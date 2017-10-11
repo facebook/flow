@@ -36,6 +36,24 @@ let assert_require
   call_opt typesof_ns assert_typesof_ns;
   ()
 
+(* Since most of the examples are only one line, this provides a concise way to
+ * create a location for assertions *)
+let make_loc start end_ =
+  let open Loc in
+  {
+    source = None;
+    start = {
+      line = 1;
+      column = start;
+      offset = start;
+    };
+    _end = {
+      line = 1;
+      column = end_;
+      offset = end_;
+    }
+  }
+
 let assert_cjs module_kind f =
   match module_kind with
   | ES _ -> assert_failure "Expected CommonJS, got ES"
@@ -81,8 +99,8 @@ let tests = "require" >::: [
       ~assert_named:(fun named ->
         assert_equal ~ctxt 1 (SMap.cardinal named);
         let locals = SMap.find_unsafe "default" named in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "Foo" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 7 10)) (SMap.find "Foo" locals))
   end;
 
   "es_import_named" >:: begin fun ctxt ->
@@ -94,8 +112,8 @@ let tests = "require" >::: [
       ~assert_named:(fun named ->
         assert_equal ~ctxt 1 (SMap.cardinal named);
         let locals = SMap.find_unsafe "A" named in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 8 9)) (SMap.find "A" locals))
   end;
 
   "es_import_renamed" >:: begin fun ctxt ->
@@ -106,7 +124,7 @@ let tests = "require" >::: [
     assert_require require
       ~assert_named:(fun named ->
         let locals = SMap.find_unsafe "A" named in
-        assert_equal ~ctxt true (SSet.mem "B" locals))
+        assert_equal ~ctxt (Nel.one (make_loc 13 14)) (SMap.find "B" locals))
   end;
 
   "es_import_named_type" >:: begin fun ctxt ->
@@ -118,8 +136,8 @@ let tests = "require" >::: [
       ~assert_types:(fun types ->
         assert_equal ~ctxt 1 (SMap.cardinal types);
         let locals = SMap.find_unsafe "A" types in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 13 14)) (SMap.find "A" locals))
   end;
 
   "es_import_named_typeof" >:: begin fun ctxt ->
@@ -131,8 +149,8 @@ let tests = "require" >::: [
       ~assert_typesof:(fun typesof ->
         assert_equal ~ctxt 1 (SMap.cardinal typesof);
         let locals = SMap.find_unsafe "A" typesof in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 15 16)) (SMap.find "A" locals))
   end;
 
   "es_import_ns" >:: begin fun ctxt ->
@@ -157,8 +175,8 @@ let tests = "require" >::: [
       ~assert_types:(fun types ->
         assert_equal ~ctxt 1 (SMap.cardinal types);
         let locals = SMap.find_unsafe "default" types in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 12 13)) (SMap.find "A" locals))
   end;
 
   "es_import_type_named" >:: begin fun ctxt ->
@@ -170,8 +188,8 @@ let tests = "require" >::: [
       ~assert_types:(fun types ->
         assert_equal ~ctxt 1 (SMap.cardinal types);
         let locals = SMap.find_unsafe "A" types in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 13 14)) (SMap.find "A" locals))
   end;
 
   "es_import_type_renamed" >:: begin fun ctxt ->
@@ -182,7 +200,7 @@ let tests = "require" >::: [
     assert_require require
       ~assert_types:(fun types ->
         let locals = SMap.find_unsafe "A" types in
-        assert_equal ~ctxt true (SSet.mem "B" locals))
+        assert_equal ~ctxt (Nel.one (make_loc 18 19)) (SMap.find "B" locals))
   end;
 
   "es_import_type_ns" >:: begin fun ctxt ->
@@ -207,8 +225,8 @@ let tests = "require" >::: [
       ~assert_typesof:(fun typesof ->
         assert_equal ~ctxt 1 (SMap.cardinal typesof);
         let locals = SMap.find_unsafe "default" typesof in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 14 15)) (SMap.find "A" locals))
   end;
 
   "es_import_typeof_named" >:: begin fun ctxt ->
@@ -220,8 +238,8 @@ let tests = "require" >::: [
       ~assert_typesof:(fun typesof ->
         assert_equal ~ctxt 1 (SMap.cardinal typesof);
         let locals = SMap.find_unsafe "A" typesof in
-        assert_equal ~ctxt 1 (SSet.cardinal locals);
-        assert_equal ~ctxt true (SSet.mem "A" locals))
+        assert_equal ~ctxt 1 (SMap.cardinal locals);
+        assert_equal ~ctxt (Nel.one (make_loc 15 16)) (SMap.find "A" locals))
   end;
 
   "es_import_typeof_renamed" >:: begin fun ctxt ->
@@ -232,7 +250,7 @@ let tests = "require" >::: [
     assert_require require
       ~assert_typesof:(fun typesof ->
         let locals = SMap.find_unsafe "A" typesof in
-        assert_equal ~ctxt true (SSet.mem "B" locals))
+        assert_equal ~ctxt (Nel.one (make_loc 20 21)) (SMap.find "B" locals))
   end;
 
   "es_import_typesof_ns" >:: begin fun ctxt ->

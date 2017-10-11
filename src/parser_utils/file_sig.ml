@@ -22,11 +22,11 @@ and require = {
   loc: Loc.t;
   cjs_requires: Loc.t list;
   es_imports: Loc.t list;
-  named: SSet.t SMap.t;
+  named: Loc.t Nel.t SMap.t SMap.t;
   ns: Loc.t Nel.t SMap.t;
-  types: SSet.t SMap.t;
+  types: Loc.t Nel.t SMap.t SMap.t;
   types_ns: Loc.t Nel.t SMap.t;
-  typesof: SSet.t SMap.t;
+  typesof: Loc.t Nel.t SMap.t SMap.t;
   typesof_ns: Loc.t Nel.t SMap.t;
 }
 
@@ -56,18 +56,20 @@ let mk_require
   loc =
   { loc; cjs_requires; es_imports; named; ns; types; types_ns; typesof; typesof_ns }
 
+let combine_nel _ a b = Some (Nel.concat (a, [b]))
+
 let merge_requires =
-  let sset_union _ a b = Some (SSet.union a b) in
+  let nel_smap_union _ a b = Some (SMap.union a b ~combine:combine_nel) in
   let nel_append _ a b = Some (Nel.rev_append a b) in
   fun r1 r2 -> {
     loc = r2.loc;
     cjs_requires = List.rev_append r2.cjs_requires r1.cjs_requires;
     es_imports = List.rev_append r2.es_imports r2.es_imports;
-    named = SMap.union r1.named r2.named ~combine:sset_union;
+    named = SMap.union r1.named r2.named ~combine:nel_smap_union;
     ns = SMap.union r1.ns r2.ns ~combine:nel_append;
-    types = SMap.union r1.types r2.types ~combine:sset_union;
+    types = SMap.union r1.types r2.types ~combine:nel_smap_union;
     types_ns = SMap.union r1.types_ns r2.types_ns ~combine:nel_append;
-    typesof = SMap.union r1.typesof r2.typesof ~combine:sset_union;
+    typesof = SMap.union r1.typesof r2.typesof ~combine:nel_smap_union;
     typesof_ns = SMap.union r1.typesof_ns r2.typesof_ns ~combine:nel_append;
   }
 
@@ -184,7 +186,7 @@ class requires_calculator ~ast = object(this)
     | loc, { Ast.Literal.value = Ast.Literal.String name; _ } -> loc, name
     | _ -> failwith "import declaration source must be a string literal"
     in
-    let named = ref SMap.empty in
+    let named: Loc.t Nel.t SMap.t SMap.t ref = ref SMap.empty in
     let ns = ref SMap.empty in
     let types = ref SMap.empty in
     let types_ns = ref SMap.empty in
@@ -195,16 +197,17 @@ class requires_calculator ~ast = object(this)
       | ImportTypeof -> typesof
       | ImportValue -> named
     in
-    let add_named remote local ref =
-      let locals = SSet.singleton local in
-      ref := SMap.add remote locals !ref ~combine:SSet.union
+    let add_named remote local loc ref =
+      let locals = SMap.singleton local (Nel.one loc) in
+      let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
+      ref := SMap.add remote locals !ref ~combine:combine_nel_smap
     in
     let add_ns local loc ref =
       let locs = Nel.one loc in
       ref := SMap.add local locs !ref ~combine:Nel.rev_append
     in
-    Option.iter ~f:(fun (_, local) ->
-      add_named "default" local (ref_of_kind importKind)
+    Option.iter ~f:(fun (loc, local) ->
+      add_named "default" local loc (ref_of_kind importKind)
     ) default;
     Option.iter ~f:(function
       | ImportNamespaceSpecifier (loc, (_, local)) ->
@@ -214,10 +217,11 @@ class requires_calculator ~ast = object(this)
           | ImportTypeof -> typesof_ns
           | ImportValue -> ns)
       | ImportNamedSpecifiers named_specifiers ->
-        List.iter (function {local; remote = (_, remote); kind} ->
+        List.iter (function {local; remote; kind} ->
           let importKind = match kind with Some k -> k | None -> importKind in
-          let local = match local with Some (_, x) -> x | None -> remote in
-          add_named remote local (ref_of_kind importKind)
+          let loc, local_name = match local with Some x -> x | None -> remote in
+          let _, remote_name = remote in
+          add_named remote_name local_name loc (ref_of_kind importKind)
         ) named_specifiers
     ) specifiers;
     this#add_es_import name loc
