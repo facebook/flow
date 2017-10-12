@@ -94,9 +94,26 @@ let to_fd_with_preamble fd obj =
     raise Writing_Payload_Exception;
   ()
 
+(* Marshal_tools reads from file descriptors. These file descriptors might be for some
+ * non-blocking socket. Normally if you try to read from an fd, it will block until some data is
+ * ready. But if you try to read from a non-blocking socket and it's not ready, you get an
+ * EWOULDBLOCK error.
+ *
+ * People using Marshal_tools probably are calling Unix.select first. However, that only guarantees
+ * that the first read won't block. Marshal_tools will always do at least 2 reads (one for the
+ * preamble and one or more for the data). Any read after the first might block.
+ *
+ * One day we should probably add a timeout to Marshal_tools, rather than blocking forever on
+ * partially written data
+ *)
+let block_and_read fd buffer offset to_read =
+  match Unix.select [fd] [] [] ~-.1.0 with
+  | [], _, _ -> 0
+  | _ -> Unix.read fd buffer offset to_read
+
 let rec read_payload fd buffer offset to_read =
   if to_read = 0 then offset else begin
-    let bytes_read = Unix.read fd buffer offset to_read in
+    let bytes_read = block_and_read fd buffer offset to_read in
     if bytes_read = 0 then offset else begin
       read_payload fd buffer (offset+bytes_read) (to_read-bytes_read)
     end
@@ -104,7 +121,7 @@ let rec read_payload fd buffer offset to_read =
 
 let from_fd_with_preamble fd =
   let preamble = String.create expected_preamble_size in
-  let bytes_read = Unix.read fd preamble 0 expected_preamble_size in
+  let bytes_read = block_and_read fd preamble 0 expected_preamble_size in
   if (bytes_read = 0)
   (** Unix manpage for read says 0 bytes read indicates end of file. *)
   then raise End_of_file
