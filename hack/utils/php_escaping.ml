@@ -75,7 +75,7 @@ let parse_numeric_escape ?(trim_to_byte = false) s =
     Char.chr v
   with _ -> raise (Invalid_string "escaped character too large")
 
-let unescape_double s =
+let unescape_double_or_heredoc ~is_heredoc s =
   let len = String.length s in
   let buf = Buffer.create len in
   let idx = ref 0 in
@@ -105,7 +105,10 @@ let unescape_double s =
       | 'f'  -> Buffer.add_char buf '\x0c'
       | '\\' -> Buffer.add_char buf '\\'
       | '$'  -> Buffer.add_char buf '$'
-      | '\"' -> Buffer.add_char buf '\"'
+      | '\"' ->
+        if is_heredoc
+        then Buffer.add_string buf "\\\""
+        else Buffer.add_char buf '\"'
       | 'u' when !idx < len && s.[!idx] = '{' ->
         let _ = next () in
         let unicode_count = count_f (fun c -> c <> '}') ~max:6 0 in
@@ -138,6 +141,12 @@ let unescape_double s =
   done;
 
   Buffer.contents buf
+
+let unescape_double s =
+  unescape_double_or_heredoc ~is_heredoc:false s
+
+let unescape_heredoc s =
+  unescape_double_or_heredoc ~is_heredoc:true s
 
 let unescape_single s =
   let len = String.length s in
