@@ -244,8 +244,20 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         }
       );
       ret._startsIde = true;
+      ret._needsFlowServer = true;
       return ret;
-    }
+    };
+
+  ideStop: () => TestStepFirstStage =
+    () => {
+      const ret = this._cloneWithAction(
+        async (builder, env) => {
+          await builder.cleanupIDEConnection();
+        }
+      );
+      ret._needsFlowServer = true;
+      return ret;
+    };
 
   ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage =
     (method, ...params) => {
