@@ -148,7 +148,7 @@ let unescape_double s =
 let unescape_heredoc s =
   unescape_double_or_heredoc ~is_heredoc:true s
 
-let unescape_single s =
+let unescape_single_or_nowdoc ~is_nowdoc s =
   let len = String.length s in
   let buf = Buffer.create len in
   let idx = ref 0 in
@@ -163,7 +163,7 @@ let unescape_single s =
       let c = next () in
       match c with
       | '\'' ->Buffer.add_char buf '\''
-      | '\\' ->Buffer.add_char buf '\\'
+      | '\\' when not is_nowdoc -> Buffer.add_char buf '\\'
       (* unrecognized escapes are just copied over *)
       | c ->
         Buffer.add_char buf '\\';
@@ -173,3 +173,9 @@ let unescape_single s =
   done;
 
   Buffer.contents buf
+
+let unescape_single s =
+  unescape_single_or_nowdoc ~is_nowdoc:false s
+
+let unescape_nowdoc s =
+  unescape_single_or_nowdoc ~is_nowdoc:true s
