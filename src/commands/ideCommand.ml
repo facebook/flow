@@ -295,10 +295,14 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
       let (message : Prot.response) =
         try
           Marshal_tools.from_fd_with_preamble fd
-        with End_of_file ->
-          prerr_endline "Server closed the connection";
-          (* TODO choose a standard exit code for this *)
-          exit 1
+        with
+        | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+          (* Windows throws ECONNRESET when the connection dies *)
+          let msg = "Server closed the connection via an ECONNRESET" in
+          FlowExitStatus.(exit ~msg No_server_running)
+        | End_of_file ->
+          let msg = "Server closed the connection via an End_of_file" in
+          FlowExitStatus.(exit ~msg No_server_running)
       in
       let pending_requests =
         PendingRequests.add_response local_env.pending_requests message
