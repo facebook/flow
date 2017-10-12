@@ -1470,7 +1470,7 @@ export default suite(({
         `,
       )
       .because('No files are open yet'),
-    flowCmd(['check-contents', '--no-auto-start', 'focused.js'], 'focused.js')
+    flowCmd(['check-contents', 'focused.js'], 'focused.js')
       .stdout(
         `
           Error: focused.js:3
