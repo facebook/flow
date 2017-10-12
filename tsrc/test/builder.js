@@ -263,6 +263,7 @@ export class TestBuilder {
         // Useful for debugging flow server
         // stdio: ["pipe", "pipe", process.stderr],
         cwd: this.dir,
+        env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
       }
     );
     this.server = serverProcess;
@@ -323,6 +324,7 @@ export class TestBuilder {
           // Useful for debugging flow ide
           // stdio: ["pipe", "pipe", process.stderr],
           cwd: this.dir,
+          env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
         }
       );
       const connection = rpc.createMessageConnection(
