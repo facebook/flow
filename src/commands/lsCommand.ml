@@ -114,6 +114,14 @@ let make_options ~root ~ignore_flag ~include_flag =
   let libs = [] in
   CommandUtils.file_options ~root ~no_flowlib:true ~temp_dir ~ignores ~includes ~libs flowconfig
 
+(* The problem with Files.wanted is that it says yes to everything except ignored files and libs.
+ * So implicitly ignored files (like files in another directory) pass the Files.wanted check *)
+let wanted ~root ~options libs file =
+  Files.wanted ~options libs file && (
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    String_utils.string_starts_with file root_str || Files.is_included options file
+  )
+
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
  *)
@@ -124,7 +132,7 @@ let get_ls_files ~root ~all ~options ~libs ~imaginary = function
     let subdir = Some (Path.make dir) in
     Files.make_next_files ~root ~all ~subdir ~options ~libs
 | Some file ->
-    if (Sys.file_exists file || imaginary) && (all || Files.wanted ~options libs file)
+    if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file)
     then begin
       let file = file |> Path.make |> Path.to_string in
       let rec cb = ref begin fun () ->
