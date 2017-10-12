@@ -36,7 +36,7 @@ export class TestBuilder {
   errorCheckCommand: CheckCommand;
   flowConfigFilename: string;
   lazyMode: 'ide' | 'fs' | null;
-  server: ?number;
+  server: null | child_process$ChildProcess = null;
   ide: null | {
     connection: RpcConnection;
     process: child_process$ChildProcess;
@@ -47,6 +47,8 @@ export class TestBuilder {
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
+  testErrors = [];
+  allowFlowServerToDie = false;
 
   constructor(
     bin: string,
@@ -240,60 +242,66 @@ export class TestBuilder {
   }
 
   async startFlowServer(): Promise<void> {
-    const lazyMode = this.lazyMode === null
-      ? ""
-      : format('--lazy-mode "%s"', this.lazyMode);
-    const [err, stdout, stderr] = await execManual(format(
-      "%s start --json --strip-root --temp-dir %s --wait %s %s",
-      this.bin,
-      this.tmpDir,
-      lazyMode,
-      this.dir,
-    ));
-
-    if (!err) {
-      const response = JSON.parse(stdout.toString());
-      this.server = response.pid;
-    } else if (err.code === 11) {
-      // Already a server running...that's cool
-    } else {
-      throw new Error(format('Flow start failed!', err, stdout, stderr));
+    if (this.server !== null) {
+      return;
     }
-  }
-
-  async stopFlowServer(): Promise<void> {
-    const server = this.server;
-    if (server != null ) {
-      this.server = null;
-      const [err, stdout, stderr] = await execManual(format(
-        "%s stop %s",
-        this.bin,
+    const lazyMode = this.lazyMode === null
+      ? []
+      : ['--lazy-mode', this.lazyMode];
+    const serverProcess = spawn(
+      this.bin,
+      [
+        'server',
+        '--strip-root',
+        '--debug',
+        '--temp-dir', this.tmpDir,
+      ].concat(lazyMode)
+      .concat([
         this.dir,
-      ));
+      ]),
+      {
+        // Useful for debugging flow server
+        // stdio: ["pipe", "pipe", process.stderr],
+        cwd: this.dir,
+      }
+    );
+    this.server = serverProcess;
 
-      if (err != null) {
-        try {
-          process.kill(server);
-        } catch (e) {
-          console.log("Failed to kill server %s", server);
+    const stderr = [];
+    serverProcess.stderr.on('data', (data) => {
+      stderr.push(data.toString());
+    });
+
+    serverProcess.on('exit', (code, signal) => {
+      if (this.server != null && !this.allowFlowServerToDie) {
+        this.testErrors.push(format(
+          "flow server mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
+          code,
+          signal,
+          stderr.join(""),
+        ));
+      }
+      this.stopFlowServer();
+    });
+
+    // Wait for the server to be ready
+    await new Promise((resolve, reject) => {
+      function resolveOnReady(data) {
+        if (stderr.concat([data]).join('').match(/Server is READY/)) {
+          serverProcess.stderr.removeListener('data', resolveOnReady);
+          resolve();
         }
       }
-    }
+      serverProcess.stderr.on('data', resolveOnReady);
+    });
   }
 
-  stopFlowServerSync(): void {
+  stopFlowServer(): void {
     const server = this.server;
     if (server != null) {
       this.server = null;
-      try {
-        execSync(format("%s stop %s", this.bin, this.dir));
-      } catch (e) {
-        try {
-          process.kill(server);
-        } catch (e) {
-          console.log("Failed to kill server %s", server);
-        }
-      }
+      server.stdin.end();
+      server.kill();
     }
   }
 
@@ -323,7 +331,17 @@ export class TestBuilder {
       );
       connection.listen();
 
-      ideProcess.on('exit', () => this.cleanupIDEConnection());
+      ideProcess.on('exit', (code, signal) => {
+        if (this.ide != null) {
+          this.testErrors.push(format(
+            "flow ide mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
+            code,
+            signal,
+            this.getIDEStderr(),
+          ));
+        }
+        this.cleanupIDEConnection();
+      });
       ideProcess.on('close', () => this.cleanupIDEConnection());
 
       const emitter = new EventEmitter;
@@ -340,7 +358,9 @@ export class TestBuilder {
       });
 
       const stderr = [];
-      ideProcess.stderr.on('data', (data) => stderr.push(data.toString()));
+      ideProcess.stderr.on('data', (data) => {
+        stderr.push(data.toString());
+      });
 
       this.ide = { process: ideProcess, connection, messages, stderr, emitter };
     }
@@ -349,10 +369,10 @@ export class TestBuilder {
   cleanupIDEConnection(): void {
     const ide = this.ide;
     if (ide != null) {
+      this.ide = null;
       ide.process.stdin.end();
       ide.process.kill();
       ide.connection.dispose();
-      this.ide = null;
     }
   }
 
@@ -379,7 +399,10 @@ export class TestBuilder {
     const messages = [...expected];
 
     return new Promise(resolve => {
-      if (ide == null || expected.length === 0) {
+      if (ide == null) {
+        throw new Error('No ide process running!');
+      }
+      if (expected.length === 0) {
         resolve();
         return; // Flow doesn't know resolve doesn't return
       }
@@ -425,23 +448,34 @@ export class TestBuilder {
 
   cleanup(): void {
     this.cleanupIDEConnection();
-    this.stopFlowServerSync();
+    this.stopFlowServer();
+  }
+
+  assertNoErrors(): void {
+    if (this.testErrors.length > 0) {
+      throw new Error(format(
+        "%d test error%s: %s",
+        this.testErrors.length,
+        this.testErrors.length == 1 ? "" : "s",
+        this.testErrors.join("\n\n"),
+      ));
+    }
   }
 
   async waitForServerToDie(timeout: number): Promise<void> {
-    const pid = this.server;
-    if (pid == null) {
-      throw new Error('Cannot wait for a server that never started');
-    }
     let remaining = timeout;
-    while (remaining > 0 && await isRunning(pid)) {
+    while (remaining > 0 && this.server != null) {
+      await sleep(Math.min(remaining, 100));
       remaining -= 100;
-      await sleep(100);
     }
   }
 
+  setAllowFlowServerToDie(allow: boolean): void {
+    this.allowFlowServerToDie = allow;
+  }
+
   async forceRecheck(files: Array<string>): Promise<void> {
-    if (this.server && await isRunning(this.server)) {
+    if (this.server && await isRunning(this.server.pid)) {
       const [err, stdout, stderr] = await execManual(format(
         "%s force-recheck --no-auto-start --temp-dir %s %s",
         this.bin,
