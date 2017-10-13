@@ -1,3 +1,8 @@
+### 0.57.2
+
+Misc:
+* Reverted the change which stopped call properties from flowing to object type dictionaries
+
 ### 0.57.1
 
 Notable bug fixes:
