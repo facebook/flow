@@ -382,7 +382,7 @@ let tests = "require" >::: [
       assert_equal ~ctxt 0 (SMap.cardinal batch);
       assert_equal ~ctxt "x"
         (substring_loc source (SMap.find_unsafe "x" named));
-      assert_equal ~ctxt "y as z"
+      assert_equal ~ctxt "z"
         (substring_loc source (SMap.find_unsafe "z" named));
     )
   end;
@@ -498,7 +498,7 @@ let tests = "require" >::: [
       assert_equal ~ctxt 0 (SMap.cardinal batch);
       assert_equal ~ctxt "x"
         (substring_loc source (SMap.find_unsafe "x" named));
-      assert_equal ~ctxt "y as z"
+      assert_equal ~ctxt "z"
         (substring_loc source (SMap.find_unsafe "z" named));
     )
   end;

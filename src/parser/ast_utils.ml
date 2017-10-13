@@ -49,7 +49,7 @@ let bindings_of_variable_declarations =
 let bindings_of_export_specifiers =
   let open Ast.Statement.ExportNamedDeclaration in
   List.fold_left ExportSpecifier.(fun acc -> function
-    | loc, { local = id; exported = None }
-    | loc, { exported = Some id; _ } ->
-      (loc, snd id)::acc
+    | _, { local = id; exported = None }
+    | _, { exported = Some id; _ } ->
+      id::acc
   ) []
