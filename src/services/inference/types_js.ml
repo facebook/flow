@@ -914,7 +914,12 @@ let recheck_with_profiling
   let updated_checked_files, all_dependent_files = match Options.lazy_mode options with
   | None (* Non lazy mode treats every file as focused. *)
   | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-    let old_focus_targets = FilenameSet.diff (CheckedSet.focused env.ServerEnv.checked_files) deleted in
+    let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
+    let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
+    let old_focus_targets = List.fold_left
+      (fun targets (unparsed, _) -> FilenameSet.remove unparsed targets)
+      old_focus_targets
+      unparsed in
     let parsed = FilenameSet.union old_focus_targets freshparsed in
     let updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
     updated_checked_files, all_dependent_files
