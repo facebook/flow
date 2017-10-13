@@ -213,6 +213,80 @@ var num: number = method.call(42);
 var str: string = method.call(42);
 ```
 
+### Predicate Functions <a class="toc" id="toc-function-checks" href="#toc-predicate-functions"></a>
+
+Sometimes you will want to move condition from `if` statement into a function
+
+```js
+function concat(a: ?string, b: ?string): string {
+  if (a && b) {
+    return a + b;
+  }
+  return '';
+}
+```
+
+However, `flow` will see an error in the code below:
+
+```js
+function truthy(a, b): boolean {
+  return a && b;
+}
+
+function concat(a: ?string, b: ?string): string {
+  if (truthy(a, b)) {
+    // $ExpectError
+    return a + b;
+  }
+  return '';
+}
+```
+
+You can fix it using `%checks` mark like this:
+
+```js
+function truthy(a, b): boolean %checks {
+  return !!a && !!b;
+}
+
+function concat(a: ?string, b: ?string): string {
+  if (truthy(a, b)) {
+    return a + b;
+  }
+  return '';
+}
+```
+
+Such predicate functions must return immediately (i.e. you can not declare variables). 
+But it's possible to call other predicate functions inside a predicate function:
+
+```js
+function isString(y): %checks {
+  return typeof y === "string";
+}
+
+function isNumber(y): %checks {
+  return typeof y === "number";
+}
+
+function isNumberOrString(y): %checks {
+  return isString(y) || isNumber(y);
+}
+
+function foo(x): string | number {
+  if(isNumberOrString(x)) {
+    return x + x;
+  } else {
+  	return x.length; // no error, because flow understands that x has to be an array
+  }
+}
+
+foo('a');
+foo(5);
+foo([]);
+```
+
+
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
 
 Sometimes it is useful to write types that accept arbitrary functions, for
