@@ -1,0 +1,13 @@
+<script src="https://www.gstatic.com/firebasejs/4.5.1/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyB2o5m7ZmkeGxKYEbmLGztbdQLyzwPMqXk",
+    authDomain: "games-4110f.firebaseapp.com",
+    databaseURL: "https://games-4110f.firebaseio.com",
+    projectId: "games-4110f",
+    storageBucket: "games-4110f.appspot.com",
+    messagingSenderId: "700095599088"
+  };
+  firebase.initializeApp(config);
+</script>
