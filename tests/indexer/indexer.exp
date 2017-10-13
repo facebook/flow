@@ -33,21 +33,21 @@ Error: A.js:38
      37: function foo7(): {[key: string]: number; foo: number} {
                                                        ^^^^^^ number
 
-Error: call.js:7
-  7: (y: {(number): string});
+Error: call.js:4
+  4: (y: {(number): string});
       ^ object type. This type is incompatible with
-  7: (y: {(number): string});
+  4: (y: {(number): string});
          ^^^^^^^^^^^^^^^^^^ object type
 
-Error: call.js:7
-  7: (y: {(number): string});
+Error: call.js:4
+  4: (y: {(number): string});
       ^ object type. This type is incompatible with
-  7: (y: {(number): string});
+  4: (y: {(number): string});
          ^^^^^^^^^^^^^^^^^^ object type
   Callable property is incompatible:
-      7: (y: {(number): string});
+      4: (y: {(number): string});
              ^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
-      7: (y: {(number): string});
+      4: (y: {(number): string});
           ^ object type
 
 Error: multiple.js:7
