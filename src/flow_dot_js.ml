@@ -55,7 +55,7 @@ let load_lib_files ~master_cx ~metadata files
       match parse_content lib_file lib_content with
       | ast, [] ->
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms ~lint_severities:None
+          ~metadata ~exclude_syms ~lint_severities:LintSettings.default_severities
           lib_file ast
         in
 
@@ -165,7 +165,7 @@ let infer_and_merge ~root filename ast =
   let reqs = Merge_js.Reqs.({ empty with decls }) in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   Merge_js.merge_component_strict
-    ~metadata ~lint_severities:None ~file_sigs
+    ~metadata ~lint_severities:LintSettings.default_severities ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     [filename] reqs [] master_cx

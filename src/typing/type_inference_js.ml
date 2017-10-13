@@ -363,12 +363,7 @@ let scan_for_lint_suppressions =
 
 let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
-  match base_settings with
-  | Some base_settings ->
-    scan_for_lint_suppressions cx base_settings comments
-  | None -> ()
-  ;
-  ()
+  scan_for_lint_suppressions cx base_settings comments
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)

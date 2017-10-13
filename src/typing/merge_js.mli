@@ -28,7 +28,7 @@ end
 
 val merge_component_strict:
   metadata: Context.metadata ->
-  lint_severities: Severity.severity LintSettings.t option ->
+  lint_severities: Severity.severity LintSettings.t ->
   file_sigs: File_sig.t Utils_js.FilenameMap.t ->
   get_ast_unsafe: (File_key.t -> Loc.t Ast.program) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
