@@ -315,7 +315,7 @@ end = struct
 
   let run ~shared_mem_config ~log_file options =
     let log_fd = Server_daemon.open_log_file log_file in
-    Hh_logger.set_log (Unix.out_channel_of_descr log_fd);
+    Hh_logger.set_log log_file (Unix.out_channel_of_descr log_fd);
     Hh_logger.info "Logs will go to %s" log_file;
     run_internal ~shared_mem_config options
 
