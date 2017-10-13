@@ -1,3 +1,12 @@
+### 0.57.1
+
+Notable bug fixes:
+* Fixed a crash when a file goes from parsable to unparsable
+* Fixed a server crash when a client dies before receiving a response
+
+Misc:
+* Added logging to show which components take a long time to merge
+
 ### 0.57.0
 
 Likely to cause new Flow errors:
