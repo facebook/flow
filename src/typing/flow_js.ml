@@ -6386,7 +6386,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | None -> ()
   | Some { key; value; dict_polarity; _ } ->
     iter_real_props cx lflds (fun s lp ->
-      if not (Context.has_prop cx uflds s || is_dictionary_exempt s)
+      if not (Context.has_prop cx uflds s)
       then (
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
