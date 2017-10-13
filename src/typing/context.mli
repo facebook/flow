@@ -23,6 +23,7 @@ type local_metadata = {
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
+  strict: bool;
 }
 type global_metadata = {
   enable_const_params: bool;

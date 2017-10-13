@@ -152,6 +152,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let local_metadata = match Docblock.flow docblock_info with
   | None -> local_metadata
   | Some Docblock.OptIn -> { local_metadata with checked = true; }
+  | Some Docblock.OptInStrict -> { local_metadata with checked = true; strict = true; }
   | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
@@ -202,7 +203,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict ~metadata ~lint_severities ~file_sigs
+let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe
   component reqs dep_cxs master_cx =
 
@@ -210,6 +211,13 @@ let merge_component_strict ~metadata ~lint_severities ~file_sigs
     let ast = get_ast_unsafe filename in
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
+    let lint_severities =
+      if metadata.Context.local_metadata.Context.strict
+      then StrictModeSettings.fold
+        (fun lint_kind lint_severities ->
+          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities
+        ) strict_mode lint_severities
+      else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
     let module_ref = Files.module_ref filename in
     let cx = Flow_js.fresh_context metadata filename module_ref in

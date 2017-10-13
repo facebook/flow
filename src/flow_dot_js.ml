@@ -96,6 +96,7 @@ let stub_metadata ~root ~checked = { Context.
     verbose = None;
     weak = false;
     jsx = None;
+    strict = false;
   };
   global_metadata = { Context.
     enable_const_params = false;
@@ -163,9 +164,11 @@ let infer_and_merge ~root filename ast =
     List.cons (module_name, loc, Modulename.String module_name, filename)
   ) require_loc_map [] in
   let reqs = Merge_js.Reqs.({ empty with decls }) in
+  let lint_severities = LintSettings.default_severities in
+  let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   Merge_js.merge_component_strict
-    ~metadata ~lint_severities:LintSettings.default_severities ~file_sigs
+    ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     [filename] reqs [] master_cx

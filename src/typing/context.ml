@@ -21,6 +21,7 @@ type local_metadata = {
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
+  strict: bool;
 }
 
 type global_metadata = {
@@ -181,6 +182,7 @@ let metadata_of_options options =
     verbose = Options.verbose options;
     weak = Options.weak_by_default options;
     jsx = None;
+    strict = false;
   } in
   { global_metadata; local_metadata; }
 

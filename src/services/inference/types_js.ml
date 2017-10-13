@@ -483,6 +483,8 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
           | None -> OptInWeak
           (* Respect @flow pragma *)
           | Some OptIn -> OptIn
+          (* Respect @flow strict pragma *)
+          | Some OptInStrict -> OptInStrict
           (* Respect @flow weak pragma *)
           | Some OptInWeak -> OptInWeak
           (* Respect @noflow, which `apply_docblock_overrides` does not by

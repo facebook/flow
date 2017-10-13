@@ -73,5 +73,6 @@ val traces: config -> int
 val required_version: config -> string option
 val weak: config -> bool
 
-(* global defaults for lint suppressions *)
+(* global defaults for lint suppressions and strict mode *)
 val lint_severities: config -> Severity.severity LintSettings.t
+val strict_mode: config -> StrictModeSettings.t
