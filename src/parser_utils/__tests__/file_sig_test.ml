@@ -17,6 +17,10 @@ let substring_loc s loc =
   let {start={offset=a; _}; _end={offset=b; _}; _} = loc in
   String.sub s a (b - a)
 
+let substring_loc_opt s = function
+  | None -> "<NONE>"
+  | Some loc -> substring_loc s loc
+
 let call_opt x = function Some f -> f x | None -> ()
 
 let assert_require
@@ -319,8 +323,8 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "0"
-        (substring_loc source (SMap.find_unsafe "default" named))
+      assert_equal ~ctxt "<NONE>"
+        (substring_loc_opt source (SMap.find_unsafe "default" named))
     )
   end;
 
@@ -330,19 +334,19 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function() {}"
-        (substring_loc source (SMap.find_unsafe "default" named))
+      assert_equal ~ctxt "<NONE>"
+        (substring_loc_opt source (SMap.find_unsafe "default" named))
     )
   end;
 
   "export_named_func" >:: begin fun ctxt ->
-    let source = "export function f() {}" in
+    let source = "export function foo() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function f() {}"
-        (substring_loc source (SMap.find_unsafe "f" named))
+      assert_equal ~ctxt "foo"
+        (substring_loc_opt source (SMap.find_unsafe "foo" named))
     )
   end;
 
@@ -352,8 +356,8 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "class C {}"
-        (substring_loc source (SMap.find_unsafe "C" named))
+      assert_equal ~ctxt "C"
+        (substring_loc_opt source (SMap.find_unsafe "C" named))
     )
   end;
 
@@ -364,13 +368,13 @@ let tests = "require" >::: [
       assert_equal ~ctxt 4 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
       assert_equal ~ctxt "x"
-        (substring_loc source (SMap.find_unsafe "x" named));
+        (substring_loc_opt source (SMap.find_unsafe "x" named));
       assert_equal ~ctxt "y"
-        (substring_loc source (SMap.find_unsafe "y" named));
+        (substring_loc_opt source (SMap.find_unsafe "y" named));
       assert_equal ~ctxt "a"
-        (substring_loc source (SMap.find_unsafe "a" named));
+        (substring_loc_opt source (SMap.find_unsafe "a" named));
       assert_equal ~ctxt "p"
-        (substring_loc source (SMap.find_unsafe "p" named))
+        (substring_loc_opt source (SMap.find_unsafe "p" named))
     )
   end;
 
@@ -381,9 +385,9 @@ let tests = "require" >::: [
       assert_equal ~ctxt 2 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
       assert_equal ~ctxt "x"
-        (substring_loc source (SMap.find_unsafe "x" named));
+        (substring_loc_opt source (SMap.find_unsafe "x" named));
       assert_equal ~ctxt "z"
-        (substring_loc source (SMap.find_unsafe "z" named));
+        (substring_loc_opt source (SMap.find_unsafe "z" named));
     )
   end;
 
@@ -408,8 +412,8 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "*"
-        (substring_loc source (SMap.find_unsafe "ns" named));
+      assert_equal ~ctxt "ns"
+        (substring_loc_opt source (SMap.find_unsafe "ns" named));
     )
   end;
 
@@ -430,19 +434,19 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "string"
-        (substring_loc source (SMap.find_unsafe "default" named));
+      assert_equal ~ctxt "<NONE>"
+        (substring_loc_opt source (SMap.find_unsafe "default" named));
     )
   end;
 
   "declare_export_default_func" >:: begin fun ctxt ->
-    let source = "declare export default function f(): void" in
+    let source = "declare export default function foo(): void" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function f(): void"
-        (substring_loc source (SMap.find_unsafe "default" named));
+      assert_equal ~ctxt "foo"
+        (substring_loc_opt source (SMap.find_unsafe "default" named));
     )
   end;
 
@@ -452,19 +456,19 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "class C {}"
-        (substring_loc source (SMap.find_unsafe "default" named));
+      assert_equal ~ctxt "C"
+        (substring_loc_opt source (SMap.find_unsafe "default" named));
     )
   end;
 
   "declare_export_named_func" >:: begin fun ctxt ->
-    let source = "declare export function f(): void" in
+    let source = "declare export function foo(): void" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function f(): void"
-        (substring_loc source (SMap.find_unsafe "f" named));
+      assert_equal ~ctxt "foo"
+        (substring_loc_opt source (SMap.find_unsafe "foo" named));
     )
   end;
 
@@ -474,19 +478,19 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "class C {}"
-        (substring_loc source (SMap.find_unsafe "C" named));
+      assert_equal ~ctxt "C"
+        (substring_loc_opt source (SMap.find_unsafe "C" named));
     )
   end;
 
   "declare_export_named_var" >:: begin fun ctxt ->
-    let source = "declare export var x: string" in
+    let source = "declare export var foo: string" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "var x: string"
-        (substring_loc source (SMap.find_unsafe "x" named));
+      assert_equal ~ctxt "foo"
+        (substring_loc_opt source (SMap.find_unsafe "foo" named));
     )
   end;
 
@@ -497,9 +501,9 @@ let tests = "require" >::: [
       assert_equal ~ctxt 2 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
       assert_equal ~ctxt "x"
-        (substring_loc source (SMap.find_unsafe "x" named));
+        (substring_loc_opt source (SMap.find_unsafe "x" named));
       assert_equal ~ctxt "z"
-        (substring_loc source (SMap.find_unsafe "z" named));
+        (substring_loc_opt source (SMap.find_unsafe "z" named));
     )
   end;
 
@@ -524,8 +528,8 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "*"
-        (substring_loc source (SMap.find_unsafe "ns" named));
+      assert_equal ~ctxt "ns"
+        (substring_loc_opt source (SMap.find_unsafe "ns" named));
     )
   end;
 
@@ -543,14 +547,14 @@ let tests = "require" >::: [
   end;
 
   "declare_module_export_type" >:: begin function ctxt ->
-    let source = "declare module foo { declare export type ty = string }" in
+    let source = "declare module foo { declare export type bar = string }" in
     let {declare_modules; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { type_exports; _ } =
       SMap.find_unsafe "foo" declare_modules in
     assert_equal ~ctxt 1 (SMap.cardinal type_exports);
-    assert_equal ~ctxt "type ty = string"
-      (substring_loc source (SMap.find_unsafe "ty" type_exports));
+    assert_equal ~ctxt "bar"
+      (substring_loc source (SMap.find_unsafe "bar" type_exports));
   end;
 
   "declare_module_export_default_expr" >:: begin fun ctxt ->
@@ -561,33 +565,34 @@ let tests = "require" >::: [
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "ty"
-        (substring_loc source (SMap.find_unsafe "default" named))
+      assert_equal ~ctxt "<NONE>"
+        (substring_loc_opt source (SMap.find_unsafe "default" named))
     )
   end;
 
   "declare_module_export_default_decl" >:: begin fun ctxt ->
-    let source = "declare module foo { declare export default function f(): void }" in
+    let source = "declare module foo { declare export default function bar(): void }" in
     let {declare_modules; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function f(): void"
-        (substring_loc source (SMap.find_unsafe "default" named))
+      assert_equal ~ctxt "bar"
+        (substring_loc_opt source (SMap.find_unsafe "default" named))
     )
   end;
 "declare_module_export_name_func" >:: begin fun ctxt ->
-    let source = "declare module foo { declare export function f(): void }" in
+    let source = "declare module foo { declare export function bar(): void }" in
     let {declare_modules; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind (fun named batch ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       assert_equal ~ctxt 0 (SMap.cardinal batch);
-      assert_equal ~ctxt "function f(): void"
-        (substring_loc source (SMap.find_unsafe "f" named))
+      print_endline (substring_loc_opt source (SMap.find_unsafe "bar" named));
+      assert_equal ~ctxt "bar"
+        (substring_loc_opt source (SMap.find_unsafe "bar" named))
     )
   end;
 

@@ -81,7 +81,9 @@ and require = {
  * module-style import or export, we switch to ES *)
 and module_kind =
   | CommonJS of { clobbered: Loc.t option }
-  | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
+  (* named: map from name of export to location of the exported identifier, if there is in fact an
+     identifier *)
+  | ES of { named: Loc.t option SMap.t; batch: Loc.t SMap.t }
 
 val empty_file_sig: t
 val empty_module_sig: module_sig

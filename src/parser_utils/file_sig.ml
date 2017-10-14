@@ -32,7 +32,7 @@ and require = {
 
 and module_kind =
   | CommonJS of { clobbered: Loc.t option }
-  | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
+  | ES of { named: Loc.t option SMap.t; batch: Loc.t SMap.t }
 
 let empty_module_sig = {
   requires = SMap.empty;
@@ -102,7 +102,7 @@ let add_type_export name loc msig = {
   type_exports = SMap.add name loc msig.type_exports;
 }
 
-let add_es_exports named_bindings batch_bindings msig =
+let add_es_exports (named_bindings: (Loc.t option * string) list) batch_bindings msig =
   let named, batch = match msig.module_kind with
   | CommonJS _ -> SMap.empty, SMap.empty
   | ES { named; batch } -> named, batch
@@ -231,9 +231,9 @@ class requires_calculator ~ast = object(this)
   method! export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
     let open Ast.Statement.ExportDefaultDeclaration in
     begin match decl with
-    | Declaration (loc, _)
-    | Expression (loc, _) ->
-      this#add_es_exports [loc, "default"] []
+    | Declaration _
+    | Expression _ ->
+      this#add_es_exports [None, "default"] []
     end;
     super#export_default_declaration_decl  decl
 
@@ -250,11 +250,14 @@ class requires_calculator ~ast = object(this)
     | Some (loc, stmt) ->
       let open Ast.Statement in
       match stmt with
-      | FunctionDeclaration { Ast.Function.id = Some id; _ }
-      | ClassDeclaration { Ast.Class.id = Some id; _ } ->
-        this#add_es_exports [loc, snd id] []
+      | FunctionDeclaration { Ast.Function.id = Some (id_loc, name); _ }
+      | ClassDeclaration { Ast.Class.id = Some (id_loc, name); _ } ->
+        this#add_es_exports [Some id_loc, name] []
       | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
         let bindings = Ast_utils.bindings_of_variable_declarations decls in
+        let bindings =
+          List.map (fun (loc, name) -> (Some loc, name)) bindings
+        in
         this#add_es_exports bindings []
       | TypeAlias { TypeAlias.id; _ }
       | OpaqueType { OpaqueType.id; _ }
@@ -286,18 +289,18 @@ class requires_calculator ~ast = object(this)
     | Some declaration ->
       let open Ast.Statement in
       match declaration with
-      | Variable (loc, { DeclareVariable.id; _ })
-      | Function (loc, { DeclareFunction.id; _ })
-      | Class (loc, { Interface.id; _ }) ->
+      | Variable (_, { DeclareVariable.id=(id_loc, name); _ })
+      | Function (_, { DeclareFunction.id=(id_loc, name); _ })
+      | Class (_, { Interface.id=(id_loc, name); _ }) ->
+        let name = if default then "default" else name in
+        this#add_es_exports [Some id_loc, name] []
+      | DefaultType (_, _) ->
+        this#add_es_exports [None, "default"] []
+      | NamedType (_, { TypeAlias.id; _ })
+      | NamedOpaqueType (_, { OpaqueType.id; _ })
+      | Interface (_, { Interface.id; _ }) ->
         let name = if default then "default" else snd id in
-        this#add_es_exports [loc, name] []
-      | DefaultType (loc, _) ->
-        this#add_es_exports [loc, "default"] []
-      | NamedType (loc, { TypeAlias.id; _ })
-      | NamedOpaqueType (loc, { OpaqueType.id; _ })
-      | Interface (loc, { Interface.id; _ }) ->
-        let name = if default then "default" else snd id in
-        this#add_type_export name loc
+        this#add_type_export name (fst id)
     end;
     begin match specifiers with
     | None -> () (* assert declaration <> None *)
@@ -343,8 +346,8 @@ class requires_calculator ~ast = object(this)
   method private export_specifiers source =
     let open Ast.Statement.ExportNamedDeclaration in
     function
-    | ExportBatchSpecifier (loc, Some (_, name)) ->
-      this#add_es_exports [loc, name] []
+    | ExportBatchSpecifier (_, Some (id_loc, name)) ->
+      this#add_es_exports [Some id_loc, name] []
     | ExportBatchSpecifier (loc, None) ->
       let require = match source with
       | Some (_, { Ast.Literal.value = Ast.Literal.String v; _ }) -> v
@@ -353,6 +356,9 @@ class requires_calculator ~ast = object(this)
       this#add_es_exports [] [loc, require]
     | ExportSpecifiers specs ->
       let bindings = Ast_utils.bindings_of_export_specifiers specs in
+      let bindings =
+        List.map (fun (loc, name) -> (Some loc, name)) bindings
+      in
       this#add_es_exports bindings []
 end
 
