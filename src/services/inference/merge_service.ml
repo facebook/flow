@@ -98,6 +98,7 @@ let merge_strict_context ~options component =
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
+    ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
   in
 

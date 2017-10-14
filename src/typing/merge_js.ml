@@ -204,7 +204,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
-  ~get_ast_unsafe ~get_docblock_unsafe
+  ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
   component reqs dep_cxs master_cx =
 
   let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
@@ -225,6 +225,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
     implicit_require_strict cx master_cx cx;
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~file_sig;
+    if do_gc then Gc_js.do_gc ~master_cx cx;
     cx::cxs, FilenameMap.add filename cx impl_cxs
   ) ([], FilenameMap.empty) component in
   let cxs = List.rev rev_cxs in
