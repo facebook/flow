@@ -691,7 +691,6 @@ module Statement
       typeParameters;
     }) in
     let typeAnnotation = fst typeAnnotation, typeAnnotation in
-    let id = Loc.btwn (fst id) end_loc, snd id in
     let predicate = Type.predicate_opt env in
     Eat.semicolon env;
     Statement.DeclareFunction.({
