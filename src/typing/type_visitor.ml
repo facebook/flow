@@ -213,7 +213,7 @@ class ['a] t = object(self)
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
   | RestType (_, t) -> self#type_ cx acc t
   | CallType args -> self#list (self#type_ cx) acc args
-  | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
+  | TypeMap map -> self#type_map cx acc map
 
   method private custom_fun_kind cx acc = function
   | ReactPropType (React.PropType.Primitive (_, t))
@@ -546,21 +546,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc tout in
     acc
 
-  | ChoiceKitUseT (_, tool) -> (match tool with
-    | FullyResolveType _ -> acc
-    | TryFlow (_, spec) -> (match spec with
-      | UnionCases (_, t, ts) ->
-        let acc = self#type_ cx acc t in
-        let acc = List.fold_left (self#type_ cx) acc ts in
-        acc
-      | IntersectionCases (ts, use) ->
-        let acc = List.fold_left (self#type_ cx) acc ts in
-        let acc = self#use_type_ cx acc use in
-        acc)
-    | EvalDestructor (_, d, tout) ->
-      let acc = self#destructor cx acc d in
-      let acc = self#type_ cx acc tout in
-      acc)
+  | ChoiceKitUseT (r, tool) ->
+    self#choice_use_tool cx acc r tool
 
   | IntersectionPreprocessKitT (_, tool) -> (match tool with
     | ConcretizeTypes (ts1, ts2, t, use) ->
@@ -698,6 +685,48 @@ class ['a] t = object(self)
   | TupleMap t
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx acc t
+
+  method private choice_use_tool cx acc r = function
+  | FullyResolveType id ->
+    let _, acc = self#type_graph cx (ISet.empty, acc) id in
+    acc
+  | TryFlow (_, spec) ->
+    self#try_flow_spec cx acc spec
+  | EvalDestructor (id, d, tout) ->
+    let acc = self#tvar cx acc r id in
+    let acc = self#destructor cx acc d in
+    let acc = self#type_ cx acc tout in
+    acc
+
+  method private type_graph cx (seen, acc) id =
+    let open Graph_explorer in
+    let seen' = ISet.add id seen in
+    if seen' == seen then seen, acc else
+    let graph = Context.type_graph cx in
+    let acc = seen', self#eval_id cx acc id in
+    let acc =
+      match IMap.get id graph.explored_nodes with
+      | None -> acc
+      | Some {deps} ->
+        ISet.fold (fun id acc -> self#type_graph cx acc id) deps acc
+    in
+    let acc =
+      match IMap.get id graph.unexplored_nodes with
+      | None -> acc
+      | Some {rev_deps} ->
+        ISet.fold (fun id acc -> self#type_graph cx acc id) rev_deps acc
+    in
+    acc
+
+  method private try_flow_spec cx acc = function
+  | UnionCases (_, t, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = List.fold_left (self#type_ cx) acc ts in
+    acc
+  | IntersectionCases (ts, use) ->
+    let acc = List.fold_left (self#type_ cx) acc ts in
+    let acc = self#use_type_ cx acc use in
+    acc
 
   method private object_kit_resolve cx acc =
     let open Object in
