@@ -277,6 +277,7 @@ let is_weak cx = cx.local.metadata.weak
 let severity_cover cx = cx.local.severity_cover
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
+let require_map cx = cx.local.require_map
 let module_map cx = cx.local.module_map
 let module_ref cx = cx.local.module_ref
 let property_maps cx = cx.local.property_maps
