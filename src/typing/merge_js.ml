@@ -404,9 +404,9 @@ module ContextOptimizer = struct
       let { reduced_module_map; _ } = quotient in
       let export = Flow_js.lookup_module cx module_ref in
       let reduced_module_map = SMap.add module_ref export reduced_module_map in
-      self#type_ cx { quotient with reduced_module_map } export
+      self#type_ cx Neutral { quotient with reduced_module_map } export
 
-    method! tvar cx quotient r id =
+    method! tvar cx pole quotient r id =
       let root_id, _ = Flow_js.find_constraints cx id in
       if id == root_id then
         let { reduced_graph; sig_hash; _ } = quotient in
@@ -422,14 +422,14 @@ module ContextOptimizer = struct
             let stable_id = self#fresh_stable_id in
             stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
           in
-          self#type_ cx { quotient with reduced_graph } t
+          self#type_ cx pole { quotient with reduced_graph } t
       else
-        let quotient = self#tvar cx quotient r root_id in
+        let quotient = self#tvar cx pole quotient r root_id in
         let node = Goto root_id in
         let reduced_graph = IMap.add id node quotient.reduced_graph in
         { quotient with reduced_graph }
 
-    method! props cx quotient id =
+    method! props cx pole quotient id =
       let { reduced_property_maps; sig_hash; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps)
       then
@@ -443,9 +443,9 @@ module ContextOptimizer = struct
           Properties.Map.add id pmap reduced_property_maps in
         let stable_id = self#fresh_stable_id in
         stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
-        super#props cx { quotient with reduced_property_maps; sig_hash } id
+        super#props cx pole { quotient with reduced_property_maps; sig_hash } id
 
-    method! exports cx quotient id =
+    method! exports cx pole quotient id =
       let { reduced_export_maps; sig_hash; _ } = quotient in
       if (Exports.Map.mem id reduced_export_maps) then quotient
       else
@@ -453,9 +453,9 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add_exports_map tmap sig_hash in
         let reduced_export_maps =
           Exports.Map.add id tmap reduced_export_maps in
-        super#exports cx { quotient with reduced_export_maps; sig_hash } id
+        super#exports cx pole { quotient with reduced_export_maps; sig_hash } id
 
-    method! eval_id cx quotient id =
+    method! eval_id cx pole quotient id =
       let { reduced_evaluated; sig_hash; _ } = quotient in
       if IMap.mem id reduced_evaluated
       then
@@ -468,30 +468,30 @@ module ContextOptimizer = struct
         match IMap.get id (Context.evaluated cx) with
         | None -> quotient
         | Some t ->
-          let quotient = self#type_ cx quotient t in
+          let quotient = self#type_ cx pole quotient t in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
-          super#eval_id cx { quotient with reduced_evaluated } id
+          super#eval_id cx pole { quotient with reduced_evaluated } id
 
-    method! fun_type cx quotient funtype =
+    method! fun_type cx pole quotient funtype =
       let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx quotient funtype
+      if id = 0 then super#fun_type cx pole quotient funtype
       else
         let { reduced_envs; _ } = quotient in
         let closure = IMap.find_unsafe id (Context.envs cx) in
         let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx { quotient with reduced_envs } funtype
+        super#fun_type cx pole { quotient with reduced_envs } funtype
 
-    method! dict_type cx quotient dicttype =
+    method! dict_type cx pole quotient dicttype =
       let { sig_hash; _ } = quotient in
       let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
-      super#dict_type cx { quotient with sig_hash } dicttype
+      super#dict_type cx pole { quotient with sig_hash } dicttype
 
-    method! type_ cx quotient t =
+    method! type_ cx pole quotient t =
       let quotient = { quotient with
         sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
       } in
       match t with
-      | OpenT _ -> super#type_ cx quotient t
+      | OpenT _ -> super#type_ cx pole quotient t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -504,7 +504,7 @@ module ContextOptimizer = struct
           | Some id -> id
           else class_id in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | OpaqueT (_, opaquetype) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -519,7 +519,7 @@ module ContextOptimizer = struct
           else opaque_id
         in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | DefT (_, PolyT (_, _, poly_id)) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -533,18 +533,18 @@ module ContextOptimizer = struct
           else poly_id
         in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | _ ->
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_type t sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
 
     method! use_type_ cx quotient use =
       let quotient = { quotient with
         sig_hash = SigHash.add (reason_of_use_t use) quotient.sig_hash
       } in
       match use with
-      | UseT (_, t) -> self#type_ cx quotient t
+      | UseT (_, t) -> self#type_ cx Neutral quotient t
       | _ ->
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_use use sig_hash in

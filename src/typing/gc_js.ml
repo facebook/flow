@@ -42,7 +42,7 @@ open Type
 let gc = object (self)
   inherit [ISet.t] Type_visitor.t
 
-  method! tvar cx marked r id =
+  method! tvar cx pole marked r id =
     let root_id, constraints = Flow_js.find_constraints cx id in
     if id == root_id then
       let marked' = ISet.add id marked in
@@ -50,13 +50,13 @@ let gc = object (self)
       then marked (* already marked *)
       else (
         match constraints with
-        | Resolved t -> self#type_ cx marked' t
+        | Resolved t -> self#type_ cx pole marked' t
         | Unresolved bounds -> marked'
-          |> TypeMap.fold (fun l _ acc -> self#type_ cx acc l) bounds.lower
+          |> TypeMap.fold (fun l _ acc -> self#type_ cx pole acc l) bounds.lower
           |> UseTypeMap.fold (fun u _ acc -> self#use_type_ cx acc u) bounds.upper
       )
     else
-      self#tvar cx (ISet.add id marked) r root_id
+      self#tvar cx pole (ISet.add id marked) r root_id
 end
 
 (* Keep a reachable type variable around. *)
@@ -93,8 +93,8 @@ let do_gc ~master_cx cx =
    * prevents the visitor from walking their bounds. *)
   |> IMap.fold (fun id _ acc -> ISet.add id acc) (Context.graph master_cx)
   (* Mark tvars reachable from imports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx acc t) (Context.require_map cx)
+  |> SMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx acc t) (Context.module_map cx)
+  |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
   (* Collect unmarked tvars from the graph. *)
   |> cleanup ~master_cx cx

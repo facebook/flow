@@ -690,14 +690,15 @@ end = struct
   let stack = ref ([]: entry list)
 
   (* visitor to collect roots of type applications nested in a type *)
-  class roots_collector = object
+  let roots_collector = object
     inherit [TypeSet.t] Type_visitor.t as super
 
-    method! type_ cx acc t = match t with
-    | DefT (_, TypeAppT (c, _)) -> super#type_ cx (TypeSet.add c acc) t
-    | _ -> super#type_ cx acc t
+    method! type_ cx pole acc t = match t with
+    | DefT (_, TypeAppT (c, _)) -> super#type_ cx pole (TypeSet.add c acc) t
+    | _ -> super#type_ cx pole acc t
   end
-  let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
+
+  let collect_roots cx = roots_collector#type_ cx Neutral TypeSet.empty
 
   (* Util to stringify a list, given a separator string and a function that maps
      elements of the list to strings. Should probably be moved somewhere else
