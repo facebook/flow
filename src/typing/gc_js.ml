@@ -8,6 +8,8 @@
 open Constraint
 open Type
 
+module P = Type.Polarity
+
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
     type variables from a given set of "roots," by following links between type
     variables and traversing their concrete bounds.
@@ -37,41 +39,153 @@ open Type
    that was marked unreachable, leading to a crash; at worst, a dependency is
    missed, leading to missed errors.
 
-   Thus, do a conservative version of GC for now, that is undirected. *)
+   The type visitor has an in-progress, conservative polarity calculation. It is
+   conservative in that any "unknown" or unimplemented polarity is treated as
+   Neutral, so we will preserve both lower bounds and upper bounds. *)
+
+module Marked : sig
+  type t
+  val empty: t
+  val add: int -> Type.polarity -> t -> (Type.polarity * t) option
+  val get: int -> t -> Type.polarity option
+  val mem: int -> Type.polarity -> t -> bool
+  val exclude: int -> t -> t
+end = struct
+  type t = Type.polarity IMap.t
+
+  let empty = IMap.empty
+
+  let add id p x =
+    match IMap.get id x with
+    | None -> Some (p, IMap.add id p x)
+    | Some p' ->
+      match p, p' with
+      | Positive, Negative
+      | Negative, Positive -> Some (p, IMap.add id Neutral x)
+      | Neutral, Negative -> Some (Positive, IMap.add id p x)
+      | Neutral, Positive -> Some (Negative, IMap.add id p x)
+      | _ -> None
+
+  let get = IMap.get
+
+  let mem id p x =
+    match IMap.get id x with
+    | None -> false
+    | Some p' -> P.compat (p', p)
+
+  let exclude id x = IMap.add id Neutral x
+end
 
 let gc = object (self)
-  inherit [ISet.t] Type_visitor.t
+  inherit [Marked.t] Type_visitor.t as super
+
+  val depth = ref 0;
+
+  method! type_ cx pole marked t =
+    Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent} ->
+      let pid = Context.pid_prefix cx in
+      let indent = String.make (!depth * indent) ' ' in
+      Utils_js.prerr_endlinef "\n%s%sGC (%s): %s" indent pid
+        (Polarity.string pole)
+        (Debug_js.dump_t cx ~depth:verbose_depth t)
+    ) (Context.verbose cx);
+    incr depth;
+    let marked = super#type_ cx pole marked t in
+    decr depth;
+    marked
 
   method! tvar cx pole marked r id =
-    let root_id, constraints = Flow_js.find_constraints cx id in
-    if id == root_id then
-      let marked' = ISet.add id marked in
-      if marked == marked'
-      then marked (* already marked *)
-      else (
+    match Marked.add id pole marked with
+    | None -> marked
+    | Some (pole, marked) ->
+      let root_id, constraints = Flow_js.find_constraints cx id in
+      if id != root_id then
+        self#tvar cx pole marked r root_id
+      else
         match constraints with
-        | Resolved t -> self#type_ cx pole marked' t
-        | Unresolved bounds -> marked'
-          |> TypeMap.fold (fun l _ acc -> self#type_ cx pole acc l) bounds.lower
-          |> UseTypeMap.fold (fun u _ acc -> self#use_type_ cx acc u) bounds.upper
-      )
-    else
-      self#tvar cx pole (ISet.add id marked) r root_id
+        | Resolved t -> self#type_ cx pole marked t
+        | Unresolved bounds ->
+          let marked =
+            if P.compat (pole, Positive) then
+              let marked = TypeMap.fold (fun l _ acc ->
+                self#type_ cx Positive acc l
+              ) bounds.lower marked in
+              let marked = IMap.fold (fun id _ acc ->
+                self#tvar_bounds cx Positive acc id
+              ) bounds.lowertvars marked in
+              marked
+            else marked
+          in
+          let marked =
+            if P.compat (pole, Negative) then
+              let marked = UseTypeMap.fold (fun u _ acc ->
+                self#use_type_ cx acc u
+              ) bounds.upper marked in
+              let marked = IMap.fold (fun id _ acc ->
+                self#tvar_bounds cx Negative acc id
+              ) bounds.uppertvars marked in
+              marked
+            else marked
+          in
+          marked
+
+  method private tvar_bounds cx pole marked id =
+    match Marked.add id pole marked with
+    | None -> marked
+    | Some (pole, marked) ->
+      let root_id, constraints = Flow_js.find_constraints cx id in
+      if id != root_id then
+        self#tvar_bounds cx pole marked root_id
+      else
+        match constraints with
+        | Resolved _ -> marked
+        | Unresolved bounds ->
+          let marked =
+            if P.compat (pole, Positive) then
+              IMap.fold (fun id _ acc ->
+                self#tvar_bounds cx Positive acc id
+              ) bounds.lowertvars marked
+            else marked
+          in
+          let marked =
+            if P.compat (pole, Negative) then
+              IMap.fold (fun id _ acc ->
+                self#tvar_bounds cx Negative acc id
+              ) bounds.uppertvars marked
+            else marked
+          in
+          marked
 end
 
 (* Keep a reachable type variable around. *)
-let live cx marked id =
+let live cx marked p id =
   let constraints = Flow_js.find_graph cx id in
   match constraints with
   | Resolved _ -> ()
   | Unresolved bounds ->
-    bounds.uppertvars <-
-      bounds.uppertvars |> IMap.filter (fun id _ -> ISet.mem id marked);
-    bounds.lowertvars <-
-      bounds.lowertvars |> IMap.filter (fun id _ -> ISet.mem id marked)
+    let lower, lowertvars =
+      if P.compat (p, Positive) then
+        bounds.lower,
+        IMap.filter (fun id _ -> Marked.mem id Positive marked) bounds.lowertvars
+      else
+        TypeMap.empty, IMap.empty
+    in
+    let upper, uppertvars =
+      if P.compat (p, Negative) then
+        bounds.upper,
+        IMap.filter (fun id _ -> Marked.mem id Negative marked) bounds.uppertvars
+      else
+        UseTypeMap.empty, IMap.empty
+    in
+    bounds.lower <- lower;
+    bounds.upper <- upper;
+    bounds.lowertvars <- lowertvars;
+    bounds.uppertvars <- uppertvars;
+    ()
 
 (* Kill an unreachable type variable. *)
-let die cx id = Context.remove_tvar cx id
+let die cx id =
+  Context.remove_tvar cx id
 
 (* Prune the graph given a GC state contained marked type variables. *)
 let cleanup ~master_cx cx marked =
@@ -81,17 +195,18 @@ let cleanup ~master_cx cx marked =
     (* Don't collect tvars from the master cx, which are explicitly excluded
      * from GC. Because the master cx is part of every cx, we can simply remove
      * all parts of the master from any cx. This is done separately in merge. *)
-    if IMap.mem id master_graph then ()
-    else if ISet.mem id marked then live cx marked id
-    else die cx id
-    ) graph
+    if IMap.mem id master_graph then () else
+    match Marked.get id marked with
+    | None -> die cx id
+    | Some p -> live cx marked p id
+  ) graph
 
 (* Main entry point for graph pruning. *)
 let do_gc ~master_cx cx =
-  ISet.empty
+  Marked.empty
   (* Exclude tvars from the master cx. Adding these ids to the marked set
    * prevents the visitor from walking their bounds. *)
-  |> IMap.fold (fun id _ acc -> ISet.add id acc) (Context.graph master_cx)
+  |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph master_cx)
   (* Mark tvars reachable from imports. *)
   |> SMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
