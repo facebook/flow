@@ -1761,9 +1761,8 @@ let is_use = function
   | _ -> true
 
 (* not all so-called def types can appear as use types *)
-(* TODO: separate these misfits out *)
 let is_proper_def = function
-  | InternalT (ChoiceKitT _) -> false
+  | InternalT _ -> false
   | _ -> true
 
 (* convenience *)
