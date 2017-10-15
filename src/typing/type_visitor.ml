@@ -24,7 +24,7 @@ class ['a] t = object(self)
 
   | DefT (_, t) -> self#def_type cx pole acc t
 
-  | ChoiceKitT (_, Trigger) -> acc
+  | InternalT (ChoiceKitT (_, Trigger)) -> acc
 
   | TypeDestructorTriggerT (_, d, t) ->
     let acc = self#destructor cx acc d in
@@ -93,13 +93,13 @@ class ['a] t = object(self)
   | ModuleT (_, exporttypes) ->
     self#export_types cx pole acc exporttypes
 
-  | ExtendsT (_, ts, t1, t2) ->
+  | InternalT (ExtendsT (_, ts, t1, t2)) ->
     let acc = self#list (self#type_ cx pole_TODO) acc ts in
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | IdxWrapper (_, t) ->
+  | InternalT (IdxWrapper (_, t)) ->
     self#type_ cx pole acc t
 
   | OpenPredT (_ , t, p_map, n_map) ->
@@ -117,7 +117,7 @@ class ['a] t = object(self)
     acc
 
   | ReposT (_, t)
-  | ReposUpperT (_, t) ->
+  | InternalT (ReposUpperT (_, t)) ->
     self#type_ cx pole acc t
 
   method def_type cx pole acc = function

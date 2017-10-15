@@ -299,12 +299,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
     ]
 
-  | ExtendsT (_, _, t1, t2) -> [
+  | InternalT (ExtendsT (_, _, t1, t2)) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
 
-  | ChoiceKitT (_, tool) -> [
+  | InternalT (ChoiceKitT (_, tool)) -> [
       "tool", JSON_String (match tool with
       | Trigger -> "trigger"
       );
@@ -322,7 +322,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | _ -> []
     )
 
-  | IdxWrapper (_, t) -> [
+  | InternalT (IdxWrapper (_, t)) -> [
       "wrappedObj", _json_of_t json_cx t
     ]
 
@@ -340,7 +340,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | ReposT (_, t)
-  | ReposUpperT (_, t) -> [
+  | InternalT (ReposUpperT (_, t)) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1720,16 +1720,16 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
   | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
-  | ExtendsT (_, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
+  | InternalT (ExtendsT (_, nexts, l, u)) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
-  | ChoiceKitT _ -> p t
+  | InternalT (ChoiceKitT _) -> p t
   | TypeDestructorTriggerT (_, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
-  | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
+  | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
   | ReposT (_, arg)
-  | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
+  | InternalT (ReposUpperT (_, arg)) -> p ~extra:(kid arg) t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t

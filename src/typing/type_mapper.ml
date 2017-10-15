@@ -108,13 +108,13 @@ class ['a] t = object(self)
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
           else ModuleT (r, exporttypes')
-      | ExtendsT (r, tlist, t1, t2) ->
+      | InternalT (ExtendsT (r, tlist, t1, t2)) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if tlist' == tlist && t1' == t1 && t2' == t2 then t
-          else ExtendsT (r, tlist', t1', t2')
-      | ChoiceKitT _ -> t
+          else InternalT (ExtendsT (r, tlist', t1', t2'))
+      | InternalT (ChoiceKitT _) -> t
       | TypeDestructorTriggerT (r, d, x) ->
           let d' = self#destructor cx map_cx d in
           let x' = self#type_ cx map_cx x in
@@ -125,10 +125,10 @@ class ['a] t = object(self)
           if c' == c then t
           else CustomFunT (r, ReactElementFactory c')
       | CustomFunT _ -> t
-      | IdxWrapper (r, t') ->
+      | InternalT (IdxWrapper (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
-          else IdxWrapper (r, t'')
+          else InternalT (IdxWrapper (r, t''))
       | OpenPredT (r, t', map1, map2) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -137,10 +137,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ReposT (r, t'')
-      | ReposUpperT (r, t') ->
+      | InternalT (ReposUpperT (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else ReposUpperT (r, t'')
+          else InternalT (ReposUpperT (r, t''))
 
   method tvar _cx _map_cx _r id = id
 

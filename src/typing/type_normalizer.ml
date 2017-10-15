@@ -116,7 +116,7 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["thisArg"] in
       fake_fun params_names tins rest_param any
 
-  | ChoiceKitT (_, _)
+  | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
     -> Locationless.AnyT.t
 
@@ -213,7 +213,7 @@ let rec normalize_type_impl cx ids t = match t with
       ) in
 
       let cb_param = (
-        let cb_param = IdxWrapper (reason, obj_param) in
+        let cb_param = InternalT (IdxWrapper (reason, obj_param)) in
         fake_fun (Some ["demaybifiedObj"]) [cb_param] None cb_ret
       ) in
 
@@ -299,9 +299,9 @@ let rec normalize_type_impl cx ids t = match t with
         IntersectionT (InterRep.make t1 t2 [])
       )
 
-  | IdxWrapper (_, obj) ->
+  | InternalT (IdxWrapper (_, obj)) ->
     let reason = locationless_reason (RCustom "idx object") in
-    IdxWrapper (reason, normalize_type_impl cx ids obj)
+    InternalT (IdxWrapper (reason, normalize_type_impl cx ids obj))
 
   | DefT (_, ObjT ot) ->
       let dict = match ot.dict_t with
@@ -470,11 +470,11 @@ let rec normalize_type_impl cx ids t = match t with
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
   | ReposT (_, t)
-  | ReposUpperT (_, t) ->
+  | InternalT (ReposUpperT (_, t)) ->
       normalize_type_impl cx ids t
 
   | FunProtoT _
-  | ExtendsT (_, _, _, _)
+  | InternalT (ExtendsT (_, _, _, _))
   | CustomFunT (_, Compose _)
   ->
     (** TODO **)

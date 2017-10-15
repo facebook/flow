@@ -205,7 +205,7 @@ let hash_of_ctor = Type.(function
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
   | MergedT _ -> MergedH
   | BoundT _ -> BoundH
-  | ChoiceKitT _ -> ChoiceKitH
+  | InternalT (ChoiceKitT _) -> ChoiceKitH
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
@@ -213,12 +213,12 @@ let hash_of_ctor = Type.(function
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
-  | ExtendsT _ -> ExtendsH
+  | InternalT (ExtendsT _) -> ExtendsH
   | FunProtoT _ -> FunProtoH
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
-  | IdxWrapper _ -> IdxWrapperH
+  | InternalT (IdxWrapper _) -> IdxWrapperH
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
   | NullProtoT _ -> NullProtoH
@@ -226,7 +226,7 @@ let hash_of_ctor = Type.(function
   | MatchingPropT _ -> MatchingPropH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
-  | ReposUpperT _ -> ReposUpperH
+  | InternalT (ReposUpperT _) -> ReposUpperH
   | ShapeT _ -> ShapeH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
