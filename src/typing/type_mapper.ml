@@ -108,12 +108,11 @@ class ['a] t = object(self)
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
           else ModuleT (r, exporttypes')
-      | InternalT (ExtendsT (r, tlist, t1, t2)) ->
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+      | InternalT (ExtendsT (r, t1, t2)) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
-          if tlist' == tlist && t1' == t1 && t2' == t2 then t
-          else InternalT (ExtendsT (r, tlist', t1', t2'))
+          if t1' == t1 && t2' == t2 then t
+          else InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
       | TypeDestructorTriggerT (r, d, x) ->
           let d' = self#destructor cx map_cx d in

@@ -299,7 +299,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
     ]
 
-  | InternalT (ExtendsT (_, _, t1, t2)) -> [
+  | InternalT (ExtendsT (_, t1, t2)) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
@@ -1724,8 +1724,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
   | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
-  | InternalT (ExtendsT (_, nexts, l, u)) -> p ~extra:(spf "[%s], %s, %s"
-    (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
+  | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | InternalT (ChoiceKitT _) -> p t
   | TypeDestructorTriggerT (_, s, x) -> p ~extra:(spf "%s on upper, %s"

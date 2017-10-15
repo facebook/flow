@@ -93,8 +93,7 @@ class ['a] t = object(self)
   | ModuleT (_, exporttypes) ->
     self#export_types cx pole acc exporttypes
 
-  | InternalT (ExtendsT (_, ts, t1, t2)) ->
-    let acc = self#list (self#type_ cx pole_TODO) acc ts in
+  | InternalT (ExtendsT (_, t1, t2)) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     acc

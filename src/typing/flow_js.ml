@@ -8514,7 +8514,7 @@ and instanceof_test cx trace result = function
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = DefT (r, ClassT (extends_type arr a)) in
+    let right = extends_type r arr a in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
@@ -8524,7 +8524,7 @@ and instanceof_test cx trace result = function
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = DefT (r, ClassT (extends_type arr a)) in
+    let right = extends_type r arr a in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
@@ -8554,7 +8554,7 @@ and instanceof_test cx trace result = function
     (DefT (_, InstanceT _) as c),
     DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
     predicate cx trace result
-      (DefT (r, ClassT (extends_type c a)))
+      (extends_type r c a)
       (RightP (InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
@@ -8562,7 +8562,7 @@ and instanceof_test cx trace result = function
       C & A, but that's hard to compute.) **)
   | true,
     DefT (reason, InstanceT (_, super_c, _, instance_c)),
-    (DefT (_, ClassT (InternalT (ExtendsT (_, _, c, DefT (_, InstanceT (_, _, _, instance_a)))))) as right)
+    (InternalT (ExtendsT (_, c, DefT (_, InstanceT (_, _, _, instance_a)))) as right)
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -8575,7 +8575,7 @@ and instanceof_test cx trace result = function
 
   | true,
     ObjProtoT _,
-    DefT (r, ClassT (InternalT (ExtendsT (_, _, _, a))))
+    InternalT (ExtendsT (r, _, a))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) a, result)
@@ -8599,14 +8599,14 @@ and instanceof_test cx trace result = function
     (DefT (_, InstanceT _) as c),
     DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
     predicate cx trace result
-      (DefT (r, ClassT (extends_type c a)))
+      (extends_type r c a)
       (NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | false,
     DefT (reason, InstanceT (_, super_c, _, instance_c)),
-    (DefT (_, ClassT (InternalT (ExtendsT(_, _, _, DefT (_, InstanceT (_, _, _, instance_a)))))) as right)
+    (InternalT (ExtendsT(_, _, DefT (_, InstanceT (_, _, _, instance_a)))) as right)
     ->
 
     if instance_a.class_id = instance_c.class_id
@@ -8617,7 +8617,7 @@ and instanceof_test cx trace result = function
 
   | false,
     ObjProtoT _,
-    DefT (r, ClassT (InternalT (ExtendsT(_, _, c, _))))
+    InternalT (ExtendsT(r, c, _))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) c, result)

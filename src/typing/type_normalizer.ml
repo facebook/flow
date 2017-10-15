@@ -474,7 +474,7 @@ let rec normalize_type_impl cx ids t = match t with
       normalize_type_impl cx ids t
 
   | FunProtoT _
-  | InternalT (ExtendsT (_, _, _, _))
+  | InternalT (ExtendsT (_, _, _))
   | CustomFunT (_, Compose _)
   ->
     (** TODO **)

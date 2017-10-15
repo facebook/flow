@@ -268,7 +268,7 @@ module rec TypeTerm : sig
     (* toolkit for making choices *)
     | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
-    | ExtendsT of reason * t list * t * t
+    | ExtendsT of reason * t * t
     (* Internal-only type that wraps object types for the CustomFunT(Idx)
        function *)
     | IdxWrapper of reason * t
@@ -1918,7 +1918,7 @@ let rec reason_of_t = function
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
-  | InternalT (ExtendsT (reason, _, _, _)) -> reason
+  | InternalT (ExtendsT (reason, _, _)) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
@@ -2064,7 +2064,7 @@ let rec mod_reason_of_t f = function
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
-  | InternalT (ExtendsT (reason, ts, t1, t2)) -> InternalT (ExtendsT (f reason, ts, t1, t2))
+  | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
@@ -2528,9 +2528,9 @@ let this_class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
-let extends_type l u =
-  let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
-  InternalT (ExtendsT (reason, [], l, u))
+let extends_type r l u =
+  let reason = replace_reason (fun desc -> RExtends desc) r in
+  InternalT (ExtendsT (reason, l, u))
 
 let extends_use_type use_op l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
