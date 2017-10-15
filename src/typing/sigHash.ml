@@ -165,6 +165,7 @@ type hash =
   | RefineH
   | ResolveSpreadH
   | CondH
+  | ExtendsUseH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -317,6 +318,7 @@ let hash_of_use_ctor = Type.(function
   | RefineT _ -> RefineH
   | ResolveSpreadT _ -> ResolveSpreadH
   | CondT _ -> CondH
+  | ExtendsUseT _ -> ExtendsUseH
 )
 
 type prop_hash =

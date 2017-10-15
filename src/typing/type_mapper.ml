@@ -761,6 +761,12 @@ class ['a] t = object(self)
         let tout' = self#type_ cx map_cx tout in
         if alt' == alt && tout' == tout then t
         else CondT (r, alt', tout')
+    | ExtendsUseT (use_op, r, tlist, t1, t2) ->
+      let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+      let t1' = self#type_ cx map_cx t1 in
+      let t2' = self#type_ cx map_cx t2 in
+      if tlist' == tlist && t1' == t1 && t2' == t2 then t
+      else ExtendsUseT (use_op, r, tlist', t1', t2')
 
   method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
       call_closure_t; call_strict_arity} as t) =

@@ -826,6 +826,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "alternate", _json_of_t json_cx alternate;
       "t_out", _json_of_t json_cx t_out;
     ]
+  | ExtendsUseT (_, _, _, t1, t2) -> [
+      "type1", _json_of_t json_cx t1;
+      "type2", _json_of_t json_cx t2
+    ]
   )
 )
 
@@ -2084,6 +2088,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | ConcretizeTypeAppsT _ -> p t
   | TypeAppVarianceCheckT _ -> p t
   | CondT (_, alt, tout) -> p ~extra:(spf "%s, %s" (kid alt) (kid tout)) t
+  | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
+    (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
 
 and dump_tvar ?(depth=3) cx id =
   dump_tvar_ (depth, ISet.empty) cx id

@@ -3002,14 +3002,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** extends **)
     | DefT (_, IntersectionT rep),
-      UseT (use_op, InternalT (ExtendsT (reason, try_ts_on_failure, l, u))) ->
+      ExtendsUseT (use_op, reason, try_ts_on_failure, l, u) ->
       let t, ts = InterRep.members_nel rep in
       let try_ts_on_failure = (Nel.to_list ts) @ try_ts_on_failure in
       (* Since s could be in any object type in the list ts, we try to look it
          up in the first element of ts, pushing the rest into the list
          try_ts_on_failure (see below). *)
-      rec_flow cx trace (t, UseT (use_op,
-        InternalT (ExtendsT (reason, try_ts_on_failure, l, u))))
+      rec_flow cx trace (t, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
 
     (** consistent override of properties **)
     | DefT (_, IntersectionT rep), SuperT _ ->
@@ -4096,7 +4095,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        object is a subtype. We use `ExtendsT` to walk the proto chain of the
        object, in case it includes a nominal type. *)
     | DefT (_, ObjT _), UseT (use_op, (DefT (_, InstanceT _) as u)) ->
-      rec_flow cx trace (l, UseT (use_op, extends_type l u))
+      rec_flow cx trace (l, extends_use_type use_op l u)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -4279,11 +4278,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************)
 
     | DefT (_, InstanceT _), UseT (use_op, (DefT (_, InstanceT _) as u)) ->
-      rec_flow cx trace (l, UseT (use_op, extends_type l u))
+      rec_flow cx trace (l, extends_use_type use_op l u)
 
     | DefT (reason, InstanceT (_, super, implements, instance)),
-      UseT (use_op, InternalT (ExtendsT (reason_op, try_ts_on_failure, l,
-        (DefT (_, InstanceT (_, _, _, instance_super)) as u)))) ->
+      ExtendsUseT (use_op, reason_op, try_ts_on_failure, l,
+        (DefT (_, InstanceT (_, _, _, instance_super)) as u)) ->
       if instance.class_id = instance_super.class_id
       then begin
           (if instance.class_id != instance_super.class_id then
@@ -4298,8 +4297,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            then use the ExtendsT use type to search for a nominally matching
            implementation, thereby short-circuiting a potentially expensive
            structural test at the use site. *)
-        let u = UseT (use_op,
-          InternalT (ExtendsT (reason_op, try_ts_on_failure @ implements, l, u))) in
+        let u = ExtendsUseT (use_op, reason_op, try_ts_on_failure @ implements, l, u) in
         rec_flow cx trace (super, ReposLowerT (reason, false, u))
 
     (********************************************************)
@@ -5902,38 +5900,40 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | DefT (_, AnyObjT), UseT (_, InternalT (ExtendsT _)) -> ()
+    | DefT (_, AnyObjT), ExtendsUseT _ -> ()
 
-    | DefT (lreason, ObjT { proto_t; _ }), UseT (_, InternalT (ExtendsT _)) ->
+    | DefT (lreason, ObjT { proto_t; _ }), ExtendsUseT _ ->
       let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
       rec_flow cx trace (l, u)
 
-    | DefT (reason, ClassT instance), UseT (_, (InternalT (ExtendsT _) as u)) ->
+    | DefT (reason, ClassT instance), ExtendsUseT _ ->
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
       let loc = loc_of_reason reason in
       let reason = mk_reason desc loc in
-      rec_flow cx trace (instance, GetStaticsT (reason, u))
+      let static = mk_tvar cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, static));
+      rec_flow cx trace (static, u)
 
     | DefT (_, NullT),
-      UseT (use_op, InternalT (ExtendsT (reason, next::try_ts_on_failure, l, u))) ->
+      ExtendsUseT (use_op, reason, next::try_ts_on_failure, l, u) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
-        (next, UseT (use_op, InternalT (ExtendsT (reason, try_ts_on_failure, l, u))))
+        (next, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
 
     | DefT (_, NullT),
-      UseT (use_op, InternalT (ExtendsT (_, [], l, DefT (reason_inst, InstanceT (_, super, _, {
+      ExtendsUseT (use_op, _, [], l, DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
         structural = true;
         _;
-      }))))) ->
+      }))) ->
       structural_subtype cx trace ~use_op l reason_inst
         (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | DefT (_, NullT),
-      UseT (use_op, InternalT (ExtendsT (_, [], t, tc))) ->
+      ExtendsUseT (use_op, _, [], t, tc) ->
       let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t, reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
 

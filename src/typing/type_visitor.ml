@@ -566,6 +566,12 @@ class ['a] t = object(self)
   | ChoiceKitUseT (r, tool) ->
     self#choice_use_tool cx acc r tool
 
+  | ExtendsUseT (_, _, ts, t1, t2) ->
+    let acc = self#list (self#type_ cx pole_TODO) acc ts in
+    let acc = self#type_ cx pole_TODO acc t1 in
+    let acc = self#type_ cx pole_TODO acc t2 in
+    acc
+
   | IntersectionPreprocessKitT (_, tool) -> (match tool with
     | ConcretizeTypes (ts1, ts2, t, use) ->
       let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in

@@ -599,6 +599,9 @@ module rec TypeTerm : sig
      * the lower bound is empty. *)
     | CondT of reason * t * t_out
 
+    (* util for deciding subclassing relations *)
+    | ExtendsUseT of use_op * reason * t list * t * t
+
   and specialize_cache = reason list option
 
   and predicate =
@@ -1885,6 +1888,7 @@ let any_propagating_use_t = function
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
   | ConcretizeTypeAppsT _
+  | ExtendsUseT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
@@ -1968,6 +1972,7 @@ and reason_of_use_t = function
   | EqT (reason, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
+  | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
@@ -2120,6 +2125,8 @@ and mod_reason_of_use_t f = function
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
   | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
+  | ExtendsUseT (use_op, reason, ts, t1, t2) ->
+    ExtendsUseT(use_op, f reason, ts, t1, t2)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
@@ -2352,6 +2359,7 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
+  | ExtendsUseT _ -> "ExtendsUseT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
@@ -2524,6 +2532,10 @@ let this_class_type t =
 let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   InternalT (ExtendsT (reason, [], l, u))
+
+let extends_use_type use_op l u =
+  let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
+  ExtendsUseT (use_op, reason, [], l, u)
 
 let poly_type id tparams t =
   if tparams = []
