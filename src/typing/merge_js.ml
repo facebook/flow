@@ -491,6 +491,7 @@ module ContextOptimizer = struct
         sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
       } in
       match t with
+      | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole quotient t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
         let { sig_hash; _ } = quotient in
