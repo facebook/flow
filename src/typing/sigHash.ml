@@ -58,7 +58,6 @@ type hash =
   | ExistsH
   | ExactH
   | MaybeH
-  | TaintH
   | IntersectionH
   | UnionH
   | AnyWithLowerBoundH
@@ -229,7 +228,6 @@ let hash_of_ctor = Type.(function
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH
   | ShapeT _ -> ShapeH
-  | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
 )

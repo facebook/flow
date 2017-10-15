@@ -335,7 +335,6 @@ let rec gen_type t env = Type.(
   | ExtendsT _
   | IdxWrapper _
   | ModuleT _
-  | TaintT _
   | OpaqueT _
   | MatchingPropT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env

@@ -103,7 +103,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | DefT (_, VoidT)
     -> []
 
-  | TaintT _
   | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
@@ -1702,7 +1701,6 @@ and dump_t_ (depth, tvars) cx t =
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, MaybeT arg) -> p ~extra:(kid arg) t
-  | TaintT _ -> p t
   | DefT (_, IntersectionT rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (List.map kid (InterRep.members rep)))) t
   | DefT (_, UnionT rep) -> p ~extra:(spf "[%s]"

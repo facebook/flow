@@ -81,8 +81,6 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
-    | TaintT of reason
-
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
@@ -1931,7 +1929,6 @@ let rec reason_of_t = function
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
   | ShapeT (t) -> reason_of_t t
-  | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
 
@@ -2077,7 +2074,6 @@ let rec mod_reason_of_t f = function
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
-  | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
 
@@ -2294,7 +2290,6 @@ let string_of_ctor = function
   | ReposT _ -> "ReposT"
   | ReposUpperT _ -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
-  | TaintT _ -> "TaintT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
 

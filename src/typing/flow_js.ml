@@ -339,7 +339,6 @@ let rec merge_type cx =
   | DefT (_, AnyObjT), (DefT (_, AnyObjT) as t)
     -> t
 
-  | (TaintT _, ((TaintT _) as t))
   | (ObjProtoT _, (ObjProtoT _ as t))
      -> t
 
@@ -1146,7 +1145,6 @@ module ResolvableTypeJob = struct
     | ObjProtoT _
     | CustomFunT (_, _)
 
-    | TaintT _
     | ExistsT _
     | OpenPredT _
       ->
@@ -1606,19 +1604,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, DebugPrintT reason ->
       let str = Debug_js.jstr_of_t cx l in
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
-
-    (************)
-    (* tainting *)
-    (************)
-
-    | (TaintT _, UseT (_, TaintT _)) ->
-      ()
-
-    | (TaintT _, u) when taint_op u ->
-      begin match result_of_taint_op u with
-      | Some u -> rec_flow_t cx trace (l, u)
-      | None -> ()
-      end
 
     (*************************)
     (* repositioning, part 1 *)
@@ -6492,10 +6477,7 @@ and ground_subtype = function
   (* Allow any propagation to dictionaries *)
   | DefT (_, AnyT), ElemT _ -> false
 
-  (* Prevents Tainted<any> -> any *)
-  (* NOTE: the union could be narrowed down to ensure it contains taint *)
-  | DefT (_, UnionT _), _
-  | (TaintT _, _) -> false
+  | DefT (_, UnionT _), _ -> false
 
   (* Allow EmptyT ~> CondT *)
   | (_, CondT _) -> false
@@ -6588,16 +6570,6 @@ and equatable = function
     -> false
 
   | _ -> true
-
-and taint_op = function
-  | AdderT _ | GetPrivatePropT _ | GetPropT _ | GetElemT _ | ComparatorT _ -> true
-  | _ -> false
-
-and result_of_taint_op = function
-  | AdderT (_, _, u) | GetPrivatePropT (_,_,_,_, u)
-  | GetPropT (_, _, u) | GetElemT (_, _, u) -> Some u
-  | ComparatorT _ -> None
-  | _ -> assert false
 
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
@@ -6968,7 +6940,6 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, AnyFunT)
   | DefT (_, CharSetT _)
     -> ()
-  | TaintT _
   | ExistsT _
     -> ()
 
@@ -11147,7 +11118,6 @@ end = struct
     | OpenT _
     | DefT (_, OptionalT _)
     | ShapeT _
-    | TaintT _
     | ThisClassT _
     | DefT (_, TypeT _)
       ->
@@ -11216,9 +11186,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, AnyT)
   | DefT (_, CharSetT _)
     -> ()
-
-  | TaintT _ ->
-    ()
 
   | DefT (reason, FunT (static, prototype, ft)) ->
     let { this_t; params_tlist; return_t; rest_param; _ } = ft in

@@ -55,7 +55,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ExactT (r, t'')
-      | TaintT _
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _

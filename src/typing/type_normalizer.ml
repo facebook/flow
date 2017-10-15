@@ -58,8 +58,6 @@ let rec normalize_type_impl cx ids t = match t with
   | DefT (_, MixedT _) -> Locationless.MixedT.t
   | DefT (_, AnyT) -> Locationless.AnyT.t
 
-  | TaintT _ -> TaintT (locationless_reason (RCustom "taint"))
-
   | ExistsT _ -> ExistsT (locationless_reason (RCustom "exists"))
 
   | DefT (_, SingletonStrT s) ->

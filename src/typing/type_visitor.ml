@@ -31,7 +31,6 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | TaintT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
