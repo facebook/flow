@@ -18,7 +18,7 @@ let tests = [
   },
 
   function() {
-    window.onmessage = (event: MessageEvent) => {
+    window.onmessage = (event: MessageEvent<*, *, *>) => {
       (event.target: window);
     };
   },
