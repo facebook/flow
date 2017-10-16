@@ -1,3 +1,9 @@
+### 0.57.3
+
+Notable bug fixes:
+* Fixed a race condition which was causing the Flow server to hang during merge
+* Rebuilt the Windows binary
+
 ### 0.57.2
 
 Misc:
