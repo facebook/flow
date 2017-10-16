@@ -1,8 +1,8 @@
 Error: symbol.js:4
   4: var WAT = Symbol('foo', 'bar'); // Error - unused argument
                              ^^^^^ unused function argument
-   73:   static (value?:any): Symbol;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:73
+   86:   static (value?:any): Symbol;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:86
 
 
 Found 1 error

@@ -37,8 +37,8 @@ Error: basic.js:15
 Error: recompose.js:23
  23:     c: Math.round(props.p), // Error: string ~> number
                        ^^^^^^^ string. This type is incompatible with the expected param type of
-184:     round(x: number): number;
-                  ^^^^^^ number. See lib: <BUILTINS>/core.js:184
+198:     round(x: number): number;
+                  ^^^^^^ number. See lib: <BUILTINS>/core.js:198
 
 Error: spread.js:6
   6: declare var fns3: Array<<O>(O) => $PropertyType<O, 'p'>>;
