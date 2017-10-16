@@ -1300,57 +1300,138 @@ module Statement
           error_unexpected env;
           ret
 
-    in let rec specifier_list ?(preceding_comma=true) env is_type_import acc =
+    in let is_type_import = function
+      | T_TYPE
+      | T_TYPEOF -> true
+      | _ -> false
+
+    (* `x` or `x as y` in a specifier *)
+    in let with_maybe_as ~for_type ?error_if_type env =
+      let identifier env =
+        if for_type then Type.type_identifier env else Parse.identifier env
+      in
+      match Peek.token ~i:1 env with
+      | T_IDENTIFIER { raw = "as"; _ } ->
+        let remote = identifier_name env in
+        Eat.token env; (* as *)
+        let local = Some (identifier env) in
+        remote, local
+      | T_EOF
+      | T_COMMA
+      | T_RCURLY ->
+        identifier env, None
+      | _ ->
+        begin match error_if_type, Peek.token env with
+        | Some error_if_type, T_TYPE
+        | Some error_if_type, T_TYPEOF ->
+          error env error_if_type;
+          Eat.token env (* consume `type` or `typeof` *)
+        | _ -> ()
+        end;
+        identifier env, None
+
+    (*
+      ImportSpecifier[Type]:
+        [~Type] ImportedBinding
+        [~Type] IdentifierName ImportedTypeBinding
+        [~Type] IdentifierName IdentifierName ImportedBinding
+        [~Type] IdentifierName IdentifierName IdentifierName ImportedTypeBinding
+        [+Type] ImportedTypeBinding
+        [+Type] IdentifierName IdentifierName ImportedTypeBinding
+
+      Static Semantics:
+
+      `IdentifierName ImportedTypeBinding`:
+      - It is a Syntax Error if IdentifierName's StringValue is not "type" or "typeof"
+
+      `IdentifierName IdentifierName ImportedBinding`:
+      - It is a Syntax Error if the second IdentifierName's StringValue is not "as"
+
+      `IdentifierName IdentifierName IdentifierName  ImportedTypeBinding`:
+      - It is a Syntax Error if the first IdentifierName's StringValue is not "type"
+        or "typeof", and the third IdentifierName's StringValue is not "as"
+    *)
+    in let specifier env =
+      let kind = match Peek.token env with
+      | T_TYPE -> Some ImportType
+      | T_TYPEOF -> Some ImportTypeof
+      | _ -> None
+      in
+
+      if is_type_import (Peek.token env) then begin
+        (* consume `type`, but we don't know yet whether this is `type foo` or
+           `type as foo`. *)
+        let type_keyword_or_remote = identifier_name env in
+        match Peek.token env with
+        (* `type` (a value) *)
+        | T_EOF
+        | T_RCURLY
+        | T_COMMA ->
+          let remote = type_keyword_or_remote in (* `type` becomes a value *)
+          Parse.assert_identifier_name_is_identifier env remote;
+          { remote; local = None; kind = None }
+
+        (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
+        | T_IDENTIFIER { raw = "as"; _ } ->
+          begin match Peek.token ~i:1 env with
+          | T_EOF
+          | T_RCURLY
+          | T_COMMA ->
+            (* `type as` *)
+            { remote = Type.type_identifier env; local = None; kind }
+          | T_IDENTIFIER { raw = "as"; _ } ->
+            (* `type as as foo` *)
+            let remote = identifier_name env in (* first `as` *)
+            Eat.token env; (* second `as` *)
+            let local = Some (Type.type_identifier env) in (* `foo` *)
+            { remote; local; kind }
+          | _ ->
+            (* `type as foo` *)
+            let remote = type_keyword_or_remote in (* `type` becomes a value *)
+            Parse.assert_identifier_name_is_identifier env remote;
+            Eat.token env; (* `as` *)
+            let local = Some (Parse.identifier env) in
+            { remote; local; kind = None }
+          end
+
+        (* `type x`, or `type x as y` *)
+        | _ ->
+          let remote, local = with_maybe_as ~for_type:true env in
+          { remote; local; kind }
+      end else
+        (* standard `x` or `x as y` *)
+        let remote, local = with_maybe_as ~for_type:false env in
+        { remote; local; kind = None }
+
+    (* specifier in an `import type { ... }` *)
+    in let type_specifier env =
+      let remote, local = with_maybe_as env
+        ~for_type:true
+        ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
+      in
+      { remote; local; kind = None }
+
+    (* specifier in an `import typeof { ... }` *)
+    in let typeof_specifier env =
+      let remote, local = with_maybe_as env
+        ~for_type:false
+        ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
+      in
+      { remote; local; kind = None }
+
+    in let rec specifier_list ?(preceding_comma=true) env statement_kind acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
         if not preceding_comma then error env Error.ImportSpecifierMissingComma;
-        let remote = identifier_name env in
-        let starts_w_type, kind =
-          match snd remote with
-          | "type" -> true, Some ImportType
-          | "typeof" -> true, Some ImportTypeof
-          | _ -> false, None
-        in
-        let specifier =
-          let is_as = match Peek.token env with
-            | T_IDENTIFIER { raw = "as"; _ } -> true
-            | _ -> false
-          in
-          if is_as then begin
-            let as_ident = Parse.identifier env in
-            if starts_w_type && not (Peek.is_identifier env) then begin
-              (* `import {type as ,` or `import {type as }` *)
-              if is_type_import then
-                error_at env (fst remote, Error.ImportTypeShorthandOnlyInPureImport);
-              { remote = as_ident; local = None; kind }
-            end else begin
-              (* `import {type as foo` *)
-              let local = Some (Parse.identifier env) in
-              { remote; local; kind = None; }
-            end
-          end else if starts_w_type && Peek.is_identifier env then begin
-            (* `import {type foo` *)
-            if is_type_import then
-              error_at env (fst remote, Error.ImportTypeShorthandOnlyInPureImport);
-            let remote = identifier_name env in
-            let local =
-              match Peek.token env with
-              | T_IDENTIFIER { raw = "as"; _ } ->
-                Eat.token env;
-                Some (Type.type_identifier env)
-              | _ ->
-                None
-            in
-            { remote; local; kind }
-          end else begin
-            Parse.assert_identifier_name_is_identifier env remote;
-            { remote; local = None; kind = None; }
-          end
+        let specifier = match statement_kind with
+        | ImportType -> type_specifier env
+        | ImportTypeof -> typeof_specifier env
+        | ImportValue -> specifier env
         in
         let preceding_comma = Expect.maybe env T_COMMA in
-        specifier_list ~preceding_comma env is_type_import (specifier::acc)
+        specifier_list ~preceding_comma env statement_kind (specifier::acc)
 
     in let named_or_namespace_specifier env import_kind =
       let start_loc = Peek.loc env in
@@ -1358,88 +1439,109 @@ module Statement
       | T_MULT ->
           Expect.token env T_MULT;
           Expect.identifier env "as";
-          let id = Parse.identifier env in
+          let id = match import_kind with
+          | ImportType
+          | ImportTypeof -> Type.type_identifier env
+          | ImportValue -> Parse.identifier env
+          in
           ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)
       | _ ->
           Expect.token env T_LCURLY;
-          let is_type_import = import_kind <> ImportValue in
-          let specifiers = specifier_list env is_type_import [] in
+          let specifiers = specifier_list env import_kind [] in
           Expect.token env T_RCURLY;
           ImportNamedSpecifiers specifiers
+
+    in let with_specifiers importKind env =
+      let specifiers = Some (named_or_namespace_specifier env importKind) in
+      let source = source env in
+      Eat.semicolon env;
+      Statement.ImportDeclaration {
+        importKind;
+        source;
+        specifiers;
+        default = None;
+      }
+
+    in let with_default importKind env =
+      let default_specifier = match importKind with
+      | ImportType
+      | ImportTypeof -> Type.type_identifier env
+      | ImportValue -> Parse.identifier env
+      in
+
+      let additional_specifiers =
+        match Peek.token env with
+        | T_COMMA -> (* `import Foo, ...` *)
+            Expect.token env T_COMMA;
+            Some (named_or_namespace_specifier env importKind)
+        | _ -> None
+      in
+
+      let source = source env in
+      Eat.semicolon env;
+      Statement.ImportDeclaration {
+        importKind;
+        source;
+        specifiers = additional_specifiers;
+        default = Some default_specifier;
+      }
 
     in with_loc (fun env ->
       let env = env |> with_strict true in
       Expect.token env T_IMPORT;
-      (* It might turn out that we need to treat this "type" token as an
-       * identifier, like import type from "module" *)
-      let importKind, type_ident =
-        match Peek.token env with
-        | T_TYPE ->
-          if not (should_parse_types env)
-          then error env Error.UnexpectedTypeImport;
-          ImportType, Some(Parse.identifier env)
-        | T_TYPEOF ->
-          if not (should_parse_types env)
-          then error env Error.UnexpectedTypeImport;
-          Expect.token env T_TYPEOF;
-          ImportTypeof, None
-        | _ -> ImportValue, None
-      in
-      match Peek.token env, Peek.is_identifier env with
-      (* import "ModuleName"; *)
-      | T_STRING (str_loc, value, raw, octal), _
-          when importKind = ImportValue ->
+
+      match Peek.token env with
+      (* `import * as ns from "ModuleName";` *)
+      | T_MULT ->
+        with_specifiers ImportValue env
+
+      (* `import { ... } from "ModuleName";` *)
+      | T_LCURLY ->
+        with_specifiers ImportValue env
+
+      (* `import "ModuleName";` *)
+      | T_STRING (str_loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (str_loc, value, raw, octal));
         let value = Literal.String value in
         let source = (str_loc, { Literal.value; raw; }) in
         Eat.semicolon env;
         Statement.ImportDeclaration {
-          importKind;
+          importKind = ImportValue;
           source;
           specifiers = None;
           default = None;
         }
 
-      (* import [type] SomeDefault ... *)
-      | T_COMMA, _ (* `import type, ...` *)
-      | _, true -> (* `import type Foo` or `import type from` *)
-          let importKind, default_specifier = (
-            match type_ident, Peek.token env with
-            | Some type_ident, T_COMMA (* `import type,` *)
-            | Some type_ident, T_IDENTIFIER { raw = "from"; _ } -> (* `import type from` *)
-              ImportValue, type_ident
-            | _ -> (* Either `import type Foo` or `import Foo` *)
-              importKind, Parse.identifier env
-          ) in
+      (* `import type [...] from "ModuleName";`
+         note that if [...] is missing, we're importing a value named `type`! *)
+      | T_TYPE when should_parse_types env ->
+        begin match Peek.token ~i:1 env with
+        (* `import type, { other, names } from "ModuleName";` *)
+        | T_COMMA
+        (* `import type from "ModuleName";` *)
+        | T_IDENTIFIER { raw = "from"; _ } ->
+          with_default ImportValue env
+        | T_MULT
+        | T_LCURLY ->
+          Eat.token env; (* consume `type` *)
+          with_specifiers ImportType env
+        | _ ->
+          Eat.token env; (* consume `type` *)
+          with_default ImportType env
+        end
 
-          let additional_specifiers = (
-            match Peek.token env with
-            | T_COMMA -> (* `import Foo, ...` *)
-                Expect.token env T_COMMA;
-                Some (named_or_namespace_specifier env importKind)
-            | _ -> None
-          ) in
+      (* `import typeof ... from "ModuleName";` *)
+      | T_TYPEOF when should_parse_types env ->
+        Expect.token env T_TYPEOF;
+        begin match Peek.token env with
+        | T_MULT
+        | T_LCURLY -> with_specifiers ImportTypeof env
+        | _ -> with_default ImportTypeof env
+        end
 
-          let source = source env in
-          Eat.semicolon env;
-          Statement.ImportDeclaration {
-            importKind;
-            source;
-            specifiers = additional_specifiers;
-            default = Some default_specifier;
-          }
-
-      (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
+      (* import Foo from "ModuleName"; *)
       | _ ->
-          let specifiers = Some (named_or_namespace_specifier env importKind) in
-          let source = source env in
-          Eat.semicolon env;
-          Statement.ImportDeclaration {
-            importKind;
-            source;
-            specifiers;
-            default = None;
-          }
+        with_default ImportValue env
     )
 end
