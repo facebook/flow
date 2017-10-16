@@ -83,16 +83,6 @@ end = struct
         failwith "Internal server error: select returned an unknown fd"
     )
 
-  (* Quickly check whether there is an outstanding request (while
-     rechecking). TODO: handle persistent connections. *)
-  let quick_check socket =
-    let ready_socket_l, _, _ = Unix.select [socket] [] [] (0.0) in
-    List.map ready_socket_l (fun ready_socket ->
-      if ready_socket = socket then
-        New_client socket
-      else failwith "Internal server error: select returned an unknown fd"
-    )
-
   let handle_connection_ genv env ~serve_ready_clients ~waiting_requests socket =
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
@@ -209,21 +199,10 @@ end = struct
        * say that "serve_ready_clients" is going to serve all the clients who are ready when
        * serve_ready_clients is called and maybe a few more who are ready after the existing queue
        * is processed
+       *
+       * TODO (glevi) Delete all this serve_ready_clients stuff.
        *)
-      let rec serve_ready_clients () =
-        (* Drain the queue *)
-        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
-
-        (* If serve_queue is not empty, quick check will add duplicate sockets to the queue *)
-        assert (Queue.is_empty ready_sockets);
-
-        (* Add any waiting clients *)
-        quick_check socket
-        |> List.iter ~f:add_ready_socket;
-
-        (* Drain the queue again *)
-        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
-      in
+      let serve_ready_clients () = () in
       env := recheck_loop ~dfind genv !env ~serve_ready_clients;
 
       serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
