@@ -2959,10 +2959,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       match UnionRep.quick_mem l rep with
       | Some true -> ()
       | Some false ->
-        let r = match UnionRep.enum_base rep with
-          | None -> r
-          | Some base -> replace_reason_const (desc_of_t base) r
-        in
+        let r = UnionRep.enum_reason r rep in
         rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)))
       | None ->
         (* Try the branches of the union in turn, with the goal of selecting the

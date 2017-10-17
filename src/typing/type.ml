@@ -1294,8 +1294,8 @@ and UnionRep : sig
   (** build a rep from list of members *)
   val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  (** enum base type, if any *)
-  val enum_base: t -> TypeTerm.t option
+  (** replace reason with enum desc, if any *)
+  val enum_reason: reason -> t -> reason
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
@@ -1314,40 +1314,42 @@ and UnionRep : sig
 
 end = struct
 
+  type canon_t =
+    | StrCanon of string
+    | NumCanon of TypeTerm.number_literal
+
+  type base_t =
+    | StrBase
+    | NumBase
+
+  let desc_of_base = function
+    | StrBase -> RStringEnum
+    | NumBase -> RNumberEnum
+
+  let base_of_canon = function
+    | StrCanon _ -> StrBase
+    | NumCanon _ -> NumBase
+
   (* canonicalize a type w.r.t. enum membership *)
-  let canon t = TypeTerm.(
-    match t with
-    | DefT (_, SingletonStrT _) -> t
-    | DefT (r, StrT (Literal (_, s))) -> DefT (r, SingletonStrT s)
-    | DefT (_, SingletonNumT _) -> t
-    | DefT (r, NumT (Literal (_, lit))) -> DefT (r, SingletonNumT lit)
-    | _ -> t
+  let canon = TypeTerm.(function
+    | DefT (_, SingletonStrT lit)
+    | DefT (_, StrT (Literal (_, lit))) -> Some (StrCanon lit)
+    | DefT (_, SingletonNumT lit)
+    | DefT (_, NumT (Literal (_, lit))) -> Some (NumCanon lit)
+    | _ -> None
+  )
+
+  let base_of_t = TypeTerm.(function
+    | DefT (_, SingletonStrT _) -> Some StrBase
+    | DefT (_, SingletonNumT _) -> Some NumBase
+    | _ -> None
   )
 
   (* enums are stored as singleton type sets *)
-  module EnumSet : Set.S with type elt = TypeTerm.t = Set.Make(struct
-    type elt = TypeTerm.t
-    type t = elt
-    let compare x y = TypeTerm.(
-      match x, y with
-      | DefT (_, SingletonStrT a), DefT (_, SingletonStrT b) ->
-        Pervasives.compare a b
-      | DefT (_, SingletonNumT (a, _)), DefT (_, SingletonNumT (b, _)) ->
-        Pervasives.compare a b
-      | _ -> Pervasives.compare x y
-    )
+  module EnumSet : Set.S with type elt = canon_t = Set.Make(struct
+    type t = canon_t
+    let compare = Pervasives.compare
   end)
-
-  (* given a type, return corresponding enum base type if any *)
-  let base_of_t = TypeTerm.(
-    let str = Some (DefT (locationless_reason RStringEnum, StrT AnyLiteral)) in
-    let num = Some (DefT (locationless_reason RNumberEnum, NumT AnyLiteral)) in
-    fun t ->
-      match t with
-      | DefT (_, SingletonStrT _) -> str
-      | DefT (_, SingletonNumT _) -> num
-      | _ -> None
-  )
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -1357,27 +1359,31 @@ end = struct
    *)
   type t =
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
-    (TypeTerm.t * EnumSet.t) option
+    (base_t * EnumSet.t) option
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
-    match base_of_t t with
-    | Some tbase when tbase = base ->
-      Some (base, EnumSet.add t tset)
+    match Option.both (base_of_t t) (canon t) with
+    | Some (tbase, tcanon) when tbase = base ->
+      Some (base, EnumSet.add tcanon tset)
     | _ -> None
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
   let make t0 t1 ts =
-    let enum = Option.bind (base_of_t t0) (fun base ->
-      ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t0) (t1::ts)
-    ) in
+    let enum = match Option.both (base_of_t t0) (canon t0) with
+    | None -> None
+    | Some (tbase, tcanon) ->
+      let enum = EnumSet.singleton tcanon in
+      ListUtils.fold_left_opt acc_enum (tbase, enum) (t1::ts)
+    in
     t0, t1, ts, enum
 
-  let enum_base (_, _, _, enum) =
+  let enum_reason r (_, _, _, enum) =
     match enum with
-    | None -> None
-    | Some (base, _) -> Some base
+    | None -> r
+    | Some (b, _) ->
+      replace_reason_const (desc_of_base b) r
 
   let members (t0, t1, ts, _) = t0::t1::ts
   let members_nel (t0, t1, ts, _) = t0, (t1, ts)
@@ -1398,15 +1404,15 @@ end = struct
     if changed then make t0_ t1_ ts_ else rep
 
   let quick_mem t (t0, t1, ts, enum) =
-    let t = canon t in
-    match enum with
+    match Option.both (canon t) enum with
     | None ->
-      if List.mem t (t0::t1::ts) then Some true else None
-    | Some (base, tset) ->
-      match base_of_t t with
-      | Some tbase when tbase = base ->
-        Some (EnumSet.mem t tset)
-      | _ -> Some false
+      if List.mem t (t0::t1::ts)
+      then Some true
+      else Option.map ~f:(Fn.const false) enum
+    | Some (tcanon, (base, tset)) ->
+      if (base_of_canon tcanon) = base
+      then Some (EnumSet.mem tcanon tset)
+      else Some false
 end
 
 (* We encapsulate IntersectionT's internal structure.
