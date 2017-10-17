@@ -308,6 +308,8 @@ type config = {
   libs: string list;
   (* lint severities *)
   lint_severities: Severity.severity LintSettings.t;
+  (* strict mode *)
+  strict_mode: StrictModeSettings.t;
   (* config options *)
   options: Opts.t;
 }
@@ -364,6 +366,14 @@ end = struct
           (string_of_severity state)))
       lint_severities
 
+  let strict o config =
+    let open Lints in
+    let strict_mode = config.strict_mode in
+    StrictModeSettings.iter (fun kind ->
+      (fprintf o "%s\n"
+         (string_of_kind kind)))
+      strict_mode
+
   let config o config =
     section_header o "ignore";
     ignores o config.ignores;
@@ -378,7 +388,10 @@ end = struct
     lints o config;
     fprintf o "\n";
     section_header o "options";
-    options o config
+    options o config;
+    fprintf o "\n";
+    section_header o "strict";
+    strict o config
 end
 
 let empty_config = {
@@ -386,6 +399,7 @@ let empty_config = {
   includes = [];
   libs = [];
   lint_severities = LintSettings.default_severities;
+  strict_mode = StrictModeSettings.empty;
   options = Opts.default_options
 }
 
@@ -856,6 +870,11 @@ let parse_lints config lines =
   | Ok lint_severities -> {config with lint_severities}
   | Error (ln, msg) -> error ln msg
 
+let parse_strict config lines =
+  match lines |> trim_labeled_lines |> StrictModeSettings.of_lines with
+  | Ok strict_mode -> {config with strict_mode}
+  | Error (ln, msg) -> error ln msg
+
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
   | "", [] when section_ln = 0 -> config
@@ -865,6 +884,7 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
   | "lints", _ -> parse_lints config lines
+  | "strict", _ -> parse_strict config lines
   | "options", _ -> parse_options config lines
   | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
@@ -974,5 +994,6 @@ let traces c = c.options.Opts.traces
 let required_version c = c.options.Opts.version
 let weak c = c.options.Opts.weak
 
-(* global defaults for lint severities *)
+(* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities
+let strict_mode c = c.strict_mode

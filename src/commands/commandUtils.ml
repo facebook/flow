@@ -595,6 +595,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let lint_severities = parse_lints_flag
     (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities
   in
+  let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_lazy_mode = lazy_mode;
     opt_root = root;
@@ -637,6 +638,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
+    opt_strict_mode = strict_mode;
   }
 
 let connect server_flags root =

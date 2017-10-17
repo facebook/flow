@@ -248,7 +248,6 @@ let rec type_printer_impl ~size override enclosure cx t =
     | OpaqueT (_, {opaque_name; _}) -> opaque_name
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
-    | TaintT (_) -> spf "$Tainted<any>"
 
     (* The following types are not syntax-supported *)
     | DefT (_, ClassT t) ->
@@ -269,14 +268,14 @@ let rec type_printer_impl ~size override enclosure cx t =
     | DefT (_, AnyFunT) ->
         "Function"
 
-    | IdxWrapper (_, t) ->
+    | InternalT (IdxWrapper (_, t)) ->
       spf "$IdxWrapper<%s>" (pp enclosure cx t)
 
     | ThisClassT _ ->
         "This"
 
     | ReposT (_, t)
-    | ReposUpperT (_, t) ->
+    | InternalT (ReposUpperT (_, t)) ->
         pp enclosure cx t
 
     | OpenPredT (_, t, m_pos, m_neg) ->
@@ -314,7 +313,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ModuleT _ ->
         "Module"
 
-    | ChoiceKitT _ ->
+    | InternalT (ChoiceKitT _) ->
         "ChoiceKit"
 
     | TypeDestructorTriggerT _ ->
@@ -323,8 +322,8 @@ let rec type_printer_impl ~size override enclosure cx t =
     | FunProtoCallT _
     | ObjProtoT _
     | NullProtoT _
-    | DiffT (_, _)
-    | ExtendsT (_, _, _, _)
+    | DiffT _
+    | InternalT (ExtendsT _)
     | MergedT _
     | MatchingPropT _ ->
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
@@ -396,9 +395,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | DefT (_, MaybeT t)
     ->
       is_printed_type_parsable_impl weak cx EnclosureMaybe t
-  | TaintT (_)
-    ->
-      true
 
   | DefT (_, ArrT (ArrayAT (t, None) | ROArrayAT t))
     ->

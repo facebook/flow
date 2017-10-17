@@ -46,8 +46,8 @@ and require = {
 
   (* map from remote name to local names of value imports
    * source: import {A, B as C} from "foo";
-   * result: {A:{A}, B:{C}} *)
-  named: SSet.t SMap.t;
+   * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
+  named: Loc.t Nel.t SMap.t SMap.t;
 
   (* map from local name to location of namespace imports
    * source: import * as X from "foo";
@@ -57,8 +57,8 @@ and require = {
   (* map from remote name to local names of type imports
    * source: import type {A, B as C} from "foo";
    * source: import {type A, type B as C} from "foo";
-   * result: {A:{A}, B:{C}} *)
-  types: SSet.t SMap.t;
+   * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
+  types: Loc.t Nel.t SMap.t SMap.t;
 
   (* map from local name to location of namespace type imports
    * source: import type * as X from "foo";
@@ -68,8 +68,8 @@ and require = {
   (* map from remote name to local names of typeof imports
    * source: import typeof {A, B as C} from "foo";
    * source: import {typeof A, typeof B as C} from "foo";
-   * result: {A:{A}, B:{C}} *)
-  typesof: SSet.t SMap.t;
+   * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
+  typesof: Loc.t Nel.t SMap.t SMap.t;
 
   (* map from local name to location of namespace typeof imports
    * source: import typeof * as X from "foo";
@@ -81,7 +81,9 @@ and require = {
  * module-style import or export, we switch to ES *)
 and module_kind =
   | CommonJS of { clobbered: Loc.t option }
-  | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
+  (* named: map from name of export to location of the exported identifier, if there is in fact an
+     identifier *)
+  | ES of { named: Loc.t option SMap.t; batch: Loc.t SMap.t }
 
 val empty_file_sig: t
 val empty_module_sig: module_sig

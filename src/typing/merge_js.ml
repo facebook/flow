@@ -152,6 +152,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let local_metadata = match Docblock.flow docblock_info with
   | None -> local_metadata
   | Some Docblock.OptIn -> { local_metadata with checked = true; }
+  | Some Docblock.OptInStrict -> { local_metadata with checked = true; strict = true; }
   | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
@@ -202,14 +203,21 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict ~metadata ~lint_severities ~file_sigs
-  ~get_ast_unsafe ~get_docblock_unsafe
+let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
+  ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
   component reqs dep_cxs master_cx =
 
   let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
     let ast = get_ast_unsafe filename in
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
+    let lint_severities =
+      if metadata.Context.local_metadata.Context.strict
+      then StrictModeSettings.fold
+        (fun lint_kind lint_severities ->
+          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities
+        ) strict_mode lint_severities
+      else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
     let module_ref = Files.module_ref filename in
     let cx = Flow_js.fresh_context metadata filename module_ref in
@@ -217,6 +225,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_sigs
     implicit_require_strict cx master_cx cx;
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~file_sig;
+    if do_gc then Gc_js.do_gc ~master_cx cx;
     cx::cxs, FilenameMap.add filename cx impl_cxs
   ) ([], FilenameMap.empty) component in
   let cxs = List.rev rev_cxs in
@@ -395,9 +404,9 @@ module ContextOptimizer = struct
       let { reduced_module_map; _ } = quotient in
       let export = Flow_js.lookup_module cx module_ref in
       let reduced_module_map = SMap.add module_ref export reduced_module_map in
-      self#type_ cx { quotient with reduced_module_map } export
+      self#type_ cx Neutral { quotient with reduced_module_map } export
 
-    method! tvar cx quotient r id =
+    method! tvar cx pole quotient r id =
       let root_id, _ = Flow_js.find_constraints cx id in
       if id == root_id then
         let { reduced_graph; sig_hash; _ } = quotient in
@@ -413,14 +422,14 @@ module ContextOptimizer = struct
             let stable_id = self#fresh_stable_id in
             stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
           in
-          self#type_ cx { quotient with reduced_graph } t
+          self#type_ cx pole { quotient with reduced_graph } t
       else
-        let quotient = self#tvar cx quotient r root_id in
+        let quotient = self#tvar cx pole quotient r root_id in
         let node = Goto root_id in
         let reduced_graph = IMap.add id node quotient.reduced_graph in
         { quotient with reduced_graph }
 
-    method! props cx quotient id =
+    method! props cx pole quotient id =
       let { reduced_property_maps; sig_hash; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps)
       then
@@ -434,9 +443,9 @@ module ContextOptimizer = struct
           Properties.Map.add id pmap reduced_property_maps in
         let stable_id = self#fresh_stable_id in
         stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
-        super#props cx { quotient with reduced_property_maps; sig_hash } id
+        super#props cx pole { quotient with reduced_property_maps; sig_hash } id
 
-    method! exports cx quotient id =
+    method! exports cx pole quotient id =
       let { reduced_export_maps; sig_hash; _ } = quotient in
       if (Exports.Map.mem id reduced_export_maps) then quotient
       else
@@ -444,9 +453,9 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add_exports_map tmap sig_hash in
         let reduced_export_maps =
           Exports.Map.add id tmap reduced_export_maps in
-        super#exports cx { quotient with reduced_export_maps; sig_hash } id
+        super#exports cx pole { quotient with reduced_export_maps; sig_hash } id
 
-    method! eval_id cx quotient id =
+    method! eval_id cx pole quotient id =
       let { reduced_evaluated; sig_hash; _ } = quotient in
       if IMap.mem id reduced_evaluated
       then
@@ -459,30 +468,31 @@ module ContextOptimizer = struct
         match IMap.get id (Context.evaluated cx) with
         | None -> quotient
         | Some t ->
-          let quotient = self#type_ cx quotient t in
+          let quotient = self#type_ cx pole quotient t in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
-          super#eval_id cx { quotient with reduced_evaluated } id
+          super#eval_id cx pole { quotient with reduced_evaluated } id
 
-    method! fun_type cx quotient funtype =
+    method! fun_type cx pole quotient funtype =
       let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx quotient funtype
+      if id = 0 then super#fun_type cx pole quotient funtype
       else
         let { reduced_envs; _ } = quotient in
         let closure = IMap.find_unsafe id (Context.envs cx) in
         let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx { quotient with reduced_envs } funtype
+        super#fun_type cx pole { quotient with reduced_envs } funtype
 
-    method! dict_type cx quotient dicttype =
+    method! dict_type cx pole quotient dicttype =
       let { sig_hash; _ } = quotient in
       let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
-      super#dict_type cx { quotient with sig_hash } dicttype
+      super#dict_type cx pole { quotient with sig_hash } dicttype
 
-    method! type_ cx quotient t =
+    method! type_ cx pole quotient t =
       let quotient = { quotient with
         sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
       } in
       match t with
-      | OpenT _ -> super#type_ cx quotient t
+      | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
+      | OpenT _ -> super#type_ cx pole quotient t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -495,7 +505,7 @@ module ContextOptimizer = struct
           | Some id -> id
           else class_id in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | OpaqueT (_, opaquetype) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -510,7 +520,7 @@ module ContextOptimizer = struct
           else opaque_id
         in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | DefT (_, PolyT (_, _, poly_id)) ->
         let { sig_hash; _ } = quotient in
         let id =
@@ -524,18 +534,18 @@ module ContextOptimizer = struct
           else poly_id
         in
         let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
       | _ ->
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_type t sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        super#type_ cx pole { quotient with sig_hash } t
 
     method! use_type_ cx quotient use =
       let quotient = { quotient with
         sig_hash = SigHash.add (reason_of_use_t use) quotient.sig_hash
       } in
       match use with
-      | UseT (_, t) -> self#type_ cx quotient t
+      | UseT (_, t) -> self#type_ cx Neutral quotient t
       | _ ->
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_use use sig_hash in

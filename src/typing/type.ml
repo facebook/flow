@@ -81,8 +81,6 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
-    | TaintT of reason
-
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
@@ -168,11 +166,8 @@ module rec TypeTerm : sig
     (** Here's to the crazy ones. The misfits. The rebels. The troublemakers.
         The round pegs in the square holes. **)
 
-    (* util for deciding subclassing relations *)
-    | ExtendsT of reason * t list * t * t
-
-    (* toolkit for making choices *)
-    | ChoiceKitT of reason * choice_tool
+    (* types that should never appear in signatures *)
+    | InternalT of internal_t
 
     (* upper bound trigger for type destructors *)
     | TypeDestructorTriggerT of reason * destructor * t
@@ -180,10 +175,6 @@ module rec TypeTerm : sig
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
-
-    (* Internal-only type that wraps object types for the CustomFunT(Idx)
-       function *)
-    | IdxWrapper of reason * t
 
     (** Predicate types **)
 
@@ -197,7 +188,6 @@ module rec TypeTerm : sig
     | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
 
     | ReposT of reason * t
-    | ReposUpperT of reason * t
 
   and def_t =
     | NumT of number_literal literal
@@ -273,6 +263,16 @@ module rec TypeTerm : sig
        defaults---and these additional behaviors cannot be covered by a simple
        implementation of destructors. *)
     | TypeDestructorT of reason * destructor
+
+  and internal_t =
+    (* toolkit for making choices *)
+    | ChoiceKitT of reason * choice_tool
+    (* util for deciding subclassing relations *)
+    | ExtendsT of reason * t * t
+    (* Internal-only type that wraps object types for the CustomFunT(Idx)
+       function *)
+    | IdxWrapper of reason * t
+    | ReposUpperT of reason * t
 
   and internal_use_op =
     | CopyEnv
@@ -598,6 +598,9 @@ module rec TypeTerm : sig
     (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
      * the lower bound is empty. *)
     | CondT of reason * t * t_out
+
+    (* util for deciding subclassing relations *)
+    | ExtendsUseT of use_op * reason * t list * t * t
 
   and specialize_cache = reason list option
 
@@ -1758,9 +1761,8 @@ let is_use = function
   | _ -> true
 
 (* not all so-called def types can appear as use types *)
-(* TODO: separate these misfits out *)
 let is_proper_def = function
-  | ChoiceKitT _ -> false
+  | InternalT _ -> false
   | _ -> true
 
 (* convenience *)
@@ -1885,6 +1887,7 @@ let any_propagating_use_t = function
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
   | ConcretizeTypeAppsT _
+  | ExtendsUseT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
@@ -1907,7 +1910,7 @@ let rec reason_of_t = function
   | AnyWithUpperBoundT (t) -> reason_of_t t
   | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
-  | ChoiceKitT (reason, _) -> reason
+  | InternalT (ChoiceKitT (reason, _)) -> reason
   | TypeDestructorTriggerT (reason, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
@@ -1915,12 +1918,12 @@ let rec reason_of_t = function
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
-  | ExtendsT (reason, _, _, _) -> reason
+  | InternalT (ExtendsT (reason, _, _)) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
-  | IdxWrapper (reason, _) -> reason
+  | InternalT (IdxWrapper (reason, _)) -> reason
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | NullProtoT reason -> reason
@@ -1929,9 +1932,8 @@ let rec reason_of_t = function
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
-  | ReposUpperT (reason, _) -> reason
+  | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
   | ShapeT (t) -> reason_of_t t
-  | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
 
@@ -1969,6 +1971,7 @@ and reason_of_use_t = function
   | EqT (reason, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
+  | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
@@ -2052,7 +2055,7 @@ let rec mod_reason_of_t f = function
   | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
-  | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
+  | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | TypeDestructorTriggerT (reason, d, t) -> TypeDestructorTriggerT (f reason, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
@@ -2061,12 +2064,12 @@ let rec mod_reason_of_t f = function
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
-  | ExtendsT (reason, ts, t, tc) -> ExtendsT (f reason, ts, t, tc)
+  | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-  | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
+  | InternalT (IdxWrapper (reason, t)) -> InternalT (IdxWrapper (f reason, t))
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullProtoT reason -> NullProtoT (f reason)
@@ -2075,9 +2078,8 @@ let rec mod_reason_of_t f = function
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
-  | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
+  | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
-  | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
 
@@ -2122,6 +2124,8 @@ and mod_reason_of_use_t f = function
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
   | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
+  | ExtendsUseT (use_op, reason, ts, t1, t2) ->
+    ExtendsUseT(use_op, f reason, ts, t1, t2)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
@@ -2267,7 +2271,7 @@ let string_of_ctor = function
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
   | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
-  | ChoiceKitT (_, tool) ->
+  | InternalT (ChoiceKitT (_, tool)) ->
     spf "ChoiceKitT %s" begin match tool with
     | Trigger -> "Trigger"
     end
@@ -2278,12 +2282,12 @@ let string_of_ctor = function
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"
-  | ExtendsT _ -> "ExtendsT"
+  | InternalT (ExtendsT _) -> "ExtendsT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
-  | IdxWrapper _ -> "IdxWrapper"
+  | InternalT (IdxWrapper _) -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
@@ -2292,9 +2296,8 @@ let string_of_ctor = function
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
   | ReposT _ -> "ReposT"
-  | ReposUpperT _ -> "ReposUpperT"
+  | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
-  | TaintT _ -> "TaintT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
 
@@ -2355,6 +2358,7 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
+  | ExtendsUseT _ -> "ExtendsUseT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
@@ -2524,9 +2528,13 @@ let this_class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
-let extends_type l u =
+let extends_type r l u =
+  let reason = replace_reason (fun desc -> RExtends desc) r in
+  InternalT (ExtendsT (reason, l, u))
+
+let extends_use_type use_op l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
-  ExtendsT (reason, [], l, u)
+  ExtendsUseT (use_op, reason, [], l, u)
 
 let poly_type id tparams t =
   if tparams = []

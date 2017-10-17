@@ -301,7 +301,7 @@ let rec gen_type t env = Type.(
   | OpenT _ -> gen_type (resolve_type t env) env
   | DefT (_, PolyT (tparams, t, _)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
-  | ReposUpperT (_, t) -> gen_type t env
+  | InternalT (ReposUpperT (_, t)) -> gen_type t env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
   | DefT (_, SingletonBoolT v) -> add_str (spf "%b" v) env
   | DefT (_, SingletonNumT (_, v)) -> add_str (spf "%s" v) env
@@ -327,15 +327,14 @@ let rec gen_type t env = Type.(
    *       handling for these types depening on the needs of the API user
    *       (i.e. raise, etc).
    *)
-  | ChoiceKitT _
+  | InternalT (ChoiceKitT _)
   | TypeDestructorTriggerT _
   | DefT (_, EmptyT)
   | EvalT _
   | ExistsT _
-  | ExtendsT _
-  | IdxWrapper _
+  | InternalT (ExtendsT _)
+  | InternalT (IdxWrapper _)
   | ModuleT _
-  | TaintT _
   | OpaqueT _
   | MatchingPropT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env

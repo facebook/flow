@@ -133,6 +133,7 @@ module Peek : sig
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
   val is_identifier : ?i:int -> env -> bool
+  val is_type_identifier : ?i:int -> env -> bool
   val is_literal_property_name : ?i:int -> env -> bool
   val is_function : ?i:int -> env -> bool
   val is_class : ?i:int -> env -> bool

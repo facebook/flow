@@ -69,6 +69,7 @@ type t = {
   opt_weak : bool;
   opt_max_header_tokens: int;
   opt_lint_severities: Severity.severity LintSettings.t;
+  opt_strict_mode: StrictModeSettings.t;
 }
 
 let all opts = opts.opt_all
@@ -113,3 +114,4 @@ let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
 
 let lint_severities opts = opts.opt_lint_severities
+let strict_mode opts = opts.opt_strict_mode

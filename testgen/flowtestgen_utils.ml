@@ -710,3 +710,7 @@ let test_code (code : string) : string option =
   run_cmd code (exe ^ " -a -p | node") run_exit_handler;;
 
 let is_typecheck engine_name = engine_name = "union"
+
+let flow_check (code : Loc.t Ast.program) : string option = 
+  ignore code;
+  None

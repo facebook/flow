@@ -18,15 +18,16 @@ let timestamp_string () =
 (* We might want to log to both stderr and a file. Shelling out to tee isn't cross-platform.
  * We could dup2 stderr to a pipe and have a child process write to both original stderr and the
  * file, but that's kind of overkill. This is good enough *)
-let dupe_log_oc = ref None
-let set_log fd =
-  dupe_log_oc := Some fd
+let dupe_log: (string * out_channel) option ref = ref None
+let set_log filename fd =
+  dupe_log := Some (filename, fd)
+let get_log_name () = Option.map !dupe_log ~f:fst
 
 let print_raw s =
   let time = timestamp_string () in
-  begin match !dupe_log_oc with
+  begin match !dupe_log with
   | None -> ()
-  | Some dupe_log_oc -> Printf.fprintf dupe_log_oc "%s %s%!" time s end;
+  | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%!" time s end;
   Printf.eprintf "%s %s%!" time s
 
 (* wraps print_raw in order to take a format string & add a newline *)

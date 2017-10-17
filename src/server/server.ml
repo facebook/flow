@@ -641,20 +641,25 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
-      Marshal.to_channel oc msg [];
-      flush oc
+      try
+        Marshal.to_channel oc msg [];
+        flush oc
+      with
+      | Sys_error msg when msg = "Broken pipe" ->
+        Hh_logger.info
+          "Due to a broken pipe, failed to respond to request: %s"
+          (ServerProt.string_of_command command)
     in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
+    Hh_logger.debug "Request: %s" (ServerProt.string_of_command command);
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
-        Hh_logger.debug "Request: autocomplete %s" (File_input.filename_of_file_input fn);
         let results: ServerProt.autocomplete_response =
           autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, force, include_warnings) ->
-        Hh_logger.debug "Request: check %s" (File_input.filename_of_file_input fn);
         let options = { options with Options.
           opt_verbose = verbose;
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -662,68 +667,50 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         (check_file ~options ~workers ~env ~force fn: ServerProt.response)
           |> marshal
     | ServerProt.COVERAGE (fn, force) ->
-        Hh_logger.debug "Request: coverage %s" (File_input.filename_of_file_input fn);
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
     | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
-        Hh_logger.debug "Request: dump-types %s" (File_input.filename_of_file_input fn);
         let types: ServerProt.dump_types_response =
           dump_types ~options ~workers ~env ~include_raw ~strip_root fn
         in
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
-        Hh_logger.debug "Request: find-module %s %s" moduleref filename;
         (find_module ~options (moduleref, filename): File_key.t option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
-        Hh_logger.debug "Request: find-refs %s:%d:%d"
-          (File_input.filename_of_file_input fn) line char;
         (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
           |> marshal
     | ServerProt.FORCE_RECHECK (files, force_focus) ->
-        Hh_logger.debug
-          "Request: force-recheck %s (focus = %b)" (String.concat " " files) force_focus;
-        Marshal.to_channel oc () [];
-        flush oc;
+        marshal ();
         let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env ~force_focus ~serve_ready_clients updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
-        Hh_logger.debug "Request: gen-flow-files %s"
-          (files |> List.map File_input.filename_of_file_input |> String.concat " ");
         let options = { options with Options.
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
-        Hh_logger.debug "Request: get-def %s:%d:%d"
-          (File_input.filename_of_file_input fn) line char;
         let def: ServerProt.get_def_response =
           get_def ~options ~workers ~env client_logging_context (fn, line, char)
         in
         marshal def
     | ServerProt.GET_IMPORTS module_names ->
-        Hh_logger.debug "Request: get-imports %s" (String.concat " " module_names);
         (get_imports ~options module_names: ServerProt.get_imports_response)
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
-        Hh_logger.debug "Request: type-at-pos %s:%d:%d"
-          (File_input.filename_of_file_input fn) line char;
         (infer_type
             ~options ~workers ~env
             client_logging_context
             (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
-        Hh_logger.debug "Request: kill";
         (Ok () : ServerProt.stop_response) |> marshal;
         die_nicely ()
     | ServerProt.PORT (files) ->
-        Hh_logger.debug "Request: port %s" (String.concat " " files);
         (port files: ServerProt.port_response)
           |> marshal
     | ServerProt.STATUS (client_root, include_warnings) ->
-        Hh_logger.debug "Request: status";
         let genv = {genv with
           options = let open Options in {genv.options with
             opt_include_warnings = genv.options.opt_include_warnings || include_warnings
@@ -743,11 +730,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           | _ -> ()
         end
     | ServerProt.SUGGEST (files) ->
-        Hh_logger.debug "Request: suggest";
         (suggest ~options ~workers ~env files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
-        Hh_logger.debug "Request: connect";
         let new_connections, new_client =
           Persistent_connection.add_client
             !env.connections

@@ -190,11 +190,11 @@ let gen_class_body =
 class unexported_class_visitor = object(self)
   inherit [Codegen.codegen_env * Type.TypeSet.t * ISet.t] Type_visitor.t as super
 
-  method! tvar cx (env, seen, imported_classids) r id =
+  method! tvar cx pole (env, seen, imported_classids) r id =
     let t = Codegen.resolve_type (Type.OpenT (r, id)) env in
-    self#type_ cx (env, seen, imported_classids) t
+    self#type_ cx pole (env, seen, imported_classids) t
 
-  method! type_ cx (env, seen, imported_classids) t = Codegen.(Type.(
+  method! type_ cx pole (env, seen, imported_classids) t = Codegen.(Type.(
     if TypeSet.mem t seen then (env, seen, imported_classids) else (
       let seen = TypeSet.add t seen in
       match t with
@@ -217,7 +217,7 @@ class unexported_class_visitor = object(self)
          * on recursive references to this class from within itself.
          *)
         let env = set_class_name class_id class_name env in
-        let (env, seen, imported_classids) = super#type_ cx (env, seen, imported_classids) t in
+        let (env, seen, imported_classids) = super#type_ cx pole (env, seen, imported_classids) t in
 
         let env = env
           |> add_str "declare "
@@ -254,7 +254,7 @@ class unexported_class_visitor = object(self)
         let env = gen_class_body static fields methods env |> add_str "\n" in
         (env, seen, imported_classids)
 
-      | t -> super#type_ cx (env, seen, imported_classids) t
+      | t -> super#type_ cx pole (env, seen, imported_classids) t
     )
   ))
 end
@@ -265,6 +265,7 @@ let gen_local_classes =
     let (env, _, _) =
       visitor#type_
         env.Codegen.flow_cx
+        Type.Neutral
         (env, Type.TypeSet.empty, imported_classids)
         t
     in

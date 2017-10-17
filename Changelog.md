@@ -1,3 +1,51 @@
+### 0.57.3
+
+Notable bug fixes:
+* Fixed a race condition which was causing the Flow server to hang during merge
+* Rebuilt the Windows binary
+
+### 0.57.2
+
+Misc:
+* Reverted the change which stopped call properties from flowing to object type dictionaries
+
+### 0.57.1
+
+Notable bug fixes:
+* Fixed a crash when a file goes from parsable to unparsable
+* Fixed a server crash when a client dies before receiving a response
+
+Misc:
+* Added logging to show which components take a long time to merge
+
+### 0.57.0
+
+Likely to cause new Flow errors:
+* We've [manually enumerated](https://github.com/facebook/flow/blob/1c9d9486c07dd51853107621c686b7b30b7134f8/lib/react-dom.js#L172) all the JSX intrinsics, so Flow might notice if you're misusing an intrinsic.
+* `$Diff`'s implementation was rewritten. It should behave mostly the same, but will error on `$Diff<ObjA, {x: string}>` if `ObjA` doesn't have a property `x`
+
+New Features:
+* Flow will now only check the files in `node_modules/` which are direct or transitive dependencies of the non-`node_modules` code.
+
+Notable bug fixes:
+* A handful of fixes for `flow ide` on Windows
+* Fixed a few bugs that would cause `flow server` to crash when `flow ide` exits
+* Fixed a regression in v0.56.0 which caused Flow to crash on `import type *` syntax
+* Fixed `$ObjMap`'s behavior on optional properties
+* Various fixes for type destructors (like `$PropertyType`, `$Diff`, and `$ObjMap`)
+* Object type indexers no longer include call properties. So `{[string]: boolean}` is no longer a subtype of `{(number): string}`.
+* Fixed a bug where circular type imports would miss errors involving union types in rare cases.
+
+Misc:
+* Updated Flow headers and license file from BSD3 to MIT
+* `flow server` will now write to a log file in addition to stderr
+* `flow ls` will now list the `.flowconfig`
+* `flow ls` will now list lib files, even if `--all` is not set
+* `flow ls --imaginary` will list nonexistent files. It's useful for speculating whether or not Flow would care about a file if it existed.
+* Added `flow force-recheck --focus` which tells a lazy server to start caring about certain files
+* Various small error message fixes
+* Lots of libdef updates! Thanks everyone for the contributions!
+
 ### 0.56.0
 
 New Features:

@@ -55,7 +55,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ExactT (r, t'')
-      | TaintT _
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
@@ -109,13 +108,12 @@ class ['a] t = object(self)
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
           else ModuleT (r, exporttypes')
-      | ExtendsT (r, tlist, t1, t2) ->
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+      | InternalT (ExtendsT (r, t1, t2)) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
-          if tlist' == tlist && t1' == t1 && t2' == t2 then t
-          else ExtendsT (r, tlist', t1', t2')
-      | ChoiceKitT _ -> t
+          if t1' == t1 && t2' == t2 then t
+          else InternalT (ExtendsT (r, t1', t2'))
+      | InternalT (ChoiceKitT _) -> t
       | TypeDestructorTriggerT (r, d, x) ->
           let d' = self#destructor cx map_cx d in
           let x' = self#type_ cx map_cx x in
@@ -126,10 +124,10 @@ class ['a] t = object(self)
           if c' == c then t
           else CustomFunT (r, ReactElementFactory c')
       | CustomFunT _ -> t
-      | IdxWrapper (r, t') ->
+      | InternalT (IdxWrapper (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
-          else IdxWrapper (r, t'')
+          else InternalT (IdxWrapper (r, t''))
       | OpenPredT (r, t', map1, map2) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -138,10 +136,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ReposT (r, t'')
-      | ReposUpperT (r, t') ->
+      | InternalT (ReposUpperT (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else ReposUpperT (r, t'')
+          else InternalT (ReposUpperT (r, t''))
 
   method tvar _cx _map_cx _r id = id
 
@@ -762,6 +760,12 @@ class ['a] t = object(self)
         let tout' = self#type_ cx map_cx tout in
         if alt' == alt && tout' == tout then t
         else CondT (r, alt', tout')
+    | ExtendsUseT (use_op, r, tlist, t1, t2) ->
+      let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+      let t1' = self#type_ cx map_cx t1 in
+      let t2' = self#type_ cx map_cx t2 in
+      if tlist' == tlist && t1' == t1 && t2' == t2 then t
+      else ExtendsUseT (use_op, r, tlist', t1', t2')
 
   method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
       call_closure_t; call_strict_arity} as t) =

@@ -45,3 +45,4 @@ module LintKind = struct
 end
 
 module LintMap = MyMap.Make(LintKind)
+module LintSet = Set.Make(LintKind)

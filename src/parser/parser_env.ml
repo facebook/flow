@@ -498,6 +498,166 @@ module Peek = struct
     | T_IDENTIFIER _ -> true
     | _ -> false
 
+  let is_type_identifier ?(i=0) env =
+    match lex_mode env with
+    | Lex_mode.TYPE ->
+      begin match token ~i env with
+      | T_IDENTIFIER _ -> true
+      | _ -> false
+      end
+    | Lex_mode.NORMAL ->
+      (* Sometimes we peek at type identifiers while in normal lex mode. For
+         example, when deciding whether a `type` token is an identifier or the
+         start of a type declaration, based on whether the following token
+         `is_type_identifier`. *)
+      begin match token ~i env with
+      | T_IDENTIFIER { raw; _ } when is_reserved_type raw -> false
+
+      (* reserved type identifiers, but these don't appear in NORMAL mode *)
+      | T_ANY_TYPE
+      | T_MIXED_TYPE
+      | T_EMPTY_TYPE
+      | T_NUMBER_TYPE
+      | T_STRING_TYPE
+      | T_VOID_TYPE
+      | T_BOOLEAN_TYPE _
+      | T_NUMBER_SINGLETON_TYPE _
+
+      (* identifier-ish *)
+      | T_ASYNC
+      | T_AWAIT
+      | T_BREAK
+      | T_CASE
+      | T_CATCH
+      | T_CLASS
+      | T_CONST
+      | T_CONTINUE
+      | T_DEBUGGER
+      | T_DECLARE
+      | T_DEFAULT
+      | T_DELETE
+      | T_DO
+      | T_ELSE
+      | T_ENUM
+      | T_EXPORT
+      | T_EXTENDS
+      | T_FALSE
+      | T_FINALLY
+      | T_FOR
+      | T_FUNCTION
+      | T_IDENTIFIER _
+      | T_IF
+      | T_IMPLEMENTS
+      | T_IMPORT
+      | T_IN
+      | T_INSTANCEOF
+      | T_INTERFACE
+      | T_LET
+      | T_NEW
+      | T_NULL
+      | T_OF
+      | T_OPAQUE
+      | T_PACKAGE
+      | T_PRIVATE
+      | T_PROTECTED
+      | T_PUBLIC
+      | T_RETURN
+      | T_SUPER
+      | T_SWITCH
+      | T_THIS
+      | T_THROW
+      | T_TRUE
+      | T_TRY
+      | T_TYPE
+      | T_VAR
+      | T_WHILE
+      | T_WITH
+      | T_YIELD -> true
+
+      (* identifier-ish, but not valid types *)
+      | T_STATIC
+      | T_TYPEOF
+      | T_VOID
+        -> false
+
+      (* syntax *)
+      | T_LCURLY
+      | T_RCURLY
+      | T_LCURLYBAR
+      | T_RCURLYBAR
+      | T_LPAREN
+      | T_RPAREN
+      | T_LBRACKET
+      | T_RBRACKET
+      | T_SEMICOLON
+      | T_COMMA
+      | T_PERIOD
+      | T_ARROW
+      | T_ELLIPSIS
+      | T_AT
+      | T_POUND
+      | T_CHECKS
+      | T_RSHIFT3_ASSIGN
+      | T_RSHIFT_ASSIGN
+      | T_LSHIFT_ASSIGN
+      | T_BIT_XOR_ASSIGN
+      | T_BIT_OR_ASSIGN
+      | T_BIT_AND_ASSIGN
+      | T_MOD_ASSIGN
+      | T_DIV_ASSIGN
+      | T_MULT_ASSIGN
+      | T_EXP_ASSIGN
+      | T_MINUS_ASSIGN
+      | T_PLUS_ASSIGN
+      | T_ASSIGN
+      | T_PLING
+      | T_COLON
+      | T_OR
+      | T_AND
+      | T_BIT_OR
+      | T_BIT_XOR
+      | T_BIT_AND
+      | T_EQUAL
+      | T_NOT_EQUAL
+      | T_STRICT_EQUAL
+      | T_STRICT_NOT_EQUAL
+      | T_LESS_THAN_EQUAL
+      | T_GREATER_THAN_EQUAL
+      | T_LESS_THAN
+      | T_GREATER_THAN
+      | T_LSHIFT
+      | T_RSHIFT
+      | T_RSHIFT3
+      | T_PLUS
+      | T_MINUS
+      | T_DIV
+      | T_MULT
+      | T_EXP
+      | T_MOD
+      | T_NOT
+      | T_BIT_NOT
+      | T_INCR
+      | T_DECR
+      | T_EOF
+        -> false
+
+      (* literals *)
+      | T_NUMBER _
+      | T_STRING _
+      | T_TEMPLATE_PART _
+      | T_REGEXP _
+
+      (* misc that shouldn't appear in NORMAL mode *)
+      | T_JSX_IDENTIFIER _
+      | T_JSX_TEXT _
+      | T_ERROR _
+        -> false
+      end
+    | Lex_mode.JSX_TAG
+    | Lex_mode.JSX_CHILD
+    | Lex_mode.TEMPLATE
+    | Lex_mode.REGEXP -> false
+
   let is_literal_property_name ?(i=0) env =
     is_identifier ~i env || match token ~i env with
     | T_STRING _

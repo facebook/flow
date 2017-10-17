@@ -92,11 +92,13 @@ let merge_strict_context ~options component =
   in
 
   let metadata = Context.metadata_of_options options in
-  let lint_severities = Some (Options.lint_severities options) in
+  let lint_severities = Options.lint_severities options in
+  let strict_mode = Options.strict_mode options in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~file_sigs
+    ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
+    ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
   in
 
@@ -132,9 +134,10 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   in
 
   let metadata = Context.metadata_of_options options in
-  let lint_severities = Some (Options.lint_severities options) in
+  let lint_severities = Options.lint_severities options in
+  let strict_mode = Options.strict_mode options in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~file_sigs
+    ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
@@ -193,6 +196,30 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
     (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
     unchanged_acc
 
+(* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
+ * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
+let with_async_logging_timer ~interval ~on_timer ~f =
+  let start_time = Unix.gettimeofday () in
+  let timer = ref None in
+  let cancel_timer () = Option.iter ~f:Timer.cancel_timer !timer in
+  let rec run_timer ?(first_run=false) () =
+    if not first_run
+    then begin
+      let run_time = Unix.gettimeofday () -. start_time in
+      on_timer run_time
+    end;
+    timer := Some (Timer.set_timer ~interval ~callback:run_timer)
+  in
+  (* Timer is unimplemented in Windows. *)
+  if not Sys.win32 then run_timer ~first_run:true ();
+  let ret = begin try f ()
+  with e ->
+    cancel_timer ();
+    raise e
+  end in
+  cancel_timer ();
+  ret
+
 let merge_strict_job ~options ~job (merged, unchanged) elements =
   List.fold_left (fun (merged, unchanged) -> function
     | Merge_stream.Skip file ->
@@ -211,16 +238,25 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       |> List.map File_key.to_string
       |> String.concat "\n\t"
       in
-      try Profile_utils.checktime ~options ~limit:1.0
-        ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
-        ~log:(fun merge_time ->
-          let length = List.length component in
-          let leader = List.hd component |> File_key.to_string in
-          Flow_server_profile.merge ~length ~merge_time ~leader)
-        ~f:(fun () ->
-          (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          job ~options (merged, unchanged) component
+
+      try with_async_logging_timer
+        ~interval:15.0
+        ~on_timer:(fun run_time ->
+          Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
+          Hh_logger.info "Merging" (* Log this to keep the Tail status stuff working *)
         )
+        ~f:(fun () ->
+          Profile_utils.checktime ~options ~limit:1.0
+            ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
+            ~log:(fun merge_time ->
+              let length = List.length component in
+              let leader = List.hd component |> File_key.to_string in
+              Flow_server_profile.merge ~length ~merge_time ~leader)
+            ~f:(fun () ->
+              (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
+              job ~options (merged, unchanged) component
+            )
+          )
       with
       | SharedMem_js.Out_of_shared_memory
       | SharedMem_js.Heap_full
