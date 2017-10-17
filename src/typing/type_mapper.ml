@@ -751,10 +751,10 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if p' == p && t'' == t' then t
         else RefineT (r, p', t'')
-    | ResolveSpreadT (r, resolve_spread) ->
+    | ResolveSpreadT (op, r, resolve_spread) ->
         let resolve_spread' = self#resolve_spread cx map_cx resolve_spread in
         if resolve_spread' == resolve_spread then t
-        else ResolveSpreadT (r, resolve_spread')
+        else ResolveSpreadT (op, r, resolve_spread')
     | CondT (r, alt, tout) ->
         let alt' = self#type_ cx map_cx alt in
         let tout' = self#type_ cx map_cx tout in

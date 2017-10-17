@@ -16,7 +16,7 @@ declare var c: C;
 
 type D = $Call<Fn1>;
 declare var d: D;
-(42: D); // Error: function called with to few arguments.
+(42: D); // Error: number ~> undefined
 
 type E = $Call<Fn1, number>;
 declare var e: E;

@@ -523,7 +523,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | ResolveSpreadT (_, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
+  | ResolveSpreadT (_, _, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
     let acc = List.fold_left (fun (acc: 'a) -> function
       | ResolvedArg t -> self#type_ cx pole_TODO acc t
       | ResolvedAnySpreadArg _ -> acc

@@ -109,8 +109,9 @@ let run cx trace reason_op l u
    * because there seems to be a bug where reasons get mixed up when this
    * function is called multiple times *)
   let component_function ?(with_return_t=true) props =
+    let reason = replace_reason_const RReactSFC reason_op in
     let any = DefT (reason_op, AnyT) in
-    DefT (reason_op, FunT (
+    DefT (reason, FunT (
       any,
       any,
       {

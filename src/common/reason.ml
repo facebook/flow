@@ -175,6 +175,7 @@ type reason_desc =
   | RReactChildren
   | RReactChildrenOrType of reason_desc
   | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactSFC
 
 and reason_desc_function =
   | RAsync
@@ -500,6 +501,7 @@ let rec string_of_desc = function
     spf "React children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc ->
     spf "React children array, undefined, or %s" (string_of_desc desc)
+  | RReactSFC -> "React stateless functional component"
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in

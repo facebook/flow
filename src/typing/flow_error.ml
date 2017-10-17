@@ -162,6 +162,7 @@ type error_message =
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
   | EReactElementFunArity of reason * string * int
+  | EFunctionCallMissingArg of (reason * reason)
   | EFunctionCallExtraArg of (reason * reason * int)
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
@@ -302,6 +303,7 @@ let rec locs_of_use_op acc = function
   | Addition
   | Coercion
   | FunImplicitReturn
+  | FunCallMissingArg _
   | FunCallParam
   | FunReturn
   | TypeRefinement
@@ -444,6 +446,8 @@ let locs_of_error_message = function
   | EReactKit ((reason1, reason2), _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EReactElementFunArity (reason, _, _) -> [loc_of_reason reason]
+  | EFunctionCallMissingArg (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
   | EFunctionCallExtraArg (reason1, reason2, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
@@ -1489,6 +1493,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [mk_info reason [
         "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
       ]]
+
+  | EFunctionCallMissingArg (reason_op, reason_def) ->
+    typecheck_error_with_core_infos [
+      (reason_op, ["Called with too few arguments"])
+    ] ~extra:[
+      InfoLeaf [loc_of_reason reason_def, [spf
+        "%s expects more arguments"
+        (string_of_desc (desc_of_reason reason_def))
+      ]]
+    ]
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
     let core_msgs = [

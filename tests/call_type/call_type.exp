@@ -19,10 +19,10 @@ Error: test.js:15
          ^^^^^ empty
 
 Error: test.js:19
- 19: (42: D); // Error: function called with to few arguments.
+ 19: (42: D); // Error: number ~> undefined
       ^^ number. This type is incompatible with
- 19: (42: D); // Error: function called with to few arguments.
-          ^ undefined (too few arguments, expected default/rest parameters)
+ 19: (42: D); // Error: number ~> undefined
+          ^ undefined
 
 Error: test.js:24
  24: ((null: mixed): E); // Error: mixed ~> number

@@ -283,6 +283,7 @@ module rec TypeTerm : sig
   and use_op =
     | Addition
     | Coercion
+    | FunCallMissingArg of reason * reason
     | FunCallParam
     | FunCallThis of reason
     | FunImplicitReturn
@@ -593,7 +594,7 @@ module rec TypeTerm : sig
      * elements resolve to. ResolveSpreadT is a use type that waits for a list
      * of spread and non-spread elements to resolve, and then constructs
      * whatever type it resolves to *)
-    | ResolveSpreadT of reason * resolve_spread_type
+    | ResolveSpreadT of use_op * reason * resolve_spread_type
 
     (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
      * the lower bound is empty. *)
@@ -2009,7 +2010,7 @@ and reason_of_use_t = function
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
-  | ResolveSpreadT (reason, _) -> reason
+  | ResolveSpreadT (_, reason, _) -> reason
   | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
@@ -2170,7 +2171,7 @@ and mod_reason_of_use_t f = function
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
-  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
+  | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
@@ -2310,6 +2311,7 @@ let string_of_internal_use_op = function
 let string_of_use_op = function
   | Addition -> "Addition"
   | Coercion -> "Coercion"
+  | FunCallMissingArg _ -> "FunCallMissingArg"
   | FunCallParam -> "FunCallParam"
   | FunCallThis _ -> "FunCallThis"
   | FunImplicitReturn -> "FunImplicitReturn"
@@ -2401,7 +2403,7 @@ let string_of_use_ctor = function
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
-  | ResolveSpreadT (_, {rrt_resolve_to; _;})->
+  | ResolveSpreadT (_, _, {rrt_resolve_to; _;})->
     spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
     | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"

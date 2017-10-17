@@ -793,7 +793,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ("refined_t", _json_of_t_impl json_cx t)
       ]
     ]
-  | ResolveSpreadT (_, {
+  | ResolveSpreadT (_, _, {
     rrt_resolved;
     rrt_unresolved;
     rrt_resolve_to;
@@ -2031,7 +2031,7 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
   | ReposUseT (_, use_desc, use_op, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
-  | ResolveSpreadT (_, {rrt_resolve_to; _;}) ->
+  | ResolveSpreadT (_, _, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, tout)
       | ResolveSpreadsToArrayLiteral (_, tout)
@@ -2610,6 +2610,10 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EReactElementFunArity (reason, _, _) ->
         spf "EReactElementFunArity (%s)" (dump_reason cx reason)
+    | EFunctionCallMissingArg (reason_op, reason_def) ->
+        spf "EFunctionCallMissingArg (%s, %s)"
+          (dump_reason cx reason_op)
+          (dump_reason cx reason_def)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
         spf "EFunctionCallExtraArg (%s, %s, %d)"
           (dump_reason cx  unused_reason)

@@ -3100,7 +3100,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * any Iterable can be spread, and `Object` is the any type that covers
      * iterable objects. *)
     | DefT (r, (AnyT | AnyObjT)),
-      ResolveSpreadT (reason_op, {
+      ResolveSpreadT (use_op, reason_op, {
         rrt_resolved;
         rrt_unresolved;
         rrt_resolve_to;
@@ -3108,18 +3108,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let rrt_resolved = (ResolvedAnySpreadArg r)::rrt_resolved in
       resolve_spread_list_rec
-        cx ~trace ~use_op:FunCallParam ~reason_op
+        cx ~trace ~use_op ~reason_op
         (rrt_resolved, rrt_unresolved) rrt_resolve_to
 
     | _,
-      ResolveSpreadT (reason_op, {
+      ResolveSpreadT (use_op, reason_op, {
         rrt_resolved;
         rrt_unresolved;
         rrt_resolve_to;
       }) ->
       let reason = reason_of_t l in
-
-      let use_op = FunCallParam in
 
       let r, arrtype = match l with
       | DefT (r, ArrT arrtype) ->
@@ -3180,7 +3178,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             (* To avoid infinite recursion, let's deconstruct to a simplier case
              * where we no longer resolve to a tuple but instead just resolve to
              * an array. *)
-            rec_flow cx trace (l, ResolveSpreadT (reason_op, {
+            rec_flow cx trace (l, ResolveSpreadT (use_op, reason_op, {
               rrt_resolved;
               rrt_unresolved;
               (* We need a deterministic way to generate a new id. This is fine - not many ids are
@@ -3795,7 +3793,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let args = List.rev (match rest2 with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      let use_op = FunParam { lower = lreason; upper = ureason; use_op } in
+      let use_op = match desc_of_reason ureason with
+      (* TODO: This exists to support a legacy behavior of ResolveSpreadT.
+       * Refactor how React use_ops work and remove this special case. *)
+      | RReactSFC -> FunCallParam
+      | _ -> FunParam { lower = lreason; upper = ureason; use_op }
+      in
       multiflow_subtype cx trace ~use_op ureason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
@@ -6081,6 +6084,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         reason_of_t l, reason_of_t u, use_op
       ))
 
+    | _, UseT (FunCallMissingArg (reason_op, reason_def), _) ->
+      add_output cx ~trace
+        (FlowError.EFunctionCallMissingArg (reason_op, reason_def))
+
     | l, UseT (_, u) ->
       add_output cx ~trace (FlowError.EIncompatibleDefs {
         reason_lower = reason_of_t l;
@@ -7788,6 +7795,10 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
       reason, msg
     ) ts in
     begin match spec with
+      | UnionCases (FunCallMissingArg (reason_op, reason_def), _, _) ->
+        add_output cx ~trace
+          (FlowError.EFunctionCallMissingArg (reason_op, reason_def))
+
       | UnionCases (use_op, l, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
@@ -9336,8 +9347,13 @@ and multiflow_full
     ~spread_arg ~rest_param (arglist, parlist) in
 
   List.iter (fun param ->
-    let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
-    rec_flow_t cx trace (DefT (reason, VoidT), param);
+    let is_call = is_call || use_op = FunCallParam in
+    let (reason_desc, use_op) = if is_call
+      then (RVoid, FunCallMissingArg (reason_op, def_reason))
+      else (RTooFewArgsExpectedRest, UnknownUse)
+    in
+    let reason = replace_reason_const reason_desc reason_op in
+    rec_flow cx trace (DefT (reason, VoidT), UseT (use_op, param));
   ) unused_parameters
 
 (* This is a tricky function. The simple description is that it flows all the
@@ -9487,7 +9503,7 @@ and resolve_spread_list_rec
         (ResolvedArg(next)::resolved, unresolved)
         resolve_to
   | resolved, UnresolvedSpreadArg(next)::unresolved ->
-      flow_opt cx ?trace (next, ResolveSpreadT (reason_op, {
+      flow_opt cx ?trace (next, ResolveSpreadT (use_op, reason_op, {
         rrt_resolved = resolved;
         rrt_unresolved = unresolved;
         rrt_resolve_to = resolve_to;

@@ -36,14 +36,14 @@ Error: all.js:19
 
 Error: all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+     ^^^^^^^^^^^^^ undefined. This type is incompatible with
 608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                        ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:
     608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                            ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:608
      24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-         ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
+         ^^^^^^^^^^^^^ undefined
 
 Error: all.js:27
  27: Promise.all(0); // Error: expected array instead of number
@@ -171,7 +171,7 @@ Error: resolve_void.js:3
                          ^^^^^^^^^^^^^^^ type application of identifier `Promise`
   Type argument `R` is incompatible:
       3: (Promise.resolve(): Promise<number>); // error
-          ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+          ^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
       3: (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ number
 
