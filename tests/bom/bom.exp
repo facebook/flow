@@ -448,15 +448,15 @@ Error: FormData.js:64
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-               ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+               ^ string. This type is incompatible with
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+               ^ number
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                  ^ string. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                  ^ File. This type is incompatible with
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                  ^ string
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -472,15 +472,15 @@ Error: FormData.js:65
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                  ^ File. This type is incompatible with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                  ^ number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                  ^ string. This type is incompatible with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                  ^ number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -518,21 +518,21 @@ Error: FormData.js:66
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-               ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+               ^ string. This type is incompatible with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+               ^ number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                  ^ File. This type is incompatible with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^ number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                  ^ string. This type is incompatible with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^ number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect

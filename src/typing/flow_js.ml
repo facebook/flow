@@ -5015,15 +5015,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, ElemT (reason_op, DefT (_, (AnyObjT | AnyT)), action) ->
       let value = AnyT.why reason_op in
-      perform_elem_action cx trace value action
+      perform_elem_action cx trace reason_op value action
 
     (* It is not safe to write to an unknown index in a tuple. However, any is
      * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
      * error when `tup[0] = 123` does not. *)
     | DefT (_, AnyT),
-      ElemT (_, DefT (r, ArrT arrtype), action) ->
+      ElemT (reason_op, DefT (r, ArrT arrtype), action) ->
       let value = elemt_of_arrtype r arrtype in
-      perform_elem_action cx trace value action
+      perform_elem_action cx trace reason_op value action
 
     | l, ElemT (reason, DefT (reason_tup, ArrT arrtype), action) when numeric l ->
       let value, ts, is_tuple = begin match arrtype with
@@ -5066,7 +5066,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               (FlowError.ETupleUnsafeWrite reasons)
       end;
 
-      perform_elem_action cx trace value action
+      perform_elem_action cx trace reason value action
 
 
     | DefT (_, ArrT _), GetPropT(reason_op, Named (_, "constructor"), tout) ->
@@ -9829,8 +9829,10 @@ and perform_lookup_action cx trace propref p lreason ureason = function
         ))
     end
 
-and perform_elem_action cx trace value = function
-  | ReadElem t -> rec_flow_t cx trace (value, t)
+and perform_elem_action cx trace reason_op value = function
+  | ReadElem t ->
+    let loc = loc_of_reason reason_op in
+    rec_flow_t cx trace (reposition cx ~trace loc value, t)
   | WriteElem t -> rec_flow_t cx trace (t, value)
   | CallElem (reason_call, ft) ->
     rec_flow cx trace (value, CallT (reason_call, ft))

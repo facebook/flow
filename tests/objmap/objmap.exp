@@ -401,9 +401,9 @@ Error: issue-2674.js:15
  15: b.FOO = 'BAR'; // error
      ^^^^^ string literal `FOO`
 
-Error: issue-2674.js:17
- 17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
+Error: issue-2674.js:21
+ 21: (c[0]: 'BAR'); // error
+      ^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
  21: (c[0]: 'BAR'); // error
             ^^^^^ string literal `BAR`
 

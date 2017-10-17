@@ -26,15 +26,15 @@ Error: test.js:8
       6: class NVerbose<E,I:E> {
                ^^^^^^^^ some incompatible instantiation of `E`
 
-Error: test.js:12
- 12: nv.x = [0];
-             ^ number. This type is incompatible with
+Error: test.js:13
+ 13: (nv.x[0]: string); // error
+      ^^^^^^^ number. This type is incompatible with
  13: (nv.x[0]: string); // error
                ^^^^^^ string
 
-Error: test.js:12
- 12: nv.x = [0];
-             ^ number. This type is incompatible with
+Error: test.js:14
+ 14: (nv.foo()[0]: string); // error
+      ^^^^^^^^^^^ number. This type is incompatible with
  14: (nv.foo()[0]: string); // error
                    ^^^^^^ string
 

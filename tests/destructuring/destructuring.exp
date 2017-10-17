@@ -255,7 +255,7 @@ Error: destructuring.js:4
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
-                                  ^ number. This type is incompatible with
+                ^ number. This type is incompatible with
   3: declare var c:string;
                    ^^^^^^ string
 
@@ -285,20 +285,20 @@ Error: destructuring.js:16
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
-           ^^^^ rest of array pattern. This type is incompatible with
-  3: declare var c:string;
-                   ^^^^^^ string
-
-Error: destructuring.js:20
- 20: [a,,b,...c] = [0,1,true,3];
-                    ^ number. This type is incompatible with
+      ^ number. This type is incompatible with
   1: declare var a:string;
                    ^^^^^^ string
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
-                        ^^^^ boolean. This type is incompatible with
+         ^ boolean. This type is incompatible with
   2: declare var b:string;
+                   ^^^^^^ string
+
+Error: destructuring.js:20
+ 20: [a,,b,...c] = [0,1,true,3];
+           ^^^^ rest of array pattern. This type is incompatible with
+  3: declare var c:string;
                    ^^^^^^ string
 
 Error: destructuring.js:25
