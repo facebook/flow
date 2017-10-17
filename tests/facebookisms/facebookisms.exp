@@ -4,7 +4,7 @@ Error: copyProperties.js:6
 
 Error: copyProperties.js:31
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                         ^^^^^^^^^^^^ object literal. This type is incompatible with
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
                                         ^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:

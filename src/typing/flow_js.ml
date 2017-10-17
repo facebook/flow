@@ -7251,7 +7251,7 @@ and spread_objects cx reason those =
   chain_objects cx reason obj those
 
 and chain_objects cx ?trace reason this those =
-  List.fold_left (fun result that ->
+  let result = List.fold_left (fun result that ->
     let that, kind = match that with
     | Arg t -> t, ObjAssign
     | SpreadArg t ->
@@ -7262,7 +7262,8 @@ and chain_objects cx ?trace reason this those =
     mk_tvar_where cx reason (fun t ->
       flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, kind));
     )
-  ) this those
+  ) this those in
+  reposition cx ?trace (loc_of_reason reason) result
 
 (*******************************************************)
 (* Entry points into the process of trying different   *)
