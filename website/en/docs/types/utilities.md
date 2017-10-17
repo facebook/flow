@@ -129,7 +129,7 @@ Work in progress
 A $PropertyType is the type at a given key.
 
 As of Flow v0.36.0, `x` must be a literal string. In future versions, `x` may be allowed to be any type, as long
-as that type exists on the keys of `T`.
+as that type exists on the keys of `T`. See also $ElementType.
 
 ```js
 // @flow
@@ -187,6 +187,76 @@ class BackboneModel {
 type ID = $PropertyType<Class<BackboneModel>, 'idAttribute'>;
 const someID: ID = '1234';
 const someBadID: ID = true;
+```
+
+## `$ElementType<T, KeyT>` <a class="toc" id="toc-propertytype" href="#toc-elementtype"></a>
+
+A $ElementType is the type at a given key like $PropertyType, but using a type instead of a string.
+
+```js
+// @flow
+type Person = {
+  name: string,
+  age: number,
+  parent: Person
+};
+type PersonNameKey = 'name';
+type PersonAgeKey = 'age';
+type PersonParentKey = 'parent'
+const newName: $ElementType<Person, PersonNameKey> = 'Michael Jackson';
+const newAge: $ElementType<Person, PersonAgeKey> = 50;
+const newParent: $ElementType<Person, PersonParentKey> = 'Joe Jackson';
+```
+
+There's type for simplified version of Lodash `get` function as an example of usage:
+
+```js
+// @flow
+type P = string | number;
+type ET<E, P> = $ElementType<E & {[p: P]: any}, P>;
+// O - type of the object 
+// P0..PN - parts of the path 
+type Get = {
+  <O, P0: P, K: [P0], D>(obj: O, path: K, def?: D): ET<O, P0> | D,
+  <O, P0: P, P1: P, K: [P0, P1], D>(obj: O, path: K, def?: D): ET<ET<O, P0>, P1> | D,
+  <O, P0: P, P1: P, P2: P, K: [P0, P1, P2], D>(obj: O, path: K, def?: D): ET<ET<ET<O, P0>, P1>, P2> | D,
+}
+declare var get: Get;
+      
+type Person = {
+  name: string,
+  child?: Person,
+}
+      
+declare var father: Person;
+      
+const name: string = get(father, ['name']);
+const name1: number = get(father, ['name']);
+const child1: ?Person = get(father, ['child']);
+const child2: Person = get(father, ['child']);
+const child3: ?Person = get(father, ['child', 'child']);
+```
+
+It will catch also attempts to use the function with undeclared path:
+
+```js
+type P = string | number;
+type ET<E, P> = $ElementType<E & {[p: P]: any}, P>;
+type Get = {
+  <O, P0: P, K: [P0], D>(obj: O, path: K, def?: D): ET<O, P0> | D,
+  <O, P0: P, P1: P, K: [P0, P1], D>(obj: O, path: K, def?: D): ET<ET<O, P0>, P1> | D,
+  <O, P0: P, P1: P, P2: P, K: [P0, P1, P2], D>(obj: O, path: K, def?: D): ET<ET<ET<O, P0>, P1>, P2> | D,
+}
+declare var get: Get;
+      
+type Person = {
+  name: string,
+  child?: Person,
+}
+      
+declare var father: Person;
+
+const surname: number = get(father, ['surname']);
 ```
 
 ## The Existential Type (`*`) <a class="toc" id="toc-the-existential-type" href="#toc-the-existential-type"></a>
