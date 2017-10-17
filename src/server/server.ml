@@ -265,14 +265,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         else
           ServerProt.NOT_COVERED
 
-  let mk_loc file line col =
-    {
-      Loc.
-      source = Some file;
-      start = { Loc.line; column = col; offset = 0; };
-      _end = { Loc.line; column = col + 1; offset = 0; };
-    }
-
   let infer_type
       ~options
       ~workers
@@ -406,7 +398,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let _ = options, workers, env in
     let filename = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile filename in
-    let loc = mk_loc file line col in
+    let loc = Loc.make file line col in
     let scope_info_result =
       let open Parsing_service_js in
       File_input.content_of_file_input file_input >>= fun content ->
@@ -438,7 +430,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile filename in
-    let loc = mk_loc file line col in
+    let loc = Loc.make file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     let result =
       File_input.content_of_file_input file_input >>= fun content ->

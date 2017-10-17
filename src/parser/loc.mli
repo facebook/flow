@@ -18,4 +18,6 @@ val span_compare : t -> t -> int
 val compare : t -> t -> int
 val to_string : ?include_source:bool -> t -> string
 val source : t -> File_key.t option
+(* filename, line, column. produces a Loc.t at the given location, with stubbed out offsets *)
+val make: File_key.t -> int -> int -> t
 module LocSet : Set.S with type elt = t
