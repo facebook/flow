@@ -66,15 +66,15 @@ Error: headers.js:4
 
 Error: headers.js:9
   9: e.append('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-886:     append(name: string, value: string): void;
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:886
+     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
+  886:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:886
 
 Error: headers.js:10
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-886:     append(name: string, value: string): void;
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:886
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
+  886:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:886
 
 Error: headers.js:10
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
@@ -84,15 +84,15 @@ Error: headers.js:10
 
 Error: headers.js:12
  12: e.set('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-893:     set(name: string, value: string): void;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:893
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
+  893:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:893
 
 Error: headers.js:13
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-893:     set(name: string, value: string): void;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:893
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
+  893:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:893
 
 Error: headers.js:13
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
@@ -120,35 +120,9 @@ Error: headers.js:28
 
 Error: request.js:2
   2: const a: Request = new Request(); // incorrect
-                        ^^^^^^^^^^^^^ constructor call
-  2: const a: Request = new Request(); // incorrect
-                        ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-976:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                            ^^^^^^^^^^^ union: Request | URL | string. See lib: <BUILTINS>/bom.js:976
-  Member 1:
-  925: type RequestInfo = Request | URL | string;
-                          ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:925
-  Error:
-    2: const a: Request = new Request(); // incorrect
-                          ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  925: type RequestInfo = Request | URL | string;
-                          ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:925
-  Member 2:
-  925: type RequestInfo = Request | URL | string;
-                                    ^^^ URL. See lib: <BUILTINS>/bom.js:925
-  Error:
-    2: const a: Request = new Request(); // incorrect
-                          ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  925: type RequestInfo = Request | URL | string;
-                                    ^^^ URL. See lib: <BUILTINS>/bom.js:925
-  Member 3:
-  925: type RequestInfo = Request | URL | string;
-                                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:925
-  Error:
-    2: const a: Request = new Request(); // incorrect
-                          ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  925: type RequestInfo = Request | URL | string;
-                                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:925
+                        ^^^^^^^^^^^^^ constructor call. Called with too few arguments
+  976:     constructor(input: RequestInfo, init?: RequestOptions): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:976
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -591,15 +565,15 @@ Error: urlsearchparams.js:5
 
 Error: urlsearchparams.js:9
   9: e.append('key1'); // not correct
-     ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-900:     append(name: string, value: string): void;
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:900
+     ^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
+  900:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:900
 
 Error: urlsearchparams.js:10
  10: e.append({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-900:     append(name: string, value: string): void;
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:900
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
+  900:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:900
 
 Error: urlsearchparams.js:10
  10: e.append({'key1': 'value1'}); // not correct
@@ -609,15 +583,15 @@ Error: urlsearchparams.js:10
 
 Error: urlsearchparams.js:12
  12: e.set('key1'); // not correct
-     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-908:     set(name: string, value: string): void;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:908
+     ^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
+  908:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:908
 
 Error: urlsearchparams.js:13
  13: e.set({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-908:     set(name: string, value: string): void;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:908
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
+  908:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:908
 
 Error: urlsearchparams.js:13
  13: e.set({'key1': 'value1'}); // not correct

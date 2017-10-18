@@ -483,6 +483,8 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
           | None -> OptInWeak
           (* Respect @flow pragma *)
           | Some OptIn -> OptIn
+          (* Respect @flow strict pragma *)
+          | Some OptInStrict -> OptInStrict
           (* Respect @flow weak pragma *)
           | Some OptInWeak -> OptInWeak
           (* Respect @noflow, which `apply_docblock_overrides` does not by
@@ -879,12 +881,14 @@ let recheck_with_profiling
   (* direct_dependent_files are unchanged files which directly depend on changed modules,
      or are new / changed files that are phantom dependents. dependent_files are
      direct_dependent_files plus their dependents (transitive closure) *)
-  let all_dependent_files, direct_dependent_files = Dep_service.dependent_files
-    workers
-    ~unchanged
-    ~new_or_changed
-    ~changed_modules
-  in
+  let all_dependent_files, direct_dependent_files =
+    with_timer ~options "DependentFiles" profiling (fun () ->
+      Dep_service.dependent_files
+        workers
+        ~unchanged
+        ~new_or_changed
+        ~changed_modules
+    ) in
 
   Hh_logger.info "Re-resolving directly dependent files";
   (** TODO [perf] Consider oldifying **)
@@ -914,7 +918,12 @@ let recheck_with_profiling
   let updated_checked_files, all_dependent_files = match Options.lazy_mode options with
   | None (* Non lazy mode treats every file as focused. *)
   | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-    let old_focus_targets = FilenameSet.diff (CheckedSet.focused env.ServerEnv.checked_files) deleted in
+    let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
+    let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
+    let old_focus_targets = List.fold_left
+      (fun targets (unparsed, _) -> FilenameSet.remove unparsed targets)
+      old_focus_targets
+      unparsed in
     let parsed = FilenameSet.union old_focus_targets freshparsed in
     let updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
     updated_checked_files, all_dependent_files

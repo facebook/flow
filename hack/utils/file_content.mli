@@ -10,7 +10,7 @@
 
 open Ide_api_types
 
-val edit_file : string -> text_edit list -> (string, string) Result.t
+val edit_file : string -> text_edit list -> (string, string) result
 
 val edit_file_unsafe : string -> text_edit list -> string
 

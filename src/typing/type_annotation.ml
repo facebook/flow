@@ -431,14 +431,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       FunProtoCallT reason
     )
 
-  | "$Tainted" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert_type_params () |> List.hd in
-      let taint = TaintT (mk_reason (RCustom "taint") loc) in
-      let reason = Reason.repos_reason loc (reason_of_t t) in
-      DefT (reason, UnionT (UnionRep.make t taint []))
-    )
-
   | "Object$Assign" ->
       mk_custom_fun cx loc typeParameters ObjectAssign
   | "Object$GetPrototypeOf" ->

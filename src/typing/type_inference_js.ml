@@ -210,8 +210,8 @@ let scan_for_lint_suppressions =
         | Ok kinds, Ok setting ->
           Some (List.map (fun kind -> ({value = kind; loc = arg.loc}, setting)) kinds)
         | rule_result, setting_result ->
-          Result.iter_error rule_result ~f:(add_error cx);
-          Result.iter_error setting_result ~f:(add_error cx);
+          Core_result.iter_error rule_result ~f:(add_error cx);
+          Core_result.iter_error setting_result ~f:(add_error cx);
           None
       end
     | _ ->
@@ -363,12 +363,7 @@ let scan_for_lint_suppressions =
 
 let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
-  match base_settings with
-  | Some base_settings ->
-    scan_for_lint_suppressions cx base_settings comments
-  | None -> ()
-  ;
-  ()
+  scan_for_lint_suppressions cx base_settings comments
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)

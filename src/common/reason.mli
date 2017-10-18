@@ -127,6 +127,7 @@ type reason_desc =
   | RReactChildren
   | RReactChildrenOrType of reason_desc
   | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactSFC
 
 and reason_desc_function =
   | RAsync

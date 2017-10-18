@@ -26,6 +26,37 @@ let mk_write pos1 pos2 =
   Ssa_api.Write (mk_loc pos1 pos2)
 
 let tests = "ssa_builder" >::: [
+  "var" >:: mk_ssa_builder_test
+    "function foo(x) {
+       var y;
+       if (x) y = 123;
+       return y;
+     }"
+    LocMap.(
+      empty |>
+      add (mk_loc (3, 11) (3, 12)) [ (* x *)
+        mk_write (1, 13) (1, 14);
+      ] |>
+      add (mk_loc (4, 14) (4, 15)) [ (* y *)
+        Ssa_api.uninitialized;
+        mk_write (3, 14) (3, 15);
+      ]
+    );
+  "var_hoist" >:: mk_ssa_builder_test
+    "function foo(x) {
+       y = x;
+       var y;
+       return y;
+     }"
+    LocMap.(
+      empty |>
+      add (mk_loc (2, 11) (2, 12)) [ (* x *)
+        mk_write (1, 13) (1, 14);
+      ] |>
+      add (mk_loc (4, 14) (4, 15)) [ (* y *)
+        mk_write (2, 7) (2, 8);
+      ]
+    );
   "let" >:: mk_ssa_builder_test
     "function foo() { \
        let x = 0; \

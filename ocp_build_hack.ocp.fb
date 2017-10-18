@@ -334,9 +334,9 @@ end
 begin library "tp-core"
   sort = true
   files = begin fb-glob "hack/third-party/core"
-    excludes = [ "result.ml" ]
+    excludes = [ "core_result.ml" ]
   end
   files += [
-    "hack/third-party/core/result.ml" (comp += [ "-w" "-41" ])
+    "hack/third-party/core/core_result.ml" (comp += [ "-w" "-41" ])
   ]
 end

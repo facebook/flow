@@ -21,6 +21,7 @@ type local_metadata = {
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
+  strict: bool;
 }
 
 type global_metadata = {
@@ -181,6 +182,7 @@ let metadata_of_options options =
     verbose = Options.verbose options;
     weak = Options.weak_by_default options;
     jsx = None;
+    strict = false;
   } in
   { global_metadata; local_metadata; }
 
@@ -275,6 +277,7 @@ let is_weak cx = cx.local.metadata.weak
 let severity_cover cx = cx.local.severity_cover
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
+let require_map cx = cx.local.require_map
 let module_map cx = cx.local.module_map
 let module_ref cx = cx.local.module_ref
 let property_maps cx = cx.local.property_maps

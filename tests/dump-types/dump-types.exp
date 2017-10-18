@@ -2061,23 +2061,8 @@
     "end":25
   },
   {
-    "type":"$IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2091,7 +2076,7 @@
     "end":30
   },
   {
-    "type":"(obj: $IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>) => $IdxWrapper<number>",
+    "type":"(obj: empty) => empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -2106,23 +2091,8 @@
     "end":45
   },
   {
-    "type":"$IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2136,23 +2106,8 @@
     "end":37
   },
   {
-    "type":"$IdxWrapper<{b: ?{c: null | {d: number}}} | void>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2166,23 +2121,8 @@
     "end":39
   },
   {
-    "type":"$IdxWrapper<?{c: null | {d: number}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2196,23 +2136,8 @@
     "end":41
   },
   {
-    "type":"$IdxWrapper<null | {d: number}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2226,23 +2151,8 @@
     "end":43
   },
   {
-    "type":"$IdxWrapper<number>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4365,24 +4275,9 @@
     "end":25
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"object\"\n    },\n    \"kind\":\"ObjT\",\n    \"type\":{\n      \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n      \"propTypes\":[\n        {\n          \"name\":\"a\",\n          \"prop\":{\n            \"field\":{\n              \"reason\":{\n                \"pos\":{\n                  \"source\":null,\n                  \"type\":null,\n                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                },\n                \"desc\":\"optional object type\"\n              },\n              \"kind\":\"OptionalT\",\n              \"type\":{\n                \"reason\":{\n                  \"pos\":{\n                    \"source\":null,\n                    \"type\":null,\n                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                  },\n                  \"desc\":\"object\"\n                },\n                \"kind\":\"ObjT\",\n                \"type\":{\n                  \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                  \"propTypes\":[\n                    {\n                      \"name\":\"b\",\n                      \"prop\":{\n                        \"field\":{\n                          \"reason\":{\n                            \"pos\":{\n                              \"source\":null,\n                              \"type\":null,\n                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                            },\n                            \"desc\":\"?object type\"\n                          },\n                          \"kind\":\"MaybeT\",\n                          \"type\":{\n                            \"reason\":{\n                              \"pos\":{\n                                \"source\":null,\n                                \"type\":null,\n                                \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                              },\n                              \"desc\":\"object\"\n                            },\n                            \"kind\":\"ObjT\",\n                            \"type\":{\n                              \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                              \"propTypes\":[\n                                {\n                                  \"name\":\"c\",\n                                  \"prop\":{\n                                    \"field\":{\n                                      \"reason\":{\n                                        \"pos\":{\n                                          \"source\":null,\n                                          \"type\":null,\n                                          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                        },\n                                        \"desc\":\"union\"\n                                      },\n                                      \"kind\":\"UnionT\",\n                                      \"types\":[\n                                        {\n                                          \"reason\":{\n                                            \"pos\":{\n                                              \"source\":null,\n                                              \"type\":null,\n                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                            },\n                                            \"desc\":\"null\"\n                                          },\n                                          \"kind\":\"NullT\"\n                                        },\n                                        {\n                                          \"reason\":{\n                                            \"pos\":{\n                                              \"source\":null,\n                                              \"type\":null,\n                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                            },\n                                            \"desc\":\"object\"\n                                          },\n                                          \"kind\":\"ObjT\",\n                                          \"type\":{\n                                            \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                                            \"propTypes\":[\n                                              {\n                                                \"name\":\"d\",\n                                                \"prop\":{\n                                                  \"field\":{\n                                                    \"reason\":{\n                                                      \"pos\":{\n                                                        \"source\":null,\n                                                        \"type\":null,\n                                                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                      },\n                                                      \"desc\":\"number\"\n                                                    },\n                                                    \"kind\":\"NumT\"\n                                                  },\n                                                  \"polarity\":\"Neutral\"\n                                                }\n                                              }\n                                            ],\n                                            \"prototype\":{\n                                              \"reason\":{\n                                                \"pos\":{\n                                                  \"source\":null,\n                                                  \"type\":null,\n                                                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                },\n                                                \"desc\":\"any\"\n                                              },\n                                              \"kind\":\"AnyT\"\n                                            }\n                                          }\n                                        }\n                                      ]\n                                    },\n                                    \"polarity\":\"Neutral\"\n                                  }\n                                }\n                              ],\n                              \"prototype\":{\n                                \"reason\":{\n                                  \"pos\":{\n                                    \"source\":null,\n                                    \"type\":null,\n                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                  },\n                                  \"desc\":\"any\"\n                                },\n                                \"kind\":\"AnyT\"\n                              }\n                            }\n                          }\n                        },\n                        \"polarity\":\"Neutral\"\n                      }\n                    }\n                  ],\n                  \"prototype\":{\n                    \"reason\":{\n                      \"pos\":{\n                        \"source\":null,\n                        \"type\":null,\n                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                      },\n                      \"desc\":\"any\"\n                    },\n                    \"kind\":\"AnyT\"\n                  }\n                }\n              }\n            },\n            \"polarity\":\"Neutral\"\n          }\n        }\n      ],\n      \"prototype\":{\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"any\"\n        },\n        \"kind\":\"AnyT\"\n      }\n    }\n  }\n}",
-    "type":"$IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4396,8 +4291,8 @@
     "end":30
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"function\"\n  },\n  \"kind\":\"FunT\",\n  \"static\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"statics of function\"\n    },\n    \"kind\":\"AnyFunT\"\n  },\n  \"prototype\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"empty prototype object\"\n    },\n    \"kind\":\"ObjProtoT\"\n  },\n  \"funType\":{\n    \"thisType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"global object\"\n      },\n      \"kind\":\"ObjProtoT\"\n    },\n    \"paramTypes\":[\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"idx object\"\n        },\n        \"kind\":\"IdxWrapper\",\n        \"wrappedObj\":{\n          \"reason\":{\n            \"pos\":{\n              \"source\":null,\n              \"type\":null,\n              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n            },\n            \"desc\":\"object\"\n          },\n          \"kind\":\"ObjT\",\n          \"type\":{\n            \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n            \"propTypes\":[\n              {\n                \"name\":\"a\",\n                \"prop\":{\n                  \"field\":{\n                    \"reason\":{\n                      \"pos\":{\n                        \"source\":null,\n                        \"type\":null,\n                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                      },\n                      \"desc\":\"optional object type\"\n                    },\n                    \"kind\":\"OptionalT\",\n                    \"type\":{\n                      \"reason\":{\n                        \"pos\":{\n                          \"source\":null,\n                          \"type\":null,\n                          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                        },\n                        \"desc\":\"object\"\n                      },\n                      \"kind\":\"ObjT\",\n                      \"type\":{\n                        \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                        \"propTypes\":[\n                          {\n                            \"name\":\"b\",\n                            \"prop\":{\n                              \"field\":{\n                                \"reason\":{\n                                  \"pos\":{\n                                    \"source\":null,\n                                    \"type\":null,\n                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                  },\n                                  \"desc\":\"?object type\"\n                                },\n                                \"kind\":\"MaybeT\",\n                                \"type\":{\n                                  \"reason\":{\n                                    \"pos\":{\n                                      \"source\":null,\n                                      \"type\":null,\n                                      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                    },\n                                    \"desc\":\"object\"\n                                  },\n                                  \"kind\":\"ObjT\",\n                                  \"type\":{\n                                    \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                                    \"propTypes\":[\n                                      {\n                                        \"name\":\"c\",\n                                        \"prop\":{\n                                          \"field\":{\n                                            \"reason\":{\n                                              \"pos\":{\n                                                \"source\":null,\n                                                \"type\":null,\n                                                \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                              },\n                                              \"desc\":\"union\"\n                                            },\n                                            \"kind\":\"UnionT\",\n                                            \"types\":[\n                                              {\n                                                \"reason\":{\n                                                  \"pos\":{\n                                                    \"source\":null,\n                                                    \"type\":null,\n                                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                  },\n                                                  \"desc\":\"null\"\n                                                },\n                                                \"kind\":\"NullT\"\n                                              },\n                                              {\n                                                \"reason\":{\n                                                  \"pos\":{\n                                                    \"source\":null,\n                                                    \"type\":null,\n                                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                  },\n                                                  \"desc\":\"object\"\n                                                },\n                                                \"kind\":\"ObjT\",\n                                                \"type\":{\n                                                  \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                                                  \"propTypes\":[\n                                                    {\n                                                      \"name\":\"d\",\n                                                      \"prop\":{\n                                                        \"field\":{\n                                                          \"reason\":{\n                                                            \"pos\":{\n                                                              \"source\":null,\n                                                              \"type\":null,\n                                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                            },\n                                                            \"desc\":\"number\"\n                                                          },\n                                                          \"kind\":\"NumT\"\n                                                        },\n                                                        \"polarity\":\"Neutral\"\n                                                      }\n                                                    }\n                                                  ],\n                                                  \"prototype\":{\n                                                    \"reason\":{\n                                                      \"pos\":{\n                                                        \"source\":null,\n                                                        \"type\":null,\n                                                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                      },\n                                                      \"desc\":\"any\"\n                                                    },\n                                                    \"kind\":\"AnyT\"\n                                                  }\n                                                }\n                                              }\n                                            ]\n                                          },\n                                          \"polarity\":\"Neutral\"\n                                        }\n                                      }\n                                    ],\n                                    \"prototype\":{\n                                      \"reason\":{\n                                        \"pos\":{\n                                          \"source\":null,\n                                          \"type\":null,\n                                          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                        },\n                                        \"desc\":\"any\"\n                                      },\n                                      \"kind\":\"AnyT\"\n                                    }\n                                  }\n                                }\n                              },\n                              \"polarity\":\"Neutral\"\n                            }\n                          }\n                        ],\n                        \"prototype\":{\n                          \"reason\":{\n                            \"pos\":{\n                              \"source\":null,\n                              \"type\":null,\n                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                            },\n                            \"desc\":\"any\"\n                          },\n                          \"kind\":\"AnyT\"\n                        }\n                      }\n                    }\n                  },\n                  \"polarity\":\"Neutral\"\n                }\n              }\n            ],\n            \"prototype\":{\n              \"reason\":{\n                \"pos\":{\n                  \"source\":null,\n                  \"type\":null,\n                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                },\n                \"desc\":\"any\"\n              },\n              \"kind\":\"AnyT\"\n            }\n          }\n        }\n      }\n    ],\n    \"paramNames\":[\"obj\"],\n    \"restParam\":null,\n    \"returnType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"idx object\"\n      },\n      \"kind\":\"IdxWrapper\",\n      \"wrappedObj\":{\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"number\"\n        },\n        \"kind\":\"NumT\"\n      }\n    },\n    \"isPredicate\":false,\n    \"closureIndex\":0,\n    \"changeset\":{\"vars\":[],\"refis\":[]},\n    \"defLoc\":{\n      \"pos\":{\n        \"source\":\"test.js\",\n        \"type\":\"SourceFile\",\n        \"start\":{\"line\":21,\"column\":28,\"offset\":566},\n        \"end\":{\"line\":21,\"column\":45,\"offset\":584}\n      },\n      \"desc\":\"function\"\n    }\n  }\n}",
-    "type":"(obj: $IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>) => $IdxWrapper<number>",
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"function\"\n  },\n  \"kind\":\"FunT\",\n  \"static\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"statics of function\"\n    },\n    \"kind\":\"AnyFunT\"\n  },\n  \"prototype\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"empty prototype object\"\n    },\n    \"kind\":\"ObjProtoT\"\n  },\n  \"funType\":{\n    \"thisType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"global object\"\n      },\n      \"kind\":\"ObjProtoT\"\n    },\n    \"paramTypes\":[\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"empty\"\n        },\n        \"kind\":\"EmptyT\"\n      }\n    ],\n    \"paramNames\":[\"obj\"],\n    \"restParam\":null,\n    \"returnType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"empty\"\n      },\n      \"kind\":\"EmptyT\"\n    },\n    \"isPredicate\":false,\n    \"closureIndex\":0,\n    \"changeset\":{\"vars\":[],\"refis\":[]},\n    \"defLoc\":{\n      \"pos\":{\n        \"source\":\"test.js\",\n        \"type\":\"SourceFile\",\n        \"start\":{\"line\":21,\"column\":28,\"offset\":566},\n        \"end\":{\"line\":21,\"column\":45,\"offset\":584}\n      },\n      \"desc\":\"function\"\n    }\n  }\n}",
+    "type":"(obj: empty) => empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -4412,24 +4307,9 @@
     "end":45
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"object\"\n    },\n    \"kind\":\"ObjT\",\n    \"type\":{\n      \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n      \"propTypes\":[\n        {\n          \"name\":\"a\",\n          \"prop\":{\n            \"field\":{\n              \"reason\":{\n                \"pos\":{\n                  \"source\":null,\n                  \"type\":null,\n                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                },\n                \"desc\":\"optional object type\"\n              },\n              \"kind\":\"OptionalT\",\n              \"type\":{\n                \"reason\":{\n                  \"pos\":{\n                    \"source\":null,\n                    \"type\":null,\n                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                  },\n                  \"desc\":\"object\"\n                },\n                \"kind\":\"ObjT\",\n                \"type\":{\n                  \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                  \"propTypes\":[\n                    {\n                      \"name\":\"b\",\n                      \"prop\":{\n                        \"field\":{\n                          \"reason\":{\n                            \"pos\":{\n                              \"source\":null,\n                              \"type\":null,\n                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                            },\n                            \"desc\":\"?object type\"\n                          },\n                          \"kind\":\"MaybeT\",\n                          \"type\":{\n                            \"reason\":{\n                              \"pos\":{\n                                \"source\":null,\n                                \"type\":null,\n                                \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                              },\n                              \"desc\":\"object\"\n                            },\n                            \"kind\":\"ObjT\",\n                            \"type\":{\n                              \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                              \"propTypes\":[\n                                {\n                                  \"name\":\"c\",\n                                  \"prop\":{\n                                    \"field\":{\n                                      \"reason\":{\n                                        \"pos\":{\n                                          \"source\":null,\n                                          \"type\":null,\n                                          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                        },\n                                        \"desc\":\"union\"\n                                      },\n                                      \"kind\":\"UnionT\",\n                                      \"types\":[\n                                        {\n                                          \"reason\":{\n                                            \"pos\":{\n                                              \"source\":null,\n                                              \"type\":null,\n                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                            },\n                                            \"desc\":\"null\"\n                                          },\n                                          \"kind\":\"NullT\"\n                                        },\n                                        {\n                                          \"reason\":{\n                                            \"pos\":{\n                                              \"source\":null,\n                                              \"type\":null,\n                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                            },\n                                            \"desc\":\"object\"\n                                          },\n                                          \"kind\":\"ObjT\",\n                                          \"type\":{\n                                            \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                                            \"propTypes\":[\n                                              {\n                                                \"name\":\"d\",\n                                                \"prop\":{\n                                                  \"field\":{\n                                                    \"reason\":{\n                                                      \"pos\":{\n                                                        \"source\":null,\n                                                        \"type\":null,\n                                                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                      },\n                                                      \"desc\":\"number\"\n                                                    },\n                                                    \"kind\":\"NumT\"\n                                                  },\n                                                  \"polarity\":\"Neutral\"\n                                                }\n                                              }\n                                            ],\n                                            \"prototype\":{\n                                              \"reason\":{\n                                                \"pos\":{\n                                                  \"source\":null,\n                                                  \"type\":null,\n                                                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                                },\n                                                \"desc\":\"any\"\n                                              },\n                                              \"kind\":\"AnyT\"\n                                            }\n                                          }\n                                        }\n                                      ]\n                                    },\n                                    \"polarity\":\"Neutral\"\n                                  }\n                                }\n                              ],\n                              \"prototype\":{\n                                \"reason\":{\n                                  \"pos\":{\n                                    \"source\":null,\n                                    \"type\":null,\n                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                  },\n                                  \"desc\":\"any\"\n                                },\n                                \"kind\":\"AnyT\"\n                              }\n                            }\n                          }\n                        },\n                        \"polarity\":\"Neutral\"\n                      }\n                    }\n                  ],\n                  \"prototype\":{\n                    \"reason\":{\n                      \"pos\":{\n                        \"source\":null,\n                        \"type\":null,\n                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                      },\n                      \"desc\":\"any\"\n                    },\n                    \"kind\":\"AnyT\"\n                  }\n                }\n              }\n            },\n            \"polarity\":\"Neutral\"\n          }\n        }\n      ],\n      \"prototype\":{\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"any\"\n        },\n        \"kind\":\"AnyT\"\n      }\n    }\n  }\n}",
-    "type":"$IdxWrapper<{a?: {b: ?{c: null | {d: number}}}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4443,24 +4323,9 @@
     "end":37
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"optional object type\"\n    },\n    \"kind\":\"OptionalT\",\n    \"type\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"object\"\n      },\n      \"kind\":\"ObjT\",\n      \"type\":{\n        \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n        \"propTypes\":[\n          {\n            \"name\":\"b\",\n            \"prop\":{\n              \"field\":{\n                \"reason\":{\n                  \"pos\":{\n                    \"source\":null,\n                    \"type\":null,\n                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                  },\n                  \"desc\":\"?object type\"\n                },\n                \"kind\":\"MaybeT\",\n                \"type\":{\n                  \"reason\":{\n                    \"pos\":{\n                      \"source\":null,\n                      \"type\":null,\n                      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                    },\n                    \"desc\":\"object\"\n                  },\n                  \"kind\":\"ObjT\",\n                  \"type\":{\n                    \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                    \"propTypes\":[\n                      {\n                        \"name\":\"c\",\n                        \"prop\":{\n                          \"field\":{\n                            \"reason\":{\n                              \"pos\":{\n                                \"source\":null,\n                                \"type\":null,\n                                \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                              },\n                              \"desc\":\"union\"\n                            },\n                            \"kind\":\"UnionT\",\n                            \"types\":[\n                              {\n                                \"reason\":{\n                                  \"pos\":{\n                                    \"source\":null,\n                                    \"type\":null,\n                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                  },\n                                  \"desc\":\"null\"\n                                },\n                                \"kind\":\"NullT\"\n                              },\n                              {\n                                \"reason\":{\n                                  \"pos\":{\n                                    \"source\":null,\n                                    \"type\":null,\n                                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                  },\n                                  \"desc\":\"object\"\n                                },\n                                \"kind\":\"ObjT\",\n                                \"type\":{\n                                  \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                                  \"propTypes\":[\n                                    {\n                                      \"name\":\"d\",\n                                      \"prop\":{\n                                        \"field\":{\n                                          \"reason\":{\n                                            \"pos\":{\n                                              \"source\":null,\n                                              \"type\":null,\n                                              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                            },\n                                            \"desc\":\"number\"\n                                          },\n                                          \"kind\":\"NumT\"\n                                        },\n                                        \"polarity\":\"Neutral\"\n                                      }\n                                    }\n                                  ],\n                                  \"prototype\":{\n                                    \"reason\":{\n                                      \"pos\":{\n                                        \"source\":null,\n                                        \"type\":null,\n                                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                      },\n                                      \"desc\":\"any\"\n                                    },\n                                    \"kind\":\"AnyT\"\n                                  }\n                                }\n                              }\n                            ]\n                          },\n                          \"polarity\":\"Neutral\"\n                        }\n                      }\n                    ],\n                    \"prototype\":{\n                      \"reason\":{\n                        \"pos\":{\n                          \"source\":null,\n                          \"type\":null,\n                          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                        },\n                        \"desc\":\"any\"\n                      },\n                      \"kind\":\"AnyT\"\n                    }\n                  }\n                }\n              },\n              \"polarity\":\"Neutral\"\n            }\n          }\n        ],\n        \"prototype\":{\n          \"reason\":{\n            \"pos\":{\n              \"source\":null,\n              \"type\":null,\n              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n            },\n            \"desc\":\"any\"\n          },\n          \"kind\":\"AnyT\"\n        }\n      }\n    }\n  }\n}",
-    "type":"$IdxWrapper<{b: ?{c: null | {d: number}}} | void>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4474,24 +4339,9 @@
     "end":39
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"?object type\"\n    },\n    \"kind\":\"MaybeT\",\n    \"type\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"object\"\n      },\n      \"kind\":\"ObjT\",\n      \"type\":{\n        \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n        \"propTypes\":[\n          {\n            \"name\":\"c\",\n            \"prop\":{\n              \"field\":{\n                \"reason\":{\n                  \"pos\":{\n                    \"source\":null,\n                    \"type\":null,\n                    \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                    \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                  },\n                  \"desc\":\"union\"\n                },\n                \"kind\":\"UnionT\",\n                \"types\":[\n                  {\n                    \"reason\":{\n                      \"pos\":{\n                        \"source\":null,\n                        \"type\":null,\n                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                      },\n                      \"desc\":\"null\"\n                    },\n                    \"kind\":\"NullT\"\n                  },\n                  {\n                    \"reason\":{\n                      \"pos\":{\n                        \"source\":null,\n                        \"type\":null,\n                        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                      },\n                      \"desc\":\"object\"\n                    },\n                    \"kind\":\"ObjT\",\n                    \"type\":{\n                      \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n                      \"propTypes\":[\n                        {\n                          \"name\":\"d\",\n                          \"prop\":{\n                            \"field\":{\n                              \"reason\":{\n                                \"pos\":{\n                                  \"source\":null,\n                                  \"type\":null,\n                                  \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                                  \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                                },\n                                \"desc\":\"number\"\n                              },\n                              \"kind\":\"NumT\"\n                            },\n                            \"polarity\":\"Neutral\"\n                          }\n                        }\n                      ],\n                      \"prototype\":{\n                        \"reason\":{\n                          \"pos\":{\n                            \"source\":null,\n                            \"type\":null,\n                            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                          },\n                          \"desc\":\"any\"\n                        },\n                        \"kind\":\"AnyT\"\n                      }\n                    }\n                  }\n                ]\n              },\n              \"polarity\":\"Neutral\"\n            }\n          }\n        ],\n        \"prototype\":{\n          \"reason\":{\n            \"pos\":{\n              \"source\":null,\n              \"type\":null,\n              \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n              \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n            },\n            \"desc\":\"any\"\n          },\n          \"kind\":\"AnyT\"\n        }\n      }\n    }\n  }\n}",
-    "type":"$IdxWrapper<?{c: null | {d: number}}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4505,24 +4355,9 @@
     "end":41
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"union\"\n    },\n    \"kind\":\"UnionT\",\n    \"types\":[\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"null\"\n        },\n        \"kind\":\"NullT\"\n      },\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"object\"\n        },\n        \"kind\":\"ObjT\",\n        \"type\":{\n          \"flags\":{\"frozen\":false,\"sealed\":false,\"exact\":true},\n          \"propTypes\":[\n            {\n              \"name\":\"d\",\n              \"prop\":{\n                \"field\":{\n                  \"reason\":{\n                    \"pos\":{\n                      \"source\":null,\n                      \"type\":null,\n                      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n                    },\n                    \"desc\":\"number\"\n                  },\n                  \"kind\":\"NumT\"\n                },\n                \"polarity\":\"Neutral\"\n              }\n            }\n          ],\n          \"prototype\":{\n            \"reason\":{\n              \"pos\":{\n                \"source\":null,\n                \"type\":null,\n                \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n                \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n              },\n              \"desc\":\"any\"\n            },\n            \"kind\":\"AnyT\"\n          }\n        }\n      }\n    ]\n  }\n}",
-    "type":"$IdxWrapper<null | {d: number}>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -4536,24 +4371,9 @@
     "end":43
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"idx object\"\n  },\n  \"kind\":\"IdxWrapper\",\n  \"wrappedObj\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"number\"\n    },\n    \"kind\":\"NumT\"\n  }\n}",
-    "type":"$IdxWrapper<number>",
-    "reasons":[
-      {
-        "desc":"function call",
-        "loc":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":21,"column":19,"offset":557},
-          "end":{"line":21,"column":46,"offset":585}
-        },
-        "path":"test.js",
-        "line":21,
-        "endline":21,
-        "start":19,
-        "end":46
-      }
-    ],
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
+    "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",

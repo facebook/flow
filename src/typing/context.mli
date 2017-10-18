@@ -23,6 +23,7 @@ type local_metadata = {
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
+  strict: bool;
 }
 type global_metadata = {
   enable_const_params: bool;
@@ -89,6 +90,7 @@ val is_weak: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
+val require_map: t -> Type.t SMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map

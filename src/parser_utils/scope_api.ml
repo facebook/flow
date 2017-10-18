@@ -13,7 +13,6 @@ type use = Loc.t
 module Def = struct
   type t = {
     locs: Loc.t list;
-    scope: int;
     name: int;
   }
   let mem_loc x t = List.mem x t.locs
@@ -23,38 +22,47 @@ module Scope = struct
   type t = {
     lexical: bool;
     parent: int option;
+    defs: Def.t SMap.t;
+    locals: Def.t LocMap.t;
+    globals: SSet.t;
   }
 end
 
 type info = {
-  (* map from identifier locations to their defs and their enclosing scope ids *)
-  locals: (Def.t * int) LocMap.t;
-  (* map from name ids to globals they conflict with *)
-  globals: SSet.t IMap.t;
   (* number of distinct name ids *)
   max_distinct: int;
   (* map of scope ids to local scopes *)
   scopes: Scope.t IMap.t
 }
 
-let all_uses { locals; _ } =
-  LocMap.fold (fun use _ uses ->
-    use::uses
-  ) locals []
+let all_uses { scopes; _ } =
+  IMap.fold (fun _ scope acc ->
+    LocMap.fold (fun use _ uses ->
+      use::uses
+    ) scope.Scope.locals acc
+  ) scopes []
 
-let def_of_use { locals; _ } use =
-  let def, _ = LocMap.find use locals in
-  def
+let def_of_use { scopes; _ } use =
+  let def_opt = IMap.fold (fun _ scope acc ->
+    match acc with
+    | Some _ -> acc
+    | None -> LocMap.get use scope.Scope.locals
+  ) scopes None in
+  match def_opt with
+  | Some def -> def
+  | None -> failwith "missing def"
 
 let use_is_def info use =
   let def = def_of_use info use in
   Def.mem_loc use def
 
-let uses_of_def { locals; _ } ?(exclude_def=false) def =
-  LocMap.fold (fun use (def', _) uses ->
-    if exclude_def && Def.mem_loc use def' then uses
-    else if Def.(def.locs = def'.locs) then use::uses else uses
-  ) locals []
+let uses_of_def { scopes; _ } ?(exclude_def=false) def =
+  IMap.fold (fun _ scope acc ->
+    LocMap.fold (fun use def' uses ->
+      if exclude_def && Def.mem_loc use def' then uses
+      else if Def.(def.locs = def'.locs) then use::uses else uses
+    ) scope.Scope.locals acc
+  ) scopes []
 
 let uses_of_use info ?exclude_def use =
   let def = def_of_use info use in
@@ -63,14 +71,18 @@ let uses_of_use info ?exclude_def use =
 let def_is_unused info def =
   uses_of_def info ~exclude_def:true def = []
 
-let all_defs { locals; _ } =
-  LocMap.fold (fun use (def, _) defs ->
-    if Def.mem_loc use def then def::defs else defs
-  ) locals []
+let scope info scope_id =
+  try IMap.find_unsafe scope_id info.scopes with Not_found ->
+    failwith ("Scope " ^ (string_of_int scope_id) ^ " not found")
 
-let defs_of_scope info scope =
-  let defs = all_defs info in
-  List.filter (fun def -> scope = def.Def.scope) defs
+let is_local_use { scopes; _ } use =
+  IMap.exists (fun _ scope ->
+    LocMap.mem use scope.Scope.locals
+  ) scopes
 
-let is_local_use { locals; _ } use =
-  LocMap.mem use locals
+let rec fold_scope_chain info f scope_id acc =
+  let s = scope info scope_id in
+  let acc = f scope_id s acc in
+  match s.Scope.parent with
+  | Some parent_id -> fold_scope_chain info f parent_id acc
+  | None -> acc

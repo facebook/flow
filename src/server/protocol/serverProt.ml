@@ -36,6 +36,44 @@ type command =
 | SUGGEST of (string * string list) list
 | CONNECT
 
+let string_of_command = function
+| AUTOCOMPLETE fn ->
+  Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input fn)
+| CHECK_FILE (fn, _, _, _) ->
+  Printf.sprintf "check %s" (File_input.filename_of_file_input fn)
+| COVERAGE (fn, _) ->
+    Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
+| DUMP_TYPES (fn, _, _) ->
+    Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
+| FIND_MODULE (moduleref, filename) ->
+    Printf.sprintf "find-module %s %s" moduleref filename
+| FIND_REFS (fn, line, char) ->
+    Printf.sprintf "find-refs %s:%d:%d" (File_input.filename_of_file_input fn) line char
+| FORCE_RECHECK (files, force_focus) ->
+    Printf.sprintf
+      "force-recheck %s (focus = %b)" (String.concat " " files) force_focus
+| GEN_FLOW_FILES (files, _) ->
+    Printf.sprintf "gen-flow-files %s"
+      (files |> List.map File_input.filename_of_file_input |> String.concat " ")
+| GET_DEF (fn, line, char) ->
+    Printf.sprintf "get-def %s:%d:%d"
+      (File_input.filename_of_file_input fn) line char
+| GET_IMPORTS module_names ->
+    Printf.sprintf "get-imports %s" (String.concat " " module_names)
+| INFER_TYPE (fn, line, char, _, _) ->
+    Printf.sprintf "type-at-pos %s:%d:%d"
+      (File_input.filename_of_file_input fn) line char
+| KILL ->
+    "kill"
+| PORT (files) ->
+    Printf.sprintf "port %s" (String.concat " " files)
+| STATUS (_, _) ->
+    "status"
+| SUGGEST (_) ->
+    "suggest"
+| CONNECT ->
+    "connect"
+
 type command_with_context = {
   client_logging_context: FlowEventLogger.logging_context;
   command: command;

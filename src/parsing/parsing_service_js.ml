@@ -171,6 +171,11 @@ let extract_docblock =
      if @flow or @providesModule is found more than once, the first one is used
      and an error is returned. *)
   let rec parse_attributes (errors, info) = function
+    | (loc, "@flow") :: (_, "strict") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInStrict } in
+        parse_attributes acc xs
     | (loc, "@flow") :: (_, "weak") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
@@ -352,6 +357,7 @@ let types_checked types_mode info =
     | None
     | Some Docblock.OptOut -> false
     | Some Docblock.OptIn
+    | Some Docblock.OptInStrict
     | Some Docblock.OptInWeak -> true
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =

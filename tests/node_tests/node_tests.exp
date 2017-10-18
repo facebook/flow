@@ -308,23 +308,38 @@ Error: os/userInfo.js:14
  14: (u3.username: string); // error
                    ^^^^^^ string
 
-Error: process/nextTick.js:14
- 14:   0, // Error: number ~> string
-       ^ number. This type is incompatible with the expected param type of
+Error: process/nextTick.js:13
  13:   (a: string, b: number, c: boolean) => {},
-           ^^^^^^ string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1937
+  This parameter is incompatible:
+     14:   0, // Error: number ~> string
+           ^ number. This type is incompatible with
+     13:   (a: string, b: number, c: boolean) => {},
+               ^^^^^^ string
 
-Error: process/nextTick.js:16
- 16:   null // Error: null ~> boolean
-       ^^^^ null. This type is incompatible with the expected param type of
+Error: process/nextTick.js:13
  13:   (a: string, b: number, c: boolean) => {},
-                                 ^^^^^^^ boolean
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1937
+  This parameter is incompatible:
+     16:   null // Error: null ~> boolean
+           ^^^^ null. This type is incompatible with
+     13:   (a: string, b: number, c: boolean) => {},
+                                     ^^^^^^^ boolean
 
-Error: process/nextTick.js:22
- 22:   'y', // Error: string ~> number
-       ^^^ string. This type is incompatible with the expected param type of
+Error: process/nextTick.js:20
  20:   (a: string, b: number, c: boolean) => {},
-                      ^^^^^^ number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1937
+  This parameter is incompatible:
+     22:   'y', // Error: string ~> number
+           ^^^ string. This type is incompatible with
+     20:   (a: string, b: number, c: boolean) => {},
+                          ^^^^^^ number
 
 Error: process/nextTick.js:27
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments

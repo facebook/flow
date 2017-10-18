@@ -529,7 +529,7 @@ module type Access = sig
     | Missing_key_error of string * keytrace
     | Wrong_type_error of keytrace * json_type
 
-  type 'a m = (('a * keytrace), access_failure) Result.t
+  type 'a m = (('a * keytrace), access_failure) result
 
   val access_failure_to_string : access_failure -> string
 
@@ -555,7 +555,7 @@ module Access = struct
     | Missing_key_error of string * keytrace
     | Wrong_type_error of keytrace * json_type
 
-  type 'a m = (('a * keytrace), access_failure) Result.t
+  type 'a m = (('a * keytrace), access_failure) result
 
   let keytrace_to_string x =
     if x = [] then "" else
@@ -571,26 +571,28 @@ module Access = struct
       Printf.sprintf "Value expected to be %s%s"
         (json_type_to_string y) (keytrace_to_string x)
 
-  let return v = Result.Ok (v, [])
+  let return v = Ok (v, [])
 
-  let (>>=) m f = Result.bind m f
+  let (>>=) m f = match m with
+    | Error _ as x -> x
+    | Ok x -> f x
 
   let counit_with f m = match m with
-    | Result.Ok (v, _) ->
+    | Ok (v, _) ->
       v
-    | Result.Error e ->
+    | Error e ->
       f e
 
   let to_option = function
-    | Result.Ok (v, _) -> Some v
-    | Result.Error _ -> None
+    | Ok (v, _) -> Some v
+    | Error _ -> None
 
   let catch_type_error exp f (v, keytrace) =
-    try Result.Ok (f v, keytrace) with
+    try Ok (f v, keytrace) with
       | Failure msg when (String.equal "int_of_string" msg) ->
-        Result.Error (Wrong_type_error (keytrace, exp))
+        Error (Wrong_type_error (keytrace, exp))
       | Assert_failure _ ->
-        Result.Error (Wrong_type_error (keytrace, exp))
+        Error (Wrong_type_error (keytrace, exp))
 
   let get_val k (v, keytrace) =
     try begin
@@ -601,12 +603,12 @@ module Access = struct
         else None
       ) in
       match candidate with
-      | None -> Result.Error (Missing_key_error (k, keytrace))
+      | None -> Error (Missing_key_error (k, keytrace))
       | Some obj ->
-        Result.Ok (obj, k :: keytrace)
+        Ok (obj, k :: keytrace)
     end with
     | Assert_failure _ ->
-      Result.Error (Not_an_object (keytrace))
+      Error (Not_an_object (keytrace))
 
   let make_object_json v =
     JSON_Object (get_object_exn v)

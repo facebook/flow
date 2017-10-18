@@ -1,8 +1,13 @@
 Error: apply.js:12
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
-                          ^^^ number. Expected number literal `123`, got `456` instead
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+           ^^^^^^ function. This type is incompatible with the expected param type of
+  4:   fn: (...Args) => Ret,
+           ^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
+                              ^^^ number. Expected number literal `123`, got `456` instead
+     10: function noRest(x: 'hi', y: 123): true { return true; }
+                                     ^^^ number literal `123`
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
@@ -38,9 +43,14 @@ Error: apply.js:21
 
 Error: apply.js:31
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
-                              ^^^ number. Expected number literal `123`, got `456` instead
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+               ^^^^^^ function. This type is incompatible with the expected param type of
+ 25:   fn: (...Args) => Ret,
+           ^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
+                                  ^^^ number. Expected number literal `123`, got `456` instead
+     10: function noRest(x: 'hi', y: 123): true { return true; }
+                                     ^^^ number literal `123`
 
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args

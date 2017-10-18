@@ -116,18 +116,18 @@ let print_edit b edit =
 
 let edit_file content (edits: text_edit list) =
   try
-    Result.Ok (List.fold ~init:content ~f:apply_edit edits)
+    Ok (List.fold ~init:content ~f:apply_edit edits)
   with e ->
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
     Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
     List.iter edits ~f:(print_edit b);
-    Result.Error (Buffer.contents b)
+    Error (Buffer.contents b)
 
 let edit_file_unsafe fc edits =
   match edit_file fc edits with
-  | Result.Ok r -> r
-  | Result.Error e ->
+  | Ok r -> r
+  | Error e ->
       Printf.eprintf "%s" e;
       failwith e

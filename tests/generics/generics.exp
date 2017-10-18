@@ -18,7 +18,7 @@ Error: generics.js:28
 
 Error: generics.js:28
  28: var x:string = e.set(0);
-                    ^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+                    ^^^^^^^^ undefined. This type is incompatible with
  28: var x:string = e.set(0);
            ^^^^^^ string
 

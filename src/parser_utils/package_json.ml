@@ -10,7 +10,7 @@ type t = {
   main: string option;
 }
 
-let (>>=) = Result.(>>=)
+let (>>=) = Core_result.(>>=)
 
 let empty = { name = None; main = None; }
 let name package = package.name

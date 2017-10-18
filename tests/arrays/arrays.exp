@@ -4,9 +4,9 @@ Error: Arrays.js:10
   4: function foo(x:string) { }
                     ^^^^^^ string
 
-Error: numeric_elem.js:6
-  6: arr[day] = 0;
-                ^ number. This type is incompatible with
+Error: numeric_elem.js:7
+  7: (arr[day]: string); // error: number ~> string
+      ^^^^^^^^ number. This type is incompatible with
   7: (arr[day]: string); // error: number ~> string
                 ^^^^^^ string
 

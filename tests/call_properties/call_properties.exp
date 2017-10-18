@@ -12,11 +12,9 @@ Error: A.js:13
 
 Error: A.js:18
  18:   return f();
-              ^^^ function call
- 18:   return f();
-              ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 17: function d(f: { (x: number): number }): number {
-                         ^^^^^^ number
+              ^^^ function call. Called with too few arguments
+   17: function d(f: { (x: number): number }): number {
+                       ^^^^^^^^^^^^^^^^^^^ function type expects more arguments
 
 Error: A.js:23
  23:   return f();

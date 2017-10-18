@@ -81,8 +81,6 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
-    | TaintT of reason
-
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
@@ -168,11 +166,8 @@ module rec TypeTerm : sig
     (** Here's to the crazy ones. The misfits. The rebels. The troublemakers.
         The round pegs in the square holes. **)
 
-    (* util for deciding subclassing relations *)
-    | ExtendsT of reason * t list * t * t
-
-    (* toolkit for making choices *)
-    | ChoiceKitT of reason * choice_tool
+    (* types that should never appear in signatures *)
+    | InternalT of internal_t
 
     (* upper bound trigger for type destructors *)
     | TypeDestructorTriggerT of reason * destructor * t
@@ -180,10 +175,6 @@ module rec TypeTerm : sig
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
-
-    (* Internal-only type that wraps object types for the CustomFunT(Idx)
-       function *)
-    | IdxWrapper of reason * t
 
     (** Predicate types **)
 
@@ -197,7 +188,6 @@ module rec TypeTerm : sig
     | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
 
     | ReposT of reason * t
-    | ReposUpperT of reason * t
 
   and def_t =
     | NumT of number_literal literal
@@ -274,6 +264,16 @@ module rec TypeTerm : sig
        implementation of destructors. *)
     | TypeDestructorT of reason * destructor
 
+  and internal_t =
+    (* toolkit for making choices *)
+    | ChoiceKitT of reason * choice_tool
+    (* util for deciding subclassing relations *)
+    | ExtendsT of reason * t * t
+    (* Internal-only type that wraps object types for the CustomFunT(Idx)
+       function *)
+    | IdxWrapper of reason * t
+    | ReposUpperT of reason * t
+
   and internal_use_op =
     | CopyEnv
     | MergeEnv
@@ -283,6 +283,7 @@ module rec TypeTerm : sig
   and use_op =
     | Addition
     | Coercion
+    | FunCallMissingArg of reason * reason
     | FunCallParam
     | FunCallThis of reason
     | FunImplicitReturn
@@ -593,11 +594,14 @@ module rec TypeTerm : sig
      * elements resolve to. ResolveSpreadT is a use type that waits for a list
      * of spread and non-spread elements to resolve, and then constructs
      * whatever type it resolves to *)
-    | ResolveSpreadT of reason * resolve_spread_type
+    | ResolveSpreadT of use_op * reason * resolve_spread_type
 
     (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
      * the lower bound is empty. *)
     | CondT of reason * t * t_out
+
+    (* util for deciding subclassing relations *)
+    | ExtendsUseT of use_op * reason * t list * t * t
 
   and specialize_cache = reason list option
 
@@ -1290,8 +1294,8 @@ and UnionRep : sig
   (** build a rep from list of members *)
   val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  (** enum base type, if any *)
-  val enum_base: t -> TypeTerm.t option
+  (** replace reason with enum desc, if any *)
+  val enum_reason: reason -> t -> reason
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
@@ -1310,40 +1314,42 @@ and UnionRep : sig
 
 end = struct
 
+  type canon_t =
+    | StrCanon of string
+    | NumCanon of TypeTerm.number_literal
+
+  type base_t =
+    | StrBase
+    | NumBase
+
+  let desc_of_base = function
+    | StrBase -> RStringEnum
+    | NumBase -> RNumberEnum
+
+  let base_of_canon = function
+    | StrCanon _ -> StrBase
+    | NumCanon _ -> NumBase
+
   (* canonicalize a type w.r.t. enum membership *)
-  let canon t = TypeTerm.(
-    match t with
-    | DefT (_, SingletonStrT _) -> t
-    | DefT (r, StrT (Literal (_, s))) -> DefT (r, SingletonStrT s)
-    | DefT (_, SingletonNumT _) -> t
-    | DefT (r, NumT (Literal (_, lit))) -> DefT (r, SingletonNumT lit)
-    | _ -> t
+  let canon = TypeTerm.(function
+    | DefT (_, SingletonStrT lit)
+    | DefT (_, StrT (Literal (_, lit))) -> Some (StrCanon lit)
+    | DefT (_, SingletonNumT lit)
+    | DefT (_, NumT (Literal (_, lit))) -> Some (NumCanon lit)
+    | _ -> None
+  )
+
+  let base_of_t = TypeTerm.(function
+    | DefT (_, SingletonStrT _) -> Some StrBase
+    | DefT (_, SingletonNumT _) -> Some NumBase
+    | _ -> None
   )
 
   (* enums are stored as singleton type sets *)
-  module EnumSet : Set.S with type elt = TypeTerm.t = Set.Make(struct
-    type elt = TypeTerm.t
-    type t = elt
-    let compare x y = TypeTerm.(
-      match x, y with
-      | DefT (_, SingletonStrT a), DefT (_, SingletonStrT b) ->
-        Pervasives.compare a b
-      | DefT (_, SingletonNumT (a, _)), DefT (_, SingletonNumT (b, _)) ->
-        Pervasives.compare a b
-      | _ -> Pervasives.compare x y
-    )
+  module EnumSet : Set.S with type elt = canon_t = Set.Make(struct
+    type t = canon_t
+    let compare = Pervasives.compare
   end)
-
-  (* given a type, return corresponding enum base type if any *)
-  let base_of_t = TypeTerm.(
-    let str = Some (DefT (locationless_reason RStringEnum, StrT AnyLiteral)) in
-    let num = Some (DefT (locationless_reason RNumberEnum, NumT AnyLiteral)) in
-    fun t ->
-      match t with
-      | DefT (_, SingletonStrT _) -> str
-      | DefT (_, SingletonNumT _) -> num
-      | _ -> None
-  )
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -1353,27 +1359,31 @@ end = struct
    *)
   type t =
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
-    (TypeTerm.t * EnumSet.t) option
+    (base_t * EnumSet.t) option
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
-    match base_of_t t with
-    | Some tbase when tbase = base ->
-      Some (base, EnumSet.add t tset)
+    match Option.both (base_of_t t) (canon t) with
+    | Some (tbase, tcanon) when tbase = base ->
+      Some (base, EnumSet.add tcanon tset)
     | _ -> None
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
   let make t0 t1 ts =
-    let enum = Option.bind (base_of_t t0) (fun base ->
-      ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t0) (t1::ts)
-    ) in
+    let enum = match Option.both (base_of_t t0) (canon t0) with
+    | None -> None
+    | Some (tbase, tcanon) ->
+      let enum = EnumSet.singleton tcanon in
+      ListUtils.fold_left_opt acc_enum (tbase, enum) (t1::ts)
+    in
     t0, t1, ts, enum
 
-  let enum_base (_, _, _, enum) =
+  let enum_reason r (_, _, _, enum) =
     match enum with
-    | None -> None
-    | Some (base, _) -> Some base
+    | None -> r
+    | Some (b, _) ->
+      replace_reason_const (desc_of_base b) r
 
   let members (t0, t1, ts, _) = t0::t1::ts
   let members_nel (t0, t1, ts, _) = t0, (t1, ts)
@@ -1394,15 +1404,15 @@ end = struct
     if changed then make t0_ t1_ ts_ else rep
 
   let quick_mem t (t0, t1, ts, enum) =
-    let t = canon t in
-    match enum with
+    match Option.both (canon t) enum with
     | None ->
-      if List.mem t (t0::t1::ts) then Some true else None
-    | Some (base, tset) ->
-      match base_of_t t with
-      | Some tbase when tbase = base ->
-        Some (EnumSet.mem t tset)
-      | _ -> Some false
+      if List.mem t (t0::t1::ts)
+      then Some true
+      else Option.map ~f:(Fn.const false) enum
+    | Some (tcanon, (base, tset)) ->
+      if (base_of_canon tcanon) = base
+      then Some (EnumSet.mem tcanon tset)
+      else Some false
 end
 
 (* We encapsulate IntersectionT's internal structure.
@@ -1758,9 +1768,8 @@ let is_use = function
   | _ -> true
 
 (* not all so-called def types can appear as use types *)
-(* TODO: separate these misfits out *)
 let is_proper_def = function
-  | ChoiceKitT _ -> false
+  | InternalT _ -> false
   | _ -> true
 
 (* convenience *)
@@ -1885,6 +1894,7 @@ let any_propagating_use_t = function
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
   | ConcretizeTypeAppsT _
+  | ExtendsUseT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
@@ -1907,7 +1917,7 @@ let rec reason_of_t = function
   | AnyWithUpperBoundT (t) -> reason_of_t t
   | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
-  | ChoiceKitT (reason, _) -> reason
+  | InternalT (ChoiceKitT (reason, _)) -> reason
   | TypeDestructorTriggerT (reason, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
@@ -1915,12 +1925,12 @@ let rec reason_of_t = function
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
-  | ExtendsT (reason, _, _, _) -> reason
+  | InternalT (ExtendsT (reason, _, _)) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
-  | IdxWrapper (reason, _) -> reason
+  | InternalT (IdxWrapper (reason, _)) -> reason
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | NullProtoT reason -> reason
@@ -1929,9 +1939,8 @@ let rec reason_of_t = function
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
-  | ReposUpperT (reason, _) -> reason
+  | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
   | ShapeT (t) -> reason_of_t t
-  | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
 
@@ -1969,6 +1978,7 @@ and reason_of_use_t = function
   | EqT (reason, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
+  | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
@@ -2006,7 +2016,7 @@ and reason_of_use_t = function
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
-  | ResolveSpreadT (reason, _) -> reason
+  | ResolveSpreadT (_, reason, _) -> reason
   | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
@@ -2052,7 +2062,7 @@ let rec mod_reason_of_t f = function
   | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
-  | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
+  | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | TypeDestructorTriggerT (reason, d, t) -> TypeDestructorTriggerT (f reason, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
@@ -2061,12 +2071,12 @@ let rec mod_reason_of_t f = function
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
-  | ExtendsT (reason, ts, t, tc) -> ExtendsT (f reason, ts, t, tc)
+  | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-  | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
+  | InternalT (IdxWrapper (reason, t)) -> InternalT (IdxWrapper (f reason, t))
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullProtoT reason -> NullProtoT (f reason)
@@ -2075,9 +2085,8 @@ let rec mod_reason_of_t f = function
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
-  | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
+  | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
-  | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
 
@@ -2122,6 +2131,8 @@ and mod_reason_of_use_t f = function
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
   | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
+  | ExtendsUseT (use_op, reason, ts, t1, t2) ->
+    ExtendsUseT(use_op, f reason, ts, t1, t2)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
@@ -2166,7 +2177,7 @@ and mod_reason_of_use_t f = function
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
-  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
+  | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
@@ -2267,7 +2278,7 @@ let string_of_ctor = function
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
   | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
-  | ChoiceKitT (_, tool) ->
+  | InternalT (ChoiceKitT (_, tool)) ->
     spf "ChoiceKitT %s" begin match tool with
     | Trigger -> "Trigger"
     end
@@ -2278,12 +2289,12 @@ let string_of_ctor = function
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"
-  | ExtendsT _ -> "ExtendsT"
+  | InternalT (ExtendsT _) -> "ExtendsT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
-  | IdxWrapper _ -> "IdxWrapper"
+  | InternalT (IdxWrapper _) -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
@@ -2292,9 +2303,8 @@ let string_of_ctor = function
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
   | ReposT _ -> "ReposT"
-  | ReposUpperT _ -> "ReposUpperT"
+  | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
-  | TaintT _ -> "TaintT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
 
@@ -2307,6 +2317,7 @@ let string_of_internal_use_op = function
 let string_of_use_op = function
   | Addition -> "Addition"
   | Coercion -> "Coercion"
+  | FunCallMissingArg _ -> "FunCallMissingArg"
   | FunCallParam -> "FunCallParam"
   | FunCallThis _ -> "FunCallThis"
   | FunImplicitReturn -> "FunImplicitReturn"
@@ -2355,6 +2366,7 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
+  | ExtendsUseT _ -> "ExtendsUseT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
@@ -2397,7 +2409,7 @@ let string_of_use_ctor = function
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
-  | ResolveSpreadT (_, {rrt_resolve_to; _;})->
+  | ResolveSpreadT (_, _, {rrt_resolve_to; _;})->
     spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
     | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
@@ -2524,9 +2536,13 @@ let this_class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
-let extends_type l u =
+let extends_type r l u =
+  let reason = replace_reason (fun desc -> RExtends desc) r in
+  InternalT (ExtendsT (reason, l, u))
+
+let extends_use_type use_op l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
-  ExtendsT (reason, [], l, u)
+  ExtendsUseT (use_op, reason, [], l, u)
 
 let poly_type id tparams t =
   if tparams = []

@@ -58,7 +58,6 @@ type hash =
   | ExistsH
   | ExactH
   | MaybeH
-  | TaintH
   | IntersectionH
   | UnionH
   | AnyWithLowerBoundH
@@ -75,15 +74,11 @@ type hash =
   | TypeH
   | AnnotH
   | ModuleH
-  | ExtendsH
-  | ChoiceKitH
   | TvarDestructorH
   | CustomFunH
-  | IdxWrapperH
   | OpenPredH
   | CharSetH
   | ReposH
-  | ReposUpperH
   | BindH
   | CallH
   | MethodH
@@ -166,6 +161,7 @@ type hash =
   | RefineH
   | ResolveSpreadH
   | CondH
+  | ExtendsUseH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -199,6 +195,7 @@ let hash_of_def_ctor = Type.(function
 
 let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
+  | InternalT _ -> failwith "undefined hash of InternalT"
   | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
   | AnnotT _ -> AnnotH
@@ -206,7 +203,6 @@ let hash_of_ctor = Type.(function
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
   | MergedT _ -> MergedH
   | BoundT _ -> BoundH
-  | ChoiceKitT _ -> ChoiceKitH
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
@@ -214,12 +210,10 @@ let hash_of_ctor = Type.(function
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
-  | ExtendsT _ -> ExtendsH
   | FunProtoT _ -> FunProtoH
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
-  | IdxWrapper _ -> IdxWrapperH
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
   | NullProtoT _ -> NullProtoH
@@ -227,9 +221,7 @@ let hash_of_ctor = Type.(function
   | MatchingPropT _ -> MatchingPropH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
-  | ReposUpperT _ -> ReposUpperH
   | ShapeT _ -> ShapeH
-  | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
 )
@@ -319,6 +311,7 @@ let hash_of_use_ctor = Type.(function
   | RefineT _ -> RefineH
   | ResolveSpreadT _ -> ResolveSpreadH
   | CondT _ -> CondH
+  | ExtendsUseT _ -> ExtendsUseH
 )
 
 type prop_hash =

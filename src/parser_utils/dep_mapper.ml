@@ -178,13 +178,15 @@ class mapper = object(this)
   val merge_dep = Dep.merge_dep
 
   method! program (program: Loc.t Ast.program) =
-    let { Scope_api.locals; globals=_; max_distinct=_; scopes=_ } =
+    let { Scope_api.scopes; max_distinct=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    use_def_map <- LocMap.map (fun ({ Scope_api.Def.locs; _ }, _) ->
-      (* TODO: investigate whether picking the first location where there could
-         be multiple is fine in principle *)
-      List.hd locs
-    ) locals;
+    use_def_map <- IMap.fold (fun _ scope acc ->
+      LocMap.fold (fun loc { Scope_api.Def.locs; _ } acc ->
+        (* TODO: investigate whether picking the first location where there could
+          be multiple is fine in principle *)
+        LocMap.add loc (List.hd locs) acc
+      ) scope.Scope_api.Scope.locals acc
+    ) scopes LocMap.empty;
     LocMap.iter
       (fun _ def_loc ->
         let open Dep in

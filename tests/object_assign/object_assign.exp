@@ -56,7 +56,7 @@ Error: non_objects.js:5
 
 Error: spread.js:7
   7: (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
-                    ^^ object literal. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   7: (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
                                        ^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -67,7 +67,7 @@ Error: spread.js:7
 
 Error: spread.js:8
   8: (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
-                    ^^ object literal. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   8: (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
                                          ^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -78,7 +78,7 @@ Error: spread.js:8
 
 Error: spread.js:9
   9: (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
-                    ^^ object literal. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   9: (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -87,9 +87,14 @@ Error: spread.js:9
       9: (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
                                                          ^^^^^^^ boolean
 
-Error: spread.js:12
+Error: spread.js:11
+      v-------------
+ 11: (Object.assign(
  12:   {},
-       ^^ object literal. This type is incompatible with
+ 13:   ...[{a: 1}, {b: 'foo'}],
+ 14:   ...[{c: true}],
+ 15: ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
+     ^ object literal. This type is incompatible with
  15: ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `b` is incompatible:

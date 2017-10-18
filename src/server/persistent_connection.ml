@@ -31,10 +31,19 @@ let send_message_to_client message connection =
       connection.client_id
   else
     begin try Marshal_tools.to_fd_with_preamble connection.outfd message
-    with Unix.Unix_error (Unix.EPIPE, _, _) ->
+    with
+    | Unix.Unix_error (Unix.EPIPE, _, _) ->
       (* Broken pipe most likely means that the client has died *)
       connection.broken <- true;
-      Hh_logger.info "Marking client #%d as broken due to an EPIPE error" connection.client_id
+      Hh_logger.info
+        "Marking client #%d as broken due to an EPIPE error during send"
+        connection.client_id
+    | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+      (* Windows throws ECONNRESET instead of EPIPE *)
+      connection.broken <- true;
+      Hh_logger.info
+        "Marking client #%d as broken due to an ECONNRESET error during send"
+        connection.client_id
     end
 
 
@@ -187,11 +196,35 @@ let client_did_close connections client ~filenames =
 let get_logging_context client = client.logging_context
 
 let input_value client =
-  try Some (Marshal_tools.from_fd_with_preamble client.infd)
-  with End_of_file ->
-    client.broken <- true;
-    Hh_logger.info "Marking client #%d as broken due to an End_of_file error" client.client_id;
+  if client.broken
+  then begin
+    Hh_logger.info "Skipping reading from broken persistent connection client #%d" client.client_id;
     None
+  end else begin
+    try Some (Marshal_tools.from_fd_with_preamble client.infd)
+    with
+    | End_of_file ->
+      (* End_of_file likely means the client is dead *)
+      client.broken <- true;
+      Hh_logger.info
+        "Marking client #%d as broken due to an end of file error during read"
+        client.client_id;
+      None
+    | Unix.Unix_error (Unix.EPIPE, _, _) ->
+      (* Broken pipe most likely means that the client has died *)
+      client.broken <- true;
+      Hh_logger.info
+        "Marking client #%d as broken due to an EPIPE error during read"
+        client.client_id;
+      None
+    | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+      (* Windows throws ECONNRESET instead of EPIPE *)
+      client.broken <- true;
+      Hh_logger.info
+        "Marking client #%d as broken due to an ECONNRESET error during read"
+        client.client_id;
+      None
+  end
 
 let get_opened_files clients =
   List.fold_left (fun acc client -> SSet.union acc (client.opened_files)) SSet.empty clients

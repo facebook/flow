@@ -148,7 +148,7 @@ Trace:
  10: var B = React.createClass({
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
-     -^ ~> UseT(UnknownUse, ExtendsT) [extends React$Component] (from [not shown])
+     -^ ~> ExtendsUseT [extends React$Component] (from [not shown])
 
 Error: Traces2.js:11
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
@@ -176,7 +176,7 @@ Trace:
  10: var B = React.createClass({
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
-     -^ ~> UseT(UnknownUse, ExtendsT) [extends React$Component] (from [not shown])
+     -^ ~> ExtendsUseT [extends React$Component] (from [not shown])
 
 Error: Traces2.js:14
  14: function f(b): Element<*> {

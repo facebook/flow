@@ -261,13 +261,7 @@ Error: test16.js:14
 
 Error: test17.js:7
   7: ([].concat([0,1])[1]: string)
-                 ^ number. This type is incompatible with
-  7: ([].concat([0,1])[1]: string)
-                           ^^^^^^ string
-
-Error: test17.js:7
-  7: ([].concat([0,1])[1]: string)
-                   ^ number. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
   7: ([].concat([0,1])[1]: string)
                            ^^^^^^ string
 
@@ -410,4 +404,4 @@ Error: test9.js:12
                   ^ null. The operand of an arithmetic operation must be a number.
 
 
-Found 26 errors
+Found 25 errors

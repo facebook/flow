@@ -115,6 +115,9 @@ class mapper = object(this)
     | (loc, With stuff) ->
       id this#with_ stuff stmt (fun stuff -> loc, With stuff)
 
+    | (loc, TypeAlias stuff) ->
+      id this#type_alias stuff stmt (fun stuff -> loc, TypeAlias stuff)
+
     (* TODO: ES6 or Flow specific stuff *)
     | (_loc, Debugger) -> stmt
     | (_loc, DeclareClass _) -> stmt
@@ -124,7 +127,6 @@ class mapper = object(this)
     | (_loc, DeclareOpaqueType _) -> stmt
     | (_loc, DeclareVariable _) -> stmt
     | (_loc, InterfaceDeclaration _) -> stmt
-    | (_loc, TypeAlias _) -> stmt
     | (_loc, OpaqueType _) -> stmt
 
   method comment (c: Loc.t Ast.Comment.t) = c
@@ -486,12 +488,35 @@ class mapper = object(this)
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
     | _ -> git (* TODO *)
 
+  method type_parameter_instantiation (pi: Loc.t Ast.Type.ParameterInstantiation.t) =
+    let open Ast.Type.ParameterInstantiation in
+    let loc, { params; } = pi in
+    let params' = map_list this#type_ params in
+    if params' == params then pi
+    else loc, { params = params'; }
+
+  method type_parameter_declaration (pd: Loc.t Ast.Type.ParameterDeclaration.t) =
+    let open Ast.Type.ParameterDeclaration in
+    let loc, { params; } = pd in
+    let params' = map_list this#type_parameter_declaration_type_param params in
+    if params' == params then pd
+    else loc, { params = params'; }
+
+  method type_parameter_declaration_type_param (type_param: Loc.t Ast.Type.ParameterDeclaration.TypeParam.t) =
+    let open Ast.Type.ParameterDeclaration.TypeParam in
+    let loc, { name; bound; variance; default; } = type_param in
+    let bound' = map_opt this#type_annotation bound in
+    let default' = map_opt this#type_ default in
+    if bound' == bound && default' == default then type_param
+    else loc, { name; bound = bound'; variance; default = default'; }
+
   method generic_type (gt: Loc.t Ast.Type.Generic.t) =
     let open Ast.Type.Generic in
     let { id; typeParameters; } = gt in
     let id' = this#generic_identifier_type id in
-    if id' == id then gt
-    else { id = id'; typeParameters }
+    let typeParameters' = map_opt this#type_parameter_instantiation typeParameters in
+    if id' == id && typeParameters' == typeParameters then gt
+    else { id = id'; typeParameters = typeParameters' }
 
   method type_ (t: Loc.t Ast.Type.t) =
     let open Ast.Type in
@@ -599,12 +624,13 @@ class mapper = object(this)
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     match importKind with
-    | ImportValue ->
+    | ImportValue
+    | ImportType ->
       let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
       if specifiers == specifiers' && default == default' then decl
       else { importKind; source; specifiers = specifiers'; default = default' }
-    | ImportType | ImportTypeof -> decl (* TODO *)
+    | ImportTypeof -> decl (* TODO *)
 
   method import_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.specifier) =
     let open Ast.Statement.ImportDeclaration in
@@ -1065,6 +1091,15 @@ class mapper = object(this)
     let body' = this#statement body in
     if _object == _object' && body == body' then stuff
     else { _object = _object'; body = body' }
+
+  method type_alias (stuff: Loc.t Ast.Statement.TypeAlias.t) =
+    let open Ast.Statement.TypeAlias in
+    let { id; typeParameters; right } = stuff in
+    let id' = this#identifier id in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let right' = this#type_ right in
+    if id == id' && right == right' && typeParameters == typeParameters' then stuff
+    else { id = id'; typeParameters = typeParameters'; right = right' }
 
   (* TODO *)
   method yield (expr: Loc.t Ast.Expression.Yield.t) = expr

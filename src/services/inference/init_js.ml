@@ -82,7 +82,7 @@ let load_lib_files ~master_cx ~options files =
         in
 
         let cx, syms = Infer.infer_lib_file
-          ~metadata ~exclude_syms ~lint_severities:(Some lint_severities)
+          ~metadata ~exclude_syms ~lint_severities
           lib_file ast
         in
 

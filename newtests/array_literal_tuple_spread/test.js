@@ -109,15 +109,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:6
-            6:         return foo([...arr, 1]);
-                                           ^ number. Expected number literal \`2\`, got \`1\` instead
+          test.js:15
            15:       (ret[5]: 2);
-                              ^ number literal \`2\`
-
-          test.js:8
-            8:       const ret = foo([1]);
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
            15:       (ret[5]: 2);
                               ^ number literal \`2\`
         `,
@@ -149,9 +143,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:8
-            8:       const ret = foo([1]);
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+          test.js:15
+           15:       (ret[5]: 2);
+                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
            15:       (ret[5]: 2);
                               ^ number literal \`2\`
         `,
@@ -204,9 +198,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(ret1[0]: 2);')
       .newErrors(
         `
-          test.js:8
-            8:       const ret2 = foo([3]);
-                                       ^ number. Expected number literal \`2\`, got \`3\` instead
+          test.js:11
+           11: (ret1[0]: 2);
+                ^^^^^^^ number. Expected number literal \`2\`, got \`3\` instead
            11: (ret1[0]: 2);
                          ^ number literal \`2\`
         `,
@@ -215,9 +209,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(ret2[0]: 3);')
       .newErrors(
         `
-          test.js:7
-            7:       const ret1 = foo([2]);
-                                       ^ number. Expected number literal \`3\`, got \`2\` instead
+          test.js:13
+           13: (ret2[0]: 3);
+                ^^^^^^^ number. Expected number literal \`3\`, got \`2\` instead
            13: (ret2[0]: 3);
                          ^ number literal \`3\`
         `,

@@ -389,8 +389,14 @@ class ssa_builder = object(this)
   method! variable_declarator ~kind (decl: Loc.t Ast.Statement.VariableDeclaration.Declarator.t) =
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (_loc, { id; init }) = decl in
-    ignore @@ Flow_ast_mapper.map_opt this#expression init;
-    ignore @@ this#variable_declarator_pattern ~kind id;
+    (* `var x;` is not a write of `x` *)
+    begin match init with
+    | Some init ->
+      ignore @@ this#expression init;
+      ignore @@ this#variable_declarator_pattern ~kind id
+    | None ->
+      ()
+    end;
     decl
 
   (* read and write (when the argument is an identifier) *)

@@ -252,7 +252,7 @@ module Watchman_actual = struct
          raise Exit_status.(Exit_with Watchman_fresh_instance)
        end
        else
-         Result.Ok ((), trace)
+         Ok ((), trace)
       ) in
     ()
 
@@ -364,9 +364,9 @@ module Watchman_actual = struct
     (** Projects down from the boolean error monad into booleans.
      * Error states go to false, values are projected directly. *)
     let project_bool m = match m with
-      | Result.Ok (v, _) ->
+      | Ok (v, _) ->
         v
-      | Result.Error _ ->
+      | Error _ ->
         false
     in
     let open Hh_json.Access in
@@ -582,12 +582,12 @@ module Watchman_actual = struct
     let files = set_of_list @@ extract_file_names env data in
     env.clockspec <- clock;
     let response = Changed_merge_base (mergebase, files) in
-    Result.Ok ((env, response), keytrace)
+    Ok ((env, response), keytrace)
 
   let transform_asynchronous_get_changes_response env data =
     match make_mergebase_changed_response env data with
-    | Result.Ok ((env, response), _) -> env, response
-    | Result.Error _ ->
+    | Ok ((env, response), _) -> env, response
+    | Error _ ->
       env.clockspec <- J.get_string_val "clock" data;
       assert_no_fresh_instance data;
       try env, make_state_change_response `Enter
@@ -629,15 +629,15 @@ module Watchman_actual = struct
     let is_finished_flush_response json =
       let open Hh_json.Access in
       let synced = (return json) >>= get_array "synced" |> begin function
-        | Result.Error _ -> false
-        | Result.Ok (vs, _) ->
+        | Error _ -> false
+        | Ok (vs, _) ->
           List.fold_left vs ~init:false ~f:(fun acc v ->
             acc || ((Hh_json.get_string_exn v) = subscription_name)) end
       in
       let not_needed = (return json) >>= get_array "no_sync_needed"
         |> begin function
-          | Result.Error _ -> false
-          | Result.Ok (vs, _) ->
+          | Error _ -> false
+          | Ok (vs, _) ->
             List.fold_left vs ~init:false ~f:(fun acc v ->
               acc || ((Hh_json.get_string_exn v) = subscription_name)) end
       in
