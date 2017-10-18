@@ -270,24 +270,24 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       ~workers
       ~env
       client_context
-      (file_input, line, col, verbose, include_raw) =
+      (file_input, line, col, verbose) =
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     let options = { options with Options.opt_verbose = verbose } in
     try_with begin fun () ->
       Type_info_service.type_at_pos
-        ~options ~workers ~env ~client_context ~include_raw
+        ~options ~workers ~env ~client_context
         file content line col
     end
 
-  let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
+  let dump_types ~options ~workers ~env file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     try_with begin fun () ->
       Type_info_service.dump_types
-        ~options ~workers ~env ~include_raw ~strip_root file content
+        ~options ~workers ~env file content
     end
 
   let coverage ~options ~workers ~env ~force file_input =
@@ -661,9 +661,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
-    | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
+    | ServerProt.DUMP_TYPES (fn) ->
         let types: ServerProt.dump_types_response =
-          dump_types ~options ~workers ~env ~include_raw ~strip_root fn
+          dump_types ~options ~workers ~env fn
         in
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
@@ -690,11 +690,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.GET_IMPORTS module_names ->
         (get_imports ~options module_names: ServerProt.get_imports_response)
           |> marshal
-    | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
+    | ServerProt.INFER_TYPE (fn, line, char, verbose) ->
         (infer_type
             ~options ~workers ~env
             client_logging_context
-            (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
+            (fn, line, char, verbose) : ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
         (Ok () : ServerProt.stop_response) |> marshal;

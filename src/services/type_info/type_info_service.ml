@@ -15,7 +15,7 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1; offset = 0; };
   }
 
-let type_at_pos ~options ~workers ~env ~client_context ~include_raw file content line col =
+let type_at_pos ~options ~workers ~env ~client_context file content line col =
   Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (profiling, cx, _info) ->
   let loc = mk_loc file line col in
   let result_str, data, loc, ground_t, possible_ts =
@@ -40,36 +40,19 @@ let type_at_pos ~options ~workers ~env ~client_context ~include_raw file content
     ~json_data:(Hh_json.JSON_Object data)
     ~profiling;
 
-  let ty, raw_type = match ground_t with
-    | None -> None, None
-    | Some t ->
-      let ty = Some (Type_printer.string_of_t cx t) in
-      let raw_type =
-        if include_raw then
-          Some (Debug_js.jstr_of_t ~size:50 ~depth:10 cx t)
-        else
-          None
-      in
-      ty, raw_type
+  let ty = match ground_t with
+    | None -> None
+    | Some t -> Some (Type_printer.string_of_t cx t)
   in
   let reasons = List.map Type.reason_of_t possible_ts in
-  loc, ty, raw_type, reasons
+  loc, ty, reasons
 
-let dump_types ~options ~workers ~env ~include_raw ~strip_root file content =
+let dump_types ~options ~workers ~env file content =
   (* Print type using Flow type syntax *)
   let printer = Type_printer.string_of_t in
 
-  (* Print raw representation of types as json; as it turns out, the
-     json gets cut off at a specified depth, so pass the maximum
-     possible depth to avoid that. *)
-  let raw_printer c t =
-    if include_raw
-      then Some (Debug_js.jstr_of_t ~depth:max_int ~strip_root c t)
-      else None
-    in
-
   Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (_profiling, cx, _info) ->
-  Query_types.dump_types printer raw_printer cx
+  Query_types.dump_types printer cx
 
 let coverage ~options ~workers ~env ~force file content =
   let should_check =

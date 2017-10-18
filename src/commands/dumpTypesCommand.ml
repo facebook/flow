@@ -32,8 +32,6 @@ let spec = {
     |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
-    |> flag "--raw" no_arg
-        ~doc:"Output raw representation of types (implies --json)"
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
@@ -41,7 +39,7 @@ let spec = {
 let types_to_json types ~strip_root =
   let open Hh_json in
   let open Reason in
-  let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+  let types_json = types |> List.map (fun (loc, _ctor, str, reasons) ->
     let json_assoc = (
       ("type", JSON_String str) ::
       ("reasons", JSON_Array (List.map (fun r ->
@@ -58,10 +56,6 @@ let types_to_json types ~strip_root =
       ("loc", json_of_loc ~strip_root loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
-    let json_assoc = match raw_t with
-      | None -> json_assoc
-      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
-    in
     JSON_Object json_assoc
   ) in
   JSON_Array types_json
@@ -73,7 +67,7 @@ let handle_response types ~json ~pretty ~strip_root =
     print_endline (Hh_json.json_to_string ~pretty types_json)
   ) else (
     let out = types
-      |> List.map (fun (loc, _, str, _, _) ->
+      |> List.map (fun (loc, _, str, _) ->
         (spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
       )
       |> String.concat "\n"
@@ -93,9 +87,9 @@ let handle_error err ~json ~pretty ~strip_root =
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root from path include_raw filename () =
+let main option_values root json pretty strip_root from path filename () =
   FlowEventLogger.set_from from;
-  let json = json || pretty || include_raw in
+  let json = json || pretty in
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
@@ -106,7 +100,7 @@ let main option_values root json pretty strip_root from path include_raw filenam
   let strip_root = if strip_root then Some root else None in
 
   let ic, oc = connect option_values root in
-  send_command oc (ServerProt.DUMP_TYPES (file, include_raw, strip_root));
+  send_command oc (ServerProt.DUMP_TYPES file);
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
   | Error err ->

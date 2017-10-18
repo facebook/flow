@@ -5,8 +5,6 @@ FLOW=$1
 assert_ok \
   "$FLOW" type-at-pos test.js 5 1 --strip-root --pretty
 assert_ok \
-  "$FLOW" type-at-pos test.js 5 1 --strip-root --raw --pretty
-assert_ok \
   "$FLOW" type-at-pos test.js 8 7 --strip-root --pretty
 assert_ok \
   "$FLOW" type-at-pos test.js 10 7 --strip-root --pretty

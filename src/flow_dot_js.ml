@@ -233,25 +233,21 @@ let infer_type filename content line col =
         | FailureUnparseable (loc, _, possible_ts) -> loc, None, possible_ts
         | Success (loc, gt, possible_ts) -> loc, Some gt, possible_ts
       ) in
-      let ty, raw_type = match ground_t with
-        | None -> None, None
-        | Some t ->
-            let ty = Some (Type_printer.string_of_t cx t) in
-            let raw_type = Some (Debug_js.jstr_of_t ~depth:10 cx t)
-            in
-            ty, raw_type
+      let ty = match ground_t with
+        | None -> None
+        | Some t -> Some (Type_printer.string_of_t cx t)
       in
       let reasons =
         possible_ts
         |> List.map Type.reason_of_t
       in
-      (None, Some (loc, ty, raw_type, reasons))
+      (None, Some (loc, ty, reasons))
     | _, _ -> failwith "parse error"
 
 let types_to_json types ~strip_root =
   let open Hh_json in
   let open Reason in
-  let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+  let types_json = types |> List.map (fun (loc, _ctor, str, reasons) ->
     let json_assoc = (
       ("type", JSON_String str) ::
       ("reasons", JSON_Array (List.map (fun r ->
@@ -268,10 +264,6 @@ let types_to_json types ~strip_root =
       ("loc", json_of_loc ~strip_root loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
-    let json_assoc = match raw_t with
-      | None -> json_assoc
-      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
-    in
     JSON_Object json_assoc
   ) in
   JSON_Array types_json
@@ -284,8 +276,7 @@ let dump_types js_file js_content =
     | ast, [] ->
       let cx = infer_and_merge ~root filename ast in
       let printer = Type_printer.string_of_t in
-      let raw_printer _ _ = None in
-      let types = Query_types.dump_types printer raw_printer cx in
+      let types = Query_types.dump_types printer cx in
 
       let strip_root = None in
       let types_json = types_to_json types ~strip_root in
@@ -293,7 +284,7 @@ let dump_types js_file js_content =
       js_of_json types_json
     | _, _ -> failwith "parse error"
 
-let handle_inferred_result (_, inferred, _, _) =
+let handle_inferred_result (_, inferred, _) =
   inferred
 
 let type_at_pos js_file js_content js_line js_col =

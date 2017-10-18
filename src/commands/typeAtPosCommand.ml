@@ -33,8 +33,6 @@ let spec = {
     |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
-    |> flag "--raw" no_arg
-        ~doc:"Output raw represenation of type (implies --json)"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
   )
 }
@@ -64,7 +62,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
+let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
@@ -87,10 +85,6 @@ let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
         ("loc", json_of_loc ~strip_root loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
-    let json_assoc = match raw_t with
-      | None -> json_assoc
-      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
-    in
     let json = JSON_Object json_assoc in
     print_endline (json_to_string ~pretty json)
   ) else (
@@ -119,9 +113,9 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root verbose from path include_raw args () =
+let main option_values root json pretty strip_root verbose from path args () =
   FlowEventLogger.set_from from;
-  let json = json || pretty || include_raw in
+  let json = json || pretty in
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with
@@ -135,7 +129,7 @@ let main option_values root json pretty strip_root verbose from path include_raw
 
   let ic, oc = connect option_values root in
   send_command oc
-    (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
+    (ServerProt.INFER_TYPE (file, line, column, verbose));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
   | Error err -> handle_error err ~json ~pretty
   | Ok resp -> handle_response resp ~json ~pretty ~strip_root
