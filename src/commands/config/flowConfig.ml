@@ -447,7 +447,7 @@ let parse_ignores config lines =
 
 let parse_options config lines =
   let open Opts in
-  let (>>=) = Result.(>>=) in
+  let (>>=) = Core_result.(>>=) in
   let options = parse config.options lines
     |> define_opt "emoji" {
       initializer_ = USE_DEFAULT;
@@ -717,7 +717,7 @@ let parse_options config lines =
         Str.split_delim version_regex v
         |> String.concat (">=" ^ less_or_equal_curr_version)
         |> String.escaped
-        |> Result.return
+        |> Core_result.return
         >>= optparse_regexp
         >>= fun v -> Ok { opts with suppress_comments = v::(opts.suppress_comments) }
       );

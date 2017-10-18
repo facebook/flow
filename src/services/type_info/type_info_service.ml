@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Result
+open Core_result
 
 let mk_loc file line col =
   {

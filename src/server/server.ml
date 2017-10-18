@@ -8,7 +8,7 @@
 module TI = Type_inference_js
 module Server = ServerFunctors
 
-open Result
+open Core_result
 let try_with f =
   try f () with exn -> Error (Printexc.to_string exn)
 

@@ -139,13 +139,13 @@ type retry_info = {
 }
 
 let reset_retries_if_necessary retries = function
-  | Result.Error CCS.Server_missing
-  | Result.Error CCS.Server_busy -> retries
-  | Result.Ok _
-  | Result.Error CCS.Build_id_mismatch
-  | Result.Error CCS.Server_rechecking
-  | Result.Error CCS.Server_gcollecting
-  | Result.Error CCS.Server_initializing ->
+  | Error CCS.Server_missing
+  | Error CCS.Server_busy -> retries
+  | Ok _
+  | Error CCS.Build_id_mismatch
+  | Error CCS.Server_rechecking
+  | Error CCS.Server_gcollecting
+  | Error CCS.Server_initializing ->
       { retries with
         retries_remaining = retries.original_retries;
       }
@@ -190,8 +190,8 @@ let rec connect env retries start_time tail_env =
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in
   match conn with
-  | Result.Ok (ic, oc) -> (ic, oc)
-  | Result.Error CCS.Server_missing ->
+  | Ok (ic, oc) -> (ic, oc)
+  | Error CCS.Server_missing ->
       if env.autostart then begin
         (* Windows doesn't let us move open files, and flow start
          * tries to move the log file, so let's close our tail for
@@ -219,7 +219,7 @@ let rec connect env retries start_time tail_env =
           (Path.to_string env.root) in
         FlowExitStatus.(exit ~msg No_server_running)
       end
-  | Result.Error CCS.Server_busy ->
+  | Error CCS.Server_busy ->
       if not env.quiet then Printf.eprintf
         "The flow server is not responding (%d %s remaining): %s %s%!"
         retries.retries_remaining
@@ -227,7 +227,7 @@ let rec connect env retries start_time tail_env =
         tail_msg
         (Tty.spinner());
       connect env (consume_retry retries) start_time tail_env
-  | Result.Error CCS.Build_id_mismatch ->
+  | Error CCS.Build_id_mismatch ->
       let msg = "The flow server's version didn't match the client's, so it \
       exited." in
       if env.autostart
@@ -247,7 +247,7 @@ let rec connect env retries start_time tail_env =
       else
         let msg = "\n"^msg in
         FlowExitStatus.(exit ~msg Build_id_mismatch)
-  | Result.Error CCS.Server_initializing ->
+  | Error CCS.Server_initializing ->
       let msg = "flow is still initializing; this can take some time." in
       if env.retry_if_init then begin
         if not env.quiet then Printf.eprintf
@@ -258,13 +258,13 @@ let rec connect env retries start_time tail_env =
         let msg = "\n"^msg^" Not retrying since --retry-if-init is false." in
         FlowExitStatus.(exit ~msg Server_initializing)
       end
-  | Result.Error CCS.Server_rechecking ->
+  | Error CCS.Server_rechecking ->
       let msg = "flow is rechecking" in
       if not env.quiet then Printf.eprintf
         "%s %s %s%!" msg tail_msg (Tty.spinner());
       rate_limit retries;
       connect env retries start_time tail_env
-  | Result.Error CCS.Server_gcollecting ->
+  | Error CCS.Server_gcollecting ->
       let msg = "flow is cleaning up some unused memory; this should not take long" in
       if not env.quiet then Printf.eprintf
         "%s %s %s%!" msg tail_msg (Tty.spinner());

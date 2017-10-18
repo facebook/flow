@@ -8,7 +8,7 @@
     | "CSCO" -> Ok "CSCO.OQ"
     | _ as ticker -> Error (sprintf "can't find ric of %s" ticker) ]}
     The return type of ric_of_ticker could be [string option], but [(string, string)
-    Result.t] gives more control over the error message. *)
+    Core_result.t] gives more control over the error message. *)
 type ('ok, 'err) t = ('ok, 'err) Pervasives.result =
   | Ok of 'ok
   | Error of 'err
@@ -45,7 +45,7 @@ val combine
 
 (** [ok_fst] is useful with [List.partition_map].  Continuing the above example:
 {[
-    let rics, errors = List.partition_map ~f:Result.ok_fst
+    let rics, errors = List.partition_map ~f:Core_result.ok_fst
       (List.map ~f:ric_of_ticker ["AA"; "F"; "CSCO"; "AAPL"]) ]} *)
 val ok_fst : ('ok, 'err) t -> [ `Fst of 'ok | `Snd of 'err ]
 

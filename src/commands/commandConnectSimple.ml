@@ -72,13 +72,13 @@ let establish_connection ~timeout ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (sockaddr, open_connection ~timeout sockaddr)
+  Ok (sockaddr, open_connection ~timeout sockaddr)
 
 let get_cstate ~timeout sockaddr ic oc =
   try
     let cstate : ServerUtils.connection_state =
       Timeout.input_value ~timeout ic in
-    Result.Ok (ic, oc, cstate)
+    Ok (ic, oc, cstate)
   with
   | ConnectTimeout as e ->
       (* Timeouts are expected *)
@@ -89,7 +89,7 @@ let get_cstate ~timeout sockaddr ic oc =
       raise e
 
 let verify_cstate ic = function
-  | ServerUtils.Connection_ok -> Result.Ok ()
+  | ServerUtils.Connection_ok -> Ok ()
   | ServerUtils.Build_id_mismatch ->
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
@@ -102,13 +102,13 @@ let verify_cstate ic = function
        *)
       wait_on_server_restart ic;
       Timeout.close_in_noerr ic;
-      Result.Error Build_id_mismatch
+      Error Build_id_mismatch
 
 (* Connects to the server via a socket. As soon as the server starts up,
  * it opens the socket but it doesn't read or write to it. So during
  * initialization, this function should time out. *)
 let connect_once ~tmp_dir root =
-  let (>>=) = Result.(>>=) in
+  let (>>=) = Core_result.(>>=) in
   try
     Timeout.with_timeout
       ~timeout:1
@@ -118,19 +118,19 @@ let connect_once ~tmp_dir root =
         get_cstate ~timeout sockaddr ic oc
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
-      Result.Ok (ic, oc)
+      Ok (ic, oc)
   with
   | _ ->
     if not (server_exists ~tmp_dir root)
-    then Result.Error Server_missing
+    then Error Server_missing
 
     else if not (Lock.check (Server_files.init_file ~tmp_dir root))
-    then Result.Error Server_initializing
+    then Error Server_initializing
 
     else if not (Lock.check (Server_files.gc_file ~tmp_dir root))
-    then Result.Error Server_gcollecting
+    then Error Server_gcollecting
 
     else if not (Lock.check (Server_files.recheck_file ~tmp_dir root))
-    then Result.Error Server_rechecking
+    then Error Server_rechecking
 
-    else Result.Error Server_busy
+    else Error Server_busy

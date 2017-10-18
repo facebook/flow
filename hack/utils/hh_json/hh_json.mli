@@ -62,8 +62,8 @@ type json_type =
 
 (**
  * This module gives monadic recursive access to values within objects by key.
- * It uses the Result.t to manage control flow in the monad when an error is
- * encountered. It also tracks the backtrace of the keys accessed to give
+ * It uses Pervasives.result to manage control flow in the monad when an error
+ * is encountered. It also tracks the backtrace of the keys accessed to give
  * detailed error messages.
  *
  * Usage:
@@ -76,7 +76,7 @@ type json_type =
    *   get_obj "baz" >>=
    *   get_bool "qux"
  *
- * If an error is encountered along the call chain, a Result.Error is returned
+ * If an error is encountered along the call chain, a Error is returned
  * with the appropriate error and the history of key accesses that arrived
  * there (so you can trace how far it went successfully and exactly where the
  * error was encountered).
@@ -118,9 +118,9 @@ type json_type =
  * The result will be the record type inside the Result monad.
  *
    * match result with
-   * | Result.Ok (v, _) ->
+   * | Ok (v, _) ->
    *   Printf.eprintf "Got baz: %d" v.baz
-   * | Result.Error access_failure ->
+   * | Error access_failure ->
    *   Printf.eprintf "JSON failure: %s"
    *     (access_failure_to_string access_failure)
  *
@@ -140,7 +140,7 @@ module type Access = sig
   (** Our type for the result monad. It isn't just the json because it tracks
    * a history of the keys traversed to arrive at the current point. This helps
    * produce more informative error states. *)
-  type 'a m = (('a * keytrace), access_failure) Result.t
+  type 'a m = (('a * keytrace), access_failure) result
 
   val access_failure_to_string : access_failure -> string
 
