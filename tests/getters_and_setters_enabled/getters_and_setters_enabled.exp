@@ -184,8 +184,6 @@ Error: object_type.js:52
 
 Error: react.js:15
  15: (<Example />); // error: property `a` not found
-      ^^^^^^^^^^^ React element `Example`
- 15: (<Example />); // error: property `a` not found
       ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
   8:   propTypes: {

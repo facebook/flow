@@ -60,8 +60,6 @@ Error: ProfilePic.js:17
 
 Error: main.js:15
  15: <Profile user={userRef} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Profile`
- 15: <Profile user={userRef} />; // Error: Missing foo
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
@@ -72,8 +70,6 @@ Error: main.js:15
          ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
 
 Error: main.js:16
- 16: <Profile foo={42} />; // Error: Missing user
-     ^^^^^^^^^^^^^^^^^^^^ React element `Profile`
  16: <Profile foo={42} />; // Error: Missing user
      ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
@@ -97,8 +93,6 @@ Error: main.js:17
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ React element `Profile`
- 18: <Profile />; // Error: Missing user and foo
      ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
@@ -109,8 +103,6 @@ Error: main.js:18
          ^^^^^^^^^^^ props of React element `Profile`
 
 Error: main.js:18
- 18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ React element `Profile`
  18: <Profile />; // Error: Missing user and foo
      ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {

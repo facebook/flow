@@ -191,8 +191,6 @@ Error: builtin_intrinsic.js:24
 
 Error: component.js:15
  15: <MyComponent />; // Error: `children` is required.
-     ^^^^^^^^^^^^^^^ React element `MyComponent`
- 15: <MyComponent />; // Error: `children` is required.
      ^^^^^^^^^^^^^^^ props of React element `MyComponent`. This type is incompatible with
   6: class MyComponent extends React.Component<{children: Node}, void> {
                                                ^^^^^^^^^^^^^^^^ object type
@@ -204,8 +202,6 @@ Error: component.js:15
 
 Error: component.js:16
  16: <MyComponent></MyComponent>; // Error: `children` is required.
-     ^^^^^^^^^^^^^ React element `MyComponent`
- 16: <MyComponent></MyComponent>; // Error: `children` is required.
      ^^^^^^^^^^^^^ props of React element `MyComponent`. This type is incompatible with
   6: class MyComponent extends React.Component<{children: Node}, void> {
                                                ^^^^^^^^^^^^^^^^ object type
@@ -216,8 +212,6 @@ Error: component.js:16
          ^^^^^^^^^^^^^ props of React element `MyComponent`
 
 Error: component.js:18
- 18: <MyComponent>{}</MyComponent>; // Error: `children` is required.
-     ^^^^^^^^^^^^^ React element `MyComponent`
  18: <MyComponent>{}</MyComponent>; // Error: `children` is required.
      ^^^^^^^^^^^^^ props of React element `MyComponent`. This type is incompatible with
   6: class MyComponent extends React.Component<{children: Node}, void> {
@@ -310,8 +304,6 @@ Error: component.js:40
 
 Error: fun.js:23
  23: <Fun />; // Error: `children` is required.
-     ^^^^^^^ React element `Fun`
- 23: <Fun />; // Error: `children` is required.
      ^^^^^^^ props of React element `Fun`. This type is incompatible with
  16: class Fun extends React.Component<{children: Fn}, void> {}
                                        ^^^^^^^^^^^^^^ object type
@@ -389,8 +381,6 @@ Error: fun.js:41
 
 Error: fun.js:46
  46: <Fun>{}</Fun>; // Error: `void` is not allowed.
-     ^^^^^ React element `Fun`
- 46: <Fun>{}</Fun>; // Error: `void` is not allowed.
      ^^^^^ props of React element `Fun`. This type is incompatible with
  16: class Fun extends React.Component<{children: Fn}, void> {}
                                        ^^^^^^^^^^^^^^ object type
@@ -401,8 +391,6 @@ Error: fun.js:46
          ^^^^^ props of React element `Fun`
 
 Error: fun.js:47
- 47: <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
-     ^^^^^ React element `Fun`
  47: <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
      ^^^^^ props of React element `Fun`. This type is incompatible with
  16: class Fun extends React.Component<{children: Fn}, void> {}
@@ -496,8 +484,6 @@ Error: fun.js:54
                   ^^^^^^^^^^^^ object type
 
 Error: fun.js:56
- 56: <Obj />; // Error: `children` is required.
-     ^^^^^^^ React element `Obj`
  56: <Obj />; // Error: `children` is required.
      ^^^^^^^ props of React element `Obj`. This type is incompatible with
  18: class Obj extends React.Component<{children: Data}, void> {}
@@ -678,8 +664,6 @@ Error: fun.js:111
 
 Error: fun.js:134
 134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
-     ^^^^^^^^^^ React element `FunArray`
-134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
      ^^^^^^^^^^ props of React element `FunArray`. This type is incompatible with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -690,8 +674,6 @@ Error: fun.js:134
          ^^^^^^^^^^ props of React element `FunArray`
 
 Error: fun.js:135
-135: <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
-     ^^^^^^^^^^ React element `FunArray`
 135: <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
      ^^^^^^^^^^ props of React element `FunArray`. This type is incompatible with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
@@ -866,8 +848,6 @@ Error: fun.js:141
 
 Error: fun.js:142
 142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-               ^^^^^^^^^^^^ React element `intrinsic`
-142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
      ^^^^^^^^^^ React element `FunArray`. This type is incompatible with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -899,8 +879,6 @@ Error: fun.js:142
                                                                   ^^^^^^^^^ array type
 
 Error: tabs.js:26
- 26: <TabBar />; // Error: `children` is required.
-     ^^^^^^^^^^ React element `TabBar`
  26: <TabBar />; // Error: `children` is required.
      ^^^^^^^^^^ props of React element `TabBar`. This type is incompatible with
  24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
@@ -1201,8 +1179,6 @@ Error: tabs.js:32
 
 Error: tabs.js:67
  67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-             ^^^^^^^^^ React element `NotTab`
- 67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
      ^^^^^^^^ React element `TabBar`. This type is incompatible with
  24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
                                           ^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1433,8 +1409,6 @@ Error: tabs.js:73
 
 Error: text.js:9
   9: <Text />; // Error: `children` is required.
-     ^^^^^^^^ React element `Text`
-  9: <Text />; // Error: `children` is required.
      ^^^^^^^^ props of React element `Text`. This type is incompatible with
   5: class Text extends React.Component<{children: string}, void> {}
                                         ^^^^^^^^^^^^^^^^^^ object type
@@ -1445,8 +1419,6 @@ Error: text.js:9
          ^^^^^^^^ props of React element `Text`
 
 Error: text.js:11
- 11: <TextLiteral />; // Error: `children` is required.
-     ^^^^^^^^^^^^^^^ React element `TextLiteral`
  11: <TextLiteral />; // Error: `children` is required.
      ^^^^^^^^^^^^^^^ props of React element `TextLiteral`. This type is incompatible with
   7: class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
@@ -1459,8 +1431,6 @@ Error: text.js:11
 
 Error: text.js:15
  15: <Text></Text>; // Error: `children` does not exist.
-     ^^^^^^ React element `Text`
- 15: <Text></Text>; // Error: `children` does not exist.
      ^^^^^^ props of React element `Text`. This type is incompatible with
   5: class Text extends React.Component<{children: string}, void> {}
                                         ^^^^^^^^^^^^^^^^^^ object type
@@ -1472,8 +1442,6 @@ Error: text.js:15
 
 Error: text.js:18
  18: <Text>{}</Text>; // Error: `children` is required.
-     ^^^^^^ React element `Text`
- 18: <Text>{}</Text>; // Error: `children` is required.
      ^^^^^^ props of React element `Text`. This type is incompatible with
   5: class Text extends React.Component<{children: string}, void> {}
                                         ^^^^^^^^^^^^^^^^^^ object type
@@ -1484,8 +1452,6 @@ Error: text.js:18
          ^^^^^^ props of React element `Text`
 
 Error: text.js:19
- 19: <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
-     ^^^^^^ React element `Text`
  19: <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
      ^^^^^^ props of React element `Text`. This type is incompatible with
   5: class Text extends React.Component<{children: string}, void> {}
@@ -1684,8 +1650,6 @@ Error: text.js:53
                                                               ^^^^^^^^^^^^^ string enum
 
 Error: tuple.js:9
-  9: <Tuple />; // Error: `children` is required.
-     ^^^^^^^^^ React element `Tuple`
   9: <Tuple />; // Error: `children` is required.
      ^^^^^^^^^ props of React element `Tuple`. This type is incompatible with
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}

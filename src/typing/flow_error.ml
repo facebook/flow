@@ -490,7 +490,8 @@ let suppress_fun_call_param_op op =
     begin match desc_of_reason r with
     | RFunctionCall
     | RConstructorCall
-    | RMethodCall _ -> true
+    | RMethodCall _
+    | RReactElement _ -> true
     | _ -> false
     end
   | None -> false

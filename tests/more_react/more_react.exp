@@ -59,8 +59,6 @@ Error: checkPropTypes.js:12
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ React element `D`
- 15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ props of React element `D`. This type is incompatible with
                   v
   9:   propTypes: {
@@ -79,8 +77,6 @@ Error: propTypes.js:15
          ^^^^^ props of React element `D`
 
 Error: propTypes.js:15
- 15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ React element `D`
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ props of React element `D`. This type is incompatible with
                   v

@@ -1,7 +1,5 @@
 Error: test.js:4
   4: <F />; // error: missing `foo`
-     ^^^^^ React element `F`
-  4: <F />; // error: missing `foo`
      ^^^^^ props of React element `F`. This type is incompatible with
   3: function F(props: { foo: string }) {}
                        ^^^^^^^^^^^^^^^ object type

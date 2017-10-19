@@ -1,7 +1,5 @@
 Error: createElementRequiredProp_string.js:17
  17:     return (<Cmp/>);
-                 ^^^^^^ React element `Cmp`
- 17:     return (<Cmp/>);
                  ^^^^^^ props of React element `Cmp`. This type is incompatible with
   4: class Bar extends React.Component<{test: number}> {
                                        ^^^^^^^^^^^^^^ object type
@@ -468,8 +466,6 @@ Error: element_with_component_type.js:8
 
 Error: hoc.js:11
  11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ React element `Component`
- 11:       <Component />; // Error: `foo` is required.
            ^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -481,8 +477,6 @@ Error: hoc.js:11
 
 Error: hoc.js:11
  11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ React element `Component`
- 11:       <Component />; // Error: `foo` is required.
            ^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -493,8 +487,6 @@ Error: hoc.js:11
                ^^^^^^^^^^^^^ props of React element `Component`
 
 Error: hoc.js:12
- 12:       <Component foo={42} />; // Error: `bar` is required.
-           ^^^^^^^^^^^^^^^^^^^^^^ React element `Component`
  12:       <Component foo={42} />; // Error: `bar` is required.
            ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
@@ -581,8 +573,6 @@ Error: hoc.js:36
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.
-     ^^^^^^^^^^^ React element `Wrapped`
- 41: <Wrapped />; // Error: `foo` is required.
      ^^^^^^^^^^^ props of React element `Wrapped`. This type is incompatible with
   7: ): React$ComponentType<{foo: number}> {
                             ^^^^^^^^^^^^^ object type
@@ -593,8 +583,6 @@ Error: hoc.js:41
          ^^^^^^^^^^^ props of React element `Wrapped`
 
 Error: hoc.js:43
- 43: <WrappedFun />; // Error: `foo` is required.
-     ^^^^^^^^^^^^^^ React element `WrappedFun`
  43: <WrappedFun />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^ props of React element `WrappedFun`. This type is incompatible with
   7: ): React$ComponentType<{foo: number}> {
@@ -1116,8 +1104,6 @@ Error: hoc4.js:17
 
 Error: hoc4.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
   7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1128,8 +1114,6 @@ Error: hoc4.js:26
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
 Error: hoc4.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
   7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
@@ -1290,8 +1274,6 @@ Error: portals.js:12
                     ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:23
 
 Error: proptype_arrayOf.js:13
- 13: var fail_missing = <Example />
-                        ^^^^^^^^^^^ React element `Example`
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -1508,8 +1490,6 @@ Error: proptype_object.js:13
 
 Error: proptype_objectOf.js:13
  13: var fail_missing = <Example />
-                        ^^^^^^^^^^^ React element `Example`
- 13: var fail_missing = <Example />
                         ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
   5:   propTypes: {
@@ -1635,8 +1615,6 @@ Error: proptype_oneOf.js:17
 
 Error: proptype_oneOf.js:20
  20: (<Example bool={false} />); // error: false ~> true
-      ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 20: (<Example bool={false} />); // error: false ~> true
       ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
   5:   propTypes: {
@@ -1652,8 +1630,6 @@ Error: proptype_oneOf.js:20
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
 
 Error: proptype_oneOf.js:24
- 24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
       ^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -1695,8 +1671,6 @@ Error: proptype_oneOf.js:24
 
 Error: proptype_oneOf.js:32
  32: (<RequiredExample />); // error: `p` not found
-      ^^^^^^^^^^^^^^^^^^^ React element `RequiredExample`
- 32: (<RequiredExample />); // error: `p` not found
       ^^^^^^^^^^^^^^^^^^^ props of React element `RequiredExample`. This type is incompatible with
                   v
  27:   propTypes: {
@@ -1734,8 +1708,6 @@ Error: proptype_oneOf.js:76
 
 Error: proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
-                        ^^^^^^^^^^^ React element `Example`
- 23: var fail_missing = <Example />;
                         ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
   5:   propTypes: {
@@ -1756,8 +1728,6 @@ Error: proptype_oneOfType.js:23
                             ^^^^^^^^^^^ props of React element `Example`
 
 Error: proptype_oneOfType.js:24
- 24: var fail_bool = <Example prop={true} />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  24: var fail_bool = <Example prop={true} />;
                      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -1810,8 +1780,6 @@ Error: proptype_oneOfType.js:24
                ------------^ number
 
 Error: proptype_oneOfType.js:29
- 29: var todo_required = <Example prop={null} />;
-                         ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  29: var todo_required = <Example prop={null} />;
                          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
