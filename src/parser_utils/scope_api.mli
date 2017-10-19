@@ -11,6 +11,7 @@ module Def: sig
   type t = {
     locs: Loc.t list;
     name: int;
+    actual_name: string;
   }
 end
 module Scope: sig
