@@ -665,8 +665,7 @@ module rec TypeTerm : sig
   (* used by FunT *)
   and funtype = {
     this_t: t;
-    params_tlist: t list;
-    params_names: string list option;
+    params: (string option * t) list;
     rest_param: (string option * Loc.t * t) option;
     return_t: t;
     closure_t: int;
@@ -2508,7 +2507,7 @@ let reason_of_propref = function
   | Computed t -> reason_of_t t
 
 and extract_setter_type = function
-  | DefT (_, FunT (_, _, { params_tlist = [param_t]; _; })) -> param_t
+  | DefT (_, FunT (_, _, { params = [_, param_t]; _; })) -> param_t
   | _ ->  failwith "Setter property with unexpected type"
 
 and extract_getter_type = function

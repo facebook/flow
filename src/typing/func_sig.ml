@@ -24,7 +24,7 @@ type t = {
   kind: kind;
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
-  params: Func_params.t;
+  fparams: Func_params.t;
   body: Loc.t Ast.Function.body;
   return_t: Type.t;
 }
@@ -53,7 +53,7 @@ let mk cx tparams_map ~expr loc func =
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
-  let params = Func_params.mk cx tparams_map ~expr func in
+  let fparams = Func_params.mk cx tparams_map ~expr func in
   let ret_reason = mk_reason RReturn (return_loc func) in
   let return_t =
     Anno.mk_type_annotation cx tparams_map ret_reason returnType
@@ -72,7 +72,7 @@ let mk cx tparams_map ~expr loc func =
         );
         Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
-  {reason; kind; tparams; tparams_map; params; body; return_t}
+  {reason; kind; tparams; tparams_map; fparams; body; return_t}
 
 let empty_body =
   let loc = Loc.none in
@@ -86,18 +86,18 @@ let convert cx tparams_map loc func =
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
-  let params = Func_params.convert cx tparams_map func in
+  let fparams = Func_params.convert cx tparams_map func in
   let body = empty_body in
   let return_t = Anno.convert cx tparams_map returnType in
 
-  {reason; kind; tparams; tparams_map; params; body; return_t}
+  {reason; kind; tparams; tparams_map; fparams; body; return_t}
 
 let default_constructor reason = {
   reason;
   kind = Ordinary;
   tparams = [];
   tparams_map = SMap.empty;
-  params = Func_params.empty;
+  fparams = Func_params.empty;
   body = empty_body;
   return_t = VoidT.why reason;
 }
@@ -107,13 +107,13 @@ let field_initializer cx tparams_map reason expr annot = {
   kind = FieldInit expr;
   tparams = [];
   tparams_map;
-  params = Func_params.empty;
+  fparams = Func_params.empty;
   body = empty_body;
   return_t = Anno.mk_type_annotation cx tparams_map reason annot;
 }
 
 let subst cx map x =
-  let {tparams; tparams_map; params; return_t; _} = x in
+  let {tparams; tparams_map; fparams; return_t; _} = x in
   (* Remove shadowed type params from `map`, but allow bounds/defaults to be
      substituted if they refer to a type param before it is shadowed. *)
   let tparams, map = tparams |> List.fold_left (fun (tparams, map) tp ->
@@ -124,20 +124,20 @@ let subst cx map x =
   ) ([], map) in
   let tparams = List.rev tparams in
   let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
-  let params = Func_params.subst cx map params in
+  let fparams = Func_params.subst cx map fparams in
   let return_t = Flow.subst cx map return_t in
-  {x with tparams; tparams_map; params; return_t}
+  {x with tparams; tparams_map; fparams; return_t}
 
 let generate_tests cx f x =
-  let {reason; tparams; tparams_map; params; return_t; _} = x in
+  let {reason; tparams; tparams_map; fparams; return_t; _} = x in
   Flow.generate_tests cx reason tparams (fun map -> f {
     x with
     tparams_map = SMap.map (Flow.subst cx map) tparams_map;
-    params = Func_params.subst cx map params;
+    fparams = Func_params.subst cx map fparams;
     return_t = Flow.subst cx map return_t;
   })
 
-let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
+let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
   let knot = Flow.mk_tvar cx reason in
   let static =
     let props = SMap.singleton "$call" (Method knot) in
@@ -150,9 +150,8 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
   in
   let funtype = { Type.
     this_t;
-    params_tlist = Func_params.tlist params;
-    params_names = Some (Func_params.names params);
-    rest_param = Func_params.rest params;
+    params = Func_params.value fparams;
+    rest_param = Func_params.rest fparams;
     return_t;
     is_predicate = kind = Predicate;
     closure_t = Env.peek_frame ();
@@ -164,10 +163,10 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
   Flow.unify cx t knot;
   t
 
-let methodtype cx {reason; tparams; params; return_t; _} =
-  let params_tlist = Func_params.tlist params in
-  let params_names = Func_params.names params in
-  let rest_param = Func_params.rest params in
+let methodtype cx {reason; tparams; fparams; return_t; _} =
+  let params = Func_params.value fparams in
+  let params_names, params_tlist = List.split params in
+  let rest_param = Func_params.rest fparams in
   let def_reason = reason in
   let t = DefT (reason, FunT (
     Flow.dummy_static reason,
@@ -179,13 +178,13 @@ let methodtype cx {reason; tparams; params; return_t; _} =
 
 let gettertype ({return_t; _}: t) = return_t
 
-let settertype {params; _} =
-  match Func_params.tlist params with
-  | [param_t] -> param_t
+let settertype {fparams; _} =
+  match Func_params.value fparams with
+  | [(_, param_t)] -> param_t
   | _ -> failwith "Setter property with unexpected type"
 
 let toplevels id cx this super ~decls ~stmts ~expr
-  {kind; tparams_map; params; body; return_t; _} =
+  {kind; tparams_map; fparams; body; return_t; _} =
 
   let loc, reason =
     let loc = Ast.Function.(match body with
@@ -240,17 +239,18 @@ let toplevels id cx this super ~decls ~stmts ~expr
         mk_reason (RCustom "Rest params are always arrays") loc in
       Flow_js.flow cx (t, AssertRestParamT rest_reason)
     )
-    (Func_params.rest params);
+    (Func_params.rest fparams);
 
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
-  params |> Func_params.iter Scope.(fun (name, t, loc) ->
+  fparams |> Func_params.iter Scope.(fun (name, t, loc) ->
     let reason = mk_reason (RParameter name) loc in
+    let name = Option.value name ~default:"_" in
     (* add default value as lower bound, if provided *)
     Func_params.with_default name (fun default ->
       let default_t = Flow.mk_default cx reason default ~expr in
       Flow.flow_t cx (default_t, t)
-    ) params;
+    ) fparams;
     (* add to scope *)
     if const_params
     then Env.bind_implicit_const ~state:State.Initialized

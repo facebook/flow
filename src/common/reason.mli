@@ -74,8 +74,8 @@ type reason_desc =
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
-  | RParameter of string
-  | RRestParameter of string
+  | RParameter of string option
+  | RRestParameter of string option
   | RIdentifier of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option

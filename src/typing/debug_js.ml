@@ -961,8 +961,7 @@ and json_of_changeset_impl _json_cx = Hh_json.(
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 and json_of_funtype_impl json_cx {
   this_t;
-  params_tlist;
-  params_names;
+  params;
   rest_param;
   return_t;
   is_predicate;
@@ -970,14 +969,19 @@ and json_of_funtype_impl json_cx {
   changeset;
   def_reason;
 } = Hh_json.(
+  let rec params_names (any, names_rev) = function
+    | [] -> if any then Some names_rev else None
+    | (None, _)::xs -> params_names (any, "_"::names_rev) xs
+    | (Some name, _)::xs -> params_names (true, name::names_rev) xs
+  in
   JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
-    "paramTypes", JSON_Array (List.map (_json_of_t json_cx) params_tlist)
-  ] @ (match params_names with
+    "paramTypes", JSON_Array (List.map (fun (_, t) -> _json_of_t json_cx t) params)
+  ] @ (match params_names (false, []) params with
     | None -> []
-    | Some names -> [
+    | Some names_rev -> [
         "paramNames",
-        JSON_Array (List.map (fun s -> JSON_String s) names)
+        JSON_Array (List.rev_map (fun s -> JSON_String s) names_rev)
       ]
   ) @ [
     "restParam", (match rest_param with
@@ -1634,10 +1638,10 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, BoolT c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | DefT (_, FunT (_, _, {params_tlist; return_t; this_t; _})) -> p
+  | DefT (_, FunT (_, _, {params; return_t; this_t; _})) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
-        (String.concat "; " (List.map kid params_tlist))
+        (String.concat "; " (List.map (fun (_, t) -> kid t) params))
         (kid return_t)) t
   | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | DefT (_, EmptyT)

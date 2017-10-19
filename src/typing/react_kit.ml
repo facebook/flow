@@ -116,8 +116,7 @@ let run cx trace ~use_op reason_op l u
       any,
       {
         this_t = any;
-        params_tlist = [props];
-        params_names = None;
+        params = [(None, props)];
         rest_param = Some (None, loc_of_reason reason_op, any);
         return_t = if with_return_t
           then get_builtin_type cx reason_op "React$Node"

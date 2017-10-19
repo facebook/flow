@@ -647,8 +647,7 @@ class ['a] t = object(self)
   method fun_type cx pole acc ft =
     let {
       this_t;
-      params_tlist;
-      params_names = _;
+      params;
       rest_param;
       return_t;
       closure_t = _;
@@ -657,7 +656,7 @@ class ['a] t = object(self)
       def_reason = _;
     } = ft in
     let acc = self#type_ cx pole acc this_t in
-    let acc = self#list (self#type_ cx (P.inv pole)) acc params_tlist in
+    let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
     let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
     let acc = self#type_ cx pole acc return_t in
     acc

@@ -4568,9 +4568,9 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
               })
             ]}) in
           let returnType = Some (loc, returnType) in
-          Some (Ast.Statement.FunctionDeclaration Ast.Function.({
+          Some (Ast.Statement.FunctionDeclaration { Ast.Function.
             id = Some id;
-            params = (params_loc, { Params.params; rest });
+            params = (params_loc, { Ast.Function.Params.params; rest });
             body = body;
             async = false;
             generator = false;
@@ -4578,7 +4578,7 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
             expression = false;
             returnType = returnType;
             typeParameters;
-          }))
+          })
 
       | _ ->
         None

@@ -230,10 +230,10 @@ let rec gen_type t env = Type.(
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
   | DefT (_, FunT (_static, _prototype, ft)) ->
-    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+    let {params; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist rest_param
+      |> gen_func_params params rest_param
       |> add_str ") => "
       |> gen_type return_t
   | DefT (_, InstanceT (_static, _super, _, {class_id; _;})) -> (
@@ -348,18 +348,18 @@ and gen_prop k p env =
     add_str "set " env
       |> add_str k
       |> add_str "("
-      |> gen_func_param "value" t
+      |> gen_func_param (Some "value") t
       |> add_str "): void"
   in
 
   let rec gen_method k t env =
     match t with
     | DefT (_, FunT (_static, _prototype, ft)) ->
-      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      let {params; rest_param; return_t; _;} = ft in
       add_str k env
         |> gen_tparams_list
         |> add_str "("
-        |> gen_func_params params_names params_tlist rest_param
+        |> gen_func_params params rest_param
         |> add_str "): "
         |> gen_type return_t
     | DefT (_, PolyT (tparams, t, _)) -> gen_method k t (add_tparams tparams env)
@@ -384,20 +384,15 @@ and gen_prop k p env =
     gen_getter k t1 env |> gen_setter k t2
   | Method t -> gen_method k t env
 
-and gen_func_params params_names params_tlist rest_param env =
-  let params =
-    match params_names with
-    | Some params_names ->
-      List.rev (List.fold_left2 (fun params name t ->
-        (name, t, false):: params
-      ) [] params_names params_tlist)
-    | None ->
-      List.mapi (fun idx t -> (spf "p%d" idx, t, false)) params_tlist
+and gen_func_params params rest_param env =
+  let params_rev = List.fold_left (fun acc (name, t) ->
+    (name, t, false) :: acc
+  ) [] params in
+  let params_rev = match rest_param with
+  | None -> params_rev
+  | Some (name, _, t) -> (name, t, true) :: params_rev
   in
-  let params = match rest_param with
-  | None -> params
-  | Some (name, _, t) ->
-    params @ [Option.value ~default:"rest" name, t, true] in
+  let params = List.rev params_rev in
   gen_separated_list params ", " (fun (name, t, is_rest) env ->
     if is_rest
     then gen_func_rest_param name t env
@@ -405,6 +400,7 @@ and gen_func_params params_names params_tlist rest_param env =
   ) env
 
 and gen_func_rest_param name t env =
+  let name = Option.value name ~default:"_" in
   add_str "..." env
   |> add_str name
   |> add_str ": "
@@ -412,6 +408,7 @@ and gen_func_rest_param name t env =
 
 and gen_func_param name t env =
   let open Type in
+  let name = Option.value name ~default:"_" in
   match t with
   | DefT (_, OptionalT t) ->
     add_str name env

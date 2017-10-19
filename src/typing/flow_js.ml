@@ -60,8 +60,11 @@ let mk_methodtype
     this tins ~rest_param ~def_reason
     ?(frame=0) ?params_names ?(is_predicate=false) tout = {
   this_t = this;
-  params_tlist = tins;
-  params_names;
+  params = (
+    match params_names with
+    | None -> List.map (fun t -> None, t) tins
+    | Some xs -> List.map2 (fun x t -> (x, t)) xs tins
+  );
   rest_param;
   return_t = tout;
   is_predicate;
@@ -355,39 +358,43 @@ let rec merge_type cx =
       (* Functions with different number of parameters cannot be merged into a
        * single function type. Instead, we should turn them into a union *)
       let params =
-        if List.length ft1.params_tlist <> List.length ft2.params_tlist
-        then None
-        else
-          let params_tlists =  List.map2 (fun t1 t2 -> (t1, t2))
-            ft1.params_tlist ft2.params_tlist in
-          match ft1.rest_param, ft2.rest_param with
-          | None, Some _
-          | Some _, None -> None
-          | None, None -> Some (params_tlists, None)
-          | Some r1, Some r2 -> Some (params_tlists, Some (r1, r2)) in
-
+        if List.length ft1.params <> List.length ft2.params then None else
+        let params = List.map2 (fun (name1, t1) (name2, t2) ->
+          (* TODO: How to merge param names? *)
+          let name = match name1, name2 with
+          | None, None -> None
+          | Some name, _
+          | _, Some name -> Some name
+          in
+          name, merge_type cx (t1, t2)
+        ) ft1.params ft2.params in
+        match ft1.rest_param, ft2.rest_param with
+        | None, Some _
+        | Some _, None -> None
+        | None, None -> Some (params, None)
+        | Some r1, Some r2 -> Some (params, Some (r1, r2))
+      in
       begin match params with
       | None -> create_union (UnionRep.make fun1 fun2 [])
-      | Some (params_tlists, rest_params) ->
-          let tins = List.map (merge_type cx) params_tlists in
-
+      | Some (params, rest_params) ->
+          let params_names, tins = List.split params in
           let rest_param = match rest_params with
           | None -> None
           | Some ((name1, loc, rest_t1), (name2, _, rest_t2)) ->
-              (* TODO: How to merge rest names and locs? *)
-              let name = match name1, name2 with
-              | None, None -> None
-              | Some name, _
-              | _, Some name -> Some name in
-              Some (name, loc, merge_type cx (rest_t1, rest_t2)) in
-
+            (* TODO: How to merge rest names and locs? *)
+            let name = match name1, name2 with
+            | None, None -> None
+            | Some name, _
+            | _, Some name -> Some name in
+            Some (name, loc, merge_type cx (rest_t1, rest_t2))
+          in
           let tout = merge_type cx (ft1.return_t, ft2.return_t) in
-          (* TODO: How to merge parameter names? *)
           let reason = locationless_reason (RCustom "function") in
           DefT (reason, FunT (
             dummy_static reason,
             dummy_prototype,
-            mk_functiontype reason tins ~rest_param ~def_reason:reason tout
+            mk_functiontype reason tins tout ~rest_param
+              ~def_reason:reason ~params_names
           ))
       end
 
@@ -1029,8 +1036,8 @@ module ResolvableTypeJob = struct
         else Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap [] in
       collect_of_types ?log_unresolved cx reason acc ts
-    | DefT (_, FunT (_, _, { params_tlist; return_t; _ })) ->
-      let ts = return_t :: params_tlist in
+    | DefT (_, FunT (_, _, { params; return_t; _ })) ->
+      let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t] params in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) ->
       let ts = Option.value ~default:[] tuple_types in
@@ -3431,20 +3438,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
        The `CallLatentPredT` use contains the index of the argument under
        refinement. By combining this information with the names of the
-       parameters in `params_names`, we can arrive to the actual name (Key.t)
-       of the parameter that gets refined, which can be used as a key into the
-       `OpenPredT` that is expected to eventually flow to `return_t`.
-       Effectively, we are substituting the actual parameter to the refining
-       call (here in the form of the index of the argument to the call) to the
-       formal parameter of the function, and this information is stored in
-       `CallOpenPredT` of the produced flow.
+       parameters, we can arrive to the actual name (Key.t) of the parameter
+       that gets refined, which can be used as a key into the `OpenPredT` that
+       is expected to eventually flow to `return_t`.  Effectively, we are
+       substituting the actual parameter to the refining call (here in the form
+       of the index of the argument to the call) to the formal parameter of the
+       function, and this information is stored in `CallOpenPredT` of the
+       produced flow.
 
        Problematic cases (e.g. when the refining index is out of bounds w.r.t.
-       `params_names`) raise errors, but also propagate the unrefined types
-       (as if the refinement never took place).
+       `params`) raise errors, but also propagate the unrefined types (as if the
+       refinement never took place).
     *)
-    | DefT (_, FunT (_, _, {
-        params_names = Some pn;
+    | DefT (lreason, FunT (_, _, {
+        params;
         return_t;
         is_predicate = true;
         _
@@ -3452,13 +3459,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallLatentPredT (reason, sense, index, unrefined_t, fresh_t) ->
       (* TODO: for the moment we only support simple keys (empty projection)
          that exactly correspond to the function's parameters *)
-
-      let key_or_err = try
-        Ok (List.nth pn (index-1), [])
+      let name_or_err = try
+        let (name, _) = List.nth params (index-1) in
+        Ok name
       with
         | Invalid_argument _ ->
           Error ("Negative refinement index.",
-            (reason_of_t l, reason_of_use_t u))
+            (lreason, reason))
         | Failure msg when msg = "nth" ->
           let r1 = replace_reason (fun desc -> RCustom (
             spf "%s that uses predicate on parameter at position %d"
@@ -3468,13 +3475,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let r2 = replace_reason (fun desc -> RCustom (
             spf "%s with %d parameters"
               (string_of_desc desc)
-              (List.length pn)
-          )) (reason_of_t l) in
+              (List.length params)
+          )) lreason in
           Error ("This is incompatible with", (r1, r2))
       in
-      (match key_or_err with
-      | Ok key -> rec_flow cx trace
+      (match name_or_err with
+      | Ok (Some name) ->
+        let key = name, [] in
+        rec_flow cx trace
           (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
+      | Ok None ->
+        let loc = loc_of_reason lreason in
+        add_output cx ~trace FlowError.(EInternal
+          (loc, PredFunWithoutParamNames))
       | Error (msg, reasons) ->
         add_output cx ~trace (FlowError.ECustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
@@ -3774,16 +3787,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types deconstruct into their parts *)
     (***********************************************)
 
-    | DefT (lreason, FunT (_, _,
-        ({ this_t = o1; params_tlist = _; params_names = p1;
-          rest_param = _; is_predicate = ip1; return_t = t1; _ } as ft))),
-      UseT (use_op, DefT (ureason, FunT (_, _,
-        { this_t = o2; params_tlist = tins2; params_names = p2;
-          rest_param = rest2; is_predicate = ip2; return_t = t2; _ })))
-      ->
-      rec_flow cx trace (o2, UseT (use_op, o1));
-      let args = List.rev_map (fun t -> Arg t) tins2 in
-      let args = List.rev (match rest2 with
+    | DefT (lreason, FunT (_, _, ft1)),
+      UseT (use_op, DefT (ureason, FunT (_, _, ft2))) ->
+      rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
+      let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
+      let args = List.rev (match ft2.rest_param with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
       let use_op = match desc_of_reason ureason with
@@ -3792,7 +3800,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | RReactSFC -> ReactCreateElementCall
       | _ -> FunParam { lower = lreason; upper = ureason; use_op }
       in
-      multiflow_subtype cx trace ~use_op ureason args ft;
+      multiflow_subtype cx trace ~use_op ureason args ft1;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -3802,46 +3810,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          should not flow to other OpenPredTs without wrapping the latter in
          SubstOnPredT.
       *)
-      if ip2 then
-        if not ip1 then
+      if ft2.is_predicate then
+        if not ft1.is_predicate then
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output cx ~trace (FlowError.ECustom (
-            (reason_of_t l, reason_of_use_t u),
+            (lreason, ureason),
             "Function is incompatible with"))
         else
-          begin match p1, p2 with
-          | Some s1, Some s2 ->
-            let reason = replace_reason (fun desc ->
-              RCustom (spf "predicate of %s" (string_of_desc desc))
-            ) (reason_of_t t2) in
-            if List.length s1 < List.length s2 then
+          let reason = replace_reason (fun desc ->
+            RCustom (spf "predicate of %s" (string_of_desc desc))
+          ) (reason_of_t ft2.return_t) in
+          let rec subst_map (n, map) = function
+            | (Some k, _)::ps1, (Some v, _)::ps2 ->
+              subst_map (n+1, SMap.add k (v,[]) map) (ps1, ps2)
+            | _, [] -> Ok map
+            | [], ps2 ->
               (* Flag an error if predicate counts do not coincide
                  TODO: somehow the original flow needs to be propagated
                  as well *)
               let mod_reason n = replace_reason (fun _ ->
                 RCustom (spf "predicate function with %d arguments" n)
               ) in
-              add_output cx ~trace (FlowError.ECustom (
-                (mod_reason (List.length s1) (reason_of_t l),
-                 mod_reason (List.length s2) (reason_of_use_t u)),
+              let n2 = n + (List.length ps2) in
+              Error (FlowError.ECustom (
+                (mod_reason n lreason,
+                 mod_reason n2 ureason),
                 "Predicate function is incompatible with"))
-            else
-              (* NOTE: do not use List.combine here *)
-              let subst = Utils_js.zip s1 s2 |>
-                List.fold_left (fun m (k,v) -> SMap.add k (v,[]) m) SMap.empty
-              in
-              rec_flow cx trace (t1, SubstOnPredT (reason, subst, t2))
-          | _ ->
-            let loc = loc_of_reason (reason_of_use_t u) in
-            add_output cx ~trace
-              FlowError.(EInternal (loc, PredFunWithoutParamNames))
-          end
+            | (None, _)::_, _ | _, (None, _)::_ ->
+              let loc = loc_of_reason ureason in
+              Error (FlowError.(EInternal (loc, PredFunWithoutParamNames)))
+          in
+          match subst_map (0, SMap.empty) (ft1.params, ft2.params) with
+          | Error e -> add_output cx ~trace e
+          | Ok map ->
+            rec_flow cx trace (ft1.return_t,
+              SubstOnPredT (reason, map, ft2.return_t))
       else
-        rec_flow cx trace (t1, UseT (use_op, t2))
+        rec_flow cx trace (ft1.return_t, UseT (use_op, ft2.return_t))
 
     | DefT (reason_fundef, FunT (_, _,
-        ({ this_t = o1; params_tlist = _; rest_param = _; return_t = t1;
+        ({ this_t = o1; params = _; return_t = t1;
           closure_t = func_scope_id; changeset; _ } as ft))),
       CallT (reason_callsite,
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
@@ -6950,7 +6959,8 @@ and check_polarity cx ?trace polarity = function
 
   | DefT (_, FunT (_, _, func)) ->
     let f = check_polarity cx ?trace (Polarity.inv polarity) in
-    List.iter f func.params_tlist;
+    List.iter (fun (_, t) -> f t) func.params;
+    Option.iter ~f:(fun (_, _, t) -> f t) func.rest_param;
     check_polarity cx ?trace polarity func.return_t
 
   | DefT (_, ArrT (ArrayAT (elemt, _))) ->
@@ -7412,11 +7422,11 @@ and patt_that_needs_concretization = function
 (* for now, we only care about concretizating parts of functions and calls *)
 and parts_to_replace = function
   | UseT (_, DefT (_, FunT (_, _, ft))) ->
-    let ts = List.fold_left (fun acc t ->
+    let ts = List.fold_left (fun acc (_, t) ->
       if patt_that_needs_concretization t
       then t::acc
       else acc
-    ) [] ft.params_tlist in
+    ) [] ft.params in
     (match ft.rest_param with
     | Some (_, _, t) when patt_that_needs_concretization t -> t::ts
     | _ -> ts)
@@ -7431,10 +7441,10 @@ and parts_to_replace = function
 and replace_parts =
   let rec replace_params acc = function
     | ys, [] -> ys, List.rev acc
-    | ys, x::params ->
+    | ys, ((name, x) as param)::params ->
       if patt_that_needs_concretization x
-      then replace_params ((List.hd ys)::acc) (List.tl ys, params)
-      else replace_params (x::acc) (ys, params)
+      then replace_params ((name, List.hd ys)::acc) (List.tl ys, params)
+      else replace_params (param::acc) (ys, params)
   in
   let replace_rest_param = function
     | ys, None -> ys, None
@@ -7458,10 +7468,10 @@ and replace_parts =
   in
   fun resolved -> function
   | UseT (op, DefT (r, FunT (t1, t2, ft))) ->
-    let resolved, params_tlist = replace_params [] (resolved, ft.params_tlist) in
+    let resolved, params = replace_params [] (resolved, ft.params) in
     let resolved, rest_param = replace_rest_param (resolved, ft.rest_param) in
     assert (resolved = []);
-    UseT (op, DefT (r, FunT (t1, t2, { ft with params_tlist; rest_param })))
+    UseT (op, DefT (r, FunT (t1, t2, { ft with params; rest_param })))
   | CallT (r, callt) ->
     let resolved, call_args_tlist = replace_args [] (resolved, callt.call_args_tlist) in
     assert (resolved = []);
@@ -9148,10 +9158,12 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     ) lpmap upmap |> ignore
 
   | DefT (_, FunT (_, _, funtype1)), DefT (_, FunT (_, _, funtype2))
-      when List.length funtype1.params_tlist =
-           List.length funtype2.params_tlist ->
+      when List.length funtype1.params =
+           List.length funtype2.params ->
     rec_unify cx trace funtype1.this_t funtype2.this_t;
-    List.iter2 (rec_unify cx trace) funtype1.params_tlist funtype2.params_tlist;
+    List.iter2 (fun (_, t1) (_, t2) ->
+      rec_unify cx trace t1 t2
+    ) funtype1.params funtype2.params;
     rec_unify cx trace funtype1.return_t funtype2.return_t
 
   | DefT (_, TypeAppT (c1, ts1)), DefT (_, TypeAppT (c2, ts2))
@@ -9332,7 +9344,7 @@ and multiflow_full
     cx ~trace ~use_op reason_op ~is_call ~def_reason
     ~spread_arg ~rest_param (arglist, parlist) in
 
-  List.iter (fun param ->
+  List.iter (fun (_, param) ->
     let is_call = is_call || use_op = FunCallParam in
     let (reason_desc, use_op) = if is_call
       then (RVoid, FunCallMissingArg (reason_op, def_reason))
@@ -9361,7 +9373,7 @@ and multiflow_partial =
     (* No more arguments *)
     | ([], _) -> arglist, parlist
 
-    | (tin::tins, tout::touts) ->
+    | (tin::tins, (_, tout)::touts) ->
       (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
          through a `ReposLowerT` to make sure that the concrete type points at
          the arg's location. however, if `tin` is an implicit type argument
@@ -9395,7 +9407,7 @@ and multiflow_partial =
        * should flow VoidT to every remaining parameter, however we don't. This
        * is consistent with how we treat arrays almost everywhere else *)
       List.iter
-        (fun param -> rec_flow_t cx trace (spread_arg_elemt, param))
+        (fun (_, param) -> rec_flow_t cx trace (spread_arg_elemt, param))
         unused_parlist;
       []
 
@@ -9698,13 +9710,14 @@ and finish_resolve_spread_list =
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
-    let {params_tlist; rest_param; return_t; def_reason; _} = ft in
+    let {params; rest_param; return_t; def_reason; _} = ft in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
 
-    let params_tlist, rest_param = multiflow_partial
+    let params, rest_param = multiflow_partial
       cx ~trace ~use_op reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
-      (args, params_tlist) in
+      (args, params) in
+    let params_names, params_tlist = List.split params in
 
     (* e.g. "bound function type", positioned at reason_op *)
     let bound_reason =
@@ -9716,7 +9729,8 @@ and finish_resolve_spread_list =
     let funt = DefT (reason_op, FunT (
       dummy_static bound_reason,
       dummy_prototype,
-      mk_boundfunctiontype params_tlist ~rest_param ~def_reason return_t
+      mk_boundfunctiontype params_tlist return_t
+        ~rest_param ~def_reason ~params_names
     )) in
     rec_flow_t cx trace (funt, tout)
 
@@ -9730,12 +9744,12 @@ and finish_resolve_spread_list =
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
-    let {params_tlist; rest_param; def_reason; _} = ft in
+    let {params; rest_param; def_reason; _} = ft in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
     multiflow_full
       cx ~trace ~use_op reason_op ~is_call ~def_reason
-      ~spread_arg ~rest_param (args, params_tlist)
+      ~spread_arg ~rest_param (args, params)
 
   in
 
@@ -11293,14 +11307,13 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     -> ()
 
   | DefT (reason, FunT (static, prototype, ft)) ->
-    let { this_t; params_tlist; return_t; rest_param; _ } = ft in
+    let { this_t; params; return_t; rest_param; _ } = ft in
     unify_opt cx static Locationless.AnyT.t;
     unify_opt cx prototype Locationless.AnyT.t;
     unify_opt cx this_t Locationless.AnyT.t;
-    List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
-    Option.iter
-      ~f:(fun (_, _, t) -> recurse ~infer:(is_derivable_reason reason) t)
-      rest_param;
+    let infer = is_derivable_reason reason in
+    List.iter (fun (_, t) -> recurse ~infer t) params;
+    Option.iter ~f:(fun (_, _, t) -> recurse ~infer t) rest_param;
     recurse ~infer:true return_t
 
   | DefT (_, PolyT (_, t, _))

@@ -5,7 +5,7 @@ open Reason
 open Type
 open Destructuring
 
-type binding = string * Type.t * Loc.t
+type binding = string option * Type.t * Loc.t
 type param =
   | Simple of Type.t * binding
   | Complex of Type.t * binding list
@@ -30,7 +30,7 @@ let mk cx type_params_map ~expr func =
         typeAnnotation;
         optional;
       } ->
-      let reason = mk_reason (RParameter name) loc in
+      let reason = mk_reason (RParameter (Some name)) loc in
       let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in (match default with
       | None ->
@@ -40,12 +40,12 @@ let mk cx type_params_map ~expr func =
           else t
         in
         Type_table.set (Context.type_table cx) loc t;
-        let binding = name, t, loc in
+        let binding = Some name, t, loc in
         let list = Simple (t, binding) :: params.list in
         { params with list }
       | Some expr ->
         (* TODO: assert (not optional) *)
-        let binding = name, t, loc in
+        let binding = Some name, t, loc in
         { list = Simple (Type.optional t, binding) :: params.list;
           defaults = SMap.add name (Default.Expr expr) params.defaults;
           rest = params.rest; })
@@ -65,7 +65,7 @@ let mk cx type_params_map ~expr func =
           EvalT (t, DestructuringT (reason, Become), mk_id())
         in
         Type_table.set (Context.type_table cx) loc t;
-        rev_bindings := (name, t, loc) :: !rev_bindings;
+        rev_bindings := (Some name, t, loc) :: !rev_bindings;
         Option.iter default ~f:(fun default ->
           defaults := SMap.add name default !defaults
         )
@@ -88,11 +88,11 @@ let mk cx type_params_map ~expr func =
         typeAnnotation;
         _;
       } ->
-      let reason = mk_reason (RRestParameter name) loc in
+      let reason = mk_reason (RRestParameter (Some name)) loc in
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in
-      { params with rest = Some (name, t, loc) }
+      { params with rest = Some (Some name, t, loc) }
     | loc, _ ->
       Flow_js.add_output cx
         Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
@@ -118,8 +118,8 @@ let mk cx type_params_map ~expr func =
 let convert cx type_params_map func = Ast.Type.Function.(
   let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
     let name = match name with
-    | None -> "_"
-    | Some (_, name) -> name in
+    | None -> None
+    | Some (_, name) -> Some name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let t = if optional then Type.optional t else t in
     let binding = name, t, loc in
@@ -127,14 +127,14 @@ let convert cx type_params_map func = Ast.Type.Function.(
   in
   let add_rest params (loc, {Param.name; typeAnnotation; _}) =
     let name = match name with
-    | None -> "_"
-    | Some (_, name) -> name in
+    | None -> None
+    | Some (_, name) -> Some name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let reason = mk_reason (RRestParameter name) (loc_of_t t) in
     Flow.flow cx (t, AssertRestParamT reason);
     { params with rest = Some (name, t, loc) }
   in
-  let (_, { Params.params; rest }) = func.params in
+  let (_, { Params.params; rest }) = func.Ast.Type.Function.params in
   let params = List.fold_left add_param empty params in
   let params = match rest with
   | Some (_, { RestParam.argument }) -> add_rest params argument
@@ -143,20 +143,15 @@ let convert cx type_params_map func = Ast.Type.Function.(
   { params with list = List.rev params.list }
 )
 
-let names params =
+let value params =
   params.list |> List.map (function
-    | Simple (_, (name, _, _)) -> name
-    | Complex _ -> "_")
-
-let tlist params =
-  params.list |> List.map (function
-    | Simple (t, _)
-    | Complex (t, _) -> t)
+    | Simple (t, (name, _, _)) -> name, t
+    | Complex (t, _) -> None, t)
 
 let rest params =
   match params.rest with
   | None -> None
-  | Some (name, t, loc) -> Some (Some name, loc, t)
+  | Some (name, t, loc) -> Some (name, loc, t)
 
 let iter f params =
   params.list |> List.iter (function

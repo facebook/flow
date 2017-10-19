@@ -26,10 +26,6 @@ let qualified_name =
 
 let ident_name (_, name) = name
 
-let optional_ident_name = function
-| None -> "_"
-| Some ident -> ident_name ident
-
 let error_type cx loc msg =
   Flow_js.add_output cx msg;
   AnyT.at loc
@@ -539,7 +535,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let n = Pervasives.int_of_float f in
         let key_strs =
           Utils_js.range 0 n |>
-          List.map (fun i -> "x_" ^ Pervasives.string_of_int i) in
+          List.map (fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
         let emp = Key_map.empty in
         let tins = Utils_js.repeat n (AnyT.at loc) in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
@@ -583,13 +579,12 @@ let rec convert cx tparams_map = Ast.Type.(function
   let tparams, tparams_map =
     mk_type_param_declarations cx ~tparams_map typeParameters in
 
-  let rev_params_tlist, rev_params_names =
-    List.fold_left (fun (tlist, pnames) (_, param) ->
-      let { Function.Param.name; typeAnnotation; optional } = param in
-      let t = convert cx tparams_map typeAnnotation in
-      let t = if optional then Type.optional t else t in
-      (t :: tlist, optional_ident_name name :: pnames)
-    ) ([], []) params in
+  let rev_params = List.fold_left (fun acc (_, param) ->
+    let { Function.Param.name; typeAnnotation; optional } = param in
+    let t = convert cx tparams_map typeAnnotation in
+    let t = if optional then Type.optional t else t in
+    (Option.map ~f:ident_name name, t) :: acc
+  ) [] params in
 
   let reason = mk_reason RFunctionType loc in
 
@@ -609,7 +604,6 @@ let rec convert cx tparams_map = Ast.Type.(function
     Some (Option.map ~f:ident_name name, loc_of_t rest, rest)
   | None -> None in
 
-  let params_names = List.rev rev_params_names in
   let return_t = convert cx tparams_map returnType in
   let ft =
     DefT (reason, FunT (
@@ -617,8 +611,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       DefT (mk_reason RPrototype loc, AnyT),
       {
         this_t = DefT (mk_reason RThis loc, AnyT);
-        params_tlist = (List.rev rev_params_tlist);
-        params_names = Some params_names;
+        params = List.rev rev_params;
         rest_param;
         return_t;
         is_predicate = false;
@@ -904,15 +897,15 @@ and type_identifier cx name loc =
   else Env.var_ref ~lookup_mode:ForType cx name loc
 
 and extract_type_param_declarations =
-  let open Ast.Type.ParameterDeclaration in
-  let f (_, typeParameters) = typeParameters.params in
+  let open Ast.Type in
+  let f (_, typeParameters) = typeParameters.ParameterDeclaration.params in
   Option.value_map ~f ~default:[]
 
 and extract_type_param_instantiations =
-  let open Ast.Type.ParameterInstantiation in
+  let open Ast.Type in
   function
   | None -> None
-  | Some (_, typeParameters) -> Some typeParameters.params
+  | Some (_, typeParameters) -> Some typeParameters.ParameterInstantiation.params
 
 and polarity = Ast.Variance.(function
   | Some (_, Plus) -> Positive

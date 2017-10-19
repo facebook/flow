@@ -229,8 +229,7 @@ class ['a] t = object(self)
     else {exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export}
 
   method fun_type cx map_cx ({ this_t;
-                       params_tlist;
-                       params_names;
+                       params;
                        rest_param;
                        return_t;
                        closure_t;
@@ -239,7 +238,10 @@ class ['a] t = object(self)
                        def_reason } as t) =
     let this_t' = self#type_ cx map_cx this_t in
     let return_t' = self#type_ cx map_cx return_t in
-    let params_tlist' = ListUtils.ident_map (self#type_ cx map_cx) params_tlist in
+    let params' = ListUtils.ident_map (fun ((name, t) as param) ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then param else (name, t')
+    ) params in
     let rest_param' = match rest_param with
     | None -> rest_param
     | Some (name, loc, t) ->
@@ -248,14 +250,14 @@ class ['a] t = object(self)
     in
     if this_t' == this_t &&
        return_t' == return_t &&
-       params_tlist' == params_tlist &&
+       params' == params &&
        rest_param' == rest_param then t
     else
       let this_t = this_t' in
       let return_t = return_t' in
-      let params_tlist = params_tlist' in
+      let params = params' in
       let rest_param = rest_param' in
-      {this_t; params_tlist; params_names; rest_param; return_t;
+      {this_t; params; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
   method inst_type cx map_cx ({ class_id;
