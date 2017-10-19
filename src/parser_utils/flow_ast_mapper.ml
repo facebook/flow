@@ -578,7 +578,7 @@ class mapper = object(this)
     let returnType' = map_opt this#type_annotation returnType in
     let body' = match body with
       | BodyBlock (loc, block) ->
-        id this#block block body (fun block -> BodyBlock (loc, block))
+        id this#function_body block body (fun block -> BodyBlock (loc, block))
       | BodyExpression expr ->
         id this#expression expr body (fun expr -> BodyExpression expr)
     in
@@ -589,6 +589,9 @@ class mapper = object(this)
       id = ident'; params = params'; returnType = returnType'; body = body';
       async; generator; expression; predicate; typeParameters;
     }
+
+  method function_body (block: Loc.t Ast.Statement.Block.t) =
+    this#block block
 
   method function_identifier (ident: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
