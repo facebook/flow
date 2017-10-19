@@ -2198,10 +2198,20 @@ and mod_reason_of_use_t f = function
 
 (* type comparison mod reason *)
 let reasonless_compare =
-  let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
-  fun t t' ->
-    if t == t' then 0 else
-    compare t (swap_reason t' (reason_of_t t))
+  let rec swap_reason t2 t1 =
+    match t2, t1 with
+    (* In reposition we also recurse and reposition some nested types. We need
+     * to make sure we swap the types for these reasons as well. Otherwise our
+     * optimized union ~> union check will not pass. *)
+    | DefT (_, MaybeT t2), DefT (r, MaybeT t1) -> DefT (r, MaybeT (swap_reason t2 t1))
+    | DefT (_, OptionalT t2), DefT (r, OptionalT t1) -> DefT (r, OptionalT (swap_reason t2 t1))
+    | ExactT (_, t2), ExactT (r, t1) -> ExactT (r, swap_reason t2 t1)
+
+    | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
+  in
+  fun t1 t2 ->
+    if t1 == t2 then 0 else
+    compare t1 (swap_reason t2 t1)
 
 let reasonless_eq t1 t2 =
   reasonless_compare t1 t2 = 0
