@@ -9942,6 +9942,9 @@ and reposition cx ?trace loc ?desc t =
       OpaqueT (r, { opaquetype with
         underlying_t = OptionUtils.ident_map (recurse seen) opaquetype.underlying_t;
         super_t = OptionUtils.ident_map (recurse seen) opaquetype.super_t; })
+  | ExactT (r, t) ->
+      let r = mod_reason r in
+      ExactT (r, recurse seen t)
   | t ->
       mod_reason_of_t mod_reason t
   in

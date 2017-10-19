@@ -418,14 +418,9 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React element `Foo`
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+      ^^^^^^^^^^^^^ object type. This type is incompatible with
+  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `props` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                                            ^^^^^^^^^^^ object type. This type is incompatible with
@@ -441,14 +436,9 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React element `Foo`
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+      ^^^^^^^^^^^^^ object type. This type is incompatible with
+  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `type` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                ^^^ class type: Foo. This type is incompatible with

@@ -62,17 +62,6 @@ Error: cross_module/app.js:8
           8: export default fn((o: {a: number, b: number}) => {});
                                        ^^^^^^ number
 
-Error: type.js:7
-  7: declare var nil: {||};
-                      ^^^^ object type. This type is incompatible with
- 47: (nil: O5); // error: property `p` not found
-           ^^ object type
-  Property `p` is incompatible:
-     47: (nil: O5); // error: property `p` not found
-               ^^ property `p`. Property not found in
-      7: declare var nil: {||};
-                          ^^^^ object type
-
 Error: type.js:13
  13: (o1: {p:T}); // error: o1.p is optional
       ^^ object type. This type is incompatible with
@@ -150,6 +139,17 @@ Error: type.js:39
              ^ U. This type is incompatible with
      33: type O4 = {...{|p:T|}};
                            ^ T
+
+Error: type.js:47
+ 47: (nil: O5); // error: property `p` not found
+      ^^^ object type. This type is incompatible with
+ 47: (nil: O5); // error: property `p` not found
+           ^^ object type
+  Property `p` is incompatible:
+     47: (nil: O5); // error: property `p` not found
+               ^^ property `p`. Property not found in
+     47: (nil: O5); // error: property `p` not found
+          ^^^ object type
 
 Error: type.js:49
  49: ({p:y}: O5); // error: y ~> T
