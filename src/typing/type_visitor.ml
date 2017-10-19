@@ -435,7 +435,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ReactKitT (_, tool) -> (match tool with
+  | ReactKitT (_, _, tool) -> (match tool with
     | React.GetProps t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
     | React.CreateElement (_, t1, (ts, t2), t3) ->
@@ -465,7 +465,7 @@ class ['a] t = object(self)
       let acc = self#type_ cx pole_TODO acc tout in
       acc)
 
-  | ObjKitT (_, resolve_tool, tool, tout) ->
+  | ObjKitT (_, _, resolve_tool, tool, tout) ->
     let open Object in
     let acc =
       match resolve_tool with

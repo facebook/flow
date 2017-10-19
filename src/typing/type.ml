@@ -291,6 +291,7 @@ module rec TypeTerm : sig
     | Internal of internal_use_op
     | MissingTupleElement of int
     | PropertyCompatibility of string * reason * reason * use_op
+    | ReactCreateElementCall
     | SetProperty of reason
     | TypeArgCompatibility of string * reason * reason * use_op
     | TypeRefinement
@@ -486,9 +487,9 @@ module rec TypeTerm : sig
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t_out
 
-    | ObjKitT of reason * Object.resolve_tool * Object.tool * t_out
+    | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
 
-    | ReactKitT of reason * React.tool
+    | ReactKitT of use_op * reason * React.tool
 
     | ChoiceKitUseT of reason * choice_use_tool
 
@@ -2006,7 +2007,7 @@ and reason_of_use_t = function
   | ObjTestT (reason, _, _) -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, t) -> reason_of_t t
-  | ReactKitT (reason, _) -> reason
+  | ReactKitT (_, reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
@@ -2017,7 +2018,7 @@ and reason_of_use_t = function
   | SetPrivatePropT (reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
-  | ObjKitT (reason, _, _, _) -> reason
+  | ObjKitT (_, reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
@@ -2166,7 +2167,7 @@ and mod_reason_of_use_t f = function
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
-  | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
+  | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
@@ -2180,8 +2181,8 @@ and mod_reason_of_use_t f = function
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
-  | ObjKitT (reason, resolve_tool, tool, tout) ->
-      ObjKitT (f reason, resolve_tool, tool, tout)
+  | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
+      ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
@@ -2328,6 +2329,7 @@ let string_of_use_op = function
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
   | PropertyCompatibility _ -> "PropertyCompatibility"
+  | ReactCreateElementCall -> "ReactCreateElementCall"
   | SetProperty _ -> "SetProperty"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeRefinement -> "TypeRefinement"

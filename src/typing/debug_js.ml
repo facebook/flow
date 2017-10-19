@@ -707,11 +707,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t", _json_of_t json_cx t;
     ]
 
-  | ObjKitT (_, _, _, tout) -> [
+  | ObjKitT (_, _, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
+  | ReactKitT (_, _, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
       "children", JSON_Array (List.map (_json_of_t json_cx) children);
@@ -1896,11 +1896,11 @@ and dump_use_t_ (depth, tvars) cx t =
           (String.concat "; " (List.map kid todo_rev))
           (String.concat "; " (List.map resolved acc))
       in
-      spf "(%s, %s)" target state
+      spf "Spread (%s, %s)" target state
     in
     let rest merge_mode state =
       let open Object.Rest in
-      spf "({merge_mode=%s}, %s)"
+      spf "Rest ({merge_mode=%s}, %s)"
         (match merge_mode with
           | Sound -> "Sound"
           | IgnoreExactAndOwn -> "IgnoreExactAndOwn")
@@ -2012,7 +2012,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
-  | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
+  | ReactKitT (use_op, _, tool) -> p t
+      ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
   | RefineT _ -> p t
   | ReposLowerT (_, use_desc, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
@@ -2060,7 +2061,8 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> spf "%s, %s"
           (specialize_cache cache) (kid ret)
     end t
-  | ObjKitT (_, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s"
+  | ObjKitT (use_op, _, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s, %s"
+      (string_of_use_op use_op)
       (object_kit resolve_tool tool)
       (kid tout)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
@@ -2472,10 +2474,11 @@ let dump_flow_error =
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIncompatibleWithExact ((reason1, reason2), _) ->
-        spf "EIncompatibleWithExact ((%s, %s), _)"
+    | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+        spf "EIncompatibleWithExact ((%s, %s), %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
         spf "EUnsupportedExact (%s, %s)"
           (dump_reason cx reason1)

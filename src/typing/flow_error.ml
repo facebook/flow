@@ -306,6 +306,7 @@ let rec locs_of_use_op acc = function
   | FunCallMissingArg _
   | FunCallParam
   | FunReturn
+  | ReactCreateElementCall
   | TypeRefinement
   | UnknownUse
   | Internal _
@@ -711,6 +712,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
+
+  | ReactCreateElementCall ->
+    let suppress_op = suppress_fun_call_param_op op in
+    extra, suppress_op, typecheck_msgs msg reasons
+
   | SetProperty reason_op ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in

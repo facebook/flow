@@ -2884,8 +2884,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | DefT (_, UnionT _), ObjKitT (reason, resolve_tool, tool, tout) ->
-      object_kit cx trace reason resolve_tool tool tout l
+    | DefT (_, UnionT _), ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
+      object_kit cx trace ~use_op reason resolve_tool tool tout l
 
     (* cases where there is no loss of precision *)
 
@@ -3052,8 +3052,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | DefT (_, IntersectionT _), ObjKitT (reason, resolve_tool, tool, tout) ->
-      object_kit cx trace reason resolve_tool tool tout l
+    | DefT (_, IntersectionT _), ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
+      object_kit cx trace ~use_op reason resolve_tool tool tout l
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -3722,11 +3722,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Special case for React.PropTypes.instanceOf arguments, which are an
          exception to type arg arity strictness, because it's not possible to
          provide args and we need to interpret the value as a type. *)
-      | ReactKitT (reason_op, (React.SimplifyPropType
+      | ReactKitT (use_op, reason_op, (React.SimplifyPropType
           (React.SimplifyPropType.InstanceOf, _) as tool)) ->
         let l = instantiate_poly_default_args cx trace
           ~reason_op ~reason_tapp (ids, t) in
-        react_kit cx trace reason_op l tool
+        react_kit cx trace ~use_op reason_op l tool
       (* Calls to polymorphic functions may cause non-termination, e.g. when the
          results of the calls feed back as subtle variations of the original
          arguments. This is similar to how we may have non-termination with
@@ -3789,7 +3789,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_op = match desc_of_reason ureason with
       (* TODO: This exists to support a legacy behavior of ResolveSpreadT.
        * Refactor how React use_ops work and remove this special case. *)
-      | RReactSFC -> FunCallParam
+      | RReactSFC -> ReactCreateElementCall
       | _ -> FunParam { lower = lreason; upper = ureason; use_op }
       in
       multiflow_subtype cx trace ~use_op ureason args ft;
@@ -3961,7 +3961,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | PropType.Shape -> SimplifyPropType.Shape ResolveObject
       in
       let t = extract_non_spread cx ~trace arg1 in
-      rec_flow cx trace (t, ReactKitT (reason_op,
+      rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
         SimplifyPropType (tool, call_tout)))
 
     | CustomFunT (reason, ReactPropType React.PropType.Complex kind), _
@@ -3979,12 +3979,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d)));
         default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d)));
       } in
-      rec_flow cx trace (spec, ReactKitT (reason_op,
+      rec_flow cx trace (spec, ReactKitT (UnknownUse, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.set ops
 
-    | _, ReactKitT (reason_op, tool) ->
-      react_kit cx trace reason_op l tool
+    | _, ReactKitT (use_op, reason_op, tool) ->
+      react_kit cx trace ~use_op reason_op l tool
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
@@ -5075,8 +5075,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* object kit *)
     (**************)
 
-    | _, ObjKitT (reason, resolve_tool, tool, tout) ->
-      object_kit cx trace reason resolve_tool tool tout l
+    | _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
+      object_kit cx trace ~use_op reason resolve_tool tool tout l
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
@@ -6873,13 +6873,13 @@ and eval_destructor cx ~trace reason t d tout = match t with
     let open Object.Spread in
     let tool = Resolve Next in
     let state = { todo_rev; acc = [] } in
-    ObjKitT (reason, tool, Spread (options, state), tout)
+    ObjKitT (UnknownUse, reason, tool, Spread (options, state), tout)
   | RestType (options, t) ->
     let open Object in
     let open Object.Rest in
     let tool = Resolve Next in
     let state = One t in
-    ObjKitT (reason, tool, Rest (options, state), tout)
+    ObjKitT (UnknownUse, reason, tool, Rest (options, state), tout)
   | ValuesType -> GetValuesT (reason, tout)
   | CallType args ->
     let args = List.map (fun arg -> Arg arg) args in
@@ -6887,8 +6887,8 @@ and eval_destructor cx ~trace reason t d tout = match t with
     let call = {call with call_strict_arity = false} in
     CallT (reason, call)
   | TypeMap tmap -> MapTypeT (reason, tmap, tout)
-  | ReactElementPropsType -> ReactKitT (reason, React.GetProps tout)
-  | ReactElementRefType -> ReactKitT (reason, React.GetRef tout)
+  | ReactElementPropsType -> ReactKitT (UnknownUse, reason, React.GetProps tout)
+  | ReactElementRefType -> ReactKitT (UnknownUse, reason, React.GetRef tout)
   )
 
 and match_this_binding map f =
@@ -10217,13 +10217,13 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
         mk_object_with_map_proto
           cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
       in
-      rec_flow cx trace (component, ReactKitT (reason_op,
+      rec_flow cx trace (component, ReactKitT (ReactCreateElementCall, reason_op,
         React.CreateElement (false, config, ([], None), tout)));
       Ops.pop ()
     (* React.createElement(component, config, ...children) *)
     | component::config::children ->
       Ops.push reason_op;
-      rec_flow cx trace (component, ReactKitT (reason_op,
+      rec_flow cx trace (component, ReactKitT (ReactCreateElementCall, reason_op,
         React.CreateElement (false, config, (children, spread_arg), tout)));
       Ops.pop ()
     (* React.createElement() *)
@@ -10258,7 +10258,7 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
       );
       (* Create a React element using the config and children. *)
       rec_flow cx trace (component,
-        ReactKitT (reason_op,
+        ReactKitT (ReactCreateElementCall, reason_op,
           React.CreateElement (true, config, (children, spread_arg), tout)));
       Ops.pop ()
     (* React.cloneElement() *)
@@ -10276,14 +10276,14 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
           cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
       in
       rec_flow cx trace (component,
-        ReactKitT (reason_op,
+        ReactKitT (ReactCreateElementCall, reason_op,
           React.CreateElement (false, config, ([], None), tout)));
       Ops.pop ()
     (* React.createFactory(component)(config, ...children) *)
     | config::children ->
       Ops.push reason_op;
       rec_flow cx trace (component,
-        ReactKitT (reason_op,
+        ReactKitT (ReactCreateElementCall, reason_op,
           React.CreateElement (false, config, (children, spread_arg), tout)));
       Ops.pop ())
 
@@ -10529,7 +10529,7 @@ and object_kit =
       if flags.exact then ExactT (reason, t) else t
     in
 
-    fun options state cx trace reason tout x ->
+    fun options state cx trace use_op reason tout x ->
       let {todo_rev; acc} = state in
       Nel.iter (fun (r, _, _, {exact; _}) ->
         match options with
@@ -10548,11 +10548,11 @@ and object_kit =
             (mk_object cx reason options x1)
             (List.map (mk_object cx reason options) xs)))
         in
-        rec_flow_t cx trace (t, tout)
+        rec_flow cx trace (t, UseT (use_op, tout))
       | t::todo_rev ->
         let tool = Resolve Next in
         let state = {todo_rev; acc = x::acc} in
-        rec_flow cx trace (t, ObjKitT (reason, tool, Spread (options, state), tout))
+        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
   in
 
   (***************)
@@ -10652,12 +10652,12 @@ and object_kit =
       if flags.exact then ExactT (r1, t) else t
     in
 
-    fun options state cx trace reason tout x ->
+    fun options state cx trace use_op reason tout x ->
       match state with
       | One t ->
         let tool = Resolve Next in
         let state = Done x in
-        rec_flow cx trace (t, ObjKitT (reason, tool, Rest (options, state), tout))
+        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Rest (options, state), tout))
       | Done base ->
         let xs = Nel.map_concat (fun slice ->
           Nel.map (rest cx trace reason options slice) x
@@ -10666,7 +10666,7 @@ and object_kit =
           | (x, []) -> x
           | (x0, x1::xs) -> DefT (reason, UnionT (UnionRep.make x0 x1 xs))
         in
-        rec_flow_t cx trace (t, tout)
+        rec_flow cx trace (t, UseT (use_op, tout))
   in
 
   (****************)
@@ -10778,14 +10778,14 @@ and object_kit =
       if flags.exact then ExactT (reason, t) else t
     in
 
-    fun state cx trace reason tout x ->
+    fun state cx trace use_op reason tout x ->
       match state with
       (* If we have some type for default props then we need to wait for that
        * type to resolve before finishing our props type. *)
       | Config { defaults = Some t; children } ->
         let tool = Resolve Next in
         let state = Defaults { config = x; children } in
-        rec_flow cx trace (t, ObjKitT (reason, tool, ReactConfig state, tout))
+        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, ReactConfig state, tout))
       (* If we have no default props then finish our object and flow it to our
        * tout type. *)
       | Config { defaults = None; children } ->
@@ -10794,7 +10794,7 @@ and object_kit =
           | t, [] -> t
           | t0, t1::ts -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
         in
-        rec_flow_t cx trace (t, tout)
+        rec_flow cx trace (t, UseT (use_op, tout))
       (* If we had default props and those defaults resolved then finish our
        * props object with those default props. *)
       | Defaults { config; children } ->
@@ -10805,7 +10805,7 @@ and object_kit =
           | t, [] -> t
           | t0, t1::ts -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
         in
-        rec_flow_t cx trace (t, tout)
+        rec_flow cx trace (t, UseT (use_op, tout))
   in
 
   (*********************)
@@ -10872,12 +10872,12 @@ and object_kit =
     r, props, dict, flags
   in
 
-  let resolved cx trace reason resolve_tool tool tout x =
+  let resolved cx trace use_op reason resolve_tool tool tout x =
     match resolve_tool with
-    | Next -> next tool cx trace reason tout x
+    | Next -> next tool cx trace use_op reason tout x
     | List0 ((t, todo), join) ->
       let resolve_tool = Resolve (List (todo, Nel.one x, join)) in
-      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     | List (todo, done_rev, join) ->
       match todo with
       | [] ->
@@ -10885,11 +10885,11 @@ and object_kit =
         | Or -> Nel.cons x done_rev |> Nel.concat
         | And -> merge (intersect2 reason) x done_rev
         in
-        next tool cx trace reason tout x
+        next tool cx trace use_op reason tout x
       | t::todo ->
         let done_rev = Nel.cons x done_rev in
         let resolve_tool = Resolve (List (todo, done_rev, join)) in
-        rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+        rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
   in
 
   let object_slice cx r id dict flags =
@@ -10920,33 +10920,33 @@ and object_kit =
     object_slice cx r id dict flags
   in
 
-  let resolve cx trace reason resolve_tool tool tout = function
+  let resolve cx trace use_op reason resolve_tool tool tout = function
     (* We extract the props from an ObjT. *)
     | DefT (r, ObjT {props_tmap; dict_t; flags; _}) ->
       let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
-      resolved cx trace reason resolve_tool tool tout x
+      resolved cx trace use_op reason resolve_tool tool tout x
     (* We take the fields from an InstanceT excluding methods (because methods
      * are always on the prototype). We also want to resolve fields from the
      * InstanceT's super class so we recurse. *)
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let resolve_tool = Super (interface_slice cx r fields_tmap, resolve_tool) in
-      rec_flow cx trace (super, ObjKitT (reason, resolve_tool, tool, tout))
+      rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Resolve each member of a union. *)
     | DefT (_, UnionT rep) ->
       let t, todo = UnionRep.members_nel rep in
       let resolve_tool = Resolve (List0 (todo, Or)) in
-      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Resolve each member of an intersection. *)
     | DefT (_, IntersectionT rep) ->
       let t, todo = InterRep.members_nel rep in
       let resolve_tool = Resolve (List0 (todo, And)) in
-      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Mirroring Object.assign() and {...null} semantics, treat null/void as
      * empty objects. *)
     | DefT (_, (NullT | VoidT)) ->
       let flags = { frozen = true; sealed = Sealed; exact = true } in
       let x = Nel.one (reason, SMap.empty, None, flags) in
-      resolved cx trace reason resolve_tool tool tout x
+      resolved cx trace use_op reason resolve_tool tool tout x
     (* mixed is treated as {[string]: mixed}. Any JavaScript value may be
      * treated as an object and so this is safe. *)
     | DefT (r, MixedT _) as t ->
@@ -10957,13 +10957,13 @@ and object_kit =
         value = t;
         dict_polarity = Neutral;
       }), flags) in
-      resolved cx trace reason resolve_tool tool tout x
+      resolved cx trace use_op reason resolve_tool tool tout x
     (* If we see an empty then propagate empty to tout. *)
     | DefT (r, EmptyT) ->
-      rec_flow_t cx trace (EmptyT.make r, tout)
+      rec_flow cx trace (EmptyT.make r, UseT (use_op, tout))
     (* Propagate any. *)
     | DefT (_, (AnyT | AnyObjT)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
+      rec_flow cx trace (AnyT.why reason, UseT (use_op, tout))
     (* Other types have reasonable object representations that may be added as
      * new uses of the object kit resolution code is found. *)
     | t ->
@@ -10974,22 +10974,22 @@ and object_kit =
       })
   in
 
-  let super cx trace reason resolve_tool tool tout acc = function
+  let super cx trace use_op reason resolve_tool tool tout acc = function
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let slice = interface_slice cx r fields_tmap in
       let acc = intersect2 reason acc slice in
       let resolve_tool = Super (acc, resolve_tool) in
-      rec_flow cx trace (super, ObjKitT (reason, resolve_tool, tool, tout))
+      rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
+      rec_flow cx trace (AnyT.why reason, UseT (use_op, tout))
     | _ ->
-      next tool cx trace reason tout (Nel.one acc)
+      next tool cx trace use_op reason tout (Nel.one acc)
   in
 
-  fun cx trace reason resolve_tool tool tout l ->
+  fun cx trace ~use_op reason resolve_tool tool tout l ->
     match resolve_tool with
-    | Resolve resolve_tool -> resolve cx trace reason resolve_tool tool tout l
-    | Super (acc, resolve_tool) -> super cx trace reason resolve_tool tool tout acc l
+    | Resolve resolve_tool -> resolve cx trace use_op reason resolve_tool tool tout l
+    | Super (acc, resolve_tool) -> super cx trace use_op reason resolve_tool tool tout acc l
 
 (************* end of slab **************************************************)
 

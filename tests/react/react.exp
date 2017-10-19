@@ -492,50 +492,11 @@ Error: hoc.js:11
      11:       <Component />; // Error: `foo` is required.
                ^^^^^^^^^^^^^ props of React element `Component`
 
-Error: hoc.js:11
- 11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ React element `Component`
- 11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with the expected param type of
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     11:       <Component />; // Error: `foo` is required.
-               ^^^^^^^^^^^^^ props of React element `Component`
-
-Error: hoc.js:11
- 11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ React element `Component`
- 11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with the expected param type of
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
-     11:       <Component />; // Error: `foo` is required.
-               ^^^^^^^^^^^^^ props of React element `Component`
-
 Error: hoc.js:12
  12:       <Component foo={42} />; // Error: `bar` is required.
            ^^^^^^^^^^^^^^^^^^^^^^ React element `Component`
  12:       <Component foo={42} />; // Error: `bar` is required.
            ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     12:       <Component foo={42} />; // Error: `bar` is required.
-               ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Component`
-
-Error: hoc.js:12
- 12:       <Component foo={42} />; // Error: `bar` is required.
-           ^^^^^^^^^^^^^^^^^^^^^^ React element `Component`
- 12:       <Component foo={42} />; // Error: `bar` is required.
-           ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Component`. This type is incompatible with the expected param type of
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -631,37 +592,11 @@ Error: hoc.js:41
      41: <Wrapped />; // Error: `foo` is required.
          ^^^^^^^^^^^ props of React element `Wrapped`
 
-Error: hoc.js:41
- 41: <Wrapped />; // Error: `foo` is required.
-     ^^^^^^^^^^^ React element `Wrapped`
- 41: <Wrapped />; // Error: `foo` is required.
-     ^^^^^^^^^^^ props of React element `Wrapped`. This type is incompatible with the expected param type of
-  7: ): React$ComponentType<{foo: number}> {
-                            ^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      7: ): React$ComponentType<{foo: number}> {
-                                ^^^^^^^^^^^^^ property `foo`. Property not found in
-     41: <Wrapped />; // Error: `foo` is required.
-         ^^^^^^^^^^^ props of React element `Wrapped`
-
 Error: hoc.js:43
  43: <WrappedFun />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^ React element `WrappedFun`
  43: <WrappedFun />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^ props of React element `WrappedFun`. This type is incompatible with
-  7: ): React$ComponentType<{foo: number}> {
-                            ^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      7: ): React$ComponentType<{foo: number}> {
-                                ^^^^^^^^^^^^^ property `foo`. Property not found in
-     43: <WrappedFun />; // Error: `foo` is required.
-         ^^^^^^^^^^^^^^ props of React element `WrappedFun`
-
-Error: hoc.js:43
- 43: <WrappedFun />; // Error: `foo` is required.
-     ^^^^^^^^^^^^^^ React element `WrappedFun`
- 43: <WrappedFun />; // Error: `foo` is required.
-     ^^^^^^^^^^^^^^ props of React element `WrappedFun`. This type is incompatible with the expected param type of
   7: ): React$ComponentType<{foo: number}> {
                             ^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -1205,35 +1140,9 @@ Error: hoc4.js:26
      26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
-Error: hoc4.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
-
-Error: hoc4.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `b` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
-
 Error: hoc4.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
   7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `a` is incompatible:
@@ -2331,4 +2240,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 172 errors
+Found 165 errors

@@ -722,16 +722,16 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if tmap' == tmap && t'' == t' then t
         else MapTypeT (r, tmap', t'')
-    | ReactKitT (r, react_tool) ->
+    | ReactKitT (use_op, r, react_tool) ->
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
-        else ReactKitT (r, react_tool')
-    | ObjKitT (r, resolve_tool, tool, tout) ->
+        else ReactKitT (use_op, r, react_tool')
+    | ObjKitT (use_op, r, resolve_tool, tool, tout) ->
         let resolve_tool' = self#object_kit_resolve_tool cx map_cx resolve_tool in
         let tool' = self#object_kit_tool cx map_cx tool in
         let tout' = self#type_ cx map_cx tout in
         if resolve_tool' == resolve_tool && tool' == tool && tout' == tout then t
-        else ObjKitT (r, resolve_tool', tool', tout')
+        else ObjKitT (use_op, r, resolve_tool', tool', tout')
     | ChoiceKitUseT (r, choice_use_tool) ->
         let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
         if choice_use_tool' == choice_use_tool then t

@@ -9,7 +9,7 @@ open Reason
 open Type
 open React
 
-let run cx trace reason_op l u
+let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
   ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
@@ -407,7 +407,7 @@ let run cx trace reason_op l u
       (* Create the final config object using the ReactConfig object kit tool and
        * flow it to our type for props. *)
       rec_flow cx trace (config,
-        ObjKitT (reason, Resolve Next,
+        ObjKitT (use_op, reason, Resolve Next,
           ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
@@ -503,7 +503,7 @@ let run cx trace reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (reason_op,
+          rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
             SimplifyPropType (OneOf
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -524,7 +524,7 @@ let run cx trace reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (reason_op,
+          rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
             SimplifyPropType (OneOfType
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -565,7 +565,7 @@ let run cx trace reason_op l u
           match Property.read_t p with
           | None -> next todo shape
           | Some t ->
-            rec_flow cx trace (t, ReactKitT (reason_op,
+            rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
               SimplifyPropType (Shape
                 (ResolveProp (k, todo, shape)), tout)))
       in
@@ -582,7 +582,7 @@ let run cx trace reason_op l u
           (match dict with
           | None -> next todo shape
           | Some dicttype ->
-            rec_flow cx trace (dicttype.value, ReactKitT (reason_op,
+            rec_flow cx trace (dicttype.value, ReactKitT (UnknownUse, reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
         | Error _ -> resolve (DefT (reason_op, AnyT)))
@@ -635,7 +635,7 @@ let run cx trace reason_op l u
      * of the bound function call *)
 
     let resolve tool t =
-      rec_flow cx trace (t, ReactKitT (reason_op,
+      rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
         CreateClass (tool, knot, tout)))
     in
 
