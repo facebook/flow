@@ -1584,7 +1584,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, DefT (r, IntersectionT rep), u)) ->
-      prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
+      prep_try_intersection cx trace reason unresolved (t::resolved) u r rep
 
     (*****************************)
     (* Refinement type subtyping *)
@@ -7409,56 +7409,63 @@ and patt_that_needs_concretization = function
   | OpenT _ | DefT (_, UnionT _) | DefT (_, MaybeT _) | DefT (_, OptionalT _) | AnnotT _ -> true
   | _ -> false
 
-and concretize_patt replace patt =
-  snd (List.fold_left (fun (replace, result) t ->
-    if patt_that_needs_concretization t
-    then List.tl replace, result@[List.hd replace]
-    else replace, result@[t]
-  ) (replace, []) patt)
-
-and concretize_call_args replace call_args =
-  snd (List.fold_left (fun (replace, result) call_arg ->
-    match call_arg with
-    | Arg t ->
-      if patt_that_needs_concretization t
-      then List.tl replace, result@[Arg (List.hd replace)]
-      else replace, result@[call_arg]
-    | SpreadArg t ->
-      if patt_that_needs_concretization t
-      then List.tl replace, result@[SpreadArg (List.hd replace)]
-      else replace, result@[call_arg]
-  ) (replace, []) call_args)
-
 (* for now, we only care about concretizating parts of functions and calls *)
 and parts_to_replace = function
-  | UseT (_, DefT (_, FunT (_, _, callt))) ->
-    let params = match callt.rest_param with
-    | None -> callt.params_tlist
-    | Some (_, _, rest) -> rest::callt.params_tlist in
-    List.filter patt_that_needs_concretization params
+  | UseT (_, DefT (_, FunT (_, _, ft))) ->
+    let ts = List.fold_left (fun acc t ->
+      if patt_that_needs_concretization t
+      then t::acc
+      else acc
+    ) [] ft.params_tlist in
+    (match ft.rest_param with
+    | Some (_, _, t) when patt_that_needs_concretization t -> t::ts
+    | _ -> ts)
   | CallT (_, callt) ->
-    callt.call_args_tlist
-      |> List.map (function Arg t | SpreadArg t -> t)
-      |> List.filter patt_that_needs_concretization
+    List.fold_left (fun acc -> function
+      | Arg t | SpreadArg t when patt_that_needs_concretization t -> t::acc
+      | _ -> acc
+    ) [] callt.call_args_tlist
   | _ -> []
 
-and replace_parts replace = function
-  | UseT (op, DefT (r, FunT (t1, t2, callt))) ->
-    let rest_param, params_tlist = match callt.rest_param with
-    | None -> None, concretize_patt replace callt.params_tlist
-    | Some (name, loc, rest) ->
-        (match concretize_patt replace (rest::callt.params_tlist) with
-        | rest::params -> Some (name, loc, rest), params
-        | [] -> failwith "By construction, this list should be non-empty") in
-
-    UseT (op, DefT (r, FunT (t1, t2, { callt with
-      params_tlist;
-      rest_param;
-    })))
+(* replace unresolved types (xs) with resolved (ys) *)
+and replace_parts =
+  let rec replace_params acc = function
+    | ys, [] -> ys, List.rev acc
+    | ys, x::params ->
+      if patt_that_needs_concretization x
+      then replace_params ((List.hd ys)::acc) (List.tl ys, params)
+      else replace_params (x::acc) (ys, params)
+  in
+  let replace_rest_param = function
+    | ys, None -> ys, None
+    | ys, (Some (name, loc, x) as param) ->
+      if patt_that_needs_concretization x
+      then List.tl ys, Some (name, loc, List.hd ys)
+      else ys, param
+  in
+  let replace_arg ys = function
+    | Arg x when patt_that_needs_concretization x ->
+      Arg (List.hd ys), List.tl ys
+    | SpreadArg x when patt_that_needs_concretization x ->
+      SpreadArg (List.hd ys), List.tl ys
+    | arg -> arg, ys
+  in
+  let rec replace_args acc = function
+    | ys, [] -> ys, List.rev acc
+    | ys, arg::args ->
+      let arg, ys = replace_arg ys arg in
+      replace_args (arg::acc) (ys, args)
+  in
+  fun resolved -> function
+  | UseT (op, DefT (r, FunT (t1, t2, ft))) ->
+    let resolved, params_tlist = replace_params [] (resolved, ft.params_tlist) in
+    let resolved, rest_param = replace_rest_param (resolved, ft.rest_param) in
+    assert (resolved = []);
+    UseT (op, DefT (r, FunT (t1, t2, { ft with params_tlist; rest_param })))
   | CallT (r, callt) ->
-    CallT (r, { callt with
-      call_args_tlist = concretize_call_args replace callt.call_args_tlist;
-    })
+    let resolved, call_args_tlist = replace_args [] (resolved, callt.call_args_tlist) in
+    assert (resolved = []);
+    CallT (r, { callt with call_args_tlist })
   | u -> u
 
 (************************)
