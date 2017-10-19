@@ -119,11 +119,10 @@ class ['a] t = object(self)
           let x' = self#type_ cx map_cx x in
           if d == d' && x == x' then t
           else TypeDestructorTriggerT (r, d', x')
-      | CustomFunT (r, ReactElementFactory c) ->
-          let c' = self#type_ cx map_cx c in
-          if c' == c then t
-          else CustomFunT (r, ReactElementFactory c')
-      | CustomFunT _ -> t
+      | CustomFunT (r, kind) ->
+          let kind' = self#custom_fun_kind cx map_cx kind in
+          if kind' == kind then t
+          else CustomFunT (r, kind')
       | InternalT (IdxWrapper (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
@@ -344,6 +343,32 @@ class ['a] t = object(self)
       | ReactElementPropsType
       | ReactElementRefType
         -> t
+
+  method private custom_fun_kind cx map_cx kind =
+    match kind with
+    | ReactPropType (React.PropType.Primitive (b, t)) ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then kind
+      else ReactPropType (React.PropType.Primitive (b, t'))
+    | ReactElementFactory t ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then kind
+      else ReactElementFactory t'
+    | ObjectAssign
+    | ObjectGetPrototypeOf
+    | ObjectSetPrototypeOf
+    | Compose _
+    | ReactPropType _
+    | ReactCreateClass
+    | ReactCreateElement
+    | ReactCloneElement
+    | Merge
+    | MergeDeepInto
+    | MergeInto
+    | Mixin
+    | Idx
+    | DebugPrint
+      -> kind
 
   method exports cx map_cx id =
     let exps = Context.find_exports cx id in
