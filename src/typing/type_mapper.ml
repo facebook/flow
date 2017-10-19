@@ -129,8 +129,10 @@ class ['a] t = object(self)
           else InternalT (IdxWrapper (r, t''))
       | OpenPredT (r, t', map1, map2) ->
           let t'' = self#type_ cx map_cx t' in
+          let map1' = Key_map.map (self#predicate cx map_cx) map1 in
+          let map2' = Key_map.map (self#predicate cx map_cx) map2 in
           if t'' == t' then t
-          else OpenPredT (r, t'', map1, map2)
+          else OpenPredT (r, t'', map1', map2')
       | ReposT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
