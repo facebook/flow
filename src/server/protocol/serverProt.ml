@@ -19,7 +19,7 @@ type command =
 | COVERAGE of File_input.t * bool (* force *)
 | DUMP_TYPES of File_input.t
 | FIND_MODULE of string * string
-| FIND_REFS of File_input.t * int * int (* filename, line, char *)
+| FIND_REFS of File_input.t * int * int * bool (* filename, line, char, global *)
 | GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
 | GET_DEF of File_input.t * int * int (* filename, line, char *)
 | GET_IMPORTS of string list
@@ -46,8 +46,8 @@ let string_of_command = function
     Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
 | FIND_MODULE (moduleref, filename) ->
     Printf.sprintf "find-module %s %s" moduleref filename
-| FIND_REFS (fn, line, char) ->
-    Printf.sprintf "find-refs %s:%d:%d" (File_input.filename_of_file_input fn) line char
+| FIND_REFS (fn, line, char, global) ->
+    Printf.sprintf "find-refs %s:%d:%d:%B" (File_input.filename_of_file_input fn) line char global
 | FORCE_RECHECK (files, force_focus) ->
     Printf.sprintf
       "force-recheck %s (focus = %b)" (String.concat " " files) force_focus
