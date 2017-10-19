@@ -288,171 +288,127 @@ let run cx trace reason_op l u
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
-  let create_element shape config_input children_args tout =
+  let create_element shape config children_args tout =
     let component = l in
-    (* If our config input is void or null then we want to replace it with an
+    (* If our config is void or null then we want to replace it with an
      * empty object. *)
-    let config_input =
-      let reason = reason_of_t config_input in
+    let config =
+      let reason = reason_of_t config in
       let empty_object = mk_object_with_map_proto
         cx reason
         ~sealed:true ~exact:true ~frozen:true
         SMap.empty (ObjProtoT reason)
       in
       mk_tvar_where cx reason (fun tout ->
-        rec_flow cx trace (filter_maybe cx ~trace reason config_input,
+        rec_flow cx trace (filter_maybe cx ~trace reason config,
           CondT (reason, empty_object, tout))
       )
     in
     (* Create the optional children input type from the children arguments. *)
-    let children_input = coerce_children_args children_args in
-    (* Create a type variable for our config. *)
-    let config = mk_tvar_where cx reason_op tin_to_props in
-    (* If we only want to check the shape of the config then wrap our final
-     * config type in a ShapeT. *)
-    let config = if shape
-      then ShapeT config
-      else config
-    in
-    (* For class components and function components we want to lookup the
-     * static default props property so that we may diff it against the props
-     * value for our component.
-     *
-     * Note that we use the shape variable. We will not be using defaultProps if
-     * shape is true because no props are required. *)
-    let config =
-      let defaults = match component with
-        | DefT (_, ClassT _)
-        | DefT (_, FunT _) ->
-          Some (mk_tvar_where cx reason_op (fun tvar ->
-            let name = "defaultProps" in
-            let reason_missing =
-              replace_reason_const (RMissingProperty (Some name)) reason_op in
-            let reason_prop =
-              replace_reason_const (RProperty (Some name)) reason_op in
-            (* NOTE: This is intentionally unsound. Function statics are modeled
-             * as an unsealed object and so a `GetPropT` would perform a shadow
-             * lookup since a write to an unsealed property may happen at any
-             * time. If we were to perform a shadow lookup for `defaultProps` and
-             * `defaultProps` was never written then our lookup would stall and
-             * therefore so would our props analysis. So instead we make the
-             * stateful assumption that `defaultProps` was already written to
-             * the component statics which may not always be true. *)
-            let strict = NonstrictReturning (Some
-              (DefT (reason_missing, VoidT), tvar)) in
-            let propref = Named (reason_prop, name) in
-            let action = LookupProp (UnknownUse, Field (tvar, Positive)) in
-            (* Lookup the `defaultProps` property. *)
-            rec_flow cx trace (component,
-              LookupT (reason_op, strict, [], propref, action))
-          ))
-        (* Everything else will not have default props we should diff out. *)
-        | _ -> None
-      in
-      (* Use the optional defaults type we created to diff against our
-       * config. *)
-      match defaults with
-      | Some defaults -> DiffT (config, defaults)
-      | None -> config
+    let children = coerce_children_args children_args in
+    (* Create a type variable for our props. *)
+    let props = mk_tvar_where cx reason_op tin_to_props in
+    (* If we only want to check the shape of the props then wrap our final
+     * props type in a ShapeT. *)
+    let props = if shape
+      then ShapeT props
+      else props
     in
     (* Check the type of React keys in the config input.
      *
-     * NOTE: We are intentionally being unsound here. If config_input is inexact
-     * and we can't find a key prop in config_input then the sound thing to do
+     * NOTE: We are intentionally being unsound here. If config is inexact
+     * and we can't find a key prop in config then the sound thing to do
      * would be to assume that the type of key is mixed. Instead we are unsound
      * and don't check a type for key. Otherwise we would cause a lot of issues
      * in existing React code. *)
     let () =
       let reason_key =
-        (replace_reason_const (RCustom "React key") (reason_of_t config_input)) in
+        (replace_reason_const (RCustom "React key") (reason_of_t config)) in
       (* Create the key type. *)
       let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
       let action = LookupProp (UnknownUse, Field (key_t, Positive)) in
-      (* TODO: if config_input is null, we will treat it like prototype termination,
-       * but we should be treating a null config like an empty config. *)
-      rec_flow cx trace (config_input,
+      rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
     (* Check the type of React refs in the config input.
      *
-     * NOTE: We are intentionally being unsound here. If config_input is inexact
-     * and we can't find a ref prop in config_input then the sound thing to do
+     * NOTE: We are intentionally being unsound here. If config is inexact
+     * and we can't find a ref prop in config then the sound thing to do
      * would be to assume that the type of ref is mixed. Instead we are unsound
      * and don't check a type for key. Otherwise we would cause a lot of issues
      * in existing React code. *)
     let () =
       let reason_ref =
-        (replace_reason_const (RCustom "React ref") (reason_of_t config_input)) in
+        (replace_reason_const (RCustom "React ref") (reason_of_t config)) in
       (* Create the ref type. *)
       let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
       let action = LookupProp (UnknownUse, Field (ref_t, Positive)) in
-      (* TODO: if config_input is null, we will treat it like prototype termination,
-       * but we should be treating a null config like an empty config. *)
-      rec_flow cx trace (config_input,
+      rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
-    (* If we have a type for children then we want to create an exact object
-     * type where the only property is children and the type is the children
-     * input. We will merge this type with our config_input type. The
-     * resulting object will only be exact if config_input is exact given the
-     * behavior of our merge mode.
-     *
-     * If we don't have a type for children then we want to create an empty
-     * exact object type since we still want to use object spread to remove the
-     * key and ref props from our config_input. *)
-    let children_input_mixin =
-      mk_object_with_map_proto cx reason_op
-        ~sealed:true ~exact:true
-        (match children_input with
-          | None -> SMap.empty
-          | Some children_input ->
-              SMap.singleton "children" (Field (children_input, Neutral)))
-        (ObjProtoT reason_op)
+    (* For class components and function components we want to lookup the
+     * static default props property so that we may add it to our config input. *)
+    let defaults = match component with
+      | DefT (_, ClassT _)
+      | DefT (_, FunT _) ->
+        Some (mk_tvar_where cx reason_op (fun tvar ->
+          let name = "defaultProps" in
+          let reason_missing =
+            replace_reason_const (RMissingProperty (Some name)) reason_op in
+          let reason_prop =
+            replace_reason_const (RProperty (Some name)) reason_op in
+          (* NOTE: This is intentionally unsound. Function statics are modeled
+           * as an unsealed object and so a `GetPropT` would perform a shadow
+           * lookup since a write to an unsealed property may happen at any
+           * time. If we were to perform a shadow lookup for `defaultProps` and
+           * `defaultProps` was never written then our lookup would stall and
+           * therefore so would our props analysis. So instead we make the
+           * stateful assumption that `defaultProps` was already written to
+           * the component statics which may not always be true. *)
+          let strict = NonstrictReturning (Some
+            (DefT (reason_missing, VoidT), tvar)) in
+          let propref = Named (reason_prop, name) in
+          let action = LookupProp (UnknownUse, Field (tvar, Positive)) in
+          (* Lookup the `defaultProps` property. *)
+          rec_flow cx trace (component,
+            LookupT (reason_op, strict, [], propref, action))
+        ))
+      (* Everything else will not have default props we should diff out. *)
+      | _ -> None
     in
-    (* Use object spread to add children to config_input (if we have children)
+    (* Use object spread to add children to config (if we have children)
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
     let () =
       let open Object in
-      let open Object.Spread in
+      let open Object.ReactConfig in
       (* We need to treat config input as a literal here so we ensure it has the
        * RReactElement or RReactElementProps reason. *)
-      let reason_el = replace_reason (fun desc ->
+      let reason = replace_reason (fun desc ->
         (* Get the element name from the current reason. *)
         let name = match desc with
         | RReactElement x -> x
         | RReactElementProps x -> x
         | _ -> None in
         (* If we have no children then we are just looking at the props. *)
-        if Option.is_none children_input
+        if Option.is_none children
           then RReactElementProps name
           else RReactElement name
-      ) (if Option.is_none children_input
-        then reason_of_t config_input
+      ) (if Option.is_none children
+        then reason_of_t config
         else reason_op)
       in
-      (* Configure our object spread appropriately. *)
-      let options = {
-        (* We just want to merge the objects together. In this case we do not
-         * care about sound object spread rules. *)
-        merge_mode = Sound Value;
-        (* Exclude key and ref from our final object type since we already
-         * checked key and ref. We do not want key and ref to exist on our
-         * final config_input type in case config is exact. *)
-        exclude_props = ["ref"; "key"];
-      } in
-      let tool = Resolve Next in
-      let state = { todo_rev = [children_input_mixin]; acc = [] } in
-      (* Flow the spread of config_input and config_input_mixin to config which
-       * will perform the final config to props check. *)
-      rec_flow cx trace (config_input,
-        ObjKitT (reason_el, tool, Spread (options, state), config))
+      (* Create the final config object using the ReactConfig object kit tool and
+       * flow it to our type for props. *)
+      rec_flow cx trace (config,
+        ObjKitT (reason, Resolve Next,
+          ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
     let elem_reason = replace_reason_const (RReactElement None) reason_op in

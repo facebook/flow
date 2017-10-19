@@ -101,7 +101,6 @@ module rec TypeTerm : sig
 
     (* constrains some properties of an object *)
     | ShapeT of t
-    | DiffT of t * t
     | MatchingPropT of reason * string * t
 
     (* collects the keys of an object *)
@@ -888,7 +887,7 @@ module rec TypeTerm : sig
   | PropertyType of string
   | ElementType of t
   | Bind of t
-  | SpreadType of Object.Spread.options * t list
+  | SpreadType of Object.Spread.target * t list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
   | CallType of t list
@@ -1533,17 +1532,6 @@ and Object : sig
       acc: resolved list;
     }
 
-    and options = {
-      merge_mode: merge_mode;
-      exclude_props: string list;
-    }
-
-    and merge_mode =
-      (* Combine objects according to the semantics of object spread properties. *)
-      | Sound of target
-      (* A special case for DiffT. It filters void types from properties. *)
-      | Diff
-
     and target =
       (* When spreading values, the result is exact if all of the input types are
          also exact. If any input type is inexact, the output is inexact. *)
@@ -1564,9 +1552,16 @@ and Object : sig
       | IgnoreExactAndOwn
   end
 
+  module ReactConfig : sig
+    type state =
+      | Config of { defaults: TypeTerm.t option; children: TypeTerm.t option }
+      | Defaults of { config: resolved; children: TypeTerm.t option }
+  end
+
   type tool =
-    | Spread of Spread.options * Spread.state
+    | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
+    | ReactConfig of ReactConfig.state
 end = Object
 
 and React : sig
@@ -1921,7 +1916,6 @@ let rec reason_of_t = function
   | TypeDestructorTriggerT (reason, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
-  | DiffT (t, _) -> reason_of_t t
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
@@ -2066,7 +2060,6 @@ let rec mod_reason_of_t f = function
   | TypeDestructorTriggerT (reason, d, t) -> TypeDestructorTriggerT (f reason, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
-  | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
   | EvalT (t, defer_use_t, id) ->
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
@@ -2285,7 +2278,6 @@ let string_of_ctor = function
   | TypeDestructorTriggerT _ -> "TypeDestructorTriggerT"
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
-  | DiffT _ -> "DiffT"
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"

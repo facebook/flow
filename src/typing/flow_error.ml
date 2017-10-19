@@ -1394,6 +1394,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           (match state with
             | One _ -> "Cannot remove properties from"
             | Done _ -> "Cannot remove properties with")
+        | ReactConfig state ->
+          let open Object.ReactConfig in
+          (match state with
+            | Config _ -> "Cannot compare React props with"
+            | Defaults _ -> "Cannot use React default props from")
       in
       typecheck_error msg (reason_op, reason)
 

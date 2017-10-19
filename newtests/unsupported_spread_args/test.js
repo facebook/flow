@@ -48,7 +48,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
             3: const arr = [1,2,3];
                               ^ number
 
@@ -64,7 +64,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: React.createElement(({}: any), ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
             3: const arr = [1,2,3];
                             ^ number
         `,
@@ -74,7 +74,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
             3: const arr = [1,2,3];
                               ^ number
 

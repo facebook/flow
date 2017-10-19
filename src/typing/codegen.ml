@@ -223,12 +223,6 @@ let rec gen_type t env = Type.(
    *       codegen.
    *)
   | OpenPredT (_, _, _, _) -> add_str "mixed /* TODO: OpenPredT */" env
-  | DiffT (t1, t2) ->
-    add_str "$Diff<" env
-      |> gen_type t1
-      |> add_str ", "
-      |> gen_type t2
-      |> add_str ">"
   | ExactT (_, t) -> add_str "$Exact<" env |> gen_type t |> add_str ">"
   | ObjProtoT _ -> add_str "typeof Object.prototype" env
   | FunProtoT _ -> add_str "typeof Function.prototype" env

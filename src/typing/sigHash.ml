@@ -66,7 +66,6 @@ type hash =
   | AnyObjH
   | AnyFunH
   | ShapeH
-  | DiffH
   | KeysH
   | SingletonStrH of string
   | SingletonNumH of Type.number_literal
@@ -206,7 +205,6 @@ let hash_of_ctor = Type.(function
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
-  | DiffT _ -> DiffH
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH

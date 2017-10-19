@@ -1048,14 +1048,14 @@ Error: create_element.js:191
     186: class K extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
-Error: create_element.js:192
-192: React.createElement(K, {children: '42'}, 42); // Error
+Error: create_element.js:193
+193: React.createElement(K, {children: 42}, '42'); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 186: class K extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    192: React.createElement(K, {children: '42'}, 42); // Error
-                                           ^^^^ string. This type is incompatible with
+    193: React.createElement(K, {children: 42}, '42'); // Error
+                                                ^^^^ string. This type is incompatible with
     186: class K extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
@@ -1066,7 +1066,7 @@ Error: create_element.js:194
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
     194: React.createElement(K, {children: '42'}, '42'); // Error
-                                           ^^^^ string. This type is incompatible with
+                                                  ^^^^ string. This type is incompatible with
     186: class K extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
@@ -2175,14 +2175,14 @@ Error: create_factory.js:186
     180: class K extends React.Component<{children: number}, void> {}
                                                     ^^^^^^ number
 
-Error: create_factory.js:187
-187: kFactory({children: '42'}, 42); // Error
+Error: create_factory.js:188
+188: kFactory({children: 42}, '42'); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 180: class K extends React.Component<{children: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    187: kFactory({children: '42'}, 42); // Error
-                             ^^^^ string. This type is incompatible with
+    188: kFactory({children: 42}, '42'); // Error
+                                  ^^^^ string. This type is incompatible with
     180: class K extends React.Component<{children: number}, void> {}
                                                     ^^^^^^ number
 
@@ -2193,7 +2193,7 @@ Error: create_factory.js:189
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
     189: kFactory({children: '42'}, '42'); // Error
-                             ^^^^ string. This type is incompatible with
+                                    ^^^^ string. This type is incompatible with
     180: class K extends React.Component<{children: number}, void> {}
                                                     ^^^^^^ number
 

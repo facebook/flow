@@ -77,11 +77,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ShapeT t''
-      | DiffT (t1, t2) ->
-          let t1' = self#type_ cx map_cx t1 in
-          let t2' = self#type_ cx map_cx t2 in
-          if t1 == t1' && t2 == t2' then t
-          else DiffT (t1', t2')
       | MatchingPropT (r, x, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -1030,6 +1025,22 @@ class ['a] t = object(self)
       in
       if state == state' then tool
       else Rest (options, state')
+    | ReactConfig state ->
+      let open Object.ReactConfig in
+      let state' = match state with
+        | Config { defaults; children } ->
+          let defaults' = OptionUtils.ident_map (self#type_ cx map_cx) defaults in
+          let children' = OptionUtils.ident_map (self#type_ cx map_cx) children in
+          if defaults == defaults' && children == children' then state
+          else Config { defaults = defaults'; children = children' }
+        | Defaults { config; children } ->
+          let config' = self#resolved cx map_cx config in
+          let children' = OptionUtils.ident_map (self#type_ cx map_cx) children in
+          if config == config' && children == children' then state
+          else Defaults { config = config'; children = children' }
+      in
+      if state == state' then tool
+      else ReactConfig state'
 
   method intersection_preprocess_tool cx map_cx t =
     match t with

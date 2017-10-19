@@ -795,11 +795,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   | t::ts ->
     let open Type.Object.Spread in
     let reason = mk_reason RObjectType loc in
-    let options = {
-      merge_mode = Sound (Annot {make_exact = exact});
-      exclude_props = []
-    } in
-    EvalT (t, TypeDestructorT (reason, SpreadType (options, ts)), mk_id ()))
+    let target = Annot {make_exact = exact} in
+    EvalT (t, TypeDestructorT (reason, SpreadType (target, ts)), mk_id ()))
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

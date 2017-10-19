@@ -61,11 +61,6 @@ class ['a] t = object(self)
 
   | ShapeT t -> self#type_ cx pole acc t
 
-  | DiffT (t1, t2) ->
-    let acc = self#type_ cx pole_TODO acc t1 in
-    let acc = self#type_ cx pole_TODO acc t2 in
-    acc
-
   | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
@@ -495,6 +490,17 @@ class ['a] t = object(self)
         (match state with
           | One t -> self#type_ cx pole_TODO acc t
           | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o)
+      | ReactConfig state ->
+        let open Object.ReactConfig in
+        (match state with
+          | Config { defaults; children } ->
+            let acc = self#opt (self#type_ cx pole_TODO) acc defaults in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc
+          | Defaults { config; children } ->
+            let acc = Nel.fold_left (self#object_kit_slice cx) acc config in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc)
     in
     let acc = self#type_ cx pole_TODO acc tout in
     acc

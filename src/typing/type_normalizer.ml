@@ -421,8 +421,6 @@ let rec normalize_type_impl cx ids t = match t with
 
   | ShapeT t ->
       ShapeT (normalize_type_impl cx ids t)
-  | DiffT (t1, t2) ->
-      DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
   | MatchingPropT (r, x, t) ->
       MatchingPropT (r, x, normalize_type_impl cx ids t)
 

@@ -225,7 +225,7 @@ Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot spread properties from
+                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot use React default props from
  78: FooLegacy.defaultProps = 0;
                               ^ number
 

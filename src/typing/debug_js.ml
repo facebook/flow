@@ -239,11 +239,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DiffT (t1, t2) -> [
-      "type1", _json_of_t json_cx t1;
-      "type2", _json_of_t json_cx t2
-    ]
-
   | MatchingPropT (_, x, t) -> [
       "name", JSON_String x;
       "type", _json_of_t json_cx t
@@ -1085,28 +1080,18 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType (options, ts) ->
+  | SpreadType (target, ts) ->
     let open Object.Spread in
-    let {merge_mode; exclude_props} = options in
     JSON_Object (
-      (match merge_mode with
-        | Sound target -> [
-            "mergeMode", JSON_String "Sound";
-          ] @ (match target with
-          | Value -> [
-              "target", JSON_String "Value";
-            ]
-          | Annot { make_exact } -> [
-              "target", JSON_String "Annot";
-              "makeExact", JSON_Bool make_exact;
-            ]
-          )
-        | Diff -> [
-            "mergeMode", JSON_String "Diff";
+      (match target with
+        | Value -> [
+            "target", JSON_String "Value";
+          ]
+        | Annot { make_exact } -> [
+            "target", JSON_String "Annot";
+            "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "excludePropNames",
-          JSON_Array (List.map (fun s -> JSON_String s) exclude_props);
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
@@ -1717,7 +1702,6 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
-  | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" s) t
@@ -1899,17 +1883,12 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let spread options state =
+    let spread target state =
       let open Object.Spread in
-      let options =
-        let {merge_mode; exclude_props} = options in
-        spf "{merge_mode=%s; exclude_props=[%s]}"
-          (match merge_mode with
-            | Sound target -> spf "Sound (%s)" (match target with
-              | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
-              | Value -> "Value")
-            | Diff -> "Diff")
-          (String.concat "; " exclude_props)
+      let target =
+        (match target with
+          | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
+          | Value -> "Value")
       in
       let state =
         let {todo_rev; acc} = state in
@@ -1917,7 +1896,7 @@ and dump_use_t_ (depth, tvars) cx t =
           (String.concat "; " (List.map kid todo_rev))
           (String.concat "; " (List.map resolved acc))
       in
-      spf "(%s, %s)" options state
+      spf "(%s, %s)" target state
     in
     let rest merge_mode state =
       let open Object.Rest in
@@ -1929,9 +1908,17 @@ and dump_use_t_ (depth, tvars) cx t =
           | One t -> spf "One (%s)" (kid t)
           | Done o -> spf "Done (%s)" (resolved o))
     in
+    let react_props state =
+      let open Object.ReactConfig in
+      spf "(%s)"
+        (match state with
+          | Config _ -> "Config"
+          | Defaults _ -> "Defaults")
+    in
     let tool = function
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
+      | ReactConfig state -> react_props state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)

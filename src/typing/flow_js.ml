@@ -1104,10 +1104,6 @@ module ResolvableTypeJob = struct
     | ShapeT (t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
-    | DiffT (t1, t2) ->
-      let ts = [t1;t2] in
-      collect_of_types ?log_unresolved cx reason acc ts
-
     | MatchingPropT (_, _, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
@@ -4147,7 +4143,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if t is a subtype of x's type in o. Otherwise, the property should be
         assignable to o.
 
-        TODO: The type constructors ShapeT, DiffT, ObjAssignToT/ObjAssignFromT,
+        TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
         ObjRestT express related meta-operations on objects. Consolidate these
         meta-operations and ensure consistency of their semantics. **)
 
@@ -4185,21 +4181,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
         rec_flow cx trace (l, ObjAssignFromT (reason, o, Locationless.AnyT.t, ObjAssign))
-
-    | t, UseT (_, DiffT (a, b)) ->
-        let open Object in
-        let open Object.Spread in
-        (* To implement `DiffT` we combine the properties from the type we are
-         * subtracting (`b`) and our lower bound (`t`) then compare that to the
-         * type we are subtracting from (`a`). In other terms, if the following
-         * is true: `T = Diff<A, B>`. Then the following must also be true:
-         * `{...B, ...T} = A`. We rearrange `DiffT` into the latter form and
-         * check that. *)
-        let reason = reason_of_t l in
-        let options = { merge_mode = Diff; exclude_props = [] } in
-        let tool = Resolve Next in
-        let state = { todo_rev = [b]; acc = [] } in
-        rec_flow cx trace (t, ObjKitT (reason, tool, Spread (options, state), a))
 
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
@@ -7017,7 +6998,7 @@ and check_polarity cx ?trace polarity = function
   | ModuleT _
   | AnnotT _
   | ShapeT _
-  | DiffT _
+
   | MatchingPropT _
   | KeysT _
   | NullProtoT _
@@ -10457,10 +10438,7 @@ and object_kit =
     let open Object.Spread in
 
     (* Compute spread result: slice * slice -> slice *)
-    let spread2 cx trace reason options
-      (r1, props1, dict1, flags1)
-      (r2, props2, dict2, flags2) =
-      let {merge_mode; exclude_props; _} = options in
+    let spread2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
       let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
       let merge_props (t1, own1) (t2, own2) =
         let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
@@ -10482,55 +10460,24 @@ and object_kit =
         t, own
       in
       let props = SMap.merge (fun x p1 p2 ->
-        (* If this prop has been marked as excluded then return none instead of
-         * trying to merge. *)
-        if List.mem x exclude_props then None
-        else (
         (* Due to width subtyping, failing to read from an inexact object does not
            imply non-existence, but rather an unknown result. *)
         let unknown r =
           let r = replace_reason_const (RUnknownProperty (Some x)) r in
           DefT (r, MixedT Mixed_everything), false
         in
-        match merge_mode with
-        | Sound _ ->
-          (match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
-          | None, None -> None
-          | Some p1, Some p2 -> Some (merge_props p1 p2)
-          | Some p1, None ->
-            if flags2.exact
-            then Some p1
-            else Some (merge_props p1 (unknown r2))
-          | None, Some p2 ->
-            if flags1.exact
-            then Some p2
-            else Some (merge_props (unknown r1) p2))
-        (* Diff mode is used to combine the config object passed to
-         * React.createElement with the default props for the component before
-         * comparing with the component's props type. Any own property in the
-         * config that evaluates to `undefined` should take its value from the
-         * default props instead. *)
-        | Diff ->
-          begin match p1, p2 with
-          | None, None -> None
-          | Some (t, _), None -> Some (t, true)
-          | None, Some (t, _) -> Some (t, true)
-          (* If a property is defined in both objects, and the first property's
-           * type includes void then we want to replace every occurence of void
-           * with the second property's type. This is consistent with the behavior
-           * of function default arguments. If you call a function, `f`, like:
-           * `f(undefined)` and there is a default value for the first argument,
-           * then we will ignore the void type and use the type for the default
-           * parameter instead. *)
-          | Some (t1, _), Some (t2, _) ->
-            (* Use CondT to replace void with t1. *)
-            let t = mk_tvar_where cx reason (fun tvar ->
-              rec_flow cx trace (filter_optional cx ~trace reason t2,
-                CondT (reason, t1, tvar))
-            ) in
-            Some (t, true)
-          end
-      )) props1 props2 in
+        match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
+        | None, None -> None
+        | Some p1, Some p2 -> Some (merge_props p1 p2)
+        | Some p1, None ->
+          if flags2.exact
+          then Some p1
+          else Some (merge_props p1 (unknown r2))
+        | None, Some p2 ->
+          if flags1.exact
+          then Some p2
+          else Some (merge_props (unknown r1) p2)
+      ) props1 props2 in
       let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
         dict_name = None;
         key = union d1.key d2.key;
@@ -10548,12 +10495,12 @@ and object_kit =
       reason, props, dict, flags
     in
 
-    let spread cx trace reason options = function
+    let spread reason = function
       | x, [] -> x
-      | x0, x1::xs -> merge (spread2 cx trace reason options) x0 (x1, xs)
+      | x0, x1::xs -> merge (spread2 reason) x0 (x1, xs)
     in
 
-    let mk_object cx reason {merge_mode; _} (r, props, dict, flags) =
+    let mk_object cx reason target (r, props, dict, flags) =
       let props = SMap.map (fun (t, own) ->
         (* Spread only copies over own properties. If `not own`, then the property
            might be on a proto object instead, so make the result optional. *)
@@ -10566,19 +10513,13 @@ and object_kit =
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
       let flags =
-        match merge_mode with
-        (* If all the other object types are exact then we want the resulting
-         * object to also be exact. This logic is encoded in the accumulated
-         * flags. *)
-        | Diff -> flags
-        | Sound target ->
-          let exact = match target with
-          (* Type spread result is exact if annotated to be exact *)
-          | Annot { make_exact } -> make_exact
-          (* Value spread result is exact if all inputs are exact *)
-          | Value -> flags.exact
-          in
-          { sealed = Sealed; frozen = false; exact }
+        let exact = match target with
+        (* Type spread result is exact if annotated to be exact *)
+        | Annot { make_exact } -> make_exact
+        (* Value spread result is exact if all inputs are exact *)
+        | Value -> flags.exact
+        in
+        { sealed = Sealed; frozen = false; exact }
       in
       let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
@@ -10586,18 +10527,17 @@ and object_kit =
     in
 
     fun options state cx trace reason tout x ->
-      let {merge_mode; _} = options in
       let {todo_rev; acc} = state in
       Nel.iter (fun (r, _, _, {exact; _}) ->
-        match merge_mode with
-        | Sound (Annot { make_exact }) when make_exact && not exact ->
+        match options with
+        | Annot { make_exact } when make_exact && not exact ->
           add_output cx ~trace (FlowError.
             EIncompatibleWithExact ((r, reason), UnknownUse))
         | _ -> ()
       ) x;
       match todo_rev with
       | [] ->
-        let t = match spread cx trace reason options (Nel.rev (x, acc)) with
+        let t = match spread reason (Nel.rev (x, acc)) with
         | x, [] -> mk_object cx reason options x
         | x0, x1::xs ->
           DefT (reason, UnionT (UnionRep.make
@@ -10726,6 +10666,145 @@ and object_kit =
         rec_flow_t cx trace (t, tout)
   in
 
+  (****************)
+  (* React Config *)
+  (****************)
+
+  let react_config =
+    let open Object.ReactConfig in
+
+    (* All props currently have a neutral polarity. However, they should have a
+     * positive polarity (or even better, constant) since React.createElement()
+     * freezes the type of props. We use a neutral polarity today because the
+     * props type we flow the config into is written by users who very rarely
+     * add a positive variance annotation. We may consider marking that type as
+     * constant in the future as well. *)
+    let prop_polarity = Neutral in
+
+    let finish cx trace reason config defaults children =
+      let (config_reason, config_props, config_dict, config_flags) = config in
+      (* If we have some type for children then we want to add a children prop
+       * to our config props. *)
+      let config_props =
+        Option.value_map children ~default:config_props ~f:(fun children ->
+          SMap.add "children" (children, true) config_props
+        )
+      in
+      (* Remove the key and ref props from our config. We check key and ref
+       * independently of our config. So we must remove them so the user can't
+       * see them. *)
+      let config_props = SMap.remove "key" config_props in
+      let config_props = SMap.remove "ref" config_props in
+      (* Create the final props map and dict.
+       *
+       * NOTE: React will copy any enumerable prop whether or not it
+       * is own to the config. *)
+      let props, dict, flags = match defaults with
+        (* If we have some default props then we want to add the types for those
+         * default props to our final props object. *)
+        | Some (defaults_reason, defaults_props, defaults_dict, defaults_flags) ->
+          (* Merge our props and default props. *)
+          let props = SMap.merge (fun _ p1 p2 ->
+            let p1 = get_prop config_reason p1 config_dict in
+            let p2 = get_prop defaults_reason p2 defaults_dict in
+            match p1, p2 with
+            | None, None -> None
+            | Some (t, _), None -> Some (Field (t, prop_polarity))
+            | None, Some (t, _) -> Some (Field (t, prop_polarity))
+            (* If a property is defined in both objects, and the first property's
+             * type includes void then we want to replace every occurence of void
+             * with the second property's type. This is consistent with the behavior
+             * of function default arguments. If you call a function, `f`, like:
+             * `f(undefined)` and there is a default value for the first argument,
+             * then we will ignore the void type and use the type for the default
+             * parameter instead. *)
+            | Some (t1, _), Some (t2, _) ->
+              (* Use CondT to replace void with t1. *)
+              let t = mk_tvar_where cx reason (fun tvar ->
+                rec_flow cx trace (filter_optional cx ~trace reason t1,
+                  CondT (reason, t2, tvar))
+              ) in
+              Some (Field (t, prop_polarity))
+          ) config_props defaults_props in
+          (* Merge the dictionary from our config with the defaults dictionary. *)
+          let dict = Option.merge config_dict defaults_dict (fun d1 d2 -> {
+            dict_name = None;
+            key = DefT (reason, UnionT (UnionRep.make d1.key d2.key []));
+            value = DefT (reason, UnionT (UnionRep.make
+              (read_dict config_reason d1)
+              (read_dict defaults_reason d2) []));
+            dict_polarity = prop_polarity;
+          }) in
+          (* React freezes the config so we set the frozen flag to true. The
+           * final object is only exact if both the config and defaults objects
+           * are exact. *)
+          let flags = {
+            frozen = true;
+            sealed = Sealed;
+            exact =
+              config_flags.exact && defaults_flags.exact &&
+              sealed_in_op reason config_flags.sealed &&
+              sealed_in_op reason defaults_flags.sealed;
+          } in
+          props, dict, flags
+        (* Otherwise turn our slice props map into an object props. *)
+        | None ->
+          (* All of the fields are read-only so we create positive fields. *)
+          let props = SMap.map (fun (t, _) -> Field (t, prop_polarity)) config_props in
+          (* Create a new dictionary from our config's dictionary with a
+           * positive polarity. *)
+          let dict = Option.map config_dict (fun d -> {
+            dict_name = None;
+            key = d.key;
+            value = d.value;
+            dict_polarity = prop_polarity;
+          }) in
+          (* React freezes the config so we set the frozen flag to true. The
+           * final object is only exact if the config object is exact. *)
+          let flags = {
+            frozen = true;
+            sealed = Sealed;
+            exact = config_flags.exact && sealed_in_op reason config_flags.sealed;
+          } in
+          props, dict, flags
+      in
+      (* Finish creating our props object. *)
+      let id = Context.make_property_map cx props in
+      let proto = ObjProtoT reason in
+      let t = DefT (reason, ObjT (mk_objecttype ~flags dict id proto)) in
+      if flags.exact then ExactT (reason, t) else t
+    in
+
+    fun state cx trace reason tout x ->
+      match state with
+      (* If we have some type for default props then we need to wait for that
+       * type to resolve before finishing our props type. *)
+      | Config { defaults = Some t; children } ->
+        let tool = Resolve Next in
+        let state = Defaults { config = x; children } in
+        rec_flow cx trace (t, ObjKitT (reason, tool, ReactConfig state, tout))
+      (* If we have no default props then finish our object and flow it to our
+       * tout type. *)
+      | Config { defaults = None; children } ->
+        let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
+        let t = match ts with
+          | t, [] -> t
+          | t0, t1::ts -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
+        in
+        rec_flow_t cx trace (t, tout)
+      (* If we had default props and those defaults resolved then finish our
+       * props object with those default props. *)
+      | Defaults { config; children } ->
+        let ts = Nel.map_concat (fun c ->
+          Nel.map (fun d -> finish cx trace reason c (Some d) children) x
+        ) config in
+        let t = match ts with
+          | t, [] -> t
+          | t0, t1::ts -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
+        in
+        rec_flow_t cx trace (t, tout)
+  in
+
   (*********************)
   (* Object Resolution *)
   (*********************)
@@ -10733,6 +10812,7 @@ and object_kit =
   let next = function
   | Spread (options, state) -> object_spread options state
   | Rest (options, state) -> object_rest options state
+  | ReactConfig state -> react_config state
   in
 
   (* Intersect two object slices: slice * slice -> slice
@@ -11114,7 +11194,6 @@ end = struct
     | TypeDestructorTriggerT _
     | DefT (_, ClassT _)
     | CustomFunT (_, _)
-    | DiffT (_, _)
     | MatchingPropT (_, _, _)
     | DefT (_, EmptyT)
     | EvalT (_, _, _)
@@ -11291,10 +11370,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | ShapeT t ->
     recurse t
-
-  | DiffT (t1, t2) ->
-    recurse t1;
-    recurse t2
 
   | MatchingPropT (_, _, t) ->
     recurse t
