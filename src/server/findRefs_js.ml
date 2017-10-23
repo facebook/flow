@@ -134,7 +134,7 @@ let find_refs options workers env file_input line col global =
   (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
   first *)
   local_find_refs file_key file_input loc >>= function
-    | None -> Ok []
+    | None -> Ok None
     | Some (name, refs) ->
         if global then
           File_input.content_of_file_input file_input >>= fun content ->
@@ -143,16 +143,17 @@ let find_refs options workers env file_input line col global =
           let open File_sig in
           begin match sig_.module_sig.module_kind with
             (* TODO support CommonJS *)
-            | CommonJS _ -> Ok refs
+            | CommonJS _ -> Ok (Some (name, refs))
             | ES {named; _} -> begin match SMap.get name named with
                 | None
-                | Some None (* lol *) -> Ok refs
+                | Some None (* lol *) -> Ok (Some (name, refs))
                 | Some (Some loc) ->
                     if List.mem loc refs then
-                      find_external_refs options workers env file_key content name refs
+                      let all_refs_result = find_external_refs options workers env file_key content name refs in
+                      all_refs_result >>= fun all_refs -> Ok (Some (name, all_refs))
                     else
-                      Ok refs
+                      Ok (Some (name, refs))
               end
           end
         else
-          Ok refs
+          Ok (Some (name, refs))

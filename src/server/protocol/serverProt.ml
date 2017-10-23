@@ -90,7 +90,11 @@ type dump_types_response = (
   (Loc.t * string * string * Reason.t list) list,
   string
 ) result
-type find_refs_response = (Loc.t list, string) result
+
+(* name of the symbol, locations where it appears, or None if no symbols were found *)
+type find_refs_success = (string * Loc.t list) option
+type find_refs_response = (find_refs_success, string) result
+
 type get_def_response = (Loc.t, string) result
 type get_imports_response = (Modulename.Set.t * Loc.t SMap.t) SMap.t * SSet.t
 type infer_type_response = (
