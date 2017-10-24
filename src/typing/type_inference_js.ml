@@ -71,6 +71,7 @@ let scan_for_lint_suppressions =
   in
 
   let ws_and_stars_regex = Str.regexp "[ \t\n\r\\*]+" in
+  let ignore_chars = " \t\n\r*" in
 
   let starts_with_keyword comment =
     match Str.split ws_and_stars_regex comment with
@@ -101,32 +102,23 @@ let scan_for_lint_suppressions =
   in
 
   (* Trims whitespace and stars from the front and end of loc_str. *)
-  let trim_and_stars_locational =
-      let open Loc in
-
-      let rec load_buffer buffer = function
-        | [] | [Str.Delim _] -> ()
-        | (Str.Text head | Str.Delim head)::tail ->
-          Buffer.add_string buffer head;
-          load_buffer buffer tail
-      in
-
-      fun loc_str ->
-        let split_str = Str.full_split ws_and_stars_regex loc_str.value in
-        let prefix, split_str = match split_str with
-          | (Str.Delim prefix)::tail -> prefix, tail
-          | _ -> "", split_str
-        in
-        let buffer = loc_str.value |> String.length |> Buffer.create in
-        let () = load_buffer buffer split_str in
-        let trimmed_str = Buffer.contents buffer in
-
-        let orig_loc = loc_str.loc in
-        let new_start = update_pos orig_loc.start prefix in
-        let new_end = update_pos new_start trimmed_str in
-        let new_loc = {orig_loc with start = new_start; _end = new_end} in
-
-        {value = trimmed_str; loc = new_loc}
+  let trim_and_stars_locational { value; loc } =
+    let open Loc in
+    let start_offset = String_utils.index_not_opt value ignore_chars in
+    let end_offset = String_utils.rindex_not_opt value ignore_chars in
+    let start = match start_offset with
+      | Some offset -> update_pos loc.start (String.sub value 0 offset)
+      | None -> loc.start
+    in
+    let value = match start_offset, end_offset with
+      | Some i, Some j -> String.sub value i (j - i + 1)
+      | Some i, None -> String.sub value i (String.length value - i)
+      | None, Some j -> String.sub value 0 (j + 1)
+      | None, None -> value
+    in
+    let _end = update_pos start value in
+    let loc = { loc with start; _end } in
+    { value; loc }
   in
 
   let convert_split_results =
