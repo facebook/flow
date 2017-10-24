@@ -173,6 +173,29 @@ module Make (State: sig type t end) : sig
   | `Fatal_exception of Marshal_tools.remote_exception_data
   | `Recoverable_exception of Marshal_tools.remote_exception_data ]
 
+  type on_result = result:Hh_json.json option -> State.t -> State.t
+  type on_error = code:int -> message:string -> data:Hh_json.json option -> State.t -> State.t
+  type cancellation_token = unit -> unit
+
+  (* 'respond to_this with_that' is for replying to a JsonRPC request. It will send either *)
+  (* a response or an error depending on whether 'with_that' has an error id in it.        *)
+  val respond : message -> Hh_json.json -> unit
+  (* notify/request are for initiating JsonRPC messages *)
+  val notify : string -> Hh_json.json -> unit
+  val request : on_result -> on_error -> string -> Hh_json.json -> cancellation_token
+
+  (* For logging purposes, you can get a copy of which JsonRPC message was last    *)
+  (* sent by this module - be it a response, notification, request or cancellation *)
+  val last_sent : unit -> Hh_json.json option
+  val clear_last_sent : unit -> unit
+
+  (* if the controlling loop received a response message, it should call  *)
+  (* into dispatch_response, to trigger the appropriate callback that had *)
+  (* been passed to the corresponding 'request' method.                   *)
+  val dispatch_response : message -> State.t -> State.t
+  (* For logging purposes, when you receive a response message, you can   *)
+  (* also see what outgoing request method it is in response to.          *)
+  val get_method_for_response : message -> string
 end = struct
 
   type kind = Request | Notification | Response
@@ -276,5 +299,149 @@ end = struct
     | Timestamped_json {tj_json; tj_timestamp;} -> `Message (parse_message tj_json tj_timestamp)
     | Fatal_exception data -> `Fatal_exception data
     | Recoverable_exception data -> `Recoverable_exception data
+
+
+  (************************************************)
+  (* Output functions for respond+notify          *)
+  (************************************************)
+
+  let last_sent_ref : Hh_json.json option ref = ref None
+
+  let clear_last_sent () : unit =
+    last_sent_ref := None
+
+  let last_sent () : Hh_json.json option =
+    !last_sent_ref
+
+  (* respond: sends either a Response or an Error message, according
+     to whether the json has an error-code or not. *)
+  let respond
+      (in_response_to: message)
+      (result_or_error: Hh_json.json)
+    : unit =
+    let open Hh_json in
+    let is_error = match result_or_error with
+      | JSON_Object _ ->
+        Hh_json_helpers.try_get_val "code" result_or_error
+          |> Option.is_some
+      | _ -> false in
+    let response = JSON_Object (
+      ["jsonrpc", JSON_String "2.0"]
+      @
+        ["id", Option.value in_response_to.id ~default:JSON_Null]
+      @
+        (if is_error then ["error", result_or_error] else ["result", result_or_error])
+    )
+    in
+    last_sent_ref := Some response;
+    response |> Hh_json.json_to_string |> Http_lite.write_message stdout
+
+
+  (* notify: sends a Notify message *)
+  let notify (method_: string) (params: Hh_json.json)
+    : unit =
+    let open Hh_json in
+    let message = JSON_Object [
+      "jsonrpc", JSON_String "2.0";
+      "method", JSON_String method_;
+      "params", params;
+    ]
+    in
+    last_sent_ref := Some message;
+    message |> Hh_json.json_to_string |> Http_lite.write_message stdout
+
+
+  (************************************************)
+  (* Output functions for request                 *)
+  (************************************************)
+
+  type on_result = result:Hh_json.json option -> State.t -> State.t
+  type on_error = code:int -> message:string -> data:Hh_json.json option -> State.t -> State.t
+  type cancellation_token = unit -> unit
+
+  module Callback = struct
+    type t = {
+      method_: string;
+      on_result: on_result;
+      on_error: on_error;
+    }
+  end
+
+  let requests_counter: IMap.key ref = ref 0
+  let requests_outstanding: Callback.t IMap.t ref = ref IMap.empty
+
+  (* request: produce a Request message; returns a method you can call to cancel it *)
+  let request
+      (on_result: on_result)
+      (on_error: on_error)
+      (method_: string)
+      (params: Hh_json.json)
+    : cancellation_token =
+    incr requests_counter;
+    let callback = { Callback.method_; on_result; on_error; } in
+    let request_id = !requests_counter in
+    requests_outstanding := IMap.add request_id callback !requests_outstanding;
+
+    let open Hh_json in
+    let message = JSON_Object [
+      "jsonrpc", string_ "2.0";
+      "id", int_ request_id;
+      "method", string_ method_;
+      "params", params;
+    ]
+    in
+    let cancel_message = JSON_Object [
+      "jsonrpc", string_ "2.0";
+      "method", string_ "$/cancelRequest";
+      "params", JSON_Object [
+        "id", int_ request_id;
+      ]
+    ]
+    in
+    last_sent_ref := Some message;
+    message |> Hh_json.json_to_string |> Http_lite.write_message stdout;
+
+    let cancel () =
+      last_sent_ref := Some cancel_message;
+      cancel_message |> Hh_json.json_to_string |> Http_lite.write_message stdout
+    in
+    cancel
+
+  let get_request_for_response (response: message) =
+    match response.id with
+    | Some (Hh_json.JSON_Number s) -> begin
+        try
+          let id = int_of_string s in
+          Option.map (IMap.get id !requests_outstanding) ~f:(fun v -> (id, v))
+        with Failure _ -> None
+      end
+    | _ -> None
+
+  let get_method_for_response (response: message) : string =
+    match (get_request_for_response response) with
+    | Some (_, callback) -> callback.Callback.method_
+    | None -> ""
+
+  let dispatch_response
+      (response: message)
+      (state: State.t)
+    : State.t =
+    let open Callback in
+    let id, on_result, on_error = match (get_request_for_response response) with
+      | Some (id, callback) -> (id, callback.on_result, callback.on_error)
+      | None -> failwith "response to non-existent id"
+    in
+    requests_outstanding := IMap.remove id !requests_outstanding;
+    if Option.is_some response.error then
+      let code = Option.bind response.error (Hh_json_helpers.try_get_val "code")
+        |> Option.map ~f:Hh_json.get_number_int_exn in
+      let message = Option.bind response.error (Hh_json_helpers.try_get_val "message")
+        |> Option.map ~f:Hh_json.get_string_exn in
+      let data = Option.bind response.error (Hh_json_helpers.try_get_val "data") in
+      match code, message, data with
+      | Some code, Some message, data -> on_error code message data state
+      | _ -> failwith "malformed error response"
+    else
+      on_result response.result state
 
 end
