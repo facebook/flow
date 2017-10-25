@@ -306,7 +306,7 @@ let exports =
   end
 
 let () = Js.Unsafe.set exports "registerFile" (
-  Js.wrap_callback (fun name content -> Sys_js.register_file ~name ~content)
+  Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content)
 )
 let () = Js.Unsafe.set exports
   "setLibs" (Js.wrap_callback set_libs_js)
