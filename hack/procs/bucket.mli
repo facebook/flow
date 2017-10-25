@@ -16,8 +16,13 @@ type 'a bucket =
   | Wait
   | Done
 
+
+
 type 'a next =
   unit -> 'a bucket
+
+val set_max_bucket_size : int -> unit
+val max_size : unit -> int
 
 (* Makes a bucket out of a list, without regard for number of workers or the
    size of the list.  *)
