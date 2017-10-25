@@ -64,7 +64,7 @@ this.onmessage = function(e) {
 function getFlow(version) {
   if (!(version in versionCache)) {
     versionCache[version] = new Promise(function(resolve) {
-      require(['flow-loader'], function(FlowLoader) {
+      requirejs(['flow-loader'], function(FlowLoader) {
         resolve(FlowLoader.load(version));
       });
     });

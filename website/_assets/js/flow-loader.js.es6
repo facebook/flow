@@ -59,7 +59,7 @@ export function load(version) {
     `/static/${version}/flowlib/react.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
-    require([`/static/${version}/flow.js`], resolve);
+    requirejs([`/static/${version}/flow.js`], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])
     .then(function([_flow, ...contents]) {
