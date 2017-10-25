@@ -945,7 +945,7 @@ module ResolvableTypeJob = struct
 
   *)
   type t =
-  | Binding of Type.t
+  | Binding of Type.tvar
   | OpenResolved
   | OpenUnresolved of int option * Constraint.ident
 
@@ -956,7 +956,8 @@ module ResolvableTypeJob = struct
     List.fold_left (collect_of_type ?log_unresolved cx reason)
 
   and collect_of_type ?log_unresolved cx reason acc = function
-    | OpenT (r, id) as tvar ->
+    | OpenT tvar ->
+      let r, id = tvar in
       if IMap.mem id acc then acc
       else if is_constant_property_reason r
       (* It is important to consider reads of constant property names as fully
@@ -986,16 +987,17 @@ module ResolvableTypeJob = struct
     | AnnotT (tvar, _) ->
       let _, id = tvar in
       if IMap.mem id acc then acc
-      else IMap.add id (Binding (OpenT tvar)) acc
+      else IMap.add id (Binding tvar) acc
 
     | ThisTypeAppT (_, poly_t, _, targs_opt) ->
       let targs = match targs_opt with | None -> [] | Some targs -> targs in
       begin match poly_t with
-      | OpenT (_, id) ->
+      | OpenT tvar ->
+        let _, id = tvar in
         if IMap.mem id acc then
           collect_of_types ?log_unresolved cx reason acc targs
         else begin
-          let acc = IMap.add id (Binding poly_t) acc in
+          let acc = IMap.add id (Binding tvar) acc in
           collect_of_types ?log_unresolved cx reason acc targs
         end
 
@@ -1007,11 +1009,12 @@ module ResolvableTypeJob = struct
     | DefT (_, TypeAppT (poly_t, targs))
       ->
       begin match poly_t with
-      | OpenT (_, id) ->
+      | OpenT tvar ->
+        let _, id = tvar in
         if IMap.mem id acc then
           collect_of_types ?log_unresolved cx reason acc targs
         else begin
-          let acc = IMap.add id (Binding poly_t) acc in
+          let acc = IMap.add id (Binding tvar) acc in
           collect_of_types ?log_unresolved cx reason acc targs
         end
 
@@ -6855,7 +6858,7 @@ and eval_destructor cx ~trace reason t d tout = match t with
   (* Use full type resolution to wait for the tout to become resolved. *)
   let k = tvar_with_constraint cx ~trace
     (choice_kit_use reason (EvalDestructor (id, d, tout))) in
-  resolve_bindings_init cx trace reason [(id, OpenT tvar)] k
+  resolve_bindings_init cx trace reason [(id, tvar)] k
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.
@@ -7510,7 +7513,7 @@ and replace_parts =
 and bindings_of_jobs cx trace jobs =
   IMap.fold ResolvableTypeJob.(fun id job bindings -> match job with
   | OpenResolved -> bindings
-  | Binding t -> (id, t)::bindings
+  | Binding tvar -> (id, tvar)::bindings
   | OpenUnresolved (log_unresolved, id) ->
     begin match log_unresolved with
     | Some speculation_id ->
@@ -7632,9 +7635,9 @@ and try_flow_continuation cx trace reason speculation_id spec =
   tvar_with_constraint cx ~trace
     (choice_kit_use reason (TryFlow (speculation_id, spec)))
 
-and resolve_binding cx trace reason (id, t) =
+and resolve_binding cx trace reason (id, tvar) =
   rec_flow cx trace (
-    t,
+    OpenT tvar,
     choice_kit_use reason (FullyResolveType id)
   )
 
