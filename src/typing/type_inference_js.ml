@@ -63,21 +63,13 @@ type 'a located = {
   loc: Loc.t;
 }
 
+type range_keyword =
+  | Unending (* Comment lasting until negated *)
+  | Line (* covers current line *)
+  | Next_line (* covers next line *)
+
 let scan_for_lint_suppressions =
-  let flowlint_keywords =
-    ["flowlint";
-    "flowlint-line";
-    "flowlint-next-line";]
-  in
-
-  let ws_and_stars_regex = Str.regexp "[ \t\n\r\\*]+" in
   let ignore_chars = " \t\n\r*" in
-
-  let starts_with_keyword comment =
-    match Str.split ws_and_stars_regex comment with
-    | head::_ -> List.exists ((=) head) flowlint_keywords
-    | [] -> false
-  in
 
   (* Get the position induced by reading the string str from the starting position pos *)
   let update_pos =
@@ -101,6 +93,55 @@ let scan_for_lint_suppressions =
       update_pos' pos str 0 (String.length str)
   in
 
+
+  (* Given a string like `"flowlint-line foo:bar"`, returns `Some (Line, Some "foo:bar")` *)
+  let parse_keyword : string located -> (range_keyword located * string located option) option =
+    let keywords = [
+      "flowlint-line", Line;
+      "flowlint-next-line", Next_line;
+      "flowlint", Unending;
+    ] in
+
+    (* [prefix_length prefix str] returns the position of the first non-whitespace character in
+       [str] after [prefix]. If [str] does not start with [prefix], or [prefix] is not followed by
+       whitespace, returns [None]. *)
+    let prefix_length prefix str =
+      let sl = String.length prefix in
+      if not (String_utils.string_starts_with str prefix) then None
+      else if String.length str = sl then Some sl
+      else match String_utils.index_not_from_opt str sl ignore_chars with
+        | Some i when i = sl -> None
+        | Some i -> Some i
+        | None -> None
+    in
+
+    let rec try_keyword comment = function
+    | [] -> None
+    | (prefix, range)::todo ->
+      let { loc; value } = comment in
+      let value_len = String.length value in
+      begin match prefix_length prefix value with
+      | Some i when i = value_len ->
+          Some ({ loc; value = range }, None)
+      | Some i ->
+          let range_end = update_pos loc.Loc.start prefix in
+          let args_start = update_pos loc.Loc.start (String.sub value 0 i) in
+          let range = {
+            value = range;
+            loc = { loc with Loc._end = range_end };
+          } in
+          let args = {
+            value = String.sub value i (String.length value - i);
+            loc = { loc with Loc.start = args_start }
+          } in
+          Some (range, Some args)
+      | None -> try_keyword comment todo
+      end
+    in
+
+    fun comment -> try_keyword comment keywords
+  in
+
   (* Trims whitespace and stars from the front and end of loc_str. *)
   let trim_and_stars_locational { value; loc } =
     let open Loc in
@@ -121,54 +162,16 @@ let scan_for_lint_suppressions =
     { value; loc }
   in
 
-  let convert_split_results =
-    let open Loc in
-
-    let rec convert' ((loc_strings, (source, current_pos)) as acc) =
-      let open Str in function
-        (* Text to be added to the result *)
-        | (Text text)::tail ->
-          let next_pos = update_pos current_pos text in
-          let loc = {source; start = current_pos; _end = next_pos} in
-          convert' ({loc; value = text}::loc_strings, (source, next_pos)) tail
-        (* Delim that can be skipped over *)
-        | (Delim delim)::((Text _)::_ as tail) ->
-          convert' (loc_strings, (source, update_pos current_pos delim)) tail
-        (* When we have adjacent Delims, insert an empy string between them *)
-        | (Delim _ as head)::((Delim _)::_ as tail) ->
-          convert' acc (head::Text ""::tail)
-        (* When the result ends with a Delim, append an empty string *)
-        | [Delim _ as ending] -> convert' acc [ending; Text ""]
-        (* Return the results when we get to the end of the list *)
-        | [] -> acc |> fst |> List.rev
-    in
-
-    fun source start_pos split_results ->
-      let split_results = match split_results with
-        | (Str.Delim _)::_ -> (Str.Text "")::split_results
-        | _ -> split_results
-      in
-      convert' ([], (source, start_pos)) split_results
-  in
-
-  let split_delim_locational regex loc_str =
-    let open Loc in
-    Str.full_split regex loc_str.value
-    |> convert_split_results loc_str.loc.source loc_str.loc.start
-  in
-
-  let bounded_split_delim_locational regex loc_str max_substrs =
-    let open Loc in
-    Str.bounded_full_split regex loc_str.value max_substrs
-    |> convert_split_results loc_str.loc.source loc_str.loc.start
-  in
-
-  let split_comment comment =
-    match bounded_split_delim_locational ws_and_stars_regex comment 2 with
-    | [keyword; args] -> (keyword, Some args)
-    | [keyword] -> (keyword, None)
-    | _ -> Utils.assert_false
-      "Unreachable match case. (split_comment is only called when comment starts with a keyword)"
+  let split_delim_locational delim { loc; value } =
+    let delim_str = String.make 1 delim in
+    let source = loc.Loc.source in
+    let parts = String_utils.split_on_char delim value in
+    let parts, _ = List.fold_left (fun (parts, start) value ->
+      let _end = update_pos start value in
+      let next_start = update_pos _end delim_str in
+      ({loc = {Loc.source; start; _end}; value}::parts, next_start)
+    ) ([], loc.Loc.start) parts in
+    List.rev parts
   in
 
   let add_error cx (loc, kind) =
@@ -176,9 +179,6 @@ let scan_for_lint_suppressions =
     FlowError.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) err
     |> Context.add_error cx
   in
-
-  let comma_regex = Str.regexp "," in
-  let colon_regex = Str.regexp ":" in
 
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with
@@ -194,7 +194,7 @@ let scan_for_lint_suppressions =
 
   let get_kind_setting cx arg =
     let arg = trim_and_stars_locational arg in
-    match split_delim_locational colon_regex arg with
+    match split_delim_locational ':' arg with
     | [rule; setting] ->
       let rule = trim_and_stars_locational rule in
       let setting = trim_and_stars_locational setting in
@@ -213,17 +213,9 @@ let scan_for_lint_suppressions =
 
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
   let get_settings_list cx args =
-    split_delim_locational comma_regex args
+    split_delim_locational ',' args
     |> List.map (fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
   in
-
-  let contains_r regex str start_index =
-    try Str.search_forward regex str start_index |> ignore; true
-    with Not_found -> false
-  in
-
-  let line_regex = Str.regexp "line" in
-  let next_regex = Str.regexp "next" in
 
   (* Doesn't preserve offset, but is only used in locations where offset isn't used,
    * so that's fine. *)
@@ -242,13 +234,10 @@ let scan_for_lint_suppressions =
     in
 
     fun {loc; value = keyword} ->
-      if contains_r line_regex keyword 0 then
-        if contains_r next_regex keyword 0 then (* covers next line *)
-          range_of_line loc.source (loc._end.line + 1)
-        else (* covers current line *)
-          range_of_line loc.source loc._end.line
-      else (* Comment lasting until negated *)
-        range_unending loc
+      match keyword with
+      | Unending -> range_unending loc
+      | Line -> range_of_line loc.source loc._end.line
+      | Next_line -> range_of_line loc.source (loc._end.line + 1)
   in
 
   let convert_comment (loc, comment) =
@@ -282,66 +271,68 @@ let scan_for_lint_suppressions =
       ((severity_cover_builder, running_settings, suppression_locs) as acc)
       comment =
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in
-    if starts_with_keyword loc_comment.value then
-      let keyword, args = split_comment loc_comment in
-      let covered_range = get_range keyword in
-      match args with
+    match parse_keyword loc_comment with
+    | Some (keyword, Some args) ->
         (* Case where we're changing certain lint settings *)
-        | Some args ->
-          let settings_list =
-            get_settings_list cx args
-              |> nested_map (fun ({loc; value = kind}, state) -> (kind, (state, loc)))
+        let settings_list =
+          get_settings_list cx args
+            |> nested_map (fun ({loc; value = kind}, state) -> (kind, (state, loc)))
+        in
+        let error_encountered = ref false in
+        let (new_builder, new_running_settings) =
+          let covered_range = get_range keyword in
+          ExactCover.update_settings_and_running running_settings
+            (fun err -> error_encountered := true; add_error cx err)
+            covered_range settings_list severity_cover_builder in
+        (* Only report overwritten arguments if there are no no-op arguments,
+         * to avoid error duplication *)
+        let () = if not !error_encountered then
+          (* Check for overwritten arguments *)
+          let used_locs = LintSettings.fold
+            (fun _ (_, loc) loc_set -> match loc with
+              | Some loc -> Loc.LocSet.add loc loc_set
+              | None -> loc_set)
+            new_running_settings Loc.LocSet.empty
           in
-          let error_encountered = ref false in
-          let (new_builder, new_running_settings) =
-            ExactCover.update_settings_and_running running_settings
-              (fun err -> error_encountered := true; add_error cx err)
-              covered_range settings_list severity_cover_builder in
-          (* Only report overwritten arguments if there are no no-op arguments,
-           * to avoid error duplication *)
-          let () = if not !error_encountered then
-            (* Check for overwritten arguments *)
-            let used_locs = LintSettings.fold
-              (fun _ (_, loc) loc_set -> match loc with
-                | Some loc -> Loc.LocSet.add loc loc_set
-                | None -> loc_set)
-              new_running_settings Loc.LocSet.empty
-            in
-            let arg_locs = List.map
-              (function
-                | (_,(_,loc))::_ -> Some loc
-                | [] -> None)
-              settings_list
-            in
-            List.iter (function
-              | Some arg_loc ->
-                if not (Loc.LocSet.mem arg_loc used_locs) then begin
-                  error_encountered := true;
-                  add_error cx (arg_loc, LintSettings.Overwritten_argument)
-                end
-              | None -> ()) arg_locs
+          let arg_locs = List.map
+            (function
+              | (_,(_,loc))::_ -> Some loc
+              | [] -> None)
+            settings_list
           in
-          let suppression_locs =
-            (* Only report unused suppressions if there are no redundant settings,
-             * to avoid error duplication. (The suppression_locs are later used to detect
-             * unused suppressions; by never storing their locations we are effectively
-             * immediately using them.) *)
-            if not !error_encountered then
-              List.fold_left (
-                fun suppression_locs -> function
-                  | (_, (Severity.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
-                  | _ -> suppression_locs
-                ) suppression_locs settings_list
-            else suppression_locs
-          in
-          if contains_r line_regex keyword.value 0
-            then (new_builder, running_settings, suppression_locs)
-            else (new_builder, new_running_settings, suppression_locs)
+          List.iter (function
+            | Some arg_loc ->
+              if not (Loc.LocSet.mem arg_loc used_locs) then begin
+                error_encountered := true;
+                add_error cx (arg_loc, LintSettings.Overwritten_argument)
+              end
+            | None -> ()) arg_locs
+        in
+        let suppression_locs =
+          (* Only report unused suppressions if there are no redundant settings,
+           * to avoid error duplication. (The suppression_locs are later used to detect
+           * unused suppressions; by never storing their locations we are effectively
+           * immediately using them.) *)
+          if not !error_encountered then
+            List.fold_left (
+              fun suppression_locs -> function
+                | (_, (Severity.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
+                | _ -> suppression_locs
+              ) suppression_locs settings_list
+          else suppression_locs
+        in
+        begin match keyword.value with
+        | Line
+        | Next_line ->
+          (new_builder, running_settings, suppression_locs)
+        | Unending ->
+          (new_builder, new_running_settings, suppression_locs)
+        end
+    | Some (keyword, None) ->
         (* Case where we're wholly enabling/disabling linting *)
-        | None ->
-          add_error cx (keyword.loc, LintSettings.Naked_comment);
-          acc (* TODO (rballard): regional lint disabling *)
-    else acc
+        add_error cx (keyword.loc, LintSettings.Naked_comment);
+        acc (* TODO (rballard): regional lint disabling *)
+    | None -> acc
   in
 
   fun cx base_settings comments ->
