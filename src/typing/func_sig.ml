@@ -169,9 +169,9 @@ let methodtype cx {reason; tparams; fparams; return_t; _} =
   let rest_param = Func_params.rest fparams in
   let def_reason = reason in
   let t = DefT (reason, FunT (
-    Flow.dummy_static reason,
-    Flow.dummy_prototype,
-    Flow.mk_boundfunctiontype
+    dummy_static reason,
+    dummy_prototype,
+    mk_boundfunctiontype
       params_tlist ~rest_param ~def_reason ~params_names return_t
   )) in
   poly_type (Context.make_nominal cx) tparams t

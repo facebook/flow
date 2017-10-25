@@ -57,44 +57,6 @@ val check_polarity:
 
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
-(* object/method types *)
-
-val mk_methodtype :
-  Type.t -> Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string option list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_methodcalltype :
-  Type.t -> Type.call_arg list ->
-  ?frame:int ->
-  ?call_strict_arity:bool ->
-  Type.t -> Type.funcalltype
-
-val mk_boundfunctiontype :
-  Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string option list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_functiontype :
-  reason ->
-  Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string option list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_functioncalltype :
-  reason ->
-  Type.call_arg list ->
-  ?frame:int ->
-  ?call_strict_arity:bool ->
-  Type.t -> Type.funcalltype
-
-val dummy_this : Type.t
-val dummy_static : reason -> Type.t
-val dummy_prototype : Type.t
-
 val mk_objecttype : ?flags:Type.flags ->
   Type.dicttype option -> Type.Properties.id -> Type.t -> Type.objtype
 

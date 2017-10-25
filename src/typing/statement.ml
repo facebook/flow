@@ -898,7 +898,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Tvar.mk_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functioncalltype reason [Arg t] tvar in
+            let callt = mk_functioncalltype reason [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -2624,9 +2624,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "new Function(..)") loc in
       let proto = ObjProtoT reason in
       DefT (reason, FunT (
-        Flow.dummy_static reason,
-        Flow.dummy_prototype,
-        Flow.mk_functiontype reason
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype reason
           [] ~rest_param:None ~def_reason:reason ~params_names:[] proto
       ))
     )
@@ -2684,7 +2684,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
-        let funtype = Flow.mk_methodcalltype super argts t in
+        let funtype = mk_methodcalltype super argts t in
         Flow.flow cx (
           super,
           MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2712,7 +2712,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Tvar.mk_where cx reason_call (fun t ->
           let elem_t = expression cx expr in
           let frame = Env.peek_frame () in
-          let funtype = Flow.mk_methodcalltype ot argts t ~frame in
+          let funtype = mk_methodcalltype ot argts t ~frame in
           Flow.flow cx (ot,
             CallElemT (reason_call, reason_lookup, elem_t, funtype))
         ))
@@ -2732,7 +2732,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let super = super_ cx ploc in
       let super_reason = reason_of_t super in
       Tvar.mk_where cx reason (fun t ->
-        let funtype = Flow.mk_methodcalltype this argts t in
+        let funtype = mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
         Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
 
@@ -2865,7 +2865,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Tvar.mk cx reason in
-      let ft = Flow.mk_functioncalltype reason
+      let ft = mk_functioncalltype reason
         [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
           SpreadArg (AnyT.why reason) ]
         ret
@@ -3053,7 +3053,7 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Env.havoc_heap_refinements ();
   Tvar.mk_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functioncalltype reason argts t ~frame ~call_strict_arity in
+    let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
@@ -3072,7 +3072,7 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
       Tvar.mk_where cx reason (fun t ->
         let frame = Env.peek_frame () in
         let app =
-          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
+          mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3083,7 +3083,7 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
         let app =
-          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
+          mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
@@ -3689,7 +3689,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodcalltype
+          mk_methodcalltype
             react
             ([Arg component_t; Arg props] @ List.map (fun c -> Arg c) children)
             tvar
@@ -4518,7 +4518,7 @@ and mk_arrow cx loc func =
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
-  Func_sig.functiontype cx Flow.dummy_this func_sig
+  Func_sig.functiontype cx dummy_this func_sig
 
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)

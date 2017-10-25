@@ -33,69 +33,6 @@ module TypeExSet = Set.Make(struct
   let compare = reasonless_compare
 end)
 
-(* The following functions are used as constructors for function types and
-   object types, which unfortunately have many fields, not all of which are
-   meaningful in all contexts. This part of the design should be revisited:
-   perhaps the data types can be refactored to make them more specialized. *)
-
-(* Methods may use a dummy statics object type to carry properties. We do not
-   want to encourage this pattern, but we also don't want to block uses of this
-   pattern. Thus, we compromise by not tracking the property types. *)
-let dummy_static reason =
-  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyFunT)
-
-let dummy_prototype =
-  ObjProtoT (locationless_reason RDummyPrototype)
-
-let dummy_this =
-  let reason = locationless_reason RDummyThis in
-  DefT (reason, AnyT)
-
-let global_this reason =
-  let reason = replace_reason_const (RCustom "global object") reason in
-  ObjProtoT reason
-
-(* A method type is a function type with `this` specified. *)
-let mk_methodtype
-    this tins ~rest_param ~def_reason
-    ?(frame=0) ?params_names ?(is_predicate=false) tout = {
-  this_t = this;
-  params = (
-    match params_names with
-    | None -> List.map (fun t -> None, t) tins
-    | Some xs -> List.map2 (fun x t -> (x, t)) xs tins
-  );
-  rest_param;
-  return_t = tout;
-  is_predicate;
-  closure_t = frame;
-  changeset = Changeset.empty;
-  def_reason;
-}
-
-let mk_methodcalltype
-    this tins ?(frame=0) ?(call_strict_arity=true) tout = {
-  call_this_t = this;
-  call_args_tlist = tins;
-  call_tout = tout;
-  call_closure_t = frame;
-  call_strict_arity;
-}
-
-(* A bound function type is a function type with `this` = `any`. Typically, such
-   a type is given to a method when it can be considered bound: in other words,
-   when calling that method through any object would be fine, since the object
-   would be ignored. *)
-let mk_boundfunctiontype = mk_methodtype dummy_this
-
-(* A function type has `this` = `mixed`. Such a type can be given to functions
-   that are meant to be called directly. On the other hand, it deliberately
-   causes problems when they are given to methods in which `this` is used
-   non-trivially: indeed, calling them directly would cause `this` to be bound
-   to the global object, which is typically unintended. *)
-let mk_functiontype reason = mk_methodtype (global_this reason)
-let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
-
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
    "forgeting" any properties: so to extend an object type with optional

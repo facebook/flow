@@ -18,9 +18,9 @@ let fake_fun params_names param_ts rest_param ret_t =
     rest_param in
   let def_reason = reason in
   DefT (reason, FunT (
-    Flow_js.dummy_static reason,
-    Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype reason param_ts ~rest_param ~def_reason ~params_names ret_t
+    dummy_static reason,
+    dummy_prototype,
+    mk_functiontype reason param_ts ~rest_param ~def_reason ~params_names ret_t
   ))
 
 let fake_instance name =
@@ -89,9 +89,9 @@ let rec normalize_type_impl cx ids t = match t with
       let is_predicate = Some ft.is_predicate in
       let def_reason = ft.def_reason in
       DefT (reason, FunT (
-        Flow_js.dummy_static reason,
-        Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype reason
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype reason
           tins ~rest_param ~def_reason ~params_names ?is_predicate tout
       ))
 

@@ -541,9 +541,9 @@ let rec convert cx tparams_map = Ast.Type.(function
         let tins = Utils_js.repeat n (AnyT.at loc) in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         DefT (fun_reason, FunT (
-          Flow.dummy_static static_reason,
+          dummy_static static_reason,
           DefT (mk_reason RPrototype loc, AnyT),
-          Flow.mk_functiontype fun_reason tins tout
+          mk_functiontype fun_reason tins tout
             ~rest_param:None ~def_reason:fun_reason
             ~params_names:key_strs ~is_predicate:true
         ))
@@ -608,7 +608,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let return_t = convert cx tparams_map returnType in
   let ft =
     DefT (reason, FunT (
-      Flow.dummy_static reason,
+      dummy_static reason,
       DefT (mk_reason RPrototype loc, AnyT),
       {
         this_t = DefT (mk_reason RThis loc, AnyT);
