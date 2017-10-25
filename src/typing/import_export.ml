@@ -157,7 +157,7 @@ let set_module_kind cx loc new_exports_kind = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType loc)
+      Flow.add_output cx (Flow_error.EIndeterminateModuleType loc)
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind
@@ -193,7 +193,7 @@ let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    Flow_js.add_output cx (Flow_error.EExperimentalExportStarAs loc)
+    Flow.add_output cx (Flow_error.EExperimentalExportStarAs loc)
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a

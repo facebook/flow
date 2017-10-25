@@ -482,7 +482,7 @@ let warn_or_ignore_decorators cx = function
   | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN ->
-    Flow_js.add_output cx (Flow_error.EExperimentalDecorators loc)
+    Flow.add_output cx (Flow_error.EExperimentalDecorators loc)
 
 let warn_or_ignore_class_properties cx ~static loc =
   let config_setting =
@@ -494,12 +494,12 @@ let warn_or_ignore_class_properties cx ~static loc =
   | Options.ESPROPOSAL_ENABLE
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN ->
-    Flow_js.add_output cx
+    Flow.add_output cx
       (Flow_error.EExperimentalClassProperties (loc, static))
 
 let warn_unsafe_getters_setters cx loc =
   if not (Context.enable_unsafe_getters_and_setters cx)
-  then Flow_js.add_output cx (Flow_error.EUnsafeGetSet loc)
+  then Flow.add_output cx (Flow_error.EUnsafeGetSet loc)
 
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
@@ -649,7 +649,7 @@ let mk cx _loc reason self ~expr =
         Property.key = Ast.Expression.Object.Property.Literal _;
         _
       }) ->
-        Flow_js.add_output cx
+        Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
         c
 
@@ -662,7 +662,7 @@ let mk cx _loc reason self ~expr =
         Property.key = Ast.Expression.Object.Property.Computed _;
         _
       }) ->
-        Flow_js.add_output cx
+        Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
         c
   ) class_sig elements
@@ -676,7 +676,7 @@ let extract_extends cx structural =
         let r = mk_reason (RCustom name) loc in
         loop ((r, id, typeParameters)::acc) false rest
       else (
-        Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+        Flow.add_output cx Flow_error.(EUnsupportedSyntax
           (loc, ClassExtendsMultiple));
         loop acc false []
       )
@@ -757,7 +757,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       let fsig = Func_sig.convert cx tparams_map loc func in
       append_method ~static "$call" fsig x
     | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
-      Flow_js.add_output cx
+      Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));
       x
     | Indexer (_, { Indexer.key; value; static; variance; _ }) ->
@@ -769,13 +769,13 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         |> add_field ~static "$value" (polarity, Annot v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
-      then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
+      then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in
       Ast.Expression.Object.(match _method, key, value with
       | _, Property.Literal (loc, _), _
       | _, Property.PrivateName (loc, _), _
       | _, Property.Computed (loc, _), _ ->
-          Flow_js.add_output cx (Flow_error.EIllegalName loc);
+          Flow.add_output cx (Flow_error.EIllegalName loc);
           x
       | true, Property.Identifier (_, name),
           Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->
@@ -787,7 +787,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           append_method fsig x
 
       | true, Property.Identifier _, _ ->
-          Flow_js.add_output cx
+          Flow.add_output cx
             Flow_error.(EInternal (loc, MethodNotAFunction));
           x
 
@@ -813,13 +813,13 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
 
       | _, _, Ast.Type.Object.Property.Get _
       | _, _, Ast.Type.Object.Property.Set _ ->
-          Flow_js.add_output cx
+          Flow.add_output cx
             Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
           x
       )
 
     | SpreadProperty (loc, _) ->
-      Flow_js.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
+      Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x
   ) iface_sig properties in
 

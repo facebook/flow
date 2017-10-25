@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module FlowError = Flow_error
-
 open Utils_js
 open Reason
 open Type
 open Env.LookupMode
+
+module FlowError = Flow_error
+module Flow = Flow_js
 
 (* AST helpers *)
 
@@ -27,7 +28,7 @@ let qualified_name =
 let ident_name (_, name) = name
 
 let error_type cx loc msg =
-  Flow_js.add_output cx msg;
+  Flow.add_output cx msg;
   AnyT.at loc
 
 let is_suppress_type cx type_name =
@@ -103,7 +104,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let valtype = convert_qualification ~lookup_mode:ForTypeof cx
         "typeof-annotation" qualification in
       let reason = repos_reason loc (reason_of_t valtype) in
-      Flow_js.mk_typeof_annotation cx reason valtype
+      Flow.mk_typeof_annotation cx reason valtype
   | _ ->
     error_type cx loc (FlowError.EUnexpectedTypeof loc)
   end
@@ -113,7 +114,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let reason = mk_reason RTupleType loc in
   let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
-  | [] -> Flow_js.mk_tvar cx element_reason
+  | [] -> Flow.mk_tvar cx element_reason
   | [t] -> t
   | t0::t1::ts ->
     (* If a tuple should be viewed as an array, what would the element type of
@@ -157,8 +158,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   let m = convert_qualification cx "type-annotation" qualification in
   let _, name = id in
   let reason = mk_reason (RCustom name) loc in
-  let t = Flow_js.mk_tvar_where cx reason (fun t ->
-    Flow_js.flow cx (m, GetPropT (reason, Named (reason, name), t));
+  let t = Flow.mk_tvar_where cx reason (fun t ->
+    Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
   ) in
   let typeParameters = extract_type_param_instantiations typeParameters in
   mk_nominal_type cx reason tparams_map (t, typeParameters)
@@ -321,8 +322,8 @@ let rec convert cx tparams_map = Ast.Type.(function
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) loc
           in
-          Flow_js.mk_tvar_where cx reason (fun t ->
-            Flow_js.flow cx (remote_module_t, CJSRequireT(reason, t))
+          Flow.mk_tvar_where cx reason (fun t ->
+            Flow.flow cx (remote_module_t, CJSRequireT(reason, t))
           )
       | _ ->
           error_type cx loc (FlowError.EExportsAnnot loc)
@@ -382,10 +383,10 @@ let rec convert cx tparams_map = Ast.Type.(function
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
       check_type_param_arity cx loc typeParameters 0 (fun () ->
-        Flow_js.reposition cx loc (SMap.find_unsafe "this" tparams_map)
+        Flow.reposition cx loc (SMap.find_unsafe "this" tparams_map)
       )
     else (
-      Flow_js.add_output cx (FlowError.EUnexpectedThisType loc);
+      Flow.add_output cx (FlowError.EUnexpectedThisType loc);
       Locationless.AnyT.t
     )
 
@@ -521,7 +522,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      Flow_js.reposition cx loc (SMap.find_unsafe name tparams_map)
+      Flow.reposition cx loc (SMap.find_unsafe name tparams_map)
     )
 
   | "$Pred" ->
@@ -540,9 +541,9 @@ let rec convert cx tparams_map = Ast.Type.(function
         let tins = Utils_js.repeat n (AnyT.at loc) in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         DefT (fun_reason, FunT (
-          Flow_js.dummy_static static_reason,
+          Flow.dummy_static static_reason,
           DefT (mk_reason RPrototype loc, AnyT),
-          Flow_js.mk_functiontype fun_reason tins tout
+          Flow.mk_functiontype fun_reason tins tout
             ~rest_param:None ~def_reason:fun_reason
             ~params_names:key_strs ~is_predicate:true
         ))
@@ -607,7 +608,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let return_t = convert cx tparams_map returnType in
   let ft =
     DefT (reason, FunT (
-      Flow_js.dummy_static reason,
+      Flow.dummy_static reason,
       DefT (mk_reason RPrototype loc, AnyT),
       {
         this_t = DefT (mk_reason RThis loc, AnyT);
@@ -620,7 +621,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         def_reason = reason;
       }))
   in
-  let id = Flow_js.mk_nominal cx in
+  let id = Flow.mk_nominal cx in
   poly_type id tparams ft
 
 | loc, Object { Object.exact; properties } ->
@@ -667,7 +668,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       frozen = false
     } in
     DefT (mk_reason reason_desc loc,
-      ObjT (Flow_js.mk_objecttype ~flags dict pmap proto))
+      ObjT (Flow.mk_objecttype ~flags dict pmap proto))
   in
   let property loc prop props proto =
     match prop with
@@ -683,17 +684,17 @@ let rec convert cx tparams_map = Ast.Type.(function
           if name = "__proto__" && not (_method || optional) && variance = None
           then
             let reason = mk_reason RPrototype (fst value) in
-            let proto = Flow_js.mk_tvar_where cx reason (fun tout ->
-              Flow_js.flow cx (t, ObjTestProtoT (reason, tout))
+            let proto = Flow.mk_tvar_where cx reason (fun tout ->
+              Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
-            props, Some (Flow_js.mk_typeof_annotation cx reason proto)
+            props, Some (Flow.mk_typeof_annotation cx reason proto)
           else
             let t = if optional then Type.optional t else t in
             let polarity = if _method then Positive else polarity variance in
             let props = SMap.add name (Field (t, polarity)) props in
             props, proto
       | _ ->
-        Flow_js.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
+        Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
         props, proto
       end
 
@@ -722,7 +723,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         value = Object.Property.Get _ | Object.Property.Set _;
         _
       } ->
-      Flow_js.add_output cx
+      Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       props, proto
   in
@@ -742,7 +743,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | None -> Some ([], make_dict indexer, SMap.empty, None)
     | Some (cs, None, pmap, proto) -> Some (cs, make_dict indexer, pmap, proto)
     | Some (_, Some _, _, _) as o ->
-      Flow_js.add_output cx
+      Flow.add_output cx
         FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
       o
   in
@@ -797,7 +798,7 @@ let rec convert cx tparams_map = Ast.Type.(function
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty tparams_map in
   let reason = derivable_reason (mk_reason RExistential loc) in
-  if force then Flow_js.mk_tvar cx reason
+  if force then Flow.mk_tvar cx reason
   else ExistsT reason
 )
 
@@ -808,8 +809,8 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let name = ident_name id in
     let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
     let reason = mk_reason desc loc in
-    Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.flow cx (m, GetPropT (reason, Named (reason, name), t));
+    Flow.mk_tvar_where cx reason (fun t ->
+      Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
     )
 
   | Unqualified (loc, name) ->
@@ -821,7 +822,7 @@ and mk_type cx tparams_map reason = function
       let t =
         if Context.is_weak cx
         then AnyT.why reason
-        else Flow_js.mk_tvar cx reason
+        else Flow.mk_tvar cx reason
       in
       Hashtbl.replace (Context.annot_table cx) (loc_of_reason reason) t;
       t
@@ -849,11 +850,11 @@ and mk_singleton_boolean loc b =
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
-(** See comment on Flow_js.mk_instance for what the for_type flag means. **)
+(** See comment on Flow.mk_instance for what the for_type flag means. **)
 and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
   match targs with
   | None ->
-      Flow_js.mk_instance cx reason ~for_type c
+      Flow.mk_instance cx reason ~for_type c
   | Some targs ->
       let tparams = List.map (convert cx tparams_map) targs in
       typeapp c tparams
@@ -874,14 +875,14 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
     | None -> None
     | Some default ->
         let t = mk_type cx tparams_map reason (Some default) in
-        Flow_js.flow_t cx (Flow_js.subst cx bounds_map t,
-                           Flow_js.subst cx bounds_map bound);
+        Flow.flow_t cx (Flow.subst cx bounds_map t,
+                           Flow.subst cx bounds_map bound);
         Some t in
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default; } in
     (tparam :: tparams,
      SMap.add name (BoundT tparam) tparams_map,
-     SMap.add name (Flow_js.subst cx bounds_map bound) bounds_map)
+     SMap.add name (Flow.subst cx bounds_map bound) bounds_map)
   in
   let tparams, tparams_map, _ =
     extract_type_param_declarations typeParameters
