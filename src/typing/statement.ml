@@ -1587,7 +1587,7 @@ and statement cx = Ast.Statement.(
             let proto = ObjProtoT reason in
 
             type_exports,
-            Obj_type.mk_with_map_proto cx reason value_exports proto
+            Obj_type.mk_with_proto cx reason ~props:value_exports proto
         in
 
         let module_t =
@@ -2198,8 +2198,8 @@ and object_ cx reason ?(allow_sealed=true) props =
      and use the root proto reason to build an error. *)
   let obj_proto = ObjProtoT reason in
   (* Return an object with specified sealing. *)
-  let mk_object ?(proto=obj_proto) ?(sealed=false) map =
-    Obj_type.mk_with_map_proto cx reason ~sealed map proto
+  let mk_object ?(proto=obj_proto) ?(sealed=false) props =
+    Obj_type.mk_with_proto cx reason ~sealed ~props proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
@@ -3579,8 +3579,8 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
      and use the root proto reason to build an error. *)
   let proto = (ObjProtoT reason_props) in
   (* Return an object with specified sealing. *)
-  let mk_object ?(sealed=false) map =
-    Obj_type.mk_with_map_proto cx reason_props ~sealed map proto
+  let mk_object ?(sealed=false) props =
+    Obj_type.mk_with_proto cx reason_props ~sealed ~props proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
@@ -4352,7 +4352,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       )
     in
     let pmap = prop_map_of_object cx properties in
-    let map = SMap.fold (fun x p acc ->
+    let props = SMap.fold (fun x p acc ->
       match Property.read_t p with
       | None ->
         (* Since the properties object must be a literal, and literal objects
@@ -4371,7 +4371,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         let p = Field (t, Neutral) in
         SMap.add x p acc
     ) pmap SMap.empty in
-    Obj_type.mk_with_map_proto cx reason map proto
+    Obj_type.mk_with_proto cx reason ~props proto
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
     let arr_reason = mk_reason RArrayType loc in

@@ -19,7 +19,7 @@ let run cx trace ~use_op reason_op l u
   ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
   ~(mk_object: Context.t -> reason -> Type.t)
-  ~(mk_object_with_map_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t)
+  ~(mk_object_with_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> ?props:Type.Properties.t -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
   ~(mk_tvar: Context.t -> reason -> Type.t)
   ~(mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t)
@@ -293,10 +293,10 @@ let run cx trace ~use_op reason_op l u
      * empty object. *)
     let config =
       let reason = reason_of_t config in
-      let empty_object = mk_object_with_map_proto
+      let empty_object = mk_object_with_proto
         cx reason
         ~sealed:true ~exact:true ~frozen:true
-        SMap.empty (ObjProtoT reason)
+        (ObjProtoT reason)
       in
       mk_tvar_where cx reason (fun tout ->
         rec_flow cx trace (filter_maybe cx ~trace reason config,
@@ -492,7 +492,7 @@ let run cx trace ~use_op reason_op l u
       } in
       let proto = ObjProtoT (locationless_reason RObjectClassName) in
       let reason = replace_reason_const RObjectType reason_op in
-      let t = mk_object_with_map_proto cx reason props proto
+      let t = mk_object_with_proto cx reason ~props proto
         ~dict ~sealed:true ~exact:false in
       resolve t
 
@@ -555,7 +555,7 @@ let run cx trace ~use_op reason_op l u
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
           let _, props, dict, _ = shape in
-          let t = mk_object_with_map_proto cx reason props proto
+          let t = mk_object_with_proto cx reason ~props proto
             ?dict ~sealed:true ~exact:false
           in
           resolve t
@@ -727,7 +727,7 @@ let run cx trace ~use_op reason_op l u
           mk_object cx reason
         | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (reason, props, dict, _)) ->
-          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+          mk_object_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
         rec_flow_t cx trace (t, knot.default_t)
@@ -745,7 +745,7 @@ let run cx trace ~use_op reason_op l u
         | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
-          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+          mk_object_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed ~exact
         in
         rec_flow_t cx trace (t, knot.state_t)
@@ -791,7 +791,7 @@ let run cx trace ~use_op reason_op l u
       | None -> DefT (reason_op, AnyObjT)
       | Some (Unknown reason) -> DefT (reason, AnyObjT)
       | Some (Known (reason, props, dict, _)) ->
-        mk_object_with_map_proto cx reason props (ObjProtoT reason)
+        mk_object_with_proto cx reason ~props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
       in
       let props_t =
@@ -884,7 +884,7 @@ let run cx trace ~use_op reason_op l u
           reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        mk_object_with_map_proto cx reason props (class_type super)
+        mk_object_with_proto cx reason ~props (class_type super)
           ?dict ~exact ~sealed
       in
 

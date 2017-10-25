@@ -2646,9 +2646,9 @@ let default_flags = {
   frozen = false;
 }
 
-let mk_objecttype ?(flags=default_flags) dict map proto = {
+let mk_objecttype ?(flags=default_flags) dict pmap proto = {
   flags;
   dict_t = dict;
-  props_tmap = map;
+  props_tmap = pmap;
   proto_t = proto
 }

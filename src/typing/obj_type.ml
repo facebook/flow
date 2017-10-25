@@ -7,18 +7,15 @@
 
 open Type
 
-let mk_with_map_proto cx reason
-  ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict map proto =
+let mk_with_proto cx reason
+  ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict ?(props=SMap.empty) proto =
   let sealed =
     if sealed then Sealed
     else UnsealedInFile (Loc.source (Reason.loc_of_reason reason))
   in
   let flags = { sealed; exact; frozen } in
-  let pmap = Context.make_property_map cx map in
+  let pmap = Context.make_property_map cx props in
   DefT (reason, ObjT (mk_objecttype ~flags dict pmap proto))
-
-let mk_with_proto cx reason ?dict proto =
-  mk_with_map_proto cx reason ?dict SMap.empty proto
 
 let mk cx reason =
   mk_with_proto cx reason (ObjProtoT reason)

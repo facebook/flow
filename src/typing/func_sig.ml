@@ -142,7 +142,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
   let static =
     let props = SMap.singleton "$call" (Method knot) in
     let proto = FunProtoT reason in
-    Obj_type.mk_with_map_proto cx reason props proto
+    Obj_type.mk_with_proto cx reason ~props proto
   in
   let prototype =
     let reason = replace_reason_const RPrototype reason in
