@@ -323,7 +323,7 @@ let statictype cx s =
   (* Statics are not exact, because we allow width subtyping between them.
      Specifically, given class A and class B extends A, Class<B> <: Class<A>. *)
   let static =
-    Flow.mk_object_with_map_proto cx s.reason props s.super
+    Obj_type.mk_with_map_proto cx s.reason props s.super
       ~sealed:true ~exact:false
   in
   let open Type in

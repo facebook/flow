@@ -1587,7 +1587,7 @@ and statement cx = Ast.Statement.(
             let proto = ObjProtoT reason in
 
             type_exports,
-            Flow.mk_object_with_map_proto cx reason value_exports proto
+            Obj_type.mk_with_map_proto cx reason value_exports proto
         in
 
         let module_t =
@@ -2199,7 +2199,7 @@ and object_ cx reason ?(allow_sealed=true) props =
   let obj_proto = ObjProtoT reason in
   (* Return an object with specified sealing. *)
   let mk_object ?(proto=obj_proto) ?(sealed=false) map =
-    Flow.mk_object_with_map_proto cx reason ~sealed map proto
+    Obj_type.mk_with_map_proto cx reason ~sealed map proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
@@ -3580,7 +3580,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let proto = (ObjProtoT reason_props) in
   (* Return an object with specified sealing. *)
   let mk_object ?(sealed=false) map =
-    Flow.mk_object_with_map_proto cx reason_props ~sealed map proto
+    Obj_type.mk_with_map_proto cx reason_props ~sealed map proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
@@ -4341,7 +4341,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         Flow.flow cx (expression cx e, ObjTestProtoT (reason, t))
       )
     in
-    Flow.mk_object_with_proto cx reason proto
+    Obj_type.mk_with_proto cx reason proto
 
   | ("create", [ Expression e;
                  Expression (_, Object { Object.properties }) ]) ->
@@ -4371,7 +4371,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         let p = Field (t, Neutral) in
         SMap.add x p acc
     ) pmap SMap.empty in
-    Flow.mk_object_with_map_proto cx reason map proto
+    Obj_type.mk_with_map_proto cx reason map proto
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
     let arr_reason = mk_reason RArrayType loc in

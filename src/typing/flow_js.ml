@@ -1912,7 +1912,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
           let props = SMap.map (fun t -> Field (t, Neutral)) exports_tmap in
-          mk_object_with_map_proto cx reason
+          Obj_type.mk_with_map_proto cx reason
             ~sealed:true ~frozen:true props proto
       ) in
       rec_flow_t cx trace (cjs_exports, t)
@@ -1936,7 +1936,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }
       else None in
       let proto = ObjProtoT reason in
-      let ns_obj = mk_object_with_map_proto cx reason
+      let ns_obj = Obj_type.mk_with_map_proto cx reason
         ~sealed:true ~frozen:true ?dict props proto
       in
       rec_flow_t cx trace (ns_obj, t)
@@ -4664,7 +4664,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         value = l;
         dict_polarity = Neutral;
       } in
-      let o = mk_object_with_map_proto cx reason
+      let o = Obj_type.mk_with_map_proto cx reason
         SMap.empty
         (ObjProtoT reason)
         ~dict
@@ -4691,7 +4691,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* A rest result can not be exact if the source object is unsealed,
          because we may not have seen all the writes yet. *)
       let exact = sealed && flags.exact in
-      let o = mk_object_with_map_proto cx reason props proto ~sealed ~exact in
+      let o = Obj_type.mk_with_map_proto cx reason props proto ~sealed ~exact in
       rec_flow_t cx trace (o, t)
 
     | DefT (reason, InstanceT (_, super, _, insttype)),
@@ -4706,7 +4706,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let map = Context.find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
       let proto = ObjProtoT reason_op in
-      let obj_inst = mk_object_with_map_proto cx reason_op map proto in
+      let obj_inst = Obj_type.mk_with_map_proto cx reason_op map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
       let o = Tvar.mk_where cx reason_op (fun tvar ->
@@ -4726,12 +4726,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (DefT (reason, AnyObjT), t)
 
     | (ObjProtoT _, ObjRestT (reason, _, t)) ->
-      let obj = mk_object_with_proto cx reason l in
+      let obj = Obj_type.mk_with_proto cx reason l in
       rec_flow_t cx trace (obj, t)
 
     | DefT (_, (NullT | VoidT)), ObjRestT (reason, _, t) ->
       (* mirroring Object.assign semantics, treat null/void as empty objects *)
-      let o = mk_object cx reason in
+      let o = Obj_type.mk cx reason in
       rec_flow_t cx trace (o, t)
 
     (*************************************)
@@ -4740,7 +4740,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ObjT { props_tmap = mapr; _ }), ObjSealT (reason, t) ->
       let src_props = Context.find_props cx mapr in
       let new_obj =
-        mk_object_with_map_proto cx reason ~sealed:true src_props l
+        Obj_type.mk_with_map_proto cx reason ~sealed:true src_props l
       in
       rec_flow_t cx trace (new_obj, t)
 
@@ -7096,23 +7096,6 @@ and specialize_class cx trace ~reason_op ~reason_tapp c = function
       rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, Some ts, tvar))
     )
 
-and mk_object_with_proto cx reason ?dict proto =
-  mk_object_with_map_proto cx reason ?dict SMap.empty proto
-
-and mk_object_with_map_proto cx reason
-  ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict map proto =
-  let sealed =
-    if sealed then Sealed
-    else UnsealedInFile (Loc.source (loc_of_reason reason))
-  in
-  let flags = { sealed; exact; frozen } in
-  let pmap = Context.make_property_map cx map in
-  DefT (reason, ObjT (mk_objecttype ~flags dict pmap proto))
-
-and mk_object cx reason =
-  mk_object_with_proto cx reason (ObjProtoT reason)
-
-
 (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
    existing object receives properties from other objects. This pattern suffers
    from "races" in the type checker, since the object supposed to receive
@@ -7126,7 +7109,7 @@ and mk_object cx reason =
    other patterns wherever they are potentially racy. *)
 
 and spread_objects cx reason those =
-  let obj = mk_object cx reason in
+  let obj = Obj_type.mk cx reason in
   chain_objects cx reason obj those
 
 and chain_objects cx ?trace reason this those =
@@ -8222,7 +8205,7 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | ObjP ->
-    rec_flow_t cx trace (Type_filter.object_ ~mk_object_with_proto cx l, t)
+    rec_flow_t cx trace (Type_filter.object_ ~mk_object_with_proto:Obj_type.mk_with_proto cx l, t)
 
   | NotP ObjP ->
     rec_flow_t cx trace (Type_filter.not_object l, t)
@@ -10099,8 +10082,8 @@ and react_kit =
     ~get_builtin_typeapp
     ~mk_methodcalltype
     ~mk_instance
-    ~mk_object
-    ~mk_object_with_map_proto
+    ~mk_object:Obj_type.mk
+    ~mk_object_with_map_proto:Obj_type.mk_with_map_proto
     ~string_key
     ~mk_tvar:Tvar.mk
     ~mk_tvar_where:Tvar.mk_where
@@ -10127,7 +10110,7 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
       Ops.push reason_op;
       let config =
         let r = replace_reason_const (RReactElementProps None) reason_op in
-        mk_object_with_map_proto
+        Obj_type.mk_with_map_proto
           cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
       in
       rec_flow cx trace (component, ReactKitT (ReactCreateElementCall, reason_op,
@@ -10185,7 +10168,7 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
       Ops.push reason_op;
       let config =
         let r = replace_reason_const (RReactElementProps None) reason_op in
-        mk_object_with_map_proto
+        Obj_type.mk_with_map_proto
           cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
       in
       rec_flow cx trace (component,

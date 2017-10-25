@@ -414,7 +414,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   if checked then (
     SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
 
-    let init_exports = Flow.mk_object cx reason in
+    let init_exports = Obj_type.mk cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
 
     (* infer *)
