@@ -572,7 +572,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates FilenameSet.empty
 
   (* on notification, execute client commands or recheck files *)
-  let recheck genv env ?(force_focus=false) ~serve_ready_clients updates =
+  let recheck genv env ?(force_focus=false) updates =
     if FilenameSet.is_empty updates
     then env
     else begin
@@ -583,7 +583,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let workers = genv.ServerEnv.workers in
 
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus ~serve_ready_clients in
+      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
       (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
        * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
        * run it before we release the recheck lock *)
@@ -596,7 +596,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       env
     end
 
-  let respond ~genv ~env ~serve_ready_clients ~client { ServerProt.client_logging_context; command; } =
+  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
@@ -642,7 +642,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.FORCE_RECHECK (files, force_focus) ->
         marshal ();
         let updates = process_updates genv !env (SSet.of_list files) in
-        env := recheck genv !env ~force_focus ~serve_ready_clients updates
+        env := recheck genv !env ~force_focus updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         let options = { options with Options.
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -704,7 +704,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
     !env
 
-  let respond_to_persistent_client genv env ~serve_ready_clients client msg =
+  let respond_to_persistent_client genv env client msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
@@ -756,7 +756,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               if not (FilenameSet.is_empty new_focused_files)
               then
                 (* Rechecking will send errors to the clients *)
-                recheck genv env ~serve_ready_clients new_focused_files
+                recheck genv env new_focused_files
               else begin
                 (* This open doesn't trigger a recheck, but we'll still send down the errors *)
                 let errors, warnings, _ = get_collated_errors_separate_warnings env in
@@ -786,24 +786,15 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
     | _ -> true
 
-  let handle_client genv env ~serve_ready_clients ~waiting_requests client =
+  let handle_client genv env client =
     let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
-    let continuation env =
-      let env = respond ~genv ~env ~serve_ready_clients ~client command in
-      if should_close command then client.close ();
-      env in
-    match command.ServerProt.command with
-      | ServerProt.STATUS _
-      | ServerProt.FORCE_RECHECK _
-      | ServerProt.CONNECT ->
-        (* these commands must be processed after recheck is done *)
-        waiting_requests := continuation :: !waiting_requests;
-        env
-      | _ -> continuation env
+    let env = respond ~genv ~env ~client command in
+    if should_close command then client.close ();
+    env
 
-  let handle_persistent_client genv env ~serve_ready_clients client =
+  let handle_persistent_client genv env client =
     match Persistent_connection.input_value client with
     | None -> env
-    | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
+    | Some msg -> respond_to_persistent_client genv env client msg
 
 end
