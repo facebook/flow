@@ -987,7 +987,7 @@ let merge_env =
 
   let create_union cx loc name l1 l2 =
     let reason = mk_reason (RIdentifier name) loc in
-    Flow.mk_tvar_where cx reason (fun tvar ->
+    Tvar.mk_where cx reason (fun tvar ->
       Flow.flow cx (l1, UseT (Internal MergeEnv, tvar));
       Flow.flow cx (l2, UseT (Internal MergeEnv, tvar));
     )
@@ -1216,7 +1216,7 @@ let widen_env =
     then None
     else
       let reason = mk_reason (RIdentifier name) loc in
-      let tvar = Flow.mk_tvar cx reason in
+      let tvar = Tvar.mk cx reason in
       Flow.flow cx (specific, UseT (Internal WidenEnv, tvar));
       Flow.flow cx (tvar, UseT (Internal WidenEnv, general));
       Some tvar
@@ -1338,7 +1338,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
  *)
 let refine_with_preds cx loc preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
-    Flow.mk_tvar_where cx refi_reason (fun refined_type ->
+    Tvar.mk_where cx refi_reason (fun refined_type ->
       Flow.flow cx (orig_type, PredicateT (pred, refined_type)))
   in
   let refine_with_pred key pred acc =

@@ -36,7 +36,7 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
     cjs_export = Some export_t;
     has_every_named_export = false;
   } in
-  Flow.mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (
       export_t,
       CJSExtractNamedExportsT(reason, (reason_exports_module, exporttypes), t)
@@ -62,7 +62,7 @@ let mk_resource_module_t cx loc f =
 
 
 let add_require_tvar cx r loc =
-  let tvar = Flow.mk_tvar cx (mk_reason (RCustom r) loc) in
+  let tvar = Tvar.mk cx (mk_reason (RCustom r) loc) in
   Context.add_require cx r tvar
 
 (* given a module name, return associated tvar in module map (failing if not
@@ -84,7 +84,7 @@ let require_t_of_ref_unsafe cx m reason =
 let require cx module_ref loc =
   Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
   let reason = mk_reason (RCommonJSExports module_ref) loc in
-  Flow.mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (
       require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       CJSRequireT(reason, t)
@@ -102,7 +102,7 @@ let import ?reason cx module_ref loc =
 
 let import_ns cx reason module_ref loc =
   Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
-  Flow.mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (
       require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       ImportModuleNsT(reason, t)
@@ -119,16 +119,16 @@ let module_t_of_cx cx =
     | None ->
       let loc = Loc.({ none with source = Some (Context.file cx) }) in
       let reason = (Reason.mk_reason (RCustom "exports") loc) in
-      Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
+      Tvar.mk_where cx reason (fun t -> Context.add_module cx m t)
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with
   | None -> (
     let module_ref = Context.module_ref cx in
-    Context.add_module cx module_ref (Flow.mk_tvar_where cx reason f)
+    Context.add_module cx module_ref (Tvar.mk_where cx reason f)
   )
   | Some _ ->
-    Context.set_declare_module_t cx (Some (Flow.mk_tvar_where cx reason f))
+    Context.set_declare_module_t cx (Some (Tvar.mk_where cx reason f))
 
 (**
  * Before running inference, we assume that we're dealing with a CommonJS

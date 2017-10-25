@@ -124,29 +124,6 @@ let matching_sentinel_prop reason key sentinel_value =
 
 (**************************************************************)
 
-(* tvars *)
-
-let mk_tvar cx reason =
-  let tvar = mk_id () in
-  let graph = Context.graph cx in
-  Context.add_tvar cx tvar (Constraint.new_unresolved_root ());
-  (if Context.is_verbose cx then prerr_endlinef
-    "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
-    (Debug_js.string_of_reason cx reason));
-  OpenT (reason, tvar)
-
-let mk_tvar_where cx reason f =
-  let tvar = mk_tvar cx reason in
-  f tvar;
-  tvar
-
-(* This function is used in lieu of mk_tvar_where or mk_tvar when the reason
-   must be marked internal. This has the effect of not forcing annotations where
-   this type variable appears. See `assume_ground` and `assert_ground`. *)
-let mk_tvar_derivable_where cx reason f =
-  let reason = derivable_reason reason in
-  mk_tvar_where cx reason f
-
 (* Find the constraints of a type variable in the graph.
 
    Recall that type variables are either roots or goto nodes. (See
@@ -197,7 +174,7 @@ let not_linked (id1, _bounds1) (_id2, bounds2) =
 
 (* note: this is here instead of Env because of circular deps:
   Env is downstream of Flow_js due general utility funcs such as
-  Flow_js.mk_tvar and builtins services. If the flow algorithm can
+  Tvar.mk and builtins services. If the flow algorithm can
   be split away from these, then Env can be moved upstream and
   this code can be merged into it. *)
 
@@ -639,7 +616,7 @@ and assume_ground_id cx ~depth ids id =
    to other modules that are discovered during type checking, such as modules
    required by it, the module it provides, and so on). *)
 let mk_builtins cx =
-  let builtins = mk_tvar cx (builtin_reason (RCustom "module")) in
+  let builtins = Tvar.mk cx (builtin_reason (RCustom "module")) in
   Context.add_module cx Files.lib_module_ref builtins
 
 (* Local references to modules can be looked up. *)
@@ -670,7 +647,7 @@ module ImplicitTypeArgument = struct
     let reason = replace_reason (fun desc ->
       RTypeParam (typeparam.name, desc)
     ) reason_op in
-    mk_tvar cx reason
+    Tvar.mk cx reason
 end
 
 (* We maintain a stack of entries representing type applications processed
@@ -1494,7 +1471,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* With the same "slingshot" trick used by AnnotT, hold the lower bound
        * at bay until result itself gets concretized, and then flow the lower
        * bound to that concrete type. *)
-      let t = mk_tvar_where cx reason (fun t -> eval_destructor cx ~trace reason u d t) in
+      let t = Tvar.mk_where cx reason (fun t -> eval_destructor cx ~trace reason u d t) in
       let use_desc = false in
       rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, tout))
 
@@ -1873,7 +1850,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let source_exports = Context.find_exports cx source_exports.exports_tmap in
       let target_module_t =
         SMap.fold (fun export_name export_t target_module_t ->
-          mk_tvar_where cx reason (fun t -> rec_flow cx trace (
+          Tvar.mk_where cx reason (fun t -> rec_flow cx trace (
             export_t,
             ExportTypeT(reason, true, export_name, target_module_t, t)
           ))
@@ -1920,7 +1897,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) ->
 
       (* Copy props from the prototype *)
-      let module_t = mk_tvar_where cx reason (fun t ->
+      let module_t = Tvar.mk_where cx reason (fun t ->
         rec_flow cx trace (
           proto_t,
           CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes), t)
@@ -1953,7 +1930,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       (* Copy fields *)
-      let module_t = mk_tvar_where cx reason (fun t ->
+      let module_t = Tvar.mk_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
           false, (* skip_dupes *)
@@ -2083,11 +2060,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let import_t = (
         match import_kind with
         | ImportType ->
-          mk_tvar_where cx reason (fun tvar ->
+          Tvar.mk_where cx reason (fun tvar ->
             rec_flow cx trace (export_t, ImportTypeT(reason, "default", tvar))
           )
         | ImportTypeof ->
-          mk_tvar_where cx reason (fun tvar ->
+          Tvar.mk_where cx reason (fun tvar ->
             rec_flow cx trace (export_t, ImportTypeofT(reason, "default", tvar))
           )
         | ImportValue ->
@@ -2113,21 +2090,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let import_t = (
           match (import_kind, SMap.get export_name exports_tmap) with
           | (ImportType, Some t) ->
-            mk_tvar_where cx reason (fun tvar ->
+            Tvar.mk_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeT(reason, export_name, tvar))
             )
           | (ImportType, None) when has_every_named_export ->
             let t = AnyT.why reason in
-            mk_tvar_where cx reason (fun tvar ->
+            Tvar.mk_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeT(reason, export_name, tvar))
             )
           | (ImportTypeof, Some t) ->
-            mk_tvar_where cx reason (fun tvar ->
+            Tvar.mk_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeofT(reason, export_name, tvar))
             )
           | (ImportTypeof, None) when has_every_named_export ->
             let t = AnyT.why reason in
-            mk_tvar_where cx reason (fun tvar ->
+            Tvar.mk_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeofT(reason, export_name, tvar))
             )
           | (ImportValue, Some t) ->
@@ -2288,7 +2265,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match call_args_tlist with
         | (Arg obj)::(Arg cb)::[] ->
           let wrapped_obj = InternalT (IdxWrapper (reason_op, obj)) in
-          let callback_result = mk_tvar_where cx reason_op (fun t ->
+          let callback_result = Tvar.mk_where cx reason_op (fun t ->
             rec_flow cx trace (cb, CallT (reason_op, {
               call_this_t;
               call_args_tlist = [Arg wrapped_obj];
@@ -2297,7 +2274,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               call_strict_arity;
             }))
           ) in
-          let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
+          let unwrapped_t = Tvar.mk_where cx reason_op (fun t ->
             rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
           ) in
           let maybe_r = replace_reason (fun desc -> RMaybe desc) reason_op in
@@ -2338,36 +2315,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The set of valid uses of an idx() callback parameter. In general this
        should be limited to the various forms of property access operations. *)
     | InternalT (IdxWrapper (idx_reason, obj)), ReposLowerT (reason_op, use_desc, u) ->
-      let repositioned_obj = mk_tvar_where cx reason_op (fun t ->
+      let repositioned_obj = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (obj, ReposLowerT (reason_op, use_desc, UseT (UnknownUse, t)))
       ) in
       rec_flow cx trace (InternalT (IdxWrapper(idx_reason, repositioned_obj)), u)
 
     | InternalT (IdxWrapper (idx_reason, obj)), GetPropT (reason_op, propname, t_out) ->
-      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+      let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
       ) in
-      let prop_type = mk_tvar_where cx reason_op (fun t ->
+      let prop_type = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (de_maybed_obj, GetPropT (reason_op, propname, t))
       ) in
       rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
 
     | InternalT (IdxWrapper (idx_reason, obj)),
       GetPrivatePropT (reason_op, name, class_bindings, static, t_out) ->
-      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+      let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
       ) in
-      let prop_type = mk_tvar_where cx reason_op (fun t ->
+      let prop_type = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (de_maybed_obj,
         GetPrivatePropT (reason_op, name, class_bindings, static, t))
       ) in
       rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
 
     | InternalT (IdxWrapper (idx_reason, obj)), GetElemT (reason_op, prop, t_out) ->
-      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+      let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
       ) in
-      let prop_type = mk_tvar_where cx reason_op (fun t ->
+      let prop_type = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (de_maybed_obj, GetElemT (reason_op, prop, t))
       ) in
       rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
@@ -3133,7 +3110,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ ->
         (* Non-array non-any iterables *)
         let reason = reason_of_t l in
-        let element_tvar = mk_tvar cx reason in
+        let element_tvar = Tvar.mk cx reason in
         let iterable =
           let targs = [element_tvar; AnyT.why reason; AnyT.why reason] in
           get_builtin_typeapp cx
@@ -3396,7 +3373,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* NonstrictReturning lookups unify their result, but we don't want to
          unify with the tout tvar directly, so we create an indirection here to
          ensure we only supply lower bounds to tout. *)
-      let lookup_default = mk_tvar_where cx reason_op (fun tvar ->
+      let lookup_default = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow_t cx trace (tvar, tout)
       ) in
       let lookup_kind = NonstrictReturning (match l with
@@ -3988,7 +3965,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       let ops = Ops.clear () in
       let spec = extract_non_spread cx ~trace arg1 in
-      let mk_tvar f = mk_tvar cx (f reason_op) in
+      let mk_tvar f = Tvar.mk cx (f reason_op) in
       let knot = { React.CreateClass.
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
@@ -4118,7 +4095,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         BindT (reason_op, _, _) |
         CallT (reason_op, _)
       ) ->
-      let tvar = mk_tvar cx (
+      let tvar = Tvar.mk cx (
         replace_reason (fun desc ->
           RCustom (spf "%s used as a function" (string_of_desc desc))
         ) reason
@@ -4129,7 +4106,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              a callable property. Instead, we should flow the object to the
              output tvar. This nonstrict lookup will unify the object with
              `pass`, which flows to the output tvar. *)
-          let pass = mk_tvar_where cx reason_op (fun t ->
+          let pass = Tvar.mk_where cx reason_op (fun t ->
             rec_flow_t cx trace (t, call_tout)
           ) in
           NonstrictReturning (Some (l, pass))
@@ -4343,7 +4320,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_o = replace_reason_const RConstructorReturn reason in
       Ops.push reason_op;
       (* call this.constructor(args) *)
-      let ret = mk_tvar_where cx reason_op (fun t ->
+      let ret = Tvar.mk_where cx reason_op (fun t ->
         let funtype = mk_methodcalltype this args t in
         let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
@@ -4595,7 +4572,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
-      let funt = mk_tvar cx reason_lookup in
+      let funt = Tvar.mk cx reason_lookup in
       let strict =
         if instance.mixins then NonstrictReturning None
         else Strict reason_c
@@ -4806,7 +4783,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, InstanceT (_, super, _, insttype)),
       ObjRestT (reason_op, xs, t) ->
       (* Spread fields from super into an object *)
-      let obj_super = mk_tvar_where cx reason_op (fun tvar ->
+      let obj_super = Tvar.mk_where cx reason_op (fun tvar ->
         let u = ObjRestT (reason_op, xs, tvar) in
         rec_flow cx trace (super, ReposLowerT (reason, false, u))
       ) in
@@ -4818,7 +4795,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let obj_inst = mk_object_with_map_proto cx reason_op map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
-      let o = mk_tvar_where cx reason_op (fun tvar ->
+      let o = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
           ObjAssignFromT (reason_op, obj_super, tvar, ObjAssign)
@@ -4950,7 +4927,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_obj, ObjT o),
       MethodT (reason_call, reason_lookup, propref, funtype) ->
-      let t = mk_tvar_where cx reason_lookup (fun tout ->
+      let t = Tvar.mk_where cx reason_lookup (fun tout ->
         read_obj_prop cx trace o propref reason_obj reason_lookup tout
       ) in
       rec_flow cx trace (t, CallT (reason_call, funtype))
@@ -5276,7 +5253,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * apply, etc which look at the arguments a little earlier. If we delay
          * resolving the spread argument, then we sabotage them. So we resolve
          * it early *)
-        let t = mk_tvar_where cx reason_op (fun t ->
+        let t = Tvar.mk_where cx reason_op (fun t ->
           let resolve_to = ResolveSpreadsToCallT (funtype, t) in
           resolve_call_list cx ~trace ~use_op:FunCallParam reason_op call_args_tlist resolve_to
         ) in
@@ -5666,7 +5643,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
       let loc = loc_of_reason reason in
       let reason = mk_reason desc loc in
-      let static = mk_tvar cx reason in
+      let static = Tvar.mk cx reason in
       rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (static, ReposLowerT (reason, false, u))
 
@@ -5839,7 +5816,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           (* Create prop and link shadow props along the proto chain. *)
           let reason_prop = locationless_reason (RShadowProperty x) in
-          let t = mk_tvar cx reason_prop in
+          let t = Tvar.mk cx reason_prop in
           (match proto_ids with
           | [] -> ()
           | id::ids ->
@@ -5907,7 +5884,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
       let loc = loc_of_reason reason in
       let reason = mk_reason desc loc in
-      let static = mk_tvar cx reason in
+      let static = Tvar.mk cx reason in
       rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (static, u)
 
@@ -6755,7 +6732,7 @@ and subst =
         end
 
       | ExistsT reason ->
-        if force then mk_tvar cx reason
+        if force then Tvar.mk cx reason
         else t
 
       | DefT (reason, PolyT (xs, inner, _)) ->
@@ -6799,7 +6776,7 @@ and eval_selector cx ?trace reason curr_t s i =
   let evaluated = Context.evaluated cx in
   match IMap.get i evaluated with
   | None ->
-    mk_tvar_where cx reason (fun tvar ->
+    Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
       flow_opt cx ?trace (curr_t, match s with
       | Prop x -> GetPropT(reason, Named (reason, x), tvar)
@@ -6836,7 +6813,7 @@ and mk_type_destructor cx ~trace reason t d id =
    * the result. *)
   | OpenT _, Some t -> false, t
   | OpenT _, None ->
-    false, mk_tvar_where cx reason (fun tvar ->
+    false, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
       let x = TypeDestructorTriggerT (reason, d, tvar) in
       rec_flow_t cx trace (t, x);
@@ -6844,7 +6821,7 @@ and mk_type_destructor cx ~trace reason t d id =
     )
   | _, Some t -> true, t
   | _, None ->
-    true, mk_tvar_where cx reason (fun tvar ->
+    true, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
       eval_destructor cx ~trace reason t d tvar;
     )
@@ -7155,7 +7132,7 @@ and instantiate_poly_param_upper_bounds cx typeparams =
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
 and fix_this_class cx trace reason (r, i) =
-  let this = mk_tvar cx reason in
+  let this = Tvar.mk cx reason in
   let i = subst cx (SMap.singleton "this" this) i in
   rec_unify cx trace this i;
   DefT (r, ClassT i)
@@ -7198,7 +7175,7 @@ and canonicalize_imported_type cx trace reason t =
 
 (* Specialize This in a class. Eventually this causes substitution. *)
 and instantiate_this_class cx trace reason tc this =
-  mk_tvar_where cx reason (fun tvar ->
+  Tvar.mk_where cx reason (fun tvar ->
     rec_flow cx trace (tc, ThisSpecializeT (reason, this, tvar))
   )
 
@@ -7208,7 +7185,7 @@ and instantiate_this_class cx trace reason tc this =
 and specialize_class cx trace ~reason_op ~reason_tapp c = function
   | None -> c
   | Some ts ->
-    mk_tvar_where cx reason_op (fun tvar ->
+    Tvar.mk_where cx reason_op (fun tvar ->
       rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, Some ts, tvar))
     )
 
@@ -7254,7 +7231,7 @@ and chain_objects cx ?trace reason this those =
            Object.assign({}, obj). *)
         t, ObjSpreadAssign
     in
-    mk_tvar_where cx reason (fun t ->
+    Tvar.mk_where cx reason (fun t ->
       flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, kind));
     )
   ) this those in
@@ -8114,7 +8091,7 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
 and find_or_intro_shadow_prop cx trace x =
   let intro_shadow_prop id =
     let reason_prop = locationless_reason (RShadowProperty x) in
-    let t = mk_tvar cx reason_prop in
+    let t = Tvar.mk cx reason_prop in
     let p = Field (t, Neutral) in
     Context.set_prop cx id (internal_name x) p;
     t, p
@@ -8155,13 +8132,13 @@ and find_or_intro_shadow_prop cx trace x =
 
 (* filter out undefined from a type *)
 and filter_optional cx ?trace reason opt_t =
-  mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     flow_opt_t cx ?trace (opt_t, DefT (reason, OptionalT t))
   )
 
 (* filter out undefined and null from a type *)
 and filter_maybe cx ?trace reason maybe_t =
-  mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     flow_opt_t cx ?trace (maybe_t, DefT (reason, MaybeT t))
   )
 
@@ -8237,7 +8214,7 @@ and predicate cx trace t l p = match p with
 
   | AndP (p1,p2) ->
     let reason = replace_reason_const RAnd (reason_of_t t) in
-    let tvar = mk_tvar cx reason in
+    let tvar = Tvar.mk cx reason in
     rec_flow cx trace (l,PredicateT(p1,tvar));
     rec_flow cx trace (tvar,PredicateT(p2,t))
 
@@ -9449,7 +9426,7 @@ and multiflow_partial =
         (* If the rest parameter is consuming N elements, then drop N elements
          * from the rest parameter *)
         let rest_reason = reason_of_t rest_param in
-        mk_tvar_derivable_where cx rest_reason (fun tout ->
+        Tvar.mk_derivable_where cx rest_reason (fun tout ->
           let i = List.length rev_elems in
           rec_flow cx trace (rest_param, ArrRestT (orig_rest_reason, i, tout))
         )
@@ -9471,7 +9448,7 @@ and multiflow_partial =
       let arg_array_reason = replace_reason_const
         (RRestArray (desc_of_reason reason_op)) reason_op in
 
-      let arg_array = mk_tvar_where cx arg_array_reason (fun tout ->
+      let arg_array = Tvar.mk_where cx arg_array_reason (fun tout ->
         let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
         resolve_spread_list cx ~use_op ~reason_op:arg_array_reason elems resolve_to
       ) in
@@ -9626,7 +9603,7 @@ and finish_resolve_spread_list =
            have to do that pinning more carefully, and using an unresolved
            tvar instead of a union here doesn't conflict with those plans.
         *)
-        mk_tvar_where cx element_reason (fun tvar ->
+        Tvar.mk_where cx element_reason (fun tvar ->
           TypeExSet.elements tset |> List.iter (fun t ->
             flow cx (t, UseT (UnknownUse, tvar)))
         )
@@ -9697,7 +9674,7 @@ and finish_resolve_spread_list =
           let first = Nel.(hd (rev spread_reasons)) in
           let loc = Loc.btwn (loc_of_reason first) (loc_of_reason last) in
           let r = mk_reason RArray loc in
-          mk_tvar_where cx r (fun tvar ->
+          Tvar.mk_where cx r (fun tvar ->
             TypeExSet.elements tset
             |> List.iter (fun t -> flow cx (t, UseT (UnknownUse, tvar)))
           )
@@ -9851,7 +9828,7 @@ and string_key s reason =
 (* builtins, contd. *)
 
 and get_builtin cx ?trace x reason =
-  mk_tvar_where cx reason (fun builtin ->
+  Tvar.mk_where cx reason (fun builtin ->
     let propref = Named (reason, x) in
     flow_opt cx ?trace (builtins cx, GetPropT (reason, propref, builtin))
   )
@@ -9868,7 +9845,7 @@ and get_builtin_typeapp cx ?trace reason x ts =
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
   let c = reposition cx ?trace (loc_of_reason reason_tapp) c in
-  let t = mk_tvar cx reason_op in
+  let t = Tvar.mk cx reason_op in
   flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, Some ts, t));
   mk_instance cx ?trace (reason_of_t c) t
 
@@ -9878,13 +9855,13 @@ and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
 and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
   if for_type then
     (* Make an annotation. *)
-    let source = mk_tvar_where cx instance_reason (fun t ->
+    let source = Tvar.mk_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
       flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT t))
     ) in
     AnnotT (open_tvar source, use_desc)
   else
-    mk_tvar_derivable_where cx instance_reason (fun t ->
+    Tvar.mk_derivable_where cx instance_reason (fun t ->
       flow_opt_t cx ?trace (c, class_type t)
     )
 
@@ -9912,8 +9889,8 @@ and reposition cx ?trace loc ?desc t =
       | None ->
         (* Create a fresh tvar which can be passed in `seen` *)
         let mk_tvar_where = if is_derivable_reason r
-          then mk_tvar_derivable_where
-          else mk_tvar_where
+          then Tvar.mk_derivable_where
+          else Tvar.mk_where
         in
         mk_tvar_where cx reason (fun tvar ->
           let t' = recurse (IMap.add id tvar seen) t in
@@ -9931,8 +9908,8 @@ and reposition cx ?trace loc ?desc t =
       | Some t -> t
       | None ->
         let mk_tvar_where = if is_derivable_reason r
-          then mk_tvar_derivable_where
-          else mk_tvar_where
+          then Tvar.mk_derivable_where
+          else Tvar.mk_where
         in
         mk_tvar_where cx reason (fun tvar ->
           Cache.(repos_cache := Repos_cache.add reason t tvar !repos_cache);
@@ -9948,7 +9925,7 @@ and reposition cx ?trace loc ?desc t =
          is just as transparent as its resulting tvar.) *)
       let reason = mod_reason (reason_of_t t) in
       let use_desc = Option.is_some desc in
-      mk_tvar_where cx reason (fun tvar ->
+      Tvar.mk_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
       )
   | DefT (r, MaybeT t) ->
@@ -9984,7 +9961,7 @@ and reposition cx ?trace loc ?desc t =
 and mk_typeof_annotation cx ?trace reason ?(use_desc=false) t =
   match t with
   | OpenT _ ->
-    let source = mk_tvar_where cx reason (fun t' ->
+    let source = Tvar.mk_where cx reason (fun t' ->
       flow_opt cx ?trace (t, BecomeT (reason, t'))
     ) in
     AnnotT (open_tvar source, use_desc)
@@ -10164,8 +10141,8 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
   let reason = reason_of_use_t u in
   let mk_tvar_where =
     if derivable
-    then mk_tvar_derivable_where
-    else mk_tvar_where
+    then Tvar.mk_derivable_where
+    else Tvar.mk_where
   in
   mk_tvar_where cx reason (fun tvar ->
     flow_opt cx ?trace (tvar, u)
@@ -10218,8 +10195,8 @@ and react_kit =
     ~mk_object
     ~mk_object_with_map_proto
     ~string_key
-    ~mk_tvar
-    ~mk_tvar_where
+    ~mk_tvar:Tvar.mk
+    ~mk_tvar_where:Tvar.mk_where
     ~mk_type_destructor
     ~sealed_in_op
     ~union_of_ts
@@ -10227,8 +10204,8 @@ and react_kit =
 
 and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
-    let tin = mk_tvar cx reason_op in
-    let tvar = mk_tvar cx reason_op in
+    let tin = Tvar.mk cx reason_op in
+    let tvar = Tvar.mk cx reason_op in
     run_compose cx trace reason_op reverse args spread_arg tin tvar;
     let funt = FunT (
       dummy_static reason_op,
@@ -10268,7 +10245,7 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
        * component position. *)
       let expected_element =
         get_builtin_typeapp cx ~trace (reason_of_t element)
-          "React$Element" [mk_tvar cx reason_op] in
+          "React$Element" [Tvar.mk cx reason_op] in
       (* Flow the element arg to our expected element. *)
       rec_flow_t cx trace (element, expected_element);
       (* Flow our expected element to the return type. *)
@@ -10278,7 +10255,7 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
     | element::config::children ->
       Ops.push reason_op;
       (* Create a tvar for our component. *)
-      let component = mk_tvar cx reason_op in
+      let component = Tvar.mk cx reason_op in
       (* Flow the element arg to the element type we expect. *)
       rec_flow_t cx trace (
         element,
@@ -10337,7 +10314,7 @@ and run_compose cx trace reason_op reverse fns spread_fn tin tout =
      * last after that. *)
     | false, fn::fns, _ ->
       let reason = reason_of_t fn in
-      let tvar = mk_tvar_where cx reason (fun tvar ->
+      let tvar = Tvar.mk_where cx reason (fun tvar ->
         run_compose cx trace reason_op reverse fns spread_fn tin tvar) in
       rec_flow cx trace (fn,
         CallT (reason, mk_functioncalltype reason_op[Arg tvar] tout))
@@ -10346,7 +10323,7 @@ and run_compose cx trace reason_op reverse fns spread_fn tin tout =
      * functions in our array after we call the head function. *)
     | true, fn::fns, _ ->
       let reason = reason_of_t fn in
-      let tvar = mk_tvar_where cx reason (fun tvar ->
+      let tvar = Tvar.mk_where cx reason (fun tvar ->
         rec_flow cx trace (fn,
           CallT (reason, mk_functioncalltype reason_op[Arg tin] tvar))) in
       run_compose cx trace reason_op reverse fns spread_fn tvar tout
@@ -10752,7 +10729,7 @@ and object_kit =
              * parameter instead. *)
             | Some (t1, _), Some (t2, _) ->
               (* Use CondT to replace void with t1. *)
-              let t = mk_tvar_where cx reason (fun tvar ->
+              let t = Tvar.mk_where cx reason (fun tvar ->
                 rec_flow cx trace (filter_optional cx ~trace reason t1,
                   CondT (reason, t2, tvar))
               ) in
@@ -11495,7 +11472,7 @@ let enforce_strict cx id required =
 let mk_default cx reason ~expr = Default.fold
   ~expr:(expr cx)
   ~cons:(fun t1 t2 ->
-    mk_tvar_where cx reason (fun tvar ->
+    Tvar.mk_where cx reason (fun tvar ->
       flow_t cx (t1, tvar);
       flow_t cx (t2, tvar)))
   ~selector:(fun r t sel ->

@@ -33,10 +33,6 @@ module Cache: sig
   val summarize_flow_constraint: unit -> (string * int) list
 end
 
-val mk_tvar: Context.t -> reason -> Type.t
-val mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
-val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
-
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
 val resolve_spread_list:

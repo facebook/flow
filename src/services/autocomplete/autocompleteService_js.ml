@@ -238,7 +238,7 @@ let autocomplete_jsx
   docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
-    let props_object = mk_tvar_where cx reason (fun tvar ->
+    let props_object = Tvar.mk_where cx reason (fun tvar ->
       flow cx (
         component_instance,
         Type.GetPropT (reason, Type.Named (reason, "props"), tvar))

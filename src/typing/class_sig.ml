@@ -436,7 +436,7 @@ let mk_super cx tparams_map c targs = Type.(
          be implicitly instantiated. We need to do this before we try to
          this-specialize `c`. *)
       let reason = reason_of_t c in
-      let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+      let c = Tvar.mk_derivable_where cx reason (fun tvar ->
         Flow.flow cx (c, SpecializeT (reason, reason, None, None, tvar))
       ) in
       this_typeapp c this None
@@ -467,7 +467,7 @@ let mk_mixins cx tparams_map (r, id, targs) =
     let lookup_mode = Env.LookupMode.ForValue in
     Anno.convert_qualification ~lookup_mode cx "mixins" id
   in
-  let props_bag = Flow.mk_tvar_derivable_where cx r (fun tvar ->
+  let props_bag = Tvar.mk_derivable_where cx r (fun tvar ->
     Flow.flow cx (i, Type.MixinT (r, tvar))
   ) in
   mk_super cx tparams_map props_bag targs

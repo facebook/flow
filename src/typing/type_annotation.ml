@@ -114,7 +114,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let reason = mk_reason RTupleType loc in
   let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
-  | [] -> Flow.mk_tvar cx element_reason
+  | [] -> Tvar.mk cx element_reason
   | [t] -> t
   | t0::t1::ts ->
     (* If a tuple should be viewed as an array, what would the element type of
@@ -158,7 +158,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let m = convert_qualification cx "type-annotation" qualification in
   let _, name = id in
   let reason = mk_reason (RCustom name) loc in
-  let t = Flow.mk_tvar_where cx reason (fun t ->
+  let t = Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
   ) in
   let typeParameters = extract_type_param_instantiations typeParameters in
@@ -322,7 +322,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) loc
           in
-          Flow.mk_tvar_where cx reason (fun t ->
+          Tvar.mk_where cx reason (fun t ->
             Flow.flow cx (remote_module_t, CJSRequireT(reason, t))
           )
       | _ ->
@@ -684,7 +684,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           if name = "__proto__" && not (_method || optional) && variance = None
           then
             let reason = mk_reason RPrototype (fst value) in
-            let proto = Flow.mk_tvar_where cx reason (fun tout ->
+            let proto = Tvar.mk_where cx reason (fun tout ->
               Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
             props, Some (Flow.mk_typeof_annotation cx reason proto)
@@ -798,7 +798,7 @@ let rec convert cx tparams_map = Ast.Type.(function
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty tparams_map in
   let reason = derivable_reason (mk_reason RExistential loc) in
-  if force then Flow.mk_tvar cx reason
+  if force then Tvar.mk cx reason
   else ExistsT reason
 )
 
@@ -809,7 +809,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let name = ident_name id in
     let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
     let reason = mk_reason desc loc in
-    Flow.mk_tvar_where cx reason (fun t ->
+    Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
     )
 
@@ -822,7 +822,7 @@ and mk_type cx tparams_map reason = function
       let t =
         if Context.is_weak cx
         then AnyT.why reason
-        else Flow.mk_tvar cx reason
+        else Tvar.mk cx reason
       in
       Hashtbl.replace (Context.annot_table cx) (loc_of_reason reason) t;
       t

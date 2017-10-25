@@ -138,7 +138,7 @@ let generate_tests cx f x =
   })
 
 let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
-  let knot = Flow.mk_tvar cx reason in
+  let knot = Tvar.mk cx reason in
   let static =
     let props = SMap.singleton "$call" (Method knot) in
     let proto = FunProtoT reason in
@@ -267,8 +267,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   let yield_t, next_t =
     if kind = Generator || kind = AsyncGenerator then
-      Flow.mk_tvar cx (replace_reason_const (RCustom "yield") reason),
-      Flow.mk_tvar cx (replace_reason_const (RCustom "next") reason)
+      Tvar.mk cx (replace_reason_const (RCustom "yield") reason),
+      Tvar.mk cx (replace_reason_const (RCustom "next") reason)
     else
       DefT (replace_reason_const (RCustom "no yield") reason, MixedT Mixed_everything),
       DefT (replace_reason_const (RCustom "no next") reason, MixedT Mixed_everything)

@@ -380,7 +380,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
     Reason.locationless_reason desc
   in
 
-  let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
+  let local_exports_var = Tvar.mk cx reason_exports_module in
 
   let module_scope = Scope.(
     let scope = fresh ~var_scope_kind:Module () in

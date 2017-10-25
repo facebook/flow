@@ -86,7 +86,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
     |> Modulename.to_string
     |> Reason.internal_module_name
   in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.Strict reason) from_t;
 
@@ -103,7 +103,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
 
