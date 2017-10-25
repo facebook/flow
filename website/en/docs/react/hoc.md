@@ -106,7 +106,7 @@ are correct.
 > )(MyComponent);
 > ```
 >
-> Flow will not require you to add type annotations annotations, but it is a
+> Flow will not require you to add type annotations, but it is a
 > smart idea to add annotations anyway. By adding type annotations you will get
 > better error messages when something is broken. An annotated version of a
 > `mapProps()` usage would look like:
