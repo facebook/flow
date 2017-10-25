@@ -7,7 +7,6 @@
 
 (* infer phase services *)
 
-module Flow = Flow_js
 module FlowError = Flow_error
 module ImpExp = Import_export
 module Utils = Utils_js
