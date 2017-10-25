@@ -57,9 +57,6 @@ val check_polarity:
 
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
-val mk_objecttype : ?flags:Type.flags ->
-  Type.dicttype option -> Type.Properties.id -> Type.t -> Type.objtype
-
 val mk_object_with_proto : Context.t -> reason ->
   ?dict:Type.dicttype ->
   Type.t -> Type.t

@@ -668,7 +668,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       frozen = false
     } in
     DefT (mk_reason reason_desc loc,
-      ObjT (Flow.mk_objecttype ~flags dict pmap proto))
+      ObjT (mk_objecttype ~flags dict pmap proto))
   in
   let property loc prop props proto =
     match prop with

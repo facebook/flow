@@ -2629,3 +2629,26 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
    to the global object, which is typically unintended. *)
 let mk_functiontype reason = mk_methodtype (global_this reason)
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
+
+(* An object type has two flags, sealed and exact. A sealed object type cannot
+   be extended. An exact object type accurately describes objects without
+   "forgeting" any properties: so to extend an object type with optional
+   properties, the object type must be exact. Thus, as an invariant, "not exact"
+   logically implies "sealed" (and by contrapositive, "not sealed" implies
+   "exact"; in other words, exact and sealed cannot both be false).
+
+   Types of object literals are exact, but can be sealed or unsealed. Object
+   type annotations are sealed but not exact. *)
+
+let default_flags = {
+  sealed = UnsealedInFile None;
+  exact = true;
+  frozen = false;
+}
+
+let mk_objecttype ?(flags=default_flags) dict map proto = {
+  flags;
+  dict_t = dict;
+  props_tmap = map;
+  proto_t = proto
+}

@@ -326,7 +326,7 @@ let rec normalize_type_impl cx ids t = match t with
       in
       let proto = Locationless.AnyT.t in
       DefT (locationless_reason RObject,
-        ObjT (Flow_js.mk_objecttype dict pmap proto)
+        ObjT (mk_objecttype dict pmap proto)
       )
 
   | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) ->
