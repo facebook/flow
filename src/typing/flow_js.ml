@@ -10079,13 +10079,8 @@ and react_kit =
     ~rec_flow_t
     ~get_builtin_type
     ~get_builtin_typeapp
-    ~mk_methodcalltype
     ~mk_instance
-    ~mk_object:Obj_type.mk
-    ~mk_object_with_proto:Obj_type.mk_with_proto
     ~string_key
-    ~mk_tvar:Tvar.mk
-    ~mk_tvar_where:Tvar.mk_where
     ~mk_type_destructor
     ~sealed_in_op
     ~union_of_ts

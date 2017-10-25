@@ -16,13 +16,8 @@ let run cx trace ~use_op reason_op l u
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
-  ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
-  ~(mk_object: Context.t -> reason -> Type.t)
-  ~(mk_object_with_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> ?props:Type.Properties.t -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
-  ~(mk_tvar: Context.t -> reason -> Type.t)
-  ~(mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t)
   ~(mk_type_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> bool * Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
   ~(union_of_ts: reason -> Type.t list -> Type.t)
@@ -141,7 +136,7 @@ let run cx trace ~use_op reason_op l u
       | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (reason, literal)));
     (* Create a type variable which will represent the specific intrinsic we
      * find in the intrinsics map. *)
-    let intrinsic = mk_tvar cx reason in
+    let intrinsic = Tvar.mk cx reason in
     (* Get the intrinsic from the map. *)
     rec_flow cx trace (intrinsics, GetPropT (reason, (match literal with
       | Literal (_, name) ->
@@ -293,12 +288,12 @@ let run cx trace ~use_op reason_op l u
      * empty object. *)
     let config =
       let reason = reason_of_t config in
-      let empty_object = mk_object_with_proto
+      let empty_object = Obj_type.mk_with_proto
         cx reason
         ~sealed:true ~exact:true ~frozen:true
         (ObjProtoT reason)
       in
-      mk_tvar_where cx reason (fun tout ->
+      Tvar.mk_where cx reason (fun tout ->
         rec_flow cx trace (filter_maybe cx ~trace reason config,
           CondT (reason, empty_object, tout))
       )
@@ -306,7 +301,7 @@ let run cx trace ~use_op reason_op l u
     (* Create the optional children input type from the children arguments. *)
     let children = coerce_children_args children_args in
     (* Create a type variable for our props. *)
-    let props = mk_tvar_where cx reason_op tin_to_props in
+    let props = Tvar.mk_where cx reason_op tin_to_props in
     (* If we only want to check the shape of the props then wrap our final
      * props type in a ShapeT. *)
     let props = if shape
@@ -356,7 +351,7 @@ let run cx trace ~use_op reason_op l u
     let defaults = match component with
       | DefT (_, ClassT _)
       | DefT (_, FunT _) ->
-        Some (mk_tvar_where cx reason_op (fun tvar ->
+        Some (Tvar.mk_where cx reason_op (fun tvar ->
           let name = "defaultProps" in
           let reason_missing =
             replace_reason_const (RMissingProperty (Some name)) reason_op in
@@ -492,7 +487,7 @@ let run cx trace ~use_op reason_op l u
       } in
       let proto = ObjProtoT (locationless_reason RObjectClassName) in
       let reason = replace_reason_const RObjectType reason_op in
-      let t = mk_object_with_proto cx reason ~props proto
+      let t = Obj_type.mk_with_proto cx reason ~props proto
         ~dict ~sealed:true ~exact:false in
       resolve t
 
@@ -555,7 +550,7 @@ let run cx trace ~use_op reason_op l u
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
           let _, props, dict, _ = shape in
-          let t = mk_object_with_proto cx reason ~props proto
+          let t = Obj_type.mk_with_proto cx reason ~props proto
             ?dict ~sealed:true ~exact:false
           in
           resolve t
@@ -640,7 +635,7 @@ let run cx trace ~use_op reason_op l u
 
     let resolve_call this tool t =
       let reason = reason_of_t t in
-      let return_t = mk_tvar cx reason in
+      let return_t = Tvar.mk cx reason in
       let funcall = mk_methodcalltype this [] return_t in
       rec_flow cx trace (t, CallT (reason, funcall));
       resolve tool return_t
@@ -724,10 +719,10 @@ let run cx trace ~use_op reason_op l u
         let t = match acc with
         | None ->
           let reason = replace_reason_const RReactDefaultProps reason_op in
-          mk_object cx reason
+          Obj_type.mk cx reason
         | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (reason, props, dict, _)) ->
-          mk_object_with_proto cx reason ~props (ObjProtoT reason)
+          Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
         rec_flow_t cx trace (t, knot.default_t)
@@ -740,12 +735,12 @@ let run cx trace ~use_op reason_op l u
         let t = match acc with
         | None ->
           let reason = replace_reason_const RReactState reason_op in
-          mk_object cx reason
+          Obj_type.mk cx reason
         | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
-          mk_object_with_proto cx reason ~props (ObjProtoT reason)
+          Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed ~exact
         in
         rec_flow_t cx trace (t, knot.state_t)
@@ -791,7 +786,7 @@ let run cx trace ~use_op reason_op l u
       | None -> DefT (reason_op, AnyObjT)
       | Some (Unknown reason) -> DefT (reason, AnyObjT)
       | Some (Known (reason, props, dict, _)) ->
-        mk_object_with_proto cx reason ~props (ObjProtoT reason)
+        Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
       in
       let props_t =
@@ -884,7 +879,7 @@ let run cx trace ~use_op reason_op l u
           reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        mk_object_with_proto cx reason ~props (class_type super)
+        Obj_type.mk_with_proto cx reason ~props (class_type super)
           ?dict ~exact ~sealed
       in
 
