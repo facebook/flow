@@ -276,12 +276,12 @@ let rec normalize_type_impl cx ids t = match t with
       let config = BoundT config_tp in
       let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let instance = fake_instance "React$Element" in
         typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let component_class =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let instance = fake_instance "ReactClass" in
         typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
@@ -291,13 +291,13 @@ let rec normalize_type_impl cx ids t = match t with
         fake_fun params_names param_ts None react_element
       in
       let t1 =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let params_names = [Some "name"; Some "config"; Some "children"] in
         let param_ts = [component_class; config; any] in
         poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       let t2 =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let params_names = [Some "fn"; Some "config"; Some "children"] in
         let param_ts = [stateless_functional_component; config; any] in
         poly_type id [config_tp] (fake_fun params_names param_ts None react_element)

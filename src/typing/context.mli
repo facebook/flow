@@ -168,3 +168,4 @@ val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
 (* constructors *)
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id
 val make_export_map: t -> Type.Exports.t -> Type.Exports.id
+val make_nominal: t -> int

@@ -437,6 +437,11 @@ let make_export_map cx tmap =
   add_export_map cx id tmap;
   id
 
+let make_nominal cx =
+  let nominal = Reason.mk_id () in
+  add_nominal_id cx nominal;
+  nominal
+
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
   set_envs cx (IMap.union (envs cx_other) (envs cx));

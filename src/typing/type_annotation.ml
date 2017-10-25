@@ -621,7 +621,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         def_reason = reason;
       }))
   in
-  let id = Flow.mk_nominal cx in
+  let id = Context.make_nominal cx in
   poly_type id tparams ft
 
 | loc, Object { Object.exact; properties } ->

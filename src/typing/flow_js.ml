@@ -3547,7 +3547,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let super = ObjProtoT r in
       let instance = DefT (r, InstanceT (static, super, [], insttype)) in
       rec_flow cx trace (
-        poly_type (mk_nominal cx) xs (this_class_type instance),
+        poly_type (Context.make_nominal cx) xs (this_class_type instance),
         UseT (UnknownUse, tvar)
       )
 
@@ -6636,13 +6636,6 @@ and generate_tests =
 (*********************)
 (* inheritance utils *)
 (*********************)
-
-and mk_nominal cx =
-  let nominal = mk_id () in
-  Context.add_nominal_id cx nominal;
-  (if Context.is_verbose cx then prerr_endlinef
-      "NOM %d %s" nominal (Debug_js.string_of_file cx));
-  nominal
 
 and flow_type_args cx trace pmap tmap1 tmap2 =
   tmap1 |> SMap.iter (fun x t1 ->

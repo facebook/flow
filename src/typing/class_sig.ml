@@ -422,7 +422,7 @@ let classtype cx ?(check_polarity=true) x =
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then class_type this else this_class_type this in
-  poly_type (Flow.mk_nominal cx) tparams t
+  poly_type (Context.make_nominal cx) tparams t
 
 let mk_super cx tparams_map c targs = Type.(
   (* A super class must be parameterized by This, so that it can be
@@ -529,7 +529,7 @@ let mk cx _loc reason self ~expr =
   in
 
   let class_sig =
-    let id = Flow.mk_nominal cx in
+    let id = Context.make_nominal cx in
     let extends =
       mk_extends cx tparams_map ~expr (superClass, superTypeParameters)
     in
@@ -715,7 +715,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     else tparams, tparams_map in
 
   let iface_sig =
-    let id = Flow.mk_nominal cx in
+    let id = Context.make_nominal cx in
     let extends = List.map
       (mk_interface_super cx structural tparams_map)
       (extract_extends cx structural extends)
