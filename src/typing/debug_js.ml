@@ -68,19 +68,23 @@ let rec _json_of_t json_cx t =
     check_depth _json_of_t_impl json_cx t
   )
 
+and _json_of_tvar json_cx id = Hh_json.(
+  [
+    "id", int_ id
+  ] @
+  if ISet.mem id json_cx.stack then []
+  else [
+    "node", json_of_node json_cx id
+  ]
+)
+
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
     "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
-  | OpenT (_, id) -> [
-      "id", int_ id
-    ] @
-    if ISet.mem id json_cx.stack then []
-    else [
-      "node", json_of_node json_cx id
-    ]
+  | OpenT (_, id) -> _json_of_tvar json_cx id
 
   | DefT (_, NumT lit) ->
     begin match lit with
@@ -264,8 +268,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT (t, use_desc) -> [
-      "assume", _json_of_t json_cx t;
+  | AnnotT ((_, id), use_desc) ->
+    (_json_of_tvar json_cx id) @ [
       "useDesc", JSON_Bool use_desc;
     ]
 
@@ -1677,8 +1681,8 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
-  | AnnotT (source, use_desc) -> p t ~reason:false
-      ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
+  | AnnotT ((_, id), use_desc) ->
+    p ~extra:(spf "use_desc=%b, %s" use_desc (tvar id)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
   | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t

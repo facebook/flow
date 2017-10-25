@@ -65,8 +65,7 @@ class ['a] t = object(self)
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
 
-  | AnnotT (t, _) ->
-    self#type_ cx pole_TODO acc t
+  | AnnotT ((r, id), _) -> self#tvar cx pole_TODO acc r id
 
   | OpaqueT (_, ot) ->
     let {

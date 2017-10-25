@@ -43,6 +43,7 @@ let next_class_name env =
   env.next_class_name <- id + 1;
   spf "Class%d" id
 let resolve_type t env = Flow_js.resolve_type env.flow_cx t
+let resolve_tvar tvar env = Flow_js.resolve_tvar env.flow_cx tvar
 let set_class_name class_id name env =
   {env with class_names = IMap.add class_id name env.class_names;}
 let to_string env = Buffer.contents env.buf
@@ -146,7 +147,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AnnotT (t, _) -> gen_type t env
+  | AnnotT (tvar, _) -> gen_type (resolve_tvar tvar env) env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
@@ -292,7 +293,7 @@ let rec gen_type t env = Type.(
     add_str "}" env
   )
   | DefT (_, OptionalT t) -> add_str "void | " env |> gen_type t
-  | OpenT _ -> gen_type (resolve_type t env) env
+  | OpenT tvar -> gen_type (resolve_tvar tvar env) env
   | DefT (_, PolyT (tparams, t, _)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | InternalT (ReposUpperT (_, t)) -> gen_type t env

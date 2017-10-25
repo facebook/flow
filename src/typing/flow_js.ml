@@ -522,23 +522,25 @@ let rec merge_type cx =
       create_union (UnionRep.make t1 t2 [])
 
 and resolve_type cx = function
-  | OpenT (_, id) ->
-      let ts = possible_types cx id in
-      (* The list of types returned by possible_types is often empty, and the
-         most common reason is that we don't have enough type coverage to
-         resolve id. Thus, we take the unit of merging to be `any`. (Something
-         similar happens when summarizing exports in ContextOptimizer.)
-
-         In the future, we might report errors in some cases where
-         possible_types returns an empty list: e.g., when we detect unreachable
-         code, or even we don't have enough type coverage. Irrespective of these
-         changes, the above decision would continue to make sense: as errors
-         become stricter, type resolution should become even more lenient to
-         improve failure tolerance.  *)
-      List.fold_left (fun u t ->
-        merge_type cx (t, u)
-      ) Locationless.AnyT.t ts
+  | OpenT tvar -> resolve_tvar cx tvar
   | t -> t
+
+and resolve_tvar cx (_, id) =
+  let ts = possible_types cx id in
+  (* The list of types returned by possible_types is often empty, and the
+     most common reason is that we don't have enough type coverage to
+     resolve id. Thus, we take the unit of merging to be `any`. (Something
+     similar happens when summarizing exports in ContextOptimizer.)
+
+     In the future, we might report errors in some cases where
+     possible_types returns an empty list: e.g., when we detect unreachable
+     code, or even we don't have enough type coverage. Irrespective of these
+     changes, the above decision would continue to make sense: as errors
+     become stricter, type resolution should become even more lenient to
+     improve failure tolerance.  *)
+  List.fold_left (fun u t ->
+    merge_type cx (t, u)
+  ) Locationless.AnyT.t ts
 
 (** The following functions do "shallow" walks over types, respectively from
     requires and from exports, in order to report missing annotations. There are
@@ -981,10 +983,10 @@ module ResolvableTypeJob = struct
         else IMap.add id (OpenUnresolved (log_unresolved, id)) acc
       end
 
-    | AnnotT (source, _) ->
-      let _, id = open_tvar source in
+    | AnnotT (tvar, _) ->
+      let _, id = tvar in
       if IMap.mem id acc then acc
-      else IMap.add id (Binding source) acc
+      else IMap.add id (Binding (OpenT tvar)) acc
 
     | ThisTypeAppT (_, poly_t, _, targs_opt) ->
       let targs = match targs_opt with | None -> [] | Some targs -> targs in
@@ -1586,8 +1588,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
-    | AnnotT (source_t, _), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      rec_flow cx trace (source_t, u)
+    | AnnotT (tvar, _), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      rec_flow cx trace (OpenT tvar, u)
 
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, DefT (r, IntersectionT rep), u)) ->
@@ -1678,14 +1680,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (source_t, use_desc)) ->
-      let reason = reason_of_t source_t in
-      rec_flow cx trace (source_t, ReposUseT (reason, use_desc, use_op, l))
+    | _, UseT (use_op, AnnotT (tvar, use_desc)) ->
+      let reason, _ = tvar in
+      rec_flow cx trace (OpenT tvar, ReposUseT (reason, use_desc, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT (source_t, use_desc), u ->
+    | AnnotT (tvar, use_desc), u ->
+      let source_t = OpenT tvar in
+      (* TODO: directly derive loc and desc from the reason of tvar *)
       let loc = loc_of_t source_t in
       let desc = if use_desc then Some (desc_of_t source_t) else None in
       rec_flow cx trace (reposition ~trace cx loc ?desc source_t, u)
@@ -6846,12 +6850,12 @@ and eval_destructor cx ~trace reason t d tout = match t with
 (* The type this annotation resolves to might be a union-like type which
    requires special handling (see below). However, the tout inside the
    AnnotT might not be resolved yet. *)
-| AnnotT (t, _) ->
+| AnnotT (tvar, _) ->
+  let _, id = tvar in
   (* Use full type resolution to wait for the tout to become resolved. *)
-  let _, id = open_tvar t in
   let k = tvar_with_constraint cx ~trace
     (choice_kit_use reason (EvalDestructor (id, d, tout))) in
-  resolve_bindings_init cx trace reason [(id, t)] k
+  resolve_bindings_init cx trace reason [(id, OpenT tvar)] k
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.
@@ -7884,7 +7888,7 @@ and optimize_spec cx = function
 and guess_and_record_sentinel_prop cx ts =
 
   let props_of_object = function
-    | AnnotT (OpenT (_, id), _) ->
+    | AnnotT ((_, id), _) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
@@ -7895,7 +7899,7 @@ and guess_and_record_sentinel_prop cx ts =
     | _ -> SMap.empty in
 
   let is_singleton_type = function
-    | AnnotT (OpenT (_, id), _) ->
+    | AnnotT ((_, id), _) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_,
@@ -7925,7 +7929,7 @@ and guess_and_record_sentinel_prop cx ts =
     (* Record the guessed sentinel properties for each object *)
     let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
     List.iter (function
-      | AnnotT (OpenT (_, id), _) ->
+      | AnnotT ((_, id), _) ->
         let constraints = find_graph cx id in
         begin match constraints with
         | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
@@ -9871,10 +9875,11 @@ and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
 and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
   if for_type then
     (* Make an annotation. *)
-    AnnotT (mk_tvar_where cx instance_reason (fun t ->
+    let source = mk_tvar_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
       flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT t))
-    ), use_desc)
+    ) in
+    AnnotT (open_tvar source, use_desc)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
       flow_opt_t cx ?trace (c, class_type t)
@@ -9979,7 +9984,7 @@ and mk_typeof_annotation cx ?trace reason ?(use_desc=false) t =
     let source = mk_tvar_where cx reason (fun t' ->
       flow_opt cx ?trace (t, BecomeT (reason, t'))
     ) in
-    AnnotT (source, use_desc)
+    AnnotT (open_tvar source, use_desc)
   | _ ->
     let loc = loc_of_reason reason in
     reposition cx ?trace loc t
@@ -11093,9 +11098,9 @@ end = struct
           []
         in
         extract cx (DefT (reason, IntersectionT rep))
-    | AnnotT (source, _) ->
-        let source_t = resolve_type cx source in
-        extract cx source_t
+    | AnnotT (tvar, _) ->
+      let source_t = resolve_tvar cx tvar in
+      extract cx source_t
     | DefT (_, InstanceT (_, super, _,
                 {fields_tmap = fields;
                 methods_tmap = methods;

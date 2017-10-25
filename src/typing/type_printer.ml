@@ -238,7 +238,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         end
 
     (* The following types are not syntax-supported in all cases *)
-    | AnnotT (t, _) -> pp EnclosureNone cx t
+    | AnnotT ((_, id), _) -> spf "ANNOT_TYPE_%d" id
     | OpaqueT (_, {opaque_name; _}) -> opaque_name
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
@@ -379,8 +379,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | AnnotT (t, _) ->
-      is_printed_type_parsable_impl weak cx enclosure t
+  | AnnotT (_, _) -> false (* HUH? *)
 
   | OpaqueT _ -> true
 

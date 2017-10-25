@@ -431,8 +431,8 @@ let rec normalize_type_impl cx ids t = match t with
   | MatchingPropT (r, x, t) ->
       MatchingPropT (r, x, normalize_type_impl cx ids t)
 
-  | AnnotT (t, use_desc) ->
-      AnnotT (normalize_type_impl cx ids t, use_desc)
+  | AnnotT ((_, id), _) ->
+      lookup_type cx ids id
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with

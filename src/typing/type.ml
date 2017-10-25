@@ -36,6 +36,8 @@ type ident = int
 type name = string
 type index = int
 
+type tvar = reason * ident
+
 module rec TypeTerm : sig
 
   type t =
@@ -47,7 +49,7 @@ module rec TypeTerm : sig
        Note: ids are globally unique. tvars are "owned" by a single context,
        but that context and its tvars may later be merged into other contexts.
      *)
-    | OpenT of reason * ident
+    | OpenT of tvar
 
     (*************)
     (* def types *)
@@ -147,7 +149,7 @@ module rec TypeTerm : sig
         as the wrapped tvars are 0->1. If instead the possible types of a
         wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
         upper bounds, and would flow lower bounds to T1 & T2. **)
-    | AnnotT of t * bool (* use_desc *)
+    | AnnotT of tvar * bool (* use_desc *)
 
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -1907,7 +1909,7 @@ let any_propagating_use_t = function
 
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
-  | AnnotT (assume_t, _) -> reason_of_t assume_t
+  | AnnotT ((reason, _), _) -> reason
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
   | MergedT (reason, _) -> reason
@@ -2048,9 +2050,8 @@ let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
-  | OpenT (reason, t) -> OpenT (f reason, t)
-  | AnnotT (assume_t, use_desc) ->
-      AnnotT (mod_reason_of_t f assume_t, use_desc)
+  | OpenT (reason, id) -> OpenT (f reason, id)
+  | AnnotT ((reason, id), use_desc) -> AnnotT ((f reason, id), use_desc)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
   | MergedT (reason, uses) -> MergedT (f reason, uses)
@@ -2563,5 +2564,5 @@ let this_typeapp t this tparams =
   ThisTypeAppT (reason, t, this, tparams)
 
 let annot use_desc = function
-| OpenT _ as t -> AnnotT (t, use_desc)
-| t -> t
+  | OpenT tvar -> AnnotT (tvar, use_desc)
+  | t -> t
