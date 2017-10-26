@@ -27,7 +27,6 @@ val recheck:
   updates:FilenameSet.t ->
   ServerEnv.env ->
   force_focus:bool ->
-  serve_ready_clients:(unit -> unit) ->
   ServerEnv.env
 
 (* initial (full) check *)
