@@ -30,7 +30,28 @@ let send_message_to_client message connection =
       "Skipping sending message to broken persistent connection client #%d"
       connection.client_id
   else
-    begin try Marshal_tools.to_fd_with_preamble connection.outfd message
+    begin try
+      (* There's a possible deadlock with flow ide, where the server sends a large message to
+       * flow ide, and flow ide is sending lots of requests to the server. The buffers will fill up
+       * and both writes will block until reads that will never happen.
+       *
+       * The fix for now is to add a 5 second timeout. When this rare case is hit, we'll kill the
+       * flow ide connection and unblock the server
+       *
+       * glevi is rewriting the connection code, and will try to avoid this deadlock, so in the
+       * future this will be removed.
+       *
+       * Also, this timeout won't work on Windows, which should be fine for a temporary fix
+       *)
+      Timeout.with_timeout
+        ~timeout:5
+        ~on_timeout:(fun () ->
+          connection.broken <- true;
+          Hh_logger.info
+            "Marking client #%d as broken due to a timeout"
+            connection.client_id
+        )
+        ~do_:(fun _ -> Marshal_tools.to_fd_with_preamble connection.outfd message)
     with
     | Unix.Unix_error (Unix.EPIPE, _, _) ->
       (* Broken pipe most likely means that the client has died *)
