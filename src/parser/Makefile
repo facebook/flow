@@ -122,12 +122,13 @@ npm-publish:
 	mv README-backup.md README.md
 
 ocamlfind-install:
-	$(OCB) parser_flow.cma parser_flow.cmxa
-	ocamlfind install flow_parser META \
-		_build/parser_flow.a \
-		_build/parser_flow.cma \
-		_build/parser_flow.cmxa \
-		_build/*.cmi
+	cd $(TOP); \
+	$(OCB) $(REL_DIR)/parser_flow.cma $(REL_DIR)/parser_flow.cmxa; \
+	ocamlfind install flow_parser $(REL_DIR)/META \
+		_build/$(REL_DIR)/parser_flow.a \
+		_build/$(REL_DIR)/parser_flow.cma \
+		_build/$(REL_DIR)/parser_flow.cmxa \
+		_build/$(REL_DIR)/*.cmi
 
 lexer.native: lexer.ml
 	$(OCB) $@
