@@ -159,12 +159,6 @@ module Select_timeout = struct
   let buffer_size = 65536-9  (* From ocaml/byterun/io.h *)
 
   let in_channel_of_descr fd =
-    begin
-      try Unix.set_nonblock fd
-      with _ ->
-        (* On windows, only 'socket' need to be tagged non-blocking. *)
-        ()
-    end;
     let buf = String.create buffer_size in
     { fd; buf; curr = 0; max = 0; pid = None }
 
@@ -410,11 +404,24 @@ module Select_timeout = struct
   let open_connection ?timeout sockaddr =
     let connect sock sockaddr =
       try
+        (* connect binds the fd sock to the socket at sockaddr. If sock is nonblocking, and the
+         * connect call would block, it errors. You can then use select to wait for the connect
+         * to finish.
+         *
+         * On Windows, if the connect succeeds, sock will be returned in the writable fd set.
+         * If the connect fails, the sock will be returned in the exception fd set.
+         * https://msdn.microsoft.com/en-us/library/windows/desktop/ms737625(v=vs.85).aspx
+         *
+         * On Linux, the sock will always be returned in the writable fd set, and you're supposed
+         * to use getsockopt to read the SO_ERROR option at level SOL_SOCKET to figure out if the
+         * connect worked. However, this code is only used on Windows, so that's fine *)
         Unix.connect sock sockaddr;
       with
       | Unix.Unix_error ((Unix.EINPROGRESS | Unix.EWOULDBLOCK), _, _) -> begin
           let timeout_duration = get_current_timeout timeout in
           match Unix.select [] [sock] [] timeout_duration with
+          | _, [], [exn_sock] when exn_sock = sock ->
+            failwith "Failed to connect to socket"
           | _, [], _ ->
             (match timeout with
             | Some timeout -> raise (Timeout timeout.id)
