@@ -110,7 +110,7 @@ let reparse ~options ~profiling ~workers modified =
   )
 
 let parse_contents ~options ~profiling ~check_syntax filename contents =
-  with_timer "Parsing" profiling (fun () ->
+  with_timer ~options "Parsing" profiling (fun () ->
     (* always enable types when checking an individual file *)
     let types_mode = Parsing_service_js.TypesAllowed in
     let use_strict = Options.modules_are_use_strict options in
@@ -420,7 +420,7 @@ let typecheck
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
-let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
+let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requires =
   let infer_input = Modulename.Set.fold (fun m acc ->
     match Module_js.get_file m ~audit:Expensive.warn with
     | Some f ->
@@ -429,13 +429,20 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
   ) resolved_requires CheckedSet.empty in
-  let errors = !env.ServerEnv.errors in
   let unchanged_checked = !env.ServerEnv.checked_files in
-  let parsed = FilenameSet.elements !env.ServerEnv.files in
-  let all_dependent_files = FilenameSet.empty in
-  let persistent_connections = Some (!env.ServerEnv.connections) in
-  let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
-    let checked, errors = typecheck ~options ~profiling ~workers ~errors
+
+  (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
+   * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
+   * large repos *)
+  if CheckedSet.is_empty (CheckedSet.diff infer_input unchanged_checked)
+  then ()
+  else begin
+    let errors = !env.ServerEnv.errors in
+    let parsed = FilenameSet.elements !env.ServerEnv.files in
+    let all_dependent_files = FilenameSet.empty in
+    let persistent_connections = Some (!env.ServerEnv.connections) in
+    let checked, errors = typecheck
+      ~options ~profiling ~workers ~errors
       ~unchanged_checked ~infer_input
       ~parsed ~all_dependent_files
       ~persistent_connections
@@ -446,20 +453,20 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
             FilenameMap.add f true map
           ) FilenameMap.empty
         )
-      ) in
-    checked, errors
-  ) in
+      )
+    in
 
-  (* During a normal initialization or recheck, we update the env with the errors and
-   * calculate the collated errors. However, this code is for when the server is in lazy mode,
-   * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
-   * we're messing with env.errors, we also need to set collated_errors to None. This will force
-   * us to recompute them the next time someone needs them *)
-  !env.ServerEnv.collated_errors := None;
-  env := { !env with ServerEnv.
-    checked_files = checked;
-    errors;
-  }
+    (* During a normal initialization or recheck, we update the env with the errors and
+     * calculate the collated errors. However, this code is for when the server is in lazy mode,
+     * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
+     * we're messing with env.errors, we also need to set collated_errors to None. This will force
+     * us to recompute them the next time someone needs them *)
+    !env.ServerEnv.collated_errors := None;
+    env := { !env with ServerEnv.
+      checked_files = checked;
+      errors;
+    }
+  end
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
@@ -495,9 +502,12 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
         in
 
         (* merge *)
-        let cx = with_timer "Merge" profiling (fun () ->
-          let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
-          Merge_service.merge_contents_context options filename ast info ~ensure_checked_dependencies
+        let cx = with_timer ~options "MergeContents" profiling (fun () ->
+          let ensure_checked_dependencies =
+            ensure_checked_dependencies ~options ~profiling ~workers ~env
+          in
+          Merge_service.merge_contents_context
+            options filename ast info ~ensure_checked_dependencies
         ) in
 
         (* Filter out suppressed errors *)
