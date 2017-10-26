@@ -22,6 +22,13 @@ type monitor_config =
     load_script_log_file: string;
   }
 
+(** Informant-induced restart may specify the mini saved state
+ * we should load from. *)
+type target_mini_state = {
+  mini_state_everstore_handle : string;
+  target_svn_rev : int;
+}
+
 module type Server_config = sig
 
   type server_start_options
@@ -29,6 +36,7 @@ module type Server_config = sig
   (** Start the server. Optionally takes in the exit code of the previously
    * running server that exited. *)
   val start_server :
+    ?target_mini_state:target_mini_state ->
     informant_managed:bool ->
     prior_exit_status:(int option) ->
     server_start_options ->

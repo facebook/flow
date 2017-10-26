@@ -119,8 +119,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           Died_unexpectedly (proc_stat, was_oom))
     | _ -> server
 
-  let start_server ~informant_managed options exit_status =
+  let start_server ?target_mini_state ~informant_managed options exit_status =
     let server_process = SC.start_server
+      ?target_mini_state
       ~prior_exit_status:exit_status
       ~informant_managed options in
     setup_autokill_server_on_exit server_process;
@@ -155,11 +156,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let kill_signal_time = Unix.gettimeofday () in
     wait_for_server_exit_with_check env.server kill_signal_time
 
-  let restart_server env exit_status =
+  let restart_server ?target_mini_state env exit_status =
     kill_server_and_wait_for_exit env;
     let informant_managed = Informant.is_managing env.informant in
-    let new_server = start_server ~informant_managed env.server_start_options
-      exit_status in
+    let new_server = start_server ?target_mini_state
+      ~informant_managed env.server_start_options exit_status in
     { env with
       server = new_server;
       retries = env.retries + 1;
@@ -206,27 +207,28 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          (env.retries + 1);
        restart_server env exit_status
      end
-     else if informant_report = Informant_sig.Restart_server then begin
+     else match informant_report with
+     | Informant_sig.Restart_server target_mini_state ->
        Hh_logger.log "Informant directed server restart. Restarting server.";
        HackEventLogger.informant_induced_restart ();
-       restart_server env exit_status
-     end
-     else if is_config_changed then begin
-       Hh_logger.log "hh_server died from hh config change. Restarting";
-       restart_server env exit_status
-     end else if is_file_heap_stale then begin
-       Hh_logger.log
-        "Several large rebases caused FileHeap to be stale. Restarting";
-       restart_server env exit_status
-    end else if is_sql_assertion_failure
-    && (env.retries < max_sql_retries) then begin
-      Hh_logger.log
-        "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
-        (env.retries + 1);
-      restart_server env exit_status
-    end
-     else
-       { env with server = server }
+       restart_server ?target_mini_state env exit_status
+     | Informant_sig.Move_along ->
+       if is_config_changed then begin
+         Hh_logger.log "hh_server died from hh config change. Restarting";
+         restart_server env exit_status
+       end else if is_file_heap_stale then begin
+         Hh_logger.log
+          "Several large rebases caused FileHeap to be stale. Restarting";
+         restart_server env exit_status
+      end else if is_sql_assertion_failure
+      && (env.retries < max_sql_retries) then begin
+        Hh_logger.log
+          "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
+          (env.retries + 1);
+        restart_server env exit_status
+      end
+       else
+         { env with server = server }
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
