@@ -122,6 +122,22 @@ end = struct
         flush stderr;
         env
 
+  let exit_due_to_dfind_dying ~genv e =
+    let root = Options.root genv.options in
+    let tmp_dir = Options.temp_dir genv.options in
+    let dfind_logs = Sys_utils.cat_no_fail (Server_files.dfind_log_file ~tmp_dir root) in
+    let logs_len = String.length dfind_logs in
+    (* Let's limit how much of the log we stick in the exit message *)
+    let max_len = 2000 in
+    let dfind_logs = if logs_len > max_len
+      then String.sub dfind_logs (logs_len - max_len) max_len
+      else dfind_logs in
+    let msg = spf
+      "dfind died (got exception: %s)\ndfind logs:\n%s"
+      (Printexc.to_string e)
+      dfind_logs in
+    FlowExitStatus.(exit Dfind_died ~msg)
+
   (* When a rebase occurs, dfind takes a while to give us the full list of
    * updates, and it often comes in batches. To get an accurate measurement
    * of rebase time, we use the heuristic that any changes that come in
@@ -129,7 +145,12 @@ end = struct
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
   let rec recheck_loop ~dfind genv env =
-    let raw_updates = DfindLib.get_changes dfind in
+    let raw_updates =
+      try DfindLib.get_changes dfind
+      with
+      | Sys_error msg as e when msg = "Broken pipe" -> exit_due_to_dfind_dying ~genv e
+      | End_of_file as e -> exit_due_to_dfind_dying ~genv e
+    in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
       let env = Program.recheck genv env updates in
