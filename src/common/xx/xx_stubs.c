@@ -1,10 +1,9 @@
 #include <xxhash.h>
-#include <string.h>
+#include <assert.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
 #include <caml/custom.h>
-#include <caml/intext.h>
 
 #define State_val(v) (*((XXH64_state_t **) Data_custom_val(v)))
 
@@ -41,10 +40,8 @@ CAMLexport value caml_xx_update(value state, value v) {
 }
 
 CAMLexport value caml_xx_update_int(value state, value v) {
-  // TODO: we know this is an int, so just hash its bytes
-  static char data[40]; // 32 for the header
-  intnat len = caml_output_value_to_block(v, Val_int(0), data, 40);
-  XXH64_update(State_val(state), data, (size_t)len);
+  assert(Is_long(v));
+  XXH64_update(State_val(state), &v, sizeof(v));
   return Val_unit;
 }
 
