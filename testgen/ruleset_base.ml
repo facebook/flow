@@ -241,7 +241,7 @@ class ruleset_base = object(self)
       (cons : env_elt_t -> bool)
       (num : int)
       (env : env_t) : env_elt_t list =
-    let rec helper count limit result = 
+    let rec helper count limit result =
       if count = limit then result
       else
         let elt = self#choose (count + start) (fun () -> require_func env) in
@@ -255,7 +255,7 @@ class ruleset_base = object(self)
       ?(cons = (fun _ -> true))
       (prop_num : int)
       (option_num : int)
-      (env : env_t) : (Syntax.t * Loc.t E.t' * Loc.t T.t') = 
+      (env : env_t) : (Syntax.t * Loc.t E.t' * Loc.t T.t') =
 
     (* We are getting 1 property *)
     let elist = self#gen_elt_list start self#require_expr cons (prop_num + option_num) env in
@@ -444,7 +444,7 @@ class ruleset_base = object(self)
       | Type t -> t
       | _ -> failwith "This has to a type" in
 
-    (* assert the subtyping relationhips between the rhs and lhs *)
+    (* assert the subtyping relationships between the rhs and lhs *)
     self#weak_assert (self#is_subtype rhs_type vtype);
     let vname = Utils.mk_var () in
     let var_decl = Syntax.mk_vardecl ~etype:vtype vname rhs_expr in
@@ -696,7 +696,7 @@ class ruleset_base = object(self)
       (cons : (Loc.t T.t') -> bool)
       (num : int)
       (env : env_t) : (Loc.t T.t') list =
-    let rec helper count limit result = 
+    let rec helper count limit result =
       if count = limit then result
       else
         let expr = self#choose count (fun () -> self#require_expr env) in

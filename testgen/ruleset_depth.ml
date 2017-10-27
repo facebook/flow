@@ -157,7 +157,7 @@ class ruleset_depth = object(self)
       | Type t -> t
       | _ -> failwith "This has to a type" in
 
-    (* assert the subtyping relationhips between the rhs and lhs *)
+    (* assert the subtyping relationships between the rhs and lhs *)
     self#weak_assert (self#is_subtype rhs_type vtype);
     let vname = Utils.mk_var () in
     let var_decl = Syntax.mk_vardecl ~etype:vtype vname rhs_expr in
