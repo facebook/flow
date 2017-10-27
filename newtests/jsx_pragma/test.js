@@ -301,7 +301,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       <Bar x="hi" />;
     `).noNewErrors(),
   ]),
-  test('Exact prop type with spread still doesnt work', [
+  test('Exact prop type with spread still doesn't work', [
     addCode(`
       // @jsx Foo
       function Foo(elem: number, props: {| x: string |}) {}

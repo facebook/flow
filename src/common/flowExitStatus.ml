@@ -20,7 +20,7 @@ type t =
   | Build_id_mismatch
   (* Generic "Bad Input" kind of error *)
   | Input_error
-  (* Failed to aquire lock or lost lock *)
+  (* Failed to acquire lock or lost lock *)
   | Lock_stolen
   (* Specific error for not being able to find a .flowconfig *)
   | Could_not_find_flowconfig
