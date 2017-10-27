@@ -64,7 +64,7 @@ let parse_options () =
       SourceText.make @@ read_stdin ()
   in
 
-  (* TODO: verify that start_c and end_c fall on line boundries *)
+  (* TODO: verify that start_c and end_c fall on line boundaries *)
   let start_c = Option.value_map !start_char ~default:0 ~f:(fun i -> i - 1) in
   let end_c = Option.value_map !end_char
     ~default:(SourceText.length source_text) ~f:(fun i -> i - 1) in
