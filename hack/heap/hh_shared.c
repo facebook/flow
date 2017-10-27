@@ -1578,7 +1578,7 @@ static uint64_t get_hash(value key) {
  */
 /*****************************************************************************/
 static value write_at(unsigned int slot, value data) {
-  CAMLparam2(slot, data);
+  CAMLparam1(data);
   CAMLlocal1(result);
   result = caml_alloc_tuple(2);
   // Try to write in a value to indicate that the data is being written.
@@ -1598,7 +1598,7 @@ static value write_at(unsigned int slot, value data) {
     Field(result, 0) = Min_long;
     Field(result, 1) = Min_long;
   }
-  return result;
+  CAMLreturn(result);
 }
 
 static void raise_hash_table_full() {
