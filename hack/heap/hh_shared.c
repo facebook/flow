@@ -1497,7 +1497,11 @@ static char* hh_alloc(hh_header_t header) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
+static char* hh_store_ocaml(
+  value data,
+  /*out*/size_t *alloc_size,
+  /*out*/size_t *orig_size
+) {
   char* value;
   size_t size;
   storage_kind kind;
@@ -1550,6 +1554,7 @@ static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
   if (header.kind == KIND_SERIALIZED) free(value);
 
   *alloc_size = header.size;
+  *orig_size = size;
   return addr;
 }
 
@@ -1573,6 +1578,8 @@ static uint64_t get_hash(value key) {
  */
 /*****************************************************************************/
 static value write_at(unsigned int slot, value data) {
+  CAMLlocal1(result);
+  result = caml_alloc_tuple(2);
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
      __sync_bool_compare_and_swap(
@@ -1582,10 +1589,15 @@ static value write_at(unsigned int slot, value data) {
      )
   ) {
     size_t alloc_size;
-    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size);
-    return Val_long(alloc_size);
+    size_t orig_size;
+    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
+    Field(result, 0) = Val_long(alloc_size);
+    Field(result, 1) = Val_long(orig_size);
+  } else {
+    Field(result, 0) = Min_long;
+    Field(result, 1) = Min_long;
   }
-  return Min_long;
+  return result;
 }
 
 static void raise_hash_table_full() {
