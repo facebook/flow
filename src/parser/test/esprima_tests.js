@@ -483,8 +483,8 @@ module.exports = {
         },
         'var p1;/* block comment 1 */ /* block comment 2 */',
         '/*42*/',
-        '(a + /* assignmenr */b ) * c',
-        '/* assignmenr */\n a = b',
+        '(a + /* assignment */b ) * c',
+        '/* assignment */\n a = b',
         {
           content: '42 /*The*/ /*Answer*/',
           explanation: "Esprima counts comments in its loc, Flow doesn't",
