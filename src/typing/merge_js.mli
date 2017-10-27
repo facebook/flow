@@ -55,5 +55,5 @@ val merge_lib_file:
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t -> string list -> SigHash.t
+  val sig_context : Context.t -> string list -> Xx.hash
 end

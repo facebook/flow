@@ -29,12 +29,17 @@
    Finally, these structures may be huge, so we instead compare their digests,
    tolerating improbable collisions (cf. SharedMem).
 *)
+
+(* NOTE: it's critical that these are all constant constructors, which are
+ * represented as ints, because we hash in C assuming they are ints. Any
+ * non-constant constructors will be blocks, and fail to hash properly. *)
 type hash =
-  | NumH of Type.number_literal Type.literal
-  | StrH of string Type.literal
-  | BoolH of bool option
+  (* def types *)
+  | NumH
+  | StrH
+  | BoolH
   | EmptyH
-  | MixedH of Type.mixed_flavor
+  | MixedH
   | AnyH
   | NullH
   | VoidH
@@ -67,9 +72,9 @@ type hash =
   | AnyFunH
   | ShapeH
   | KeysH
-  | SingletonStrH of string
-  | SingletonNumH of Type.number_literal
-  | SingletonBoolH of bool
+  | SingletonStrH
+  | SingletonNumH
+  | SingletonBoolH
   | TypeH
   | AnnotH
   | ModuleH
@@ -78,6 +83,7 @@ type hash =
   | OpenPredH
   | CharSetH
   | ReposH
+  (* use types *)
   | BindH
   | CallH
   | MethodH
@@ -170,22 +176,22 @@ let hash_of_def_ctor = Type.(function
   | AnyObjT -> AnyObjH
   | AnyT -> AnyH
   | ArrT _ -> ArrH
-  | BoolT b -> BoolH b
+  | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH
   | IntersectionT _ -> IntersectionH
   | MaybeT _ -> MaybeH
-  | MixedT m -> MixedH m
+  | MixedT _ -> MixedH
   | NullT -> NullH
-  | NumT n -> NumH n
+  | NumT _ -> NumH
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
-  | SingletonBoolT b -> SingletonBoolH b
-  | SingletonNumT n -> SingletonNumH n
-  | SingletonStrT s -> SingletonStrH s
-  | StrT s -> StrH s
+  | SingletonBoolT _ -> SingletonBoolH
+  | SingletonNumT _ -> SingletonNumH
+  | SingletonStrT _ -> SingletonStrH
+  | StrT _ -> StrH
   | TypeT _ -> TypeH
   | TypeAppT _ -> TypeAppH
   | VoidT -> VoidH
@@ -312,35 +318,63 @@ let hash_of_use_ctor = Type.(function
   | ExtendsUseT _ -> ExtendsUseH
 )
 
-type prop_hash =
-  | FieldH of Type.polarity
-  | GetH
-  | SetH
-  | GetSetH
-  | MethodH
+let add = Xx.update
+let add_int = Xx.update_int
+let add_bool = Xx.update_int (* bools are ints *)
 
-let hash_of_prop = Type.(function
-  | Field (_, polarity) -> FieldH polarity
-  | Get _ -> GetH
-  | Set _ -> SetH
-  | GetSet _ -> GetSetH
-  | Method _ -> MethodH
+let add_option state f = function
+  | None -> add_int state 0
+  | Some x -> add_int state 1; f state x
+
+let add_literal state f = Type.(function
+  | Literal (_, x) -> add_int state 0; f state x
+  | Truthy -> add_int state 1
+  | AnyLiteral -> add_int state 2
 )
 
-type t = Digest.t
-let empty = Digest.string ""
+let add_number_literal state (_, x) = add state x
 
-let add x t =
-  Digest.string (Marshal.to_string (x, t) [])
+let add_type state t =
+  add_int state (hash_of_ctor t);
+  let open Type in
+  match t with
+  | DefT (_, BoolT b) ->
+    add_option state add_bool b
+  | DefT (_, MixedT m) ->
+    add_int state m
+  | DefT (_, NumT n) ->
+    add_literal state add_number_literal n
+  | DefT (_, SingletonBoolT b) ->
+    add_bool state b
+  | DefT (_, SingletonNumT n) ->
+    add_number_literal state n
+  | DefT (_, SingletonStrT s) ->
+    add state s
+  | DefT (_, StrT s) ->
+    add_literal state add s
+  | _ -> ()
 
-let add_type type_ =
-  add (hash_of_ctor type_)
+let add_use state use =
+  add_int state (hash_of_use_ctor use)
 
-let add_use use =
-  add (hash_of_use_ctor use)
+let add_reason state r =
+  (* TODO: don't marshal, just directly hash the interesting bits *)
+  add state (Marshal.to_string r)
 
-let add_props_map pmap =
-  SMap.fold (fun k p h -> h |> add k |>  add (hash_of_prop p)) pmap
+let add_polarity = add_int
 
-let add_exports_map tmap =
-  add (SMap.keys tmap)
+let add_prop state = Type.(function
+  | Field (_, polarity) ->
+    add_int state 0;
+    add_int state polarity
+  | Get _ -> add_int state 1
+  | Set _ -> add_int state 2
+  | GetSet _ -> add_int state 3
+  | Method _ -> add_int state 4
+)
+
+let add_props_map state =
+  SMap.iter (fun k p -> add state k; add_prop state p)
+
+let add_exports_map state =
+  SMap.iter (fun k _ -> add state k)

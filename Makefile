@@ -74,6 +74,7 @@ MODULES=\
   src/common/profiling\
   src/common/span\
   src/common/utils\
+  src/common/xx\
   src/flowlib\
   src/parser\
   src/parser_utils\
@@ -110,6 +111,7 @@ MODULES=\
 NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
+  src/common/xx/xx_stubs.c\
   hack/heap/hh_shared.c\
   hack/utils/files.c\
   hack/utils/get_build_id.c\
