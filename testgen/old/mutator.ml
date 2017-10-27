@@ -42,7 +42,7 @@ let rec prop_read_of_list (plist : string list) : E.Member.t =
      property = PropertyExpression (Loc.none, E.Member (prop_read_of_list tl));
      computed = false}
 
-(* Make an experssion code into a statement code *)
+(* Make an expression code into a statement code *)
 let mk_expr_code (e : t') : t =
   let stmt = let open S.Expression in
     S.Expression {expression = (Loc.none, e.expr); directive = None} in
