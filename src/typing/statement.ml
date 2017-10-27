@@ -2880,11 +2880,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let strt_of_quasi = function
       | (elem_loc, {
           TemplateLiteral.Element.value = {
-            TemplateLiteral.Element.cooked;
-            _
+            TemplateLiteral.Element.raw; cooked;
           };
           _
-        }) -> DefT (mk_reason RString elem_loc, StrT (Type.Literal (None, cooked)))
+        }) ->
+          literal cx elem_loc { Ast.Literal.
+            value = Ast.Literal.String cooked;
+            raw;
+          }
       in
       begin match quasis with
       | head::[] ->
@@ -3097,7 +3100,13 @@ and identifier cx name loc =
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
-      DefT (mk_reason RString loc, StrT (Literal (None, s)))
+      (* It's too expensive to track literal information for large strings.*)
+      let lit =
+        if String.length s < 100
+        then Literal (None, s)
+        else AnyLiteral
+      in
+      DefT (mk_reason RString loc, StrT lit)
 
   | Boolean b ->
       DefT (mk_reason RBoolean loc, BoolT (Some b))
