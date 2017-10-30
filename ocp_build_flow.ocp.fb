@@ -155,7 +155,7 @@ xx_libc_flags = [
   "-I"; "src/third-party/lz4";
 ]
 begin library "flow-common-xx"
-  files = begin fb-glob "src/common/profiling"
+  files = begin fb-glob "src/common/xx"
     excludes = [ "xx_stubs.c" ]
   end
   files += [
