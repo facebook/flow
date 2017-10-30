@@ -84,7 +84,11 @@ type connection_error =
 
 type connection_state =
   | Connection_ok
+  (* Build_is_mismatch is never used, but it can't be removed, because *)
+  (* the sequence of constructors here is part of the binary protocol  *)
+  (* we want to support between mismatched versions of client_server.  *)
   | Build_id_mismatch
+  (* Build_id_mismatch_ex *is* used. *)
   | Build_id_mismatch_ex of build_mismatch_info
 
 (** Result of a shutdown monitor RPC. *)

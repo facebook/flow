@@ -72,7 +72,7 @@ let get_cstate config (ic, oc) =
 let verify_cstate ic cstate =
   match cstate with
   | Connection_ok -> Ok ()
-  | Build_id_mismatch | Build_id_mismatch_ex _ ->
+  | Build_id_mismatch_ex mismatch_info ->
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
        * the server that is about to die, and eventually we will be hung
@@ -83,22 +83,13 @@ let verify_cstate ic cstate =
        * has exited and the OS has cleaned up after it, then we try again.
        *
        * See also: ServerMonitor.client_out_of_date
-       *
-       * TODO: around September 2017, add an assert that the Build_id_mismatch
-       * form will never arise; only the _ex form will be emitted.
-       * At that point we can make Build_id_mismatched take a non-optional.
-       * Why that date? As of early July, the server started emitting only the
-       * _ex form. We'll give the change time to percolate, until no one
-       * will realistically be running the old form of the server, and by that
-       * time we can add the assert.
        *)
       wait_on_server_restart ic;
       Timeout.close_in_noerr ic;
-      let mismatch_info = match cstate with
-        | Build_id_mismatch_ex mismatch_info -> Some mismatch_info
-        | _ -> None
-      in
-      Error (Build_id_mismatched mismatch_info)
+      Error (Build_id_mismatched (Some mismatch_info))
+  | Build_id_mismatch ->
+      (* The server no longer ever sends this message, as of July 2017 *)
+      failwith "Ancient version of server sent old Build_id_mismatch"
 
 (** Consume sequence of Prehandoff messages. *)
 let rec consume_prehandoff_messages ic oc =
