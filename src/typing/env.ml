@@ -1143,7 +1143,7 @@ let copy_env =
     | Some Value v1, Some Value v2 ->
       (* flow child2's specific type to child1 in place *)
       Flow.flow cx (v2.specific, UseT (Internal CopyEnv, v1.specific));
-      (* udpate state *)
+      (* update state *)
       if v1.value_state < State.Initialized
         && v2.value_state >= State.MaybeInitialized
       then (
