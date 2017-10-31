@@ -81,6 +81,15 @@ the `Props` type we defined.
 > either style, but importing as a namespace gives you access to React's
 > [utility types](../types).
 
+> **Note:** If you use babel and you import `React` namespaced like
+> above you might run into warnings such as: `Warning: Accessing
+> PropTypes via the main React package is deprecated` and ` Warning:
+> Accessing createClass via the main React package is deprecated`,
+> this is a false positive and you can get rid of those warnings
+> importing the types you want explicitly.
+> Eg. `import React, { Element, Component } from 'react'`
+> You can follow the discussion [here](https://github.com/facebook/flow/issues/4673)
+
 `React.Component<Props, State>` is a [generic type][] the takes two type
 arguments. Props and state. The second type argument, `State`, is optional. By
 default it is undefined so you can see in the example above we did not include
