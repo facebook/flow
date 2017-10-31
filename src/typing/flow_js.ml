@@ -2110,7 +2110,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT (_, DefT (_, AnyFunT))) when function_like l -> ()
 
     | DefT (reason, AnyFunT), GetPropT (_, Named (_, x), _)
-    | DefT (reason, AnyFunT), SetPropT (_, Named (_, x), _)
+    | DefT (reason, AnyFunT), SetPropT (_, Named (_, x), _, _)
     | DefT (reason, AnyFunT), LookupT (_, _, _, Named (_, x), _)
     | DefT (reason, AnyFunT), MethodT (_, _, Named (_, x), _)
         when is_function_prototype x ->
@@ -4077,7 +4077,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ) reason in
             let propref = Named (reason_prop, x) in
             let t = filter_optional cx ~trace reason_prop t in
-            rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
+            rec_flow cx trace (proto, SetPropT (reason_op, propref, Normal, t))
           | None ->
             add_output cx ~trace (FlowError.EPropAccess (
               (reason, reason_op), Some x, Property.polarity p, Read
@@ -4399,13 +4399,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
-      SetPropT (reason_op, Named (reason_prop, x), tin) ->
+      SetPropT (reason_op, Named (reason_prop, x), wr_ctx, tin) ->
       let ops = Ops.clear () in
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = Strict reason_c in
-      set_prop cx trace reason_prop reason_op strict l super x fields tin;
+      set_prop cx ~wr_ctx trace reason_prop reason_op strict l super x fields tin;
       Ops.set ops
 
     | DefT (reason_c, InstanceT _),
@@ -4426,12 +4426,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
         | Some p ->
-          let action = RWProp (l, tin, Write) in
+          let action = RWProp (l, tin, Write Normal) in
           let propref = Named (reason_op, x) in
           perform_lookup_action cx trace propref p reason_c reason_op action
       )
 
-    | DefT (_, InstanceT _), SetPropT (reason_op, Computed _, _) ->
+    | DefT (_, InstanceT _), SetPropT (reason_op, Computed _, _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
@@ -4605,7 +4605,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some t ->
             let propref = Named (reason_prop, x) in
             let t = filter_optional cx ~trace reason_prop t in
-            rec_flow cx trace (proto, SetPropT (reason_prop, propref, t));
+            rec_flow cx trace (proto, SetPropT (reason_prop, propref, Normal, t));
           | None ->
             add_output cx ~trace (FlowError.EPropAccess (
               (lreason, reason_op), Some x, Property.polarity p, Read
@@ -4624,7 +4624,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         match Property.read_t p with
         | Some t ->
           let propref = Named (reason_op, x) in
-          rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
+          rec_flow cx trace (proto, SetPropT (reason_op, propref, Normal, t))
         | None ->
           add_output cx ~trace (FlowError.EPropAccess (
             (lreason, reason_op), Some x, Property.polarity p, Read
@@ -4811,21 +4811,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields written *)
     (*****************************************)
 
-    | DefT (reason, ObjT {flags; _}), SetPropT(reason_op, Named (_, "constructor"), _) ->
+    | DefT (reason, ObjT {flags; _}), SetPropT(reason_op, Named (_, "constructor"), _, _) ->
       if flags.frozen
       then
         add_output cx ~trace (FlowError.EMutationNotAllowed { reason; reason_op })
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
-    | DefT (reason, ObjT { flags; _ }), SetPropT (reason_op, _, _) when flags.frozen ->
+    | DefT (reason, ObjT { flags; _ }), SetPropT (reason_op, _, _, _) when flags.frozen ->
       add_output cx ~trace (FlowError.EMutationNotAllowed { reason; reason_op })
 
-    | DefT (reason_obj, ObjT o), SetPropT (reason_op, propref, tin) ->
+    | DefT (reason_obj, ObjT o), SetPropT (reason_op, propref, _, tin) ->
       write_obj_prop cx trace o propref reason_obj reason_op tin
 
     (* Since we don't know the type of the prop, use AnyT. *)
-    | DefT (_, (AnyT | AnyObjT)), SetPropT (reason_op, _, t) ->
+    | DefT (_, (AnyT | AnyObjT)), SetPropT (reason_op, _, _, t) ->
       rec_flow_t cx trace (t, AnyT.why reason_op)
 
     (*****************************)
@@ -4900,7 +4900,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       let u = match action with
       | ReadElem t -> GetPropT (reason_op, propref, t)
-      | WriteElem t -> SetPropT (reason_op, propref, t)
+      | WriteElem t -> SetPropT (reason_op, propref, Normal, t)
       | CallElem (reason_call, ft) ->
         MethodT (reason_call, reason_op, propref, ft)
       in
@@ -4965,7 +4965,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ArrT _), GetPropT(reason_op, Named (_, "constructor"), tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | DefT (_, ArrT _), SetPropT(_, Named (_, "constructor"), _)
+    | DefT (_, ArrT _), SetPropT(_, Named (_, "constructor"), _, _)
     | DefT (_, ArrT _), MethodT(_, _, Named (_, "constructor"), _) ->
       ()
 
@@ -5079,7 +5079,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* functions may have their prototypes written *)
     (***********************************************)
 
-    | DefT (_, FunT (_, t, _)), SetPropT(reason_op, Named (_, "prototype"), tin) ->
+    | DefT (_, FunT (_, t, _)), SetPropT(reason_op, Named (_, "prototype"), _, tin) ->
       rec_flow cx trace (tin, ObjAssignFromT (reason_op, t, Locationless.AnyT.t, ObjAssign))
 
     (*********************************)
@@ -5111,7 +5111,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields/elements written *)
     (*****************************************)
 
-    | DefT (_, AnyFunT), SetPropT(reason_op, _, t)
+    | DefT (_, AnyFunT), SetPropT(reason_op, _, _, t)
     | DefT (_, AnyFunT), SetElemT(reason_op, _, t) ->
       rec_flow_t cx trace (t, AnyT.why reason_op)
 
@@ -5601,12 +5601,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (************)
 
     | DefT (_, InstanceT _), GetElemT (reason, i, t) ->
-      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), Normal, i));
       rec_flow cx trace (l, GetPropT (reason, Named (reason, "$value"), t))
 
     | DefT (_, InstanceT _), SetElemT (reason, i, t) ->
-      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
-      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), Normal, i));
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), Normal, t))
 
     (***************************)
     (* conditional type switch *)
@@ -5655,7 +5655,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* __proto__ is a getter/setter on Object.prototype *)
       let u = match rw with
       | Read -> GetProtoT (reason_op, t)
-      | Write -> SetProtoT (reason_op, t)
+      | Write _ -> SetProtoT (reason_op, t)
       in
       rec_flow cx trace (l, u)
 
@@ -5916,7 +5916,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         special = flow_error_kind_of_lower l;
       })
 
-    | _, SetPropT (_, propref, _) ->
+    | _, SetPropT (_, propref, _, _) ->
       add_output cx ~trace (FlowError.EIncompatibleSetProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
@@ -7882,16 +7882,16 @@ and get_prop cx trace reason_prop reason_op strict l super x map tout =
   end;
   Ops.set ops
 
-and set_prop cx trace reason_prop reason_op strict l super x pmap tin =
+and set_prop cx ?(wr_ctx=Normal) trace reason_prop reason_op strict l super x pmap tin =
   match SMap.get x pmap with
   | Some p ->
-    let action = RWProp (l, tin, Write) in
+    let action = RWProp (l, tin, Write wr_ctx) in
     let propref = Named (reason_prop, x) in
     (* TODO: use lreason instead of reason_prop below? *)
     perform_lookup_action cx trace propref p reason_prop reason_op action
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
-      (RWProp (l, tin, Write))
+      (RWProp (l, tin, Write wr_ctx))
 
 and get_obj_prop cx trace o propref reason_op =
   let named_prop = match propref with
@@ -7951,7 +7951,7 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
   let l = DefT (reason_obj, ObjT o) in
   match get_obj_prop cx trace o propref reason_op with
   | Some p ->
-    let action = RWProp (l, tin, Write) in
+    let action = RWProp (l, tin, Write Normal) in
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
@@ -7968,7 +7968,7 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
           else ShadowWrite (Nel.one o.props_tmap)
         in
         rec_flow cx trace (o.proto_t,
-          LookupT (reason_op, strict, [], propref, RWProp (l, tin, Write)))
+          LookupT (reason_op, strict, [], propref, RWProp (l, tin, Write Normal)))
     | Computed elem_t ->
       match elem_t with
       | OpenT _ ->
@@ -9689,7 +9689,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     | Read, Some t ->
       let loc = loc_of_reason ureason in
       rec_flow_t cx trace (reposition cx ~trace loc t, tout)
-    | Write, Some t ->
+    | Write _, Some t ->
       let use_op = match desc_of_reason ureason with
       | RPropertyAssignment _ -> SetProperty ureason
       | _ -> UnknownUse
@@ -9945,7 +9945,7 @@ and resolve_builtin_class cx ?trace = function
 and set_builtin cx ?trace x t =
   let reason = builtin_reason (RCustom x) in
   let propref = Named (reason, x) in
-  flow_opt cx ?trace (builtins cx, SetPropT (reason, propref, t))
+  flow_opt cx ?trace (builtins cx, SetPropT (reason, propref, Normal, t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)

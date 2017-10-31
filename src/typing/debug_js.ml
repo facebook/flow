@@ -47,7 +47,7 @@ let string_of_polarity = function
 
 let string_of_rw = function
   | Read -> "Read"
-  | Write -> "Write"
+  | Write _ -> "Write"
 
 type json_cx = {
   stack: ISet.t;
@@ -435,7 +435,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "useDesc", JSON_Bool use_desc;
     ]
 
-  | SetPropT (_, name, t)
+  | SetPropT (_, name, _, t)
   | GetPropT (_, name, t)
   | TestPropT (_, name, t) -> [
       "propRef", json_of_propref json_cx name;
@@ -1773,7 +1773,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let lookup_action = function
   | RWProp (_, t, Read) -> spf "Read %s" (kid t)
-  | RWProp (_, t, Write) -> spf "Write %s" (kid t)
+  | RWProp (_, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
   | MatchProp t -> spf "Match %s" (kid t)
@@ -2056,7 +2056,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPropT (_, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
   | SetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"

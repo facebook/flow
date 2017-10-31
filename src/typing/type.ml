@@ -311,7 +311,7 @@ module rec TypeTerm : sig
     | BindT of reason * funcalltype * bool (* pass-through *)
     | CallT of reason * funcalltype
     | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
-    | SetPropT of reason * propref * t
+    | SetPropT of reason * propref * write_ctx * t
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
@@ -773,7 +773,9 @@ module rec TypeTerm : sig
   | SuperProp of Property.t
   | MatchProp of t
 
-  and rw = Read | Write
+  and rw = Read | Write of write_ctx
+
+  and write_ctx = ThisInCtor | Normal
 
   and elem_action =
     | ReadElem of t
@@ -1054,7 +1056,7 @@ end = struct
 
   let of_rw = function
     | Read -> Positive
-    | Write -> Negative
+    | Write _ -> Negative
 
   (* printer *)
   let string = function
@@ -1074,7 +1076,7 @@ and Property : sig
   val polarity: t -> Polarity.t
 
   val read_t: t -> TypeTerm.t option
-  val write_t: t -> TypeTerm.t option
+  val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
   val access: TypeTerm.rw -> t -> TypeTerm.t option
 
   val iter_t: (TypeTerm.t -> unit) -> t -> unit
@@ -1106,7 +1108,8 @@ end = struct
     | GetSet (t, _) -> Some t
     | Method t -> Some t
 
-  let write_t = function
+  let write_t ?(ctx=Normal) = function
+    | Field (t, _) when ctx = ThisInCtor -> Some t
     | Field (t, polarity) ->
       if Polarity.compat (polarity, Negative)
       then Some t
@@ -1118,7 +1121,7 @@ end = struct
 
   let access = function
     | Read -> read_t
-    | Write -> write_t
+    | Write ctx -> write_t ~ctx
 
   let iter_t f = function
     | Field (t, _)
@@ -2015,7 +2018,7 @@ and reason_of_use_t = function
   | ResolveSpreadT (_, reason, _) -> reason
   | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
-  | SetPropT (reason,_,_) -> reason
+  | SetPropT (reason,_,_,_) -> reason
   | SetPrivatePropT (reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
@@ -2175,7 +2178,7 @@ and mod_reason_of_use_t f = function
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
-  | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
+  | SetPropT (reason, n, i, t) -> SetPropT (f reason, n, i, t)
   | SetPrivatePropT (reason, n, scopes, static, t) ->
       SetPrivatePropT (f reason, n, scopes, static, t)
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)

@@ -153,14 +153,14 @@ let add_private_field name fld = map_sig (fun s -> {
 })
 
 let add_constructor fsig s =
-  {s with constructor = [fsig]}
+  {s with constructor = [Func_sig.to_ctor_sig fsig]}
 
 let add_default_constructor reason s =
   let fsig = Func_sig.default_constructor reason in
   add_constructor fsig s
 
 let append_constructor fsig s =
-  {s with constructor = fsig::s.constructor}
+  {s with constructor = Func_sig.to_ctor_sig fsig::s.constructor}
 
 let add_field ~static name fld = map_sig ~static (fun s -> {
   s with

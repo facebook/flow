@@ -442,11 +442,11 @@ class ['a] t = object(self)
         let funcall' = self#fun_call_type cx map_cx funcall in
         if prop' == prop && funcall' == funcall then t
         else MethodT (r1, r2, prop', funcall')
-    | SetPropT (r, prop, t') ->
+    | SetPropT (r, prop, i, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
-        else SetPropT (r, prop', t'')
+        else SetPropT (r, prop', i, t'')
     | SetPrivatePropT (r, prop, scopes, static, t') ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in

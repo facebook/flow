@@ -258,7 +258,7 @@ class ['a] t = object(self)
     let acc = self#fun_call_type cx acc fn in
     acc
 
-  | SetPropT (_, p, t)
+  | SetPropT (_, p, _, t)
   | GetPropT (_, p, t)
   | TestPropT (_, p, t) ->
     let acc = self#propref cx acc p in

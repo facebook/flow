@@ -102,3 +102,4 @@ val settertype: t -> Type.t
 
 (** The location of the return type for a function. *)
 val return_loc: Loc.t Ast.Function.t -> Loc.t
+val to_ctor_sig: t -> t

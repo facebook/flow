@@ -3321,7 +3321,7 @@ and assignment cx loc = Ast.Expression.(function
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
-            Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
+            Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), Normal, t))
 
         (* _object.#name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
@@ -3348,6 +3348,10 @@ and assignment cx loc = Ast.Expression.(function
             _
           }) as expr) ->
             let o = expression cx _object in
+            let wr_ctx = match _object, Env.var_scope_kind () with
+              | (_, This), Scope.Ctor -> ThisInCtor
+              | _ -> Normal
+            in
             (* if we fire this hook, it means the assignment is a sham. *)
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
@@ -3355,7 +3359,7 @@ and assignment cx loc = Ast.Expression.(function
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
-              Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), t));
+              Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), wr_ctx, t));
               post_assignment_havoc ~private_:false name expr lhs_loc t
             )
 
@@ -4408,7 +4412,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let tvar = Tvar.mk cx reason in
     let prop_reason = mk_reason (RProperty (Some x)) ploc in
     Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar));
-    Flow.flow cx (o, SetPropT (reason, Named (prop_reason, x), tvar));
+    Flow.flow cx (o, SetPropT (reason, Named (prop_reason, x), Normal, tvar));
     o
 
   | ("defineProperties", [ Expression e;
@@ -4429,7 +4433,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         ) reason in
         let tvar = Tvar.mk cx reason in
         Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar));
-        Flow.flow cx (o, SetPropT (reason, Named (reason, x), tvar));
+        Flow.flow cx (o, SetPropT (reason, Named (reason, x), Normal, tvar));
     );
     o
 

@@ -18,6 +18,7 @@ type kind =
   | AsyncGenerator
   | FieldInit of Loc.t Ast.Expression.t
   | Predicate
+  | Ctor
 
 type t = {
   reason: reason;
@@ -94,7 +95,7 @@ let convert cx tparams_map loc func =
 
 let default_constructor reason = {
   reason;
-  kind = Ordinary;
+  kind = Ctor;
   tparams = [];
   tparams_map = SMap.empty;
   fparams = Func_params.empty;
@@ -210,6 +211,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       | Async -> Scope.Async
       | Generator -> Scope.Generator
       | AsyncGenerator -> Scope.AsyncGenerator
+      | Ctor -> Scope.Ctor
     in
     Scope.fresh ~var_scope_kind ()
   in
@@ -327,7 +329,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (if is_void then
     let loc = loc_of_t return_t in
     let use_op, void_t = match kind with
-    | Ordinary ->
+    | Ordinary
+    | Ctor ->
       FunImplicitReturn, VoidT.at loc
     | Async ->
       let reason = mk_reason (RCustom "Promise<void>") loc in
@@ -358,3 +361,5 @@ let toplevels id cx this super ~decls ~stmts ~expr
   Env.pop_var_scope ();
 
   Env.update_env cx loc env
+
+let to_ctor_sig f = { f with kind = Ctor }
