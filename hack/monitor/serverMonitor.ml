@@ -48,6 +48,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
   }
 
+  type t = env * ServerMonitorUtils.monitor_config * Unix.file_descr
+
   let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
 
   let msg_to_channel fd msg =
@@ -60,8 +62,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   let kill_server process =
     try Unix.kill process.pid Sys.sigusr2 with
-    | _ ->
-      Hh_logger.log
+    | _ -> Hh_logger.log
         "Failed to send sigusr2 signal to server process. Trying \
          violently";
       try Unix.kill process.pid Sys.sigkill with e ->
@@ -448,7 +449,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          "Accepting on socket failed. Ignoring client connection attempt.";
          env)
 
-  let start_monitoring ~waiting_client ~max_purgatory_clients
+  let check_and_run_loop_once (env, monitor_config, socket) =
+    let env = check_and_run_loop_ env monitor_config socket in
+    env, monitor_config, socket
+
+  let start_monitor ~waiting_client ~max_purgatory_clients
     server_start_options informant_init_env
     monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
@@ -487,5 +492,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server_start_options;
       retries = 0;
     } in
+    env, monitor_config, socket
+
+  let start_monitoring ~waiting_client ~max_purgatory_clients
+    server_start_options informant_init_env
+    monitor_config =
+    let env, monitor_config, socket = start_monitor ~waiting_client ~max_purgatory_clients
+      server_start_options informant_init_env monitor_config in
     check_and_run_loop env monitor_config socket
 end
