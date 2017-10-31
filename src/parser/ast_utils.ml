@@ -53,3 +53,12 @@ let bindings_of_export_specifiers =
     | _, { exported = Some id; _ } ->
       id::acc
   ) []
+
+let partition_directives statements =
+  let open Ast.Statement in
+  let rec helper directives = function
+    | ((_, Expression { Expression.directive = Some _; _ }) as directive)::rest ->
+      helper (directive::directives) rest
+    | rest -> List.rev directives, rest
+  in
+  helper [] statements
