@@ -86,8 +86,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   let update_status_ (server: ServerProcess.server_process) monitor_config =
     match server with
     | Alive process ->
-      let pid, proc_stat =
-        Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
+      let pid, proc_stat = SC.wait_pid process in
       (match pid, proc_stat with
         | 0, _ ->
           server
