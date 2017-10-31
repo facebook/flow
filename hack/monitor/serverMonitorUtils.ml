@@ -42,6 +42,12 @@ module type Server_config = sig
     server_start_options ->
     ServerProcess.process_data
 
+  val kill_server : ServerProcess.process_data -> unit
+
+  val wait_for_server_exit : ServerProcess.process_data ->
+    float (** Kill signal time *) ->
+    unit
+
   (** Callback to run when server exits *)
   val on_server_exit : monitor_config -> unit
 end

@@ -60,25 +60,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * meant for it. *)
     Marshal_tools.to_fd_with_preamble fd msg
 
-  let kill_server process =
-    try Unix.kill process.pid Sys.sigusr2 with
-    | _ -> Hh_logger.log
-        "Failed to send sigusr2 signal to server process. Trying \
-         violently";
-      try Unix.kill process.pid Sys.sigkill with e ->
-        Hh_logger.exc ~prefix: "Failed to violently kill server process: " e
-
-  let rec wait_for_server_exit process start_t =
-    let exit_status = Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
-    match exit_status with
-    | 0, _ ->
-      Unix.sleep 1;
-      wait_for_server_exit process start_t
-    | _ ->
-      ignore (
-        Hh_logger.log_duration (Printf.sprintf
-          "%s has exited. Time since sigterm: " process.name) start_t)
-
   let setup_handler_for_signals handler signals =
     List.iter signals begin fun signal ->
       Sys_utils.set_signal signal (Sys.Signal_handle handler)
@@ -88,7 +69,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     try
       setup_handler_for_signals begin fun _ ->
         Hh_logger.log "Got an exit signal. Killing server and exiting.";
-        kill_server process;
+        SC.kill_server process;
         Exit_status.exit Exit_status.Interrupted
       end [Sys.sigint; Sys.sigquit; Sys.sigterm; Sys.sighup];
     with
@@ -143,13 +124,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   let kill_server_with_check = function
       | Alive server ->
-        kill_server server
+        SC.kill_server server
       | _ -> ()
 
   let wait_for_server_exit_with_check server kill_signal_time =
     match server with
       | Alive server ->
-        wait_for_server_exit server kill_signal_time
+        SC.wait_for_server_exit server kill_signal_time
       | _ -> ()
 
   let kill_server_and_wait_for_exit env =
