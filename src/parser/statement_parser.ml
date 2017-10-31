@@ -606,7 +606,7 @@ module Statement
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeInterface;
       Expect.token env T_INTERFACE;
-      let id = Parse.identifier env in
+      let id = Type.type_identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
       let extends = if Peek.token env = T_EXTENDS
       then begin
@@ -629,7 +629,9 @@ module Statement
   ) env
 
   and interface env =
-    if Peek.is_identifier ~i:1 env
+    (* disambiguate between a value named `interface`, like `var interface = 1; interface++`,
+       and an interface declaration like `interface Foo {}`.` *)
+    if Peek.is_identifier_name ~i:1 env
     then
       let loc, iface = with_loc interface_helper env in
       loc, Statement.InterfaceDeclaration iface

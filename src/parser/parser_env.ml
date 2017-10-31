@@ -658,6 +658,9 @@ module Peek = struct
     | Lex_mode.TEMPLATE
     | Lex_mode.REGEXP -> false
 
+  let is_identifier_name ?(i=0) env =
+    is_identifier ~i env || is_type_identifier ~i env
+
   let is_literal_property_name ?(i=0) env =
     is_identifier ~i env || match token ~i env with
     | T_STRING _
