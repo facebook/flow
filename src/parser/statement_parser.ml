@@ -1325,10 +1325,11 @@ module Statement
         | Some error_if_type, T_TYPE
         | Some error_if_type, T_TYPEOF ->
           error env error_if_type;
-          Eat.token env (* consume `type` or `typeof` *)
-        | _ -> ()
-        end;
-        identifier env, None
+          Eat.token env; (* consume `type` or `typeof` *)
+          Type.type_identifier env, None
+        | _ ->
+          identifier env, None
+        end
 
     (*
       ImportSpecifier[Type]:
@@ -1414,7 +1415,7 @@ module Statement
     (* specifier in an `import typeof { ... }` *)
     in let typeof_specifier env =
       let remote, local = with_maybe_as env
-        ~for_type:false
+        ~for_type:true
         ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
       in
       { remote; local; kind = None }
