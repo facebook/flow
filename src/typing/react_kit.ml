@@ -889,6 +889,7 @@ let run cx trace ~use_op reason_op l u
         arg_polarities = SMap.empty;
         fields_tmap = Context.make_property_map cx props;
         initialized_field_names = SSet.empty;
+        initialized_static_field_names = SSet.empty;
         methods_tmap = Context.make_property_map cx SMap.empty;
         mixins = spec.unknown_mixins <> [];
         structural = false;

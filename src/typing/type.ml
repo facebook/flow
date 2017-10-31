@@ -825,6 +825,7 @@ module rec TypeTerm : sig
     arg_polarities: polarity SMap.t;
     fields_tmap: Properties.id;
     initialized_field_names: SSet.t;
+    initialized_static_field_names: SSet.t;
     methods_tmap: Properties.id;
     mixins: bool;
     structural: bool;

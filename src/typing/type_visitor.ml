@@ -692,6 +692,7 @@ class ['a] t = object(self)
       methods_tmap;
       class_id = _;
       initialized_field_names = _;
+      initialized_static_field_names = _;
       mixins = _;
       structural = _;
     } = i in

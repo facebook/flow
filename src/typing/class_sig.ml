@@ -313,7 +313,7 @@ let arg_polarities x =
   ) SMap.empty x.tparams
 
 let statictype cx s =
-  let _, fields, methods = elements cx s in
+  let inited_fields, fields, methods = elements cx s in
   let props = SMap.union fields methods
     ~combine:(fun _ _ ->
       Utils_js.assert_false (Utils_js.spf
@@ -328,10 +328,10 @@ let statictype cx s =
   in
   let open Type in
   match static with
-  | DefT (_, ObjT o) -> o
+  | DefT (_, ObjT o) -> inited_fields, o
   | _ -> failwith "statics must be an ObjT"
 
-let insttype cx s =
+let insttype cx ~initialized_static_field_names s =
   let constructor =
     let ts = List.rev_map (Func_sig.methodtype cx) s.constructor in
     match ts with
@@ -349,6 +349,7 @@ let insttype cx s =
     arg_polarities = arg_polarities s;
     fields_tmap = Context.make_property_map cx fields;
     initialized_field_names = inited_fields;
+    initialized_static_field_names;
     methods_tmap = Context.make_property_map cx methods;
     mixins = false;
     structural = s.structural;
@@ -396,8 +397,10 @@ let thistype cx x =
     _;
   } = x in
   let open Type in
-  let static = DefT (sreason, ObjT (statictype cx x.static)) in
-  DefT (reason, InstanceT (static, super, implements, insttype cx x))
+  let initialized_static_field_names, static_objtype = statictype cx x.static in
+  let insttype = insttype cx ~initialized_static_field_names x in
+  let static = DefT (sreason, ObjT static_objtype) in
+  DefT (reason, InstanceT (static, super, implements, insttype))
 
 let check_implements cx x =
   let this = thistype cx x in
@@ -409,10 +412,10 @@ let check_super cx x =
   let x = remove_this x in
   let reason = x.instance.reason in
   let open Type in
-  Flow.flow cx (x.static.super,
-    SuperT (reason, DerivedStatics (statictype cx x.static)));
-  Flow.flow cx (x.instance.super,
-    SuperT (reason, DerivedInstance (insttype cx x)))
+  let initialized_static_field_names, static_objtype = statictype cx x.static in
+  let insttype = insttype cx ~initialized_static_field_names x in
+  Flow.flow cx (x.static.super, SuperT (reason, DerivedStatics static_objtype));
+  Flow.flow cx (x.instance.super, SuperT (reason, DerivedInstance insttype))
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)

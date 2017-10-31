@@ -11219,24 +11219,30 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse t
 
   | DefT (_, InstanceT (static, super, _, instance)) ->
-    let process_element ?(is_field=false) name t =
+    let process_element ~static name t =
       let munged = is_munged_prop_name cx name in
-      let initialized = SSet.mem name instance.initialized_field_names in
-      let infer = munged || is_field && initialized in
-
+      let init_fields =
+        if static then instance.initialized_static_field_names
+        else instance.initialized_field_names
+      in
+      let initialized = SSet.mem name init_fields in
+      let infer = munged || initialized in
       let t =
-        if munged && (not is_field || initialized)
+        if munged
         then mod_reason_of_t (fun r -> derivable_reason r) t
         else t
       in
-
       recurse ~infer t
     in
+    (match static with
+    | DefT (_, ObjT o) ->
+      Context.iter_props cx o.props_tmap
+        (fun x -> Property.iter_t (process_element ~static:true x))
+    | _ -> ());
     Context.iter_props cx instance.fields_tmap
-      (fun x -> Property.iter_t (process_element ~is_field:true x));
+      (fun x -> Property.iter_t (process_element ~static:false x));
     Context.iter_props cx instance.methods_tmap
-      (fun x -> Property.iter_t (process_element x));
-    unify_opt cx static Locationless.AnyT.t;
+      (fun x -> Property.iter_t (process_element ~static:false x));
     recurse super
 
   | DefT (_, OptionalT t) ->

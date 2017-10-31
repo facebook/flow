@@ -259,14 +259,18 @@ class ['a] t = object(self)
       {this_t; params; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
-  method inst_type cx map_cx ({ class_id;
-                        type_args;
-                        arg_polarities;
-                        fields_tmap;
-                        initialized_field_names;
-                        methods_tmap;
-                        mixins;
-                        structural } as t) =
+  method inst_type cx map_cx i =
+    let {
+      class_id;
+      type_args;
+      arg_polarities;
+      fields_tmap;
+      initialized_field_names;
+      initialized_static_field_names;
+      methods_tmap;
+      mixins;
+      structural
+    } = i in
     let type_args' = SMap.ident_map (self#type_ cx map_cx) type_args in
     let f_tmap = Context.find_props cx fields_tmap in
     let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) f_tmap in
@@ -279,10 +283,18 @@ class ['a] t = object(self)
       if m_tmap == m_tmap' then methods_tmap
       else Context.make_property_map cx m_tmap' in
     if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
-    then t
-    else
-      {class_id; type_args = type_args'; arg_polarities; fields_tmap = fields_tmap';
-     initialized_field_names; methods_tmap = methods_tmap'; mixins; structural}
+    then i
+    else {
+      class_id;
+      type_args = type_args';
+      arg_polarities;
+      fields_tmap = fields_tmap';
+      initialized_field_names;
+      initialized_static_field_names;
+      methods_tmap = methods_tmap';
+      mixins;
+      structural;
+    }
 
   method type_param cx map_cx ({reason; name; bound; polarity; default} as t) =
     let bound' = self#type_ cx map_cx bound in

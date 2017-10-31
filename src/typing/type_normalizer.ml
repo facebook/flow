@@ -30,6 +30,7 @@ let fake_instance name =
     arg_polarities = SMap.empty;
     fields_tmap = Properties.fake_id;
     initialized_field_names = SSet.empty;
+    initialized_static_field_names = SSet.empty;
     methods_tmap = Properties.fake_id;
     mixins = false;
     structural = false;
