@@ -12,11 +12,11 @@ Error: api.js:11
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-226:       fn: (child: $NonMaybeType<T>, index: number) => U,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+227:       fn: (child: $NonMaybeType<T>, index: number) => U,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
   This parameter is incompatible:
-    226:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:226
+    227:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:227
      11: na(Children.map(a, (x: string) => (x: string))); // Error
                                 ^^^^^^ string
 
@@ -34,8 +34,8 @@ Error: api.js:12
 Error: api.js:14
  14: Children.forEach(a, (x: number) => {}); // Error
                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-231:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:231
+232:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ null. This type is incompatible with
@@ -45,8 +45,8 @@ Error: api.js:14
 Error: api.js:14
  14: Children.forEach(a, (x: number) => {}); // Error
                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-231:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:231
+232:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ undefined. This type is incompatible with
@@ -56,8 +56,8 @@ Error: api.js:14
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-231:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:231
+232:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ null. This type is incompatible with
@@ -67,8 +67,8 @@ Error: api.js:16
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-231:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:231
+232:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ undefined. This type is incompatible with
@@ -78,8 +78,8 @@ Error: api.js:16
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-231:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:231
+232:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
                                  ^^^^^^ number. This type is incompatible with

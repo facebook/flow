@@ -517,6 +517,7 @@ end with type t = Impl.t) = struct
     | loc, TaggedTemplate tagged -> tagged_template (loc, tagged)
     | loc, Class c -> class_expression (loc, c)
     | loc, JSXElement element -> jsx_element (loc, element)
+    | loc, JSXFragment fragment -> jsx_fragment (loc, fragment)
     | loc, MetaProperty meta_prop -> MetaProperty.(
         node "MetaProperty" loc [|
           "meta", identifier meta_prop.meta;
@@ -1247,6 +1248,14 @@ end with type t = Impl.t) = struct
     |]
   )
 
+  and jsx_fragment (loc, (fragment: Loc.t JSX.fragment)) = JSX.(
+    node "JSXFragment" loc [|
+      "openingFragment", jsx_opening_fragment fragment.frag_openingElement;
+      "children", array_of_list jsx_child fragment.frag_children;
+      "closingFragment", option jsx_closing_fragment fragment.frag_closingElement
+    |]
+  )
+
   and jsx_opening (loc, opening) = JSX.Opening.(
     node "JSXOpeningElement" loc [|
       "name", jsx_name opening.name;
@@ -1254,6 +1263,9 @@ end with type t = Impl.t) = struct
       "selfClosing", bool opening.selfClosing;
     |]
   )
+
+  and jsx_opening_fragment loc =
+    node "JSXOpeningFragment" loc [||]
 
   and jsx_opening_attribute = JSX.Opening.(function
     | Attribute attribute -> jsx_attribute attribute
@@ -1266,8 +1278,12 @@ end with type t = Impl.t) = struct
     |]
   )
 
+  and jsx_closing_fragment loc =
+    node "JSXClosingFragment" loc [||]
+
   and jsx_child = JSX.(function
     | loc, Element element -> jsx_element (loc, element)
+    | loc, Fragment fragment -> jsx_fragment (loc, fragment)
     | loc, ExpressionContainer expr -> jsx_expression_container (loc, expr)
     | loc, Text str -> jsx_text (loc, str)
   )

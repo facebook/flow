@@ -171,6 +171,7 @@ class mapper = object(this)
     | loc, Identifier x -> id this#identifier x expr (fun x -> loc, Identifier x)
     | loc, Import x -> id this#import x expr (fun x -> loc, Import x)
     | loc, JSXElement x -> id this#jsx_element x expr (fun x -> loc, JSXElement x)
+    | loc, JSXFragment x -> id this#jsx_fragment x expr (fun x -> loc, JSXFragment x)
     | loc, Literal x -> id this#literal x expr (fun x -> loc, Literal x)
     | loc, Logical x -> id this#logical x expr (fun x -> loc, Logical x)
     | loc, Member x -> id this#member x expr (fun x -> loc, Member x)
@@ -741,6 +742,12 @@ class mapper = object(this)
     if openingElement == openingElement' && children == children' then expr
     else { expr with openingElement = openingElement'; children = children' }
 
+  method jsx_fragment (expr: Loc.t Ast.JSX.fragment) =
+    let open Ast.JSX in
+    let { frag_children; _ } = expr in
+    let children' = map_list this#jsx_child frag_children in
+    { expr with frag_children = children' }
+
   method jsx_opening_element (elem: Loc.t Ast.JSX.Opening.t) =
     let open Ast.JSX.Opening in
     let loc, { name; selfClosing; attributes } = elem in
@@ -781,6 +788,8 @@ class mapper = object(this)
     match child' with
     | Element elem ->
       id this#jsx_element elem child (fun elem -> loc, Element elem)
+    | Fragment frag ->
+      id this#jsx_fragment frag child (fun frag -> loc, Fragment frag)
     | ExpressionContainer expr ->
       id this#jsx_expression expr child (fun expr -> loc, ExpressionContainer expr)
     | Text _ -> child

@@ -327,7 +327,7 @@ module rec Parse : PARSER = struct
     Expect.token env T_RCURLY;
     Loc.btwn start_loc end_loc, { Ast.Statement.Block.body; }, strict
 
-  and jsx_element = JSX.element
+  and jsx_element_or_fragment = JSX.element_or_fragment
 
   and pattern = Pattern.pattern
   and pattern_from_expr = Pattern.from_expr

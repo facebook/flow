@@ -2904,6 +2904,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | JSXElement e ->
       jsx cx e
 
+  | JSXFragment f ->
+      jsx_fragment cx f
+
   | Class c ->
       let (name_loc, name) = extract_class_name loc c in
       let reason = mk_reason (RCustom (spf "class expr `%s`" name)) loc in
@@ -3446,20 +3449,33 @@ and clone_object cx reason this that =
     )
   )
 
+and collapse_children cx children = Ast.JSX.(
+  children
+  |> List.filter (ExpressionContainer.(function
+    | (_, ExpressionContainer { expression = EmptyExpression _ }) -> false
+    | _ -> true))
+  |> List.map (jsx_body cx)
+  |> List.fold_left (fun children -> function
+    | None -> children
+    | Some child -> child::children) []
+  |> List.rev)
+
 and jsx cx = Ast.JSX.(
   function { openingElement; children; _ } ->
-  let children =
-    children
-    |> List.filter (ExpressionContainer.(function
-      | (_, ExpressionContainer { expression = EmptyExpression _ }) -> false
-      | _ -> true))
-    |> List.map (jsx_body cx)
-    |> List.fold_left (fun children -> function
-      | None -> children
-      | Some child -> child::children) []
-    |> List.rev in
-
+  let children = collapse_children cx children in
   jsx_title cx openingElement children
+)
+
+and jsx_fragment cx = Ast.JSX.(
+  function { frag_openingElement; frag_children; _ } ->
+  let eloc = frag_openingElement in
+  let children = collapse_children cx frag_children in
+  let fragment =
+    let reason = mk_reason (RIdentifier "React.Fragment") eloc in
+    let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
+    get_prop ~is_cond:false cx reason react (reason, "Fragment")
+  in
+  jsx_desugar cx "React.Fragment" fragment (NullT.at eloc) [] children eloc
 )
 
 and jsx_title cx openingElement children = Ast.JSX.(
@@ -3762,6 +3778,7 @@ and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
 
 and jsx_body cx = Ast.JSX.(function
   | _, Element e -> Some (jsx cx e)
+  | _, Fragment f -> Some (jsx_fragment cx f)
   | _, ExpressionContainer ec -> (
       let open ExpressionContainer in
       let { expression = ex } = ec in

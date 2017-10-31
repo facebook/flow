@@ -785,6 +785,7 @@ and Expression : sig
     | Identifier of 'M Identifier.t
     | Import of 'M t
     | JSXElement of 'M JSX.element
+    | JSXFragment of 'M JSX.fragment
     | Literal of Literal.t
     | Logical of 'M Logical.t
     | Member of 'M Member.t
@@ -895,6 +896,7 @@ and JSX : sig
   type 'M child = 'M * 'M child'
   and 'M child' =
     | Element of 'M element
+    | Fragment of 'M fragment
     | ExpressionContainer of 'M ExpressionContainer.t
     | Text of Text.t
 
@@ -903,6 +905,13 @@ and JSX : sig
     closingElement: 'M Closing.t option;
     children: 'M child list
   }
+
+  and 'M fragment = {
+    frag_openingElement: 'M;
+    frag_closingElement: 'M option;
+    frag_children: 'M child list;
+  }
+
 end = JSX
 
 and Pattern : sig
