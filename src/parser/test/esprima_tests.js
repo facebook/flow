@@ -454,7 +454,6 @@ module.exports = {
 
     'Comments': [
 
-        '/* block comment */ 42',
         {
           content: '42 /* block comment 1 */ /* block comment 2 */',
           explanation: "Esprima counts comments in its loc, Flow doesn't",
@@ -481,10 +480,6 @@ module.exports = {
             },
           }
         },
-        'var p1;/* block comment 1 */ /* block comment 2 */',
-        '/*42*/',
-        '(a + /* assignment */b ) * c',
-        '/* assignment */\n a = b',
         {
           content: '42 /*The*/ /*Answer*/',
           explanation: "Esprima counts comments in its loc, Flow doesn't",

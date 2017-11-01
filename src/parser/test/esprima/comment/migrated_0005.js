@@ -1,2 +1,2 @@
-/* assignment */
+/* assignmenr */
  a = b
