@@ -812,7 +812,7 @@ module rec TypeTerm : sig
     | GetSet of t * t
     | Method of t
 
-  (* This has to go here so that Type doesnt depend on Scope *)
+  (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
     class_binding_id: ident;
     class_private_fields: Properties.id;
