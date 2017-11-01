@@ -297,13 +297,14 @@ let type_at_pos js_file js_content js_line js_col =
   | (_, _) ->  failwith "Error"
 
 let exports =
-  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
+  if (Js.Unsafe.js_expr "typeof exports !== 'undefined'")
   then Js.Unsafe.js_expr "exports"
   else begin
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;
     exports
   end
+
 let () = Js.Unsafe.set exports "registerFile" (
   Js.wrap_callback (fun name content -> Sys_js.register_file ~name ~content)
 )
