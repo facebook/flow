@@ -180,9 +180,8 @@ let check_content ~filename ~content =
   let errors, warnings = match parse_content filename content with
   | ast, [] ->
     let cx = infer_and_merge ~root filename ast in
-    (* Perform a basic suppression step, to eliminate lints from playground output. *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors cx)
+      Error_suppressions.empty (Context.severity_cover cx) (Context.errors cx)
     in errors, warnings
   | _, parse_errors ->
     let errors = List.fold_left (fun acc parse_error ->
