@@ -638,13 +638,13 @@ module Statement
     else expression env
 
   and declare_class =
-    let rec supers env acc =
+    let rec mixins env acc =
       let super = Type.generic env in
       let acc = super::acc in
       match Peek.token env with
       | T_COMMA ->
         Expect.token env T_COMMA;
-        supers env acc
+        mixins env acc
       | _ -> List.rev acc
 
     (* This is identical to `interface`, except that mixins are allowed *)
@@ -653,13 +653,9 @@ module Statement
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Peek.token env = T_EXTENDS
-        then begin
-          Expect.token env T_EXTENDS;
-          supers env []
-        end else [] in
+      let extends = if Expect.maybe env T_EXTENDS then [Type.generic env] else [] in
       let mixins = match Peek.token env with
-      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; supers env []
+      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
       | _ -> []
       in
       let body = Type._object ~allow_static:true env in
