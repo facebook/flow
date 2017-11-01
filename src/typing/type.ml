@@ -892,6 +892,7 @@ module rec TypeTerm : sig
   | PropertyType of string
   | ElementType of t
   | Bind of t
+  | ReadOnlyType
   | SpreadType of Object.Spread.target * t list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
@@ -1565,6 +1566,7 @@ and Object : sig
   end
 
   type tool =
+    | ReadOnly
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state

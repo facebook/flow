@@ -279,6 +279,20 @@ let rec convert cx tparams_map = Ast.Type.(function
         RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)), mk_id ())
     )
 
+  (* $ReadOnly<T> *)
+  | "$ReadOnly" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (
+        t,
+        TypeDestructorT (
+          mk_reason RObjectType loc,
+          ReadOnlyType
+        ),
+        mk_id ()
+      )
+    )
+
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum" ->

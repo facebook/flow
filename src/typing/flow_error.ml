@@ -1395,6 +1395,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EInvalidObjectKit { tool; reason; reason_op } ->
       let open Object in
       let msg = match tool with
+        | ReadOnly -> "Cannot create an object with read-only properties from"
         | Spread _ -> "Cannot spread properties from"
         | Rest (_, state) ->
           let open Object.Rest in

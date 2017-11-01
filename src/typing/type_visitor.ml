@@ -215,6 +215,7 @@ class ['a] t = object(self)
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReadOnlyType
   | ReactElementPropsType
   | ReactElementRefType
     -> acc
@@ -475,6 +476,7 @@ class ['a] t = object(self)
         acc
     in
     let acc = match tool with
+      | ReadOnly -> acc
       | Spread (_, state) ->
         let open Object.Spread in
         let { todo_rev; acc = object_spread_acc } = state in

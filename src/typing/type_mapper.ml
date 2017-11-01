@@ -333,6 +333,7 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else Bind t''
+      | ReadOnlyType -> t
       | SpreadType (options, tlist) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
@@ -1018,6 +1019,7 @@ class ['a] t = object(self)
   method object_kit_tool cx map_cx tool =
     let open Object in
     match tool with
+    | ReadOnly -> tool
     | Spread (options, state) ->
       let open Object.Spread in
       let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in

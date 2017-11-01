@@ -1088,6 +1088,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
+  | ReadOnlyType -> JSON_Object [
+      "readOnly", JSON_Bool true
+    ]
   | SpreadType (target, ts) ->
     let open Object.Spread in
     JSON_Object (
@@ -1556,6 +1559,7 @@ and dump_t_ (depth, tvars) cx t =
   | PropertyType x -> spf "property type `%s`" x
   | ElementType _ -> "element type"
   | Bind _ -> "bind"
+  | ReadOnlyType -> "read only"
   | SpreadType _ -> "spread"
   | RestType _ -> "rest"
   | ValuesType -> "values"
@@ -1924,6 +1928,7 @@ and dump_use_t_ (depth, tvars) cx t =
           | Defaults _ -> "Defaults")
     in
     let tool = function
+      | ReadOnly -> "ReadOnly"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
       | ReactConfig state -> react_props state
@@ -2227,6 +2232,7 @@ let string_of_destructor = function
   | PropertyType x -> spf "PropertyType %s" x
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
+  | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"

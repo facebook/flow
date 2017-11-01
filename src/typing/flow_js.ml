@@ -6788,6 +6788,9 @@ and eval_destructor cx ~trace reason t d tout = match t with
     let tool = Resolve Next in
     let state = One t in
     ObjKitT (UnknownUse, reason, tool, Rest (options, state), tout)
+  | ReadOnlyType ->
+    let open Object in
+    ObjKitT (UnknownUse, reason, Resolve (Next), ReadOnly, tout)
   | ValuesType -> GetValuesT (reason, tout)
   | CallType args ->
     let args = List.map (fun arg -> Arg arg) args in
@@ -10568,6 +10571,32 @@ and object_kit =
         rec_flow cx trace (t, UseT (use_op, tout))
   in
 
+  (********************)
+  (* Object Read Only *)
+  (********************)
+
+  let object_read_only =
+    let polarity = Positive in
+
+    let mk_read_only_object cx reason slice =
+      let (r, props, dict, flags) = slice in
+
+      let props = SMap.map (fun (t, _) -> Field (t, polarity)) props in
+      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+      let id = Context.make_property_map cx props in
+      let proto = ObjProtoT reason in
+      let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
+      if flags.exact then ExactT (reason, t) else t
+    in
+
+    fun cx trace use_op reason tout x ->
+      let t = match Nel.map (mk_read_only_object cx reason) x with
+        | (t, []) -> t
+        | (t0, t1::ts) -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
+      in
+      rec_flow cx trace (t, UseT (use_op, tout))
+  in
+
   (****************)
   (* React Config *)
   (****************)
@@ -10715,6 +10744,7 @@ and object_kit =
   | Spread (options, state) -> object_spread options state
   | Rest (options, state) -> object_rest options state
   | ReactConfig state -> react_config state
+  | ReadOnly -> object_read_only
   in
 
   (* Intersect two object slices: slice * slice -> slice
