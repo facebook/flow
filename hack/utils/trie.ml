@@ -237,7 +237,7 @@ let remove_prefix (trie : 'a t) (s : string) : unit =
 (*       if String.length key = c then begin *)
 (*         (\* matched whole key. *)
 (*          * Either continue to merge child, if whole s matched, *)
-(*          * or continue to match in des's path, if some s left*\) *)
+(*          * or continue to match in des s path, if some s left*\) *)
 (*         if (String.length s = c) && (not (s = "")) then *)
 (*           merge child n ~if_exist *)
 (*         else if (not (s = "")) then *)
