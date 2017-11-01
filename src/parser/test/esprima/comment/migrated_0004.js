@@ -1,1 +1,1 @@
-(a + /* assignmenr */b ) * c
+(a + /* assignment */b ) * c
