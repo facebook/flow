@@ -21,20 +21,30 @@
 let () =
   let out_file = Sys.argv.(1) in
   let rev =
-    try read_process_output "git" [|"git"; "rev-parse"; "HEAD"|]
-    with Failure _ ->
-      try read_process_output "hg" [|"hg"; "id"; "-i"|]
-      with Failure _ -> ""
+    try read_process_stdout "git" [|"git"; "rev-parse"; "HEAD"|]
+    with Failure msg -> (
+      Printf.eprintf "Failed git rev-parse: %s\n%!" msg;
+      try read_process_stdout "hg" [|"hg"; "id"; "-i"|]
+      with Failure msg -> (
+        Printf.eprintf "Failed hg id: %s\n%!" msg;
+        ""
+      )
+    )
   in
   let time =
-    try read_process_output "git" [|"git"; "log"; "-1"; "--pretty=tformat:%ct"|]
-    with Failure _ ->
+    try read_process_stdout "git" [|"git"; "log"; "-1"; "--pretty=tformat:%ct"|]
+    with Failure msg -> (
+      Printf.eprintf "Failed git log: %s\n%!" msg;
       try
-        let raw = read_process_output "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{date|hgdate}\\n"|] in
+        let raw = read_process_stdout "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{date|hgdate}\\n"|] in
         String.sub raw 0 (String.index raw ' ')
       with
-      | Failure _ -> "0"
+      | Failure msg -> (
+        Printf.eprintf "Failed hg log: %s\n%!" msg;
+        "0"
+      )
       | Not_found -> "0"
+    )
   in
   let content = Printf.sprintf
     "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\n"
