@@ -1,3 +1,25 @@
+Error: annot.js:6
+  6: f(x); // error should point to `x` here, not at type alias
+     ^^^^ function call. Function cannot be called on any member of intersection type
+  6: f(x); // error should point to `x` here, not at type alias
+     ^ intersection
+  Member 1:
+    1: declare function f(x: string): void;
+                         ^^^^^^^^^^^^^^^^^ function type
+  Error:
+    6: f(x); // error should point to `x` here, not at type alias
+         ^ null. This type is incompatible with the expected param type of
+    1: declare function f(x: string): void;
+                             ^^^^^^ string
+  Member 2:
+    2: declare function f(x: number): void;
+                         ^^^^^^^^^^^^^^^^^ function type
+  Error:
+    6: f(x); // error should point to `x` here, not at type alias
+         ^ null. This type is incompatible with the expected param type of
+    2: declare function f(x: number): void;
+                             ^^^^^^ number
+
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
@@ -197,4 +219,4 @@ Error: test2.js:7
                        ^^^^^^ number
 
 
-Found 12 errors
+Found 13 errors

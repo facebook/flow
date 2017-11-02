@@ -1482,8 +1482,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
-    | AnnotT (tvar, _), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      rec_flow cx trace (OpenT tvar, u)
+    | AnnotT (tvar, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      let source_t = OpenT tvar in
+      (* TODO: directly derive loc and desc from the reason of tvar *)
+      let loc = loc_of_t source_t in
+      let desc = if use_desc then Some (desc_of_t source_t) else None in
+      rec_flow cx trace (reposition ~trace cx loc ?desc source_t, u)
 
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, DefT (r, IntersectionT rep), u)) ->
