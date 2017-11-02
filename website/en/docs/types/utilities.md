@@ -115,7 +115,22 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
+## `Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
 
+Copies the shape of the type supplied, but marks every field optional.
+
+```js
+type FullConfig = {
+  configA: boolean,
+  configB: number,
+}
+type PartialConfig = $Shape<FullConfig>;
+
+const config1: PartialConfig = {configB: true}; // error due to incorrect type for configB
+const config2: FullConfig    = {configB: 1}; // error due to missing configA
+const config3: PartialConfig = {configA: 1, configB: 1}; // error due to incorrect type for configA
+const config4: PartialConfig = {configA: true, configB: 1}; // ok
+```
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
 Work in progress
