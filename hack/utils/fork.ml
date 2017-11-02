@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (* Forking duplicates data in all buffers, so we flush them beforehand to avoid
  * writing the same thing twice.

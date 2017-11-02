@@ -21,7 +21,7 @@
    *    its fate to the next client.
 *)
 
-open Core
+open Hh_core
 open ServerProcess
 open ServerProcessTools
 open ServerMonitorUtils

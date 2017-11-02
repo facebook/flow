@@ -2,7 +2,7 @@
 (* Spec: http://www.jsonrpc.org/specification *)
 (* Practical readbable guide: https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol-json-structures *)
 
-open Core
+open Hh_core
 
 
 (***************************************************************)

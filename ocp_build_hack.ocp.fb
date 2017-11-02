@@ -91,7 +91,7 @@ begin library "hh-utils-core"
   files = [
     "build_id.ml"
     "build_mode/prod/build_mode.ml"
-    "core.ml"
+    "hh_core.ml"
     "exit_status.ml"
     "get_build_id.c"
     "get_build_id.gen.c"

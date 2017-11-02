@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)

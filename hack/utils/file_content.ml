@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Core
+open Hh_core
 open Ide_api_types
 
 (* UTF-8 encoding character lengths.

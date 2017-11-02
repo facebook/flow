@@ -79,7 +79,7 @@
  * sent across pipes.
  *)
 
-module List = Core.List
+module List = Hh_core.List
 module FloatMap = MyMap.Make(struct type t = float let compare = compare end)
 
 type distribution = {

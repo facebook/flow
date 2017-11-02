@@ -8,7 +8,7 @@
  *
 *)
 
-open Core
+open Hh_core
 
 (** Our Unix systems only allow reading 64KB chunks at a time.
  * Trying to read more than 64KB results in only 64KB being read. *)

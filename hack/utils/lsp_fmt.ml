@@ -8,7 +8,7 @@
  *
 *)
 
-open Core
+open Hh_core
 open Lsp
 open Hh_json
 

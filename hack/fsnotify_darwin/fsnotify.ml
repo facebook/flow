@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 module SSet = Set.Make(String)
 exception Error of string * Unix.error
