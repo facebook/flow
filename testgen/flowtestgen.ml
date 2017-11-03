@@ -110,4 +110,5 @@ let main () =
   Logging.print_stats ();
   Logging.close ();;
 
-main ();;
+ignore (Utils.flow_check "var i : string = ([]).length;");
+(* main ();; *)

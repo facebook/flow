@@ -243,6 +243,16 @@ build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
+testgen: build-flow
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
+	 	-lflags "$(LINKER_FLAGS)" \
+		$(RELEASE_TAGS) \
+		testgen/flowtestgen.native
+	mkdir -p bin
+	cp _build/testgen/flowtestgen.native bin/flowtestgen$(EXE)
+
 %.h: $(subst _build/,,$@)
 	mkdir -p $(dir $@)
 	cp $(subst _build/,,$@) $@

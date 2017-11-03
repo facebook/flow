@@ -711,6 +711,107 @@ let test_code (code : string) : string option =
 
 let is_typecheck engine_name = engine_name = "union"
 
-let flow_check (code : Loc.t Ast.program) : string option = 
-  ignore code;
+let stub_metadata ~root ~checked = { Context.
+  local_metadata = { Context.
+    checked;
+    munge_underscores = false;
+    verbose = None;
+    weak = false;
+    jsx = None;
+    strict = true;
+  };
+  global_metadata = { Context.
+    enable_const_params = false;
+    enable_unsafe_getters_and_setters = true;
+    enforce_strict_type_args = true;
+    enforce_strict_call_arity = true;
+    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+    facebook_fbt = None;
+    ignore_non_literal_requires = false;
+    max_trace_depth = 0;
+    max_workers = 0;
+    root;
+    strip_root = true;
+    suppress_comments = [];
+    suppress_types = SSet.empty;
+  };
+}
+
+let get_master_cx =
+  let master_cx = ref None in
+  fun root ->
+    match !master_cx with
+    | Some (prev_root, cx) -> assert (prev_root = root); cx
+    | None ->
+      let cx = Flow_js.fresh_context
+        (stub_metadata ~root ~checked:false)
+        File_key.Builtins
+        Files.lib_module_ref in
+      master_cx := Some (root, cx);
+      cx
+
+let flow_check (code : string) : string option =
+(* let flow_check (code : Loc.t Ast.program) : string option =  *)
+  let root = Path.dummy_path in
+  let master_cx = get_master_cx root in
+  ignore master_cx;
+
+  let builtin_metadata = stub_metadata ~root ~checked:true in
+  let lint_severities = LintSettings.default_severities in
+  Printf.printf "bar1\n%!";
+  let builtins_ast, _ = Parser_flow.program (snd (Flowlib.contents true).(0)) in
+  Printf.printf "bar2\n%!";
+  let cx, _ = Type_inference_js.infer_lib_file
+      ~metadata:builtin_metadata ~exclude_syms:SSet.empty ~lint_severities
+      File_key.Builtins builtins_ast in
+  Printf.printf "bar3\n%!";
+  (*
+  let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
+  Printf.printf "Lib errors:\n";
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errs errs ();
+  ignore suppressions;
+  ignore lint_suppressions;
+     *)
+
+  let strict_mode = StrictModeSettings.empty in
+  let stub_docblock = { Docblock.
+                        flow = Docblock.(Some OptIn);
+                        preventMunge = None;
+                        providesModule = None;
+                        isDeclarationFile = false;
+                        jsx = None;
+                      } in
+  let input_ast, _ = Parser_flow.program code in
+  (*
+  let input_metadata = stub_metadata ~root ~checked:true in
+     *)
+  let filename = File_key.SourceFile "/tmp/foo.js" in
+  let file_sig = File_sig.program ~ast:input_ast in
+  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+  (*
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let decls = SMap.fold (fun module_name loc ->
+    List.cons (module_name, loc, Modulename.String module_name, filename)
+  ) require_loc_map [] in
+  let reqs = Merge_js.Reqs.({ empty with decls }) in
+     *)
+  let reqs = Merge_js.Reqs.empty in
+  Printf.printf "foo1\n%!";
+  let final_cx = Merge_js.merge_component_strict
+    ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(fun _ -> input_ast)
+    ~get_docblock_unsafe:(fun _ -> stub_docblock)
+    [filename] reqs [] cx in
+  Printf.printf "foo2\n%!";
+  Type_inference_js.infer_ast
+    ~lint_severities ~file_sig final_cx filename input_ast;
+  Printf.printf "foo3\n%!";
+  let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
+      Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
+  in 
+  Printf.printf "Input errors:\n";
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errors warnings ();
   None
