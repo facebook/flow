@@ -97,7 +97,7 @@ module Alarm_timeout = struct
     | None -> invalid_arg "Timeout.close_process_in"
     | Some pid ->
         Pervasives.close_in ic;
-        snd(Unix.waitpid [] pid)
+        snd(Sys_utils.waitpid_non_intr [] pid)
 
   let read_process ~timeout ~on_timeout ~reader cmd args =
     let (ic, oc) = open_process cmd args in
@@ -174,16 +174,12 @@ module Select_timeout = struct
     try Unix.close tic.fd
     with _ -> ()
 
-  let rec waitpid_non_intr pid =
-    try Unix.waitpid [] pid
-    with Unix.Unix_error (Unix.EINTR, _, _) -> waitpid_non_intr pid
-
   let close_process_in tic =
     match tic.pid with
     | None -> invalid_arg "Timeout.close_process_in"
     | Some pid ->
         close_in tic;
-        snd (waitpid_non_intr pid)
+        snd (Sys_utils.waitpid_non_intr [] pid)
 
   let do_read ?timeout tic =
     let timeout_duration = get_current_timeout timeout in
