@@ -3643,6 +3643,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
+      (* Special case for `_ instanceof C` where C is polymorphic *)
+      | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
+        let l = instantiate_poly_default_args cx trace
+          ~reason_op ~reason_tapp (ids, t) in
+        rec_flow cx trace (l, u)
       (* Special case for React.PropTypes.instanceOf arguments, which are an
          exception to type arg arity strictness, because it's not possible to
          provide args and we need to interpret the value as a type. *)
