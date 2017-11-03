@@ -233,6 +233,7 @@ type var_scope_kind =
   | Module          (* module scope *)
   | Global          (* global scope *)
   | Predicate       (* predicate function *)
+  | Ctor            (* constructor *)
 
 let string_of_var_scope_kind = function
 | Ordinary -> "Ordinary"
@@ -242,6 +243,7 @@ let string_of_var_scope_kind = function
 | Module -> "Module"
 | Global -> "Global"
 | Predicate -> "Predicate"
+| Ctor -> "Constructor"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)

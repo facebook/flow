@@ -47,7 +47,7 @@ let string_of_polarity = function
 
 let string_of_rw = function
   | Read -> "Read"
-  | Write -> "Write"
+  | Write _ -> "Write"
 
 type json_cx = {
   stack: ISet.t;
@@ -68,19 +68,23 @@ let rec _json_of_t json_cx t =
     check_depth _json_of_t_impl json_cx t
   )
 
+and _json_of_tvar json_cx id = Hh_json.(
+  [
+    "id", int_ id
+  ] @
+  if ISet.mem id json_cx.stack then []
+  else [
+    "node", json_of_node json_cx id
+  ]
+)
+
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
     "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
-  | OpenT (_, id) -> [
-      "id", int_ id
-    ] @
-    if ISet.mem id json_cx.stack then []
-    else [
-      "node", json_of_node json_cx id
-    ]
+  | OpenT (_, id) -> _json_of_tvar json_cx id
 
   | DefT (_, NumT lit) ->
     begin match lit with
@@ -239,11 +243,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DiffT (t1, t2) -> [
-      "type1", _json_of_t json_cx t1;
-      "type2", _json_of_t json_cx t2
-    ]
-
   | MatchingPropT (_, x, t) -> [
       "name", JSON_String x;
       "type", _json_of_t json_cx t
@@ -269,8 +268,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT (t, use_desc) -> [
-      "assume", _json_of_t json_cx t;
+  | AnnotT ((_, id), use_desc) ->
+    (_json_of_tvar json_cx id) @ [
       "useDesc", JSON_Bool use_desc;
     ]
 
@@ -436,7 +435,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "useDesc", JSON_Bool use_desc;
     ]
 
-  | SetPropT (_, name, t)
+  | SetPropT (_, name, _, t)
   | GetPropT (_, name, t)
   | TestPropT (_, name, t) -> [
       "propRef", json_of_propref json_cx name;
@@ -712,11 +711,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t", _json_of_t json_cx t;
     ]
 
-  | ObjKitT (_, _, _, tout) -> [
+  | ObjKitT (_, _, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
+  | ReactKitT (_, _, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
       "children", JSON_Array (List.map (_json_of_t json_cx) children);
@@ -966,8 +965,7 @@ and json_of_changeset_impl _json_cx = Hh_json.(
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 and json_of_funtype_impl json_cx {
   this_t;
-  params_tlist;
-  params_names;
+  params;
   rest_param;
   return_t;
   is_predicate;
@@ -975,14 +973,19 @@ and json_of_funtype_impl json_cx {
   changeset;
   def_reason;
 } = Hh_json.(
+  let rec params_names (any, names_rev) = function
+    | [] -> if any then Some names_rev else None
+    | (None, _)::xs -> params_names (any, "_"::names_rev) xs
+    | (Some name, _)::xs -> params_names (true, name::names_rev) xs
+  in
   JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
-    "paramTypes", JSON_Array (List.map (_json_of_t json_cx) params_tlist)
-  ] @ (match params_names with
+    "paramTypes", JSON_Array (List.map (fun (_, t) -> _json_of_t json_cx t) params)
+  ] @ (match params_names (false, []) params with
     | None -> []
-    | Some names -> [
+    | Some names_rev -> [
         "paramNames",
-        JSON_Array (List.map (fun s -> JSON_String s) names)
+        JSON_Array (List.rev_map (fun s -> JSON_String s) names_rev)
       ]
   ) @ [
     "restParam", (match rest_param with
@@ -1085,28 +1088,21 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType (options, ts) ->
+  | ReadOnlyType -> JSON_Object [
+      "readOnly", JSON_Bool true
+    ]
+  | SpreadType (target, ts) ->
     let open Object.Spread in
-    let {merge_mode; exclude_props} = options in
     JSON_Object (
-      (match merge_mode with
-        | Sound target -> [
-            "mergeMode", JSON_String "Sound";
-          ] @ (match target with
-          | Value -> [
-              "target", JSON_String "Value";
-            ]
-          | Annot { make_exact } -> [
-              "target", JSON_String "Annot";
-              "makeExact", JSON_Bool make_exact;
-            ]
-          )
-        | Diff -> [
-            "mergeMode", JSON_String "Diff";
+      (match target with
+        | Value -> [
+            "target", JSON_String "Value";
+          ]
+        | Annot { make_exact } -> [
+            "target", JSON_String "Annot";
+            "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "excludePropNames",
-          JSON_Array (List.map (fun s -> JSON_String s) exclude_props);
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
@@ -1563,6 +1559,7 @@ and dump_t_ (depth, tvars) cx t =
   | PropertyType x -> spf "property type `%s`" x
   | ElementType _ -> "element type"
   | Bind _ -> "bind"
+  | ReadOnlyType -> "read only"
   | SpreadType _ -> "spread"
   | RestType _ -> "rest"
   | ValuesType -> "values"
@@ -1649,10 +1646,10 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, BoolT c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | DefT (_, FunT (_, _, {params_tlist; return_t; this_t; _})) -> p
+  | DefT (_, FunT (_, _, {params; return_t; this_t; _})) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
-        (String.concat "; " (List.map kid params_tlist))
+        (String.concat "; " (List.map (fun (_, t) -> kid t) params))
         (kid return_t)) t
   | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | DefT (_, EmptyT)
@@ -1688,8 +1685,8 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
-  | AnnotT (source, use_desc) -> p t ~reason:false
-      ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
+  | AnnotT ((_, id), use_desc) ->
+    p ~extra:(spf "use_desc=%b, %s" use_desc (tvar id)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
   | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t
@@ -1717,7 +1714,6 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
-  | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" s) t
@@ -1781,7 +1777,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let lookup_action = function
   | RWProp (_, t, Read) -> spf "Read %s" (kid t)
-  | RWProp (_, t, Write) -> spf "Write %s" (kid t)
+  | RWProp (_, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
   | MatchProp t -> spf "Match %s" (kid t)
@@ -1899,17 +1895,12 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let spread options state =
+    let spread target state =
       let open Object.Spread in
-      let options =
-        let {merge_mode; exclude_props} = options in
-        spf "{merge_mode=%s; exclude_props=[%s]}"
-          (match merge_mode with
-            | Sound target -> spf "Sound (%s)" (match target with
-              | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
-              | Value -> "Value")
-            | Diff -> "Diff")
-          (String.concat "; " exclude_props)
+      let target =
+        (match target with
+          | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
+          | Value -> "Value")
       in
       let state =
         let {todo_rev; acc} = state in
@@ -1917,11 +1908,11 @@ and dump_use_t_ (depth, tvars) cx t =
           (String.concat "; " (List.map kid todo_rev))
           (String.concat "; " (List.map resolved acc))
       in
-      spf "(%s, %s)" options state
+      spf "Spread (%s, %s)" target state
     in
     let rest merge_mode state =
       let open Object.Rest in
-      spf "({merge_mode=%s}, %s)"
+      spf "Rest ({merge_mode=%s}, %s)"
         (match merge_mode with
           | Sound -> "Sound"
           | IgnoreExactAndOwn -> "IgnoreExactAndOwn")
@@ -1929,9 +1920,18 @@ and dump_use_t_ (depth, tvars) cx t =
           | One t -> spf "One (%s)" (kid t)
           | Done o -> spf "Done (%s)" (resolved o))
     in
+    let react_props state =
+      let open Object.ReactConfig in
+      spf "(%s)"
+        (match state with
+          | Config _ -> "Config"
+          | Defaults _ -> "Defaults")
+    in
     let tool = function
+      | ReadOnly -> "ReadOnly"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
+      | ReactConfig state -> react_props state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)
@@ -2025,7 +2025,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
-  | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
+  | ReactKitT (use_op, _, tool) -> p t
+      ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
   | RefineT _ -> p t
   | ReposLowerT (_, use_desc, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
@@ -2060,7 +2061,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPropT (_, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
   | SetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
@@ -2073,7 +2074,8 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> spf "%s, %s"
           (specialize_cache cache) (kid ret)
     end t
-  | ObjKitT (_, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s"
+  | ObjKitT (use_op, _, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s, %s"
+      (string_of_use_op use_op)
       (object_kit resolve_tool tool)
       (kid tout)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
@@ -2230,6 +2232,7 @@ let string_of_destructor = function
   | PropertyType x -> spf "PropertyType %s" x
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
+  | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
@@ -2485,10 +2488,11 @@ let dump_flow_error =
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIncompatibleWithExact ((reason1, reason2), _) ->
-        spf "EIncompatibleWithExact ((%s, %s), _)"
+    | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+        spf "EIncompatibleWithExact ((%s, %s), %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
         spf "EUnsupportedExact (%s, %s)"
           (dump_reason cx reason1)

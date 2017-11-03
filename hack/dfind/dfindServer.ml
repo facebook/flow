@@ -13,7 +13,7 @@
 (* Code relative to the client/server communication *)
 (*****************************************************************************)
 
-open Core
+open Hh_core
 open DfindEnv
 
 type msg =

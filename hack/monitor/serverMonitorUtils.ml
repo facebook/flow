@@ -22,6 +22,13 @@ type monitor_config =
     load_script_log_file: string;
   }
 
+(** Informant-induced restart may specify the mini saved state
+ * we should load from. *)
+type target_mini_state = {
+  mini_state_everstore_handle : string;
+  target_svn_rev : int;
+}
+
 module type Server_config = sig
 
   type server_start_options
@@ -29,10 +36,19 @@ module type Server_config = sig
   (** Start the server. Optionally takes in the exit code of the previously
    * running server that exited. *)
   val start_server :
+    ?target_mini_state:target_mini_state ->
     informant_managed:bool ->
     prior_exit_status:(int option) ->
     server_start_options ->
     ServerProcess.process_data
+
+  val kill_server : ServerProcess.process_data -> unit
+
+  val wait_for_server_exit : ServerProcess.process_data ->
+    float (** Kill signal time *) ->
+    unit
+
+  val wait_pid : ServerProcess.process_data -> int * Unix.process_status
 
   (** Callback to run when server exits *)
   val on_server_exit : monitor_config -> unit
@@ -76,7 +92,11 @@ type connection_error =
 
 type connection_state =
   | Connection_ok
+  (* Build_is_mismatch is never used, but it can't be removed, because *)
+  (* the sequence of constructors here is part of the binary protocol  *)
+  (* we want to support between mismatched versions of client_server.  *)
   | Build_id_mismatch
+  (* Build_id_mismatch_ex *is* used. *)
   | Build_id_mismatch_ex of build_mismatch_info
 
 (** Result of a shutdown monitor RPC. *)

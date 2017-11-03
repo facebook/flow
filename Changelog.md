@@ -1,3 +1,53 @@
+### 0.58.0
+
+Likely to cause new Flow errors:
+
+* Detect match failures with disjoint unions. Example:
+  ```
+  type Foo = { type: 'A', ... } | { type: 'B', ... }`
+  function match(foo: Foo) {
+    switch (foo.type) {
+      case 'C': ... // dead branch, now error! (was allowed previously)
+      ...
+    }
+  }
+  ```
+
+New Features:
+
+* Support for user-defined "strict" mode. Using `@flow strict` instead of
+  `@flow` in the header will now additionally fire lint rules that can be listed
+  in the `[strict]` section of
+  `.flowconfig`. [Here](https://flow.org/en/docs/linting/rule-reference) are the
+  current set of supported lint rules (more coming, contributions welcome!).
+
+Error reporting:
+
+* Error location improvements for a bunch of common operations
+
+Parser:
+
+* Tighten the AST around import statements, and rewrite their parsing logic
+* Improvements to locations of import statements, export statements, and declare statements
+
+Perf:
+
+* Optimize a hot path in lazy mode, speeding up IDE commands
+* Optimize calculation of dependents, speeding up rechecks
+* Fix exponential blowup for large enums
+
+Reliability:
+
+* Fix deadlock issues with `flow ide`
+* Gracefully handle crashes of the file watcher
+
+Misc:
+
+* Don't list ignored files with `flow ls`
+* Remove flaky support for $Tainted types
+* Remove flaky support for `--raw` type printing
+* Various additions to lib definitions, thanks for your contributions!
+
 ### 0.57.3
 
 Notable bug fixes:

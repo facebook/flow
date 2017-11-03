@@ -12,7 +12,7 @@
 (*****************************************************************************)
 (* Adds a new file or directory to the environment *)
 (*****************************************************************************)
-open Core
+open Hh_core
 open DfindEnv
 open DfindMaybe
 

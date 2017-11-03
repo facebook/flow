@@ -12,7 +12,7 @@
 (* Prelude *)
 (*****************************************************************************)
 
-open Core
+open Hh_core
 
 let lstat_kind file =
   let open Unix in

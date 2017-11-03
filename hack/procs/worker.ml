@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (*****************************************************************************
  * Module building workers
@@ -216,7 +216,7 @@ let unix_worker_main restore state (ic, oc) =
       | 0 -> slave_main ic oc
       | pid ->
           (* Wait for the slave termination... *)
-          match snd (Unix.waitpid [] pid) with
+          match snd (Sys_utils.waitpid_non_intr [] pid) with
           | Unix.WEXITED 0 -> ()
           | Unix.WEXITED 1 ->
               raise End_of_file

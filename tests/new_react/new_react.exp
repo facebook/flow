@@ -61,22 +61,6 @@ Error: classes.js:38
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ object type. This type is incompatible with
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
-  Property `type` is incompatible:
-      7: class Foo extends React.Component<Props, State> {
-               ^^^ class type: Foo. This type is incompatible with
-     39: var foo: $jsx<number> = <Foo/>;
-                       ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
 159:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
@@ -117,7 +101,16 @@ Error: classes.js:39
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ React element `Foo`
+                             ^^^^^^ object type. This type is incompatible with
+ 39: var foo: $jsx<number> = <Foo/>;
+              ^^^^^^^^^^^^ object type
+  Property `type` is incompatible:
+      7: class Foo extends React.Component<Props, State> {
+               ^^^ class type: Foo. This type is incompatible with
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number
+
+Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ props of React element `Foo`. This type is incompatible with
   7: class Foo extends React.Component<Props, State> {
@@ -159,27 +152,6 @@ Error: classes.js:64
                    ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ object type. This type is incompatible with
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
-  Property `type` is incompatible:
-                         v------------------
-     43: var FooLegacy = React.createClass({
-     44:   is_mounted: (undefined: ?boolean),
-     45: 
-    ...:
-     76: });
-         -^ class type: React component. This type is incompatible with
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                              ^^^^^^ number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -225,13 +197,27 @@ Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot spread properties from
+                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot use React default props from
  78: FooLegacy.defaultProps = 0;
                               ^ number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ React element `FooLegacy`
+                                    ^^^^^^^^^^^^ object type. This type is incompatible with
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                     ^^^^^^^^^^^^ object type
+  Property `type` is incompatible:
+                         v------------------
+     43: var FooLegacy = React.createClass({
+     44:   is_mounted: (undefined: ?boolean),
+     45: 
+    ...:
+     76: });
+         -^ class type: React component. This type is incompatible with
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number
+
+Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`. This type is incompatible with
                   v
@@ -313,8 +299,6 @@ Error: new_react.js:29
 
 Error: new_react.js:30
  30: var element_ = <C/>;
-                    ^^^^ React element `C`
- 30: var element_ = <C/>;
                     ^^^^ props of React element `C`. This type is incompatible with
                     v
   5:     propTypes: {
@@ -353,12 +337,6 @@ Error: new_react.js:32
             ^^^^^^ number
 
 Error: propTypes.js:13
-     v---------------
- 13: <C statistics={[
- 14:   {},
- 15:   {label:"",value:undefined},
- 16: ]}/>; // error (label is required, value not required)
-     ---^ React element `C`
      v---------------
  13: <C statistics={[
  14:   {},
@@ -486,14 +464,9 @@ Error: props.js:20
 
 Error: props.js:27
  27: (element: $jsx<Class<FooProps>>);
-               ^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+      ^^^^^^^ object type. This type is incompatible with
+ 27: (element: $jsx<Class<FooProps>>);
+               ^^^^^^^^^^^^^^^^^^^^^ object type
   Property `props` is incompatible:
                         v
       4:     propTypes: {
@@ -573,8 +546,6 @@ Error: props4.js:9
                                                  ^^^^^^ string
 
 Error: props4.js:18
- 18:   <Example foo="foo" />,
-       ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  18:   <Example foo="foo" />,
        ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
  11: class Example extends React.Component<{ bar: string }> {

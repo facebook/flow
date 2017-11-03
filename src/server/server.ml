@@ -270,24 +270,24 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       ~workers
       ~env
       client_context
-      (file_input, line, col, verbose, include_raw) =
+      (file_input, line, col, verbose) =
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     let options = { options with Options.opt_verbose = verbose } in
     try_with begin fun () ->
       Type_info_service.type_at_pos
-        ~options ~workers ~env ~client_context ~include_raw
+        ~options ~workers ~env ~client_context
         file content line col
     end
 
-  let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
+  let dump_types ~options ~workers ~env file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     try_with begin fun () ->
       Type_info_service.dump_types
-        ~options ~workers ~env ~include_raw ~strip_root file content
+        ~options ~workers ~env file content
     end
 
   let coverage ~options ~workers ~env ~force file_input =
@@ -391,41 +391,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     in
     result
 
-  let find_refs ~options ~workers ~env (file_input, line, col) =
-    (* We will likely use these when we extend find refs to work globally
-     * rather than just locally, so it's probably simplest to just leave
-     * them here for now *)
-    let _ = options, workers, env in
-    let filename = File_input.filename_of_file_input file_input in
-    let file = File_key.SourceFile filename in
-    let loc = Loc.make file line col in
-    let scope_info_result =
-      let open Parsing_service_js in
-      File_input.content_of_file_input file_input >>= fun content ->
-      let max_tokens = docblock_max_tokens in
-      let _errors, docblock = get_docblock ~max_tokens file content in
-      let types_mode = TypesAllowed in
-      let use_strict = true in
-      let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
-      match result with
-        | Parse_ok ast -> Ok (Scope_builder.program ast)
-        (* The parse should not fail; we have passes ~fail:false *)
-        | Parse_fail _ -> Error "Parse unexpectedly failed"
-        | Parse_skip _ -> Error "Parse unexpectedly skipped"
-    in
-    match scope_info_result with
-      | Ok scope_info ->
-          let all_uses = Scope_api.all_uses scope_info in
-          let matching_uses = List.filter (fun use -> Loc.contains use loc) all_uses in
-          begin match matching_uses with
-            | [] -> Ok []
-            | [use] ->
-                let def = Scope_api.def_of_use scope_info use in
-                let unsorted = Scope_api.uses_of_def scope_info ~exclude_def:false def in
-                Ok (List.fast_sort Loc.compare unsorted)
-            | _ -> Error "Multiple identifiers were unexpectedly matched"
-          end
-      | Error e -> Error e
+  let find_refs ~options ~workers ~env (file_input, line, col, global) =
+    FindRefs_js.find_refs options workers env file_input line col global
 
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
@@ -605,7 +572,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates FilenameSet.empty
 
   (* on notification, execute client commands or recheck files *)
-  let recheck genv env ?(force_focus=false) ~serve_ready_clients updates =
+  let recheck genv env ?(force_focus=false) updates =
     if FilenameSet.is_empty updates
     then env
     else begin
@@ -616,7 +583,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let workers = genv.ServerEnv.workers in
 
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus ~serve_ready_clients in
+      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
       (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
        * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
        * run it before we release the recheck lock *)
@@ -629,7 +596,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       env
     end
 
-  let respond ~genv ~env ~serve_ready_clients ~client { ServerProt.client_logging_context; command; } =
+  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
@@ -661,21 +628,21 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
-    | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
+    | ServerProt.DUMP_TYPES (fn) ->
         let types: ServerProt.dump_types_response =
-          dump_types ~options ~workers ~env ~include_raw ~strip_root fn
+          dump_types ~options ~workers ~env fn
         in
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         (find_module ~options (moduleref, filename): File_key.t option)
           |> marshal
-    | ServerProt.FIND_REFS (fn, line, char) ->
-        (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
+    | ServerProt.FIND_REFS (fn, line, char, global) ->
+        (find_refs ~options ~workers ~env (fn, line, char, global): ServerProt.find_refs_response)
           |> marshal
     | ServerProt.FORCE_RECHECK (files, force_focus) ->
         marshal ();
         let updates = process_updates genv !env (SSet.of_list files) in
-        env := recheck genv !env ~force_focus ~serve_ready_clients updates
+        env := recheck genv !env ~force_focus updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         let options = { options with Options.
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -690,11 +657,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.GET_IMPORTS module_names ->
         (get_imports ~options module_names: ServerProt.get_imports_response)
           |> marshal
-    | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
+    | ServerProt.INFER_TYPE (fn, line, char, verbose) ->
         (infer_type
             ~options ~workers ~env
             client_logging_context
-            (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
+            (fn, line, char, verbose) : ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
         (Ok () : ServerProt.stop_response) |> marshal;
@@ -737,7 +704,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
     !env
 
-  let respond_to_persistent_client genv env ~serve_ready_clients client msg =
+  let respond_to_persistent_client genv env client msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
@@ -789,7 +756,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               if not (FilenameSet.is_empty new_focused_files)
               then
                 (* Rechecking will send errors to the clients *)
-                recheck genv env ~serve_ready_clients new_focused_files
+                recheck genv env new_focused_files
               else begin
                 (* This open doesn't trigger a recheck, but we'll still send down the errors *)
                 let errors, warnings, _ = get_collated_errors_separate_warnings env in
@@ -819,24 +786,15 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
     | _ -> true
 
-  let handle_client genv env ~serve_ready_clients ~waiting_requests client =
+  let handle_client genv env client =
     let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
-    let continuation env =
-      let env = respond ~genv ~env ~serve_ready_clients ~client command in
-      if should_close command then client.close ();
-      env in
-    match command.ServerProt.command with
-      | ServerProt.STATUS _
-      | ServerProt.FORCE_RECHECK _
-      | ServerProt.CONNECT ->
-        (* these commands must be processed after recheck is done *)
-        waiting_requests := continuation :: !waiting_requests;
-        env
-      | _ -> continuation env
+    let env = respond ~genv ~env ~client command in
+    if should_close command then client.close ();
+    env
 
-  let handle_persistent_client genv env ~serve_ready_clients client =
+  let handle_persistent_client genv env client =
     match Persistent_connection.input_value client with
     | None -> env
-    | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
+    | Some msg -> respond_to_persistent_client genv env client msg
 
 end

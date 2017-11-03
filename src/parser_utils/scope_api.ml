@@ -14,6 +14,7 @@ module Def = struct
   type t = {
     locs: Loc.t list;
     name: int;
+    actual_name: string;
   }
   let mem_loc x t = List.mem x t.locs
 end

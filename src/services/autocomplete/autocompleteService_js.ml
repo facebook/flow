@@ -15,7 +15,7 @@ type func_param_result = {
   }
 
 type func_details_result = {
-    params    : func_param_result list;
+    param_tys : func_param_result list;
     return_ty : string;
   }
 
@@ -49,9 +49,9 @@ let autocomplete_result_to_json ~strip_root result =
   let func_details_to_json details =
     match details with
      | Some fd -> Hh_json.JSON_Object [
-             "return_type", Hh_json.JSON_String fd.return_ty;
-             "params", Hh_json.JSON_Array (List.map func_param_to_json fd.params);
-           ]
+         "return_type", Hh_json.JSON_String fd.return_ty;
+         "params", Hh_json.JSON_Array (List.map func_param_to_json fd.param_tys);
+       ]
      | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
@@ -85,15 +85,8 @@ let print_type cx type_ =
 
 let rec autocomplete_create_result cx name type_ loc =
   Type.(match type_ with
-  | DefT (_, FunT (_, _, {params_tlist = params;
-                    params_names = pnames;
-                    rest_param;
-                    return_t = return; _})) ->
-      let pnames =
-        match pnames with
-        | Some pnames -> pnames
-        | None -> List.map (fun _ -> "_") params in
-      let params = List.map2 (fun name type_ ->
+  | DefT (_, FunT (_, _, {params; rest_param; return_t = return; _})) ->
+      let param_tys = List.map (fun (name, type_) ->
         let param_name = parameter_name cx name type_ in
         let param_ty =
           if is_printed_param_type_parsable ~weak:true cx type_
@@ -101,23 +94,22 @@ let rec autocomplete_create_result cx name type_ loc =
           else ""
         in
         { param_name; param_ty }
-      ) pnames params in
-      let params = match rest_param with
-      | None -> params
+      ) params in
+      let param_tys = match rest_param with
+      | None -> param_tys
       | Some (name, _, t) ->
-          let name = Option.value ~default:"_" name in
           let param_name = rest_parameter_name cx name t in
           let param_ty =
             if is_printed_param_type_parsable ~weak:true cx t
             then string_of_param_t cx t
             else ""
           in
-          params @ [ { param_name; param_ty; }] in
+          param_tys @ [ { param_name; param_ty; }] in
       let return = print_type cx return in
       { res_loc = loc;
         res_name = name;
         res_ty = (print_type cx type_);
-        func_details = Some { params; return_ty = return } }
+        func_details = Some { param_tys; return_ty = return } }
   | DefT (_, PolyT (_, sub_type, _)) ->
       let result = autocomplete_create_result cx name sub_type loc in
       (* This is not exactly pretty but we need to replace the type to
@@ -246,7 +238,7 @@ let autocomplete_jsx
   docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
-    let props_object = mk_tvar_where cx reason (fun tvar ->
+    let props_object = Tvar.mk_where cx reason (fun tvar ->
       flow cx (
         component_instance,
         Type.GetPropT (reason, Type.Named (reason, "props"), tvar))

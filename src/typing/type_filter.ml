@@ -275,7 +275,7 @@ let not_number t =
   | DefT (_, (AnyT | NumT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
-let object_ ~mk_object_with_proto cx t =
+let object_ cx t =
   match t with
   | DefT (r, MixedT flavor) ->
     let reason = replace_reason_const RObject r in
@@ -286,7 +286,7 @@ let object_ ~mk_object_with_proto cx t =
       dict_polarity = Neutral;
     } in
     let proto = ObjProtoT reason in
-    let obj = mk_object_with_proto cx reason ?dict proto in
+    let obj = Obj_type.mk_with_proto cx reason ?dict proto in
     begin match flavor with
     | Mixed_truthy
     | Mixed_non_maybe

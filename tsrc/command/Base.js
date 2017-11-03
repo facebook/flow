@@ -161,7 +161,7 @@ export default class Base<T: Object> {
   }
 
   // final
-  static showUsage(exitCode) {
+  static showUsage(exitCode: number) {
     throw new ShowUsageException(exitCode);
   }
 

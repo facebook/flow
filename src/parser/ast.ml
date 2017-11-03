@@ -377,6 +377,14 @@ and Statement : sig
       typeParameters: 'M Type.ParameterDeclaration.t option;
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) list;
+    }
+  end
+  module DeclareClass : sig
+    type 'M t = {
+      id: 'M Identifier.t;
+      typeParameters: 'M Type.ParameterDeclaration.t option;
+      body: 'M * 'M Type.Object.t;
+      extends: ('M * 'M Type.Generic.t) option;
       mixins: ('M * 'M Type.Generic.t) list;
     }
   end
@@ -442,7 +450,7 @@ and Statement : sig
       (* declare export function *)
       | Function of ('M * 'M DeclareFunction.t)
       (* declare export class *)
-      | Class of ('M * 'M Interface.t)
+      | Class of ('M * 'M DeclareClass.t)
       (* declare export default [type]
        * this corresponds to things like
        * export default 1+1; *)
@@ -501,7 +509,7 @@ and Statement : sig
     | ClassDeclaration of 'M Class.t
     | Continue of 'M Continue.t
     | Debugger
-    | DeclareClass of 'M Interface.t
+    | DeclareClass of 'M DeclareClass.t
     | DeclareExportDeclaration of 'M DeclareExportDeclaration.t
     | DeclareFunction of 'M DeclareFunction.t
     | DeclareInterface of 'M Interface.t
@@ -785,6 +793,7 @@ and Expression : sig
     | Identifier of 'M Identifier.t
     | Import of 'M t
     | JSXElement of 'M JSX.element
+    | JSXFragment of 'M JSX.fragment
     | Literal of Literal.t
     | Logical of 'M Logical.t
     | Member of 'M Member.t
@@ -895,6 +904,7 @@ and JSX : sig
   type 'M child = 'M * 'M child'
   and 'M child' =
     | Element of 'M element
+    | Fragment of 'M fragment
     | ExpressionContainer of 'M ExpressionContainer.t
     | Text of Text.t
 
@@ -903,6 +913,13 @@ and JSX : sig
     closingElement: 'M Closing.t option;
     children: 'M child list
   }
+
+  and 'M fragment = {
+    frag_openingElement: 'M;
+    frag_closingElement: 'M option;
+    frag_children: 'M child list;
+  }
+
 end = JSX
 
 and Pattern : sig

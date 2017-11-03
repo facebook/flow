@@ -558,7 +558,7 @@ module Statement
     Expect.token env T_OPAQUE;
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
-    let id = Parse.identifier env in
+    let id = Type.type_identifier env in
     let typeParameters = Type.type_parameter_declaration_with_defaults env in
     let supertype = match Peek.token env with
     | T_COLON ->
@@ -606,7 +606,7 @@ module Statement
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeInterface;
       Expect.token env T_INTERFACE;
-      let id = Parse.identifier env in
+      let id = Type.type_identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
       let extends = if Peek.token env = T_EXTENDS
       then begin
@@ -619,7 +619,6 @@ module Statement
         typeParameters;
         body;
         extends;
-        mixins = [];
       })
 
   and declare_interface env = with_loc (fun env ->
@@ -629,20 +628,22 @@ module Statement
   ) env
 
   and interface env =
-    if Peek.is_identifier ~i:1 env
+    (* disambiguate between a value named `interface`, like `var interface = 1; interface++`,
+       and an interface declaration like `interface Foo {}`.` *)
+    if Peek.is_identifier_name ~i:1 env
     then
       let loc, iface = with_loc interface_helper env in
       loc, Statement.InterfaceDeclaration iface
     else expression env
 
   and declare_class =
-    let rec supers env acc =
+    let rec mixins env acc =
       let super = Type.generic env in
       let acc = super::acc in
       match Peek.token env with
       | T_COMMA ->
         Expect.token env T_COMMA;
-        supers env acc
+        mixins env acc
       | _ -> List.rev acc
 
     (* This is identical to `interface`, except that mixins are allowed *)
@@ -651,17 +652,13 @@ module Statement
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Peek.token env = T_EXTENDS
-        then begin
-          Expect.token env T_EXTENDS;
-          supers env []
-        end else [] in
+      let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
-      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; supers env []
+      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
       | _ -> []
       in
       let body = Type._object ~allow_static:true env in
-      Statement.Interface.({
+      Statement.DeclareClass.({
         id;
         typeParameters;
         body;
@@ -1325,10 +1322,11 @@ module Statement
         | Some error_if_type, T_TYPE
         | Some error_if_type, T_TYPEOF ->
           error env error_if_type;
-          Eat.token env (* consume `type` or `typeof` *)
-        | _ -> ()
-        end;
-        identifier env, None
+          Eat.token env; (* consume `type` or `typeof` *)
+          Type.type_identifier env, None
+        | _ ->
+          identifier env, None
+        end
 
     (*
       ImportSpecifier[Type]:
@@ -1414,7 +1412,7 @@ module Statement
     (* specifier in an `import typeof { ... }` *)
     in let typeof_specifier env =
       let remote, local = with_maybe_as env
-        ~for_type:false
+        ~for_type:true
         ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
       in
       { remote; local; kind = None }

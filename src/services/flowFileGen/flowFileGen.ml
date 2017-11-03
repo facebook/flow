@@ -137,8 +137,8 @@ let gen_class_body =
       match p with
       | Method t ->
         (match resolve_type t env with
-        | DefT (_, FunT (_, _, { params_tlist; return_t; _ })) ->
-          List.length params_tlist = 0 && (
+        | DefT (_, FunT (_, _, { params; return_t; _ })) ->
+          (params = []) && (
             match resolve_type return_t env with
             | DefT (_, VoidT) -> true
             | _ -> false
@@ -304,8 +304,7 @@ let gen_named_exports =
     let env = (
       match resolve_type t env with
       | DefT (_, FunT (_static, _prototype, {
-          params_tlist;
-          params_names;
+          params;
           rest_param;
           return_t;
           _;
@@ -317,7 +316,7 @@ let gen_named_exports =
         in
         gen_tparams_list env
           |> add_str "("
-          |> gen_func_params params_names params_tlist rest_param
+          |> gen_func_params params rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";"

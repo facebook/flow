@@ -1,8 +1,6 @@
 Error: test.js:4
   4: <F />; // error: missing `foo`
-     ^^^^^ React element `F`
-  4: <F />; // error: missing `foo`
-     ^^^^^ props of React element `F`. This type is incompatible with the expected param type of
+     ^^^^^ props of React element `F`. This type is incompatible with
   3: function F(props: { foo: string }) {}
                        ^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -13,7 +11,7 @@ Error: test.js:4
 
 Error: test.js:5
   5: <F foo={0} />; // error: number ~> string
-     ^^^^^^^^^^^^^ props of React element `F`. This type is incompatible with the expected param type of
+     ^^^^^^^^^^^^^ props of React element `F`. This type is incompatible with
   3: function F(props: { foo: string }) {}
                        ^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:

@@ -27,7 +27,7 @@ let find_sig ~options file =
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
 module SigHashHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = SigHash.t
+  type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
 end)
@@ -48,15 +48,15 @@ let find_leader file =
 
 (* Add a sig only if it has not changed meaningfully, and return the result of
    that check. *)
-let add_merge_on_diff ~audit leader_cx component_files md5 =
+let add_merge_on_diff ~audit leader_cx component_files xx =
   let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
-    | Some md5_old -> File_key.check_suffix leader_f Files.flow_ext || md5 <> md5_old
+    | Some xx_old -> File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
     | None -> true in
   if diff then begin
     List.iter (fun f -> LeaderHeap.add f leader_f) component_files;
     add_sig_context ~audit leader_f leader_cx;
-    SigHashHeap.add leader_f md5;
+    SigHashHeap.add leader_f xx;
   end;
   diff
 

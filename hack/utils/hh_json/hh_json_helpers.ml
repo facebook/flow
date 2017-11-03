@@ -8,7 +8,7 @@
  *
  **)
 
-open Core
+open Hh_core
 
 (* Some JSON processing helpers *)
 

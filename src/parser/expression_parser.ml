@@ -56,6 +56,7 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
@@ -206,6 +207,7 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
@@ -757,8 +759,10 @@ module Expression
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
-        let loc, element = Parse.jsx_element env in
-        Cover_expr (loc, Expression.JSXElement element)
+        let loc, expression = match Parse.jsx_element_or_fragment env with
+            | (loc, `Element e) -> (loc, Expression.JSXElement e)
+            | (loc, `Fragment f) -> (loc, Expression.JSXFragment f) in
+        Cover_expr (loc, expression)
     | T_TEMPLATE_PART part ->
         let loc, template = template_literal env part in
         Cover_expr (loc, Expression.TemplateLiteral template)

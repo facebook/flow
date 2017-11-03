@@ -18,9 +18,9 @@ let fake_fun params_names param_ts rest_param ret_t =
     rest_param in
   let def_reason = reason in
   DefT (reason, FunT (
-    Flow_js.dummy_static reason,
-    Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype reason param_ts ~rest_param ~def_reason ?params_names ret_t
+    dummy_static reason,
+    dummy_prototype,
+    mk_functiontype reason param_ts ~rest_param ~def_reason ~params_names ret_t
   ))
 
 let fake_instance name =
@@ -30,6 +30,7 @@ let fake_instance name =
     arg_polarities = SMap.empty;
     fields_tmap = Properties.fake_id;
     initialized_field_names = SSet.empty;
+    initialized_static_field_names = SSet.empty;
     methods_tmap = Properties.fake_id;
     mixins = false;
     structural = false;
@@ -72,20 +73,27 @@ let rec normalize_type_impl cx ids t = match t with
       Locationless.StrT.t (* TODO *)
 
   | DefT (_, FunT (_, _, ft)) ->
-      let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
+      let params_names, tins =
+        let rec loop (xs, ts) = function
+          | [] -> List.rev xs, List.rev ts
+          | (x, t)::params ->
+            let t = normalize_type_impl cx ids t in
+            loop (x::xs, t::ts) params
+        in
+        loop ([], []) ft.params
+      in
       let rest_param = Option.map
         ~f:(fun (name, loc, t) -> name, loc, normalize_type_impl cx ids t)
         ft.rest_param in
-      let params_names = ft.params_names in
       let tout = normalize_type_impl cx ids ft.return_t in
       let reason = locationless_reason (RFunction RNormal) in
       let is_predicate = Some ft.is_predicate in
       let def_reason = ft.def_reason in
       DefT (reason, FunT (
-        Flow_js.dummy_static reason,
-        Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype reason
-          tins ~rest_param ~def_reason ?params_names ?is_predicate tout
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype reason
+          tins ~rest_param ~def_reason ~params_names ?is_predicate tout
       ))
 
   (* Fake the signature of Function.prototype.apply: *)
@@ -93,7 +101,7 @@ let rec normalize_type_impl cx ids t = match t with
   | FunProtoApplyT _ ->
       let any = DefT (locationless_reason RAny, AnyT) in
       let tins = [any; optional any] in
-      let params_names = Some ["thisArg"; "argArray"] in
+      let params_names = [Some "thisArg"; Some "argArray"] in
       fake_fun params_names tins None any
 
   (* Fake the signature of Function.prototype.bind: *)
@@ -103,7 +111,7 @@ let rec normalize_type_impl cx ids t = match t with
       let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("argArray", arr) in
-      let params_names = Some ["thisArg"] in
+      let params_names = [Some "thisArg"] in
       fake_fun params_names tins rest_param any
 
   (* Fake the signature of Function.prototype.call: *)
@@ -113,7 +121,7 @@ let rec normalize_type_impl cx ids t = match t with
       let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("argArray", arr) in
-      let params_names = Some ["thisArg"] in
+      let params_names = [Some "thisArg"] in
       fake_fun params_names tins rest_param any
 
   | InternalT (ChoiceKitT (_, _))
@@ -127,7 +135,7 @@ let rec normalize_type_impl cx ids t = match t with
       let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
-      let params_names = Some [] in
+      let params_names = [] in
       fake_fun params_names tins rest_param obj
 
   (* Fake the signature of $Facebookism$MergeDeepInto: *)
@@ -138,7 +146,7 @@ let rec normalize_type_impl cx ids t = match t with
       let void = DefT (locationless_reason RVoid, VoidT) in
       let tins = [obj] in
       let rest_param = Some ("objects", arr) in
-      let params_names = Some ["target"] in
+      let params_names = [Some "target"] in
       fake_fun params_names tins rest_param void
 
   (* Fake the signature of $Facebookism$MergeInto: *)
@@ -149,7 +157,7 @@ let rec normalize_type_impl cx ids t = match t with
       let void = DefT (locationless_reason RVoid, VoidT) in
       let tins = [obj] in
       let rest_param = Some ("objects", arr) in
-      let params_names = Some ["target"] in
+      let params_names = [Some "target"] in
       fake_fun params_names tins rest_param void
 
   (* Fake the signature of $Facebookism$Mixin: *)
@@ -160,7 +168,7 @@ let rec normalize_type_impl cx ids t = match t with
       let tout = class_type obj in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
-      let params_names = Some [] in
+      let params_names = [] in
       fake_fun params_names tins rest_param tout
 
   (* Fake the signature of Object.assign:
@@ -170,7 +178,7 @@ let rec normalize_type_impl cx ids t = match t with
       let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("sources", arr) in
-      let params_names = Some ["target"] in
+      let params_names = [Some "target"] in
       fake_fun params_names tins rest_param any
 
   (* Fake the signature of Object.getPrototypeOf:
@@ -178,13 +186,13 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, ObjectGetPrototypeOf) ->
       let any = DefT (locationless_reason RAny, AnyT) in
       let tins = [any] in
-      let params_names = Some ["o"] in
+      let params_names = [Some "o"] in
       fake_fun params_names tins None any
 
   | CustomFunT (_, ObjectSetPrototypeOf) ->
       let any = DefT (locationless_reason RAny, AnyT) in
       let tins = [any; any] in
-      let params_names = Some ["o"; "proto"] in
+      let params_names = [Some "o"; Some "proto"] in
       fake_fun params_names tins None any
 
   | CustomFunT (reason, Idx) ->
@@ -214,11 +222,11 @@ let rec normalize_type_impl cx ids t = match t with
 
       let cb_param = (
         let cb_param = InternalT (IdxWrapper (reason, obj_param)) in
-        fake_fun (Some ["demaybifiedObj"]) [cb_param] None cb_ret
+        fake_fun ([Some "demaybifiedObj"]) [cb_param] None cb_ret
       ) in
 
       let tins = [obj_param; cb_param] in
-      let param_names = Some ["obj"; "pathCallback"] in
+      let param_names = [Some "obj"; Some "pathCallback"] in
       let maybe_ret =
         let reason = reason_of_t cb_ret in
         let reason = replace_reason (fun desc -> RMaybe desc) reason in
@@ -231,7 +239,7 @@ let rec normalize_type_impl cx ids t = match t with
         "_",
         DefT (locationless_reason RArray, ArrT (ArrayAT(Locationless.AnyT.t, None)))
       ) in
-      fake_fun None [] rest_param Locationless.VoidT.t
+      fake_fun [] [] rest_param Locationless.VoidT.t
 
   | CustomFunT (_, ReactPropType _) ->
     Locationless.AnyT.t (* TODO *)
@@ -242,7 +250,7 @@ let rec normalize_type_impl cx ids t = match t with
         let instance = fake_instance "ReactClass" in
         typeapp (class_type instance) [Locationless.AnyT.t]
       in
-      fake_fun (Some ["spec"]) [Locationless.AnyT.t] None component_class
+      fake_fun ([Some "spec"]) [Locationless.AnyT.t] None component_class
 
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
@@ -269,29 +277,29 @@ let rec normalize_type_impl cx ids t = match t with
       let config = BoundT config_tp in
       let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let instance = fake_instance "React$Element" in
         typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let component_class =
-        let id = Flow_js.mk_nominal cx in
+        let id = Context.make_nominal cx in
         let instance = fake_instance "ReactClass" in
         typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let stateless_functional_component =
-        let params_names = Some ["config"; "context"] in
+        let params_names = [Some "config"; Some "context"] in
         let param_ts = [config; any] in
         fake_fun params_names param_ts None react_element
       in
       let t1 =
-        let id = Flow_js.mk_nominal cx in
-        let params_names = Some ["name"; "config"; "children"] in
+        let id = Context.make_nominal cx in
+        let params_names = [Some "name"; Some "config"; Some "children"] in
         let param_ts = [component_class; config; any] in
         poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       let t2 =
-        let id = Flow_js.mk_nominal cx in
-        let params_names = Some ["fn"; "config"; "children"] in
+        let id = Context.make_nominal cx in
+        let params_names = [Some "fn"; Some "config"; Some "children"] in
         let param_ts = [stateless_functional_component; config; any] in
         poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
@@ -319,7 +327,7 @@ let rec normalize_type_impl cx ids t = match t with
       in
       let proto = Locationless.AnyT.t in
       DefT (locationless_reason RObject,
-        ObjT (Flow_js.mk_objecttype dict pmap proto)
+        ObjT (mk_objecttype dict pmap proto)
       )
 
   | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) ->
@@ -421,13 +429,11 @@ let rec normalize_type_impl cx ids t = match t with
 
   | ShapeT t ->
       ShapeT (normalize_type_impl cx ids t)
-  | DiffT (t1, t2) ->
-      DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
   | MatchingPropT (r, x, t) ->
       MatchingPropT (r, x, normalize_type_impl cx ids t)
 
-  | AnnotT (t, use_desc) ->
-      AnnotT (normalize_type_impl cx ids t, use_desc)
+  | AnnotT ((_, id), _) ->
+      lookup_type cx ids id
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with

@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (*****************************************************************************)
 (* The file extensions we are interested in *)

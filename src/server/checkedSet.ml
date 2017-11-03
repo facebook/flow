@@ -35,6 +35,7 @@ let combine a b = match (a, b) with
 | _ -> Dependency
 
 let empty = FilenameMap.empty
+let is_empty = FilenameMap.is_empty
 let of_focused_list = List.fold_left (fun acc f -> FilenameMap.add f Focused acc) empty
 
 let mem = FilenameMap.mem

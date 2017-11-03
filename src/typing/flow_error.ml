@@ -233,7 +233,6 @@ and unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
-  | ClassExtendsMultiple
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | RequireLazyDynamicArgument
@@ -306,6 +305,7 @@ let rec locs_of_use_op acc = function
   | FunCallMissingArg _
   | FunCallParam
   | FunReturn
+  | ReactCreateElementCall
   | TypeRefinement
   | UnknownUse
   | Internal _
@@ -489,7 +489,8 @@ let suppress_fun_call_param_op op =
     begin match desc_of_reason r with
     | RFunctionCall
     | RConstructorCall
-    | RMethodCall _ -> true
+    | RMethodCall _
+    | RReactElement _ -> true
     | _ -> false
     end
   | None -> false
@@ -711,6 +712,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
+
+  | ReactCreateElementCall ->
+    let suppress_op = suppress_fun_call_param_op op in
+    extra, suppress_op, typecheck_msgs msg reasons
+
   | SetProperty reason_op ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
@@ -1239,8 +1245,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "literal properties not yet supported"
         | ClassPropertyComputed ->
             "computed property keys not supported"
-        | ClassExtendsMultiple ->
-            "A class cannot extend multiple classes!"
         | ReactCreateClassPropertyNonInit ->
             "unsupported property specification in createClass"
         | RequireDynamicArgument ->
@@ -1388,12 +1392,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EInvalidObjectKit { tool; reason; reason_op } ->
       let open Object in
       let msg = match tool with
+        | ReadOnly -> "Cannot create an object with read-only properties from"
         | Spread _ -> "Cannot spread properties from"
         | Rest (_, state) ->
           let open Object.Rest in
           (match state with
             | One _ -> "Cannot remove properties from"
             | Done _ -> "Cannot remove properties with")
+        | ReactConfig state ->
+          let open Object.ReactConfig in
+          (match state with
+            | Config _ -> "Cannot compare React props with"
+            | Defaults _ -> "Cannot use React default props from")
       in
       typecheck_error msg (reason_op, reason)
 

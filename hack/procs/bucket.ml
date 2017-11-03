@@ -26,6 +26,12 @@ type 'a bucket =
 type 'a next =
   unit -> 'a bucket
 
+let max_size_ref = ref 500
+
+let max_size () = !max_size_ref
+
+let set_max_bucket_size x = max_size_ref := x
+
 let make_ bucket_size jobs =
   let i = ref 0 in
   fun () ->
@@ -34,7 +40,8 @@ let make_ bucket_size jobs =
     i := bucket_size + !i;
     Array.to_list result
 
-let make_list ~num_workers ?(max_size=500) jobs =
+let make_list ~num_workers ?max_size jobs =
+  let max_size = Option.value max_size ~default:!max_size_ref in
   let jobs = Array.of_list jobs in
   let bucket_size =
     if Array.length jobs < num_workers * max_size
@@ -47,7 +54,8 @@ let of_list = function
   | [] -> Done
   | wl -> Job wl
 
-let make ~num_workers ?(max_size=500) jobs =
+let make ~num_workers ?max_size jobs =
+  let max_size = Option.value max_size ~default:!max_size_ref in
   let maker = make_list ~num_workers ~max_size jobs in
   fun () -> of_list (maker ())
 

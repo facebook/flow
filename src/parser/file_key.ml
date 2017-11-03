@@ -18,6 +18,10 @@ let to_string = function
   | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
   | Builtins -> "(global)"
 
+let to_path = function
+  | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> Ok x
+  | Builtins -> Error "File key refers to a builtin"
+
 let compare =
   (* builtins, then libs, then source and json files at the same priority since
      JSON files are basically source files. We don't actually read resource

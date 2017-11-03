@@ -372,7 +372,7 @@ module Object
     body, superClass, superTypeParameters, implements
 
   and class_implements env acc =
-    let id = Parse.identifier env in
+    let id = Type.type_identifier env in
     let typeParameters = Type.type_parameter_instantiation env in
     let loc = match typeParameters with
     | None -> fst id

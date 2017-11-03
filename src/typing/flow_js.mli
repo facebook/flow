@@ -33,10 +33,6 @@ module Cache: sig
   val summarize_flow_constraint: unit -> (string * int) list
 end
 
-val mk_tvar: Context.t -> reason -> Type.t
-val mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
-val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
-
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
 val resolve_spread_list:
@@ -61,60 +57,7 @@ val check_polarity:
 
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
-(* object/method types *)
-
-val mk_methodtype :
-  Type.t -> Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_methodcalltype :
-  Type.t -> Type.call_arg list ->
-  ?frame:int ->
-  ?call_strict_arity:bool ->
-  Type.t -> Type.funcalltype
-
-val mk_boundfunctiontype :
-  Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_functiontype :
-  reason ->
-  Type.t list ->
-  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
-  ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
-  Type.t -> Type.funtype
-
-val mk_functioncalltype :
-  reason ->
-  Type.call_arg list ->
-  ?frame:int ->
-  ?call_strict_arity:bool ->
-  Type.t -> Type.funcalltype
-
-val dummy_this : Type.t
-val dummy_static : reason -> Type.t
-val dummy_prototype : Type.t
-
-val mk_objecttype : ?flags:Type.flags ->
-  Type.dicttype option -> Type.Properties.id -> Type.t -> Type.objtype
-
-val mk_object_with_proto : Context.t -> reason ->
-  ?dict:Type.dicttype ->
-  Type.t -> Type.t
-
-val mk_object_with_map_proto : Context.t -> reason ->
-  ?sealed:bool -> ?exact:bool -> ?frozen:bool ->
-  ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t
-
-val mk_object: Context.t -> reason -> Type.t
-
 (* ... *)
-
-val mk_nominal: Context.t -> int
 
 val mk_default: Context.t -> reason ->
   expr:(Context.t -> 'a -> Type.t) ->
@@ -143,6 +86,7 @@ val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:boo
 val enforce_strict: Context.t -> Constraint.ident -> string list -> unit
 val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
+val resolve_tvar: Context.t -> Type.tvar -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 val possible_uses: Context.t -> Constraint.ident -> Type.use_t list

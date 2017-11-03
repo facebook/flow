@@ -271,8 +271,8 @@ Error: es-default-pascal.js:6
 Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
             ^^^^^^^^^^^^^ Missing. Property not found in
-259:   declare var exports: $Exports<'react'>;
-                            ^^^^^^^^^^^^^^^^^ exports of module `react`. See lib: <BUILTINS>/react.js:259
+260:   declare var exports: $Exports<'react'>;
+                            ^^^^^^^^^^^^^^^^^ exports of module `react`. See lib: <BUILTINS>/react.js:260
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
@@ -284,34 +284,34 @@ Error: es-default.js:5
   5: ('Hello, world!': React.Node); // Error: Not in default export.
                        ^^^^^^^^^^ Node. Property not found in
                               v-
-239:   declare export default {|
-240:     +DOM: typeof DOM,
-241:     +PropTypes: typeof PropTypes,
+240:   declare export default {|
+241:     +DOM: typeof DOM,
+242:     +PropTypes: typeof PropTypes,
 ...:
-253:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:239
+254:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:240
 
 Error: es-default.js:6
   6: ({}: React.Node); // Error: Not in default export.
           ^^^^^^^^^^ Node. Property not found in
                               v-
-239:   declare export default {|
-240:     +DOM: typeof DOM,
-241:     +PropTypes: typeof PropTypes,
+240:   declare export default {|
+241:     +DOM: typeof DOM,
+242:     +PropTypes: typeof PropTypes,
 ...:
-253:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:239
+254:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:240
 
 Error: es-default.js:7
   7: (null: React.Missing); // Error: Not in default export.
             ^^^^^^^^^^^^^ Missing. Property not found in
                               v-
-239:   declare export default {|
-240:     +DOM: typeof DOM,
-241:     +PropTypes: typeof PropTypes,
+240:   declare export default {|
+241:     +DOM: typeof DOM,
+242:     +PropTypes: typeof PropTypes,
 ...:
-253:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:239
+254:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:240
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error

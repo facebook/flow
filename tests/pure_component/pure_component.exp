@@ -1,7 +1,5 @@
 Error: test.js:4
   4: (<C />); // error (`x` is a required prop)
-      ^^^^^ React element `C`
-  4: (<C />); // error (`x` is a required prop)
       ^^^^^ props of React element `C`. This type is incompatible with
   3: class C extends React.PureComponent<{ x: number }> {}
                                          ^^^^^^^^^^^^^ object type

@@ -122,8 +122,8 @@ type reason_desc =
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
-  | RParameter of string
-  | RRestParameter of string
+  | RParameter of string option
+  | RRestParameter of string option
   | RIdentifier of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
@@ -436,8 +436,10 @@ let rec string_of_desc = function
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
   | RMethodCall (Some x) -> spf "call of method `%s`" x
   | RMethodCall None -> "call of computed property"
-  | RParameter x -> spf "parameter `%s`" x
-  | RRestParameter x -> spf "rest parameter `%s`" x
+  | RParameter (Some x) -> spf "parameter `%s`" x
+  | RParameter None -> "parameter"
+  | RRestParameter (Some x) -> spf "rest parameter `%s`" x
+  | RRestParameter None -> "rest parameter"
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
   | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x

@@ -37,7 +37,8 @@ module type PARSER = sig
     ?restricted_error:Error.t -> env -> Loc.t * string -> unit
   val block_body : env -> Loc.t * Loc.t Statement.Block.t
   val function_block_body : env -> Loc.t * Loc.t Statement.Block.t * bool
-  val jsx_element : env -> Loc.t * Loc.t JSX.element
+  val jsx_element_or_fragment :
+    env -> Loc.t * [`Element of Loc.t JSX.element | `Fragment of Loc.t JSX.fragment]
   val pattern : env -> Error.t -> Loc.t Pattern.t
   val pattern_from_expr : env -> Loc.t Expression.t -> Loc.t Pattern.t
   val object_key : ?class_body: bool -> env -> Loc.t * Loc.t Expression.Object.Property.key

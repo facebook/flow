@@ -51,6 +51,9 @@ let of_lexing_pos lp = {
   pos_cnum = lp.Lexing.pos_cnum;
 }
 
+let of_lnum_bol_cnum ~pos_lnum ~pos_bol ~pos_cnum =
+  { pos_lnum; pos_bol; pos_cnum }
+
 (* accessors *)
 
 let offset t = t.pos_cnum

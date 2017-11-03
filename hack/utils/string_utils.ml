@@ -87,6 +87,37 @@ let rpartition s c =
     String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
   first, second
 
+
+(** [index_not_from_opt str i chars] is like [index_from_opt], but returns the index of the first
+    char in [str] after position [i] that is not in [chars] if it exists, or [None] otherwise. *)
+let index_not_from_opt =
+  let rec helper i len str chars =
+    if i = len then None
+    else if not (String.contains chars str.[i]) then Some i
+    else helper (i + 1) len str chars
+  in
+  fun str i chars ->
+    helper i (String.length str) str chars
+
+
+(** [index_not_opt str chars] is like [index_opt], but returns the index of the first char in
+    [str] that is not in [chars] if it exists, or [None] otherwise. *)
+let index_not_opt str chars = index_not_from_opt str 0 chars
+
+
+(** [rindex_not_from_opt str i chars] is like [rindex_from_opt], but returns the index of the last
+    char in [str] before position [i+1] that is not in [chars] if it exists, or [None] otherwise. *)
+let rec rindex_not_from_opt str i chars =
+  if i < 0 then None
+  else if not (String.contains chars str.[i]) then Some i
+  else rindex_not_from_opt str (i - 1) chars
+
+
+(** [rindex_not_opt str chars] is like [rindex_opt], but returns the index of the last char in
+    [str] that is not in [chars] if it exists, or [None] otherwise. *)
+let rindex_not_opt str chars = rindex_not_from_opt str (String.length str - 1) chars
+
+
 let zero_code, nine_code = Char.code '0', Char.code '9'
 
 let is_decimal_digit =
@@ -159,6 +190,21 @@ let split_on_newlines content =
   match List.rev lines with
   | "" :: rest -> List.rev rest
   | _ -> lines
+
+
+(* TODO: remove after upgrading to ocaml 4.05 *)
+let split_on_char sep s =
+  let open String in
+  let r = ref [] in
+  let j = ref (length s) in
+  for i = length s - 1 downto 0 do
+    if unsafe_get s i = sep then begin
+      r := sub s (i + 1) (!j - i - 1) :: !r;
+      j := i
+    end
+  done;
+  sub s 0 !j :: !r
+
 
 module Internal = struct
   let to_list s =

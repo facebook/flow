@@ -16,6 +16,7 @@ open Reason
 open Scope
 
 module FlowError = Flow_error
+module Flow = Flow_js
 
 (* lookup modes:
 
@@ -312,7 +313,7 @@ let global_lexicals = [
    have no process for checking the use of a global binding
    against the kind of binding it turns out to be: this global
    scope is simply a proxy; resolution takes place as a result
-   of the GetPropT types created in the call to Flow_js.get_builtin.
+   of the GetPropT types created in the call to Flow.get_builtin.
 
    This means that we have some false negatives, currently.
    Errors that go unreported currently include:
@@ -341,7 +342,7 @@ let cache_global cx name ?desc loc global_scope =
       | None -> RIdentifier name
       in
       let reason = mk_reason desc loc in
-      Flow_js.get_builtin cx name reason
+      Flow.get_builtin cx name reason
   in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
@@ -428,7 +429,7 @@ let find_refi_in_var_scope key =
 (* helpers *)
 
 let binding_error msg cx name entry loc =
-  Flow_js.add_output cx (FlowError.EBindingError (msg, loc, name, entry))
+  Flow.add_output cx (FlowError.EBindingError (msg, loc, name, entry))
 
 let already_bound_error =
   binding_error FlowError.ENameAlreadyBound
@@ -487,7 +488,7 @@ let bind_entry cx name entry loc =
           | Value e, Value p
               when can_shadow (Entry.kind_of_value e, Entry.kind_of_value p) ->
             (* TODO currently we don't step on specific. shouldn't we? *)
-            Flow_js.unify cx
+            Flow.unify cx
               (Entry.general_of_value p) (Entry.general_of_value e)
           (* bad shadowing is a binding error *)
           | _ -> already_bound_error cx name prev loc)
@@ -631,7 +632,7 @@ let init_value_entry kind cx name ~has_anno specific loc =
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.change_var (scope.id, name, Changeset.Write);
       if specific != v.general then
-        Flow_js.flow_t cx (specific, v.general);
+        Flow.flow_t cx (specific, v.general);
       (* note that annotation supercedes specific initializer type *)
       let new_kind =
         match kind with
@@ -671,7 +672,7 @@ let init_type cx name _type loc =
     let scope, entry = find_entry cx name loc in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
-      Flow_js.flow_t cx (_type, t._type);
+      Flow.flow_t cx (_type, t._type);
       let new_entry = Type { t with type_state = State.Initialized; _type } in
       Scope.add_entry name new_entry scope
     | _ ->
@@ -835,9 +836,9 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
 let unify_declared_type ?(lookup_mode=ForValue) cx name t =
   Entry.(match get_current_env_entry name with
   | Some (Value v) when lookup_mode = ForValue ->
-    Flow_js.unify cx t (general_of_value v)
+    Flow.unify cx t (general_of_value v)
   | Some entry when lookup_mode <> ForValue ->
-    Flow_js.unify cx t (Entry.declared_type entry)
+    Flow.unify cx t (Entry.declared_type entry)
   | _ -> ()
   )
 
@@ -854,13 +855,13 @@ let is_global_var _cx name =
 (* get var type, with given location used in type's reason *)
 let var_ref ?(lookup_mode=ForValue) cx name ?desc loc =
   let t = query_var ~track_ref:true ~lookup_mode cx name ?desc loc in
-  Flow_js.reposition cx loc t
+  Flow.reposition cx loc t
 
 (* get refinement entry *)
 let get_refinement cx key loc =
   match find_refi_in_var_scope key with
   | Some (_, { refined; _ }) ->
-      Some (Flow_js.reposition cx loc refined)
+      Some (Flow.reposition cx loc refined)
   | _ -> None
 
 (* helper: update let or var entry *)
@@ -882,7 +883,7 @@ let update_var ?(track_ref=false) op cx name specific loc =
     | Changeset.Refine -> Internal Refinement
     | Changeset.Read -> UnknownUse (* this is impossible *)
     in
-    Flow_js.flow cx (specific, UseT (use_op, Entry.general_of_value v));
+    Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v));
     (* add updated entry *)
     let update = Entry.Value {
       v with Entry.
@@ -929,7 +930,7 @@ let refine_const cx name specific loc =
     let change = scope.id, name, Changeset.Refine in
     Changeset.change_var change;
     let general = Entry.general_of_value v in
-    Flow_js.flow cx (specific, UseT (Internal Refinement, general));
+    Flow.flow cx (specific, UseT (Internal Refinement, general));
     let update = Value {
       v with value_state = State.Initialized; specific
     } in
@@ -986,9 +987,9 @@ let merge_env =
 
   let create_union cx loc name l1 l2 =
     let reason = mk_reason (RIdentifier name) loc in
-    Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow cx (l1, UseT (Internal MergeEnv, tvar));
-      Flow_js.flow cx (l2, UseT (Internal MergeEnv, tvar));
+    Tvar.mk_where cx reason (fun tvar ->
+      Flow.flow cx (l1, UseT (Internal MergeEnv, tvar));
+      Flow.flow cx (l2, UseT (Internal MergeEnv, tvar));
     )
   in
 
@@ -1005,7 +1006,7 @@ let merge_env =
     (* general case *)
     else
       let tvar = create_union cx loc name specific1 specific2 in
-      Flow_js.flow cx (tvar, UseT (Internal MergeEnv, general0));
+      Flow.flow cx (tvar, UseT (Internal MergeEnv, general0));
       tvar
   in
 
@@ -1141,8 +1142,8 @@ let copy_env =
     (* for values, flow env2's specific type into env1's specific type *)
     | Some Value v1, Some Value v2 ->
       (* flow child2's specific type to child1 in place *)
-      Flow_js.flow cx (v2.specific, UseT (Internal CopyEnv, v1.specific));
-      (* udpate state *)
+      Flow.flow cx (v2.specific, UseT (Internal CopyEnv, v1.specific));
+      (* update state *)
       if v1.value_state < State.Initialized
         && v2.value_state >= State.MaybeInitialized
       then (
@@ -1188,7 +1189,7 @@ let copy_env =
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
     | Some { refined = t1; _ }, Some { refined = t2; _ } ->
-      Flow_js.flow cx (t2, UseT (Internal CopyEnv, t1))
+      Flow.flow cx (t2, UseT (Internal CopyEnv, t1))
     (* uneven cases imply refi was added after splitting: remove *)
     | _ ->
       ()
@@ -1215,9 +1216,9 @@ let widen_env =
     then None
     else
       let reason = mk_reason (RIdentifier name) loc in
-      let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow cx (specific, UseT (Internal WidenEnv, tvar));
-      Flow_js.flow cx (tvar, UseT (Internal WidenEnv, general));
+      let tvar = Tvar.mk cx reason in
+      Flow.flow cx (specific, UseT (Internal WidenEnv, tvar));
+      Flow.flow cx (tvar, UseT (Internal WidenEnv, general));
       Some tvar
   in
 
@@ -1337,8 +1338,8 @@ let refine_expr = add_heap_refinement Changeset.Refine
  *)
 let refine_with_preds cx loc preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
-    Flow_js.mk_tvar_where cx refi_reason (fun refined_type ->
-      Flow_js.flow cx (orig_type, PredicateT (pred, refined_type)))
+    Tvar.mk_where cx refi_reason (fun refined_type ->
+      Flow.flow cx (orig_type, PredicateT (pred, refined_type)))
   in
   let refine_with_pred key pred acc =
     match key with

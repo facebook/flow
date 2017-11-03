@@ -19,3 +19,7 @@ val bindings_of_variable_declarations:
 val bindings_of_export_specifiers:
   Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t list ->
   binding list
+
+val partition_directives:
+  Loc.t Ast.Statement.t list ->
+  Loc.t Ast.Statement.t list * Loc.t Ast.Statement.t list

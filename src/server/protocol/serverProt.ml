@@ -17,9 +17,9 @@ type command =
     bool * (* force *)
     bool (* include_warnings *)
 | COVERAGE of File_input.t * bool (* force *)
-| DUMP_TYPES of File_input.t * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
+| DUMP_TYPES of File_input.t
 | FIND_MODULE of string * string
-| FIND_REFS of File_input.t * int * int (* filename, line, char *)
+| FIND_REFS of File_input.t * int * int * bool (* filename, line, char, global *)
 | GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
 | GET_DEF of File_input.t * int * int (* filename, line, char *)
 | GET_IMPORTS of string list
@@ -27,8 +27,7 @@ type command =
     File_input.t * (* filename|content *)
     int * (* line *)
     int * (* char *)
-    Verbose.t option *
-    bool (* include raw *)
+    Verbose.t option
 | KILL
 | PORT of string list
 | STATUS of Path.t * bool (* include_warnings *)
@@ -43,12 +42,12 @@ let string_of_command = function
   Printf.sprintf "check %s" (File_input.filename_of_file_input fn)
 | COVERAGE (fn, _) ->
     Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
-| DUMP_TYPES (fn, _, _) ->
+| DUMP_TYPES (fn) ->
     Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
 | FIND_MODULE (moduleref, filename) ->
     Printf.sprintf "find-module %s %s" moduleref filename
-| FIND_REFS (fn, line, char) ->
-    Printf.sprintf "find-refs %s:%d:%d" (File_input.filename_of_file_input fn) line char
+| FIND_REFS (fn, line, char, global) ->
+    Printf.sprintf "find-refs %s:%d:%d:%B" (File_input.filename_of_file_input fn) line char global
 | FORCE_RECHECK (files, force_focus) ->
     Printf.sprintf
       "force-recheck %s (focus = %b)" (String.concat " " files) force_focus
@@ -60,7 +59,7 @@ let string_of_command = function
       (File_input.filename_of_file_input fn) line char
 | GET_IMPORTS module_names ->
     Printf.sprintf "get-imports %s" (String.concat " " module_names)
-| INFER_TYPE (fn, line, char, _, _) ->
+| INFER_TYPE (fn, line, char, _) ->
     Printf.sprintf "type-at-pos %s:%d:%d"
       (File_input.filename_of_file_input fn) line char
 | KILL ->
@@ -88,14 +87,18 @@ type coverage_response = (
   string
 ) result
 type dump_types_response = (
-  (Loc.t * string * string * string option * Reason.t list) list,
+  (Loc.t * string * string * Reason.t list) list,
   string
 ) result
-type find_refs_response = (Loc.t list, string) result
+
+(* name of the symbol, locations where it appears, or None if no symbols were found *)
+type find_refs_success = (string * Loc.t list) option
+type find_refs_response = (find_refs_success, string) result
+
 type get_def_response = (Loc.t, string) result
 type get_imports_response = (Modulename.Set.t * Loc.t SMap.t) SMap.t * SSet.t
 type infer_type_response = (
-  Loc.t * string option * string option * Reason.t list,
+  Loc.t * string option * Reason.t list,
   string
 ) result
 (* map of files to `Ok (line, col, annotation)` or `Error msg` *)

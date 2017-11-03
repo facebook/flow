@@ -20,7 +20,7 @@ let name_suffix_of_t = function
   | _ -> ""
 
 let parameter_name _cx n t =
-  n ^ (name_suffix_of_t t)
+  (Option.value n ~default:"_") ^ (name_suffix_of_t t)
 
 let rest_parameter_name cx n t =
   "..." ^ (parameter_name cx n t)
@@ -136,23 +136,17 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     | DefT (_, FunT (_, _, ft)) ->
         let {
-          params_tlist = ts;
-          params_names = pns;
+          params;
           rest_param;
           return_t = t;
           _;
         } = ft in
-        let pns =
-          match pns with
-          | Some pns -> pns
-          | None -> List.map (fun _ -> "_") ts in
-        let params = List.map2 (fun n t ->
-          (parameter_name cx n t) ^ ": " ^ (pp EnclosureParam cx t))
-          pns ts in
+        let params = List.map (fun (name, t) ->
+          (parameter_name cx name t) ^ ": " ^ (pp EnclosureParam cx t)
+        ) params in
         let params = match rest_param with
         | None -> params
         | Some (name, _, t) ->
-          let name = Option.value ~default:"_" name in
           let param_name = rest_parameter_name cx name t in
           params @ [param_name ^ ": " ^ (pp EnclosureParam cx t)]
         in
@@ -244,7 +238,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         end
 
     (* The following types are not syntax-supported in all cases *)
-    | AnnotT (t, _) -> pp EnclosureNone cx t
+    | AnnotT ((_, id), _) -> spf "ANNOT_TYPE_%d" id
     | OpaqueT (_, {opaque_name; _}) -> opaque_name
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
@@ -322,7 +316,6 @@ let rec type_printer_impl ~size override enclosure cx t =
     | FunProtoCallT _
     | ObjProtoT _
     | NullProtoT _
-    | DiffT _
     | InternalT (ExtendsT _)
     | MergedT _
     | MatchingPropT _ ->
@@ -386,8 +379,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | AnnotT (t, _) ->
-      is_printed_type_parsable_impl weak cx enclosure t
+  | AnnotT (_, _) -> false (* HUH? *)
 
   | OpaqueT _ -> true
 
@@ -408,10 +400,10 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   | DefT (_, VoidT) -> true
 
-  | DefT (_, FunT (_, _, { params_tlist; rest_param; return_t; _ }))
+  | DefT (_, FunT (_, _, { params; rest_param; return_t; _ }))
     ->
       (is_printed_type_parsable_impl weak cx EnclosureRet return_t) &&
-      (is_printed_type_list_parsable weak cx EnclosureParam params_tlist) &&
+      (is_printed_type_list_parsable weak cx EnclosureParam (List.map snd params)) &&
       (match rest_param with
        | Some (_, _, t) ->
            is_printed_type_parsable_impl weak cx EnclosureParam t

@@ -74,6 +74,7 @@ MODULES=\
   src/common/profiling\
   src/common/span\
   src/common/utils\
+  src/common/xx\
   src/flowlib\
   src/parser\
   src/parser_utils\
@@ -110,6 +111,7 @@ MODULES=\
 NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
+  src/common/xx/xx_stubs.c\
   hack/heap/hh_shared.c\
   hack/utils/files.c\
   hack/utils/get_build_id.c\
@@ -144,14 +146,6 @@ COPIED_PRELUDE=\
 JS_STUBS=\
 	$(wildcard js/*.js)
 
-
-# We need caml_hexstring_of_float for js_of_ocaml < 2.8
-JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
-JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
-JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
-ifeq (1, $(shell [ -z "$(JSOO_VERSION)" ] || [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
-	JS_STUBS += js/optional/caml_hexstring_of_float.js
-endif
 
 ################################################################################
 #                                    Rules                                     #
@@ -332,6 +326,7 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 	js_of_ocaml \
 			--opt 3 \
 			--disable genprim \
+			--extern-fs \
 			-o bin/flow.js \
 			$(JS_STUBS) _build/src/flow_dot_js.byte \
 			2>_build/js_of_ocaml.err; \

@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -301,7 +301,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       <Bar x="hi" />;
     `).noNewErrors(),
   ]),
-  test('Exact prop type with spread still doesnt work', [
+  test('Exact prop type with spread still does not work', [
     addCode(`
       // @jsx Foo
       function Foo(elem: number, props: {| x: string |}) {}

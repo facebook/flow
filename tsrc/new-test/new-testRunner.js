@@ -31,7 +31,7 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
     join(dest, 'test.js'),
 `/*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 

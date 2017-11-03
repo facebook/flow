@@ -77,11 +77,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ShapeT t''
-      | DiffT (t1, t2) ->
-          let t1' = self#type_ cx map_cx t1 in
-          let t2' = self#type_ cx map_cx t2 in
-          if t1 == t1' && t2 == t2' then t
-          else DiffT (t1', t2')
       | MatchingPropT (r, x, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -90,10 +85,9 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else KeysT (r, t'')
-      | AnnotT (t', use_desc) ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else AnnotT (t'', use_desc)
+      | AnnotT ((r, id), use_desc) ->
+          let id' = self#tvar cx map_cx r id in
+          if id' == id then t else AnnotT ((r, id'), use_desc)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
@@ -119,19 +113,20 @@ class ['a] t = object(self)
           let x' = self#type_ cx map_cx x in
           if d == d' && x == x' then t
           else TypeDestructorTriggerT (r, d', x')
-      | CustomFunT (r, ReactElementFactory c) ->
-          let c' = self#type_ cx map_cx c in
-          if c' == c then t
-          else CustomFunT (r, ReactElementFactory c')
-      | CustomFunT _ -> t
+      | CustomFunT (r, kind) ->
+          let kind' = self#custom_fun_kind cx map_cx kind in
+          if kind' == kind then t
+          else CustomFunT (r, kind')
       | InternalT (IdxWrapper (r, t')) ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
           else InternalT (IdxWrapper (r, t''))
       | OpenPredT (r, t', map1, map2) ->
           let t'' = self#type_ cx map_cx t' in
+          let map1' = Key_map.map (self#predicate cx map_cx) map1 in
+          let map2' = Key_map.map (self#predicate cx map_cx) map2 in
           if t'' == t' then t
-          else OpenPredT (r, t'', map1, map2)
+          else OpenPredT (r, t'', map1', map2')
       | ReposT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -233,8 +228,7 @@ class ['a] t = object(self)
     else {exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export}
 
   method fun_type cx map_cx ({ this_t;
-                       params_tlist;
-                       params_names;
+                       params;
                        rest_param;
                        return_t;
                        closure_t;
@@ -243,7 +237,10 @@ class ['a] t = object(self)
                        def_reason } as t) =
     let this_t' = self#type_ cx map_cx this_t in
     let return_t' = self#type_ cx map_cx return_t in
-    let params_tlist' = ListUtils.ident_map (self#type_ cx map_cx) params_tlist in
+    let params' = ListUtils.ident_map (fun ((name, t) as param) ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then param else (name, t')
+    ) params in
     let rest_param' = match rest_param with
     | None -> rest_param
     | Some (name, loc, t) ->
@@ -252,24 +249,28 @@ class ['a] t = object(self)
     in
     if this_t' == this_t &&
        return_t' == return_t &&
-       params_tlist' == params_tlist &&
+       params' == params &&
        rest_param' == rest_param then t
     else
       let this_t = this_t' in
       let return_t = return_t' in
-      let params_tlist = params_tlist' in
+      let params = params' in
       let rest_param = rest_param' in
-      {this_t; params_tlist; params_names; rest_param; return_t;
+      {this_t; params; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
-  method inst_type cx map_cx ({ class_id;
-                        type_args;
-                        arg_polarities;
-                        fields_tmap;
-                        initialized_field_names;
-                        methods_tmap;
-                        mixins;
-                        structural } as t) =
+  method inst_type cx map_cx i =
+    let {
+      class_id;
+      type_args;
+      arg_polarities;
+      fields_tmap;
+      initialized_field_names;
+      initialized_static_field_names;
+      methods_tmap;
+      mixins;
+      structural
+    } = i in
     let type_args' = SMap.ident_map (self#type_ cx map_cx) type_args in
     let f_tmap = Context.find_props cx fields_tmap in
     let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) f_tmap in
@@ -282,10 +283,18 @@ class ['a] t = object(self)
       if m_tmap == m_tmap' then methods_tmap
       else Context.make_property_map cx m_tmap' in
     if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
-    then t
-    else
-      {class_id; type_args = type_args'; arg_polarities; fields_tmap = fields_tmap';
-     initialized_field_names; methods_tmap = methods_tmap'; mixins; structural}
+    then i
+    else {
+      class_id;
+      type_args = type_args';
+      arg_polarities;
+      fields_tmap = fields_tmap';
+      initialized_field_names;
+      initialized_static_field_names;
+      methods_tmap = methods_tmap';
+      mixins;
+      structural;
+    }
 
   method type_param cx map_cx ({reason; name; bound; polarity; default} as t) =
     let bound' = self#type_ cx map_cx bound in
@@ -324,6 +333,7 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else Bind t''
+      | ReadOnlyType -> t
       | SpreadType (options, tlist) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
@@ -344,6 +354,32 @@ class ['a] t = object(self)
       | ReactElementPropsType
       | ReactElementRefType
         -> t
+
+  method private custom_fun_kind cx map_cx kind =
+    match kind with
+    | ReactPropType (React.PropType.Primitive (b, t)) ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then kind
+      else ReactPropType (React.PropType.Primitive (b, t'))
+    | ReactElementFactory t ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then kind
+      else ReactElementFactory t'
+    | ObjectAssign
+    | ObjectGetPrototypeOf
+    | ObjectSetPrototypeOf
+    | Compose _
+    | ReactPropType _
+    | ReactCreateClass
+    | ReactCreateElement
+    | ReactCloneElement
+    | Merge
+    | MergeDeepInto
+    | MergeInto
+    | Mixin
+    | Idx
+    | DebugPrint
+      -> kind
 
   method exports cx map_cx id =
     let exps = Context.find_exports cx id in
@@ -419,11 +455,11 @@ class ['a] t = object(self)
         let funcall' = self#fun_call_type cx map_cx funcall in
         if prop' == prop && funcall' == funcall then t
         else MethodT (r1, r2, prop', funcall')
-    | SetPropT (r, prop, t') ->
+    | SetPropT (r, prop, i, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
-        else SetPropT (r, prop', t'')
+        else SetPropT (r, prop', i, t'')
     | SetPrivatePropT (r, prop, scopes, static, t') ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
@@ -700,16 +736,16 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if tmap' == tmap && t'' == t' then t
         else MapTypeT (r, tmap', t'')
-    | ReactKitT (r, react_tool) ->
+    | ReactKitT (use_op, r, react_tool) ->
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
-        else ReactKitT (r, react_tool')
-    | ObjKitT (r, resolve_tool, tool, tout) ->
+        else ReactKitT (use_op, r, react_tool')
+    | ObjKitT (use_op, r, resolve_tool, tool, tout) ->
         let resolve_tool' = self#object_kit_resolve_tool cx map_cx resolve_tool in
         let tool' = self#object_kit_tool cx map_cx tool in
         let tout' = self#type_ cx map_cx tout in
         if resolve_tool' == resolve_tool && tool' == tool && tout' == tout then t
-        else ObjKitT (r, resolve_tool', tool', tout')
+        else ObjKitT (use_op, r, resolve_tool', tool', tout')
     | ChoiceKitUseT (r, choice_use_tool) ->
         let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
         if choice_use_tool' == choice_use_tool then t
@@ -983,6 +1019,7 @@ class ['a] t = object(self)
   method object_kit_tool cx map_cx tool =
     let open Object in
     match tool with
+    | ReadOnly -> tool
     | Spread (options, state) ->
       let open Object.Spread in
       let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in
@@ -1003,6 +1040,22 @@ class ['a] t = object(self)
       in
       if state == state' then tool
       else Rest (options, state')
+    | ReactConfig state ->
+      let open Object.ReactConfig in
+      let state' = match state with
+        | Config { defaults; children } ->
+          let defaults' = OptionUtils.ident_map (self#type_ cx map_cx) defaults in
+          let children' = OptionUtils.ident_map (self#type_ cx map_cx) children in
+          if defaults == defaults' && children == children' then state
+          else Config { defaults = defaults'; children = children' }
+        | Defaults { config; children } ->
+          let config' = self#resolved cx map_cx config in
+          let children' = OptionUtils.ident_map (self#type_ cx map_cx) children in
+          if config == config' && children == children' then state
+          else Defaults { config = config'; children = children' }
+      in
+      if state == state' then tool
+      else ReactConfig state'
 
   method intersection_preprocess_tool cx map_cx t =
     match t with

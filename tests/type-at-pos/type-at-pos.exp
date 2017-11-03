@@ -29,37 +29,6 @@
   "end":3
 }
 {
-  "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}",
-  "type":"number",
-  "reasons":[
-    {
-      "desc":"number",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":1,"offset":66},
-        "end":{"line":5,"column":3,"offset":69}
-      },
-      "path":"test.js",
-      "line":5,
-      "endline":5,
-      "start":1,
-      "end":3
-    }
-  ],
-  "loc":{
-    "source":"test.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":66},
-    "end":{"line":5,"column":3,"offset":69}
-  },
-  "path":"test.js",
-  "line":5,
-  "endline":5,
-  "start":1,
-  "end":3
-}
-{
   "type":"[number, string]",
   "reasons":[
     {

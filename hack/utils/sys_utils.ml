@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 external realpath: string -> string option = "hh_realpath"
 external is_nfs: string -> bool = "hh_is_nfs"
@@ -481,3 +481,10 @@ let rec select_non_intr read write exn timeout =
       then timeout
       else max 0.0 (timeout -. (Unix.gettimeofday () -. start_time)) in
     select_non_intr read write exn timeout
+
+(* Flow uses lwt, which installs a sigchld handler. So the old pattern of fork & waitpid will hit
+ * an EINTR when the forked process dies and the parent gets a sigchld signal. Note: this is only a
+ * problem if you're not using the WNOHANG flag, since EINTR isn't thrown for WNOHANG *)
+let rec waitpid_non_intr flags pid =
+  try Unix.waitpid flags pid
+  with Unix.Unix_error (Unix.EINTR, _, _) -> waitpid_non_intr flags pid

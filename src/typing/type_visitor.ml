@@ -61,17 +61,11 @@ class ['a] t = object(self)
 
   | ShapeT t -> self#type_ cx pole acc t
 
-  | DiffT (t1, t2) ->
-    let acc = self#type_ cx pole_TODO acc t1 in
-    let acc = self#type_ cx pole_TODO acc t2 in
-    acc
-
   | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
 
-  | AnnotT (t, _) ->
-    self#type_ cx pole_TODO acc t
+  | AnnotT ((r, id), _) -> self#tvar cx pole_TODO acc r id
 
   | OpaqueT (_, ot) ->
     let {
@@ -221,6 +215,7 @@ class ['a] t = object(self)
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReadOnlyType
   | ReactElementPropsType
   | ReactElementRefType
     -> acc
@@ -264,7 +259,7 @@ class ['a] t = object(self)
     let acc = self#fun_call_type cx acc fn in
     acc
 
-  | SetPropT (_, p, t)
+  | SetPropT (_, p, _, t)
   | GetPropT (_, p, t)
   | TestPropT (_, p, t) ->
     let acc = self#propref cx acc p in
@@ -440,7 +435,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ReactKitT (_, tool) -> (match tool with
+  | ReactKitT (_, _, tool) -> (match tool with
     | React.GetProps t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
     | React.CreateElement (_, t1, (ts, t2), t3) ->
@@ -470,7 +465,7 @@ class ['a] t = object(self)
       let acc = self#type_ cx pole_TODO acc tout in
       acc)
 
-  | ObjKitT (_, resolve_tool, tool, tout) ->
+  | ObjKitT (_, _, resolve_tool, tool, tout) ->
     let open Object in
     let acc =
       match resolve_tool with
@@ -481,6 +476,7 @@ class ['a] t = object(self)
         acc
     in
     let acc = match tool with
+      | ReadOnly -> acc
       | Spread (_, state) ->
         let open Object.Spread in
         let { todo_rev; acc = object_spread_acc } = state in
@@ -495,6 +491,17 @@ class ['a] t = object(self)
         (match state with
           | One t -> self#type_ cx pole_TODO acc t
           | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o)
+      | ReactConfig state ->
+        let open Object.ReactConfig in
+        (match state with
+          | Config { defaults; children } ->
+            let acc = self#opt (self#type_ cx pole_TODO) acc defaults in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc
+          | Defaults { config; children } ->
+            let acc = Nel.fold_left (self#object_kit_slice cx) acc config in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc)
     in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
@@ -641,8 +648,7 @@ class ['a] t = object(self)
   method fun_type cx pole acc ft =
     let {
       this_t;
-      params_tlist;
-      params_names = _;
+      params;
       rest_param;
       return_t;
       closure_t = _;
@@ -651,7 +657,7 @@ class ['a] t = object(self)
       def_reason = _;
     } = ft in
     let acc = self#type_ cx pole acc this_t in
-    let acc = self#list (self#type_ cx (P.inv pole)) acc params_tlist in
+    let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
     let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
     let acc = self#type_ cx pole acc return_t in
     acc
@@ -688,6 +694,7 @@ class ['a] t = object(self)
       methods_tmap;
       class_id = _;
       initialized_field_names = _;
+      initialized_static_field_names = _;
       mixins = _;
       structural = _;
     } = i in

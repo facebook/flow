@@ -151,6 +151,21 @@ begin library "flow-common-utils"
   ]
 end
 
+xx_libc_flags = [
+  "-I"; "src/third-party/lz4";
+]
+begin library "flow-common-xx"
+  files = begin fb-glob "src/common/xx"
+    excludes = [ "xx_stubs.c" ]
+  end
+  files += [
+    "src/common/xx/xx_stubs.c" (ccopt = xx_libc_flags)
+  ]
+  requires = [
+    "lz4"
+  ]
+end
+
 begin library "flow-scripts-utils"
   dirname = "scripts"
   files = [
@@ -434,6 +449,7 @@ begin library "flow-services-inference"
     "flow-common-errors"
     "flow-common-lints"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-stubs"
     "flow-parser"
     "flow-parser-utils"
@@ -499,6 +515,7 @@ begin library "flow-typing"
     "flow-common-errors"
     "flow-common-lints"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-parser"
     "flow-parser-utils"
     "tp-core"

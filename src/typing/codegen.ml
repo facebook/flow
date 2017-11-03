@@ -43,6 +43,7 @@ let next_class_name env =
   env.next_class_name <- id + 1;
   spf "Class%d" id
 let resolve_type t env = Flow_js.resolve_type env.flow_cx t
+let resolve_tvar tvar env = Flow_js.resolve_tvar env.flow_cx tvar
 let set_class_name class_id name env =
   {env with class_names = IMap.add class_id name env.class_names;}
 let to_string env = Buffer.contents env.buf
@@ -146,7 +147,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AnnotT (t, _) -> gen_type t env
+  | AnnotT (tvar, _) -> gen_type (resolve_tvar tvar env) env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
@@ -223,12 +224,6 @@ let rec gen_type t env = Type.(
    *       codegen.
    *)
   | OpenPredT (_, _, _, _) -> add_str "mixed /* TODO: OpenPredT */" env
-  | DiffT (t1, t2) ->
-    add_str "$Diff<" env
-      |> gen_type t1
-      |> add_str ", "
-      |> gen_type t2
-      |> add_str ">"
   | ExactT (_, t) -> add_str "$Exact<" env |> gen_type t |> add_str ">"
   | ObjProtoT _ -> add_str "typeof Object.prototype" env
   | FunProtoT _ -> add_str "typeof Function.prototype" env
@@ -236,10 +231,10 @@ let rec gen_type t env = Type.(
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
   | DefT (_, FunT (_static, _prototype, ft)) ->
-    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+    let {params; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist rest_param
+      |> gen_func_params params rest_param
       |> add_str ") => "
       |> gen_type return_t
   | DefT (_, InstanceT (_static, _super, _, {class_id; _;})) -> (
@@ -298,7 +293,7 @@ let rec gen_type t env = Type.(
     add_str "}" env
   )
   | DefT (_, OptionalT t) -> add_str "void | " env |> gen_type t
-  | OpenT _ -> gen_type (resolve_type t env) env
+  | OpenT tvar -> gen_type (resolve_tvar tvar env) env
   | DefT (_, PolyT (tparams, t, _)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | InternalT (ReposUpperT (_, t)) -> gen_type t env
@@ -354,18 +349,18 @@ and gen_prop k p env =
     add_str "set " env
       |> add_str k
       |> add_str "("
-      |> gen_func_param "value" t
+      |> gen_func_param (Some "value") t
       |> add_str "): void"
   in
 
   let rec gen_method k t env =
     match t with
     | DefT (_, FunT (_static, _prototype, ft)) ->
-      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      let {params; rest_param; return_t; _;} = ft in
       add_str k env
         |> gen_tparams_list
         |> add_str "("
-        |> gen_func_params params_names params_tlist rest_param
+        |> gen_func_params params rest_param
         |> add_str "): "
         |> gen_type return_t
     | DefT (_, PolyT (tparams, t, _)) -> gen_method k t (add_tparams tparams env)
@@ -390,20 +385,15 @@ and gen_prop k p env =
     gen_getter k t1 env |> gen_setter k t2
   | Method t -> gen_method k t env
 
-and gen_func_params params_names params_tlist rest_param env =
-  let params =
-    match params_names with
-    | Some params_names ->
-      List.rev (List.fold_left2 (fun params name t ->
-        (name, t, false):: params
-      ) [] params_names params_tlist)
-    | None ->
-      List.mapi (fun idx t -> (spf "p%d" idx, t, false)) params_tlist
+and gen_func_params params rest_param env =
+  let params_rev = List.fold_left (fun acc (name, t) ->
+    (name, t, false) :: acc
+  ) [] params in
+  let params_rev = match rest_param with
+  | None -> params_rev
+  | Some (name, _, t) -> (name, t, true) :: params_rev
   in
-  let params = match rest_param with
-  | None -> params
-  | Some (name, _, t) ->
-    params @ [Option.value ~default:"rest" name, t, true] in
+  let params = List.rev params_rev in
   gen_separated_list params ", " (fun (name, t, is_rest) env ->
     if is_rest
     then gen_func_rest_param name t env
@@ -411,6 +401,7 @@ and gen_func_params params_names params_tlist rest_param env =
   ) env
 
 and gen_func_rest_param name t env =
+  let name = Option.value name ~default:"_" in
   add_str "..." env
   |> add_str name
   |> add_str ": "
@@ -418,6 +409,7 @@ and gen_func_rest_param name t env =
 
 and gen_func_param name t env =
   let open Type in
+  let name = Option.value name ~default:"_" in
   match t with
   | DefT (_, OptionalT t) ->
     add_str name env

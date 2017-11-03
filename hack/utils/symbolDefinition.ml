@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 type kind =
   | Function
@@ -32,6 +32,7 @@ and modifier =
   | Public
   | Protected
   | Async
+  | Inout
 
 and 'a t = {
   kind : kind;
@@ -81,6 +82,7 @@ let string_of_modifier = function
   | Public -> "public"
   | Protected -> "protected"
   | Async -> "async"
+  | Inout -> "inout"
 
 let function_kind_name = "function"
 let type_id_kind_name = "type_id"

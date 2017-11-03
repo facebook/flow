@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (* Utility functions *)
 
