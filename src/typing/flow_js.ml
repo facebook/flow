@@ -672,12 +672,14 @@ module Cache = struct
 
     let add_not_found l us setr =
       setr := TypeMap.add l us !setr; false
+
     let cache (l, u) setr =
       match TypeMap.get l !setr with
       | None -> add_not_found l (UseTypeSet.singleton u) setr
       | Some us ->
-        if UseTypeSet.mem u us then true
-        else add_not_found l (UseTypeSet.add u us) setr
+        (* add returns ref eq set if found *)
+        let us' = UseTypeSet.add u us in
+        us' == us || add_not_found l us' setr
 
     let fold f =
       TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
