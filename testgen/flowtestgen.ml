@@ -111,4 +111,5 @@ let main () =
   Logging.close ();;
 
 ignore (Utils.flow_check "var i : string = ([]).length;");
+
 (* main ();; *)
