@@ -634,12 +634,17 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and declare_class (loc, d) = Statement.Interface.(
+  and declare_class (loc, d) = Statement.DeclareClass.(
+    (* TODO: extends shouldn't return an array *)
+    let extends = match d.extends with
+    | Some extends -> array [| interface_extends extends |]
+    | None -> array [||]
+    in
     node "DeclareClass" loc [|
       "id", identifier d.id;
       "typeParameters", option type_parameter_declaration d.typeParameters;
       "body", object_type d.body;
-      "extends", array_of_list interface_extends d.extends;
+      "extends", extends;
     |]
   )
 
@@ -648,7 +653,6 @@ end with type t = Impl.t) = struct
     typeParameters;
     body;
     extends;
-    mixins=_;
   }) =
     node "DeclareInterface" loc [|
       "id", identifier id;

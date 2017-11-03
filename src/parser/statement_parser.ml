@@ -619,7 +619,6 @@ module Statement
         typeParameters;
         body;
         extends;
-        mixins = [];
       })
 
   and declare_interface env = with_loc (fun env ->
@@ -653,13 +652,13 @@ module Statement
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Expect.maybe env T_EXTENDS then [Type.generic env] else [] in
+      let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
       | _ -> []
       in
       let body = Type._object ~allow_static:true env in
-      Statement.Interface.({
+      Statement.DeclareClass.({
         id;
         typeParameters;
         body;

@@ -377,6 +377,14 @@ and Statement : sig
       typeParameters: 'M Type.ParameterDeclaration.t option;
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) list;
+    }
+  end
+  module DeclareClass : sig
+    type 'M t = {
+      id: 'M Identifier.t;
+      typeParameters: 'M Type.ParameterDeclaration.t option;
+      body: 'M * 'M Type.Object.t;
+      extends: ('M * 'M Type.Generic.t) option;
       mixins: ('M * 'M Type.Generic.t) list;
     }
   end
@@ -442,7 +450,7 @@ and Statement : sig
       (* declare export function *)
       | Function of ('M * 'M DeclareFunction.t)
       (* declare export class *)
-      | Class of ('M * 'M Interface.t)
+      | Class of ('M * 'M DeclareClass.t)
       (* declare export default [type]
        * this corresponds to things like
        * export default 1+1; *)
@@ -501,7 +509,7 @@ and Statement : sig
     | ClassDeclaration of 'M Class.t
     | Continue of 'M Continue.t
     | Debugger
-    | DeclareClass of 'M Interface.t
+    | DeclareClass of 'M DeclareClass.t
     | DeclareExportDeclaration of 'M DeclareExportDeclaration.t
     | DeclareFunction of 'M DeclareFunction.t
     | DeclareInterface of 'M Interface.t

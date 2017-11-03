@@ -79,13 +79,16 @@ val mk: Context.t ->
   t
 
 (** Create signature from interface AST. *)
-val mk_interface: Context.t ->
-  Loc.t ->
+val of_interface: Context.t ->
   Reason.t ->
-  bool -> (* structural *)
-  Type.t -> (* self *)
   Loc.t Ast.Statement.Interface.t ->
-  t
+  (t * Type.t (* self *))
+
+(** Create signature from DeclareClass AST. *)
+val of_declare_class: Context.t ->
+  Reason.t ->
+  Loc.t Ast.Statement.DeclareClass.t ->
+  (t * Type.t (* self *))
 
 (** 1. Manipulation *)
 

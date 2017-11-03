@@ -291,7 +291,7 @@ class requires_calculator ~ast = object(this)
       match declaration with
       | Variable (_, { DeclareVariable.id=(id_loc, name); _ })
       | Function (_, { DeclareFunction.id=(id_loc, name); _ })
-      | Class (_, { Interface.id=(id_loc, name); _ }) ->
+      | Class (_, { DeclareClass.id=(id_loc, name); _ }) ->
         let name = if default then "default" else name in
         this#add_es_exports [Some id_loc, name] []
       | DefaultType (_, _) ->

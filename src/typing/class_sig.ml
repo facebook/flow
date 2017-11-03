@@ -448,15 +448,12 @@ let mk_super cx tparams_map c targs = Type.(
       this_typeapp c this (Some tparams)
 )
 
-let mk_interface_super cx structural tparams_map (r, id, targs) =
-  let desc, lookup_mode =
-    if structural then "extends", Env.LookupMode.ForType
-    else "mixins", Env.LookupMode.ForValue in
-  let i = Anno.convert_qualification ~lookup_mode cx desc id in
-  if structural then
-    let params = Anno.extract_type_param_instantiations targs in
-    Anno.mk_nominal_type cx r tparams_map (i, params)
-  else mk_super cx tparams_map i targs
+let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; typeParameters}) =
+  let r = mk_reason (RCustom (Anno.qualified_name id)) loc in
+  let lookup_mode = Env.LookupMode.ForType in
+  let i = Anno.convert_qualification ~lookup_mode cx "extends" id in
+  let params = Anno.extract_type_param_instantiations typeParameters in
+  Anno.mk_nominal_type cx r tparams_map (i, params)
 
 let mk_extends cx tparams_map ~expr = function
   | None, None -> Implicit { null = false }
@@ -670,22 +667,6 @@ let mk cx _loc reason self ~expr =
         c
   ) class_sig elements
 
-let extract_extends cx structural =
-  let rec loop acc first = function
-    | [] -> List.rev acc
-    | (loc, {Ast.Type.Generic.id; typeParameters})::rest ->
-      if structural || first then
-        let name = Anno.qualified_name id in
-        let r = mk_reason (RCustom name) loc in
-        loop ((r, id, typeParameters)::acc) false rest
-      else (
-        Flow.add_output cx Flow_error.(EUnsupportedSyntax
-          (loc, ClassExtendsMultiple));
-        loop acc false []
-      )
-  in
-  loop [] true
-
 let extract_mixins _cx =
   List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
     let name = Anno.qualified_name id in
@@ -699,63 +680,9 @@ let is_object_builtin_libdef (loc, name) =
   | None -> false
   | Some source -> File_key.is_lib_file source
 
-let mk_interface cx loc reason structural self = Ast.Statement.(
-  fun { Interface.
-    id = ident;
-    typeParameters;
-    body = (_, { Ast.Type.Object.properties; _ });
-    extends;
-    mixins;
-    _;
-  } ->
-
-  let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx typeParameters in
-
-  let tparams, tparams_map =
-    if not structural
-    then add_this self cx reason tparams tparams_map
-    else tparams, tparams_map in
-
-  let iface_sig =
-    let id = Context.make_nominal cx in
-    let extends = List.map
-      (mk_interface_super cx structural tparams_map)
-      (extract_extends cx structural extends)
-    in
-    let mixins = List.map
-      (mk_mixins cx tparams_map)
-      (extract_mixins cx mixins)
-    in
-    let super =
-      if structural then
-        let callable = List.exists Ast.Type.Object.(function
-          | CallProperty (_, { CallProperty.static; _ }) -> not static
-          | _ -> false
-        ) properties in
-        let static_callable = List.exists Ast.Type.Object.(function
-          | CallProperty (_, { CallProperty.static; _ }) -> static
-          | _ -> false
-        ) properties in
-        Interface { extends; callable; static_callable }
-      else
-        let extends = match extends with
-        | [] -> Implicit { null = is_object_builtin_libdef ident }
-        | [t] -> Explicit t
-        | _ -> failwith "declare class with multiple extends"
-        in
-        Class { extends; mixins; implements = [] }
-    in
-    empty id reason tparams tparams_map super
-  in
-
-  let iface_sig =
-    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
-    let t = Type.StrT.why reason in
-    add_field ~static:true "name" (Type.Neutral, Annot t) iface_sig
-  in
-
-  let iface_sig = List.fold_left Ast.Type.Object.(fun x -> function
+let add_interface_properties cx properties s =
+  let { tparams_map; _ } = s in
+  List.fold_left Ast.Type.Object.(fun x -> function
     | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
       let fsig = Func_sig.convert cx tparams_map loc func in
       append_method ~static "$call" fsig x
@@ -824,18 +751,106 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     | SpreadProperty (loc, _) ->
       Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x
-  ) iface_sig properties in
+  ) s properties
 
-  (* Structural interfaces never get a default constructor. Non-structural
-   * (aka declare class) get a default constructor if they don't have a
-   * constructor and won't inherit one from a super *)
-  let inherits_constructor = extends <> [] || mixins <> [] in
-  if structural || mem_constructor iface_sig || inherits_constructor
-  then iface_sig
-  else
-    let reason = mk_reason RDefaultConstructor loc in
-    add_default_constructor reason iface_sig
-)
+let of_interface cx reason { Ast.Statement.Interface.
+  typeParameters;
+  body = (_, { Ast.Type.Object.properties; _ });
+  extends;
+  _;
+} =
+  let self = Tvar.mk cx reason in
+
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx typeParameters in
+
+  let iface_sig =
+    let id = Context.make_nominal cx in
+    let extends = List.map (mk_interface_super cx tparams_map) extends in
+    let super =
+      let callable = List.exists Ast.Type.Object.(function
+        | CallProperty (_, { CallProperty.static; _ }) -> not static
+        | _ -> false
+      ) properties in
+      let static_callable = List.exists Ast.Type.Object.(function
+        | CallProperty (_, { CallProperty.static; _ }) -> static
+        | _ -> false
+      ) properties in
+      Interface { extends; callable; static_callable }
+    in
+    empty id reason tparams tparams_map super
+  in
+
+  let iface_sig =
+    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
+    let t = Type.StrT.why reason in
+    add_field ~static:true "name" (Type.Neutral, Annot t) iface_sig
+  in
+
+  let iface_sig = add_interface_properties cx properties iface_sig in
+
+  iface_sig, self
+
+
+let of_declare_class cx reason { Ast.Statement.DeclareClass.
+  id = ident;
+  typeParameters;
+  body = (_, { Ast.Type.Object.properties; _ });
+  extends;
+  mixins;
+  _;
+} =
+  let self = Tvar.mk cx reason in
+
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx typeParameters in
+
+  let tparams, tparams_map = add_this self cx reason tparams tparams_map in
+
+  let iface_sig =
+    let id = Context.make_nominal cx in
+    let extends =
+      match extends with
+      | Some (_, {Ast.Type.Generic.id; typeParameters}) ->
+        let lookup_mode = Env.LookupMode.ForValue in
+        let i = Anno.convert_qualification ~lookup_mode cx "mixins" id in
+        Some (mk_super cx tparams_map i typeParameters)
+      | None ->
+        None
+    in
+    let mixins =
+      mixins
+      |> extract_mixins cx
+      |> List.map (mk_mixins cx tparams_map)
+    in
+    let super =
+      let extends = match extends with
+      | None -> Implicit { null = is_object_builtin_libdef ident }
+      | Some t -> Explicit t
+      in
+      Class { extends; mixins; implements = [] }
+    in
+    empty id reason tparams tparams_map super
+  in
+
+  let iface_sig =
+    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
+    let t = Type.StrT.why reason in
+    add_field ~static:true "name" (Type.Neutral, Annot t) iface_sig
+  in
+
+  let iface_sig = add_interface_properties cx properties iface_sig in
+
+  (* Add a default constructor if we don't have a constructor and won't inherit one from a super *)
+  let iface_sig =
+    if mem_constructor iface_sig || extends <> None || mixins <> [] then
+      iface_sig
+    else
+      let reason = replace_reason_const RDefaultConstructor reason in
+      add_default_constructor reason iface_sig
+  in
+  iface_sig, self
+
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =

@@ -233,7 +233,6 @@ and unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
-  | ClassExtendsMultiple
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | RequireLazyDynamicArgument
@@ -1246,8 +1245,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "literal properties not yet supported"
         | ClassPropertyComputed ->
             "computed property keys not supported"
-        | ClassExtendsMultiple ->
-            "A class cannot extend multiple classes!"
         | ReactCreateClassPropertyNonInit ->
             "unsupported property specification in createClass"
         | RequireDynamicArgument ->

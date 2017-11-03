@@ -260,7 +260,7 @@ and statement_decl cx = Ast.Statement.(
       | None -> ()
     )
 
-  | (_, DeclareClass { Interface.id = (name_loc, name); _ })
+  | (_, DeclareClass { DeclareClass.id = (name_loc, name); _ })
   | (_, DeclareInterface { Interface.id = (name_loc, name); _ })
   | (_, InterfaceDeclaration { Interface.id = (name_loc, name); _ }) as stmt ->
       let is_interface = match stmt with
@@ -435,22 +435,28 @@ and statement cx = Ast.Statement.(
     List.iter (variable cx kind) declarations
   in
 
-  let interface cx loc structural i =
-    let {Interface.id = (_, name); _} = i in
+  let interface_helper cx loc (iface_sig, self) =
+    Iface_sig.generate_tests cx (Iface_sig.check_super cx) iface_sig;
+    let t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
+    Flow.unify cx self t;
+    Type_table.set (Context.type_table cx) loc t;
+    t
+  in
+
+  let interface cx loc decl =
+    let { Interface.id = (_, name); _ } = decl in
     let reason = DescFormat.instance_reason name loc in
-    let self = Tvar.mk cx reason in
-    let iface_sig =
-      Iface_sig.mk_interface cx loc reason structural self i
-    in
-    iface_sig |> Iface_sig.generate_tests cx (fun iface_sig ->
-      Iface_sig.check_super cx iface_sig
-    );
-    let interface_t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
-    Flow.unify cx self interface_t;
-    Type_table.set (Context.type_table cx) loc interface_t;
-    (* interface is a type alias, declare class is a var *)
-    Env.(if structural then init_type else init_var ~has_anno:false)
-      cx name interface_t loc
+    let iface_sig = Iface_sig.of_interface cx reason decl in
+    let t = interface_helper cx loc iface_sig in
+    Env.init_type cx name t loc
+  in
+
+  let declare_class cx loc decl =
+    let { DeclareClass.id = (_, name); _ } = decl in
+    let reason = DescFormat.instance_reason name loc in
+    let class_sig = Iface_sig.of_declare_class cx reason decl in
+    let t = interface_helper cx loc class_sig in
+    Env.init_var ~has_anno:false cx name t loc
   in
 
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
@@ -1490,11 +1496,11 @@ and statement cx = Ast.Statement.(
         name_loc
 
   | (loc, DeclareClass decl) ->
-    interface cx loc false decl
+    declare_class cx loc decl
 
   | (loc, DeclareInterface decl)
   | (loc, InterfaceDeclaration decl) ->
-    interface cx loc true decl
+    interface cx loc decl
 
   | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let name = match id with
@@ -1618,8 +1624,7 @@ and statement cx = Ast.Statement.(
             statement cx (loc, DeclareFunction f);
             [(spf "function %s() {}" name, loc, name, None)], ExportValue
         | Some (Class (loc, c)) ->
-            let { Interface.id = (name_loc, name); _; }
-              = c in
+            let { DeclareClass.id = (name_loc, name); _; } = c in
             statement cx (loc, DeclareClass c);
             [(spf "class %s {}" name, name_loc, name, None)], ExportValue
         | Some (DefaultType (loc, t)) ->
