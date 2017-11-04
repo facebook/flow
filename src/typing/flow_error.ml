@@ -174,6 +174,7 @@ type error_message =
   | EDocblockError of Loc.t * docblock_error
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
+  | EUntypedImport of Loc.t * string
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
@@ -459,6 +460,7 @@ let locs_of_error_message = function
   | EParseError (loc, _) -> [loc]
   | EDocblockError (loc, _) -> [loc]
   | EUntypedTypeImport (loc, _) -> [loc]
+  | EUntypedImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
@@ -1568,6 +1570,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ~kind:(LintError Lints.UntypedTypeImport)
       [loc, [spf (
         "Importing a type from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
+      ) module_name]]
+
+  | EUntypedImport (loc, module_name) ->
+    mk_error
+      ~kind:(LintError Lints.UntypedImport)
+      [loc, [spf (
+        "Importing from an untyped module makes it `any` and is not safe! "^^
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 

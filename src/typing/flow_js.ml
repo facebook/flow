@@ -2071,16 +2071,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (_, AnyT), (CJSRequireT(reason, t) | ImportModuleNsT(reason, t)) ->
+    | DefT (lreason, AnyT), (CJSRequireT(reason, t) | ImportModuleNsT(reason, t)) ->
+      let () = match desc_of_reason lreason with
+        (* Use a special reason so we can tell the difference between an any-typed import
+         * from an untyped module and an any-typed import from a nonexistent module. *)
+        | RUntypedModule module_name ->
+          let loc = Reason.loc_of_reason reason in
+          let message = FlowError.EUntypedImport (loc, module_name) in
+          add_output cx ~trace message
+        | _ -> ()
+      in
       rec_flow_t cx trace (AnyT.why reason, t)
 
     | DefT (lreason, AnyT), ImportDefaultT(reason, import_kind, _, t) ->
       let () = match import_kind, desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed type import
-         * from an untyped module and an any-typed type import from a nonexistent module. *)
+         * from an untyped module and an any-typed import from a nonexistent module. *)
         | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.loc_of_reason reason in
           let message = FlowError.EUntypedTypeImport (loc, module_name) in
+          add_output cx ~trace message
+        | ImportValue, RUntypedModule module_name ->
+          let loc = Reason.loc_of_reason reason in
+          let message = FlowError.EUntypedImport (loc, module_name) in
           add_output cx ~trace message
         | _ -> ()
       in
@@ -2093,6 +2106,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.loc_of_reason reason in
           let message = FlowError.EUntypedTypeImport (loc, module_name) in
+          add_output cx ~trace message
+        | ImportValue, RUntypedModule module_name ->
+          let loc = Reason.loc_of_reason reason in
+          let message = FlowError.EUntypedImport (loc, module_name) in
           add_output cx ~trace message
         | _ -> ()
       in

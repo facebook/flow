@@ -2644,6 +2644,8 @@ let dump_flow_error =
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
+    | EUntypedImport (loc, module_name) ->
+      spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
     | ELintSetting (loc, kind) ->
