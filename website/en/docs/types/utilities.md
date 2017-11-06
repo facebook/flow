@@ -258,7 +258,7 @@ Let's see an example. Suppose you have a function called `run` that takes an obj
 
 ```js
 // @flow
-function run<A, O: {[key: string]: () => A}>(o: O) {
+function run<O: {[key: string]: () => any}>(o: O) {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 ```
@@ -275,7 +275,7 @@ This is where `ObjMap<T, F>` comes in handy.
 // let's write a typelevel function that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V
 
-function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
+function run<O: {[key: string]: () => any}>(o: O): $ObjMap<O, ExtractReturnType> {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 ```
