@@ -92,8 +92,8 @@ let main option_values root json pretty strip_root from args () =
       prerr_endlinef "Error: %s" error
     | Ok completions ->
       List.iter (fun res ->
-        let name = res.AutocompleteService_js.res_name in
-        let ty = res.AutocompleteService_js.res_ty in
+        let name = res.ServerProt.res_name in
+        let ty = res.ServerProt.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

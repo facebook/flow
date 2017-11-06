@@ -7,25 +7,7 @@
 
 open Autocomplete_js
 open Type_printer
-
-(* Details about functions to be added in json output *)
-type func_param_result = {
-    param_name     : string;
-    param_ty       : string;
-  }
-
-type func_details_result = {
-    param_tys : func_param_result list;
-    return_ty : string;
-  }
-
-(* Results ready to be displayed to the user *)
-type complete_autocomplete_result = {
-    res_loc      : Loc.t;
-    res_ty       : string;
-    res_name     : string;
-    func_details : func_details_result option;
-  }
+open ServerProt
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
