@@ -5,36 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
- module Timing : sig
-   type t
-   val empty: t
-   val start_timer: timer:string -> t -> t
-   val stop_timer: timer:string -> t -> t
-   val get_finished_timer: timer:string -> t -> (float * float * float * float) option
-   val to_json: t -> Hh_json.json
- end = struct
-  type time_measurement = {
-    start_age: float;
-    duration: float;
-  }
+type time_measurement = {
+  start_age: float;
+  duration: float;
+}
 
-  type processor_info = {
-    cpu_user: float;
-    cpu_nice_user: float;
-    cpu_system: float;
-    cpu_idle: float;
-    cpu_usage: float;
-  }
+type processor_info = {
+  cpu_user: float;
+  cpu_nice_user: float;
+  cpu_system: float;
+  cpu_idle: float;
+  cpu_usage: float;
+}
 
-  type result = {
-    user: time_measurement;
-    system: time_measurement;
-    worker_user: time_measurement;
-    worker_system: time_measurement;
-    wall: time_measurement;
-    processor_totals: processor_info;
-    flow_cpu_usage: float;
-  }
+type result = {
+  user: time_measurement;
+  system: time_measurement;
+  worker_user: time_measurement;
+  worker_system: time_measurement;
+  wall: time_measurement;
+  processor_totals: processor_info;
+  flow_cpu_usage: float;
+}
+
+module Timing : sig
+  type t
+  val empty: t
+  val start_timer: timer:string -> t -> t
+  val stop_timer: timer:string -> t -> t
+  val get_results: t -> result SMap.t
+  val to_json: t -> Hh_json.json
+end = struct
 
   type running_timer = {
     user_start: float;
@@ -152,16 +153,7 @@
           results = SMap.add timer result results;
         }
 
-  let get_finished_timer ~timer { results; _; } =
-    match SMap.get timer results with
-    | None -> None
-    | Some {
-      wall = { start_age; duration; };
-      processor_totals = { cpu_usage; _; };
-      flow_cpu_usage;
-      _;
-    } ->
-        Some (start_age, duration, cpu_usage, flow_cpu_usage)
+  let get_results { results; _; } = results
 
   let json_of_time_measurement { start_age; duration; } =
     let open Hh_json in
@@ -207,7 +199,7 @@
     JSON_Object [
       "results", JSON_Object results;
     ]
- end
+end
 
 module Memory: sig
   type t
@@ -250,11 +242,129 @@ let stop_timer ~timer profile =
 let profiling_timer_name = "Profiling"
 let reserved_timer_names = SSet.of_list [ profiling_timer_name ]
 
-let with_profiling f =
+(* Prints out a nice table of all the timers for a profiling run. It might look like this:
+ *
+ *  WALL TIME                CPU TIME            SECTION
+ * --------------------------------------------------------
+ * 0.620 (100.0%)          2.454 (100.0%)        <Total>
+ * 0.036 (  5.9%)          0.154 (  6.3%)        Parsing
+ * 0.022 (  3.6%)          0.003 (  0.1%)        <Unknown>
+ * 0.023 (  3.7%)          0.001 (  0.0%)        CommitModules
+ * 0.023 (  3.7%)          0.012 (  0.5%)        ResolveRequires
+ * 0.028 (  4.5%)          0.047 (  1.9%)        DependentFiles
+ * 0.019 (  3.0%)          0.013 (  0.5%)        <Unknown>
+ * 0.012 (  1.9%)          0.003 (  0.1%)        RecalcDepGraph
+ * 0.017 (  2.7%)          0.038 (  1.5%)        CalcDepsTypecheck
+ * 0.000 (  0.0%)          0.001 (  0.0%)        Infer
+ * 0.001 (  0.2%)          0.001 (  0.0%)        MakeMergeInput
+ * 0.017 (  2.7%)          0.009 (  0.4%)        CalcDeps
+ * 0.407 ( 65.7%)          2.157 ( 87.9%)        Merge
+ * 0.056 (  9.0%)          0.031 (  1.3%)        <Unknown total>
+ *
+ * For each profiled section, it prints out the wall time and cpu time, including the percentage of
+ * the total profiled time. The sections are printed in the order that they were run.
+ *
+ * The <Unknown> sections appear when some unprofiled code takes up more than 1% of wall time. The
+ * <Unknown total> is the sum of all unprofiled time.
+ *)
+let print_summary =
+  (* Total cpu duration *)
+  let sum_cpu result =
+    result.user.duration +.
+    result.system.duration +.
+    result.worker_user.duration +.
+    result.worker_system.duration
+  in
+
+  (* Total cpu start age *)
+  let sum_cpu_start_age result =
+    result.user.start_age +.
+    result.system.start_age +.
+    result.worker_user.start_age +.
+    result.worker_system.start_age
+  in
+
+  (* Prints a single row of the table. All but the last column have a fixed width. *)
+  let print_summary_single_raw key (result_wall, result_cpu) total =
+    Printf.eprintf "%7.3f (%5.1f%%)\t%7.3f (%5.1f%%)\t%s\n%!"
+      result_wall
+      (100.0 *. result_wall /. total.wall.duration)
+      result_cpu
+      (100.0 *. result_cpu /. (sum_cpu total))
+      key
+  in
+
+  let print_summary_single key result total =
+    print_summary_single_raw key (result.wall.duration, sum_cpu result) total
+  in
+
+  (* If there's more than 1% of wall time since the last end and the next start_age, then print an
+   * <Unknown> row *)
+  let print_unknown last_end (wall_start_age, cpu_start_age) total =
+    match last_end with
+    | None -> ()
+    | Some (wall_end, cpu_end) ->
+      let unknown_wall = wall_start_age -. wall_end in
+      if unknown_wall /. total.wall.duration > 0.01
+      then
+        let unknown_cpu = cpu_start_age -. cpu_end in
+        print_summary_single_raw "<Unknown>" (unknown_wall, unknown_cpu) total
+  in
+
+  fun profile ->
+    let results = Timing.get_results profile.timing in
+    let total, parts = SMap.fold (fun key result (total, parts) ->
+      if key = profiling_timer_name
+      then (Some result), parts
+      else total, ((key, result)::parts)
+    ) results (None, []) in
+    let total = match total with
+    | None -> failwith (Printf.sprintf "Couldn't find timing results for '%s'" profiling_timer_name)
+    | Some total -> total in
+    let parts =
+      List.sort (fun (_, r1) (_, r2) -> compare r1.wall.start_age r2.wall.start_age) parts in
+
+    (* Print the header *)
+    Printf.eprintf "   WALL TIME\t\t    CPU TIME\t\tSECTION\n%!";
+    Printf.eprintf "--------------------------------------------------------\n%!";
+
+    (* Print the total time *)
+    print_summary_single "<Total>" total total;
+
+    (* Print the various sections and the unknown durations *)
+    let last_end, remaining = List.fold_left
+      (fun (last_end, (wall_remaining, cpu_remaining)) (key, result) ->
+        (* Print an <Unknown> row if needed *)
+        print_unknown last_end (result.wall.start_age, sum_cpu_start_age result) total;
+
+        (* Print this row *)
+        print_summary_single key result total;
+
+        let remaining = wall_remaining -. result.wall.duration, cpu_remaining -. (sum_cpu result) in
+        let last_end =
+          result.wall.start_age +. result.wall.duration,
+          (sum_cpu_start_age result) +. (sum_cpu result) in
+        Some last_end, remaining
+      )
+      (None, (total.wall.duration, sum_cpu total))
+      parts in
+
+    (* Print an <Unknown> row if there's too much time between the last section and the end of the
+     * profiling *)
+    print_unknown
+      last_end
+      (total.wall.start_age +. total.wall.duration, sum_cpu_start_age total +. sum_cpu total)
+      total;
+
+    (* Print the unknown totals *)
+    print_summary_single_raw "<Unknown total>" remaining total
+
+let with_profiling ~should_print_summary f =
   let profiling = ref empty in
   start_timer ~timer:profiling_timer_name profiling;
   let ret = f profiling in
   stop_timer ~timer:profiling_timer_name profiling;
+  if should_print_summary then print_summary !profiling;
   (!profiling, ret)
 
 let check_for_reserved_timer_name f ~timer profile =
@@ -266,7 +376,11 @@ let start_timer = check_for_reserved_timer_name start_timer
 let stop_timer = check_for_reserved_timer_name stop_timer
 
 let get_finished_timer ~timer profile =
-  Timing.get_finished_timer ~timer !profile.timing
+  let results = Timing.get_results !profile.timing in
+  match SMap.get timer results with
+  | None -> None
+  | Some r ->
+    Some (r.wall.start_age, r.wall.duration, r.processor_totals.cpu_usage, r.flow_cpu_usage)
 
 let sample_memory ~metric ~value profile =
   profile := {!profile with memory = Memory.sample_memory ~metric ~value !profile.memory }

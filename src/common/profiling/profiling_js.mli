@@ -8,7 +8,7 @@
 type running
 type finished
 
-val with_profiling: (running -> 'a) -> finished * 'a
+val with_profiling: should_print_summary:bool -> (running -> 'a) -> finished * 'a
 
 val start_timer: timer:string -> running -> unit
 val stop_timer: timer:string -> running -> unit
@@ -20,3 +20,5 @@ val get_timing_json_string: finished -> string
 val get_memory_json_string: finished -> string
 
 val to_json_properties: finished -> (string * Hh_json.json) list
+
+val print_summary: finished -> unit
