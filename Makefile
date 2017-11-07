@@ -206,7 +206,8 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 		src/flow.native
 
 %.ocp: %.ocp.fb scripts/script_utils.ml scripts/ocp_build_glob.ml
-	ocaml -I scripts -w -3 str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
+	ocaml -safe-string -I scripts -w -3 \
+		str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
 
 build-flow-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
@@ -250,10 +251,10 @@ $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
 hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
-	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
+	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 _build/hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
-	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
+	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 $(COPIED_FLOWLIB): _build/%.js: %.js
 	mkdir -p $(dir $@)

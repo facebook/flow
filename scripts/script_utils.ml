@@ -71,7 +71,7 @@ let string_of_file filename =
   let rec iter ic b s =
     let nread = input ic s 0 32759 in
     if nread > 0 then begin
-      Buffer.add_substring b s 0 nread;
+      Buffer.add_subbytes b s 0 nread;
       iter ic b s
     end in
   iter ic b s;
