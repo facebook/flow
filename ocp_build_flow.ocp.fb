@@ -268,6 +268,18 @@ begin library "flow-parsing"
   ]
 end
 
+begin library "flow-monitor-server-status"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "serverStatus.mli"
+    "serverStatus.ml"
+  ]
+  requires = [
+    "flow-common-utils"
+  ]
+end
+
 begin library "flow-server-files"
   sort = true
   files = [
@@ -302,12 +314,13 @@ begin library "flow-server-protocol"
     "flow-common"
     "flow-common-errors"
     "flow-common-utils"
+    "flow-monitor-server-status"
     "flow-parser"
     "flow-server-utils"
     "flow-typing"
     "hh-utils"
-    "hh-utils-sys"
     "hh-utils-collections"
+    "hh-utils-sys"
   ]
 end
 
