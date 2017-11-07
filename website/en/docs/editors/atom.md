@@ -13,8 +13,8 @@ apm install atom-ide-ui ide-flowtype
 
 Combining [atom-ide-ui](https://atom.io/packages/atom-ide-ui)
 and [ide-flowtype](https://atom.io/packages/ide-flowtype), this is [Flow's
-integration](https://nuclide.io/blog/2017/09/12/Introducing-Atom-IDE-UI/) into the
-[Atom IDE](https://ide.atom.io/) initiative.
+integration](https://nuclide.io/blog/2017/09/12/Introducing-Atom-IDE-UI/)
+into the [Atom IDE](https://ide.atom.io/) initiative.
 Like Nuclide, it’s a unified package which contains the following features:
 * Diagnostics
 * Definitions
@@ -26,9 +26,9 @@ Like Nuclide, it’s a unified package which contains the following features:
 * Code Highlight
 * Busy Signal
 
-Note that if you’re already a Nuclide user, all of Atom IDE UI’s features will still
-be bundled inside of Nuclide, so there’s no need to install another package.
-
+Note that if you’re already a Nuclide user, all of Atom IDE UI’s features
+will still be bundled inside of Nuclide, so there’s no need to install another
+package.
 
 ### Nuclide <a class="toc" id="toc-nuclide" href="#toc-nuclide"></a>
 
