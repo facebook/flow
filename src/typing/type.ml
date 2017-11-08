@@ -805,12 +805,13 @@ module rec TypeTerm : sig
 
   and polarity = Negative | Neutral | Positive
 
+  (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of t * polarity
-    | Get of t
-    | Set of t
-    | GetSet of t * t
-    | Method of t
+    | Field of Loc.t option * t * polarity
+    | Get of Loc.t option * t
+    | Set of Loc.t option * t
+    | GetSet of Loc.t option * t * Loc.t option * t
+    | Method of Loc.t option * t
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
@@ -1081,6 +1082,9 @@ and Property : sig
   val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
   val access: TypeTerm.rw -> t -> TypeTerm.t option
 
+  val read_loc: t -> Loc.t option
+  val write_loc: t -> Loc.t option
+
   val iter_t: (TypeTerm.t -> unit) -> t -> unit
   val fold_t: ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
   val map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -1094,86 +1098,103 @@ end = struct
   type t = property
 
   let polarity = function
-    | Field (_, polarity) -> polarity
+    | Field (_, _, polarity) -> polarity
     | Get _ -> Positive
     | Set _ -> Negative
     | GetSet _ -> Neutral
     | Method _ -> Positive
 
   let read_t = function
-    | Field (t, polarity) ->
+    | Field (_, t, polarity) ->
       if Polarity.compat (polarity, Positive)
       then Some t
       else None
-    | Get t -> Some t
+    | Get (_, t) -> Some t
     | Set _ -> None
-    | GetSet (t, _) -> Some t
-    | Method t -> Some t
+    | GetSet (_, t, _, _) -> Some t
+    | Method (_, t) -> Some t
 
   let write_t ?(ctx=Normal) = function
-    | Field (t, _) when ctx = ThisInCtor -> Some t
-    | Field (t, polarity) ->
+    | Field (_, t, _) when ctx = ThisInCtor -> Some t
+    | Field (_, t, polarity) ->
       if Polarity.compat (polarity, Negative)
       then Some t
       else None
     | Get _ -> None
-    | Set t -> Some t
-    | GetSet (_, t) -> Some t
+    | Set (_, t) -> Some t
+    | GetSet (_, _, _, t) -> Some t
     | Method _ -> None
+
+  let read_loc = function
+    | Field (loc, _, _)
+    | Get (loc, _)
+    | GetSet (loc, _, _, _)
+    | Method (loc, _) ->
+        loc
+    | Set _ -> None
+
+  let write_loc = function
+    | Field (loc, _, _)
+    | Set (loc, _)
+    | GetSet (_, _, loc, _) ->
+        loc
+    | Method _
+    | Get _ ->
+        None
 
   let access = function
     | Read -> read_t
     | Write ctx -> write_t ~ctx
 
   let iter_t f = function
-    | Field (t, _)
-    | Get t
-    | Set t
-    | Method t ->
+    | Field (_, t, _)
+    | Get (_, t)
+    | Set (_, t)
+    | Method (_, t) ->
       f t
-    | GetSet (t1, t2) ->
+    | GetSet (_, t1, _, t2) ->
       f t1;
       f t2
 
   let fold_t f acc = function
-    | Field (t, _)
-    | Get t
-    | Set t
-    | Method t ->
+    | Field (_, t, _)
+    | Get (_, t)
+    | Set (_, t)
+    | Method (_, t) ->
       f acc t
-    | GetSet (t1, t2) ->
+    | GetSet (_, t1, _, t2) ->
       f (f acc t1) t2
 
   let map_t f = function
-    | Field (t, polarity) -> Field (f t, polarity)
-    | Get t -> Get (f t)
-    | Set t -> Set (f t)
-    | GetSet (t1, t2) -> GetSet (f t1, f t2)
-    | Method t -> Method (f t)
+    | Field (loc, t, polarity) -> Field (loc, f t, polarity)
+    | Get (loc, t) -> Get (loc, f t)
+    | Set (loc, t) -> Set (loc, f t)
+    | GetSet (loc1, t1, loc2, t2) -> GetSet (loc1, f t1, loc2, f t2)
+    | Method (loc, t) -> Method (loc, f t)
 
   let ident_map_t f p =
     match p with
-    | Field (t, polarity) ->
+    | Field (loc, t, polarity) ->
       let t_ = f t in
-      if t_ == t then p else Field (t_, polarity)
-    | Get t ->
+      if t_ == t then p else Field (loc, t_, polarity)
+    | Get (loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Get t_
-    | Set t ->
+      if t_ == t then p else Get (loc, t_)
+    | Set (loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Set t_
-    | GetSet (t1, t2) ->
+      if t_ == t then p else Set (loc, t_)
+    | GetSet (loc1, t1, loc2, t2) ->
       let t1_ = f t1 in
       let t2_ = f t2 in
-      if t1_ == t1 && t2_ == t2 then p else GetSet (t1_, t2_)
-    | Method t ->
+      if t1_ == t1 && t2_ == t2 then p else GetSet (loc1, t1_, loc2, t2_)
+    | Method (loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Method t_
+      if t_ == t then p else Method (loc, t_)
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
   let assert_field = function
-    | Field (t, _) -> t
+    | Field (_, t, _) -> t
     | _ -> assert_false "Unexpected field type"
 end
 
@@ -1184,10 +1205,10 @@ and Properties : sig
   module Map : MyMap.S with type key = id
   type map = t Map.t
 
-  val add_field: string -> Polarity.t -> TypeTerm.t -> t -> t
-  val add_getter: string -> TypeTerm.t -> t -> t
-  val add_setter: string -> TypeTerm.t -> t -> t
-  val add_method: string -> TypeTerm.t -> t -> t
+  val add_field: string -> Polarity.t -> Loc.t option -> TypeTerm.t -> t -> t
+  val add_getter: string -> Loc.t option -> TypeTerm.t -> t -> t
+  val add_setter: string -> Loc.t option -> TypeTerm.t -> t -> t
+  val add_method: string -> Loc.t option -> TypeTerm.t -> t -> t
 
   val mk_id: unit -> id
   val fake_id: id
@@ -1212,25 +1233,25 @@ end = struct
   end)
   type map = t Map.t
 
-  let add_field x polarity t =
-    SMap.add x (Field (t, polarity))
+  let add_field x polarity loc t =
+    SMap.add x (Field (loc, t, polarity))
 
-  let add_getter x get_t map =
+  let add_getter x loc get_t map =
     let p = match SMap.get x map with
-    | Some (Set set_t) -> GetSet (get_t, set_t)
-    | _ -> Get get_t
+    | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
+    | _ -> Get (loc, get_t)
     in
     SMap.add x p map
 
-  let add_setter x set_t map =
+  let add_setter x loc set_t map =
     let p = match SMap.get x map with
-    | Some (Get get_t) -> GetSet (get_t, set_t)
-    | _ -> Set set_t
+    | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
+    | _ -> Set (loc, set_t)
     in
     SMap.add x p map
 
-  let add_method x t =
-    SMap.add x (Method t)
+  let add_method x loc t =
+    SMap.add x (Method (loc, t))
 
   let mk_id = Reason.mk_id
   let fake_id = 0
@@ -1248,12 +1269,12 @@ end = struct
   let map_t f = SMap.map (Property.map_t f)
 
   let map_fields f = SMap.map (function
-    | Field (t, polarity) -> Field (f t, polarity)
+    | Field (loc, t, polarity) -> Field (loc, f t, polarity)
     | p -> p
   )
 
   let mapi_fields f = SMap.mapi (fun k -> function
-    | Field (t, polarity) -> Field (f k t, polarity)
+    | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
     | p -> p
   )
 end

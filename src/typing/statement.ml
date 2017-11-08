@@ -1579,10 +1579,11 @@ and statement cx = Ast.Statement.(
           | Some (Type _), None
           | None, None ->
             let type_exports, value_exports = SMap.fold (fun x entry (ts, vs) ->
+              let loc = entry_loc entry in
               match entry with
               | Value {specific; _} ->
                 ts,
-                SMap.add x (Field (specific, Neutral)) vs
+                SMap.add x (Field (Some loc, specific, Neutral)) vs
               | Type {_type; _} ->
                 SMap.add x _type ts,
                 vs
@@ -2121,14 +2122,14 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* named prop *)
   | Property (_, { Property.
       key =
-        Property.Identifier (_, name) |
-        Property.Literal (_, {
+        Property.Identifier (loc, name) |
+        Property.Literal (loc, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
       value = Property.Init v; _ }) ->
     let t = expression cx v in
-    Properties.add_field name Neutral t map
+    Properties.add_field name Neutral (Some loc) t map
 
   (* literal LHS *)
   | Property (loc, { Property.key = Property.Literal _; _ }) ->
@@ -2143,13 +2144,13 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe getter property *)
   | Property (loc, { Property.
-      key = Property.Identifier (_, name);
+      key = Property.Identifier (id_loc, name);
       value = Property.Get (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let return_t = Type.extract_getter_type function_type in
-      Properties.add_getter name return_t map
+      Properties.add_getter name (Some id_loc) return_t map
     else begin
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
@@ -2158,13 +2159,13 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe setter property *)
   | Property (loc, { Property.
-      key = Property.Identifier (_, name);
+      key = Property.Identifier (id_loc, name);
       value = Property.Set (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let param_t = Type.extract_setter_type function_type in
-      Properties.add_setter name param_t map
+      Properties.add_setter name (Some id_loc) param_t map
     else begin
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
@@ -3651,7 +3652,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     (* All attributes with a non-namespaced name that are not a react ignored
      * attribute. *)
     | Opening.Attribute (aloc, { Attribute.
-        name = Attribute.Identifier (_, { Identifier.name = aname });
+        name = Attribute.Identifier (id_loc, { Identifier.name = aname });
         value
       }) ->
       (* Get the type for the attribute's value. *)
@@ -3676,7 +3677,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             | None ->
                 DefT (mk_reason RBoolean aloc, BoolT (Some true))
       in
-      let p = Field (atype, Neutral) in
+      let p = Field (Some id_loc, atype, Neutral) in
       (sealed, SMap.add aname p map, result)
     (* Do nothing for namespaced attributes or ignored React attributes. *)
     | Opening.Attribute _ ->
@@ -3705,7 +3706,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             (List.map (fun child -> UnresolvedArg child) children)
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
         ) in
-        let p = Field (arr, Neutral) in
+        let p = Field (None, arr, Neutral) in
         SMap.add "children" p map
   in
   eval_props ~sealed (map, result)
@@ -4388,6 +4389,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     in
     let pmap = prop_map_of_object cx properties in
     let props = SMap.fold (fun x p acc ->
+      let loc = Property.read_loc p in
       match Property.read_t p with
       | None ->
         (* Since the properties object must be a literal, and literal objects
@@ -4403,7 +4405,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         let t = Tvar.mk_where cx reason (fun tvar ->
           Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar))
         ) in
-        let p = Field (t, Neutral) in
+        let p = Field (loc, t, Neutral) in
         SMap.add x p acc
     ) pmap SMap.empty in
     Obj_type.mk_with_proto cx reason ~props proto

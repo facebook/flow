@@ -1201,21 +1201,21 @@ and json_of_prop_binding_impl json_cx (name, p) = Hh_json.(
 and json_of_prop json_cx = check_depth json_of_prop_impl json_cx
 and json_of_prop_impl json_cx p = Hh_json.(
   JSON_Object (match p with
-  | Field (t, polarity) -> [
+  | Field (_loc, t, polarity) -> [
       "field", _json_of_t json_cx t;
       "polarity", json_of_polarity json_cx polarity
     ]
-  | Get t -> [
+  | Get (_loc, t) -> [
       "getter", _json_of_t json_cx t;
     ]
-  | Set t -> [
+  | Set (_loc, t) -> [
       "setter", _json_of_t json_cx t;
     ]
-  | GetSet (t1, t2) -> [
+  | GetSet (_loc1, t1, _loc2, t2) -> [
       "getter", _json_of_t json_cx t1;
       "setter", _json_of_t json_cx t2;
     ]
-  | Method t -> [
+  | Method (_loc, t) -> [
       "method", _json_of_t json_cx t;
     ]
 ))
@@ -2125,15 +2125,15 @@ and dump_prop ?(depth=3) cx p =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   match p with
-  | Field (t, polarity) ->
+  | Field (_loc, t, polarity) ->
     spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
-  | Get t ->
+  | Get (_loc, t) ->
     spf "Get %s" (kid t)
-  | Set t ->
+  | Set (_loc, t) ->
     spf "Set %s" (kid t)
-  | GetSet (t1, t2) ->
+  | GetSet (_loc1, t1, _loc2, t2) ->
     spf "Get %s Set %s" (kid t1) (kid t2)
-  | Method t ->
+  | Method (_loc, t) ->
     spf "Method %s" (kid t)
 
 (*****************************************************)

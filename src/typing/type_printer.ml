@@ -54,18 +54,18 @@ let rec type_printer_impl ~size override enclosure cx t =
   let pp = type_printer ~size override in
 
   let rec prop x = function
-    | Field (t, polarity) -> spf "%s%s: %s"
+    | Field (_, t, polarity) -> spf "%s%s: %s"
       (Polarity.sigil polarity)
       (prop_name cx x t)
       (pp EnclosureProp cx t)
-    | Get t -> spf "get %s(): %s" x (pp EnclosureRet cx t)
-    | Set t -> spf "set %s(value: %s): void" x (pp EnclosureParam cx t)
-    | GetSet (t1, t2) ->
+    | Get (_, t) -> spf "get %s(): %s" x (pp EnclosureRet cx t)
+    | Set (_, t) -> spf "set %s(value: %s): void" x (pp EnclosureParam cx t)
+    | GetSet (loc1, t1, loc2, t2) ->
       String.concat ", " [
-        prop x (Get t1);
-        prop x (Set t2);
+        prop x (Get (loc1, t1));
+        prop x (Set (loc2, t2));
       ]
-    | Method t -> spf "%s%s"
+    | Method (_, t) -> spf "%s%s"
       (prop_name cx x t)
       (pp EnclosureMethod cx t)
   in

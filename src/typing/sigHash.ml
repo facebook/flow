@@ -364,7 +364,7 @@ let add_reason state r =
 let add_polarity = add_int
 
 let add_prop state = Type.(function
-  | Field (_, polarity) ->
+  | Field (_, _, polarity) ->
     add_int state 0;
     add_int state polarity
   | Get _ -> add_int state 1

@@ -305,7 +305,7 @@ let rec merge_type cx =
        * sufficient. *)
       | Some _, None | None, Some _ -> Some (o1.flags.exact || o2.flags.exact)
       (* Covariant fields can be merged. *)
-      | Some (Field (_, Positive)), Some (Field (_, Positive)) -> Some true
+      | Some (Field (_, _, Positive)), Some (Field (_, _, Positive)) -> Some true
       (* Getters are covariant and thus can be merged. *)
       | Some (Get _), Some (Get _) -> Some true
       (* Anything else is can't be merged. *)
@@ -1926,7 +1926,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          let props = SMap.map (fun t -> Field (t, Neutral)) exports_tmap in
+          (* TODO this Field should probably have a location *)
+          let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
           Obj_type.mk_with_proto cx reason
             ~sealed:true ~frozen:true ~props proto
       ) in
@@ -1935,10 +1936,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* import * as X from 'SomeModule'; *)
     | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      let props = SMap.map (fun t -> Field (t, Neutral)) exports_tmap in
+      (* TODO this Field should probably have a location *)
+      let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
       let props = match exports.cjs_export with
       | Some t ->
-        let p = Field (t, Neutral) in
+        (* TODO this Field should probably have a location *)
+        let p = Field (None, t, Neutral) in
         SMap.add "default" p props
       | None -> props
       in
@@ -4018,10 +4021,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
-          | Field (DefT (_, OptionalT ut), upolarity) ->
+          | Field (_, DefT (_, OptionalT ut), upolarity) ->
             rec_flow cx trace (l,
               LookupT (ureason, NonstrictReturning None, [], propref,
-                LookupProp (use_op, Field (ut, upolarity))))
+                LookupProp (use_op, Field (None, ut, upolarity))))
           | _ ->
             let u =
               LookupT (ureason, Strict lreason, [], propref,
@@ -4066,7 +4069,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = match u with
       | UseT (use_op, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
         let use_op = PropertyCompatibility ("$call", reason, reason_op, use_op) in
-        LookupProp (use_op, Field (u_def, Positive))
+        LookupProp (use_op, Field (None, u_def, Positive))
       | _ -> RWProp (l, tvar, Read)
       in
       lookup_prop cx trace l reason_op reason strict "$call" action;
@@ -4832,7 +4835,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * covariant props, which would always flow into `any`. *)
         ()
       | _ ->
-        let p = Field (AnyT.why reason_op, Neutral) in
+        let p = Field (None, AnyT.why reason_op, Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action)
 
     (*****************************************)
@@ -5132,7 +5135,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | DefT (reason_fun, AnyFunT), LookupT (reason_op, _, _, x, action) ->
-      let p = Field (AnyT.why reason_op, Neutral) in
+      let p = Field (None, AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace x p reason_fun reason_op action
 
     (*****************************************)
@@ -5706,7 +5709,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_op = use_op_of_lookup_action action in
       add_output cx ~trace (FlowError.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x, use_op));
-      let p = Field (AnyT.why reason_op, Neutral) in
+      let p = Field (None, AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
     | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -5722,7 +5725,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | DefT (_, AnyT) | DefT (_, StrT _) | DefT (_, NumT _) ->
         (* any, string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        let p = Field (AnyT.why reason_op, Neutral) in
+        let p = Field (None, AnyT.why reason_op, Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
@@ -5774,7 +5777,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t_proto = Property.assert_field p_proto in
             rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
           (* Add prop *)
-          let p = Field (t, Neutral) in
+          let p = Field (None, t, Neutral) in
           pmap
             |> SMap.add x p
             |> Context.add_property_map cx id;
@@ -6219,9 +6222,9 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
       Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
       rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
-        (Field (lk, lpolarity), Field (uk, upolarity));
+        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
       rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
-        (Field (lv, lpolarity), Field (uv, upolarity))
+        (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
   (* Properties in u must either exist in l, or match l's indexer. *)
@@ -6249,10 +6252,10 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | None, Some { key; value; dict_polarity; _ }
         when not (is_dictionary_exempt s) ->
       rec_flow_t cx trace (string_key s reason_prop, key);
-      let lp = Field (value, dict_polarity) in
+      let lp = Field (None, value, dict_polarity) in
       let up = match up with
-      | Field (DefT (_, OptionalT ut), upolarity) ->
-        Field (ut, upolarity)
+      | Field (loc, DefT (_, OptionalT ut), upolarity) ->
+        Field (loc, ut, upolarity)
       | _ -> up
       in
       if lit
@@ -6265,7 +6268,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | _ ->
       (* property doesn't exist in inflowing type *)
       match up with
-      | Field (DefT (_, OptionalT _), _) when lit ->
+      | Field (_, DefT (_, OptionalT _), _) when lit ->
         (* if property is marked optional or otherwise has a maybe type,
            and if inflowing type is a literal (i.e., it is not an
            annotation), then we add it to the inflowing type as
@@ -6304,11 +6307,11 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       then (
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
-        | Field (DefT (_, OptionalT lt), lpolarity) ->
-          Field (lt, lpolarity)
+        | Field (loc, DefT (_, OptionalT lt), lpolarity) ->
+          Field (loc, lt, lpolarity)
         | _ -> lp
         in
-        let up = Field (value, dict_polarity) in
+        let up = Field (None, value, dict_polarity) in
         if lit
         then
           match Property.read_t lp, Property.read_t up with
@@ -6368,7 +6371,7 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
   | Some statics_own_props ->
     let props_not_found = SMap.filter (fun x p ->
       let optional = match p with
-      | Field (DefT (_, OptionalT _), _) -> true
+      | Field (_, DefT (_, OptionalT _), _) -> true
       |_ -> false
       in
       not (
@@ -6618,7 +6621,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   fields_pmap |> SMap.iter (fun s p ->
     let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
     match p with
-    | Field (DefT (_, OptionalT t), polarity) ->
+    | Field (_, DefT (_, OptionalT t), polarity) ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
           ROptional (RPropertyOf (s, desc))
@@ -6627,7 +6630,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
       in
       rec_flow cx trace (lower,
         LookupT (reason_struct, NonstrictReturning None, [], propref,
-          LookupProp (use_op, Field (t, polarity))))
+          LookupProp (use_op, Field (None, t, polarity))))
     | _ ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
@@ -6961,13 +6964,13 @@ and check_polarity_propmap cx ?trace polarity id =
   SMap.iter (fun _ -> check_polarity_prop cx ?trace polarity) pmap
 
 and check_polarity_prop cx ?trace polarity = function
-  | Field (t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
-  | Get t -> check_polarity cx ?trace polarity t
-  | Set t -> check_polarity cx ?trace (Polarity.inv polarity) t
-  | GetSet (t1, t2) ->
+  | Field (_, t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
+  | Get (_, t) -> check_polarity cx ?trace polarity t
+  | Set (_, t) -> check_polarity cx ?trace (Polarity.inv polarity) t
+  | GetSet (_, t1, _, t2) ->
     check_polarity cx ?trace polarity t1;
     check_polarity cx ?trace (Polarity.inv polarity) t2
-  | Method t -> check_polarity cx ?trace polarity t
+  | Method (_, t) -> check_polarity cx ?trace polarity t
 
 and check_polarity_typeparam cx ?trace polarity tp =
   check_polarity cx ?trace polarity tp.bound
@@ -7830,7 +7833,7 @@ and guess_and_record_sentinel_prop cx ts =
   (* Keep only fields that have singleton types *)
   let acc = SMap.filter (fun _ p ->
     match p with
-    | Field (t, _) -> is_singleton_type t
+    | Field (_, t, _) -> is_singleton_type t
     | _ -> false
   ) acc in
 
@@ -7937,10 +7940,10 @@ and get_obj_prop cx trace o propref reason_op =
     when not (is_dictionary_exempt x) ->
     (* Dictionaries match all property reads *)
     rec_flow_t cx trace (string_key x reason_op, key);
-    Some (Field (value, dict_polarity))
+    Some (Field (None, value, dict_polarity))
   | Computed k, None, Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (k, key);
-    Some (Field (value, dict_polarity))
+    Some (Field (None, value, dict_polarity))
   | _ -> None
 
 and read_obj_prop cx trace o propref reason_obj reason_op tout =
@@ -8021,7 +8024,7 @@ and find_or_intro_shadow_prop cx trace x =
   let intro_shadow_prop id =
     let reason_prop = locationless_reason (RShadowProperty x) in
     let t = Tvar.mk cx reason_prop in
-    let p = Field (t, Neutral) in
+    let p = Field (None, t, Neutral) in
     Context.set_prop cx id (internal_name x) p;
     t, p
   in
@@ -9092,8 +9095,8 @@ and unify_props cx trace ~use_op x r1 r2 p1 p2 =
 
   (* If both sides are neutral fields, we can just unify once *)
   match p1, p2 with
-  | Field (t1, Neutral),
-    Field (t2, Neutral) ->
+  | Field (_, t1, Neutral),
+    Field (_, t2, Neutral) ->
     rec_unify cx trace ~use_op t1 t2;
   | _ ->
     (* Otherwise, unify read/write sides separately. *)
@@ -9125,7 +9128,7 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
   match dict with
   | Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (string_key x prop_reason, key);
-    let p2 = Field (value, dict_polarity) in
+    let p2 = Field (None, value, dict_polarity) in
     unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
   | None ->
     let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
@@ -10002,8 +10005,8 @@ and rec_flow_t cx trace ?(use_op=UnknownUse) (t1, t2) =
 
 and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
   (* unification cases *)
-  | Field (lt, Neutral),
-    Field (ut, Neutral) ->
+  | Field (_, lt, Neutral),
+    Field (_, ut, Neutral) ->
     rec_unify cx trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
@@ -10441,7 +10444,7 @@ and object_kit =
         | DefT (_, OptionalT _) -> t
         | _ -> if own then t else optional t
         in
-        Field (t, Neutral)
+        Field (None, t, Neutral)
       ) props in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
@@ -10526,7 +10529,7 @@ and object_kit =
         | Sound, Some (t1, _), Some (t2, false), _
         | Sound, Some (t1, _), Some (t2, _), false ->
           rec_flow_t cx trace (t1, optional t2);
-          Some (Field (optional t1, Neutral))
+          Some (Field (None, optional t1, Neutral))
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
          * source object. *)
@@ -10542,7 +10545,7 @@ and object_kit =
          * property optional and flow that type to mixed. *)
         | Sound, Some (t1, _), None, false ->
           rec_flow_t cx trace (t1, MixedT.make r2);
-          Some (Field (optional t1, Neutral))
+          Some (Field (None, optional t1, Neutral))
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
         | _, None, None, _ -> None
@@ -10550,9 +10553,9 @@ and object_kit =
          * prop then we will copy over that prop. If the first object's prop is
          * non-own then sometimes we may not copy it over so we mark it
          * as optional. *)
-        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (t, Neutral))
-        | _, Some (t, true), None, _ -> Some (Field (t, Neutral))
-        | Sound, Some (t, false), None, _ -> Some (Field (optional t, Neutral))
+        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Neutral))
+        | _, Some (t, true), None, _ -> Some (Field (None, t, Neutral))
+        | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Neutral))
       ) props1 props2 in
       let dict = match dict1, dict2 with
         | None, None -> None
@@ -10609,7 +10612,7 @@ and object_kit =
     let mk_read_only_object cx reason slice =
       let (r, props, dict, flags) = slice in
 
-      let props = SMap.map (fun (t, _) -> Field (t, polarity)) props in
+      let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
@@ -10668,8 +10671,8 @@ and object_kit =
             let p2 = get_prop defaults_reason p2 defaults_dict in
             match p1, p2 with
             | None, None -> None
-            | Some (t, _), None -> Some (Field (t, prop_polarity))
-            | None, Some (t, _) -> Some (Field (t, prop_polarity))
+            | Some (t, _), None -> Some (Field (None, t, prop_polarity))
+            | None, Some (t, _) -> Some (Field (None, t, prop_polarity))
             (* If a property is defined in both objects, and the first property's
              * type includes void then we want to replace every occurence of void
              * with the second property's type. This is consistent with the behavior
@@ -10683,7 +10686,7 @@ and object_kit =
                 rec_flow cx trace (filter_optional cx ~trace reason t1,
                   CondT (reason, t2, tvar))
               ) in
-              Some (Field (t, prop_polarity))
+              Some (Field (None, t, prop_polarity))
           ) config_props defaults_props in
           (* Merge the dictionary from our config with the defaults dictionary. *)
           let dict = Option.merge config_dict defaults_dict (fun d1 d2 -> {
@@ -10709,7 +10712,7 @@ and object_kit =
         (* Otherwise turn our slice props map into an object props. *)
         | None ->
           (* All of the fields are read-only so we create positive fields. *)
-          let props = SMap.map (fun (t, _) -> Field (t, prop_polarity)) config_props in
+          let props = SMap.map (fun (t, _) -> Field (None, t, prop_polarity)) config_props in
           (* Create a new dictionary from our config's dictionary with a
            * positive polarity. *)
           let dict = Option.map config_dict (fun d -> {
@@ -10866,7 +10869,7 @@ and object_kit =
     let id, dict =
       let props = Context.find_props cx id in
       match SMap.get "$key" props, SMap.get "$value" props with
-      | Some (Field (key, polarity)), Some (Field (value, polarity'))
+      | Some (Field (_, key, polarity)), Some (Field (_, value, polarity'))
         when polarity = polarity' ->
         let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
         let id = Context.make_property_map cx props in
@@ -11041,7 +11044,7 @@ end = struct
            * property in autocomplete, so for now we just return the getter
            * type. *)
           let t = match p with
-          | Field (t, _) | Get t | Set t | GetSet (t, _) | Method t -> t
+          | Field (_, t, _) | Get (_, t) | Set (_, t) | GetSet (_, t, _, _) | Method (_, t) -> t
           in
           SMap.add x t acc
         ) (find_props cx fields) SMap.empty in
