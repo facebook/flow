@@ -276,7 +276,7 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex,compiler-libs.common,unix \
+		-use-ocamlfind -pkgs compiler-libs.common,unix \
 		-I scripts \
 		scripts/ppx_gen_flowlibs.native
 	rm -f ppx_gen_flowlibs.native
@@ -314,10 +314,10 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 	# result.cma, and this is the most expedient (though fragile) way to unblock
 	# ourselves.
 	ocamlbuild -use-ocamlfind \
-		-pkgs js_of_ocaml,sedlex \
+		-pkg js_of_ocaml \
 		-build-dir _build \
 		-lflags -custom -no-links \
-		$(INCLUDE_OPTS) $(LIB_OPTS) \
+		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		src/flow_dot_js.byte
 	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
