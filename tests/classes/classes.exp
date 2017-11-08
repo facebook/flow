@@ -27,18 +27,6 @@ Error: D.js:3
   3: new E().x
      ^^^^^^^ E
 
-Error: class_shapes.js:4
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string. This type is incompatible with
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number
-
-Error: class_shapes.js:6
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string. This type is incompatible with
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number
-
 Error: class_shapes.js:18
  18: x.b; // error, TestClass has no b
        ^ property `b`. Property not found in
@@ -53,21 +41,36 @@ Error: class_shapes.js:20
 
 Error: class_shapes.js:22
  22: var y : Foo = x;
-             ^^^ property `b`. Property not found in
+                   ^ TestClass. This type is incompatible with
  22: var y : Foo = x;
-                   ^ TestClass
+             ^^^ object type
+  Property `b` is incompatible:
+     22: var y : Foo = x;
+                 ^^^ property `b`. Property not found in
+     22: var y : Foo = x;
+                       ^ TestClass
 
-Error: class_shapes.js:27
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number. This type is incompatible with
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `a` is incompatible:
+      4:   a: string;    // exists in TestClass
+              ^^^^^^ string. This type is incompatible with
+     27:   a: number;  // conflicts with cast to Foo
+              ^^^^^^ number
 
-Error: class_shapes.js:28
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number. This type is incompatible with
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `a` is incompatible:
+     27:   a: number;  // conflicts with cast to Foo
+              ^^^^^^ number. This type is incompatible with
+      4:   a: string;    // exists in TestClass
+              ^^^^^^ string
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
@@ -90,6 +93,28 @@ Error: class_shapes.js:35
               ^^^^^^ number. This type is incompatible with
       5:   b: string;    // doesn't exist
               ^^^^^^ string
+
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `c` is incompatible:
+      6:   c?: ?string;  // exists in TestClass, optional
+                ^^^^^^ string. This type is incompatible with
+     28:   c: ?number; // conflicts with cast to Foo
+               ^^^^^^ number
+
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `c` is incompatible:
+     28:   c: ?number; // conflicts with cast to Foo
+               ^^^^^^ number. This type is incompatible with
+      6:   c?: ?string;  // exists in TestClass, optional
+                ^^^^^^ string
 
 Error: expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope

@@ -11,9 +11,14 @@ Error: annot.js:10
                      ^^^^ type application of polymorphic type: class type: A
   Type argument `X` is incompatible:
      10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                              ^^^^^^^^^^^ property `x`. Property not found in
+                                              ^^^^^^^^^^^ object type. This type is incompatible with
      10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                             ^^ object type
+      Property `x` is incompatible:
+         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                                  ^^^^^^^^^^^ property `x`. Property not found in
+         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                ^^ object type
 
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle

@@ -39,6 +39,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Covariant computed property incompatible with invariant use in
            52: (droA: dRWA);
                       ^^^^ object type
+
+          test.js:52
+           52: (droA: dRWA);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               52: (droA: dRWA);
+                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+               52: (droA: dRWA);
+                          ^^^^ object type
         `,
       ),
 
@@ -66,6 +77,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Contravariant computed property incompatible with invariant use in
            56: (dwoA: dRWA);
                       ^^^^ object type
+
+          test.js:56
+           56: (dwoA: dRWA);
+                ^^^^ object type. This type is incompatible with
+           56: (dwoA: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               56: (dwoA: dRWA);
+                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+               56: (dwoA: dRWA);
+                          ^^^^ object type
         `,
       ),
 
@@ -93,11 +115,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(drwB: dRWA);')
       .newErrors(
         `
-          test.js:26
-           26:     type dRWA = {[string]: A};
-                                          ^ A. This type is incompatible with
-           29:     type dRWB = {[string]: B};
-                                          ^ B
+          test.js:64
+           64: (drwB: dRWA);
+                ^^^^ object type. This type is incompatible with
+           64: (drwB: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               26:     type dRWA = {[string]: A};
+                                              ^ A. This type is incompatible with
+               29:     type dRWB = {[string]: B};
+                                              ^ B
         `,
       ),
 
@@ -125,6 +152,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Covariant computed property incompatible with invariant use in
            68: (droB: dRWA);
                       ^^^^ object type
+
+          test.js:68
+           68: (droB: dRWA);
+                ^^^^ object type. This type is incompatible with
+           68: (droB: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               68: (droB: dRWA);
+                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+               68: (droB: dRWA);
+                          ^^^^ object type
         `,
       ),
 
@@ -158,17 +196,33 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(dwoB: dRWA);')
       .newErrors(
         `
-          test.js:26
-           26:     type dRWA = {[string]: A};
-                                          ^ A. This type is incompatible with
-           31:     type dWOB = {-[string]: B};
-                                           ^ B
-
           test.js:72
            72: (dwoB: dRWA);
                 ^^^^ object type. Contravariant computed property incompatible with invariant use in
            72: (dwoB: dRWA);
                       ^^^^ object type
+
+          test.js:72
+           72: (dwoB: dRWA);
+                ^^^^ object type. This type is incompatible with
+           72: (dwoB: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               26:     type dRWA = {[string]: A};
+                                              ^ A. This type is incompatible with
+               31:     type dWOB = {-[string]: B};
+                                               ^ B
+
+          test.js:72
+           72: (dwoB: dRWA);
+                ^^^^ object type. This type is incompatible with
+           72: (dwoB: dRWA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               72: (dwoB: dRWA);
+                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+               72: (dwoB: dRWA);
+                          ^^^^ object type
         `,
       ),
   ]),
@@ -210,6 +264,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Contravariant computed property incompatible with covariant use in
            56: (dwoA: dROA);
                       ^^^^ object type
+
+          test.js:56
+           56: (dwoA: dROA);
+                ^^^^ object type. This type is incompatible with
+           56: (dwoA: dROA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               56: (dwoA: dROA);
+                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+               56: (dwoA: dROA);
+                          ^^^^ object type
         `,
       ),
 
@@ -249,6 +314,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Contravariant computed property incompatible with covariant use in
            72: (dwoB: dROA);
                       ^^^^ object type
+
+          test.js:72
+           72: (dwoB: dROA);
+                ^^^^ object type. This type is incompatible with
+           72: (dwoB: dROA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               72: (dwoB: dROA);
+                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+               72: (dwoB: dROA);
+                          ^^^^ object type
         `,
       ),
   ]),
@@ -286,6 +362,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Covariant computed property incompatible with contravariant use in
            52: (droA: dWOA);
                       ^^^^ object type
+
+          test.js:52
+           52: (droA: dWOA);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dWOA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               52: (droA: dWOA);
+                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+               52: (droA: dWOA);
+                          ^^^^ object type
         `,
       ),
 
@@ -316,11 +403,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(drwB: dWOA);')
       .newErrors(
         `
-          test.js:28
-           28:     type dWOA = {-[string]: A};
-                                           ^ A. This type is incompatible with
-           29:     type dRWB = {[string]: B};
-                                          ^ B
+          test.js:64
+           64: (drwB: dWOA);
+                ^^^^ object type. This type is incompatible with
+           64: (drwB: dWOA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               28:     type dWOA = {-[string]: A};
+                                               ^ A. This type is incompatible with
+               29:     type dRWB = {[string]: B};
+                                              ^ B
         `,
       ),
 
@@ -348,6 +440,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Covariant computed property incompatible with contravariant use in
            68: (droB: dWOA);
                       ^^^^ object type
+
+          test.js:68
+           68: (droB: dWOA);
+                ^^^^ object type. This type is incompatible with
+           68: (droB: dWOA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               68: (droB: dWOA);
+                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+               68: (droB: dWOA);
+                          ^^^^ object type
         `,
       ),
 
@@ -370,11 +473,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(dwoB: dWOA);')
       .newErrors(
         `
-          test.js:28
-           28:     type dWOA = {-[string]: A};
-                                           ^ A. This type is incompatible with
-           31:     type dWOB = {-[string]: B};
-                                           ^ B
+          test.js:72
+           72: (dwoB: dWOA);
+                ^^^^ object type. This type is incompatible with
+           72: (dwoB: dWOA);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               28:     type dWOA = {-[string]: A};
+                                               ^ A. This type is incompatible with
+               31:     type dWOB = {-[string]: B};
+                                               ^ B
         `,
       ),
   ]),
@@ -401,9 +509,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:44
            44: ({p: new A}: dRWB);
-                    ^^^^^ A. This type is incompatible with
-           29:     type dRWB = {[string]: B};
-                                          ^ B
+                ^^^^^^^^^^ object literal. This type is incompatible with
+           44: ({p: new A}: dRWB);
+                            ^^^^ object type
+            Property \`p\` is incompatible:
+               44: ({p: new A}: dRWB);
+                        ^^^^^ A. This type is incompatible with
+               29:     type dRWB = {[string]: B};
+                                              ^ B
         `,
       ),
 
@@ -426,11 +539,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(drwA: dRWB);')
       .newErrors(
         `
-          test.js:26
-           26:     type dRWA = {[string]: A};
-                                          ^ A. This type is incompatible with
-           29:     type dRWB = {[string]: B};
-                                          ^ B
+          test.js:48
+           48: (drwA: dRWB);
+                ^^^^ object type. This type is incompatible with
+           48: (drwA: dRWB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               26:     type dRWA = {[string]: A};
+                                              ^ A. This type is incompatible with
+               29:     type dRWB = {[string]: B};
+                                              ^ B
         `,
       ),
 
@@ -464,17 +582,33 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(droA: dRWB);')
       .newErrors(
         `
-          test.js:27
-           27:     type dROA = {+[string]: A};
-                                           ^ A. This type is incompatible with
-           29:     type dRWB = {[string]: B};
-                                          ^ B
-
           test.js:52
            52: (droA: dRWB);
                 ^^^^ object type. Covariant computed property incompatible with invariant use in
            52: (droA: dRWB);
                       ^^^^ object type
+
+          test.js:52
+           52: (droA: dRWB);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dRWB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               27:     type dROA = {+[string]: A};
+                                               ^ A. This type is incompatible with
+               29:     type dRWB = {[string]: B};
+                                              ^ B
+
+          test.js:52
+           52: (droA: dRWB);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dRWB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               52: (droA: dRWB);
+                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+               52: (droA: dRWB);
+                          ^^^^ object type
         `,
       ),
 
@@ -502,6 +636,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Contravariant computed property incompatible with invariant use in
            56: (dwoA: dRWB);
                       ^^^^ object type
+
+          test.js:56
+           56: (dwoA: dRWB);
+                ^^^^ object type. This type is incompatible with
+           56: (dwoA: dRWB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               56: (dwoA: dRWB);
+                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+               56: (dwoA: dRWB);
+                          ^^^^ object type
         `,
       ),
   ]),
@@ -528,9 +673,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:44
            44: ({p: new A}: dROB);
-                    ^^^^^ A. This type is incompatible with
-           30:     type dROB = {+[string]: B};
-                                           ^ B
+                ^^^^^^^^^^ object literal. This type is incompatible with
+           44: ({p: new A}: dROB);
+                            ^^^^ object type
+            Property \`p\` is incompatible:
+               44: ({p: new A}: dROB);
+                        ^^^^^ A. This type is incompatible with
+               30:     type dROB = {+[string]: B};
+                                               ^ B
         `,
       ),
 
@@ -553,11 +703,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(drwA: dROB);')
       .newErrors(
         `
-          test.js:26
-           26:     type dRWA = {[string]: A};
-                                          ^ A. This type is incompatible with
-           30:     type dROB = {+[string]: B};
-                                           ^ B
+          test.js:48
+           48: (drwA: dROB);
+                ^^^^ object type. This type is incompatible with
+           48: (drwA: dROB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               26:     type dRWA = {[string]: A};
+                                              ^ A. This type is incompatible with
+               30:     type dROB = {+[string]: B};
+                                               ^ B
         `,
       ),
 
@@ -580,11 +735,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(droA: dROB);')
       .newErrors(
         `
-          test.js:27
-           27:     type dROA = {+[string]: A};
-                                           ^ A. This type is incompatible with
-           30:     type dROB = {+[string]: B};
-                                           ^ B
+          test.js:52
+           52: (droA: dROB);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dROB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               27:     type dROA = {+[string]: A};
+                                               ^ A. This type is incompatible with
+               30:     type dROB = {+[string]: B};
+                                               ^ B
         `,
       ),
 
@@ -612,6 +772,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Contravariant computed property incompatible with covariant use in
            56: (dwoA: dROB);
                       ^^^^ object type
+
+          test.js:56
+           56: (dwoA: dROB);
+                ^^^^ object type. This type is incompatible with
+           56: (dwoA: dROB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               56: (dwoA: dROB);
+                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+               56: (dwoA: dROB);
+                          ^^^^ object type
         `,
       ),
   ]),
@@ -649,6 +820,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ object type. Covariant computed property incompatible with contravariant use in
            52: (droA: dWOB);
                       ^^^^ object type
+
+          test.js:52
+           52: (droA: dWOB);
+                ^^^^ object type. This type is incompatible with
+           52: (droA: dWOB);
+                      ^^^^ object type
+            Indexable signature is incompatible:
+               52: (droA: dWOB);
+                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+               52: (droA: dWOB);
+                          ^^^^ object type
         `,
       ),
 

@@ -460,9 +460,14 @@ Error: element_with_component_type.js:8
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:138
       Error:
         8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                             ^^^^^^^^^^^ property `b`. Property not found in
+                                                             ^^^^^^^^^^^ object type. This type is incompatible with
         5: class Foo extends React.Component<{a: number}> {}
                                              ^^^^^^^^^^^ object type
+        Property `b` is incompatible:
+            8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                                 ^^^^^^^^^^^ property `b`. Property not found in
+            5: class Foo extends React.Component<{a: number}> {}
+                                                 ^^^^^^^^^^^ object type
 
 Error: hoc.js:11
  11:       <Component />; // Error: `foo` is required.
@@ -1529,9 +1534,14 @@ Error: proptype_objectOf.js:15
        ^ propTypes of React component
   Property `obj` is incompatible:
      15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                                                       ^^^^^ string. This type is incompatible with
+                                                 ^^^^^^^^^^^^ object literal. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                                           ^^^^^^^^^^^^^^^^^^^^^^ number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+                                                           ^^^^^ string. This type is incompatible with
+          6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                               ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_objectOf.js:20
  20: var todo_required = <Example obj={{p:null}} />
@@ -1543,9 +1553,14 @@ Error: proptype_objectOf.js:20
        ^ propTypes of React component
   Property `obj` is incompatible:
      20: var todo_required = <Example obj={{p:null}} />
-                                              ^^^^ null. This type is incompatible with
+                                           ^^^^^^^^ object literal. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                                           ^^^^^^^^^^^^^^^^^^^^^^ number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `p` is incompatible:
+         20: var todo_required = <Example obj={{p:null}} />
+                                                  ^^^^ null. This type is incompatible with
+          6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                               ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_objectOf.js:30
  30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
@@ -1557,9 +1572,14 @@ Error: proptype_objectOf.js:30
        ^ propTypes of React component
   Property `obj` is incompatible:
      30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
-                                   ^^ string. This type is incompatible with
+                                ^^^^^^ object literal. This type is incompatible with
      24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
-                                           ^^^^^^^^^^^^^^^^^^^^^^ number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `p` is incompatible:
+         30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
+                                       ^^ string. This type is incompatible with
+         24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
+                                               ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_objectOf.js:38
  38: (<AnyExample obj={0} />); // error: still needs to be an object

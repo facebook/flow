@@ -290,10 +290,9 @@ and upper_kind =
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
-  | PropertyCompatibility
-      (_, lower_obj_reason, upper_obj_reason, use_op) ->
-    let lower_loc = loc_of_reason lower_obj_reason in
-    let upper_loc = loc_of_reason upper_obj_reason in
+  | PropertyCompatibility {lower; upper; use_op; _} ->
+    let lower_loc = loc_of_reason lower in
+    let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
   | SetProperty reason -> (loc_of_reason reason)::acc
   | TypeArgCompatibility (_, r1, r2, use_op) ->
@@ -664,12 +663,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
      Note that `force` is not recursive, as the input message is consumed by
      `extra_info_of_use_op` and will appear in the output. *)
   let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
-  | PropertyCompatibility (x, rl', ru', use_op) ->
+  | PropertyCompatibility {prop; lower=rl'; upper=ru'; use_op} ->
     let extra =
       let prop =
-        if x = "$call" then "Callable property"
-        else if x = "$key" || x = "$value" then "Indexable signature"
-        else spf "Property `%s`" x
+        match prop with
+        | Some "$call" -> "Callable property"
+        | None | Some "$key" | Some "$value" -> "Indexable signature"
+        | Some x -> spf "Property `%s`" x
       in
       extra_info_of_use_op reasons extra msg
         (spf "%s is incompatible:" prop)

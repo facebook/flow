@@ -259,11 +259,16 @@ Error: type_contra.js:7
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
             ^ T
 
-Error: type_contra.js:9
-  9: type O2 = {...{-[string]:T}};
-                   ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
+Error: type_contra.js:12
  12: (o2: {[string]:T}); // error: unknown ~> T
-                    ^ T
+      ^^ object type. This type is incompatible with
+ 12: (o2: {[string]:T}); // error: unknown ~> T
+          ^^^^^^^^^^^^ object type
+  Indexable signature is incompatible:
+      9: type O2 = {...{-[string]:T}};
+                       ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
+     12: (o2: {[string]:T}); // error: unknown ~> T
+                        ^ T
 
 Error: type_contra.js:13
  13: (o2.p: T); // errors: unknown ~> T

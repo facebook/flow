@@ -292,7 +292,12 @@ module rec TypeTerm : sig
     | FunReturn
     | Internal of internal_use_op
     | MissingTupleElement of int
-    | PropertyCompatibility of string * reason * reason * use_op
+    | PropertyCompatibility of {
+        prop: string option;
+        lower: reason;
+        upper: reason;
+        use_op: use_op;
+      }
     | ReactCreateElementCall
     | SetProperty of reason
     | TypeArgCompatibility of string * reason * reason * use_op

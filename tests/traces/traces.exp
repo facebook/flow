@@ -124,7 +124,7 @@ Trace:
 
 Error: Traces2.js:7
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 Trace:
@@ -149,10 +149,15 @@ Trace:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
      -^ ~> ExtendsUseT [extends React$Component] (from [not shown])
+  Property `foo` is incompatible:
+      7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 
 Error: Traces2.js:11
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 Trace:
@@ -177,6 +182,11 @@ Trace:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
      -^ ~> ExtendsUseT [extends React$Component] (from [not shown])
+  Property `bar` is incompatible:
+     11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+      7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;

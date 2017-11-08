@@ -700,8 +700,8 @@ module Cache = struct
            non-termination problems. To ensure proper caching, we hash use ops
            to just their top-level structure. *)
         let u = match u with
-          | UseT (PropertyCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
-            UseT (PropertyCompatibility (s, r1, r2, UnknownUse), t)
+          | UseT (PropertyCompatibility c, t) when c.use_op <> UnknownUse ->
+            UseT (PropertyCompatibility {c with use_op = UnknownUse}, t)
           | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
             UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
           | UseT (FunParam { lower; upper; use_op }, t) when use_op <> UnknownUse ->
@@ -4018,13 +4018,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       iter_real_props cx uflds (fun s up ->
+        let use_op = PropertyCompatibility {
+          prop = Some s;
+          lower = lreason;
+          upper = ureason;
+          use_op;
+        } in
         let propref =
           let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
           Named (reason_prop, s)
         in
         match SMap.get s lflds with
         | Some lp ->
-          let use_op = PropertyCompatibility (s, lreason, ureason, use_op) in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
@@ -4075,7 +4080,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       let action = match u with
       | UseT (use_op, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
-        let use_op = PropertyCompatibility ("$call", reason, reason_op, use_op) in
+        let use_op = PropertyCompatibility {
+          prop = Some "$call";
+          lower = reason;
+          upper = reason_op;
+          use_op;
+        } in
         LookupProp (use_op, Field (None, u_def, Positive))
       | _ -> RWProp (l, tvar, Read)
       in
@@ -6228,7 +6238,13 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   (match ldict, udict with
     | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
       Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
-      rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
+      let use_op = PropertyCompatibility {
+        prop = None;
+        lower = lreason;
+        upper = ureason;
+        use_op;
+      } in
+      rec_flow_p cx trace ~use_op:UnknownUse lreason ureason (Computed uk)
         (Field (None, lk, lpolarity), Field (None, uk, upolarity));
       rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
@@ -6238,7 +6254,12 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
-    let use_op = PropertyCompatibility (s, lreason, ureason, use_op) in
+    let use_op = PropertyCompatibility {
+      prop = Some s;
+      lower = lreason;
+      upper = ureason;
+      use_op;
+    } in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (
@@ -6312,6 +6333,12 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     iter_real_props cx lflds (fun s lp ->
       if not (Context.has_prop cx uflds s)
       then (
+        let use_op = PropertyCompatibility {
+          prop = Some s;
+          lower = lreason;
+          upper = ureason;
+          use_op;
+        } in
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
         | Field (loc, DefT (_, OptionalT lt), lpolarity) ->
@@ -6626,7 +6653,12 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
-    let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
+    let use_op = PropertyCompatibility {
+      prop = Some s;
+      lower = lreason;
+      upper = reason_struct;
+      use_op;
+    } in
     match p with
     | Field (_, DefT (_, OptionalT t), polarity) ->
       let propref =
@@ -6650,7 +6682,12 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
           LookupProp (use_op, p)))
   );
   methods_pmap |> SMap.iter (fun s p ->
-    let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
+    let use_op = PropertyCompatibility {
+      prop = Some s;
+      lower = lreason;
+      upper = reason_struct;
+      use_op;
+    } in
     let propref =
       let reason_prop = replace_reason (fun desc ->
         RPropertyOf (s, desc)
@@ -9098,7 +9135,12 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   )
 
 and unify_props cx trace ~use_op x r1 r2 p1 p2 =
-  let use_op = PropertyCompatibility (x, r1, r2, use_op) in
+  let use_op = PropertyCompatibility {
+    prop = Some x;
+    lower = r1;
+    upper = r2;
+    use_op;
+  } in
 
   (* If both sides are neutral fields, we can just unify once *)
   match p1, p2 with
@@ -9138,6 +9180,12 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
     let p2 = Field (None, value, dict_polarity) in
     unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
   | None ->
+    let use_op = PropertyCompatibility {
+      prop = Some x;
+      lower = prop_obj_reason;
+      upper = dict_reason;
+      use_op;
+    } in
     let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
     add_output cx ~trace err
 
