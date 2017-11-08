@@ -17,6 +17,7 @@ val get_finished_timer: timer:string -> running -> (float * float * float * floa
 val sample_memory: metric:string -> value:float -> running -> unit
 
 val get_timing_json_string: finished -> string
+val get_abridged_timing_json_string: finished -> string
 val get_memory_json_string: finished -> string
 
 val to_json_properties: finished -> (string * Hh_json.json) list

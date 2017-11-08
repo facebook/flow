@@ -34,7 +34,7 @@ module Timing : sig
   val start_timer: timer:string -> t -> t
   val stop_timer: timer:string -> t -> t
   val get_results: t -> result SMap.t
-  val to_json: t -> Hh_json.json
+  val to_json: abridged:bool -> t -> Hh_json.json
 end = struct
 
   type running_timer = {
@@ -155,6 +155,12 @@ end = struct
 
   let get_results { results; _; } = results
 
+  let combine_time_measurements = List.fold_left
+    (fun acc t ->
+      { start_age = acc.start_age +. t.start_age; duration = acc.duration +. t.duration }
+    )
+    { start_age = 0.0; duration = 0.0 }
+
   let json_of_time_measurement { start_age; duration; } =
     let open Hh_json in
     let open Utils_js in
@@ -163,38 +169,58 @@ end = struct
       "duration", JSON_Number (string_of_float_trunc duration);
     ]
 
-  let json_of_processor_info info =
+  let json_of_processor_info ~abridged info =
     let open Hh_json in
     let open Utils_js in
-    JSON_Object [
-      "user", JSON_Number (string_of_float_trunc info.cpu_user);
-      "nice", JSON_Number (string_of_float_trunc info.cpu_nice_user);
-      "system", JSON_Number (string_of_float_trunc info.cpu_system);
-      "idle", JSON_Number (string_of_float_trunc info.cpu_idle);
-      "usage", JSON_Number (string_of_float_trunc info.cpu_usage);
-    ]
+    if abridged
+    then
+      let total =  info.cpu_user +. info.cpu_nice_user +. info.cpu_system +. info.cpu_idle in
+      (* We can infer enough from these two numbers
+       * busy = total * usage
+       * idle = total - busy *)
+      JSON_Object [
+        "total", JSON_Number (string_of_float_trunc total);
+        "usage", JSON_Number (string_of_float_trunc info.cpu_usage);
+      ]
+    else
+      JSON_Object [
+        "user", JSON_Number (string_of_float_trunc info.cpu_user);
+        "nice", JSON_Number (string_of_float_trunc info.cpu_nice_user);
+        "system", JSON_Number (string_of_float_trunc info.cpu_system);
+        "idle", JSON_Number (string_of_float_trunc info.cpu_idle);
+        "usage", JSON_Number (string_of_float_trunc info.cpu_usage);
+      ]
 
-  let json_of_result
+  let json_of_result ~abridged
     { wall; user; system; worker_user; worker_system; processor_totals; flow_cpu_usage; } =
     let open Hh_json in
     let open Utils_js in
-    JSON_Object [
+    let cpu = [user; system; worker_user; worker_system] in
+    let common_fields = [
       "wall", json_of_time_measurement wall;
-      "user", json_of_time_measurement user;
-      "system", json_of_time_measurement system;
-      "worker_user", json_of_time_measurement worker_user;
-      "worker_system", json_of_time_measurement worker_system;
-      (* legacy fields *)
-      "start_wall_age", JSON_Number (string_of_float_trunc wall.start_age);
-      "wall_duration", JSON_Number (string_of_float_trunc wall.duration);
-      "processor_totals", json_of_processor_info processor_totals;
-      "flow_cpu_usage", JSON_Number (string_of_float_trunc flow_cpu_usage)
-    ]
+      "cpu", json_of_time_measurement (combine_time_measurements cpu);
+      "flow_cpu_usage", JSON_Number (string_of_float_trunc flow_cpu_usage);
+      "processor_totals", json_of_processor_info ~abridged processor_totals;
+    ] in
+    let fields =
+      if abridged
+      then common_fields
+      else common_fields @ [
+        "wall", json_of_time_measurement wall;
+        "user", json_of_time_measurement user;
+        "system", json_of_time_measurement system;
+        "worker_user", json_of_time_measurement worker_user;
+        "worker_system", json_of_time_measurement worker_system;
+        (* legacy fields *)
+        "start_wall_age", JSON_Number (string_of_float_trunc wall.start_age);
+        "wall_duration", JSON_Number (string_of_float_trunc wall.duration);
+      ]
+    in JSON_Object fields
 
-  let to_json { results; _; } =
+  let to_json ~abridged { results; _; } =
     let open Hh_json in
     let results = results
-    |> SMap.map json_of_result
+    |> SMap.map (json_of_result ~abridged)
     |> SMap.elements in
     JSON_Object [
       "results", JSON_Object results;
@@ -387,12 +413,15 @@ let sample_memory ~metric ~value profile =
 
 let to_json_properties profile =
   [
-    "timing", Timing.to_json profile.timing;
+    "timing", Timing.to_json ~abridged:false profile.timing;
     "memory", Memory.to_json profile.memory;
   ]
 
 let get_timing_json_string profile =
-  Timing.to_json profile.timing |> Hh_json.json_to_string
+  Timing.to_json ~abridged:false profile.timing |> Hh_json.json_to_string
+
+let get_abridged_timing_json_string profile =
+  Timing.to_json ~abridged:true profile.timing |> Hh_json.json_to_string
 
 let get_memory_json_string profile =
   Memory.to_json profile.memory |> Hh_json.json_to_string
