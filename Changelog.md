@@ -1,3 +1,60 @@
+### 0.59.0
+
+#### New Features:
+
+- Adds a `$ReadOnly<T>` utility type which makes all properties on objects
+  read-only. `$ReadOnly<{ a: number, b: string }>` behaves as if you wrote
+  `{ +a: number, +b: string }`. [Read more about property variance on
+  our blog.][]
+
+```js
+type O = { a: number, b: string };
+
+function fn(o: $ReadOnly<O>) {
+  o.a = 42; // Error!
+}
+```
+
+- Allow read-only property initialization in constructors. Covariant properties
+  are still read-only everywhere else in the class.
+
+```js
+class X {
+  +p: number;
+  constructor(p: number) {
+    this.p = p;
+  }
+}
+```
+
+- **25% performance improvement** on full check time for large projects.
+  (Results may vary.)
+- Enables lints in Try Flow. [Enable lints with configuration comments like
+  `/* flowlint sketchy-null:error */`][try-flow-lint-example].
+
+[Read more about property variance on our blog.]: https://flow.org/blog/2016/10/04/Property-Variance/
+[try-flow-lint-example]: https://flow.org/try/#0PQKgBAZgNg9g7lAlgOwC5gM4GsCmqDGAFgJ4C0yArlFAFw4BO9M9YIwAUAG4CGLAHgEYaYAPwAjGDChgAvJG5QMOANztEEMAApBASjABvMKEy4CJVsDABfdkA
+
+#### Notable bug fixes:
+
+- Improves positioning for error messages involving exact objects. Notably, this
+  bug caused error messages against `React.Element` to incorrectly point at
+  library definitions instead of user code.
+
+#### Misc:
+
+- Experimental implementation of find-all-references.
+- Enforces that exported class statics are annotated.
+- Improves typings for Node.js HTTP server `listen()` function.
+- Removes redundant information from some React error messages.
+
+#### Parser:
+
+- Adds parser support for JSX fragments.
+- Various correctness changes to which identifiers error on reserved value
+  and type names.
+- `declare class` with multiple extends is now a parse error.
+
 ### 0.58.0
 
 Likely to cause new Flow errors:
