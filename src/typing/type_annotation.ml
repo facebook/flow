@@ -346,7 +346,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Call" ->
     (match convert_type_params () with
     | fn::args ->
-       let reason = mk_reason RFunctionCall loc in
+       let reason = mk_reason RFunctionCallType loc in
        EvalT (fn, TypeDestructorT (reason, CallType args), mk_id ())
     | _ ->
       error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))

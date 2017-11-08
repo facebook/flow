@@ -77,6 +77,7 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
@@ -383,6 +384,7 @@ let rec string_of_desc = function
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall -> "function call"
+  | RFunctionCallType -> "function call" (* TODO *)
   | RFunctionUnusedArgument -> "unused function argument"
   | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
   | RJSXIdentifier (raw_jsx, name) ->
@@ -592,6 +594,14 @@ let is_typemap_reason r =
   | RTupleMap
   | RObjectMap
   | RObjectMapi -> true
+  | _ -> false
+
+let is_calltype_reason r =
+  match desc_of_reason r with
+  | RTupleMap
+  | RObjectMap
+  | RObjectMapi
+  | RFunctionCallType -> true
   | _ -> false
 
 let is_derivable_reason r =
