@@ -10967,30 +10967,31 @@ let intersect_members cx members =
               | (Some tl, Some t) -> Some (t :: tl)
             ) acc x
         ) map (List.tl members) in
-      SMap.map (List.fold_left (fun acc x ->
-          merge_type cx (acc, x)
-      ) Locationless.EmptyT.t) map
+      SMap.map (List.fold_left (fun (_, acc) (loc, t) ->
+          (* Arbitrarily use the last location encountered *)
+          loc, merge_type cx (acc, t)
+      ) (None, Locationless.EmptyT.t)) map
 
 (* It's kind of lame that Members is in this module, but it uses a bunch of
    internal APIs so for now it's easier to keep it here than to expose those
    APIs *)
 module Members : sig
   type t =
-    | Success of Type.t SMap.t
-    | SuccessModule of Type.t SMap.t * (Type.t option)
+    | Success of (Loc.t option * Type.t) SMap.t
+    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val to_command_result: t -> (Type.t SMap.t, string) result
+  val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
 
 end = struct
 
   type t =
-    | Success of Type.t SMap.t
-    | SuccessModule of Type.t SMap.t * (Type.t option)
+    | Success of (Loc.t option * Type.t) SMap.t
+    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
@@ -11000,7 +11001,7 @@ end = struct
     | SuccessModule (map, None) ->
         Ok map
     | SuccessModule (named_exports, Some cjs_export) ->
-        Ok (SMap.add "default" cjs_export named_exports)
+        Ok (SMap.add "default" (None, cjs_export) named_exports)
     | FailureMaybeType ->
         Error "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
@@ -11043,14 +11044,22 @@ end = struct
           (* TODO: It isn't currently possible to return two types for a given
            * property in autocomplete, so for now we just return the getter
            * type. *)
-          let t = match p with
-          | Field (_, t, _) | Get (_, t) | Set (_, t) | GetSet (_, t, _, _) | Method (_, t) -> t
+          let loc, t = match p with
+            | Field (loc, t, _)
+            | Get (loc, t)
+            | Set (loc, t)
+            (* arbitrarily use the location for the getter. maybe we can send both in the future *)
+            | GetSet (loc, t, _, _)
+            | Method (loc, t) ->
+                (loc, t)
           in
-          SMap.add x t acc
+          SMap.add x (loc, t) acc
         ) (find_props cx fields) SMap.empty in
         let members = SMap.fold (fun x p acc ->
           match Property.read_t p with
-          | Some t -> SMap.add x t acc
+          | Some t ->
+              let loc = Property.read_loc p in
+              SMap.add x (loc, t) acc
           | None -> acc
         ) (find_props cx methods) members in
         let super_t = resolve_type cx super in
@@ -11067,7 +11076,9 @@ end = struct
         let prot_members = extract_members_as_map cx proto_t in
         let members = SMap.fold (fun x p acc ->
           match Property.read_t p with
-          | Some t -> SMap.add x t acc
+          | Some t ->
+              let loc = Property.read_loc p in
+              SMap.add x (loc, t) acc
           | None -> acc
         ) (find_props cx flds) SMap.empty in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
@@ -11076,6 +11087,8 @@ end = struct
         extract cx t
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
         let named_exports = Context.find_exports cx exports_tmap in
+        (* Stub out the identifier locations. It would be nice to get actual locations in here at some point *)
+        let named_exports = SMap.map (fun t -> None, t) named_exports in
         let cjs_export =
           match cjs_export with
           | Some t -> Some (resolve_type cx t)

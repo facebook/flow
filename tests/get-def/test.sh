@@ -63,3 +63,8 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 #    ^
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
+
+printf "class properties = "
+assert_ok "$FLOW" get-def class.js 9 6 --strip-root --pretty
+printf "class methods = "
+assert_ok "$FLOW" get-def class.js 10 6 --strip-root --pretty

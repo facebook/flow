@@ -104,7 +104,11 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       | Error _ -> Loc.none
       | Ok result_map ->
         begin match SMap.get name result_map with
-        | Some t -> Type.loc_of_t t
+        | Some (loc, t) ->
+            begin match loc with
+              | None -> Type.loc_of_t t
+              | Some x -> x
+            end
         | None -> Loc.none
         end
       end

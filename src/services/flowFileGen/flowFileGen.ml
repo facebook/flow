@@ -399,6 +399,8 @@ let gen_exports named_exports cjs_export env =
 let flow_file cx =
   let module_ref = Context.module_ref cx in
   let (named_exports, cjs_export) = exports_map cx module_ref in
+  (* Drop the loc *)
+  let named_exports = SMap.map snd named_exports in
 
   Codegen.mk_env cx
     |> Codegen.add_str "// @flow\n\n"

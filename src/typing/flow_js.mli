@@ -93,13 +93,13 @@ val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
 
 module Members : sig
   type t =
-    | Success of Type.t SMap.t
-    | SuccessModule of Type.t SMap.t * (Type.t option)
+    | Success of (Loc.t option * Type.t) SMap.t
+    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val to_command_result: t -> (Type.t SMap.t, string) result
+  val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
 end

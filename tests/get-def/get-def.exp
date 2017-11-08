@@ -1,4 +1,4 @@
-{"path":"library.js","line":5,"endline":5,"start":17,"end":46}
+{"path":"library.js","line":5,"endline":5,"start":3,"end":14}
 default import points to default export = {"path":"helpers/exports_default.js","line":5,"endline":5,"start":16,"end":16}
 local reference points to default import = {"path":"helpers/exports_default.js","line":3,"endline":3,"start":11,"end":15}
 named import points to named export = {"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
@@ -11,3 +11,5 @@ namespaced import points to imported file (as) = {"path":"helpers/exports_named.
 namespaced import points to imported file (remote name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 namespaced import points to imported file (local name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 local reference points to namespaced import = {"path":"imports.js","line":10,"endline":10,"start":1,"end":53}
+class properties = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
+class methods = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}

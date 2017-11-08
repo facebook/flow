@@ -168,7 +168,7 @@ let autocomplete_member
     Ok (
       result_map
       |> autocomplete_filter_members
-      |> SMap.mapi (fun name t ->
+      |> SMap.mapi (fun name (_id_loc, t) ->
           let loc = Type.loc_of_t t in
           let gt = Type_normalizer.normalize_type cx t in
           autocomplete_create_result cx name gt loc
