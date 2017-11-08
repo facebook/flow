@@ -49,7 +49,7 @@ let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t l
       end
   in
   (* The keys in relevant_requires are all just references to the module where the symbol is
-  defined, so let's get just the values since we have already filterd out irrelevant keys *)
+  defined, so let's get just the values since we have already filtered out irrelevant keys *)
   let only_requires: require list =
     SMap.bindings relevant_requires |>
       List.map (fun (_, x) -> x)

@@ -25,7 +25,7 @@ class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
 <Text>{42}</Text>; // Error: `number`s are not allowed.
 <Text><intrinsic/></Text>; // Error: elements are not allowed.
 
-// OK: Text accross multiple lines is fine.
+// OK: Text across multiple lines is fine.
 <Text>
   Hello, world!
   Multiline.

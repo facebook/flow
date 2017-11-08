@@ -46,7 +46,7 @@ module type CONNECTION = sig
     name: string ->
     (* The fd from which we should read *)
     in_fd:Lwt_unix.file_descr ->
-    (* The fd to whcih we should write *)
+    (* The fd to which we should write *)
     out_fd:Lwt_unix.file_descr ->
     (* A function that closes the in and out fds *)
     close:(unit -> unit Lwt.t) ->

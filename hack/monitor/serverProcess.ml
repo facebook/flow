@@ -14,7 +14,7 @@ type process_data =
     pid : int;
     name : string;
     start_t : float;
-    (** Get occassional updates about status/busyness from typechecker here. *)
+    (** Get occasional updates about status/busyness from typechecker here. *)
     in_fd: Unix.file_descr;
     (** Send client's File Descriptors to the typechecker over this. *)
     out_fd : Unix.file_descr;

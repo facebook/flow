@@ -624,7 +624,7 @@ let run cx trace ~use_op reason_op l u
 
     (* This tool recursively resolves types until the spec is resolved enough to
      * compute the instance type. `resolve` and `resolve_call` actually emit the
-     * recursive constaints. The latter is for `getInitialState` and
+     * recursive constraints. The latter is for `getInitialState` and
      * `getDefaultProps`, where the type we want to resolve is the return type
      * of the bound function call *)
 
