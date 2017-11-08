@@ -54,6 +54,12 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
     shared_mem_config:SharedMem_js.config ->
     ?on_spawn:(int -> unit) ->
     Options.t -> unit
+  val daemonize_from_monitor :
+    log_file:string ->
+    shared_mem_config:SharedMem_js.config ->
+    argv:string array ->
+    Options.t ->
+    (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle
 end = struct
   type ready_socket =
     | New_client of Unix.file_descr
@@ -305,4 +311,9 @@ end = struct
     let entry = Server_daemon.register_entry_point run_from_daemonize in
     fun ~wait ~log_file ~shared_mem_config ?on_spawn options ->
       Server_daemon.daemonize ~wait ~log_file ~shared_mem_config ?on_spawn ~options entry
+
+  let daemonize_from_monitor ~log_file:_ ~shared_mem_config:_ ~argv:_ _ =
+    (* TODO - In a later FlowServerMonitor diff I will delete daemonize_from_monitor. It only exists
+     * since I can't change daemonize just yet. *)
+    failwith "Unimplemented"
 end
