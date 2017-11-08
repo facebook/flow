@@ -26,6 +26,7 @@ begin library "flow-commands"
     "flow-common-lints"
     "flow-common-utils"
     "flow-flowlib"
+    "flow-monitor"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
@@ -267,6 +268,64 @@ begin library "flow-parsing"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+  ]
+end
+
+begin library "flow-monitor"
+  sort = true
+  files = begin fb-glob "src/monitor"
+    excludes = [
+      "serverStatus.mli"
+      "serverStatus.ml"
+      "serverToMonitor.mli"
+      "serverToMonitor.ml"
+    ]
+  end
+  requires = [
+    "flow-common"
+    "flow-monitor-connections"
+    "flow-monitor-logger"
+    "flow-monitor-server-status"
+    "flow-monitor-utils"
+    "flow-server"
+    "flow-server-protocol"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-logger"
+  sort = true
+  files = begin fb-glob "src/monitor/logger"
+  end
+  requires = [
+    "lwt"
+    "lwt.log"
+    "lwt.unix"
+    "tp-core"
+  ]
+end
+
+begin library "flow-monitor-connections"
+  sort = true
+  files = begin fb-glob "src/monitor/connections"
+  end
+  requires = [
+    "flow-monitor-logger"
+    "flow-monitor-utils"
+    "flow-server-protocol"
+    "hh-marshal-tools-lwt"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-utils"
+  sort = true
+  files = begin fb-glob "src/monitor/utils"
+  end
+  requires = [
+    "lwt"
   ]
 end
 
