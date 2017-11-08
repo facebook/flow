@@ -2995,6 +2995,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, IntersectionT _), ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       object_kit cx trace ~use_op reason resolve_tool tool tout l
 
+    (* CallT uses that arise from the CallType type destructor are processed
+       without preparation (see below). This is because in these cases, the
+       return type is intended to be 0-1, whereas preparation (as implemented
+       currently) destroys 0-1 behavior. *)
+    | DefT (r, IntersectionT rep), CallT (reason, _) when is_calltype_reason reason ->
+      try_intersection cx trace u r rep
+
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
         prep_try_intersection for details. **)

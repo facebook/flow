@@ -29,6 +29,7 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
@@ -174,6 +175,7 @@ val is_instantiable_reason: reason -> bool
 val is_constant_property_reason: reason -> bool
 
 val is_typemap_reason: reason -> bool
+val is_calltype_reason: reason -> bool
 
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool

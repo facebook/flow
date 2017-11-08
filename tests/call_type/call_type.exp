@@ -1,3 +1,15 @@
+Error: intersection.js:10
+ 10: function foo(x: X): A { return x; } // error
+                                    ^ B. This type is incompatible with the expected return type of
+ 10: function foo(x: X): A { return x; } // error
+                         ^ A
+
+Error: intersection.js:11
+ 11: function bar(x: X): B { return x; } // error
+                                    ^ A. This type is incompatible with the expected return type of
+ 11: function bar(x: X): B { return x; } // error
+                         ^ B
+
 Error: test.js:7
   7: type A = $Call; // Error: one or more arguments are required.
               ^^^^^ Incorrect number of type parameters (expected at least 1)
@@ -209,4 +221,4 @@ Error: union.js:25
          ^^^^^ empty
 
 
-Found 25 errors
+Found 27 errors
