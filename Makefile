@@ -76,6 +76,10 @@ MODULES=\
   src/common/utils\
   src/common/xx\
   src/flowlib\
+  src/monitor\
+  src/monitor/connections\
+  src/monitor/logger\
+  src/monitor/utils\
   src/parser\
   src/parser_utils\
   src/parsing\
@@ -124,7 +128,11 @@ NATIVE_C_FILES=\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
-OCAML_LIBRARIES=\
+FINDLIB_PACKAGES=\
+  sedlex\
+  lwt\
+  lwt.log\
+  lwt.unix\
   unix\
   str\
   bigarray
@@ -163,7 +171,7 @@ CC_FLAGS=-DNO_SQLITE3
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
-LIB_OPTS=$(foreach lib,$(OCAML_LIBRARIES),-lib $(lib))
+FINDLIB_OPTS=$(foreach lib,$(FINDLIB_PACKAGES),-pkg $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
 ALL_INCLUDE_PATHS=$(sort $(realpath $(BUILT_C_DIRS))) $(EXTRA_INCLUDE_PATHS)
 EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
@@ -199,8 +207,8 @@ clean-ocp: clean
 
 build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-use-ocamlfind\
+		-no-links  $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
@@ -231,8 +239,8 @@ test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-use-ocamlfind \
+		-no-links $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
