@@ -276,7 +276,9 @@ let typecheck
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
     let roots = CheckedSet.all infer_input in
-    let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+    let dependency_graph = with_timer ~options "CalcDepsTypecheck" profiling (fun () ->
+      Dep_service.calc_dependency_graph workers parsed
+    ) in
     let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
     let infer_input = CheckedSet.add ~dependencies:all_dependencies infer_input in
 
@@ -289,7 +291,7 @@ let typecheck
   let send_errors_over_connection =
     match persistent_connections with
     | None -> fun _ -> ()
-    | Some conns ->
+    | Some conns -> with_timer ~options "MakeSendErrors" profiling (fun () ->
       (* Each merge step uncovers new errors, warnings, suppressions and lint severity covers.
 
          While more suppressions and severity covers may come in later steps, the suppressions and
@@ -340,6 +342,7 @@ let typecheck
 
         if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
           Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
+      )
   in
 
   (* call supplied function to calculate closure of modules to merge *)
@@ -393,7 +396,8 @@ let typecheck
           recheck_map
           (merge_errors, suppressions, severity_cover_set)
       in
-      if Options.should_profile options then Gc.print_stat stderr;
+      if Options.should_profile options
+      then with_timer ~options "PrintGCStats" profiling (fun () -> Gc.print_stat stderr);
       Hh_logger.info "Done";
       merge_errors, suppressions, severity_cover_set
     with
@@ -871,7 +875,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let unchanged_checked = CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files in
 
   (* clear out records of files, and names of modules provided by those files *)
-  let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in
+  let old_modules = with_timer ~options "ModuleClearFiles" profiling (fun () ->
+    Module_js.clear_files workers ~options new_or_changed_or_deleted
+  ) in
 
   let dependent_file_count = ref 0 in
 
@@ -906,76 +912,84 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
   let node_modules_containers = !Files.node_modules_containers in
   (* requires in direct_dependent_files must be re-resolved before merging. *)
-  MultiWorker.call workers
-    ~job: (fun () files ->
-      List.iter (fun f ->
-        let file_sig = Parsing_service_js.get_file_sig_unsafe f in
-        let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
-        let errors = Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-          ~node_modules_containers f require_loc in
-        ignore errors (* TODO: why, FFS, why? *)
-      ) files
-    )
-    ~neutral: ()
-    ~merge: (fun () () -> ())
-    ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
+  with_timer ~options "ReresolveDirectDependents" profiling (fun () ->
+    MultiWorker.call workers
+      ~job: (fun () files ->
+        List.iter (fun f ->
+          let file_sig = Parsing_service_js.get_file_sig_unsafe f in
+          let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
+          let errors = Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+            ~node_modules_containers f require_loc in
+          ignore errors (* TODO: why, FFS, why? *)
+        ) files
+      )
+      ~neutral: ()
+      ~merge: (fun () () -> ())
+      ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files))
+  );
 
   let parsed = FilenameSet.union freshparsed unchanged in
   let parsed_list = FilenameSet.elements parsed in
 
   Hh_logger.info "Recalculating dependency graph";
-  let updated_checked_files, all_dependent_files = match Options.lazy_mode options with
-  | None (* Non lazy mode treats every file as focused. *)
-  | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-    let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
-    let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
-    let old_focus_targets = List.fold_left
-      (fun targets (unparsed, _) -> FilenameSet.remove unparsed targets)
-      old_focus_targets
-      unparsed in
-    let parsed = FilenameSet.union old_focus_targets freshparsed in
-    let updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
-    updated_checked_files, all_dependent_files
-  | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
-    (* Unfortunately, our checked_files set might be out of date. This update could have added
-     * some new dependents or dependencies. So we need to recalculate those.
-     *
-     * To calculate dependents and dependencies, we need to know what are the focused files. We
-     * define the focused files to be the union of
-     *
-     *   1. The files that were previously focused
-     *   2. Modified files that are currently open in the IDE
-     *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
-     *
-     * Remember that the IDE might open a new file or keep open a deleted file, so the focused set
-     * might be missing that file. If that file reappears, we must remember to refocus on it.
-     **)
-    let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
-    let forced_focus = if force_focus
-      then filter_out_node_modules ~options freshparsed
-      else FilenameSet.empty in
-    let open_in_ide =
-      let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
-      FilenameSet.filter (function
-        | File_key.SourceFile fn
-        | File_key.LibFile fn
-        | File_key.JsonFile fn
-        | File_key.ResourceFile fn -> SSet.mem fn opened_files
-        | File_key.Builtins -> false
-      ) freshparsed
-    in
-    let focused = old_focused
-      |> FilenameSet.union open_in_ide
-      |> FilenameSet.union forced_focus in
-    let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
+  let updated_checked_files, all_dependent_files =
+    with_timer ~options "RecalcDepGraph" profiling (fun () ->
+      match Options.lazy_mode options with
+      | None (* Non lazy mode treats every file as focused. *)
+      | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
+        let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
+        let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
+        let old_focus_targets = List.fold_left
+          (fun targets (unparsed, _) -> FilenameSet.remove unparsed targets)
+          old_focus_targets
+          unparsed in
+        let parsed = FilenameSet.union old_focus_targets freshparsed in
+        let updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
+        updated_checked_files, all_dependent_files
+      | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
+        (* Unfortunately, our checked_files set might be out of date. This update could have added
+         * some new dependents or dependencies. So we need to recalculate those.
+         *
+         * To calculate dependents and dependencies, we need to know what are the focused files. We
+         * define the focused files to be the union of
+         *
+         *   1. The files that were previously focused
+         *   2. Modified files that are currently open in the IDE
+         *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
+         *
+         * Remember that the IDE might open a new file or keep open a deleted file, so the focused
+         * set might be missing that file. If that file reappears, we must remember to refocus on
+         * it.
+         **)
+        let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
+        let forced_focus = if force_focus
+          then filter_out_node_modules ~options freshparsed
+          else FilenameSet.empty in
+        let open_in_ide =
+          let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
+          FilenameSet.filter (function
+            | File_key.SourceFile fn
+            | File_key.LibFile fn
+            | File_key.JsonFile fn
+            | File_key.ResourceFile fn -> SSet.mem fn opened_files
+            | File_key.Builtins -> false
+          ) freshparsed
+        in
+        let focused = old_focused
+          |> FilenameSet.union open_in_ide
+          |> FilenameSet.union forced_focus in
+        let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
 
-    (* It's possible that all_dependent_files contains foo.js, which is a dependent of a dependency.
-     * That's fine if foo.js is a focused file or a transitive dependent of a focused file. But if
-     * it's just some random other dependent then we need to filter it out. *)
-    let focused_or_dependents = FilenameSet.union
-      (CheckedSet.focused updated_checked_files) (CheckedSet.dependents updated_checked_files) in
-    let all_dependent_files = FilenameSet.inter all_dependent_files focused_or_dependents in
-    updated_checked_files, all_dependent_files
+        (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
+         * dependency. That's fine if foo.js is a focused file or a transitive dependent of a
+         * focused file. But if it's just some random other dependent then we need to filter it out.
+         *)
+        let focused_or_dependents = FilenameSet.union
+          (CheckedSet.focused updated_checked_files)
+          (CheckedSet.dependents updated_checked_files) in
+        let all_dependent_files = FilenameSet.inter all_dependent_files focused_or_dependents in
+        updated_checked_files, all_dependent_files
+    )
   in
 
   let infer_input =
