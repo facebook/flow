@@ -108,6 +108,7 @@ MODULES=\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
+  hack/utils/sys\
   $(INOTIFY)\
   $(FSNOTIFY)\
   $(INTERNAL_MODULES)
@@ -117,14 +118,14 @@ NATIVE_C_FILES=\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
   hack/heap/hh_shared.c\
-  hack/utils/files.c\
   hack/utils/get_build_id.c\
-  hack/utils/handle_stubs.c\
-  hack/utils/nproc.c\
-  hack/utils/realpath.c\
-  hack/utils/sysinfo.c\
-  hack/utils/priorities.c\
-  hack/utils/processor_info.c\
+  hack/utils/sys/files.c\
+  hack/utils/sys/handle_stubs.c\
+  hack/utils/sys/nproc.c\
+  hack/utils/sys/priorities.c\
+  hack/utils/sys/processor_info.c\
+  hack/utils/sys/realpath.c\
+  hack/utils/sys/sysinfo.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 

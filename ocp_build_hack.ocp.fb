@@ -200,7 +200,7 @@ begin library "hh-utils-string"
 end
 
 begin library "hh-utils-sys"
-  dirname = "hack/utils"
+  dirname = "hack/utils/sys"
   sort = true
   files = [
     "daemon.ml"
