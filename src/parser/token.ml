@@ -80,6 +80,7 @@ type t =
   | T_ASYNC
   | T_AWAIT
   | T_CHECKS
+  | T_ABSTRACT
   (* Operators *)
   | T_RSHIFT3_ASSIGN
   | T_RSHIFT_ASSIGN
@@ -219,6 +220,7 @@ let token_to_string = function
   | T_ASYNC -> "T_ASYNC"
   | T_AWAIT -> "T_AWAIT"
   | T_CHECKS -> "T_CHECKS"
+  | T_ABSTRACT -> "T_ABSTRACT"
   | T_LCURLY -> "T_LCURLY"
   | T_RCURLY -> "T_RCURLY"
   | T_LCURLYBAR -> "T_LCURLYBAR"
@@ -363,6 +365,7 @@ let value_of_token = function
   | T_ASYNC -> "async"
   | T_AWAIT -> "await"
   | T_CHECKS -> "%checks"
+  | T_ABSTRACT -> "abstract"
   | T_RSHIFT3_ASSIGN -> ">>>="
   | T_RSHIFT_ASSIGN -> ">>="
   | T_LSHIFT_ASSIGN -> "<<="

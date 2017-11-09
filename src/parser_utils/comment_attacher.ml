@@ -79,6 +79,7 @@ class comment_attacher ~comments = object(this)
   method! class_element (elem: Loc.t Ast.Class.Body.element) =
     let open Ast.Class.Body in
     begin match elem with
+    | AbstractMethod (loc, _)
     | Method (loc, _)
     | Property (loc, _)
     | PrivateField (loc, _) -> this#check_loc loc

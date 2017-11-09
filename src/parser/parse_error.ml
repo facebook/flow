@@ -18,6 +18,7 @@ type t =
   | UnexpectedSuperCall
   | UnexpectedEOS
   | UnexpectedVariance
+  | UnexpectedAbstract
   | UnexpectedStatic
   | UnexpectedTypeAlias
   | UnexpectedOpaqueTypeAlias
@@ -107,6 +108,20 @@ type t =
   | LiteralShorthandProperty
   | ComputedShorthandProperty
   | MethodInDestructuring
+  | PrivateGetter
+  | PrivateSetter
+  | ExpectedIdentifier
+  | AbstractConstructor
+  | AbstractPrivate
+  | AbstractProperty
+  | AbstractIndexer
+  | AbstractCall
+  | AbstractGetter
+  | AbstractSetter
+  | AbstractStaticName
+  | DecoratorOnAbstract
+  | DuplicateAbstractMethods of string
+  | ImmediateAbstract of string
 
 exception Error of (Loc.t * t) list
 
@@ -131,6 +146,7 @@ module PP =
       | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
+      | UnexpectedAbstract -> "Unexpected abstract modifier"
       | UnexpectedStatic -> "Unexpected static modifier"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
@@ -270,4 +286,19 @@ module PP =
       | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
       | ComputedShorthandProperty -> "Computed properties must have a value."
       | MethodInDestructuring -> "Object pattern can't contain methods"
+      | PrivateGetter -> "Private getters are not allowed."
+      | PrivateSetter -> "Private setters are not allowed."
+      | ExpectedIdentifier -> "Expected an identifier."
+      | AbstractConstructor -> "Abstract class constructors are not allowed."
+      | AbstractPrivate -> "Abstract privates are not allowed."
+      | AbstractProperty -> "Abstract properties are not allowed."
+      | AbstractIndexer -> "Abstract indexers are not allowed."
+      | AbstractCall -> "Abstract call properties are not allowed."
+      | AbstractGetter -> "Abstract getters are not allowed."
+      | AbstractSetter -> "Abstract setters are not allowed."
+      | AbstractStaticName -> "Abstract static `name` methods are not allowed."
+      | DecoratorOnAbstract -> "Decorator(s) not allowed on an abstract."
+      | DuplicateAbstractMethods name ->
+        "Abstract methods may only be declared once. `" ^ name ^ "` is declared more than once."
+      | ImmediateAbstract name -> "Abstract method `" ^ name ^ "` is implemented locally."
   end

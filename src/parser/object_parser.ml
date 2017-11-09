@@ -382,58 +382,22 @@ module Object
     | _ -> List.rev acc
 
   and class_body =
-    let rec elements env seen_constructor private_names acc =
+    let rec elements env acc =
       match Peek.token env with
       | T_EOF
-      | T_RCURLY -> List.rev acc
+      | T_RCURLY -> acc
       | T_SEMICOLON ->
           (* Skip empty elements *)
           Expect.token env T_SEMICOLON;
-          elements env seen_constructor private_names acc
+          elements env acc
       | _ ->
-          let element = class_element env in
-          let seen_constructor', private_names' = begin match element with
-          | Ast.Class.Body.Method (loc, m) ->
-              let open Ast.Class.Method in
-              begin match m.kind with
-              | Constructor when not m.static ->
-                  if seen_constructor then
-                    error_at env (loc, Error.DuplicateConstructor);
-                  (true, private_names)
-              | Method ->
-                (seen_constructor, begin match m.key with
-                | Ast.Expression.Object.Property.PrivateName _ ->
-                    error_at env (loc, Error.PrivateMethod);
-                    private_names
-                | _ -> private_names
-                end)
-              | _ -> (seen_constructor, private_names)
-              end
-          | Ast.Class.Body.Property (loc, p) ->
-              let open Ast.Expression.Object.Property in
-              (seen_constructor, begin match p.Ast.Class.Property.key with
-              | Identifier (_, x) when String.equal x "constructor" ||
-                (String.equal x "prototype" && p.Ast.Class.Property.static) ->
-                  error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype", false));
-                  private_names
-              | _ -> private_names
-              end)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _})
-              when String.equal name "#constructor" ->
-                error_at env (loc, Error.InvalidFieldName (name, false, true));
-                (seen_constructor, private_names)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _}) ->
-                if SSet.mem name private_names then
-                  error_at env (loc, Error.DuplicatePrivateFields name);
-                (seen_constructor, SSet.add name private_names)
-          end in
-          elements env seen_constructor' private_names' (element::acc)
+          elements env (class_element env acc)
 
     in fun env ->
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
       enter_class env;
-      let body = elements env false SSet.empty [] in
+      let body = Object_members.members (elements env Object_members.empty) in
       exit_class env;
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
@@ -444,180 +408,376 @@ module Object
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   and class_element =
-    let get env start_loc decorators static =
-      let key, (end_loc, _ as value) =
-        getter_or_setter env true in
-      Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+    let module Members = struct
+      include Object_members.Make(struct
+        type internal_t = Loc.t Class.Body.element
+
+        module AbstractMethod = Object_members.AbstractMethod(struct
+          type t = Loc.t Ast.Class.AbstractMethod.t
+          type internal_t = Loc.t Ast.Class.Body.element
+          let loc (loc, _) = loc
+          let name (_, m) = Some (snd m.Ast.Class.AbstractMethod.key)
+          let is_static (_, m) = m.Ast.Class.AbstractMethod.static
+          let intern t = Ast.Class.Body.AbstractMethod t
+        end)
+        module Method = struct
+          include Object_members.Method(struct
+            type t = Loc.t Ast.Class.Method.t
+            type internal_t = Loc.t Ast.Class.Body.element
+            let loc (loc, _) = loc
+            let name (_, m) = Object_members.property_name m.Ast.Class.Method.key
+            let is_static (_, m) = m.Ast.Class.Method.static
+            let intern t = Ast.Class.Body.Method t
+          end)
+          let add env variance t marks =
+            let open Ast.Expression.Object.Property in
+            match t with
+            | loc, {Class.Method.key = PrivateName _; _} ->
+                error_at env (loc, Error.PrivateMethod);
+                marks
+            | loc, {Class.Method.kind = Class.Method.Constructor; _} ->
+                let open Object_members in
+                let name = "constructor" in
+                begin match SMap.get name marks with
+                | Some Native ->
+                    error_at env (loc, Error.DuplicateConstructor);
+                    marks
+                | _ ->
+                   SMap.add name Native marks
+                end
+            | _ -> add env variance t marks
+        end
+        module Property = struct
+          include Object_members.Property(struct
+            type t = Loc.t Class.Property.t
+            type internal_t = Loc.t Ast.Class.Body.element
+            let loc (loc, _) = loc
+            let name (_, p) = Object_members.property_name p.Class.Property.key
+            let is_static (_, p) = p.Class.Property.static
+            let intern t = Ast.Class.Body.Property t
+          end)
+          let add env abstract t marks =
+            let open Ast.Expression.Object.Property in
+            let (loc, p) = t in
+            Class.(match p with
+            | {Property.key = Identifier (_, "constructor"); static; _} ->
+                let e = Error.InvalidFieldName ("constructor", static, false) in
+                error_at env (loc, e);
+                marks
+            | {Property.key = Identifier (_, "prototype"); static = true; _} ->
+                let e = Error.InvalidFieldName ("prototype", true, false) in
+                error_at env (loc, e);
+                marks
+            | _ -> add env abstract t marks)
+        end
+        module Getter = struct
+          include Object_members.Getter(struct
+            type t = Loc.t Ast.Class.Method.t
+            type internal_t = Loc.t Ast.Class.Body.element
+            let loc (loc, _) = loc
+            let name (_, m) = Object_members.property_name m.Ast.Class.Method.key
+            let is_static (_, m) = m.Ast.Class.Method.static
+            let intern t = Ast.Class.Body.Method t
+          end)
+          let add env abstract variance t marks =
+            let open Ast.Expression.Object.Property in
+            match t with
+            | loc, {Class.Method.key = PrivateName _; _} ->
+                error_at env (loc, Error.PrivateGetter);
+                marks
+            | _ -> add env abstract variance t marks
+        end
+        module Setter = struct
+          include Object_members.Setter(struct
+            type t = Loc.t Ast.Class.Method.t
+            type internal_t = Loc.t Ast.Class.Body.element
+            let loc (loc, _) = loc
+            let name (_, m) = Object_members.property_name m.Ast.Class.Method.key
+            let is_static (_, m) = m.Ast.Class.Method.static
+            let intern t = Ast.Class.Body.Method t
+          end)
+          let add env abstract variance t marks =
+            let open Ast.Expression.Object.Property in
+            match t with
+            | loc, {Class.Method.key = PrivateName _; _} ->
+                error_at env (loc, Error.PrivateSetter);
+                marks
+            | _ -> add env abstract variance t marks
+        end
+      end)
+
+      let add_private_property env abstract (p: Object_members.PrivateField.t) t =
+        if abstract <> None then error_at env (fst p, Error.AbstractPrivate);
+        let open Object_members.PrivateField in
+        let f = add env abstract p in
+        t |> update_privates f |> add_member (intern p)
+    end
+
+    in let class_get env start decorators static =
+      let key, (end_loc, _ as value) = getter_or_setter env true in
+      Loc.btwn start end_loc, Ast.Class.Method.({
         key;
         value;
         kind = Get;
-        static;
+        static = static <> None;
         decorators;
-      })))
+      })
 
-    in let set env start_loc decorators static =
-      let key, (end_loc, _ as value) =
-        getter_or_setter env false in
-      Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+    in let class_set env start decorators static =
+      let key, (end_loc, _ as value) = getter_or_setter env false in
+      Loc.btwn start end_loc, Ast.Class.Method.({
         key;
         value;
         kind = Set;
-        static;
+        static = static <> None;
         decorators;
-      })))
+      })
 
-    in let error_unsupported_variance env = function
-    | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
-    | None -> ()
+    in let class_abstract_method env start keywords generator key =
+      let (abstract, static, async) = keywords in
+      assert(abstract <> None);
+      let value = with_loc (fun env ->
+        let typeParameters = Type.type_parameter_declaration env in
+        let params = Type.function_param_list env in
+        Expect.token env T_COLON;
+        let returnType = Type._type env in
+        ignore (Expect.maybe env T_SEMICOLON);
+        Ast.Type.Function.({
+          params;
+          async = async <> None;
+          generator;
+          returnType;
+          typeParameters;
+        })
+      ) env in
+      Loc.btwn start (fst value), Class.AbstractMethod.({
+        key;
+        value;
+        static = static <> None;
+      })
 
-    in let rec init env start_loc decorators key async generator static variance =
+    in let class_method env start decors keywords generator key =
+      let (abstract, static, async) = keywords in
+      assert(abstract = None);
+      let kind, env = match static, key with
+        | None, Ast.Expression.Object.Property.Identifier (_, "constructor")
+        | None, Ast.Expression.Object.Property.Literal (_, {
+            Literal.value = Literal.String "constructor";
+            _;
+          }) ->
+          Ast.Class.Method.Constructor,
+          env |> with_allow_super Super_prop_or_call
+        | _ ->
+          Ast.Class.Method.Method,
+          env |> with_allow_super Super_prop
+      in
+      let func_loc = Peek.loc env in
+      let typeParameters = Type.type_parameter_declaration env in
+      let params =
+        let yield, await = match async, generator with
+        | Some _, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+        | Some _, false -> false, allow_await env (* #prod-AsyncMethod *)
+        | None, true -> true, false (* #prod-GeneratorMethod *)
+        | None, false -> false, false (* #prod-MethodDefinition *)
+        in
+        Declaration.function_params ~await ~yield env
+      in
+      let returnType = Type.annotation_opt env in
+      let _, body, strict =
+        Declaration.function_body env ~async:(async <> None) ~generator in
+      let simple = Declaration.is_simple_function_params params in
+      Declaration.strict_post_check env ~strict ~simple None params;
+      let end_loc, expression = Function.(
+        match body with
+        | BodyBlock (loc, _) -> loc, false
+        | BodyExpression (loc, _) -> loc, true) in
+      let value = Loc.btwn func_loc end_loc, Function.({
+        id = None;
+        params;
+        body;
+        generator;
+        async = async <> None;
+        (* TODO: add support for method predicates *)
+        predicate = None;
+        expression;
+        returnType;
+        typeParameters;
+      }) in
+      Loc.btwn start end_loc, Ast.Class.Method.({
+        key;
+        value;
+        kind;
+        static = static <> None;
+        decorators = decors;
+      })
+
+    in let class_property_value env static = with_loc (fun env ->
+      let typeAnnotation = Type.annotation_opt env in
+      let options = parse_options env in
+      let value =
+        if Peek.token env = T_ASSIGN then (
+          if (static <> None) && options.esproposal_class_static_fields
+             || (static = None) && options.esproposal_class_instance_fields
+          then begin
+            Expect.token env T_ASSIGN;
+            Some (Parse.expression (env |> with_allow_super Super_prop))
+          end else None
+        ) else None
+      in
+      begin if Expect.maybe env T_SEMICOLON then
+        ()
+      else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
+        error_unexpected env
+      end;
+      typeAnnotation, value) env
+
+    in let init env start decors keywords generator variance k acc =
+      let (abstract, static, async) = keywords in
+      let key = match k with
+        | Some id ->
+            let _, name = id in
+            assert (List.mem name ["abstract";"static";"async";"get";"set"]);
+            Ast.Expression.Object.Property.Identifier id
+        | None ->
+            let id_loc = Peek.loc env in
+            Ast.Expression.Object.Property.(match key ~class_body:true env with
+            | _, (Identifier _ as key)
+            | _, (PrivateName _ as key) ->
+                key
+            | _, key ->
+                if abstract <> None then
+                  error_at env (id_loc, Error.ExpectedIdentifier);
+                key)
+      in
+      if Peek.token env == T_PLING then (
+        (* TODO: add support for optional class properties *)
+        error_unexpected env;
+        Eat.token env
+      );
       match Peek.token env with
       | T_COLON
       | T_ASSIGN
-      | T_SEMICOLON when not async && not generator ->
-        (* Class property with annotation *)
-        let end_loc, (typeAnnotation, value) = with_loc (fun env ->
-          let typeAnnotation = Type.annotation_opt env in
-          let options = parse_options env in
-          let value =
-            if Peek.token env = T_ASSIGN then (
-              if static && options.esproposal_class_static_fields
-                 || (not static) && options.esproposal_class_instance_fields
-              then begin
-                Expect.token env T_ASSIGN;
-                Some (Parse.expression (env |> with_allow_super Super_prop))
-              end else None
-            ) else None
-          in
-          begin if Expect.maybe env T_SEMICOLON then
-            ()
-          else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
-            error_unexpected env
-          end;
-          typeAnnotation, value
-        ) env in
-        let loc = Loc.btwn start_loc end_loc in
-        begin match key with
-        | Ast.Expression.Object.Property.PrivateName private_name ->
-          Ast.Class.(Body.PrivateField (loc, PrivateField.({
-            key = private_name;
-            value;
-            typeAnnotation;
-            static;
-            variance;
-          })))
-        | _ -> Ast.Class.(Body.Property (loc, Property.({
-            key;
-            value;
-            typeAnnotation;
-            static;
-            variance;
-          }))) end
-      | T_PLING ->
-        (* TODO: add support for optional class properties *)
-        error_unexpected env;
-        Eat.token env;
-        init env start_loc decorators key async generator static variance
+      | T_SEMICOLON ->
+          if async <> None then error_unexpected env;
+          if generator then error_unexpected env;
+          let end_loc, (annotation, value) = class_property_value env static in
+          let loc = Loc.btwn start end_loc in
+          begin match key with
+          | Ast.Expression.Object.Property.PrivateName private_name ->
+              let p = loc, Ast.Class.PrivateField.({
+                key = private_name;
+                value;
+                typeAnnotation = annotation;
+                static = static <> None;
+                variance;
+              }) in
+              Members.add_private_property env abstract p acc
+          | _ ->
+              let p = loc, Ast.Class.Property.({
+                key;
+                value;
+                typeAnnotation = annotation;
+                static = static <> None;
+                variance;
+              }) in
+              Members.add_property env abstract p acc
+          end
+      | T_LESS_THAN
+      | T_LPAREN ->
+          begin match abstract, key with
+          | Some _, Ast.Expression.Object.Property.Identifier key ->
+              let m = class_abstract_method env start keywords generator key in
+              Members.add_abstract_method env variance m acc
+          | Some _, Ast.Expression.Object.Property.PrivateName (_, key) ->
+              let m = class_abstract_method env start keywords generator key in
+              error_at env (fst m, Error.AbstractPrivate);
+              Members.add_abstract_method env variance m acc
+          | _ ->
+              (* Given an abstract method with some non-identifier key, the
+                 `AbstractNonidentifier` error has already been handled. Parse
+                 such an abstract method as a non-abstract method alongside
+                 non-abstract methods. *)
+              let m = class_method env start decors keywords generator key in
+              Members.add_method env variance m acc
+          end
       | _ ->
-        error_unsupported_variance env variance;
-        let kind, env = match static, key with
-          | false, Ast.Expression.Object.Property.Identifier (_, "constructor")
-          | false, Ast.Expression.Object.Property.Literal (_, {
-              Literal.value = Literal.String "constructor";
-              _;
-            }) ->
-            Ast.Class.Method.Constructor,
-            env |> with_allow_super Super_prop_or_call
-          | _ ->
-            Ast.Class.Method.Method,
-            env |> with_allow_super Super_prop
-        in
-        let func_loc = Peek.loc env in
-        let typeParameters = Type.type_parameter_declaration env in
-        let params =
-          let yield, await = match async, generator with
-          | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-          | true, false -> false, allow_await env (* #prod-AsyncMethod *)
-          | false, true -> true, false (* #prod-GeneratorMethod *)
-          | false, false -> false, false (* #prod-MethodDefinition *)
-          in
-          Declaration.function_params ~await ~yield env
-        in
-        let returnType = Type.annotation_opt env in
-        let _, body, strict =
-          Declaration.function_body env ~async ~generator in
-        let simple = Declaration.is_simple_function_params params in
-        Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc, expression = Function.(
-          match body with
-          | BodyBlock (loc, _) -> loc, false
-          | BodyExpression (loc, _) -> loc, true) in
-        let loc = Loc.btwn func_loc end_loc in
-        let value = loc, Function.({
-          id = None;
-          params;
-          body;
-          generator;
-          async;
-          (* TODO: add support for method predicates *)
-          predicate = None;
-          expression;
-          returnType;
-          typeParameters;
-        }) in
-        Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
-          key;
-          value;
-          kind;
-          static;
-          decorators;
-        })))
+          error_unexpected env;
+          Eat.token env;
+          acc
 
-    in fun env ->
-      let start_loc = Peek.loc env in
-      let decorators = decorator_list env in
-      let static =
-        Peek.ith_token ~i:1 env <> T_LPAREN &&
-        Peek.ith_token ~i:1 env <> T_LESS_THAN &&
-        Expect.maybe env T_STATIC in
-      let async =
-        Peek.ith_token ~i:1 env <> T_LPAREN &&
-        Peek.ith_token ~i:1 env <> T_COLON &&
-        Declaration.async env in
-      let generator = Declaration.generator env in
-      let variance = Declaration.variance env async generator in
-      let generator = match generator, variance with
-      | false, Some _ -> Declaration.generator env
-      | _ -> generator
+    in let is_prior_init_key env =
+      match Peek.token env with
+      | T_LESS_THAN | T_LPAREN
+      | T_PLING | T_COLON
+      | T_ASSIGN
+      | T_SEMICOLON ->
+          true
+      | _ -> false
+
+    in let prelude_keywords env decors =
+      let id_opt name = function
+        | Some loc -> Some (loc, name)
+        | None -> None
       in
-      match async, generator, Peek.token env with
-      | false, false, T_IDENTIFIER { raw = "get"; _ } ->
-          let _, key = key ~class_body:true env in
-          (match Peek.token env with
-          | T_LESS_THAN
-          | T_COLON
-          | T_ASSIGN
-          | T_SEMICOLON
-          | T_LPAREN ->
-            init env start_loc decorators key async generator static variance
+      let loc = Peek.loc env in
+      let abstract = if Expect.maybe env T_ABSTRACT then Some loc else None in
+      if is_prior_init_key env then
+        ((None, None, None), id_opt "abstract" abstract)
+      else begin
+        begin match decors, abstract with
+        | _::_, Some loc ->
+            error_at env (loc, Error.DecoratorOnAbstract)
+        | _ -> ()
+        end;
+        let loc = Peek.loc env in
+        let static = if Expect.maybe env T_STATIC then Some loc else None in
+        if is_prior_init_key env then
+          ((abstract, None, None), id_opt "static" static)
+        else
+          let loc = Peek.loc env in
+          let async = if Expect.maybe env T_ASYNC then Some loc else None in
+          if is_prior_init_key env then
+            ((abstract, static, None), id_opt "async" async)
+          else
+            ((abstract, static, async), None)
+      end
+
+    in fun env acc ->
+      let start = Peek.loc env in
+      let decors = decorator_list env in
+      let (keywords, key) = prelude_keywords env decors in
+      match key with
+      | Some _ ->
+          let generator = false in
+          let variance = None in
+          init env start decors keywords generator variance key acc
+      | None ->
+          let (abstract, static, async) = keywords in
+          let generator = Declaration.generator env in
+          let variance = Declaration.variance env (async <> None) generator in
+          let generator = match generator, variance with
+            | false, Some _ -> Declaration.generator env
+            | _ -> generator
+          in
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "get" | "set" as name; _ } ->
+              let name_loc = Peek.loc env in
+              Eat.token env;
+              begin match name, is_prior_init_key env with
+              | "get", false ->
+                  if (async <> None) || generator then error_unexpected env;
+                  let m = class_get env start decors static in
+                  Members.add_getter env abstract variance m acc
+              | "set", false ->
+                  if (async <> None) || generator then error_unexpected env;
+                  let m = class_set env start decors static in
+                  Members.add_setter env abstract variance m acc
+              | _ ->
+                  let key = Some (name_loc, name) in
+                  init env start decors keywords generator variance key acc
+              end
           | _ ->
-            error_unsupported_variance env variance;
-            get env start_loc decorators static)
-      | false, false, T_IDENTIFIER { raw = "set"; _ } ->
-          let _, key = key ~class_body:true env in
-          (match Peek.token env with
-          | T_LESS_THAN
-          | T_COLON
-          | T_ASSIGN
-          | T_SEMICOLON
-          | T_LPAREN ->
-            init env start_loc decorators key async generator static variance
-          | _ ->
-            error_unsupported_variance env variance;
-            set env start_loc decorators static)
-      | _, _, _ ->
-          let _, key = key ~class_body:true env in
-          init env start_loc decorators key async generator static variance
+              init env start decors keywords generator variance key acc
 
   let class_declaration env decorators =
     (* 10.2.1 says all parts of a class definition are strict *)

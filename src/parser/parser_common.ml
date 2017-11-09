@@ -105,6 +105,7 @@ let identifier_name env =
   | T_TRUE -> "true"
   | T_FALSE -> "false"
   (* Flow-specific stuff *)
+  | T_ABSTRACT -> "abstract"
   | T_DECLARE -> "declare"
   | T_TYPE -> "type"
   | T_OPAQUE -> "opaque"

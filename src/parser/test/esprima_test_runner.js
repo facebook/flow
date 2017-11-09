@@ -200,8 +200,13 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'ObjectTypeAnnotation':
       esprima.exact = esprima.exact || false;
       break;
+    case 'FunctionTypeAnnotation':
+      esprima.async = esprima.async || false;
+      esprima.generator = esprima.generator || false;
+      break;
     case 'ObjectTypeProperty':
       esprima.kind = "init"; // esprima-fb doesn't support getters/setters
+      esprima.abstract = esprima.abstract || false;
       esprima.static = esprima.static || false;
       break;
     case 'ObjectTypeIndexer':

@@ -528,6 +528,7 @@ module Peek = struct
       | T_NUMBER_SINGLETON_TYPE _
 
       (* identifier-ish *)
+      | T_ABSTRACT
       | T_ASYNC
       | T_AWAIT
       | T_BREAK

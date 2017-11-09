@@ -232,3 +232,21 @@ def('Import')
 
 def('CallExpression')
   .field('callee', or(def('Expression'), def('Import')));
+
+def("AbstractMethodDefinition")
+  .bases("Declaration")
+  .build("key", "value", "static")
+  .field("key", def("Identifier"))
+  .field("value", def("FunctionTypeAnnotation"))
+  .field("static", Boolean);
+
+var ClassBodyElement = or(
+  def("AbstractMethodDefinition"),
+  def("MethodDefinition"),
+  def("VariableDeclarator"),
+  def("ClassPropertyDefinition"),
+  def("ClassProperty")
+);
+
+def("ClassBody")
+  .field("body", [ClassBodyElement]);

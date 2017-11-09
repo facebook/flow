@@ -83,6 +83,8 @@ and Type : sig
     end
     type 'M t = {
       params: 'M Params.t;
+      async: bool;
+      generator: bool;
       returnType: 'M Type.t;
       typeParameters: 'M Type.ParameterDeclaration.t option;
     }
@@ -115,6 +117,7 @@ and Type : sig
         key: 'M Expression.Object.Property.key;
         value: 'M value;
         optional: bool;
+        abstract: bool;
         static: bool;
         _method: bool;
         variance: 'M Variance.t option;
@@ -996,6 +999,14 @@ and Comment : sig
 end = Comment
 
 and Class : sig
+  module AbstractMethod : sig
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      key: 'M Identifier.t;
+      value: 'M * 'M Type.Function.t;
+      static: bool;
+    }
+  end
   module Method : sig
     type 'M t = 'M * 'M t'
     and kind =
@@ -1040,6 +1051,7 @@ and Class : sig
   end
   module Body : sig
     type 'M element =
+      | AbstractMethod of 'M AbstractMethod.t
       | Method of 'M Method.t
       | Property of 'M Property.t
       | PrivateField of 'M PrivateField.t
