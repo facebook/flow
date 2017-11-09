@@ -168,5 +168,186 @@ Error: main.js:21
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 
+Error: more.js:92
+ 92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `user` is incompatible:
+     92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
+                                                     ^^^^ null. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ object type
 
-Found 16 errors
+Error: more.js:95
+ 95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `user` is incompatible:
+     35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in
+     95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`
+
+Error: more.js:98
+ 98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `SingularTest`
+ 86:   +__fragments: FragmentReference<{thing: true}>,
+                                       ^^^^^^^^^^^^^ object type. This type is incompatible with
+ 23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+              ^^^^^^^^^^^^^^ FragmentTypeof
+
+Error: more.js:98
+ 98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `user` is incompatible:
+     98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
+                                                     ^^^^^^^^^^ object type. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ object type
+      Property `__fragments` is incompatible:
+         86:   +__fragments: FragmentReference<{thing: true}>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of FragmentReference. Has some incompatible type argument with
+         23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+                                                                                    ^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: FragmentReference
+          Type argument `T` is incompatible:
+             43:   +__typeof: RelayModernTypedFlowtest_user$reference,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
+             86:   +__fragments: FragmentReference<{thing: true}>,
+                                                   ^^^^^^^^^^^^^ object type
+
+Error: more.js:121
+     v------------
+121: <SingularTest
+122:   onClick={cb}
+123:   string="x"
+...:
+127: />;
+     -^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `optionalUser` is incompatible:
+    126:   optionalUser={null}
+                         ^^^^ null. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ object type
+
+Error: more.js:144
+144: <PluralTest users={null} nullableUsers={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `users` is incompatible:
+    144: <PluralTest users={null} nullableUsers={null} />;
+                            ^^^^ null. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ read-only array type
+
+Error: more.js:147
+147: <PluralTest nullableUsers={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `users` is incompatible:
+     35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `users`. Property not found in
+    147: <PluralTest nullableUsers={null} />;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`
+
+Error: more.js:150
+150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `PluralTest`
+ 86:   +__fragments: FragmentReference<{thing: true}>,
+                                       ^^^^^^^^^^^^^ object type. This type is incompatible with
+ 25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+              ^^^^^^^^^^^^^^ FragmentTypeof
+
+Error: more.js:150
+150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
+                         ^^^^^^^^^^ object type. This type is incompatible with
+ 25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `__fragments` is incompatible:
+     86:   +__fragments: FragmentReference<{thing: true}>,
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of FragmentReference. Has some incompatible type argument with
+     25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                                                                                                               ^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: FragmentReference
+      Type argument `T` is incompatible:
+         49:   +__typeof: RelayModernTypedFlowtest_users$reference,
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
+         86:   +__fragments: FragmentReference<{thing: true}>,
+                                               ^^^^^^^^^^^^^ object type
+
+Error: more.js:174
+174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `optionalUsers` is incompatible:
+    174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
+                                                                          ^^^^ null. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ read-only array type
+
+Error: more.js:177
+177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `onClick` is incompatible:
+    177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
+                                ^^^^ string. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ function type
+
+Error: more.js:180
+180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+ 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `string` is incompatible:
+    180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
+                                            ^ number. This type is incompatible with
+                                               v-------
+     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
+     22:   $Diff<Props, {relay: RelayPropT | void}>,
+     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+    ...:
+     30: >;
+         ^ string
+
+
+Found 28 errors
