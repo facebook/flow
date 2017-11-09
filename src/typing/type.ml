@@ -343,6 +343,7 @@ module rec TypeTerm : sig
     | SuperT of reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
+    | ToStringT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * t * t
@@ -1895,6 +1896,7 @@ let any_propagating_use_t = function
   | SpecializeT _
   | TestPropT _
   | ThisSpecializeT _
+  | ToStringT _
   | UnaryMinusT _
   | UnifyT _
   | UseT (_, DefT (_, ClassT _)) (* mk_instance ~for_type:false *)
@@ -2056,6 +2058,7 @@ and reason_of_use_t = function
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
   | ThisSpecializeT(reason,_,_) -> reason
+  | ToStringT (reason, _) -> reason
   | UnaryMinusT (reason, _) -> reason
   | UnifyT (_,t) -> reason_of_t t
   | VarianceCheckT(reason,_,_) -> reason
@@ -2219,6 +2222,7 @@ and mod_reason_of_use_t f = function
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
+  | ToStringT (reason, t) -> ToStringT (f reason, t)
   | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
   | VarianceCheckT(reason, ts, polarity) ->
@@ -2468,6 +2472,7 @@ let string_of_use_ctor = function
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
+  | ToStringT _ -> "ToStringT"
   | UnaryMinusT _ -> "UnaryMinusT"
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"

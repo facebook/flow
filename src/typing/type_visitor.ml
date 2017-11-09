@@ -300,6 +300,7 @@ class ['a] t = object(self)
   | SuperT (_, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
+  | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
 
   | AdderT (_, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in

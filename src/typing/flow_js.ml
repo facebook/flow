@@ -2715,6 +2715,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let u = HasOwnPropT(reason_next, literal) in
       rec_flow cx trace (o, ReposLowerT(reason_op, false, u))
 
+    | KeysT _, ToStringT (_, t) ->
+      (* KeysT outputs strings, so we know ToStringT will be a no-op. *)
+      rec_flow_t cx trace (l, t)
 
     | KeysT (reason1, o1), _ ->
       (* flow all keys of o1 to u *)
@@ -2762,8 +2765,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let t = DefT (reason, StrT (Literal (None, x))) in
           rec_flow_t cx trace (t, keys)
         );
-        Option.iter dict_t (fun _ ->
-          rec_flow_t cx trace (StrT.why reason_op, keys)
+        Option.iter dict_t (fun { key; _ } ->
+          rec_flow cx trace (key, ToStringT (reason_op, keys))
         );
       | _ ->
         rec_flow_t cx trace (StrT.why reason_op, keys)
@@ -5908,6 +5911,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ExtendsUseT (use_op, _, [], t, tc) ->
       let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t, reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
+
+    (*******************************)
+    (* ToString abstract operation *)
+    (*******************************)
+
+    (* ToStringT passes through strings unchanged, and flows a generic StrT otherwise *)
+
+    | DefT (_, StrT _), ToStringT (_, t_out) ->
+      rec_flow_t cx trace (l, t_out)
+
+    | _, ToStringT (reason_op, t_out) ->
+      rec_flow_t cx trace (StrT.why reason_op, t_out)
 
     (**********************)
     (* Array library call *)
