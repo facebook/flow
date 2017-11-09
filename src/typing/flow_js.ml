@@ -11082,25 +11082,38 @@ let intersect_members cx members =
    internal APIs so for now it's easier to keep it here than to expose those
    APIs *)
 module Members : sig
-  type t =
-    | Success of (Loc.t option * Type.t) SMap.t
-    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
+  type ('success, 'success_module) generic_t =
+    | Success of 'success
+    | SuccessModule of 'success_module
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
+
+  type t = (
+    (* Success *) (Loc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+  ) generic_t
 
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
 
+  val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
+  val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
+
 end = struct
 
-  type t =
-    | Success of (Loc.t option * Type.t) SMap.t
-    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
+  type ('success, 'success_module) generic_t =
+    | Success of 'success
+    | SuccessModule of 'success_module
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
+
+  type t = (
+    (* Success *) (Loc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+  ) generic_t
 
   let to_command_result = function
     | Success map
@@ -11123,149 +11136,75 @@ end = struct
       not (String.length key >= 1 && key.[0] = '$')
     ) (Context.find_props cx fields)
 
-  (* TODO: Think of a better place to put this *)
-  let rec extract cx this_t =
-    match this_t with
+  let rec extract_type cx this_t = match this_t with
     | DefT (_, (MaybeT _ | NullT | VoidT)) ->
         FailureMaybeType
     | DefT (_, AnyT) ->
         FailureAnyType
     | DefT (reason, AnyObjT) ->
-        extract cx (get_builtin_type cx reason "Object")
+        extract_type cx (get_builtin_type cx reason "Object")
     | DefT (reason, AnyFunT) ->
         let rep = InterRep.make
           (get_builtin_type cx reason "Function")
           (get_builtin_type cx reason "Object")
           []
         in
-        extract cx (DefT (reason, IntersectionT rep))
+        extract_type cx (DefT (reason, IntersectionT rep))
     | AnnotT (tvar, _) ->
       let source_t = resolve_tvar cx tvar in
-      extract cx source_t
-    | DefT (_, InstanceT (_, super, _,
-                {fields_tmap = fields;
-                methods_tmap = methods;
-                _})) ->
-        let members = SMap.fold (fun x p acc ->
-          (* TODO: It isn't currently possible to return two types for a given
-           * property in autocomplete, so for now we just return the getter
-           * type. *)
-          let loc, t = match p with
-            | Field (loc, t, _)
-            | Get (loc, t)
-            | Set (loc, t)
-            (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            | GetSet (loc, t, _, _)
-            | Method (loc, t) ->
-                (loc, t)
-          in
-          SMap.add x (loc, t) acc
-        ) (find_props cx fields) SMap.empty in
-        let members = SMap.fold (fun x p acc ->
-          match Property.read_t p with
-          | Some t ->
-              let loc = Property.read_loc p in
-              SMap.add x (loc, t) acc
-          | None -> acc
-        ) (find_props cx methods) members in
-        let super_t = resolve_type cx super in
-        let super_flds = extract_members_as_map cx super_t in
-        Success (AugmentableSMap.augment super_flds ~with_bindings:members)
-    | DefT (_, ObjT {props_tmap = flds; proto_t = proto; _}) ->
-        let proto_reason = reason_of_t proto in
-        let rep = InterRep.make
-          proto
-          (get_builtin_type cx proto_reason "Object")
-          []
-        in
-        let proto_t = resolve_type cx (DefT (proto_reason, IntersectionT rep)) in
-        let prot_members = extract_members_as_map cx proto_t in
-        let members = SMap.fold (fun x p acc ->
-          match Property.read_t p with
-          | Some t ->
-              let loc = Property.read_loc p in
-              SMap.add x (loc, t) acc
-          | None -> acc
-        ) (find_props cx flds) SMap.empty in
-        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+      extract_type cx source_t
+    | DefT (_, InstanceT _ ) as t ->
+        Success t
+    | DefT (_, ObjT _) as t ->
+        Success t
     | ExactT (_, t) ->
         let t = resolve_type cx t in
-        extract cx t
-    | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
-        let named_exports = Context.find_exports cx exports_tmap in
-        (* Stub out the identifier locations. It would be nice to get actual locations in here at some point *)
-        let named_exports = SMap.map (fun t -> None, t) named_exports in
-        let cjs_export =
-          match cjs_export with
-          | Some t -> Some (resolve_type cx t)
-          | None -> None
-        in
-        SuccessModule (named_exports, cjs_export)
+        extract_type cx t
+    | ModuleT _ as t ->
+        SuccessModule t
     | ThisTypeAppT (_, c, _, ts_opt) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts_opt in
         let inst_t = instantiate_type inst_t in
-        extract cx inst_t
+        extract_type cx inst_t
     | DefT (_, TypeAppT (c, ts)) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c (Some ts) in
         let inst_t = instantiate_type inst_t in
-        extract cx inst_t
+        extract_type cx inst_t
     | DefT (_, PolyT (_, sub_type, _)) ->
         (* TODO: replace type parameters with stable/proper names? *)
-        extract cx sub_type
+        extract_type cx sub_type
     | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
     | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _)))) ->
         let static_t = resolve_type cx static in
-        extract cx static_t
-    | DefT (_, FunT (static, proto, _)) ->
-        let static_t = resolve_type cx static in
-        let proto_t = resolve_type cx proto in
-        let members = extract_members_as_map cx static_t in
-        let prot_members = extract_members_as_map cx proto_t in
-        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-    | DefT (_, IntersectionT rep) ->
-        (* Intersection type should autocomplete for every property of
-           every type in the intersection *)
-        let ts = InterRep.members rep in
-        let ts = List.map (resolve_type cx) ts in
-        let members = List.map (extract_members_as_map cx) ts in
-        Success (List.fold_left (fun acc members ->
-          AugmentableSMap.augment acc ~with_bindings:members
-        ) SMap.empty members)
-    | DefT (_, UnionT rep) ->
-        (* Union type should autocomplete for only the properties that are in
-        * every type in the intersection *)
-        let ts = List.map (resolve_type cx) (UnionRep.members rep) in
-        let members = ts
-          (* Although we'll ignore the any-ish members of the union *)
-          |> List.filter (function
-             | DefT (_, (AnyT | AnyObjT | AnyFunT)) -> false
-             | _ -> true
-             )
-          |> List.map (extract_members_as_map cx)
-          |> intersect_members cx in
-        Success members
+        extract_type cx static_t
+    | DefT (_, FunT _) as t ->
+        Success t
+    | DefT (_, IntersectionT _ ) as t ->
+        Success  t
+    | DefT (_, UnionT _ ) as t ->
+        Success t
     | DefT (reason, SingletonStrT _)
     | DefT (reason, StrT _) ->
-        extract cx (get_builtin_type cx reason "String")
+        extract_type cx (get_builtin_type cx reason "String")
     | DefT (reason, SingletonNumT _)
     | DefT (reason, NumT _) ->
-        extract cx (get_builtin_type cx reason "Number")
+        extract_type cx (get_builtin_type cx reason "Number")
     | DefT (reason, SingletonBoolT _)
     | DefT (reason, BoolT _) ->
-        extract cx (get_builtin_type cx reason "Boolean")
+        extract_type cx (get_builtin_type cx reason "Boolean")
 
     | DefT (reason, CharSetT _) ->
-        extract cx (get_builtin_type cx reason "String")
+        extract_type cx (get_builtin_type cx reason "String")
 
     | ReposT (_, t)
     | InternalT (ReposUpperT (_, t)) ->
-        extract cx t
+        extract_type cx t
 
     | OpaqueT (_, {underlying_t = Some t; _})
     | OpaqueT (_, {super_t = Some t; _})
-      -> extract cx t
+      -> extract_type cx t
 
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
@@ -11299,6 +11238,102 @@ end = struct
     | DefT (_, TypeT _)
       ->
         FailureUnhandledType this_t
+
+  let rec extract_members cx = function
+    | FailureMaybeType -> FailureMaybeType
+    | FailureAnyType -> FailureAnyType
+    | FailureUnhandledType t -> FailureUnhandledType t
+    | Success (DefT (_, InstanceT (_, super, _,
+                {fields_tmap = fields;
+                methods_tmap = methods;
+                _}))) ->
+        let members = SMap.fold (fun x p acc ->
+          (* TODO: It isn't currently possible to return two types for a given
+           * property in autocomplete, so for now we just return the getter
+           * type. *)
+          let loc, t = match p with
+            | Field (loc, t, _)
+            | Get (loc, t)
+            | Set (loc, t)
+            (* arbitrarily use the location for the getter. maybe we can send both in the future *)
+            | GetSet (loc, t, _, _)
+            | Method (loc, t) ->
+                (loc, t)
+          in
+          SMap.add x (loc, t) acc
+        ) (find_props cx fields) SMap.empty in
+        let members = SMap.fold (fun x p acc ->
+          match Property.read_t p with
+          | Some t ->
+              let loc = Property.read_loc p in
+              SMap.add x (loc, t) acc
+          | None -> acc
+        ) (find_props cx methods) members in
+        let super_t = resolve_type cx super in
+        let super_flds = extract_members_as_map cx super_t in
+        Success (AugmentableSMap.augment super_flds ~with_bindings:members)
+    | Success (DefT (_, ObjT {props_tmap = flds; proto_t = proto; _})) ->
+        let proto_reason = reason_of_t proto in
+        let rep = InterRep.make
+          proto
+          (get_builtin_type cx proto_reason "Object")
+          []
+        in
+        let proto_t = resolve_type cx (DefT (proto_reason, IntersectionT rep)) in
+        let prot_members = extract_members_as_map cx proto_t in
+        let members = SMap.fold (fun x p acc ->
+          match Property.read_t p with
+          | Some t ->
+              let loc = Property.read_loc p in
+              SMap.add x (loc, t) acc
+          | None -> acc
+        ) (find_props cx flds) SMap.empty in
+        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+    | SuccessModule (ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;})) ->
+        let named_exports = Context.find_exports cx exports_tmap in
+        (* Stub out the identifier locations. It would be nice to get actual locations in here at some point *)
+        let named_exports = SMap.map (fun t -> None, t) named_exports in
+        let cjs_export =
+          match cjs_export with
+          | Some t -> Some (resolve_type cx t)
+          | None -> None
+        in
+        SuccessModule (named_exports, cjs_export)
+    | Success (DefT (_, FunT (static, proto, _))) ->
+        let static_t = resolve_type cx static in
+        let proto_t = resolve_type cx proto in
+        let members = extract_members_as_map cx static_t in
+        let prot_members = extract_members_as_map cx proto_t in
+        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+    | Success (DefT (_, IntersectionT rep)) ->
+        (* Intersection type should autocomplete for every property of
+           every type in the intersection *)
+        let ts = InterRep.members rep in
+        let ts = List.map (resolve_type cx) ts in
+        let members = List.map (extract_members_as_map cx) ts in
+        Success (List.fold_left (fun acc members ->
+          AugmentableSMap.augment acc ~with_bindings:members
+        ) SMap.empty members)
+    | Success (DefT (_, UnionT rep)) ->
+        (* Union type should autocomplete for only the properties that are in
+        * every type in the intersection *)
+        let ts = List.map (resolve_type cx) (UnionRep.members rep) in
+        let members = ts
+          (* Although we'll ignore the any-ish members of the union *)
+          |> List.filter (function
+             | DefT (_, (AnyT | AnyObjT | AnyFunT)) -> false
+             | _ -> true
+             )
+          |> List.map (extract_members_as_map cx)
+          |> intersect_members cx in
+        Success members
+    | Success t | SuccessModule t ->
+        FailureUnhandledType t
+
+  (* TODO: Think of a better place to put this *)
+  and extract cx this_t =
+    let t = extract_type cx this_t in
+    extract_members cx t
 
   and extract_members_as_map cx this_t =
     let members = extract cx this_t in

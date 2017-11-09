@@ -92,14 +92,21 @@ val possible_types_of_type: Context.t -> Type.t -> Type.t list
 val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
 
 module Members : sig
-  type t =
-    | Success of (Loc.t option * Type.t) SMap.t
-    | SuccessModule of (Loc.t option * Type.t) SMap.t * (Type.t option)
+  type ('success, 'success_module) generic_t =
+    | Success of 'success
+    | SuccessModule of 'success_module
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
+  type t = (
+    (* Success *) (Loc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+  ) generic_t
+
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
+  val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
+  val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
 end
