@@ -741,6 +741,32 @@ module Cache = struct
 
   let repos_cache = ref Repos_cache.empty
 
+  module Eval = struct
+    type id_cache_key = Type.t * Type.defer_use_t
+    type repos_cache_key = Type.t * Type.defer_use_t * int
+
+    let id_cache: (id_cache_key, int) Hashtbl.t = Hashtbl.create 0
+    let repos_cache: (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let id t defer_use =
+      let cache_key = t, defer_use in
+      try
+        Hashtbl.find id_cache cache_key
+      with _ ->
+        let i = mk_id () in
+        Hashtbl.add id_cache cache_key i;
+        i
+
+    let find_repos t defer_use id =
+      let cache_key = t, defer_use, id in
+      try Some (Hashtbl.find repos_cache cache_key)
+      with _ -> None
+
+    let add_repos t defer_use id tvar =
+      let cache_key = t, defer_use, id in
+      Hashtbl.add repos_cache cache_key tvar
+  end
+
   (* Cache that records sentinel properties for objects. Cache entries are
      populated before checking against a union of object types, and are used
      while checking against each object type in the union. *)
@@ -771,6 +797,8 @@ module Cache = struct
     FlowConstraint.cache := FlowSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
+    Hashtbl.clear Eval.id_cache;
+    Hashtbl.clear Eval.repos_cache;
     SentinelProp.cache := Properties.Map.empty
 
   let stats_poly_instantiation () =
@@ -6425,6 +6453,7 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
   | None -> false
 
 and ground_subtype = function
+  | TypeDestructorTriggerT _, UseT (_, TypeDestructorTriggerT _) -> false
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _) | (_, UseT (_, OpenT _)) -> false
 
@@ -6833,14 +6862,15 @@ and eval_destructor cx ~trace reason t d tout = match t with
    branches of the unions. *)
 | DefT (r, UnionT rep) ->
   rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.ident_map (fun t ->
-    EvalT (t, TypeDestructorT (reason, d), mk_id ())
+    let destructor = TypeDestructorT (reason, d) in
+    EvalT (t, destructor, Cache.Eval.id t destructor)
   ))), tout)
 | DefT (r, MaybeT t) ->
   let destructor = TypeDestructorT (reason, d) in
   let rep = UnionRep.make
-    (EvalT (NullT.why r, destructor, mk_id ()))
-    (EvalT (VoidT.why r, destructor, mk_id ()))
-    [EvalT (t, destructor, mk_id ())]
+    (let null = NullT.why r in EvalT (null, destructor, Cache.Eval.id null destructor))
+    (let void = VoidT.why r in EvalT (void, destructor, Cache.Eval.id void destructor))
+    [EvalT (t, destructor, Cache.Eval.id t destructor)]
   in
   rec_flow_t cx trace (DefT (r, UnionT rep), tout)
 | _ ->
@@ -9903,18 +9933,24 @@ and reposition cx ?trace loc ?desc t =
           flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
         )
     end
-  | EvalT _ as t ->
+  | EvalT (root, defer_use_t, id) as t ->
       (* Modifying the reason of `EvalT`, as we do for other types, is not
          enough, since it will only affect the reason of the resulting tvar.
          Instead, repositioning a `EvalT` should simulate repositioning the
          resulting tvar, i.e., flowing repositioned *lower bounds* to the
          resulting tvar. (Another way of thinking about this is that a `EvalT`
          is just as transparent as its resulting tvar.) *)
-      let reason = mod_reason (reason_of_t t) in
+      let defer_use_t = mod_reason_of_defer_use_t mod_reason defer_use_t in
+      let reason = reason_of_defer_use_t defer_use_t in
       let use_desc = Option.is_some desc in
-      Tvar.mk_where cx reason (fun tvar ->
-        flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
-      )
+      begin match Cache.Eval.find_repos root defer_use_t id with
+      | Some tvar -> tvar
+      | None ->
+        Tvar.mk_where cx reason (fun tvar ->
+          Cache.Eval.add_repos root defer_use_t id tvar;
+          flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
+        )
+      end
   | DefT (r, MaybeT t) ->
       (* repositions both the MaybeT and the nested type. MaybeT represets `?T`.
          elsewhere, when we decompose into T | NullT | VoidT, we use the reason
