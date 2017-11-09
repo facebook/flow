@@ -42,10 +42,10 @@ let main option_values root json pretty strip_root from moduleref filename () =
     match root with Some root -> Some root | None -> Some filename
   ) in
 
-  let ic, oc = connect option_values root in
+  let request = ServerProt.FIND_MODULE (moduleref, filename) in
+  let response: File_key.t option =
+    connect_and_make_request option_values root request in
 
-  send_command oc (ServerProt.FIND_MODULE (moduleref, filename));
-  let response: File_key.t option = Timeout.input_value ic in
   let result = match response with
     | Some File_key.LibFile file
     | Some File_key.SourceFile file

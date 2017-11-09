@@ -66,12 +66,11 @@ let main option_values root json pretty strip_root from path args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  (* connect to server *)
-  let ic, oc = connect option_values root in
-  (* dispatch command *)
-  send_command oc (ServerProt.GET_DEF (file, line, column));
-  (* command result will be a position structure with full file path *)
-  let response: ServerProt.get_def_response = Timeout.input_value ic in
+
+  let request = ServerProt.GET_DEF (file, line, column) in
+  let response: ServerProt.get_def_response =
+    connect_and_make_request option_values root request in
+
   match response with
   | Ok loc ->
     (* format output *)

@@ -39,10 +39,10 @@ let main option_values root from files () =
     | Some root -> Some root
     | None -> Some (List.hd files)
   ) in
-  let ic, oc = connect option_values root in
   let files = List.map expand_path files in
-  send_command oc (ServerProt.PORT files);
-  let patch_map: ((string, exn) result) SMap.t = Timeout.input_value ic in
+  let request = ServerProt.PORT files in
+  let patch_map: ((string, exn) result) SMap.t =
+    connect_and_make_request option_values root request in
   SMap.iter (fun file patches_or_err ->
     match patches_or_err with
     | Ok patches ->

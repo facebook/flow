@@ -77,9 +77,9 @@ let main option_values root json pretty strip_root from args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.AUTOCOMPLETE file);
-  let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
+  let request = ServerProt.AUTOCOMPLETE file in
+  let results : ServerProt.autocomplete_response =
+    connect_and_make_request option_values root request in
   if json || pretty
   then (
     results

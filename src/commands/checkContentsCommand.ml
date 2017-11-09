@@ -49,8 +49,6 @@ let main option_values root error_flags strip_root json pretty verbose from
     | None -> File_input.path_of_file_input file
   ) in
 
-  let ic, oc = connect option_values root in
-
   (* pretty implies json *)
   let json = json || pretty in
 
@@ -69,8 +67,8 @@ let main option_values root error_flags strip_root json pretty verbose from
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  send_command oc (ServerProt.CHECK_FILE (file, verbose, all, include_warnings));
-  let response = wait_for_response ic in
+  let request = ServerProt.CHECK_FILE (file, verbose, all, include_warnings) in
+  let response: ServerProt.response = connect_and_make_request option_values root request in
   let stdin_file = match file with
     | File_input.FileContent (None, contents) ->
         Some (Path.make_unsafe "-", contents)

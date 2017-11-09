@@ -55,12 +55,12 @@ let main option_values root from files () =
       | _ -> failwith "Expected at least one file"
       end
   ) in
-  let ic, oc = connect option_values root in
   let files_and_regions = List.map (fun (file, region) ->
     expand_path file, region
   ) files_and_regions in
-  send_command oc (ServerProt.SUGGEST files_and_regions);
-  let suggestion_map: ServerProt.suggest_response = Timeout.input_value ic in
+  let request = ServerProt.SUGGEST files_and_regions in
+  let suggestion_map: ServerProt.suggest_response =
+    connect_and_make_request option_values root request in
   SMap.iter (fun file result ->
     match result with
     | Ok insertions ->
