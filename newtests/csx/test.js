@@ -84,6 +84,104 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
     .noNewErrors(),
   ]),
+  test('Should raise no errors if CSX children are passed as spread with list inline', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      <Foo>{...["foo", "bar"]}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with variable', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      const arr = ["foo", "bar"];
+      <Foo>{...arr}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise an error if CSX spread children are not a list', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      function Foo(props: Props) {}
+      const x = 42;
+      <Foo>{...x}</Foo>;
+    `)
+    .newErrors(
+      `
+        test.js:8
+          8:       <Foo>{...x}</Foo>;
+                            ^ number. This type is incompatible with
+          8:       <Foo>{...x}</Foo>;
+                            ^ $Iterable
+          Property \`@@iterator\` is incompatible:
+              8:       <Foo>{...x}</Foo>;
+                                ^ property \`@@iterator\` of $Iterable. Property not found in
+              8:       <Foo>{...x}</Foo>;
+                                ^ number
+      `
+     )
+  ]),
+  test('Should raise an error if CSX children passed as spread have the wrong type', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      function Foo(props: Props) {}
+      const arr = ["foo"];
+      <Foo>{...arr}</Foo>;
+    `)
+    .newErrors(
+      `
+        test.js:8
+          8:       <Foo>{...arr}</Foo>;
+                   ^^^^^ props of JSX element \`Foo\`. This type is incompatible with the expected param type of
+          6:       function Foo(props: Props) {}
+                                       ^^^^^ object type
+          Property \`children\` is incompatible:
+              8:       <Foo>{...arr}</Foo>;
+                       ^^^^^ JSX element \`Foo\`. Has some incompatible type argument with
+              5:       type Props = {|children: Array<number>|};
+                                                ^^^^^^^^^^^^^ array type
+              Type argument \`T\` is incompatible:
+                  7:       const arr = ["foo"];
+                                        ^^^^^ string. This type is incompatible with
+                  5:       type Props = {|children: Array<number>|};
+                                                          ^^^^^^ number
+      `,
+    ),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with function call', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      type TProps = {|text: string|};
+      function Foo(props: Props) {}
+      function Title(props: TProps) { return 42; }
+      function get_titles(l) {
+        return [];
+      }
+      var arr = ["foo", "bar"];
+      <Foo>{...get_titles(arr)}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with other children', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      <Foo>
+      {"foobar"}
+      {...["foo", "bar"]}
+      {"baz"}
+      </Foo>;
+    `)
+    .noNewErrors(),
+  ]),
   test('Should raise no errors if a JSX spread provides all required attributes for an exact type', [
     addCode(`
       // @csx

@@ -878,6 +878,10 @@ Error: fun.js:142
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
 
+Error: spread.js:7
+  7: <Foo>{...["a", "b"]}</Foo>
+     ^^^^^ A spread argument is unsupported here
+
 Error: tabs.js:26
  26: <TabBar />; // Error: `children` is required.
      ^^^^^^^^^^ props of React element `TabBar`. This type is incompatible with
@@ -2433,4 +2437,4 @@ Error: view.js:40
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 111 errors
+Found 112 errors

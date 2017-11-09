@@ -1289,6 +1289,10 @@ end with type t = Impl.t) = struct
     | loc, Element element -> jsx_element (loc, element)
     | loc, Fragment fragment -> jsx_fragment (loc, fragment)
     | loc, ExpressionContainer expr -> jsx_expression_container (loc, expr)
+    | loc, SpreadChild expr ->
+        node "JSXSpreadChild" loc [|
+          "expression", expression expr;
+        |]
     | loc, Text str -> jsx_text (loc, str)
   )
 

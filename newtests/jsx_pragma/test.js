@@ -301,6 +301,15 @@ export default suite(({addFile, addFiles, addCode}) => [
       <Bar x="hi" />;
     `).noNewErrors(),
   ]),
+  test('Spread syntax in children should work', [
+    addCode(`
+      // @jsx Foo
+      function Foo(elem: number, props: null, child1: 'a', child2: 'b', child3: 'c') {}
+
+      const Bar = 123;
+      <Bar>{...["a", "b", "c"]}</Bar>;
+    `).noNewErrors(),
+  ]),
   test('Exact prop type with spread still does not work', [
     addCode(`
       // @jsx Foo

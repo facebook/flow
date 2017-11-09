@@ -3703,7 +3703,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             cx
             ~use_op:UnknownUse
             ~reason_op:reason
-            (List.map (fun child -> UnresolvedArg child) children)
+            children
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
         ) in
         let p = Field (None, arr, Neutral) in
@@ -3717,6 +3717,13 @@ and jsx_desugar cx name component_t props attributes children eloc =
   | None ->
       let reason = mk_reason (RReactElement (Some name)) eloc in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
+      let children = List.map (function
+          | UnresolvedArg a -> a
+          | UnresolvedSpreadArg a ->
+              (* TODO - the location might be wrong here? *)
+              Flow.add_output cx Flow_error.(EUnsupportedSyntax (eloc, SpreadArgument));
+              AnyT.why (reason_of_t a)
+      ) children in
       Tvar.mk_where cx reason (fun tvar ->
         let reason_createElement =
           mk_reason (RProperty (Some "createElement")) eloc in
@@ -3740,7 +3747,10 @@ and jsx_desugar cx name component_t props attributes children eloc =
       | _ -> props in
       let argts =
         [Arg component_t; Arg props] @
-        (List.map (fun c -> Arg c) children) in
+        (List.map (function
+            | UnresolvedArg c -> Arg c
+            | UnresolvedSpreadArg c -> SpreadArg c
+        ) children) in
       Ast.Expression.(match jsx_expr with
       | _, Member {
         Member._object;
@@ -3783,17 +3793,19 @@ and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
 )
 
 and jsx_body cx = Ast.JSX.(function
-  | _, Element e -> Some (jsx cx e)
-  | _, Fragment f -> Some (jsx_fragment cx f)
+  | _, Element e -> Some (UnresolvedArg (jsx cx e))
+  | _, Fragment f -> Some (UnresolvedArg (jsx_fragment cx f))
   | _, ExpressionContainer ec -> (
       let open ExpressionContainer in
       let { expression = ex } = ec in
-      Some (match ex with
+      Some (UnresolvedArg (match ex with
         | Expression (loc, e) -> expression cx (loc, e)
         | EmptyExpression loc ->
-          DefT (mk_reason (RCustom "empty jsx body") loc, EmptyT))
+          DefT (mk_reason (RCustom "empty jsx body") loc, EmptyT)))
     )
-  | loc, Text { Text.value; raw=_; } -> jsx_trim_text loc value
+  | _, SpreadChild expr -> Some (UnresolvedSpreadArg (expression cx expr))
+  | loc, Text { Text.value; raw=_; } ->
+      Option.map (jsx_trim_text loc value) (fun c -> UnresolvedArg c)
 )
 
 and jsx_trim_text loc value =
