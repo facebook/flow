@@ -49,3 +49,23 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 55 2
 printf "\nExports:\n"
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 64 20
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 65 6
+
+printf "\nMethods and properties:\n\n"
+printf "Method declaration: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 70 3
+printf "Property declaration: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 71 5
+printf "Method call (finds definition and other references): "
+
+# TODO get find-refs working for object type aliases
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 86 13
+printf "Method declaration in an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 77 4
+printf "Property declaration in an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 78 4
+printf "Method call on an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 96 14
+
+printf "Method call on an imported class (finds other references but not the definition since it's in another file): "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 102 16
+

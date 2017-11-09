@@ -597,6 +597,7 @@ let mk cx _loc reason self ~expr =
         decorators;
       }) ->
 
+      Type_inference_hooks_js.dispatch_method_decl_hook cx name id_loc;
       warn_or_ignore_decorators cx decorators;
 
       Ast.Class.Method.(match kind with
@@ -621,6 +622,8 @@ let mk cx _loc reason self ~expr =
         variance;
         _;
       }) ->
+        Type_inference_hooks_js.dispatch_prop_decl_hook cx name id_loc;
+
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;
 
@@ -637,6 +640,8 @@ let mk cx _loc reason self ~expr =
         variance;
         _;
       }) ->
+        Type_inference_hooks_js.dispatch_prop_decl_hook cx name id_loc;
+
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;
 
