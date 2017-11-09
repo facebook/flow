@@ -366,5 +366,23 @@ Error: object_types.js:81
  64: function magicTrick(suite: SuiteEnum) {
                                 ^^^^^^^^^ string enum
 
+Error: object_types.js:95
+ 95: ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
+      ^^^^^^^^^^ string. This type is incompatible with
+ 95: ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
+                  ^^^^^^^^^^^^^^^ string enum
 
-Found 36 errors
+Error: object_types.js:96
+ 96: ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
+      ^^^^^^^ string. This type is incompatible with
+ 96: ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
+               ^^^^^^^^^^^^^^^ string enum
+
+Error: object_types.js:97
+ 97: (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+                   ^^^^^^ string. This type is incompatible with
+ 97: (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+                            ^^^^^^^^^^^^^^^ string enum
+
+
+Found 39 errors

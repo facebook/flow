@@ -2801,7 +2801,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* values *)
     (**********)
 
-    | DefT (_, ObjT { props_tmap = tmap; dict_t; _ }), GetValuesT (reason, values) ->
+    | DefT (_, ObjT { props_tmap = tmap; dict_t; flags; _ }), GetValuesT (reason, values) ->
       (* Find all of the props. *)
       let props = Context.find_props cx tmap in
       (* Get the read type for all readable properties and discard the rest. *)
@@ -2809,7 +2809,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         match Property.read_t prop with
         (* Don't include the type for the internal "$call" property if one
            exists. *)
-        | Some t when key != "$call" -> t :: ts
+        | Some t when key != "$call" ->
+            let t = if flags.frozen then
+              match t with
+              | DefT (t_reason, StrT (Literal (_, lit))) ->
+                let t_reason = replace_reason_const (RStringLit lit) t_reason in
+                DefT (t_reason, SingletonStrT lit)
+              | DefT (t_reason, NumT (Literal (_, lit))) ->
+                let t_reason = replace_reason_const (RNumberLit (snd lit)) t_reason in
+                DefT (t_reason, SingletonNumT lit)
+              | DefT (t_reason, BoolT (Some lit)) ->
+                let t_reason = replace_reason_const (RBooleanLit lit) t_reason in
+                DefT (t_reason, SingletonBoolT lit)
+              | _ -> t
+            else t in
+            t :: ts
         | _ -> ts
       ) props [] in
       (* If the object has a dictionary value then add that to our types. *)
