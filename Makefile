@@ -73,6 +73,7 @@ MODULES=\
   src/common/lints\
   src/common/profiling\
   src/common/span\
+  src/common/tarjan\
   src/common/utils\
   src/common/xx\
   src/flowlib\
