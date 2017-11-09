@@ -2496,14 +2496,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } -> (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
-      match Refinement.get cx (loc, e) loc with
+      let tobj = expression cx _object in
+      if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
+      then AnyT.at ploc
+      else match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
-        let tobj = expression cx _object in
-        if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-        then AnyT.at ploc
-        else get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
+        get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
     )
 
   | Member {

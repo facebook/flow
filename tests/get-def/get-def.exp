@@ -13,3 +13,4 @@ namespaced import points to imported file (local name) = {"path":"helpers/export
 local reference points to namespaced import = {"path":"imports.js","line":10,"endline":10,"start":1,"end":53}
 class properties = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
 class methods = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}
+refined class properties = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
