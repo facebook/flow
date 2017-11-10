@@ -493,6 +493,19 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> quiet_flag
 )
 
+(* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
+let server_and_json_flags =
+  let collect_server_and_json main server_flags json pretty =
+    main { server_flags with
+      quiet = server_flags.quiet || json || pretty
+    } json pretty
+  in
+  fun prev ->
+    prev
+    |> CommandSpec.ArgSpec.collect collect_server_and_json
+    |> server_flags
+    |> json_flags
+
 let server_log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x

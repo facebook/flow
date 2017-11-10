@@ -25,9 +25,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> from_flag
     |> flag "--color" no_arg
         ~doc:"Print the file with colors showing which parts have unknown types"
@@ -214,7 +213,7 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
   )
 
 let main
-    option_values root json pretty from color debug path respect_pragma
+    option_values json pretty root from color debug path respect_pragma
     all filename () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin path filename in

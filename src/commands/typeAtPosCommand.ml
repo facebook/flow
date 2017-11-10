@@ -25,9 +25,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> verbose_flags
     |> from_flag
@@ -113,7 +112,7 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root verbose from path args () =
+let main option_values json pretty root strip_root verbose from path args () =
   FlowEventLogger.set_from from;
   let json = json || pretty in
   let (file, line, column) = parse_args path args in

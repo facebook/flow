@@ -37,8 +37,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
         |> error_flags
         |> strip_root_flag
         |> from_flag
@@ -78,8 +77,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
         |> error_flags
         |> strip_root_flag
         |> from_flag

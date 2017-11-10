@@ -24,9 +24,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> anon "module" (required string)
@@ -36,7 +35,7 @@ let spec = {
   )
 }
 
-let main option_values root json pretty strip_root from moduleref filename () =
+let main option_values json pretty root strip_root from moduleref filename () =
   FlowEventLogger.set_from from;
   let root = guess_root (
     match root with Some root -> Some root | None -> Some filename

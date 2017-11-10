@@ -26,11 +26,10 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
     |> error_flags
     |> strip_root_flag
-    |> json_flags
     |> verbose_flags
     |> from_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
@@ -39,7 +38,7 @@ let spec = {
   )
 }
 
-let main option_values root error_flags strip_root json pretty verbose from
+let main option_values json pretty root error_flags strip_root verbose from
   respect_pragma all file () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin file None in

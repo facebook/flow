@@ -24,9 +24,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> anon "modules" (required (list_of string))
@@ -36,7 +35,7 @@ let spec = {
 
 let extract_location req req_locs = SMap.find_unsafe req req_locs
 
-let main option_values root json pretty strip_root from modules () =
+let main option_values json pretty root strip_root from modules () =
   FlowEventLogger.set_from from;
   let root = guess_root root in
 

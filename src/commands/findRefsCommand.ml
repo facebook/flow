@@ -24,9 +24,8 @@ let spec = {
         CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> flag "--path" (optional string)
@@ -84,7 +83,7 @@ let to_string result option_values ~strip_root =
    - global indicates whether to search for references in different files (much slower)
    - args is mandatory command args; see parse_args above
     *)
-let main option_values root json pretty strip_root from path global args () =
+let main option_values json pretty root strip_root from path global args () =
   FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
   let root = guess_root (
