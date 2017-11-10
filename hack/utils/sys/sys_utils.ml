@@ -191,10 +191,10 @@ let read_all ?(buf_size=4096) ic =
   let buf = Buffer.create buf_size in
   (try
     while true do
-      let data = String.create buf_size in
+      let data = Bytes.create buf_size in
       let bytes_read = input ic data 0 buf_size in
       if bytes_read = 0 then raise Exit;
-      Buffer.add_substring buf data 0 bytes_read;
+      Buffer.add_subbytes buf data 0 bytes_read;
     done
   with Exit -> ());
   Buffer.contents buf
@@ -267,7 +267,7 @@ let executable_path : unit -> string =
 
 let lines_of_in_channel ic =
   let rec loop accum =
-    match try Some(input_line ic) with e -> None with
+    match try Some(input_line ic) with _ -> None with
     | None -> List.rev accum
     | Some(line) -> loop (line::accum)
   in
@@ -287,7 +287,7 @@ let lines_of_file filename =
 let read_file file =
   let ic = open_in_bin file  in
   let size = in_channel_length ic in
-  let buf = String.create size in
+  let buf = Bytes.create size in
   really_input ic buf 0 size;
   close_in ic;
   buf

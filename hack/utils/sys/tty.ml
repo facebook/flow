@@ -132,11 +132,11 @@ let read_char () =
     c_vtime = 0;
   } in
   Unix.tcsetattr tty Unix.TCSANOW new_termio;
-  let buf = String.create 1 in
+  let buf = Bytes.create 1 in
   let bytes_read = UnixLabels.read tty ~buf ~pos:0 ~len:1 in
   Unix.tcsetattr tty Unix.TCSANOW termio;
   assert (bytes_read = 1);
-  buf.[0]
+  Bytes.get buf 0
 
 (* Prompt the user to pick one character out of a given list. If other
  * characters are entered, the prompt repeats indefinitely. *)

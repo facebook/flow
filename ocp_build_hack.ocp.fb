@@ -231,6 +231,7 @@ begin library "hh-utils-sys"
     "hh-utils-string"
     "tp-core"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "hh-utils-collections"

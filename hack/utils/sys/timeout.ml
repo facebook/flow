@@ -148,7 +148,7 @@ module Select_timeout = struct
 
   type channel = {
     fd: Unix.file_descr;
-    buf: String.t;
+    buf: Bytes.t;
     mutable curr: int;
     mutable max: int;
     mutable pid: int option;
@@ -159,7 +159,7 @@ module Select_timeout = struct
   let buffer_size = 65536-9  (* From ocaml/byterun/io.h *)
 
   let in_channel_of_descr fd =
-    let buf = String.create buffer_size in
+    let buf = Bytes.create buffer_size in
     { fd; buf; curr = 0; max = 0; pid = None }
 
   let descr_of_in_channel { fd; _ } = fd
@@ -209,23 +209,23 @@ module Select_timeout = struct
     let n = if len > max_int then max_int else len in
     let avail = tic.max - tic.curr in
     if n <= avail then begin (* There is enough to read in the buffer. *)
-      String.blit tic.buf tic.curr s ofs n;
+      Bytes.blit tic.buf tic.curr s ofs n;
       tic.curr <- tic.curr + n;
       n
     end else if avail > 0 then begin (* Read the rest of the buffer. *)
-      String.blit tic.buf tic.curr s ofs avail;
+      Bytes.blit tic.buf tic.curr s ofs avail;
       tic.curr <- tic.curr + avail;
       avail
     end else begin (* No input to read, refill buffer. *)
       let nread = refill ?timeout tic in
       let n = min nread n in
-      String.blit tic.buf tic.curr s ofs n;
+      Bytes.blit tic.buf tic.curr s ofs n;
       tic.curr <- tic.curr + n;
       n
     end
 
   let input ?timeout tic s ofs len =
-    if ofs < 0 || len < 0 || ofs > String.length s - len then
+    if ofs < 0 || len < 0 || ofs > Bytes.length s - len then
       invalid_arg "input"
     else
       unsafe_input ?timeout tic s ofs len
@@ -233,13 +233,13 @@ module Select_timeout = struct
   let input_char ?timeout tic =
     if tic.curr = tic.max then ignore (refill ?timeout tic);
     tic.curr <- tic.curr + 1;
-    tic.buf.[tic.curr - 1]
+    Bytes.get tic.buf (tic.curr - 1)
 
   (* Read in channel until we discover a '\n' *)
   let input_scan_line ?timeout tic =
     let rec scan_line tic pos =
       if pos < tic.max then
-        if tic.buf.[pos] = '\n' then
+        if Bytes.get tic.buf pos = '\n' then
           pos - tic.curr + 1
         else
           scan_line tic (pos+1)
@@ -247,7 +247,7 @@ module Select_timeout = struct
         let pos =
           if tic.curr <> 0 then begin
             tic.max <- tic.max - tic.curr;
-            String.blit tic.buf tic.curr tic.buf 0 tic.max;
+            Bytes.blit tic.buf tic.curr tic.buf 0 tic.max;
             tic.curr <- 0;
             tic.max
           end else
@@ -270,8 +270,8 @@ module Select_timeout = struct
     let rec build_result buf pos = function
       | [] -> buf
       | hd :: tl ->
-          let len = String.length hd in
-          String.blit hd 0 buf (pos - len) len;
+          let len = Bytes.length hd in
+          Bytes.blit hd 0 buf (pos - len) len;
           build_result buf (pos - len) tl in
 
     let rec scan accu len =
@@ -282,27 +282,27 @@ module Select_timeout = struct
       if n = 0 then begin
         match accu with
         | [] -> raise End_of_file
-        | _ -> build_result (String.create len) len accu
+        | _ -> build_result (Bytes.create len) len accu
 
         (* New line found in the buffer. *)
       end else if n > 0 then begin
-        let result = String.create (n - 1) in (* No need to keep '\n' *)
+        let result = Bytes.create (n - 1) in (* No need to keep '\n' *)
         ignore (unsafe_input tic result 0 (n - 1));
         ignore (input_char tic); (* Skip newline *)
         match accu with
         | [] -> result
         | _ ->
             let len = len + n - 1 in
-            build_result (String.create len) len (result :: accu)
+            build_result (Bytes.create len) len (result :: accu)
 
         (* New line not found in the buffer *)
       end else begin
-        let ofs = String.create (-n) in
+        let ofs = Bytes.create (-n) in
         ignore (unsafe_input tic ofs 0 (-n));
         scan (ofs :: accu) (len - n)
       end in
 
-    scan [] 0
+    Bytes.unsafe_to_string (scan [] 0)
 
   let rec unsafe_really_input ?timeout tic buf ofs len =
     if len = 0 then
@@ -314,16 +314,16 @@ module Select_timeout = struct
       else unsafe_really_input ?timeout tic buf (ofs + r) (len - r)
 
   let really_input ?timeout tic buf ofs len =
-    if ofs < 0 || len < 0 || ofs > String.length buf - len then
+    if ofs < 0 || len < 0 || ofs > Bytes.length buf - len then
       invalid_arg "really_input"
     else
       unsafe_really_input ?timeout tic buf ofs len
 
   (** Marshal *)
 
-  let marshal_magic =  "\x84\x95\xA6\xBE"
+  let marshal_magic = Bytes.of_string "\x84\x95\xA6\xBE"
   let input_value ?timeout tic =
-    let magic = String.create 4 in
+    let magic = Bytes.create 4 in
     magic.[0] <- input_char ?timeout tic;
     magic.[1] <- input_char ?timeout tic;
     magic.[2] <- input_char ?timeout tic;
@@ -335,8 +335,8 @@ module Select_timeout = struct
     let b3 = int_of_char (input_char ?timeout tic) in
     let b4 = int_of_char (input_char ?timeout tic) in
     let len = ((b1 lsl 24) lor (b2 lsl 16) lor (b3 lsl 8) lor b4) + 12 in
-    let data = String.create (len + 8) in
-    String.blit magic 0 data 0 4;
+    let data = Bytes.create (len + 8) in
+    Bytes.blit magic 0 data 0 4;
     data.[4] <- char_of_int b1;
     data.[5] <- char_of_int b2;
     data.[6] <- char_of_int b3;
@@ -346,7 +346,7 @@ module Select_timeout = struct
       with End_of_file ->
         failwith "Select.input_value: truncated object."
     end;
-    Marshal.from_string data 0
+    Marshal.from_bytes data 0
 
   (** Process *)
 
@@ -461,8 +461,8 @@ module type S = sig
   val open_in: string -> in_channel
   val close_in: in_channel -> unit
   val close_in_noerr: in_channel -> unit
-  val input: ?timeout:t -> in_channel -> string -> int -> int -> int
-  val really_input: ?timeout:t -> in_channel -> string -> int -> int -> unit
+  val input: ?timeout:t -> in_channel -> bytes -> int -> int -> int
+  val really_input: ?timeout:t -> in_channel -> bytes -> int -> int -> unit
   val input_char: ?timeout:t -> in_channel -> char
   val input_line: ?timeout:t -> in_channel -> string
   val input_value: ?timeout:t -> in_channel -> 'a
