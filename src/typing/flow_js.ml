@@ -10262,7 +10262,7 @@ and continue cx trace t = function
   | Lower (use_op, l) -> rec_flow cx trace (l, UseT (use_op, t))
   | Upper u -> rec_flow cx trace (t, u)
 
-and react_kit =
+and react_kit cx trace ~use_op reason_op l u =
   React_kit.run
     ~add_output
     ~reposition
@@ -10276,6 +10276,7 @@ and react_kit =
     ~sealed_in_op
     ~union_of_ts
     ~filter_maybe
+    cx trace ~use_op reason_op l u
 
 and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
