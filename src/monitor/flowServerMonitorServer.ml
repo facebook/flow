@@ -131,7 +131,7 @@ end = struct
       argv;
       _;
     } = monitor_options in
-    let handle = Main.daemonize_from_monitor
+    let handle = Main.daemonize
       ~log_file ~shared_mem_config ~argv server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
@@ -228,8 +228,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
       (**** Things the server might exit with that implies that the monitor should exit too ****)
 
       | No_error  (* Server exited cleanly *)
+      | Windows_killed_by_task_manager (* Windows task manager killed the server *)
       | Invalid_flowconfig (* Parse/version/etc error. Server will never start correctly. *)
       | Server_client_directory_mismatch (* This is a weird one *)
+      | Flowconfig_changed (* We could survive some config changes, but it's too hard to tell *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)
 
       (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
@@ -249,7 +251,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
       (**** Unrelated exit codes. If we see them then something is wrong ****)
 
-      | Server_initializing
       | Type_error
       | Out_of_time
       | Kill_error

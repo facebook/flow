@@ -871,7 +871,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
   (* update NameHeap *)
   if not (Modulename.Set.is_empty remove) then begin
     NameHeap.remove_batch remove;
-    SharedMem_js.collect options `gentle;
+    SharedMem_js.collect `gentle;
   end;
 
   MultiWorker.call
@@ -964,7 +964,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
   ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   calc_old_modules ~options old_file_module_assoc
 

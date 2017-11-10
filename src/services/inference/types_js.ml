@@ -291,7 +291,7 @@ let typecheck
   let send_errors_over_connection =
     match persistent_connections with
     | None -> fun _ -> ()
-    | Some conns -> with_timer ~options "MakeSendErrors" profiling (fun () ->
+    | Some clients -> with_timer ~options "MakeSendErrors" profiling (fun () ->
       (* Each merge step uncovers new errors, warnings, suppressions and lint severity covers.
 
          While more suppressions and severity covers may come in later steps, the suppressions and
@@ -341,7 +341,7 @@ let typecheck
         curr_severity_cover := severity_cover;
 
         if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
-          Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
+          Persistent_connection.update_clients ~clients ~errors:new_errors ~warnings:new_warnings
       )
   in
 
@@ -712,7 +712,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_batch deleted;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
@@ -735,7 +735,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
       if Errors.ErrorSet.cardinal error_set > 0
-      then Persistent_connection.update_clients env.ServerEnv.connections
+      then Persistent_connection.update_clients ~clients:env.ServerEnv.connections
         ~errors:error_set ~warnings:FilenameMap.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
@@ -910,7 +910,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Hh_logger.info "Re-resolving directly dependent files";
   (** TODO [perf] Consider oldifying **)
   Module_js.remove_batch_resolved_requires direct_dependent_files;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   let node_modules_containers = !Files.node_modules_containers in
   (* requires in direct_dependent_files must be re-resolved before merging. *)
@@ -1031,7 +1031,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       let to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in
       Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
       (** TODO [perf]: Consider `aggressive **)
-      SharedMem_js.collect options `gentle;
+      SharedMem_js.collect `gentle;
 
       (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)

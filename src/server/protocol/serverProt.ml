@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let build_revision = match Build_id.build_revision with
-  | "" -> Flow_version.version
-  | x -> x
-
 type command =
 | AUTOCOMPLETE of File_input.t
 | CHECK_FILE of
@@ -28,12 +24,10 @@ type command =
     int * (* line *)
     int * (* char *)
     Verbose.t option
-| KILL
 | PORT of string list
 | STATUS of Path.t * bool (* include_warnings *)
 | FORCE_RECHECK of string list * bool (* focus *)
 | SUGGEST of (string * string list) list
-| CONNECT
 
 let string_of_command = function
 | AUTOCOMPLETE fn ->
@@ -62,16 +56,12 @@ let string_of_command = function
 | INFER_TYPE (fn, line, char, _) ->
     Printf.sprintf "type-at-pos %s:%d:%d"
       (File_input.filename_of_file_input fn) line char
-| KILL ->
-    "kill"
 | PORT (files) ->
     Printf.sprintf "port %s" (String.concat " " files)
 | STATUS (_, _) ->
     "status"
 | SUGGEST (_) ->
     "suggest"
-| CONNECT ->
-    "connect"
 
 type command_with_context = {
   client_logging_context: FlowEventLogger.logging_context;
@@ -101,6 +91,7 @@ type autocomplete_response = (
   complete_autocomplete_result list,
   string
 ) result
+
 type coverage_response = (
   (Loc.t * bool) list,
   string
@@ -132,7 +123,6 @@ type gen_flow_file_result =
 type gen_flow_file_response =
   ((string * gen_flow_file_result) list, gen_flow_file_error) result
 type port_response = (string, exn) result SMap.t
-type stop_response = (unit, string) result
 
 type directory_mismatch = {
   server: Path.t;

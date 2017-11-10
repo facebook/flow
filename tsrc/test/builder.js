@@ -255,6 +255,7 @@ export class TestBuilder {
         '--strip-root',
         '--debug',
         '--temp-dir', this.tmpDir,
+        '--no-auto-restart',
       ].concat(lazyMode)
       .concat([
         this.dir,
@@ -288,7 +289,7 @@ export class TestBuilder {
     // Wait for the server to be ready
     await new Promise((resolve, reject) => {
       function resolveOnReady(data) {
-        if (stderr.concat([data]).join('').match(/Server is READY/)) {
+        if (stderr.concat([data]).join('').match(/Server is free/)) {
           serverProcess.stderr.removeListener('data', resolveOnReady);
           resolve();
         }

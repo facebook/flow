@@ -26,6 +26,7 @@ let spec = { CommandSpec.
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
+      |> no_restart_flag
       |> anon "root" (optional string) ~doc:"Root directory"
     );
   usage = Printf.sprintf
@@ -39,7 +40,7 @@ let spec = { CommandSpec.
 
 let main
     options_flags json pretty server_log_file monitor_log_file wait lazy_mode
-    shm_flags ignore_version from path_opt () =
+    shm_flags ignore_version from no_restart path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -66,15 +67,13 @@ let main
     |> Path.to_string
   in
 
-  (* This will be deleted in a later diff and the monitor_log_file will be used *)
-  ignore monitor_log_file;
-
   let on_spawn pid =
     if pretty || json then begin
       let open Hh_json in
       let json = json_to_string ~pretty (JSON_Object [
         "pid", JSON_String (string_of_int pid);
         "log_file", JSON_String server_log_file;
+        "monitor_log_file", JSON_String monitor_log_file;
       ]) in
       print_endline json
     end else if not (Options.is_quiet options) then begin
@@ -82,10 +81,22 @@ let main
         "Spawned flow server (pid=%d)\n" pid;
       Printf.eprintf
         "Logs will go to %s\n%!" server_log_file;
+      Printf.eprintf
+        "Monitor logs will go to %s\n%!" monitor_log_file
     end
   in
+
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
-  Main.daemonize ~wait ~log_file:server_log_file ~shared_mem_config ~on_spawn server_options
+
+  let monitor_options = FlowServerMonitorOptions.make
+    ~log_file:monitor_log_file
+    ~no_restart
+    ~server_log_file
+    ~server_options
+    ~shared_mem_config
+    ~argv:Sys.argv in
+
+  FlowServerMonitor.daemonize ~wait ~on_spawn monitor_options
 
 let command = CommandSpec.command spec main

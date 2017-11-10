@@ -51,10 +51,10 @@ let main option_values json pretty root error_flags strip_root verbose from
   (* pretty implies json *)
   let json = json || pretty in
 
-  if not json && (verbose <> None)
+  if not option_values.quiet && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  if not json && all && respect_pragma then prerr_endline
+  if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
 
   (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a

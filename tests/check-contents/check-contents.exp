@@ -41,7 +41,6 @@ File is not @flow!
 
 not_flow.js with --respect-pragma and --all
 
-Warning: --all and --respect-pragma cannot be used together. --all wins.
 Error: not_flow.js:1
   1: 1 * 'foo';
          ^^^^^ string. The operand of an arithmetic operation must be a number.

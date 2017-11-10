@@ -81,7 +81,6 @@ val reparse:
   profile: bool ->
   max_header_tokens: int ->
   lazy_mode: bool ->
-  options: Options.t ->
   ?with_progress: bool ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)

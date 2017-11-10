@@ -8,11 +8,12 @@
 type error =
   | Build_id_mismatch
   | Server_busy
-  | Server_gcollecting
-  | Server_initializing
   | Server_missing
-  | Server_rechecking
 
 val server_exists : tmp_dir:string -> Path.t -> bool
 
-val connect_once : tmp_dir:string -> Path.t -> (Timeout.in_channel * out_channel, error) result
+val connect_once :
+  client_type: SocketHandshake.client_type ->
+  tmp_dir:string ->
+  Path.t ->
+  (Timeout.in_channel * out_channel, error) result

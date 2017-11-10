@@ -242,8 +242,7 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       try with_async_logging_timer
         ~interval:15.0
         ~on_timer:(fun run_time ->
-          Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
-          Hh_logger.info "Merging" (* Log this to keep the Tail status stuff working *)
+          Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files
         )
         ~f:(fun () ->
           Profile_utils.checktime ~options ~limit:1.0

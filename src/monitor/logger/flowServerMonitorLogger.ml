@@ -44,12 +44,12 @@ let init_logger ?log_fd min_level =
     ) messages in
     Lwt.join [
       atomic_write_list formatted_messages Lwt_io.stderr;
-      Option.value_map ~default:(Lwt.return ()) ~f:(atomic_write_list formatted_messages) log_oc;
+      Option.value_map ~default:Lwt.return_unit ~f:(atomic_write_list formatted_messages) log_oc;
     ]
   in
 
   (* Just close the log *)
-  let close () = Option.value_map ~default:(Lwt.return ()) ~f:Lwt_io.close log_oc in
+  let close () = Option.value_map ~default:Lwt.return_unit ~f:Lwt_io.close log_oc in
 
   (* Set the default logger *)
   Lwt_log.default := Lwt_log_core.make ~output ~close;

@@ -10,10 +10,7 @@ module Server_files = Server_files_js
 type error =
   | Build_id_mismatch
   | Server_busy
-  | Server_gcollecting
-  | Server_initializing
   | Server_missing
-  | Server_rechecking
 
 exception ConnectTimeout
 
@@ -44,14 +41,16 @@ end)
  * connection, since there's nothing wrong with it.
  *)
 let connections = ref SockMap.empty
-let open_connection ~timeout sockaddr =
+let open_connection ~timeout ~client_type sockaddr =
   match SockMap.get sockaddr !connections with
   | Some conn -> conn
   | None ->
       let conn = Timeout.open_connection ~timeout sockaddr in
       connections := SockMap.add sockaddr conn !connections;
       (* It's important that we only write this once per connection *)
-      Printf.fprintf (snd conn) "%s\n%!" ServerProt.build_revision;
+      let fd = Unix.descr_of_out_channel (snd conn) in
+      let handshake = SocketHandshake.({ client_build_id = build_revision; client_type } )in
+      Marshal_tools.to_fd_with_preamble fd handshake;
       conn
 
 let close_connection sockaddr =
@@ -62,7 +61,7 @@ let close_connection sockaddr =
       Timeout.shutdown_connection ic;
       Timeout.close_in_noerr ic
 
-let establish_connection ~timeout ~tmp_dir root =
+let establish_connection ~timeout ~client_type ~tmp_dir root =
   let sock_name = Socket.get_path (Server_files.socket_file ~tmp_dir root) in
   let sockaddr =
     if Sys.win32 then
@@ -72,13 +71,16 @@ let establish_connection ~timeout ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Ok (sockaddr, open_connection ~timeout sockaddr)
+  Ok (sockaddr, open_connection ~timeout ~client_type sockaddr)
 
-let get_cstate ~timeout sockaddr ic oc =
+let get_handshake ~timeout:_ sockaddr ic oc =
   try
-    let cstate : ServerUtils.connection_state =
-      Timeout.input_value ~timeout ic in
-    Ok (ic, oc, cstate)
+    (* TODO (glevi) - If we want this read to timeout on Windows, we need to make Marshal_tools
+     * respect Timeout. That said, this is a lower priority fix, since we rarely run into
+     * trouble right here. *)
+    let handshake : SocketHandshake.monitor_to_client =
+      Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel ic) in
+    Ok (ic, oc, handshake)
   with
   | ConnectTimeout as e ->
       (* Timeouts are expected *)
@@ -88,9 +90,11 @@ let get_cstate ~timeout sockaddr ic oc =
       close_connection sockaddr;
       raise e
 
-let verify_cstate ic = function
-  | ServerUtils.Connection_ok -> Ok ()
-  | ServerUtils.Build_id_mismatch ->
+let verify_handshake ic = function
+  | SocketHandshake.Connection_ok -> Ok ()
+  | SocketHandshake.Build_id_mismatch _ ->
+      (* TODO (glevi) - I want to change this behavior. I want the server to survive and the client
+       * to exec a new client. *)
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
        * the server that is about to die, and eventually we will be hung
@@ -107,30 +111,20 @@ let verify_cstate ic = function
 (* Connects to the server via a socket. As soon as the server starts up,
  * it opens the socket but it doesn't read or write to it. So during
  * initialization, this function should time out. *)
-let connect_once ~tmp_dir root =
+let connect_once ~client_type ~tmp_dir root =
   let (>>=) = Core_result.(>>=) in
   try
     Timeout.with_timeout
       ~timeout:1
       ~on_timeout:(fun _ -> raise ConnectTimeout)
       ~do_:begin fun timeout ->
-        establish_connection ~timeout ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
-        get_cstate ~timeout sockaddr ic oc
+        establish_connection ~timeout ~client_type ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
+        get_handshake ~timeout sockaddr ic oc
       end >>= fun (ic, oc, cstate) ->
-      verify_cstate ic cstate >>= fun () ->
+      verify_handshake ic cstate >>= fun () ->
       Ok (ic, oc)
   with
   | _ ->
     if not (server_exists ~tmp_dir root)
     then Error Server_missing
-
-    else if not (Lock.check (Server_files.init_file ~tmp_dir root))
-    then Error Server_initializing
-
-    else if not (Lock.check (Server_files.gc_file ~tmp_dir root))
-    then Error Server_gcollecting
-
-    else if not (Lock.check (Server_files.recheck_file ~tmp_dir root))
-    then Error Server_rechecking
-
     else Error Server_busy

@@ -16,7 +16,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js
   open Sys_utils
   open ServerEnv
-  open ServerUtils
 
   let name = "flow server"
 
@@ -218,15 +217,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let check_once _genv env =
     get_collated_errors env
-
-  let die_nicely () =
-    FlowEventLogger.killed ();
-    Hh_logger.fatal "Status: Error";
-    Hh_logger.fatal "Sent KILL command by client. Dying.";
-    (* when we exit, the dfind process will attempt to read from the broken
-       pipe and then exit with SIGPIPE, so it is unnecessary to kill it
-       explicitly *)
-    die ()
 
   let autocomplete ~options ~workers ~env command_context file_input =
     let path, content = match file_input with
@@ -482,7 +472,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       Hh_logger.fatal
         "%s changed in an incompatible way. Exiting.\n%!"
         config_path;
-      FlowExitStatus.(exit Server_out_of_date)
+      FlowExitStatus.(exit Flowconfig_changed)
     end;
 
     let is_incompatible filename_str =
@@ -584,37 +574,26 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
       Persistent_connection.send_start_recheck env.connections;
       let options = genv.ServerEnv.options in
-      let root = Options.root options in
-      let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
 
-      Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       let env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
       (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
        * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
        * run it before we release the recheck lock *)
       env.collated_errors := Some (regenerate_collated_errors env);
-      Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
 
       MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
       Persistent_connection.send_end_recheck env.connections;
       let errors, warnings, _ = get_collated_errors_separate_warnings env in
-      Persistent_connection.update_clients env.connections ~errors ~warnings;
+      Persistent_connection.update_clients ~clients:env.connections ~errors ~warnings;
       env
     end
 
-  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
+  let handle_command genv env (request_id, { ServerProt.client_logging_context; command; }) =
     let env = ref env in
-    let oc = client.oc in
-    let marshal msg =
-      try
-        Marshal.to_channel oc msg [];
-        flush oc
-      with
-      | Sys_error msg when msg = "Broken pipe" ->
-        Hh_logger.info
-          "Due to a broken pipe, failed to respond to request: %s"
-          (ServerProt.string_of_command command)
+    let respond msg =
+      MonitorRPC.respond_to_request ~request_id ~response:(Marshal.to_bytes msg [])
+
     in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
@@ -625,30 +604,30 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         let results: ServerProt.autocomplete_response =
           autocomplete ~options ~workers ~env client_logging_context fn
         in
-        marshal results
+        respond results
     | ServerProt.CHECK_FILE (fn, verbose, force, include_warnings) ->
         let options = { options with Options.
           opt_verbose = verbose;
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
         (check_file ~options ~workers ~env ~force fn: ServerProt.response)
-          |> marshal
+          |> respond
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
-          |> marshal
+          |> respond
     | ServerProt.DUMP_TYPES (fn) ->
         let types: ServerProt.dump_types_response =
           dump_types ~options ~workers ~env fn
         in
-        marshal types
+        respond types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         (find_module ~options (moduleref, filename): File_key.t option)
-          |> marshal
+          |> respond
     | ServerProt.FIND_REFS (fn, line, char, global) ->
         (find_refs ~options ~workers ~env (fn, line, char, global): ServerProt.find_refs_response)
-          |> marshal
+          |> respond
     | ServerProt.FORCE_RECHECK (files, force_focus) ->
-        marshal ();
+        respond ();
         let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env ~force_focus updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
@@ -656,27 +635,24 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
-          |> marshal
+          |> respond
     | ServerProt.GET_DEF (fn, line, char) ->
         let def: ServerProt.get_def_response =
           get_def ~options ~workers ~env client_logging_context (fn, line, char)
         in
-        marshal def
+        respond def
     | ServerProt.GET_IMPORTS module_names ->
         (get_imports ~options module_names: ServerProt.get_imports_response)
-          |> marshal
+          |> respond
     | ServerProt.INFER_TYPE (fn, line, char, verbose) ->
         (infer_type
             ~options ~workers ~env
             client_logging_context
             (fn, line, char, verbose) : ServerProt.infer_type_response)
-          |> marshal
-    | ServerProt.KILL ->
-        (Ok () : ServerProt.stop_response) |> marshal;
-        die_nicely ()
+          |> respond
     | ServerProt.PORT (files) ->
         (port files: ServerProt.port_response)
-          |> marshal
+          |> respond
     | ServerProt.STATUS (client_root, include_warnings) ->
         let genv = {genv with
           options = let open Options in {genv.options with
@@ -684,7 +660,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           }
         } in
         let status: ServerProt.response = get_status genv !env client_root in
-        marshal status;
+        respond status;
         begin match status with
           | ServerProt.DIRECTORY_MISMATCH {ServerProt.server; ServerProt.client} ->
               Hh_logger.fatal "Status: Error";
@@ -698,32 +674,23 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         end
     | ServerProt.SUGGEST (files) ->
         (suggest ~options ~workers ~env files: ServerProt.suggest_response)
-          |> marshal
-    | ServerProt.CONNECT ->
-        let new_connections, new_client =
-          Persistent_connection.add_client
-            !env.connections
-            client
-            client_logging_context
-        in
-        (* See ideCommand.ml for a detailed explanation about why this is needed *)
-        Persistent_connection.send_ready new_client;
-        env := {!env with connections = new_connections}
+          |> respond
     end;
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
     !env
 
-  let respond_to_persistent_client genv env client msg =
+  let handle_persistent_client genv env client_id msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
     Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
     MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+    let client = Persistent_connection.get_client !env.connections client_id in
     let env = match msg with
       | Persistent_connection_prot.Subscribe ->
           let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
-            !env.connections client ~current_errors ~current_warnings
+            ~clients:!env.connections ~client ~current_errors ~current_warnings
           in
           { !env with connections = new_connections }
       | Persistent_connection_prot.Autocomplete (file_input, id) ->
@@ -771,7 +738,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               else begin
                 (* This open doesn't trigger a recheck, but we'll still send down the errors *)
                 let errors, warnings, _ = get_collated_errors_separate_warnings env in
-                Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+                Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
                 env
               end
             | Some Options.LAZY_MODE_FILESYSTEM
@@ -779,7 +746,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
                * a new file is opened is to send the errors to the client *)
               let errors, warnings, _ = get_collated_errors_separate_warnings env in
-              Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+              Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
               env
             end
 
@@ -789,26 +756,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           | None -> !env (* No new files were closed, so do nothing *)
           | Some (connections, client) ->
             let errors, warnings, _ = get_collated_errors_separate_warnings !env in
-            Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
             {!env with connections}
           end
-      in
-      MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-      env
-
-  let should_close = function
-    | { ServerProt.command = ServerProt.CONNECT; _ } -> false
-    | _ -> true
-
-  let handle_client genv env client =
-    let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
-    let env = respond ~genv ~env ~client command in
-    if should_close command then client.close ();
+    in
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
     env
-
-  let handle_persistent_client genv env client =
-    match Persistent_connection.input_value client with
-    | None -> env
-    | Some msg -> respond_to_persistent_client genv env client msg
-
 end

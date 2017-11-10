@@ -416,7 +416,6 @@ begin library "flow-server"
       "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
-      "serverUtils.ml"
       "persistent_connection.ml"
       "server_files_js.ml"
       "server_files_js.mli"
@@ -475,7 +474,6 @@ begin library "flow-server-utils"
   dirname = "src/server"
   files = [
     "file_input.ml"
-    "serverUtils.ml"
   ]
   requires = [
     "hh-utils-sys"

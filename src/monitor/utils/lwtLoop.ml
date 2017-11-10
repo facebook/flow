@@ -28,7 +28,7 @@ end = struct
   let catch acc exn =
     match exn with
     (* Automatically handle Canceled. No one ever seems to want to handle it manually. *)
-    | Lwt.Canceled -> Lwt.return ()
+    | Lwt.Canceled -> Lwt.return_unit
     | exn -> Loop.catch acc exn
 
   let rec loop acc =
@@ -39,7 +39,7 @@ end = struct
 
   let run ?cancel_condition acc =
     (* Create a waiting thread *)
-    let waiter, wakener = Lwt.wait () in
+    let waiter, wakener = Lwt.task () in
     (* When the waiting thread is woken, it will kick off the loop *)
     let thread = waiter >>= loop in
 

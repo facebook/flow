@@ -1,6 +1,6 @@
 type t =
   | No_error
-  | Server_initializing
+  | Windows_killed_by_task_manager
   | Type_error
   | Out_of_time
   | Kill_error
@@ -13,6 +13,7 @@ type t =
   | Could_not_find_flowconfig
   | Server_out_of_date
   | Out_of_shared_memory
+  | Flowconfig_changed
   | Server_client_directory_mismatch
   | Commandline_usage_error
   | No_input

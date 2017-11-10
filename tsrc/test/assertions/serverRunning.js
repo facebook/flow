@@ -16,7 +16,7 @@ export default function(
       String(actual),
       assertLoc,
       reason,
-      "server to be running",
+      "'server is running'",
       suggestion,
     );
   };

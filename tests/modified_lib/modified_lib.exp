@@ -17,4 +17,13 @@ Error: test.js:5
 
 Found 1 error
 third status, after modification
+Error: test.js:5
+  5: bar(5);
+         ^ number. This type is incompatible with the expected param type of
+  2:   declare function bar(str: string): number;
+                                 ^^^^^^ string. See lib: lib/lib.js:2
+
+
+Found 1 error
+fourth status, after modification
 done

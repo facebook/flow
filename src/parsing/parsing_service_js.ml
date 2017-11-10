@@ -534,8 +534,7 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   results
 
 let reparse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~options ?with_progress
-  workers files =
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
   let next = next_of_filename_set ?with_progress workers files in
@@ -553,7 +552,7 @@ let reparse
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -567,8 +566,7 @@ let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers
     get_defaults ~types_mode ~use_strict options
   in
   reparse
-    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress ~options
-    workers files
+    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files
 
 let has_ast = ASTHeap.mem
 
