@@ -114,6 +114,12 @@ print_error() {
     out_file="${dir}${name}.out"
     [ -f "$out_file" ] && cat "$out_file"
 
+    err_file="${dir}${name}.err"
+    [ -f "$err_file" ] && printf "\n\nStderr:\n" && cat "$err_file"
+
+    monitor_log_file="${dir}${name}.monitor_log"
+    [ -f "$monitor_log_file" ] && printf "\n\nServer monitor log:\n" && cat "$monitor_log_file"
+
     log_file="${dir}${name}.log"
     [ -f "$log_file" ] && printf "\n\nServer log:\n" && cat "$log_file"
 }
@@ -216,10 +222,12 @@ runtest() {
 
         out_file="$name.out"
         log_file="$name.log"
+        monitor_log_file="$name.monitor_log"
         err_file="$name.err"
         diff_file="$name.diff"
         abs_out_file="$OUT_PARENT_DIR/$name.out"
         abs_log_file="$OUT_PARENT_DIR/$name.log"
+        abs_monitor_log_file="$OUT_PARENT_DIR/$name.monitor_log"
         abs_err_file="$OUT_PARENT_DIR/$name.err"
         abs_diff_file="$OUT_PARENT_DIR/$name.diff"
         return_status=$RUNTEST_SUCCESS
@@ -314,7 +322,10 @@ runtest() {
 
             # start server and wait
             "$FLOW" start . \
-              $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
+              $all $flowlib --wait \
+              --log-file "$abs_log_file" \
+              --monitor-log-file "$abs_monitor_log_file" \
+              > /dev/null 2>&1
             code=$?
             if [ $code -ne 0 ]; then
               # flow failed to start
@@ -360,16 +371,20 @@ runtest() {
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
             [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir"
             [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir"
             return $return_status
         elif [ -s "$abs_diff_file" ]; then
             mv "$abs_out_file" "$dir"
             [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
-            mv "$abs_err_file" "$dir"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir"
             mv "$abs_diff_file" "$dir"
             return $RUNTEST_FAILURE
         else
             rm -f "$dir/$out_file"
             rm -f "$dir/$log_file"
+            rm -f "$dir/$monitor_log_file"
             rm -f "$dir/$err_file"
             rm -f "$dir/$diff_file"
             return $RUNTEST_SUCCESS
