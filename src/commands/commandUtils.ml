@@ -273,11 +273,26 @@ let ignore_version_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Ignore the version constraint in .flowconfig"
 )
 
-let log_file_flag prev = CommandSpec.ArgSpec.(
-  prev
-  |> flag "--log-file" string
-      ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
-)
+let log_file_flags =
+  let normalize log_file =
+    let dirname = Path.make (Filename.dirname log_file) in
+    let basename = Filename.basename log_file in
+    Path.concat dirname basename
+    |> Path.to_string
+  in
+
+  let collector main server_log_file monitor_log_file =
+    main (Option.map ~f:normalize server_log_file) (Option.map ~f:normalize monitor_log_file)
+  in
+
+  fun prev -> CommandSpec.ArgSpec.(
+    prev
+    |> collect collector
+    |> flag "--log-file" string
+        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+    |> flag "--monitor-log-file" string
+        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
+  )
 
 let assert_version flowconfig =
   match FlowConfig.required_version flowconfig with
@@ -478,10 +493,13 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> quiet_flag
 )
 
-let log_file ~tmp_dir root flowconfig =
+let server_log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
   | None -> Path.make (Server_files_js.file_of_root "log" ~tmp_dir root)
+
+let monitor_log_file ~tmp_dir root =
+  Path.make (Server_files_js.file_of_root "monitor_log" ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
@@ -653,7 +671,7 @@ let connect server_flags root =
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
     server_flags.shm_flags.shm_dirs in
   let log_file =
-    Path.to_string (log_file ~tmp_dir root flowconfig) in
+    Path.to_string (server_log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with

@@ -19,7 +19,7 @@ let spec = { CommandSpec.
   args = CommandSpec.ArgSpec.(
       empty
       |> options_and_json_flags
-      |> log_file_flag
+      |> log_file_flags
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
       |> lazy_flags
@@ -38,7 +38,7 @@ let spec = { CommandSpec.
 }
 
 let main
-    options_flags json pretty log_file wait lazy_mode
+    options_flags json pretty server_log_file monitor_log_file wait lazy_mode
     shm_flags ignore_version from path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
@@ -52,32 +52,40 @@ let main
 
   let shared_mem_config = shm_config shm_flags flowconfig in
 
-  let log_file = match log_file with
-    | Some s ->
-        let dirname = Path.make (Filename.dirname s) in
-        let basename = Filename.basename s in
-        Path.concat dirname basename
-    | None ->
-        CommandUtils.log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+  let server_log_file = match server_log_file with
+  | Some s -> s
+  | None ->
+    CommandUtils.server_log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+    |> Path.to_string
   in
-  let log_file = Path.to_string log_file in
+
+  let monitor_log_file = match monitor_log_file with
+  | Some s -> s
+  | None ->
+    CommandUtils.monitor_log_file ~tmp_dir:(Options.temp_dir options) root
+    |> Path.to_string
+  in
+
+  (* This will be deleted in a later diff and the monitor_log_file will be used *)
+  ignore monitor_log_file;
+
   let on_spawn pid =
     if pretty || json then begin
       let open Hh_json in
       let json = json_to_string ~pretty (JSON_Object [
         "pid", JSON_String (string_of_int pid);
-        "log_file", JSON_String log_file;
+        "log_file", JSON_String server_log_file;
       ]) in
       print_endline json
     end else if not (Options.is_quiet options) then begin
       Printf.eprintf
         "Spawned flow server (pid=%d)\n" pid;
       Printf.eprintf
-        "Logs will go to %s\n%!" log_file
+        "Logs will go to %s\n%!" server_log_file;
     end
   in
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
-  Main.daemonize ~wait ~log_file ~shared_mem_config ~on_spawn server_options
+  Main.daemonize ~wait ~log_file:server_log_file ~shared_mem_config ~on_spawn server_options
 
 let command = CommandSpec.command spec main
