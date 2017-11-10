@@ -1,6 +1,6 @@
 Error: primitives.js:6
   6: dict(); // error, callable signature not found
-     ^^^^^^ function call. Callable signature not found in
+     ^^^^^^ call of `dict`. Callable signature not found in
   6: dict(); // error, callable signature not found
      ^^^^ object type
 

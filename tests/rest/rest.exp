@@ -318,7 +318,7 @@ Error: type.js:53
  53: (o5: {|x?: X|}); // Error: inexact ~> exact
       ^^ object type. Inexact type is incompatible with exact type
  53: (o5: {|x?: X|}); // Error: inexact ~> exact
-          ^^^^^^^^^ exact type: object type
+          ^^^^^^^^^ object type
 
 Error: type.js:55
  55: (o5: {x: X}); // Error: x is optional
@@ -412,7 +412,7 @@ Error: type.js:67
  67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
       ^^ object type. Inexact type is incompatible with exact type
  67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^^^^^^^^ exact type: object type
+          ^^^^^^^^^^^^^^^^ object type
 
 Error: type.js:69
  69: (o6: {x: X}); // Error: x is optional
@@ -484,7 +484,7 @@ Error: type.js:81
  81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
       ^^ object type. Inexact type is incompatible with exact type
  81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^^^^^^^^ exact type: object type
+          ^^^^^^^^^^^^^^^^ object type
 
 Error: type.js:83
  83: (o7: {x: X}); // Error: x is optional
@@ -704,7 +704,7 @@ Error: type_dict.js:34
  34: (o4: {|y?: Y|}); // Error: inexact ~> exact
       ^^ object type. Inexact type is incompatible with exact type
  34: (o4: {|y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^ exact type: object type
+          ^^^^^^^^^ object type
 
 Error: type_dict.js:36
  36: (o4: {y: Y}); // Error: y is optional
@@ -754,7 +754,7 @@ Error: type_dict.js:46
  46: (o5: {|y?: Y|}); // Error: inexact ~> exact
       ^^ object type. Inexact type is incompatible with exact type
  46: (o5: {|y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^ exact type: object type
+          ^^^^^^^^^ object type
 
 Error: type_dict.js:48
  48: (o5: {y: Y}); // Error: y is optional
@@ -838,7 +838,7 @@ Error: type_generic.js:1
 
 Error: type_generic.js:2
   2:   const {...o, p} = a;
-              ^^^^ rest of object pattern. Expected object instead of
+              ^^^^ o. Expected object instead of
   2:   const {...o, p} = a;
                          ^ A
 
@@ -955,7 +955,7 @@ Error: type_union.js:22
 
 Error: type_union.js:25
  25: (o: O3); // OK
-      ^ exact type: object type. This type is incompatible with
+      ^ object type. This type is incompatible with
  25: (o: O3); // OK
          ^^ union: object type(s)
   Member 1:
@@ -1043,7 +1043,7 @@ Error: type_union.js:31
 
 Error: type_union.js:34
  34: (o: O5); // Error: missing x and missing y
-      ^ exact type: object type. This type is incompatible with
+      ^ object type. This type is incompatible with
  34: (o: O5); // Error: missing x and missing y
          ^^ union: object type(s)
   Member 1:
@@ -1147,7 +1147,7 @@ Error: type_union.js:46
 
 Error: type_union.js:49
  49: (o: O8); // OK
-      ^ exact type: object type. This type is incompatible with
+      ^ object type. This type is incompatible with
  49: (o: O8); // OK
          ^^ union: object type(s)
   Member 1:

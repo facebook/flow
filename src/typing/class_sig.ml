@@ -680,7 +680,7 @@ let mk cx _loc reason self ~expr =
 let extract_mixins _cx =
   List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
     let name = Anno.qualified_name id in
-    let r = mk_reason (RCustom name) loc in
+    let r = mk_reason (RType name) loc in
     r, id, typeParameters
   )
 

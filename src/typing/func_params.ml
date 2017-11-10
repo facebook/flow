@@ -61,7 +61,7 @@ let mk cx type_params_map ~expr func =
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->
-          let reason = repos_reason loc reason in
+          let reason = mk_reason (RIdentifier name) loc in
           EvalT (t, DestructuringT (reason, Become), mk_id())
         in
         Type_table.set (Context.type_table cx) loc t;

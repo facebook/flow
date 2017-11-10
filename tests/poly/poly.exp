@@ -1,14 +1,14 @@
 Error: annot.js:3
   3: class B extends A { } // OK, same as above
-                     ^ polymorphic type: class type: A. Too few type arguments. Expected at least 1
+                     ^ A. Too few type arguments. Expected at least 1
   1: class A<X> { }
              ^ See type parameters of definition here
 
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                        ^^^^^^^^^^^^^^ type application of class `A`. This type is incompatible with the expected return type of
+                                        ^^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
   9: function bar(): A<*> { // error, * can't be {} and {x: string} at the same time
-                     ^^^^ type application of polymorphic type: class type: A
+                     ^^^^ A
   Type argument `X` is incompatible:
      10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                                               ^^^^^^^^^^^ object type. This type is incompatible with
@@ -34,9 +34,9 @@ Error: implicit_bounded_instantiation.js:20
 
 Error: phantom.js:7
   7: (a: B); // Error
-      ^ type application of T. Has some incompatible type argument with
+      ^ T. Has some incompatible type argument with
   7: (a: B); // Error
-         ^ type application of T
+         ^ T
   Type argument `Phantom` is incompatible:
       3: type A = T<number>;
                     ^^^^^^ number. This type is incompatible with
@@ -45,9 +45,9 @@ Error: phantom.js:7
 
 Error: phantom.js:7
   7: (a: B); // Error
-      ^ type application of T. Has some incompatible type argument with
+      ^ T. Has some incompatible type argument with
   7: (a: B); // Error
-         ^ type application of T
+         ^ T
   Type argument `Phantom` is incompatible:
       4: type B = T<string>;
                     ^^^^^^ string. This type is incompatible with
@@ -56,9 +56,9 @@ Error: phantom.js:7
 
 Error: phantom.js:15
  15: (c: D); // Error
-      ^ type application of polymorphic type: T. Has some incompatible type argument with
+      ^ T. Has some incompatible type argument with
  15: (c: D); // Error
-         ^ type application of polymorphic type: T
+         ^ T
   Type argument `Phantom` is incompatible:
      11: type C = T<number>;
                     ^^^^^^ number. This type is incompatible with
@@ -67,9 +67,9 @@ Error: phantom.js:15
 
 Error: phantom.js:15
  15: (c: D); // Error
-      ^ type application of polymorphic type: T. Has some incompatible type argument with
+      ^ T. Has some incompatible type argument with
  15: (c: D); // Error
-         ^ type application of polymorphic type: T
+         ^ T
   Type argument `Phantom` is incompatible:
      12: type D = T<string>;
                     ^^^^^^ string. This type is incompatible with
@@ -84,9 +84,9 @@ Error: poly.js:17
 
 Error: poly.js:18
  18: var z:Foo<number> = Q.bar(foo,"");
-                         ^^^^^^^^^^^^^ type application of class `Foo`. Has some incompatible type argument with
+                         ^^^^^^^^^^^^^ Foo. Has some incompatible type argument with
  18: var z:Foo<number> = Q.bar(foo,"");
-           ^^^^^^^^^^^ type application of polymorphic type: class type: Foo
+           ^^^^^^^^^^^ Foo
   Type argument `T` is incompatible:
      18: var z:Foo<number> = Q.bar(foo,"");
                                        ^^ string. This type is incompatible with

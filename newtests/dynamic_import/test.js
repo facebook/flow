@@ -23,18 +23,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         (esmodule.pi: string);
         esmodule.default;
       }
-    `).newErrors(`
-      test.js:13
-       13:         (esmodule.pi: string);
-                    ^^^^^^^^^^^ number. This type is incompatible with
-       13:         (esmodule.pi: string);
-                                 ^^^^^^ string
-      test.js:14
-       14:         esmodule.default;
-                            ^^^^^^^ property ${'`'}default${'`'}. Property not found in
-       14:         esmodule.default;
-                   ^^^^^^^^ exports of "./esmodule"
-    `),
+    `).newErrors(
+        `
+          test.js:13
+           13:         (esmodule.pi: string);
+                        ^^^^^^^^^^^ number. This type is incompatible with
+           13:         (esmodule.pi: string);
+                                     ^^^^^^ string
+
+          test.js:14
+           14:         esmodule.default;
+                                ^^^^^^^ property \`default\`. Property not found in
+           14:         esmodule.default;
+                       ^^^^^^^^ exports of \`./esmodule\`
+        `,
+      ),
 
     addCode(`
       async function h() {

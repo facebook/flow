@@ -49,13 +49,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": C);')
-      .newErrors(`
-        test.js:9
-          9: ("str": C);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": C);
-               ^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": C);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": C);
+                       ^ statics of \`C\`
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -66,12 +68,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": CPrime);')
-      .newErrors(`
-        test.js:9
-          9: ("str": CPrime);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": CPrime);
-                     ^^^^^^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": CPrime);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": CPrime);
+                       ^^^^^^ statics of \`C\`
+        `,
+      ),
   ]),
 ]);

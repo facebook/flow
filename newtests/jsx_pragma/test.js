@@ -51,7 +51,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       // @jsx Foo['Bar']
-                             ^^^ identifier \`Foo\`. Could not resolve name
+                             ^^^ Foo. Could not resolve name
         `,
       ),
   ]),
@@ -67,7 +67,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:        * @jsx Foo['Bar']
-                             ^^^ identifier \`Foo\`. Could not resolve name
+                             ^^^ Foo. Could not resolve name
         `,
       ),
   ]),
@@ -288,7 +288,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
+                     ^^^^^^^^^^^^^^ Bar. Could not resolve name
         `,
       ),
   ]),
@@ -326,7 +326,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             9:       <Bar {...props} />;
                      ^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
             5:       function Foo(elem: number, props: {| x: string |}) {}
-                                                       ^^^^^^^^^^^^^^^ exact type: object type
+                                                       ^^^^^^^^^^^^^^^ object type
         `,
       ),
   ]),

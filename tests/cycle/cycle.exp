@@ -1,6 +1,6 @@
 Error: B.js:5
   5: module.exports = B;
-                      ^ identifier `B`. Could not resolve name
+                      ^ B. Could not resolve name
 
 
 Found 1 error

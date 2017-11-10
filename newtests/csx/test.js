@@ -29,7 +29,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:5
           5:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
+                   ^^^^^^^^^^^^^^ Bar. Could not resolve name
       `,
     ),
   ]),
@@ -120,11 +120,11 @@ export default suite(({addFile, addFiles, addCode}) => [
                             ^ $Iterable
           Property \`@@iterator\` is incompatible:
               8:       <Foo>{...x}</Foo>;
-                                ^ property \`@@iterator\` of $Iterable. Property not found in
+                                ^ property \`@@iterator\` of \`$Iterable\`. Property not found in
               8:       <Foo>{...x}</Foo>;
                                 ^ number
-      `
-     )
+      `,
+    )
   ]),
   test('Should raise an error if CSX children passed as spread have the wrong type', [
     addCode(`
@@ -190,7 +190,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       const params = {x: '23'};
       <Bar {...params} />;
     `)
-    .newErrors(  // TODO should not raise any errors.
+    .newErrors(
       `
         test.js:8
           8:       <Bar {...params} />;
@@ -198,7 +198,7 @@ export default suite(({addFile, addFiles, addCode}) => [
           8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
-                                       ^^^^^ exact type: object type
+                                       ^^^^^ object type
       `,
     ),
   ]),
@@ -228,7 +228,7 @@ export default suite(({addFile, addFiles, addCode}) => [
           8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
-                                       ^^^^^ exact type: object type
+                                       ^^^^^ object type
 
         test.js:8
           8:       <Bar {...params} />;

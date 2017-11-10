@@ -61,7 +61,7 @@ Error: FormData.js:21
      21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                                          ^^^^^^ number. This type is incompatible with
     326:     getAll(name: string): Array<FormDataEntryValue>;
-                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:326
+                                         ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:326
       Member 1:
       319: type FormDataEntryValue = string | File
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
@@ -88,7 +88,7 @@ Error: FormData.js:22
      22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                   ^^^^ Blob. This type is incompatible with
     326:     getAll(name: string): Array<FormDataEntryValue>;
-                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:326
+                                         ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:326
       Member 1:
       319: type FormDataEntryValue = string | File
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
@@ -428,7 +428,7 @@ Error: FormData.js:64
  64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                                                ^^^^ Blob. This type is incompatible with
 340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:340
+                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
   Member 1:
   319: type FormDataEntryValue = string | File
                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
@@ -498,7 +498,7 @@ Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                ^^^^^^ number. This type is incompatible with
 340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:340
+                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
   Member 1:
   319: type FormDataEntryValue = string | File
                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
@@ -556,7 +556,7 @@ Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                ^^^^^^ number. This type is incompatible with
 340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:340
+                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
   Member 1:
   319: type FormDataEntryValue = string | File
                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
@@ -576,7 +576,7 @@ Error: FormData.js:67
 
 Error: MutationObserver.js:10
  10: new MutationObserver(); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^ constructor call. Called with too few arguments
+     ^^^^^^^^^^^^^^^^^^^^^^ new `MutationObserver`. Called with too few arguments
   368:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:368
 

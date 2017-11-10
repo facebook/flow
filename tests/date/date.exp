@@ -6,7 +6,7 @@ Error: date.js:2
 
 Error: date.js:18
  18: new Date({});
-     ^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  18: new Date({});
          ^^^^ intersection
   Member 1:
@@ -44,7 +44,7 @@ Error: date.js:18
 
 Error: date.js:19
  19: new Date(2015, '6');
-     ^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  19: new Date(2015, '6');
          ^^^^ intersection
   Member 1:
@@ -82,7 +82,7 @@ Error: date.js:19
 
 Error: date.js:20
  20: new Date(2015, 6, '18');
-     ^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  20: new Date(2015, 6, '18');
          ^^^^ intersection
   Member 1:
@@ -120,7 +120,7 @@ Error: date.js:20
 
 Error: date.js:21
  21: new Date(2015, 6, 18, '11');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  21: new Date(2015, 6, 18, '11');
          ^^^^ intersection
   Member 1:
@@ -158,7 +158,7 @@ Error: date.js:21
 
 Error: date.js:22
  22: new Date(2015, 6, 18, 11, '55');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  22: new Date(2015, 6, 18, 11, '55');
          ^^^^ intersection
   Member 1:
@@ -196,7 +196,7 @@ Error: date.js:22
 
 Error: date.js:23
  23: new Date(2015, 6, 18, 11, 55, '42');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  23: new Date(2015, 6, 18, 11, 55, '42');
          ^^^^ intersection
   Member 1:
@@ -234,7 +234,7 @@ Error: date.js:23
 
 Error: date.js:24
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
          ^^^^ intersection
   Member 1:
@@ -272,7 +272,7 @@ Error: date.js:24
 
 Error: date.js:25
  25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
          ^^^^ intersection
   Member 1:
@@ -310,7 +310,7 @@ Error: date.js:25
 
 Error: date.js:26
  26: new Date('2015', 6);
-     ^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+     ^^^^^^^^^^^^^^^^^^^ new `Date`. Function cannot be called on any member of intersection type
  26: new Date('2015', 6);
          ^^^^ intersection
   Member 1:

@@ -8,23 +8,23 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 2)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of function] (from path 2)
  15: var a: string = foo('hi'); // error number ~> string
-         ^ ~> UseT(UnknownUse, OpenT) [var `a`]
+         ^ ~> UseT(UnknownUse, OpenT) [`a`]
 * path 2:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [return] (from path 3)
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of function] (from path 6)
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> ReposLowerT [function call]
+                     ^^^^^^^^^ ~> ReposLowerT [call of function]
 * path 3:
  12:   return bar();
               ^^^^^ NumT [number]
  12:   return bar();
-              ^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 4)
+              ^^^^^ ~> UseT(UnknownUse, OpenT) [call of function] (from path 4)
  11: function foo(x: string) {
                             ^ ~> UseT(FunReturn, OpenT) [return]
  15: var a: string = foo('hi'); // error number ~> string
@@ -35,7 +35,7 @@ Trace:
  12:   return bar();
               ^^^ ~> UseT(UnknownUse, OpenT) [function] (from path 5)
  12:   return bar();
-              ^^^^^ ~> CallT [function call]
+              ^^^^^ ~> CallT [call of function]
 * path 5:
   9: function bar(): number { return 5; }
      ^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
@@ -47,7 +47,7 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^ FunT [function]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> CallT [function call]
+                     ^^^^^^^^^ ~> CallT [call of function]
 
 Warning: traces.js:8
   8: // $FlowFixMe - Error unused suppression

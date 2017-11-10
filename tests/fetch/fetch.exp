@@ -1,8 +1,8 @@
 Error: fetch.js:12
  12: const b: Promise<string> = fetch(myRequest); // incorrect
-                                ^^^^^^^^^^^^^^^^ type application of identifier `Promise`. Has some incompatible type argument with
+                                ^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
  12: const b: Promise<string> = fetch(myRequest); // incorrect
-              ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+              ^^^^^^^^^^^^^^^ Promise
   Type argument `R` is incompatible:
     1001: declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                      ^^^^^^^^ Response. This type is incompatible with. See lib: <BUILTINS>/bom.js:1001
@@ -11,9 +11,9 @@ Error: fetch.js:12
 
 Error: fetch.js:25
  25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-                              ^^^^^^^^^^^^^^^^^^ type application of identifier `Promise`. Has some incompatible type argument with
+                              ^^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
  25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-              ^^^^^^^^^^^^^ type application of identifier `Promise`
+              ^^^^^^^^^^^^^ Promise
   Type argument `R` is incompatible:
      25: const d: Promise<Blob> = fetch('image.png'); // incorrect
                           ^^^^ Blob. This type is incompatible with
@@ -24,7 +24,7 @@ Error: headers.js:3
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
 885:     constructor(init?: HeadersInit): void;
-                            ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:885
+                            ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:885
   Member 1:
   878: type HeadersInit = Headers | {[key: string]: string};
                           ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:878
@@ -46,7 +46,7 @@ Error: headers.js:4
   4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 885:     constructor(init?: HeadersInit): void;
-                            ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:885
+                            ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:885
   Member 1:
   878: type HeadersInit = Headers | {[key: string]: string};
                           ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:878
@@ -120,7 +120,7 @@ Error: headers.js:28
 
 Error: request.js:2
   2: const a: Request = new Request(); // incorrect
-                        ^^^^^^^^^^^^^ constructor call. Called with too few arguments
+                        ^^^^^^^^^^^^^ new `Request`. Called with too few arguments
   976:     constructor(input: RequestInfo, init?: RequestOptions): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:976
 
@@ -238,7 +238,7 @@ Error: request.js:8
   8: const f: Request = new Request({}) // incorrect
                                     ^^ object literal. This type is incompatible with the expected param type of
 976:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                            ^^^^^^^^^^^ union: Request | URL | string. See lib: <BUILTINS>/bom.js:976
+                            ^^^^^^^^^^^ union: `Request` | `URL` | string. See lib: <BUILTINS>/bom.js:976
   Member 1:
   925: type RequestInfo = Request | URL | string;
                           ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:925
@@ -300,7 +300,7 @@ Error: request.js:54
      56:   headers: 'Content-Type: image/jpeg',
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
     932:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:932
+                       ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:932
       Member 1:
       878: type HeadersInit = Headers | {[key: string]: string};
                               ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:878
@@ -364,7 +364,7 @@ Error: response.js:11
      13:     headers: "'Content-Type': 'image/jpeg'"
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
     946:     headers?: HeadersInit
-                       ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:946
+                       ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:946
       Member 1:
       878: type HeadersInit = Headers | {[key: string]: string};
                               ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:878
@@ -391,7 +391,7 @@ Error: response.js:30
  35: }); // incorrect
      ^ object literal. This type is incompatible with the expected param type of
 950:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
-                              ^^^^^^^^ union: string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView. See lib: <BUILTINS>/bom.js:950
+                              ^^^^^^^^ union: string | `URLSearchParams` | `FormData` | `Blob` | `ArrayBuffer` | `$ArrayBufferView`. See lib: <BUILTINS>/bom.js:950
   Member 1:
   923: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:923
@@ -469,7 +469,7 @@ Error: response.js:30
    35: }); // incorrect
        ^ object literal. This type is incompatible with
   923: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                                                  ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:923
+                                                                                  ^^^^^^^^^^^^^^^^ union: `$TypedArray` | `DataView`. See lib: <BUILTINS>/bom.js:923
     Member 1:
     628: type $ArrayBufferView = $TypedArray | DataView;
                                  ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:628
@@ -523,7 +523,7 @@ Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
                                    ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 899:     constructor(query?: string | URLSearchParams): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:899
+                             ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | `URLSearchParams`. See lib: <BUILTINS>/bom.js:899
   Member 1:
   899:     constructor(query?: string | URLSearchParams): void;
                                ^^^^^^ string. See lib: <BUILTINS>/bom.js:899
@@ -545,7 +545,7 @@ Error: urlsearchparams.js:5
   5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                                    ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 899:     constructor(query?: string | URLSearchParams): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:899
+                             ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | `URLSearchParams`. See lib: <BUILTINS>/bom.js:899
   Member 1:
   899:     constructor(query?: string | URLSearchParams): void;
                                ^^^^^^ string. See lib: <BUILTINS>/bom.js:899

@@ -104,7 +104,7 @@ Error: object_missing.js:5
   5:     Object.doesNotExist();
                 ^^^^^^^^^^^^ property `doesNotExist`. Property not found in
   5:     Object.doesNotExist();
-         ^^^^^^ statics of Object
+         ^^^^^^ statics of `Object`
 
 Error: object_prototype.js:31
  31: b.toString = function(): string { return 'foo'; };
@@ -280,7 +280,7 @@ Error: proto.js:17
  17: (inst1_proto.m: empty); // TODO error: function ~> empty
                   ^ property `m`. Property not found in
  17: (inst1_proto.m: empty); // TODO error: function ~> empty
-      ^^^^^^^^^^^ super of C1
+      ^^^^^^^^^^^ super of `C1`
 
 
 Found 39 errors

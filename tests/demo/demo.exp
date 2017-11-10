@@ -4,11 +4,11 @@ Error: 1/f.js:3
 
 Error: 2/A.js:5
   5:   constructor(x) { this.x = x; }
-                   ^ parameter `x`. Missing annotation
+                   ^ x. Missing annotation
 
 Error: 2/A.js:9
   9:   onLoad(callback) {
-              ^^^^^^^^ parameter `callback`. Missing annotation
+              ^^^^^^^^ callback. Missing annotation
 
 Error: 2/A.js:10
  10:     return callback(this.getX());

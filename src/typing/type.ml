@@ -2263,10 +2263,12 @@ let reasonless_eq t1 t2 =
 module DescFormat = struct
   (* InstanceT reasons have desc = name *)
   let instance_reason name loc =
-    mk_reason (RCustom name) loc
+    mk_reason (RType name) loc
 
   let name_of_instance_reason r =
-    string_of_desc (desc_of_reason r)
+    match desc_of_reason r with
+    | RType name -> name
+    | desc -> string_of_desc desc
 
   (* TypeT reasons have desc = type `name` *)
   let type_reason name loc =
@@ -2572,11 +2574,11 @@ let exact t =
   ExactT (reason_of_t t, t)
 
 let class_type t =
-  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
   DefT (reason, ClassT t)
 
 let this_class_type t =
-  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
 let extends_type r l u =

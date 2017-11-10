@@ -241,7 +241,7 @@ Error: variance.js:21
  22:   // error: getter incompatible with read/write property
  23:   get x(): B { return b }
  24: });
-     ^ class expr `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
+     ^ `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
  21: (class extends Base {
                     ^^^^ Base
 
@@ -251,7 +251,7 @@ Error: variance.js:26
  27:   // error: setter incompatible with read/write property
  28:   set x(value: B): void {}
  29: });
-     ^ class expr `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
+     ^ `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
  26: (class extends Base {
                     ^^^^ Base
 
@@ -261,7 +261,7 @@ Error: variance.js:37
  38:   // error: setter incompatible with read-only property
  39:   set pos(value: B): void {}
  40: });
-     ^ class expr `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
+     ^ `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
  37: (class extends Base {
                     ^^^^ Base
 
@@ -271,7 +271,7 @@ Error: variance.js:47
  48:   // error: getter incompatible with write-only property
  49:   get neg(): B { return b }
  50: });
-     ^ class expr `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
+     ^ `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
  47: (class extends Base {
                     ^^^^ Base
 

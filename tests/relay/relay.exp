@@ -34,7 +34,7 @@ Error: Profile.js:22
    17:     +pic: ProfilePic_imageRef & {|
    18:       +id: string,
    19:     |},
-           -^ exact type: object type. See: Profile.graphql.js:17
+           -^ object type. See: Profile.graphql.js:17
   Error:
    22:     (this.props.user.pic.id: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -220,9 +220,9 @@ Error: more.js:98
          ^ object type
       Property `__fragments` is incompatible:
          86:   +__fragments: FragmentReference<{thing: true}>,
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of FragmentReference. Has some incompatible type argument with
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
          23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                                    ^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: FragmentReference
+                                                                                    ^^^^^^^^^^^^^^^^^^^^ FragmentReference
           Type argument `T` is incompatible:
              43:   +__typeof: RelayModernTypedFlowtest_user$reference,
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
@@ -292,9 +292,9 @@ Error: more.js:150
                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `__fragments` is incompatible:
      86:   +__fragments: FragmentReference<{thing: true}>,
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of FragmentReference. Has some incompatible type argument with
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
      25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                               ^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: FragmentReference
+                                                                                                               ^^^^^^^^^^^^^^^^^^^^ FragmentReference
       Type argument `T` is incompatible:
          49:   +__typeof: RelayModernTypedFlowtest_users$reference,
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with

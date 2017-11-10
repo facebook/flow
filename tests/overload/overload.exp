@@ -1,6 +1,6 @@
 Error: annot.js:6
   6: f(x); // error should point to `x` here, not at type alias
-     ^^^^ function call. Function cannot be called on any member of intersection type
+     ^^^^ call of intersection type. Function cannot be called on any member of intersection type
   6: f(x); // error should point to `x` here, not at type alias
      ^ intersection
   Member 1:
@@ -22,13 +22,13 @@ Error: annot.js:6
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
+                      ^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly null value
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ null
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+                      ^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ undefined
 
@@ -42,7 +42,7 @@ Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with the expected param type of
 301:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:301
+                       ^^^^^^^^^^^^^^^ union: string | `RegExp`. See lib: <BUILTINS>/core.js:301
   Member 1:
   301:     match(regexp: string | RegExp): ?Array<string>;
                          ^^^^^^ string. See lib: <BUILTINS>/core.js:301
@@ -62,13 +62,13 @@ Error: overload.js:7
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
+                      ^^^^^^^^^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly null value
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^ null
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+                      ^^^^^^^^^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^ undefined
 

@@ -157,7 +157,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let m = convert_qualification cx "type-annotation" qualification in
   let _, name = id in
-  let reason = mk_reason (RCustom name) loc in
+  let reason = mk_reason (RType name) loc in
   let t = Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
   ) in
@@ -408,7 +408,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      let reason = mk_reason (RClassType (desc_of_t t)) loc in
+      let reason = mk_reason (RStatics (desc_of_t t)) loc in
       DefT (reason, ClassT t)
     )
 
@@ -580,7 +580,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* other applications with id as head expr *)
   | _ ->
-    let reason = mk_reason (RCustom name) loc in
+    let reason = mk_reason (RType name) loc in
     let c = type_identifier cx name loc in
     mk_nominal_type cx reason tparams_map (c, typeParameters)
 
@@ -666,14 +666,14 @@ let rec convert cx tparams_map = Ast.Type.(function
         if callable
         then
           SMap.add "__proto__" (Field (None, t, Neutral)) props_map,
-          FunProtoT (locationless_reason reason_desc)
+          FunProtoT (locationless_reason RFunctionPrototype)
         else
           props_map, t
       | None ->
         props_map,
         if callable
-        then FunProtoT (locationless_reason reason_desc)
-        else ObjProtoT (locationless_reason reason_desc)
+        then FunProtoT (locationless_reason RFunctionPrototype)
+        else ObjProtoT (locationless_reason RObjectPrototype)
     in
     let pmap = Context.make_property_map cx props_map in
     let flags = {
@@ -879,7 +879,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
   | loc, { TypeParam.name; bound; variance; default; } ->
-    let reason = mk_reason (RCustom name) loc in
+    let reason = mk_reason (RType name) loc in
     let bound = match bound with
     | None -> DefT (reason, MixedT Mixed_everything)
     | Some (_, u) ->

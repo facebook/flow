@@ -12,7 +12,7 @@ Error: optional.js:9
 
 Error: typeof.js:43
  43: var b: MyClass1 = MyClass1;
-                       ^^^^^^^^ class type: MyClass1. This type is incompatible with
+                       ^^^^^^^^ statics of `MyClass1`. This type is incompatible with
  43: var b: MyClass1 = MyClass1;
             ^^^^^^^^ MyClass1
 
@@ -20,7 +20,7 @@ Error: typeof.js:53
  53: var c: typeof MyClass2 = new MyClass2();
                               ^^^^^^^^^^^^^^ MyClass2. This type is incompatible with
  53: var c: typeof MyClass2 = new MyClass2();
-            ^^^^^^^^^^^^^^^ class type: MyClass2
+            ^^^^^^^^^^^^^^^ statics of `MyClass2`
 
 Error: typeof.js:61
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number
@@ -44,10 +44,10 @@ Error: union.js:9
   9: (null: typeof x); // error: null ~> number|string
       ^^^^ null. This type is incompatible with
   9: (null: typeof x); // error: null ~> number|string
-            ^^^^^^^^ union: type parameter `A` of function call | type parameter `B` of function call
+            ^^^^^^^^ union: `A` | `B`
   Member 1:
     9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ type parameter `A` of function call
+              ^^^^^^^^ A
   Error:
     9: (null: typeof x); // error: null ~> number|string
         ^^^^ null. This type is incompatible with
@@ -55,7 +55,7 @@ Error: union.js:9
               ^^^^^^^^ number
   Member 2:
     9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ type parameter `B` of function call
+              ^^^^^^^^ B
   Error:
     9: (null: typeof x); // error: null ~> number|string
         ^^^^ null. This type is incompatible with

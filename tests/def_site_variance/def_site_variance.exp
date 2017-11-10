@@ -8,9 +8,9 @@ Error: test.js:3
 
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-        ^^ type application of polymorphic type: class type: Variance. Has some incompatible type argument with
+        ^^ Variance. Has some incompatible type argument with
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-            ^^^^^^^^^^^^^ type application of class `Variance`
+            ^^^^^^^^^^^^^ Variance
   Type argument `In` is incompatible:
      13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
                            ^ A. This type is incompatible with
@@ -19,9 +19,9 @@ Error: test.js:13
 
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-        ^^ type application of polymorphic type: class type: Variance. Has some incompatible type argument with
+        ^^ Variance. Has some incompatible type argument with
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-            ^^^^^^^^^^^^^ type application of class `Variance`
+            ^^^^^^^^^^^^^ Variance
   Type argument `Out` is incompatible:
      10:   v1: Variance<A,B>,
                         ^ A. This type is incompatible with

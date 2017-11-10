@@ -30,7 +30,7 @@ Error: classes.js:27
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                               ^^^^^^^^^^ constructor call
+                               ^^^^^^^^^^ C
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
                                      ^^^ number. This type is incompatible with
  25: class C<T: ?string = string> extends A<T> {}
@@ -56,13 +56,13 @@ Error: classes.js:34
 
 Error: classes.js:40
  40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-                         ^^^ type application of polymorphic type: class type: D. Too few type arguments. Expected at least 1
+                         ^^^ D. Too few type arguments. Expected at least 1
  36: class D<S, T = string> extends A<T> {}
              ^^^^ See type parameters of definition here
 
 Error: classes.js:41
  41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: class type: D. Too many type arguments. Expected at most 2
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ D. Too many type arguments. Expected at most 2
  36: class D<S, T = string> extends A<T> {}
              ^^^^ See type parameters of definition here
 
@@ -116,7 +116,7 @@ Error: classes.js:56
 
 Error: classes.js:58
  58: class H<S = T, T = string> {} // Error - can't refer to T before it's defined
-                 ^ identifier `T`. Could not resolve name
+                 ^ T. Could not resolve name
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
@@ -126,7 +126,7 @@ Error: classes.js:62
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                               ^^^^^^^^^^ constructor call
+                               ^^^^^^^^^^ I
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
                                      ^^^ number. This type is incompatible with
  60: class I<T: ?string = *> extends A<T> {}

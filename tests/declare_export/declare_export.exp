@@ -100,15 +100,15 @@ Error: es6modules.js:67
 
 Error: es6modules.js:70
  70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-     ^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Constructor cannot be called on
+     ^^^^^^^^^^^^^^^^^^^^^^^^ new `CJS_Clobb_Class_NS`. Constructor cannot be called on
  70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-         ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+         ^^^^^^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:71
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
                                          ^^^^^^^^^^^^^ property `staticNumber3`. Property not found in
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                      ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+                      ^^^^^^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:73
  73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
@@ -142,7 +142,7 @@ Error: es6modules.js:92
  92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
                ^^^^^^^^^^^ property `doesntExist`. Property not found in
  92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
-     ^^^^^^^^^ exports of "CommonJS_Named"
+     ^^^^^^^^^ exports of `CommonJS_Named`
 
 Error: es6modules.js:96
  96: var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
@@ -258,7 +258,7 @@ Error: es6modules.js:183
 183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
                                           ^^^^^^^^^^^ property `doesntExist`. Property not found in
 183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports of "ES6_Default_AnonFunction2"
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports of `ES6_Default_AnonFunction2`
 
 Error: es6modules.js:187
 187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string

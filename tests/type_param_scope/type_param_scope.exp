@@ -40,9 +40,9 @@ Error: method_shadow.js:42
 
 Error: method_shadow.js:43
  43: (g.m(""): G<number>); // err, string ~> number
-      ^^^^^^^ type application of class `G`. Has some incompatible type argument with
+      ^^^^^^^ G. Has some incompatible type argument with
  43: (g.m(""): G<number>); // err, string ~> number
-               ^^^^^^^^^ type application of polymorphic type: class type: G
+               ^^^^^^^^^ G
   Type argument `T` is incompatible:
      43: (g.m(""): G<number>); // err, string ~> number
               ^^ string. This type is incompatible with

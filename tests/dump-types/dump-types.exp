@@ -327,7 +327,7 @@
     "type":"?(string | Object)",
     "reasons":[
       {
-        "desc":"?object type",
+        "desc":"nullable object type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -347,7 +347,7 @@
         "end":50
       },
       {
-        "desc":"?object type",
+        "desc":"nullable object type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -367,7 +367,7 @@
         "end":50
       },
       {
-        "desc":"?string",
+        "desc":"nullable string",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -387,7 +387,7 @@
         "end":50
       },
       {
-        "desc":"?string",
+        "desc":"nullable string",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -742,7 +742,7 @@
     "type":"?(string | Object)",
     "reasons":[
       {
-        "desc":"?object type",
+        "desc":"nullable object type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -762,7 +762,7 @@
         "end":34
       },
       {
-        "desc":"?object type",
+        "desc":"nullable object type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -782,7 +782,7 @@
         "end":34
       },
       {
-        "desc":"?string",
+        "desc":"nullable string",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -802,7 +802,7 @@
         "end":34
       },
       {
-        "desc":"?string",
+        "desc":"nullable string",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -1974,7 +1974,7 @@
     "type":"?number",
     "reasons":[
       {
-        "desc":"?function call",
+        "desc":"nullable call of function type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -2019,7 +2019,7 @@
     "type":"?number",
     "reasons":[
       {
-        "desc":"?function call",
+        "desc":"nullable call of function type",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",

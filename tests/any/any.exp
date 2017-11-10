@@ -6,7 +6,7 @@ Error: any.js:8
 
 Error: flowfixme.js:14
  14: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
-                               ^^^^^^^ identifier `nnumber`. Could not resolve name
+                               ^^^^^^^ nnumber. Could not resolve name
 
 Error: flowfixme.js:17
  17: var y:string = bar(0);
@@ -16,7 +16,7 @@ Error: flowfixme.js:17
 
 Error: flowissue.js:14
  14: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
-                               ^^^^^^^ identifier `nnumber`. Could not resolve name
+                               ^^^^^^^ nnumber. Could not resolve name
 
 Error: flowissue.js:17
  17: var y:string = bar(0);

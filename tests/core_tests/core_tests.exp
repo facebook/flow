@@ -1,6 +1,6 @@
 Error: map.js:23
  23:     let x = new Map(['foo', 123]); // error
-                 ^^^^^^^^^^^^^^^^^^^^^ constructor call
+                 ^^^^^^^^^^^^^^^^^^^^^ new `Map`
  23:     let x = new Map(['foo', 123]); // error
                           ^^^^^ string. This type is incompatible with
 542:     constructor(iterable: ?Iterable<[K, V]>): void;
@@ -8,7 +8,7 @@ Error: map.js:23
 
 Error: map.js:23
  23:     let x = new Map(['foo', 123]); // error
-                 ^^^^^^^^^^^^^^^^^^^^^ constructor call
+                 ^^^^^^^^^^^^^^^^^^^^^ new `Map`
  23:     let x = new Map(['foo', 123]); // error
                                  ^^^ number. This type is incompatible with
 542:     constructor(iterable: ?Iterable<[K, V]>): void;
@@ -62,7 +62,7 @@ Error: regexp.js:27
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                             ^ number. This type is incompatible with
 580: declare class WeakSet<T: Object> {
@@ -70,7 +70,7 @@ Error: weakset.js:19
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ number. This type is incompatible with
 580: declare class WeakSet<T: Object> {
@@ -78,7 +78,7 @@ Error: weakset.js:19
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                   ^ number. This type is incompatible with
 580: declare class WeakSet<T: Object> {
@@ -86,7 +86,7 @@ Error: weakset.js:19
 
 Error: weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
  29: function* numbers(): Iterable<number> {
                                    ^^^^^^ number. This type is incompatible with
 580: declare class WeakSet<T: Object> {

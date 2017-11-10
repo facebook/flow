@@ -1,8 +1,8 @@
 Error: example1.js:6
   6: pipe("hello", null); // error
-     ^^^^^^^^^^^^^^^^^^^ function call
+     ^^^^^^^^^^^^^^^^^^^ call of function
   3: function pipe(x, f) { f(x); }
-                           ^^^^ function call. Function cannot be called on possibly null value
+                           ^^^^ call of `f`. Function cannot be called on possibly null value
   3: function pipe(x, f) { f(x); }
                            ^ null
 
@@ -27,7 +27,7 @@ Error: example6.js:9
     8: let id = (x) => x;
                        ^ return
     8: let id = (x) => x;
-                 ^ parameter `x`
+                 ^ x
 
 Error: example7.js:14
  14: stringIsString({ type: "string", val: 0 }); // error

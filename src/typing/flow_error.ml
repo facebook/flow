@@ -492,8 +492,8 @@ let suppress_fun_call_param_op op =
   match op with
   | Some r ->
     begin match desc_of_reason r with
-    | RFunctionCall
-    | RConstructorCall
+    | RFunctionCall _
+    | RConstructorCall _
     | RMethodCall _
     | RReactElement _ -> true
     | _ -> false
@@ -504,7 +504,20 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
 
   let mk_info reason extras =
-    loc_of_reason reason, string_of_desc (desc_of_reason reason) :: extras
+    let desc = string_of_desc (desc_of_reason reason) in
+    (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
+     * we want to unwrap the primes and just show A. This looks better in infos.
+     * However, when an identifier wrapped with primes is inside some other text
+     * then we want to keep the primes since they help with readability. *)
+    let desc = if (
+      (String.length desc > 2) &&
+      ((String.get desc 0) = '`') &&
+      ((String.get desc ((String.length desc) - 1)) = '`') &&
+      not (String.contains desc ' ')
+    ) then (
+      String.sub desc 1 ((String.length desc) - 2)
+    ) else desc in
+    loc_of_reason reason, desc :: extras
   in
 
   let info_of_reason r = mk_info r [] in

@@ -28,7 +28,7 @@ type reason_desc =
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall
+  | RFunctionCall of reason_desc
   | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
@@ -36,6 +36,9 @@ type reason_desc =
   | RJSXElementProps of string
   | RJSXElement of string option
   | RJSXText
+  | RUnaryOperator of string * reason_desc
+  | RBinaryOperator of string * reason_desc * reason_desc
+  | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
   | RUnknownString
@@ -58,10 +61,13 @@ type reason_desc =
   | RAnd
   | RConditional
   | RPrototype
+  | RObjectPrototype
+  | RFunctionPrototype
   | RDestructuring
+  | RDefaultValue
   | RConstructor
   | RDefaultConstructor
-  | RConstructorCall
+  | RConstructorCall of reason_desc
   | RReturn
   | RRegExp
   | RSuper
@@ -81,6 +87,7 @@ type reason_desc =
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of string option
+  | RPrivateProperty of string
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
@@ -94,7 +101,6 @@ type reason_desc =
   | RUntypedModule of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RClassType of reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -111,6 +117,7 @@ type reason_desc =
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc
   | RPredicateCallNeg of reason_desc
+  | RRefined of reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of reason_desc
   | RObjectPatternRestProp

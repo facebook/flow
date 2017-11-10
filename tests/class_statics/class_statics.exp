@@ -8,7 +8,7 @@ Error: test.js:7
   7: A.qux = function(x: string) { } // error?
        ^^^ property `qux`. Property not found in
   7: A.qux = function(x: string) { } // error?
-     ^ statics of A
+     ^ statics of `A`
 
 Error: test.js:10
  10:   static x: string; // error?
@@ -55,7 +55,7 @@ Error: test.js:19
  19:     B.qux(0); // error
            ^^^ property `qux`. Property not found in
  19:     B.qux(0); // error
-         ^ statics of B
+         ^ statics of `B`
 
 Error: test.js:26
  26:     return new this(); // error B ~> number
@@ -67,7 +67,7 @@ Error: test.js:40
  40:     D.foo(0); // error?
            ^^^ property `foo`. Property not found in
  40:     D.foo(0); // error?
-         ^ statics of D
+         ^ statics of `D`
 
 Error: test.js:42
  42:     D.bar(0);
@@ -79,13 +79,13 @@ Error: test.js:47
  47: (new A: typeof A);
       ^^^^^ A. This type is incompatible with
  47: (new A: typeof A);
-             ^^^^^^^^ class type: A
+             ^^^^^^^^ statics of `A`
 
 Error: test.js:53
  53:     this.bar(); // error
               ^^^ property `bar`. Property not found in
  53:     this.bar(); // error
-         ^^^^ statics of E
+         ^^^^ statics of `E`
 
 Error: test.js:54
  54:     return this.x; // error

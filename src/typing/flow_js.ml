@@ -605,7 +605,7 @@ end = struct
   let string_of_list list sep f =
     list |> List.map f |> String.concat sep
 
-  let string_of_desc_of_t t = string_of_desc (desc_of_t t)
+  let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
 
   (* show entries in the stack *)
   let show_entry (c, tss) =
@@ -6549,7 +6549,7 @@ and numeric = function
   | DefT (_, SingletonNumT _) -> true
 
   | DefT (reason, InstanceT _) ->
-    string_of_desc (desc_of_reason reason) = "Date"
+    DescFormat.name_of_instance_reason reason = "Date"
 
   | _ -> false
 

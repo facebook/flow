@@ -57,7 +57,7 @@ Error: call.js:4
   4: (y: {(number): string});
       ^ object type. This type is incompatible with
   4: (y: {(number): string});
-         ^^^^^^^^^^^^^^^^^^ object type
+         ^^^^^^^^^^^^^^^^^^ function prototype
 
 Error: call.js:4
   4: (y: {(number): string});

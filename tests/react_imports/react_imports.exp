@@ -1,6 +1,6 @@
 Error: commonjs-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -8,7 +8,7 @@ Error: commonjs-pascal.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
   Member 1:
    13:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -51,7 +51,7 @@ Error: commonjs-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -64,15 +64,15 @@ Error: commonjs-pascal.js:6
             ^^ object literal
   Member 7:
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Member 8:
    20:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -80,7 +80,7 @@ Error: commonjs-pascal.js:6
            ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
     Property `@@iterator` is incompatible:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -92,7 +92,7 @@ Error: commonjs-pascal.js:7
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -100,7 +100,7 @@ Error: commonjs.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
   Member 1:
    13:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -143,7 +143,7 @@ Error: commonjs.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -156,15 +156,15 @@ Error: commonjs.js:6
             ^^ object literal
   Member 7:
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Member 8:
    20:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -172,7 +172,7 @@ Error: commonjs.js:6
            ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
     Property `@@iterator` is incompatible:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -180,11 +180,11 @@ Error: commonjs.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: const React = require('react');
-                   ^^^^^^^^^^^^^^^^ CommonJS exports of "react"
+                   ^^^^^^^^^^^^^^^^ CommonJS exports of `react`
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -192,7 +192,7 @@ Error: es-default-pascal.js:6
   6: ({}: React.Node); // Error: Not in default export.
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error: Not in default export.
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
   Member 1:
    13:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -235,7 +235,7 @@ Error: es-default-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
@@ -248,15 +248,15 @@ Error: es-default-pascal.js:6
             ^^ object literal
   Member 7:
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Member 8:
    20:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
@@ -264,7 +264,7 @@ Error: es-default-pascal.js:6
            ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
     Property `@@iterator` is incompatible:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error: Not in default export.
             ^^ object literal
 
@@ -276,7 +276,7 @@ Error: es-default-pascal.js:7
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -315,7 +315,7 @@ Error: es-default.js:7
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -323,7 +323,7 @@ Error: es-namespace-pascal.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
   Member 1:
    13:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -366,7 +366,7 @@ Error: es-namespace-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -379,15 +379,15 @@ Error: es-namespace-pascal.js:6
             ^^ object literal
   Member 7:
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Member 8:
    20:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -395,7 +395,7 @@ Error: es-namespace-pascal.js:6
            ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
     Property `@@iterator` is incompatible:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -403,11 +403,11 @@ Error: es-namespace-pascal.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: import * as React from 'React';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of "React"
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of `React`
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ class type: React$Component. This type is incompatible with
+      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
   4: (React.Component: number); // Error
                        ^^^^^^ number
 
@@ -415,7 +415,7 @@ Error: es-namespace.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
   Member 1:
    13:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -458,7 +458,7 @@ Error: es-namespace.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -471,15 +471,15 @@ Error: es-namespace.js:6
             ^^ object literal
   Member 7:
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    19:   | React$Portal
-           ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+           ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
   Member 8:
    20:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -487,7 +487,7 @@ Error: es-namespace.js:6
            ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
     Property `@@iterator` is incompatible:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -495,7 +495,7 @@ Error: es-namespace.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: import * as React from 'react';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of "react"
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of `react`
 
 
 Found 19 errors

@@ -233,7 +233,7 @@ Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
                        ^^^^^^^^ object literal. This type is incompatible with the expected param type of
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:35
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `State` | function type. See lib: <BUILTINS>/react.js:35
   Member 1:
        v------------------
    40: React.createClass({
@@ -241,7 +241,7 @@ Error: create_class_initial_state_sealed.js:45
    42:     return { p: 0 };
   ...:
    50: });
-       -^ type parameter `State` of call of method `createClass`
+       -^ State
   Error:
    45:     this.setState({ q: 0 }); // property `q` not found
                          ^^^^^^^^ property `q` of object literal. Property not found in
@@ -277,7 +277,7 @@ Error: create_class_initial_state_sealed.js:81
  81:     this.setState({ baz: 0 }); // property `baz`  not found
                        ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:35
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `State` | function type. See lib: <BUILTINS>/react.js:35
   Member 1:
        v------------------
    71: React.createClass({
@@ -285,7 +285,7 @@ Error: create_class_initial_state_sealed.js:81
    73:     getInitialState(): { foo: number } {
   ...:
    86: });
-       -^ type parameter `State` of call of method `createClass`
+       -^ State
   Error:
    81:     this.setState({ baz: 0 }); // property `baz`  not found
                          ^^^^^^^^^^ property `baz` of object literal. Property not found in
@@ -439,25 +439,25 @@ Error: element_with_component_type.js:8
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `type` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
-               ^^^ class type: Foo. This type is incompatible with
+               ^^^ statics of `Foo`. This type is incompatible with
       8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: React$StatelessFunctionalComponent | class type: type application of polymorphic type: class type: React$Component
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `React.StatelessFunctionalComponent` | statics of `React.Component`
       Member 1:
       137:   | React$StatelessFunctionalComponent<Props>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: React$StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
       Error:
         5: class Foo extends React.Component<{a: number}> {}
-                 ^^^ statics of Foo. This type is incompatible with
+                 ^^^ statics of `Foo`. This type is incompatible with
       137:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
         Callable property is incompatible:
           137:   | React$StatelessFunctionalComponent<Props>
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:137
             5: class Foo extends React.Component<{a: number}> {}
-                     ^^^ statics of Foo
+                     ^^^ statics of `Foo`
       Member 2:
       138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:138
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
       Error:
         8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                              ^^^^^^^^^^^ object type. This type is incompatible with
@@ -504,25 +504,25 @@ Error: hoc.js:12
 
 Error: hoc.js:35
  35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: class expr `Empty`. This type is incompatible with the expected param type of
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `Empty`. This type is incompatible with the expected param type of
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: React$StatelessFunctionalComponent | class type: type application of polymorphic type: class type: React$Component
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `React.StatelessFunctionalComponent` | statics of `React.Component`
   Member 1:
   137:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: React$StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Error:
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`. This type is incompatible with
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `Empty`. This type is incompatible with
   137:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
     Callable property is incompatible:
       137:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:137
        35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `Empty`
   Member 2:
   138:   | Class<React$Component<Props, any>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:138
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
   Error:
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
                                                  ^^^^^^^^^^^^^ object type. This type is incompatible with
@@ -538,10 +538,10 @@ Error: hoc.js:36
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: React$StatelessFunctionalComponent | class type: type application of polymorphic type: class type: React$Component
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `React.StatelessFunctionalComponent` | statics of `React.Component`
   Member 1:
   137:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: React$StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
@@ -564,17 +564,17 @@ Error: hoc.js:36
                                                      ^^^^^^ string
   Member 2:
   138:   | Class<React$Component<Props, any>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:138
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   138:   | Class<React$Component<Props, any>>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:138
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
     Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
       138:   | Class<React$Component<Props, any>>;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:138
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.
@@ -1208,9 +1208,9 @@ Error: hoc4.js:30
 
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
-                     ^^^^^^^^^^^^^^^^^^^^^ constructor call
+                     ^^^^^^^^^^^^^^^^^^^^^ new property `Component`
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
-                     ^^^^^^^^^^^^^^^^^^^^^ React$Component. This type is incompatible with
+                     ^^^^^^^^^^^^^^^^^^^^^ React.Component. This type is incompatible with
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
             ^^^^^^ number
 
@@ -2078,7 +2078,7 @@ Error: ref.js:15
  15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
                        ^^^ Foo. This type is incompatible with
  15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                            ^^^^^^^^^^ union: Bar | null
+                            ^^^^^^^^^^ union: `Bar` | null
   Member 1:
    15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
                               ^^^ Bar
@@ -2133,7 +2133,7 @@ Error: ref.js:26
  26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
                             ^^^ FooExact. This type is incompatible with
  26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
-                                 ^^^^^^^^^^ union: Bar | null
+                                 ^^^^^^^^^^ union: `Bar` | null
   Member 1:
    26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
                                    ^^^ Bar

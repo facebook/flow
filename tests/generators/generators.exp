@@ -1,6 +1,6 @@
 Error: class.js:2
   2:   *stmt_yield(): Generator<number, void, void> {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`. This type is incompatible with an implicitly-returned type application of Generator<Yield,void,Next>
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator. This type is incompatible with an implicitly-returned Generator<Yield,void,Next>
   Type argument `Yield` is incompatible:
       4:     yield ""; // error: string ~> number
                    ^^ string. This type is incompatible with
@@ -15,9 +15,9 @@ Error: class.js:15
 
 Error: class.js:24
  24:     return ""; // error: string ~> number
-         ^^^^^^^^^^ type application of generator return. This type is incompatible with the expected return type of
+         ^^^^^^^^^^ generator return. This type is incompatible with the expected return type of
  23:   *stmt_return_err(): Generator<void, number, void> {
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator
   Type argument `Return` is incompatible:
      24:     return ""; // error: string ~> number
                     ^^ string. This type is incompatible with
@@ -104,7 +104,7 @@ Error: class_failure.js:19
 
 Error: generators.js:1
   1: function *stmt_yield(): Generator<number, void, void> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`. This type is incompatible with an implicitly-returned type application of Generator<Yield,void,Next>
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator. This type is incompatible with an implicitly-returned Generator<Yield,void,Next>
   Type argument `Yield` is incompatible:
       3:   yield ""; // error: string ~> number
                  ^^ string. This type is incompatible with
@@ -119,9 +119,9 @@ Error: generators.js:14
 
 Error: generators.js:23
  23:   return ""; // error: string ~> number
-       ^^^^^^^^^^ type application of generator return. This type is incompatible with the expected return type of
+       ^^^^^^^^^^ generator return. This type is incompatible with the expected return type of
  22: function *stmt_return_err(): Generator<void, number, void> {
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator
   Type argument `Return` is incompatible:
      23:   return ""; // error: string ~> number
                   ^^ string. This type is incompatible with

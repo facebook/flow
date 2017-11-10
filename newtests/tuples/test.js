@@ -156,7 +156,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index 2 of
+                                                       ^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 2 of
             3: function foo(x: [1,2]): number { return x[2]; }
                                                        ^ tuple type
 
@@ -173,7 +173,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index -1 of
+                                                       ^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index -1 of
             5: function foo(x: [1,2]): number { return x[-1]; }
                                                        ^ tuple type
 
@@ -191,7 +191,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ access of computed property/element. Out of bound access. This tuple has 1 elements and you tried to access index 2 of
+                                                     ^^^^ computed property. Out of bound access. This tuple has 1 elements and you tried to access index 2 of
             3: function foo(x: [1]): string { return x[2]; }
                                                      ^ tuple type
 
@@ -406,7 +406,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:           return tup[3];
-                                ^^^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index 3 of
+                                ^^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 3 of
             6:           return tup[3];
                                 ^^^ tuple type
 

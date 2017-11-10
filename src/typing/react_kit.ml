@@ -405,7 +405,7 @@ let run cx trace ~use_op reason_op l u
           ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
-    let elem_reason = replace_reason_const (RReactElement None) reason_op in
+    let elem_reason = replace_reason_const (RType "React$Element") reason_op in
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout

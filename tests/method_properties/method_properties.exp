@@ -2,13 +2,13 @@ Error: test.js:5
   5:   qux() { this.constructor.x; }
                                 ^ property `x`. Property not found in
   5:   qux() { this.constructor.x; }
-               ^^^^ statics of C
+               ^^^^ statics of `C`
 
 Error: test.js:7
   7: C.x;
        ^ property `x`. Property not found in
   7: C.x;
-     ^ statics of C
+     ^ statics of `C`
 
 Error: test.js:13
  13: (foo.bar(): string); // error, could be undefined

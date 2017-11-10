@@ -5,7 +5,7 @@ Error: builtin.js:11
                       ^^^^^^^^^^ IHasLength
   Property `length` is incompatible:
      11: var lengthTest3: IHasLength = 123; // number doesn't have length
-                          ^^^^^^^^^^ property `length` of IHasLength. Property not found in
+                          ^^^^^^^^^^ property `length` of `IHasLength`. Property not found in
      11: var lengthTest3: IHasLength = 123; // number doesn't have length
                                        ^^^ number
 
@@ -16,7 +16,7 @@ Error: builtin.js:12
                       ^^^^^^^^^^ IHasLength
   Property `length` is incompatible:
      12: var lengthTest4: IHasLength = true; // bool doesn't have length
-                          ^^^^^^^^^^ property `length` of IHasLength. Property not found in
+                          ^^^^^^^^^^ property `length` of `IHasLength`. Property not found in
      12: var lengthTest4: IHasLength = true; // bool doesn't have length
                                        ^^^^ boolean
 
@@ -49,7 +49,7 @@ Error: class.js:23
                         ^^^^^^^^^^^ IHasYString
   Property `y` is incompatible:
      23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
-                            ^^^^^^^^^^^ property `y` of IHasYString. Property not found in
+                            ^^^^^^^^^^^ property `y` of `IHasYString`. Property not found in
      23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
                                           ^^^^^^^^^^^^^^^^^^^^^^ ClassWithXString
 
@@ -82,7 +82,7 @@ Error: obj.js:11
                     ^^^^^^^^^^^ IHasXString
   Property `x` is incompatible:
      11: var propTest3: IHasXString = {}; // Property not found
-                        ^^^^^^^^^^^ property `x` of IHasXString. Property not found in
+                        ^^^^^^^^^^^ property `x` of `IHasXString`. Property not found in
      11: var propTest3: IHasXString = {}; // Property not found
                                       ^^ object literal
 
@@ -115,7 +115,7 @@ Error: optional.js:10
                 ^^^^^^^^^^^ HasOptional
   Property `a` is incompatible:
      10: var test2: HasOptional = {}; // Error: missing property a
-                    ^^^^^^^^^^^ property `a` of HasOptional. Property not found in
+                    ^^^^^^^^^^^ property `a` of `HasOptional`. Property not found in
      10: var test2: HasOptional = {}; // Error: missing property a
                                   ^^ object literal
 

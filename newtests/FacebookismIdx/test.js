@@ -51,7 +51,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                                             ^^^^^^ string
       `,
     ),
-
     addCode('(idx(obj1, obj => obj["a"].b.c): number);\n').newErrors(
        `
          test.js:23
@@ -77,13 +76,12 @@ export default suite(({addFile, addFiles, addCode}) => [
        `,
     ),
     addCode('idx(obj1, obj => obj.a = null);\n').newErrors(
-       `
-         test.js:29
-          29: idx(obj1, obj => obj.a = null);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-       `,
-    ),
-
+                                                  `
+                                                    test.js:29
+                                                     29: idx(obj1, obj => obj.a = null);
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type. idx() callbacks may only access properties on the callback parameter!
+                                                  `,
+                                                ),
     addCode('declare var obj2: {a?: {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): number);\n').newErrors(
@@ -101,7 +99,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                                         ^^^^^^ number
       `,
     ),
-
     addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): number);\n').newErrors(
@@ -119,7 +116,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                                         ^^^^^^ number
       `,
     ),
-
     // Nested maybes/optionals should get unwrapped
     addCode('declare var obj4: {a?: ?(?{b: number})};').noNewErrors(),
     addCode('(idx(obj4, obj => obj.a.b): ?number)').noNewErrors(),
@@ -148,12 +144,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `,
     ),
     addCode('idx(new Foo1(), o => o.a = null);\n').newErrors(
-      `
-        test.js:21
-         21: idx(new Foo1(), o => o.a = null);
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-      `,
-    ),
+                                                    `
+                                                      test.js:21
+                                                       21: idx(new Foo1(), o => o.a = null);
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type. idx() callbacks may only access properties on the callback parameter!
+                                                    `,
+                                                  ),
   ]),
 
   test('idx(array)', [
@@ -203,21 +199,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     // Using an annotation obscures the type wrapper mechanism that idx() uses
     // around the parameter it passes to the callback
     addCode('(idx({}, (obj: Object) => obj.a.b.c): ?number);\n').newErrors(
-       `
-         test.js:6
-           6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callback functions may not be annotated and they may only access properties on the callback parameter!
-       `,
-    ),
+                                                                  `
+                                                                    test.js:6
+                                                                      6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type. idx() callback functions may not be annotated and they may only access properties on the callback parameter!
+                                                                  `,
+                                                                ),
 
     // Can't do anything with the callback parameter other than get elements and
     // properties off of it
     addCode('idx({}, obj => obj());\n').newErrors(
-      `
-        test.js:9
-          9: idx({}, obj => obj());
-             ^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-      `,
-    ),
+                                         `
+                                           test.js:9
+                                             9: idx({}, obj => obj());
+                                                ^^^^^^^^^^^^^^^^^^^^^ call of function type. idx() callbacks may only access properties on the callback parameter!
+                                         `,
+                                       ),
   ]),
 ]);

@@ -1342,14 +1342,10 @@ let refine_with_preds cx loc preds orig_types =
       Flow.flow cx (orig_type, PredicateT (pred, refined_type)))
   in
   let refine_with_pred key pred acc =
+    let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->
-      let refi_reason =
-        let pred_str = string_of_predicate pred in
-        let rstr = spf "identifier %s when %s" name pred_str in
-        mk_reason (RCustom rstr) loc
-      in
       Entry.(match find_entry cx name loc with
       | _, Value v ->
         let orig_type =
@@ -1370,12 +1366,6 @@ let refine_with_preds cx loc preds orig_types =
       )
     (* for heap refinements, we just add new entries *)
     | _ ->
-      let refi_reason =
-        let pred_str = string_of_predicate pred in
-        let rstr = spf "expression %s when %s"
-          (Key.string_of_key key) pred_str in
-        mk_reason (RCustom rstr) loc
-      in
       let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
       let change = refine_expr key loc refi_type orig_type in

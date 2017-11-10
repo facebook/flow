@@ -24,7 +24,7 @@ Error: enum_client.js:21
 
 Error: number.js:6
   6:   return -x;
-              ^^ unary minus operator. Expected number instead of
+              ^^ string. Expected number instead of
   6:   return -x;
                ^ string
 
