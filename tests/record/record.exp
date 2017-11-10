@@ -15,7 +15,7 @@ Error: test.js:2
 
 Error: test.js:7
   7: o1.qux; // error: qux not found
-     ^^^^^^ property `qux` is a string. This type is incompatible with
+     ^^^^^^ string `qux`. This type is incompatible with
   2: var o1: {[key: Key1]: number} = {
                     ^^^^ string enum
 

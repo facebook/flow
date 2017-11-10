@@ -36,12 +36,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWA);
-                ^^^^ object type. Covariant computed property incompatible with invariant use in
-           52: (droA: dRWA);
-                      ^^^^ object type
-
-          test.js:52
-           52: (droA: dRWA);
                 ^^^^ object type. This type is incompatible with
            52: (droA: dRWA);
                       ^^^^ object type
@@ -72,12 +66,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(dwoA: dRWA);')
       .newErrors(
         `
-          test.js:56
-           56: (dwoA: dRWA);
-                ^^^^ object type. Contravariant computed property incompatible with invariant use in
-           56: (dwoA: dRWA);
-                      ^^^^ object type
-
           test.js:56
            56: (dwoA: dRWA);
                 ^^^^ object type. This type is incompatible with
@@ -149,12 +137,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:68
            68: (droB: dRWA);
-                ^^^^ object type. Covariant computed property incompatible with invariant use in
-           68: (droB: dRWA);
-                      ^^^^ object type
-
-          test.js:68
-           68: (droB: dRWA);
                 ^^^^ object type. This type is incompatible with
            68: (droB: dRWA);
                       ^^^^ object type
@@ -196,12 +178,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(dwoB: dRWA);')
       .newErrors(
         `
-          test.js:72
-           72: (dwoB: dRWA);
-                ^^^^ object type. Contravariant computed property incompatible with invariant use in
-           72: (dwoB: dRWA);
-                      ^^^^ object type
-
           test.js:72
            72: (dwoB: dRWA);
                 ^^^^ object type. This type is incompatible with
@@ -261,12 +237,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROA);
-                ^^^^ object type. Contravariant computed property incompatible with covariant use in
-           56: (dwoA: dROA);
-                      ^^^^ object type
-
-          test.js:56
-           56: (dwoA: dROA);
                 ^^^^ object type. This type is incompatible with
            56: (dwoA: dROA);
                       ^^^^ object type
@@ -311,12 +281,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dROA);
-                ^^^^ object type. Contravariant computed property incompatible with covariant use in
-           72: (dwoB: dROA);
-                      ^^^^ object type
-
-          test.js:72
-           72: (dwoB: dROA);
                 ^^^^ object type. This type is incompatible with
            72: (dwoB: dROA);
                       ^^^^ object type
@@ -357,12 +321,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(droA: dWOA);')
       .newErrors(
         `
-          test.js:52
-           52: (droA: dWOA);
-                ^^^^ object type. Covariant computed property incompatible with contravariant use in
-           52: (droA: dWOA);
-                      ^^^^ object type
-
           test.js:52
            52: (droA: dWOA);
                 ^^^^ object type. This type is incompatible with
@@ -435,12 +393,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(droB: dWOA);')
       .newErrors(
         `
-          test.js:68
-           68: (droB: dWOA);
-                ^^^^ object type. Covariant computed property incompatible with contravariant use in
-           68: (droB: dWOA);
-                      ^^^^ object type
-
           test.js:68
            68: (droB: dWOA);
                 ^^^^ object type. This type is incompatible with
@@ -584,12 +536,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWB);
-                ^^^^ object type. Covariant computed property incompatible with invariant use in
-           52: (droA: dRWB);
-                      ^^^^ object type
-
-          test.js:52
-           52: (droA: dRWB);
                 ^^^^ object type. This type is incompatible with
            52: (droA: dRWB);
                       ^^^^ object type
@@ -631,12 +577,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(dwoA: dRWB);')
       .newErrors(
         `
-          test.js:56
-           56: (dwoA: dRWB);
-                ^^^^ object type. Contravariant computed property incompatible with invariant use in
-           56: (dwoA: dRWB);
-                      ^^^^ object type
-
           test.js:56
            56: (dwoA: dRWB);
                 ^^^^ object type. This type is incompatible with
@@ -769,12 +709,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROB);
-                ^^^^ object type. Contravariant computed property incompatible with covariant use in
-           56: (dwoA: dROB);
-                      ^^^^ object type
-
-          test.js:56
-           56: (dwoA: dROB);
                 ^^^^ object type. This type is incompatible with
            56: (dwoA: dROB);
                       ^^^^ object type
@@ -815,12 +749,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(droA: dWOB);')
       .newErrors(
         `
-          test.js:52
-           52: (droA: dWOB);
-                ^^^^ object type. Covariant computed property incompatible with contravariant use in
-           52: (droA: dWOB);
-                      ^^^^ object type
-
           test.js:52
            52: (droA: dWOB);
                 ^^^^ object type. This type is incompatible with

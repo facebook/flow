@@ -448,7 +448,7 @@ let rec string_of_desc = function
   | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
-  | RPropertyIsAString x -> spf "property `%s` is a string" x
+  | RPropertyIsAString x -> spf "string `%s`" x
   | RMissingProperty (Some x) -> spf "property `%s` does not exist" x
   | RMissingProperty None -> "computed property does not exist"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" x

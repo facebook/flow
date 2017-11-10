@@ -702,6 +702,8 @@ module Cache = struct
         let u = match u with
           | UseT (PropertyCompatibility c, t) when c.use_op <> UnknownUse ->
             UseT (PropertyCompatibility {c with use_op = UnknownUse}, t)
+          | UseT (IndexerKeyCompatibility c, t) when c.use_op <> UnknownUse ->
+            UseT (IndexerKeyCompatibility {c with use_op = UnknownUse}, t)
           | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
             UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
           | UseT (FunParam { lower; upper; use_op }, t) when use_op <> UnknownUse ->
@@ -6077,6 +6079,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (FunParam _ as use_op, u)
     | _, UseT (PropertyCompatibility _ as use_op, u)
+    | _, UseT (IndexerKeyCompatibility _ as use_op, u)
     | _, UseT (TypeArgCompatibility _ as use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
@@ -6295,15 +6298,20 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   (match ldict, udict with
     | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
       Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
-      let use_op = PropertyCompatibility {
+      (* Don't report polarity errors when checking the indexer key. We would
+       * report these errors again a second time when checking values. *)
+      rec_flow_p cx trace ~report_polarity:false ~use_op:(IndexerKeyCompatibility {
+        lower = lreason;
+        upper = ureason;
+        use_op;
+      }) lreason ureason (Computed uk)
+        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
+      rec_flow_p cx trace ~use_op:(PropertyCompatibility {
         prop = None;
         lower = lreason;
         upper = ureason;
         use_op;
-      } in
-      rec_flow_p cx trace ~use_op:UnknownUse lreason ureason (Computed uk)
-        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
-      rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
+      }) lreason ureason (Computed uv)
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
@@ -6311,11 +6319,12 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
+    let use_op' = use_op in
     let use_op = PropertyCompatibility {
       prop = Some s;
       lower = lreason;
       upper = ureason;
-      use_op;
+      use_op = use_op';
     } in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
@@ -6336,7 +6345,10 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       )
     | None, Some { key; value; dict_polarity; _ }
         when not (is_dictionary_exempt s) ->
-      rec_flow_t cx trace (string_key s reason_prop, key);
+      rec_flow cx trace (string_key s reason_prop, UseT (
+        IndexerKeyCompatibility {lower = lreason; upper = ureason; use_op = use_op'},
+        key
+      ));
       let lp = Field (None, value, dict_polarity) in
       let up = match up with
       | Field (loc, DefT (_, OptionalT ut), upolarity) ->
@@ -6390,13 +6402,16 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     iter_real_props cx lflds (fun s lp ->
       if not (Context.has_prop cx uflds s)
       then (
+        rec_flow cx trace (string_key s lreason, UseT (
+          IndexerKeyCompatibility {lower = lreason; upper = ureason; use_op},
+          key
+        ));
         let use_op = PropertyCompatibility {
           prop = Some s;
           lower = lreason;
           upper = ureason;
           use_op;
         } in
-        rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
         | Field (loc, DefT (_, OptionalT lt), lpolarity) ->
           Field (loc, lt, lpolarity)
@@ -9148,8 +9163,17 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     (* ensure the keys and values are compatible with each other. *)
     begin match ldict, udict with
     | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-        rec_unify cx trace lk uk;
-        rec_unify cx trace lv uv
+        rec_unify cx trace lk uk ~use_op:(IndexerKeyCompatibility {
+          lower = lreason;
+          upper = ureason;
+          use_op;
+        });
+        rec_unify cx trace lv uv ~use_op:(PropertyCompatibility {
+          prop = None;
+          lower = lreason;
+          upper = ureason;
+          use_op;
+        })
     | Some _, None ->
         let lreason = replace_reason_const RSomeProperty lreason in
         let err = FlowError.EPropNotFound ((lreason, ureason), use_op) in
@@ -9235,7 +9259,10 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
   let prop_reason = replace_reason_const (RProperty (Some x)) prop_obj_reason in
   match dict with
   | Some { key; value; dict_polarity; _ } ->
-    rec_flow_t cx trace (string_key x prop_reason, key);
+    rec_flow cx trace (string_key x prop_reason, UseT (
+      IndexerKeyCompatibility {lower = prop_obj_reason; upper = dict_reason; use_op},
+      key
+    ));
     let p2 = Field (None, value, dict_polarity) in
     unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
   | None ->
@@ -10123,7 +10150,8 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace ?(use_op=UnknownUse) (t1, t2) =
   rec_flow cx trace (t1, UseT (use_op, t2))
 
-and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
+and rec_flow_p cx trace ?(use_op=UnknownUse) ?(report_polarity=true)
+  lreason ureason propref = function
   (* unification cases *)
   | Field (_, lt, Neutral),
     Field (_, ut, Neutral) ->
@@ -10134,7 +10162,7 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (lt, UseT (use_op, ut))
-    | None, Some _ ->
+    | None, Some _ when report_polarity ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
@@ -10143,7 +10171,7 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (ut, UseT (use_op, lt))
-    | None, Some _ ->
+    | None, Some _ when report_polarity ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),

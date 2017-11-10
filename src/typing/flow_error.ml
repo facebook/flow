@@ -294,6 +294,10 @@ let rec locs_of_use_op acc = function
     let lower_loc = loc_of_reason lower in
     let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
+  | IndexerKeyCompatibility {lower; upper; use_op} ->
+    let lower_loc = loc_of_reason lower in
+    let upper_loc = loc_of_reason upper in
+    locs_of_use_op (lower_loc::upper_loc::acc) use_op
   | SetProperty reason -> (loc_of_reason reason)::acc
   | TypeArgCompatibility (_, r1, r2, use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
@@ -673,6 +677,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       extra_info_of_use_op reasons extra msg
         (spf "%s is incompatible:" prop)
+    in
+    let obj_reasons = ordered_reasons (rl', ru') in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops (obj_reasons, extra, msg) use_op
+  | IndexerKeyCompatibility {lower=rl'; upper=ru'; use_op} ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "Indexer key is incompatible:"
     in
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in

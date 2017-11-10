@@ -1,8 +1,13 @@
 Error: A.js:13
  13:   return { foo: "bar" }
-              ^^^^^^^^^^^^^^ property `foo` is a string. This type is incompatible with
+              ^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
  12: function foo2(): {[key: number]: string} {
-                             ^^^^^^ number
+                      ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Indexer key is incompatible:
+     13:   return { foo: "bar" }
+                  ^^^^^^^^^^^^^^ string `foo`. This type is incompatible with
+     12: function foo2(): {[key: number]: string} {
+                                 ^^^^^^ number
 
 Error: A.js:18
  18:   return { foo: "bar" }
@@ -20,17 +25,22 @@ Error: A.js:23
               ^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
  22: function foo4(): {[key: number]: number} {
                       ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Indexer key is incompatible:
+     23:   return { foo: "bar" }
+                  ^^^^^^^^^^^^^^ string `foo`. This type is incompatible with
+     22: function foo4(): {[key: number]: number} {
+                                 ^^^^^^ number
+
+Error: A.js:23
+ 23:   return { foo: "bar" }
+              ^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
+ 22: function foo4(): {[key: number]: number} {
+                      ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
      23:   return { foo: "bar" }
                          ^^^^^ string. This type is incompatible with
      22: function foo4(): {[key: number]: number} {
                                           ^^^^^^ number
-
-Error: A.js:23
- 23:   return { foo: "bar" }
-              ^^^^^^^^^^^^^^ property `foo` is a string. This type is incompatible with
- 22: function foo4(): {[key: number]: number} {
-                             ^^^^^^ number
 
 Error: A.js:38
  38:   return { foo: "bar" }
