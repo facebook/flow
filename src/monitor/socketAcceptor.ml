@@ -47,6 +47,7 @@ end)
 
 let create_ephemeral_connection ~client_fd ~close =
   Logger.debug "Creating a new ephemeral connection";
+
   EphemeralConnection.create
     ~name:"some ephemeral connection"
     ~in_fd:client_fd
@@ -55,10 +56,13 @@ let create_ephemeral_connection ~client_fd ~close =
     ~on_read:handle_ephemeral_request
   >|= (fun (start, conn) ->
     (* On exit, do our best to send all pending messages to the waiting client *)
-    Lwt.async (fun () ->
+    let close_on_exit =
       Lwt_condition.wait ExitSignal.signal
       >>= (fun () -> EphemeralConnection.flush_and_close conn)
-    );
+    in
+
+    (* Lwt.pick returns the first thread to finish and cancels the rest. *)
+    Lwt.async (fun () -> Lwt.pick [ close_on_exit; EphemeralConnection.wait_for_closed conn; ]);
 
     (* Start the ephemeral connection *)
     start ();
@@ -94,10 +98,13 @@ let create_persistent_connection ~client_fd ~close ~logging_context =
     ~on_read:(handle_persistent_message ~client_id)
   >|= (fun (start, conn) ->
     (* On exit, do our best to send all pending messages to the waiting client *)
-    Lwt.async (fun () ->
+    let close_on_exit =
       Lwt_condition.wait ExitSignal.signal
       >>= (fun () -> PersistentConnection.flush_and_close conn)
-    );
+    in
+
+    (* Lwt.pick returns the first thread to finish and cancels the rest. *)
+    Lwt.async (fun () -> Lwt.pick [ close_on_exit; PersistentConnection.wait_for_closed conn; ]);
 
     (* Don't start the connection until we add it to the persistent connection map *)
     Lwt.async (fun () ->

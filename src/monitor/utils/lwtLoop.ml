@@ -11,7 +11,6 @@
   *)
 
 let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 
 module type LOOP = sig
   type acc
@@ -47,10 +46,12 @@ end = struct
     begin match cancel_condition with
     | None -> ()
     | Some condition ->
-      Lwt.async (fun () ->
-        Lwt_condition.wait condition
-        >|= (fun () -> Lwt.cancel thread)
-      )
+      (* If the condition is hit, cancel the loop thread. If the loop thread finishes, cancel the
+       * condition wait *)
+      Lwt.async (fun () -> Lwt.pick [
+        Lwt.catch (fun () -> thread) (fun _ -> Lwt.return_unit); (* Ignore exceptions here *)
+        Lwt_condition.wait condition;
+      ])
     end;
 
     (* Start things going *)

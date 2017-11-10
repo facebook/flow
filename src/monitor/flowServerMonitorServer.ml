@@ -347,7 +347,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
   let catch _ exn =
     Logger.error ~exn "Exception in KeepAliveLoop";
-    Lwt.return_unit
+    raise exn
 end)
 
 let start monitor_options = KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
