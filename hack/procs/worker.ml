@@ -271,10 +271,11 @@ let make_one ?call_wrapper spawn id =
 (** Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
 let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
-  let spawn log_fd =
+  let spawn name log_fd =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
       Daemon.spawn
+        ~name
         (Daemon.null_fd (), Unix.stdout, Unix.stderr)
         entry
         (saved_state, gc_control, heap_handle) in
@@ -282,8 +283,10 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     handle
   in
   let made_workers = ref [] in
+  let pid = Unix.getpid () in
   for n = 1 to nbr_procs do
-    made_workers := make_one ?call_wrapper spawn n :: !made_workers
+    let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
+    made_workers := make_one ?call_wrapper (spawn name) n :: !made_workers
   done;
   !made_workers
 

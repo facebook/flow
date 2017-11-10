@@ -234,6 +234,7 @@ let fork
 let spawn
     (type param) (type input) (type output)
     ?(channel_mode = `pipe)
+    ?name
     (stdin, stdout, stderr)
     (entry: (param, input, output) entry)
     (param: param) : (output, input) handle =
@@ -241,7 +242,8 @@ let spawn
     setup_channels channel_mode in
   Entry.set_context entry param (child_in, child_out);
   let exe = Sys_utils.executable_path () in
-  let pid = Unix.create_process exe [|exe|] stdin stdout stderr in
+  let name = Option.value ~default:(Entry.name_of_entry entry) name in
+  let pid = Unix.create_process exe [|exe; name|] stdin stdout stderr in
   Entry.clear_context ();
   (match channel_mode with
   | `pipe ->
