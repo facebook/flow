@@ -97,7 +97,7 @@ let gen_if conditional gen_fn env =
 let gen_builtin_class_type t env = Type.(
   (* AVERT YOUR EYES *)
   let reason = reason_of_t t in
-  let builtin_name = Reason.(string_of_desc (desc_of_reason reason)) in
+  let builtin_name = DescFormat.name_of_instance_reason reason in
 
   (**
    * Assert that the builtin name we found does match with the class_id we're
@@ -368,7 +368,7 @@ and gen_prop k p env =
   in
 
   match p with
-  | Field (t, polarity) ->
+  | Field (_, t, polarity) ->
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
@@ -379,11 +379,11 @@ and gen_prop k p env =
       |> add_str k
       |> add_str sep
       |> gen_type t
-  | Get t -> gen_getter k t env
-  | Set t -> gen_setter k t env
-  | GetSet (t1, t2) ->
+  | Get (_, t) -> gen_getter k t env
+  | Set (_, t) -> gen_setter k t env
+  | GetSet (_, t1, _, t2) ->
     gen_getter k t1 env |> gen_setter k t2
-  | Method t -> gen_method k t env
+  | Method (_, t) -> gen_method k t env
 
 and gen_func_params params rest_param env =
   let params_rev = List.fold_left (fun acc (name, t) ->

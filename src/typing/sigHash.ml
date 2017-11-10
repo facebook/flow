@@ -167,6 +167,7 @@ type hash =
   | ResolveSpreadH
   | CondH
   | ExtendsUseH
+  | ToStringH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -316,6 +317,7 @@ let hash_of_use_ctor = Type.(function
   | ResolveSpreadT _ -> ResolveSpreadH
   | CondT _ -> CondH
   | ExtendsUseT _ -> ExtendsUseH
+  | ToStringT _ -> ToStringH
 )
 
 let add = Xx.update
@@ -364,7 +366,7 @@ let add_reason state r =
 let add_polarity = add_int
 
 let add_prop state = Type.(function
-  | Field (_, polarity) ->
+  | Field (_, _, polarity) ->
     add_int state 0;
     add_int state polarity
   | Get _ -> add_int state 1

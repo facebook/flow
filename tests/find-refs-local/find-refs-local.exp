@@ -438,3 +438,135 @@ Exports:
     }
   ]
 }
+
+Methods and properties:
+
+Method declaration: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":70,"column":3,"offset":1023},
+      "end":{"line":70,"column":5,"offset":1026}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":86,"column":12,"offset":1310},
+      "end":{"line":86,"column":14,"offset":1313}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":87,"column":12,"offset":1328},
+      "end":{"line":87,"column":14,"offset":1331}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":91,"column":10,"offset":1377},
+      "end":{"line":91,"column":12,"offset":1380}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":92,"column":10,"offset":1393},
+      "end":{"line":92,"column":12,"offset":1396}
+    }
+  ]
+}
+Property declaration: {
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":71,"column":3,"offset":1040},
+      "end":{"line":71,"column":5,"offset":1043}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":88,"column":12,"offset":1346},
+      "end":{"line":88,"column":14,"offset":1349}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":89,"column":12,"offset":1362},
+      "end":{"line":89,"column":14,"offset":1365}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":93,"column":10,"offset":1409},
+      "end":{"line":93,"column":12,"offset":1412}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":94,"column":10,"offset":1423},
+      "end":{"line":94,"column":12,"offset":1426}
+    }
+  ]
+}
+Method call (finds definition and other references): {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":70,"column":3,"offset":1023},
+      "end":{"line":70,"column":5,"offset":1026}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":86,"column":12,"offset":1310},
+      "end":{"line":86,"column":14,"offset":1313}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":87,"column":12,"offset":1328},
+      "end":{"line":87,"column":14,"offset":1331}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":91,"column":10,"offset":1377},
+      "end":{"line":91,"column":12,"offset":1380}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":92,"column":10,"offset":1393},
+      "end":{"line":92,"column":12,"offset":1396}
+    }
+  ]
+}
+Method declaration in an object type alias: {"kind":"no-symbol-found"}
+Property declaration in an object type alias: {"kind":"no-symbol-found"}
+Method call on an object type alias: {"kind":"no-symbol-found"}
+Method call on an imported class (finds other references but not the definition since it's in another file): {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":101,"column":15,"offset":1516},
+      "end":{"line":101,"column":17,"offset":1519}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":102,"column":15,"offset":1537},
+      "end":{"line":102,"column":17,"offset":1540}
+    }
+  ]
+}

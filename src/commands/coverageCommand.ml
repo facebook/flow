@@ -234,13 +234,14 @@ let main
      be removed. *)
   let all = all || not respect_pragma in
 
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.COVERAGE (file, all));
-
   (* pretty implies json *)
   let json = json || pretty in
 
-  match (Timeout.input_value ic : ServerProt.coverage_response) with
+  let request = ServerProt.COVERAGE (file, all) in
+  let response: ServerProt.coverage_response =
+    connect_and_make_request option_values root request in
+
+  match response with
   | Error err ->
       handle_error ~json ~pretty err
   | Ok resp ->

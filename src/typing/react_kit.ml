@@ -190,7 +190,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component, component_function tin)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (tin, Negative))
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -220,7 +220,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Special case for intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (tout, Positive))
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -323,7 +323,7 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
-      let action = LookupProp (UnknownUse, Field (key_t, Positive)) in
+      let action = LookupProp (UnknownUse, Field (None, key_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -342,7 +342,7 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
-      let action = LookupProp (UnknownUse, Field (ref_t, Positive)) in
+      let action = LookupProp (UnknownUse, Field (None, ref_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
@@ -368,7 +368,7 @@ let run cx trace ~use_op reason_op l u
           let strict = NonstrictReturning (Some
             (DefT (reason_missing, VoidT), tvar)) in
           let propref = Named (reason_prop, name) in
-          let action = LookupProp (UnknownUse, Field (tvar, Positive)) in
+          let action = LookupProp (UnknownUse, Field (None, tvar, Positive)) in
           (* Lookup the `defaultProps` property. *)
           rec_flow cx trace (component,
             LookupT (reason_op, strict, [], propref, action))
@@ -405,7 +405,7 @@ let run cx trace ~use_op reason_op l u
           ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
-    let elem_reason = replace_reason_const (RReactElement None) reason_op in
+    let elem_reason = replace_reason_const (RType "React$Element") reason_op in
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout
@@ -427,7 +427,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (tout, Positive))
+    | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -538,7 +538,7 @@ let run cx trace ~use_op reason_op l u
          for reasons descriptions/locations, recursive ReactKit constraints, and
          `resolve` behavior. *)
       let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (t, Neutral)) props in
+        let props = SMap.add k (Field (None, t, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =
@@ -613,7 +613,7 @@ let run cx trace ~use_op reason_op l u
       | None ->
         Option.map dict (fun { key; value; dict_polarity; _ } ->
           rec_flow_t cx trace (string_key x reason_op, key);
-          Field (value, dict_polarity))
+          Field (None, value, dict_polarity))
     in
 
     let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
@@ -824,6 +824,7 @@ let run cx trace ~use_op reason_op l u
         | "componentDidUpdate"
         | "componentWillUnmount"
         | "updateComponent" ->
+          let loc = Property.read_loc v in
           let v = match Property.read_t v with
           | None -> v
           | Some t ->
@@ -835,7 +836,7 @@ let run cx trace ~use_op reason_op l u
                upper bound (e.g., as a super class), it's more flexible to
                create covariant methods. Otherwise, a subclass could not
                override the `render` method, say. *)
-            Method t
+            Method (loc, t)
           in
           SMap.add k v props, static_props
 
@@ -850,7 +851,7 @@ let run cx trace ~use_op reason_op l u
       ) spec_props (SMap.empty, SMap.empty) in
 
       let static_props = static_props
-        |> SMap.add "defaultProps" (Field (knot.default_t, Neutral))
+        |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
       in
 
       let reason_component = replace_reason_const RReactComponent reason_op in
@@ -967,7 +968,7 @@ let run cx trace ~use_op reason_op l u
 
     | PropTypes (stack, tool) ->
       let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (t, Neutral)) props in
+        let props = SMap.add k (Field (None, t, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =

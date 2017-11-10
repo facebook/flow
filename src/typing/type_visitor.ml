@@ -300,6 +300,7 @@ class ['a] t = object(self)
   | SuperT (_, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
+  | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
 
   | AdderT (_, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
@@ -615,11 +616,11 @@ class ['a] t = object(self)
     |> self#smap (self#prop cx pole) acc
 
   method private prop cx pole acc = function
-    | Field (t, p) -> self#type_ cx (P.mult (pole, p)) acc t
-    | Method t -> self#type_ cx pole acc t
-    | Get t -> self#type_ cx pole acc t
-    | Set t -> self#type_ cx (P.inv pole) acc t
-    | GetSet (t1, t2) ->
+    | Field (_, t, p) -> self#type_ cx (P.mult (pole, p)) acc t
+    | Method (_, t) -> self#type_ cx pole acc t
+    | Get (_, t) -> self#type_ cx pole acc t
+    | Set (_, t) -> self#type_ cx (P.inv pole) acc t
+    | GetSet (_, t1, _, t2) ->
       let acc = self#type_ cx pole acc t1 in
       let acc = self#type_ cx (P.inv pole) acc t2 in
       acc

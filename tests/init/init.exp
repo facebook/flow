@@ -1,30 +1,30 @@
 Error: hoisted.js:10
  10:   f(); // error, possibly undefined
-       ^^^ function call. Function cannot be called on possibly undefined value
+       ^^^ call of possibly uninitialized variable. Function cannot be called on possibly undefined value
  10:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
 Error: hoisted.js:17
  17:   f(); // error, possibly undefined
-       ^^^ function call. Function cannot be called on possibly undefined value
+       ^^^ call of possibly uninitialized variable. Function cannot be called on possibly undefined value
  17:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
 Error: hoisted.js:31
  31:   f(); // error, possibly undefined
-       ^^^ function call. Function cannot be called on possibly undefined value
+       ^^^ call of uninitialized variable. Function cannot be called on possibly undefined value
  31:   f(); // error, possibly undefined
        ^ uninitialized variable
 
 Error: hoisted.js:38
  38:   f(); // error, possibly undefined
-       ^^^ function call. Function cannot be called on possibly undefined value
+       ^^^ call of possibly uninitialized variable. Function cannot be called on possibly undefined value
  38:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
 Error: hoisted.js:45
  45:   f(); // error, possibly undefined
-       ^^^ function call. Function cannot be called on possibly undefined value
+       ^^^ call of possibly uninitialized variable. Function cannot be called on possibly undefined value
  45:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 

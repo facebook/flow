@@ -110,7 +110,8 @@ Then, restart your shell and install these additional libraries:
 
 ```
 opam update
-opam install -y ocamlfind sedlex
+opam pin add flowtype . -n
+opam install --deps-only flowtype
 ```
 
 Once you have these dependencies, building Flow just requires running

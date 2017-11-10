@@ -116,6 +116,7 @@ begin library "hh-utils"
     "file_pos.ml"
     "findUtils.ml"
     "local_id.ml"
+    "marshal_tools.mli"
     "marshal_tools.ml"
     "php_escaping.ml"
     "random_id.ml"
@@ -131,6 +132,19 @@ begin library "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
+  ]
+end
+
+begin library "hh-marshal-tools-lwt"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "marshal_tools_lwt.mli"
+    "marshal_tools_lwt.ml"
+  ]
+  requires += [
+    "hh-utils"
+    "lwt"
   ]
 end
 
@@ -186,7 +200,7 @@ begin library "hh-utils-string"
 end
 
 begin library "hh-utils-sys"
-  dirname = "hack/utils"
+  dirname = "hack/utils/sys"
   sort = true
   files = [
     "daemon.ml"
@@ -217,6 +231,7 @@ begin library "hh-utils-sys"
     "hh-utils-string"
     "tp-core"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "hh-utils-collections"

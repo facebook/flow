@@ -110,7 +110,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             | { Property.key = Property.Computed key; pattern = p; _; } ->
                 let key_t = expr cx key in
                 let loc = fst key in
-                let reason = mk_reason (RCustom "computed property/element") loc in
+                let reason = mk_reason (RProperty None) loc in
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
@@ -163,11 +163,18 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
          *)
         | None -> Type_inference_hooks_js.Id
       );
+      let curr_t = mod_reason_of_t (replace_reason (function
+      | RDefaultValue
+      | RArrayPatternRestProp
+      | RObjectPatternRestProp
+        -> RIdentifier name
+      | desc -> desc
+      )) curr_t in
       f loc name default curr_t
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
-      let reason = mk_reason (RCustom "default value") loc in
+      let reason = mk_reason RDefaultValue loc in
       let tvar =
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in

@@ -22,6 +22,20 @@ export default suite(({addFile, addFiles, addCode}) => [
         8: (42: aType)
                 ^^^^^ string
     `),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     addCode('import type {nope} from "./forward_only";').newErrors(`
       test.js:10
         10: import type {nope} from "./forward_only";

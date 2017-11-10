@@ -78,6 +78,14 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ string. This type is incompatible with
             5: (png: number)
                      ^^^^^^ number
+
+
+
+
+
+
+
+
         `,
       ),
   ]),

@@ -67,9 +67,108 @@ let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t l
   in
   Ok locs
 
-let local_find_refs file_key file_input loc : ((string * Loc.t list) option, string) result =
+let set_def_loc_hook prop_access_info target_loc =
+  let use_hook ret _ctxt name loc ty =
+    begin if Loc.contains loc target_loc then
+      prop_access_info := Some (`Use (ty, name))
+    end;
+    ret
+  in
+  let def_hook _ctxt name loc =
+    if Loc.contains loc target_loc then
+      prop_access_info := Some (`Def (loc, name))
+  in
+  Type_inference_hooks_js.set_member_hook (use_hook false);
+  Type_inference_hooks_js.set_call_hook (use_hook ());
+  Type_inference_hooks_js.set_method_decl_hook def_hook;
+  Type_inference_hooks_js.set_prop_decl_hook def_hook
+
+let set_get_refs_hook potential_refs target_name =
+  let hook ret _ctxt name loc ty =
+    begin if name = target_name then
+      potential_refs := (ty, loc) :: !potential_refs
+    end;
+    ret
+  in
+  Type_inference_hooks_js.set_member_hook (hook false);
+  Type_inference_hooks_js.set_call_hook (hook ())
+
+let unset_hooks () =
+  Type_inference_hooks_js.reset_hooks ()
+
+(* Ok None indicates an expected case where no location was found, whereas an Error return indicates
+ * that something went wrong. *)
+let extract_def_loc cx ty name : (Loc.t option, string) result =
+  let open Flow_js.Members in
+  let open Type in
+  let resolved = Flow_js.resolve_type cx ty in
+  match Flow_js.Members.extract_type cx resolved with
+    | Success (DefT (_, InstanceT _)) as extracted_type ->
+        let members = Flow_js.Members.extract_members cx extracted_type in
+        let command_result = Flow_js.Members.to_command_result members in
+        command_result >>= fun map ->
+        Result.of_option ~error:"Expected a property definition" (SMap.get name map) >>= fun (loc, _) ->
+        Result.of_option ~error:"Expected a location associated with the definition" loc >>= fun loc ->
+        Ok (Some loc)
+    | Success _
+    | SuccessModule _ ->
+        Ok None
+    | FailureMaybeType ->
+        Error "Extracting definition loc from possibly null or undefined value"
+    | FailureAnyType ->
+        Error "not enough type information to find definition"
+    | FailureUnhandledType t ->
+        Error (spf
+          "find-refs on unexpected type of value %s (please file a task!)"
+          (string_of_ctor t))
+
+let find_prop_refs options workers env content file_key loc : ((string * Loc.t list) option, string) result =
+  let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
+  let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
+    let props_access_info = ref None in
+    set_def_loc_hook props_access_info loc;
+    let check_contents_result = check_contents () in
+    unset_hooks ();
+    check_contents_result >>= fun (_, cx, _) ->
+    match !props_access_info with
+      | None -> Ok None
+      | Some (`Def (loc, name)) -> Ok (Some (loc, name))
+      | Some (`Use (ty, name)) ->
+          extract_def_loc cx ty name >>= fun loc ->
+          match loc with
+            | None -> Ok None
+            | Some loc -> Ok (Some (loc, name))
+  in
+  let get_ref_info: Loc.t -> string -> (Loc.t list, string) result = fun def_loc name ->
+    let potential_refs: (Type.t * Loc.t) list ref = ref [] in
+    set_get_refs_hook potential_refs name;
+    let check_contents_result = check_contents () in
+    unset_hooks ();
+    check_contents_result >>= fun (_, cx, _) ->
+    !potential_refs |>
+      List.map begin fun (ty, ref_loc) ->
+        extract_def_loc cx ty name >>= fun loc ->
+        match loc with
+          | Some loc when loc = def_loc ->
+              Ok (Some ref_loc)
+          | _ -> Ok None
+      end |> Result.all >>= fun refs ->
+      Ok (List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] refs)
+  in
+  get_def_info () >>= fun def_info_opt ->
+  match def_info_opt with
+    | None -> Ok None
+    | Some (def_loc, name) ->
+        get_ref_info def_loc name >>= fun refs ->
+        (* Include the def_loc if it is in the same file *)
+        let refs = match Loc.(def_loc.source) with
+          | Some source when source = file_key -> def_loc::refs
+          | _ -> refs
+        in
+        Ok (Some (name, refs))
+
+let local_var_find_refs file_key content loc : ((string * Loc.t list) option, string) result =
   let open Scope_api in
-  File_input.content_of_file_input file_input >>= fun content ->
   get_ast_result file_key content >>= fun ast ->
   let scope_info = Scope_builder.program ast in
   let all_uses = all_uses scope_info in
@@ -84,6 +183,12 @@ let local_find_refs file_key file_input loc : ((string * Loc.t list) option, str
         Ok (Some (name, sorted_locs))
     | _ -> Error "Multiple identifiers were unexpectedly matched"
   end
+
+let local_find_refs options workers env file_key file_input loc : ((string * Loc.t list) option, string) result =
+  File_input.content_of_file_input file_input >>= fun content ->
+  local_var_find_refs file_key content loc >>= function
+    | Some _ as result -> Ok result
+    | None -> find_prop_refs options workers env content file_key loc
 
 let find_external_refs options workers env file_key content name local_refs =
   let docblock = get_docblock file_key content in
@@ -117,7 +222,7 @@ let find_external_refs options workers env file_key content name local_refs =
       filekey_result >>= fun filekey ->
       File_key.to_path filekey >>= fun path ->
       let file_input = File_input.FileName path in
-      local_find_refs filekey file_input imported_loc >>= fun refs_option ->
+      local_find_refs options workers env filekey file_input imported_loc >>= fun refs_option ->
       Result.of_option refs_option ~error:"Expected results from local_find_refs" >>= fun (_name, locs) ->
       Ok locs
     end |>
@@ -133,7 +238,7 @@ let find_refs options workers env file_input line col global =
   let loc = Loc.make file_key line col in
   (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
   first *)
-  local_find_refs file_key file_input loc >>= function
+  local_find_refs options workers env file_key file_input loc >>= function
     | None -> Ok None
     | Some (name, refs) ->
         if global then

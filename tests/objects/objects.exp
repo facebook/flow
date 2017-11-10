@@ -5,9 +5,14 @@ Error: compatibility.js:3
                    ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
       2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                            ^^^^^^^^^^^^^^^ property `foo`. Property not found in
+                            ^^^^^^^^^^^^^^^ object type. This type is incompatible with
       2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
                                                        ^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                ^^^^^^^^^^^^^^^ property `foo`. Property not found in
+          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                           ^^^^^^^^^^^^^^^ object type
 
 Error: compatibility.js:3
   3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -16,9 +21,14 @@ Error: compatibility.js:3
                    ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
       2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                       ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
       2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
                             ^^^^^^^^^^^^^^^ object type
+      Property `bar` is incompatible:
+          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                           ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                ^^^^^^^^^^^^^^^ object type
 
 Error: compatibility.js:7
   7:     x = y; // 2 errors: string !~> number; number !~> string

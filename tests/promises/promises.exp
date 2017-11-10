@@ -41,7 +41,7 @@ Error: all.js:24
                        ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:
     608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:608
+                           ^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:608
      24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
          ^^^^^^^^^^^^^ undefined
 
@@ -52,7 +52,7 @@ Error: all.js:27
                        ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:
     608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:608
+                           ^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/core.js:608
      27: Promise.all(0); // Error: expected array instead of number
                      ^ number
 
@@ -156,19 +156,19 @@ Error: resolve_global.js:35
  35:   return Promise.resolve(0);
                       ^^^^^^^ property `resolve`. Property not found in
  35:   return Promise.resolve(0);
-              ^^^^^^^ statics of Promise
+              ^^^^^^^ statics of `Promise`
 
 Error: resolve_global.js:40
  40:   return 0;
-       ^^^^^^^^^ type application of async return. Expected polymorphic type instead of
+       ^^^^^^^^^ async return. Expected polymorphic type instead of
  39: async function baz(): Promise<number> {
-                           ^^^^^^^^^^^^^^^ class type: Promise
+                           ^^^^^^^^^^^^^^^ statics of `Promise`
 
 Error: resolve_void.js:3
   3: (Promise.resolve(): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
+      ^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
   3: (Promise.resolve(): Promise<number>); // error
-                         ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+                         ^^^^^^^^^^^^^^^ Promise
   Type argument `R` is incompatible:
       3: (Promise.resolve(): Promise<number>); // error
           ^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
@@ -177,9 +177,9 @@ Error: resolve_void.js:3
 
 Error: resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
   5: (Promise.resolve(undefined): Promise<number>); // error
-                                  ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+                                  ^^^^^^^^^^^^^^^ Promise
   Type argument `R` is incompatible:
       5: (Promise.resolve(undefined): Promise<number>); // error
                           ^^^^^^^^^ undefined. This type is incompatible with

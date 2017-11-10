@@ -26,6 +26,7 @@ begin library "flow-commands"
     "flow-common-lints"
     "flow-common-utils"
     "flow-flowlib"
+    "flow-monitor"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
@@ -117,6 +118,15 @@ begin library "flow-common-lints"
   ]
 end
 
+begin library "flow-common-tarjan"
+  sort = true
+  files = begin fb-glob "src/common/tarjan"
+  end
+  requires = [
+    "hh-utils-collections"
+  ]
+end
+
 begin library "flow-common-span"
   sort = true
   files = begin fb-glob "src/common/span"
@@ -174,6 +184,7 @@ begin library "flow-scripts-utils"
   requires = [
     "unix"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin program "flow-ppx-gen-flowlib"
@@ -185,6 +196,7 @@ begin program "flow-ppx-gen-flowlib"
   files = [
     "ppx_gen_flowlibs.ml"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "flow-flowlib"
@@ -268,6 +280,76 @@ begin library "flow-parsing"
   ]
 end
 
+begin library "flow-monitor"
+  sort = true
+  files = begin fb-glob "src/monitor"
+    excludes = [
+      "serverStatus.mli"
+      "serverStatus.ml"
+      "serverToMonitor.mli"
+      "serverToMonitor.ml"
+    ]
+  end
+  requires = [
+    "flow-common"
+    "flow-monitor-connections"
+    "flow-monitor-logger"
+    "flow-monitor-server-status"
+    "flow-monitor-utils"
+    "flow-server"
+    "flow-server-protocol"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-logger"
+  sort = true
+  files = begin fb-glob "src/monitor/logger"
+  end
+  requires = [
+    "lwt"
+    "lwt.log"
+    "lwt.unix"
+    "tp-core"
+  ]
+end
+
+begin library "flow-monitor-connections"
+  sort = true
+  files = begin fb-glob "src/monitor/connections"
+  end
+  requires = [
+    "flow-monitor-logger"
+    "flow-monitor-utils"
+    "flow-server-protocol"
+    "hh-marshal-tools-lwt"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-utils"
+  sort = true
+  files = begin fb-glob "src/monitor/utils"
+  end
+  requires = [
+    "lwt"
+  ]
+end
+
+begin library "flow-monitor-server-status"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "serverStatus.mli"
+    "serverStatus.ml"
+  ]
+  requires = [
+    "flow-common-utils"
+  ]
+end
+
 begin library "flow-server-files"
   sort = true
   files = [
@@ -302,13 +384,13 @@ begin library "flow-server-protocol"
     "flow-common"
     "flow-common-errors"
     "flow-common-utils"
+    "flow-monitor-server-status"
     "flow-parser"
     "flow-server-utils"
-    "flow-services-autocomplete"
     "flow-typing"
     "hh-utils"
-    "hh-utils-sys"
     "hh-utils-collections"
+    "hh-utils-sys"
   ]
 end
 
@@ -410,9 +492,10 @@ begin library "flow-services-autocomplete"
   requires = [
     "flow-common"
     "flow-common-utils"
-    "flow-stubs"
     "flow-parser"
     "flow-parsing"
+    "flow-server-protocol"
+    "flow-stubs"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
@@ -514,6 +597,7 @@ begin library "flow-typing"
     "flow-common"
     "flow-common-errors"
     "flow-common-lints"
+    "flow-common-tarjan"
     "flow-common-utils"
     "flow-common-xx"
     "flow-parser"

@@ -8,7 +8,7 @@ Error: issue-824.js:21
  21:     return this.foo(p);
                          ^ intersection type. This type is incompatible with the expected param type of
  10:   static foo(p: K): bool {
-                     ^ union: B | C
+                     ^ union: `B` | `C`
   Member 1:
     3: type K = B | C;
                 ^ B
@@ -103,7 +103,7 @@ Error: test10.js:38
    38: check_fun((x) => x);
                         ^ return
    38: check_fun((x) => x);
-                  ^ parameter `x`
+                  ^ x
 
 Error: test10.js:50
  50: check_obj({ x: id("") });
@@ -118,7 +118,7 @@ Error: test10.js:50
                                              ^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    50: check_obj({ x: id("") });
-                      ^^^^^^ function call
+                      ^^^^^^ call of function
 
 Error: test10.js:59
  59: check_arr([""]);
@@ -154,7 +154,7 @@ Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
             ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
+                           ^^^^ union: `Nil` | `Cons`
   Member 1:
    16: type List = Nil | Cons;
                    ^^^ Nil
@@ -186,7 +186,7 @@ Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
             ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
+                           ^^^^ union: `Nil` | `Cons`
   Member 1:
    16: type List = Nil | Cons;
                    ^^^ Nil
@@ -288,9 +288,9 @@ Error: test21.js:11
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    11: ({ type: bar(), x: str() }: T);
-                ^^^^^ function call
+                ^^^^^ call of function
    11: ({ type: bar(), x: str() }: T);
-                          ^^^^^ function call
+                          ^^^^^ call of function
 
 Error: test22.js:20
  20:   else return x.result;
@@ -378,7 +378,7 @@ Error: test5.js:14
    13: function a1(x) { return x; }
                      ^ return
    13: function a1(x) { return x; }
-                   ^ parameter `x`
+                   ^ x
 
 Error: test5.js:25
  25: arr(a2);

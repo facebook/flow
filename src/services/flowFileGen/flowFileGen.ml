@@ -126,7 +126,7 @@ let gen_class_body =
      *)
     let is_static_name_field = static && field_name = "name" && (
       match p with
-      | Field (t, _) ->
+      | Field (_, t, _) ->
         (match resolve_type t env with
         | DefT (_, StrT AnyLiteral) -> true
         | _ -> false)
@@ -135,7 +135,7 @@ let gen_class_body =
 
     let is_empty_constructor = not static && field_name = "constructor" && (
       match p with
-      | Method t ->
+      | Method (_, t) ->
         (match resolve_type t env with
         | DefT (_, FunT (_, _, { params; return_t; _ })) ->
           (params = []) && (
@@ -399,6 +399,8 @@ let gen_exports named_exports cjs_export env =
 let flow_file cx =
   let module_ref = Context.module_ref cx in
   let (named_exports, cjs_export) = exports_map cx module_ref in
+  (* Drop the loc *)
+  let named_exports = SMap.map snd named_exports in
 
   Codegen.mk_env cx
     |> Codegen.add_str "// @flow\n\n"

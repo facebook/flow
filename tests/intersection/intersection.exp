@@ -13,18 +13,28 @@ Error: test_obj.js:29
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
+   29: var e: E = c; // error
+              ^ object type. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                 ^^^^^^ number. See lib: lib/lib.js:33
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
+    Indexable signature is incompatible:
+       33: type C = { [key: string]: number } & { [key: string]: number };
+                                     ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
+       28: type E = { [key: string]: string };
+                                     ^^^^^^ string
   Member 2:
    33: type C = { [key: string]: number } & { [key: string]: number };
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
+   29: var e: E = c; // error
+              ^ object type. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                                             ^^^^^^ number. See lib: lib/lib.js:33
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
+    Indexable signature is incompatible:
+       33: type C = { [key: string]: number } & { [key: string]: number };
+                                                                 ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
+       28: type E = { [key: string]: string };
+                                     ^^^^^^ string
 
 
 Found 2 errors

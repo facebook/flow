@@ -1,6 +1,6 @@
 Error: unary.js:8
   8:   return -y; // error, we don't allow coercion here
-              ^^ unary minus operator. Expected number instead of
+              ^^ string. Expected number instead of
   8:   return -y; // error, we don't allow coercion here
                ^ string
 

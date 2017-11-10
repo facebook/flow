@@ -12,7 +12,7 @@ Error: typecheck.js:21
 
 Error: unreachable.js:5
   5:   return bar(x) + baz(y);
-                       ^^^^^^ function call. Function cannot be called on possibly undefined value
+                       ^^^^^^ call of uninitialized variable. Function cannot be called on possibly undefined value
   5:   return bar(x) + baz(y);
                        ^^^ uninitialized variable
 

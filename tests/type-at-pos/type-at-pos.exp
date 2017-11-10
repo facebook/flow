@@ -32,7 +32,7 @@
   "type":"[number, string]",
   "reasons":[
     {
-      "desc":"Point",
+      "desc":"`Point`",
       "loc":{
         "source":"test.js",
         "type":"SourceFile",
@@ -62,7 +62,7 @@
   "type":"'cool'",
   "reasons":[
     {
-      "desc":"MyStr",
+      "desc":"`MyStr`",
       "loc":{
         "source":"test.js",
         "type":"SourceFile",
@@ -92,7 +92,7 @@
   "type":"true",
   "reasons":[
     {
-      "desc":"MyBool",
+      "desc":"`MyBool`",
       "loc":{
         "source":"test.js",
         "type":"SourceFile",
@@ -122,7 +122,7 @@
   "type":"42",
   "reasons":[
     {
-      "desc":"MyNum",
+      "desc":"`MyNum`",
       "loc":{
         "source":"test.js",
         "type":"SourceFile",
@@ -152,7 +152,7 @@
   "type":"C<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: class type: C",
+      "desc":"`C`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -182,7 +182,7 @@
   "type":"C<number>",
   "reasons":[
     {
-      "desc":"type application of function call",
+      "desc":"call of function",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -212,7 +212,7 @@
   "type":"E<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: E",
+      "desc":"`E`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -242,7 +242,7 @@
   "type":"F<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: F",
+      "desc":"`F`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -272,7 +272,7 @@
   "type":"O<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: O",
+      "desc":"`O`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -302,7 +302,7 @@
   "type":"(unknown)",
   "reasons":[
     {
-      "desc":"type application of Mono",
+      "desc":"`Mono`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -647,7 +647,7 @@ predicates.js - Array: {
   "type":"Array<T>",
   "reasons":[
     {
-      "desc":"polymorphic type: class type: Array",
+      "desc":"`Array`",
       "loc":{
         "source":"predicates.js",
         "type":"SourceFile",

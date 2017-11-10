@@ -27,18 +27,6 @@ Error: D.js:3
   3: new E().x
      ^^^^^^^ E
 
-Error: class_shapes.js:4
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string. This type is incompatible with
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number
-
-Error: class_shapes.js:6
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string. This type is incompatible with
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number
-
 Error: class_shapes.js:18
  18: x.b; // error, TestClass has no b
        ^ property `b`. Property not found in
@@ -53,21 +41,36 @@ Error: class_shapes.js:20
 
 Error: class_shapes.js:22
  22: var y : Foo = x;
-             ^^^ property `b`. Property not found in
+                   ^ TestClass. This type is incompatible with
  22: var y : Foo = x;
-                   ^ TestClass
+             ^^^ object type
+  Property `b` is incompatible:
+     22: var y : Foo = x;
+                 ^^^ property `b`. Property not found in
+     22: var y : Foo = x;
+                       ^ TestClass
 
-Error: class_shapes.js:27
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number. This type is incompatible with
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `a` is incompatible:
+      4:   a: string;    // exists in TestClass
+              ^^^^^^ string. This type is incompatible with
+     27:   a: number;  // conflicts with cast to Foo
+              ^^^^^^ number
 
-Error: class_shapes.js:28
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number. This type is incompatible with
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `a` is incompatible:
+     27:   a: number;  // conflicts with cast to Foo
+              ^^^^^^ number. This type is incompatible with
+      4:   a: string;    // exists in TestClass
+              ^^^^^^ string
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
@@ -91,23 +94,45 @@ Error: class_shapes.js:35
       5:   b: string;    // doesn't exist
               ^^^^^^ string
 
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `c` is incompatible:
+      6:   c?: ?string;  // exists in TestClass, optional
+                ^^^^^^ string. This type is incompatible with
+     28:   c: ?number; // conflicts with cast to Foo
+               ^^^^^^ number
+
+Error: class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `c` is incompatible:
+     28:   c: ?number; // conflicts with cast to Foo
+               ^^^^^^ number. This type is incompatible with
+      6:   c?: ?string;  // exists in TestClass, optional
+                ^^^^^^ string
+
 Error: expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
-                 ^^^ identifier `Baz`. Could not resolve name
+                 ^^^ Baz. Could not resolve name
 
 Error: expr.js:17
  17: var c: Qux = new C(); // error: Qux is not a type in this scope
-            ^^^ identifier `Qux`. Could not resolve name
+            ^^^ Qux. Could not resolve name
 
 Error: expr.js:29
  29: var alias1: Alias = new _Alias(); // error: bad pun
-                         ^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
+                         ^^^^^^^^^^^^ Alias. This type is incompatible with
  29: var alias1: Alias = new _Alias(); // error: bad pun
                  ^^^^^ Alias
 
 Error: expr.js:30
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                         ^^^^^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
+                         ^^^^^^^^^^^^^^^^ Alias. This type is incompatible with
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
                  ^^^^^ Alias
 
@@ -119,7 +144,7 @@ Error: loc.js:5
 
 Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of C. This type is incompatible with
+      ^ statics of `C`. This type is incompatible with
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
          ^^^^^^^^^^ object type
   Property `p` is incompatible:
@@ -130,7 +155,7 @@ Error: statics.js:10
 
 Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of C. This type is incompatible with
+      ^ statics of `C`. This type is incompatible with
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
          ^^^^^^^^^^ object type
   Property `p` is incompatible:
@@ -143,7 +168,7 @@ Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ object type. This type is incompatible with
  13: (o: Class<C>); // error, object type incompatible with class type
-         ^^^^^^^^ class type: C
+         ^^^^^^^^ statics of `C`
 
 Error: statics.js:19
  19: (Dup1.x: empty); // function ~> empty

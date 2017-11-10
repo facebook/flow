@@ -86,7 +86,8 @@ let call workers ~job ~merge ~neutral ~next =
   | None -> single_threaded_call job merge neutral next
   | Some workers -> multi_threaded_call workers job merge neutral next
 
-let next ?max_size workers =
+let next ?progress_fn ?max_size workers =
   Bucket.make
     ~num_workers: (match workers with Some w -> List.length w | None -> 1)
+    ?progress_fn
     ?max_size

@@ -19,7 +19,7 @@ Parent.js:4:18,4:28
 Trace `NonDestructuredFoo` back to its def
 main.js:20:5,20:7
 Parent.js:3:23,3:27
-Parent.js:3:23,3:27
+Parent.js:3:18,3:20
 
 React class and attribute expressions
 react.js:3:7,3:7
@@ -28,7 +28,7 @@ react.js:7:5,7:7
 react.js:7:5,7:7
 
 Inheritance
-override.js:10:3,10:16
+override.js:10:3,10:10
 
 Directly jump to required/imported modules (TODO #2)
 Parent.js:4:18,4:28

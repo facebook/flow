@@ -38,7 +38,7 @@ Error: buffer/buffer.js:57
 
 Error: child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Function cannot be called on any member of intersection type
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of property `execSync`. Function cannot be called on any member of intersection type
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
@@ -104,7 +104,7 @@ Error: crypto/crypto.js:16
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with the expected param type of
 1475:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1475
+                 ^^^^^^^^^^^^^^^ union: `Buffer` | string. See lib: <BUILTINS>/node.js:1475
   Member 1:
   1475:     chunk: Buffer | string,
                    ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1475
@@ -176,9 +176,9 @@ Error: fs/fs.js:13
          ------^ function type. See lib: <BUILTINS>/node.js:912
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                      ^ parameter `_`
+                                                      ^ _
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                         ^^^^ parameter `data`
+                                                         ^^^^ data
 
 Error: fs/fs.js:28
  28: (fs.readFileSync("file.exp") : string); // error

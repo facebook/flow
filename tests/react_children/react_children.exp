@@ -118,7 +118,7 @@ Error: builtin_intrinsic.js:24
      25:   {{a: 1, b: 2, c: 3}}
             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     314: type ReactDOM$HTMLElementJSXIntrinsic = {instance: HTMLElement, props: {children?: React$Node, [key: string]: any}};
-                                                                                            ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`. See lib: <BUILTINS>/react-dom.js:314
+                                                                                            ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`. See lib: <BUILTINS>/react-dom.js:314
       Member 1:
        13:   | void
                ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -161,7 +161,7 @@ Error: builtin_intrinsic.js:24
                ^^^^^^ string. See lib: <BUILTINS>/react.js:17
       Member 6:
        18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Error:
        25:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
@@ -169,15 +169,15 @@ Error: builtin_intrinsic.js:24
                ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
-               ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
       Error:
        25:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
        19:   | React$Portal
-               ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
       Member 8:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
       Error:
        25:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
@@ -185,7 +185,7 @@ Error: builtin_intrinsic.js:24
                ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
         Property `@@iterator` is incompatible:
            20:   | Iterable<React$Node>;
-                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
            25:   {{a: 1, b: 2, c: 3}}
                   ^^^^^^^^^^^^^^^^^^ object literal
 
@@ -231,7 +231,7 @@ Error: component.js:40
      41:   {{a: 1, b: 2, c: 3}}
             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
       6: class MyComponent extends React.Component<{children: Node}, void> {
-                                                              ^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
+                                                              ^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
       Member 1:
        13:   | void
                ^^^^ undefined. See lib: <BUILTINS>/react.js:13
@@ -274,7 +274,7 @@ Error: component.js:40
                ^^^^^^ string. See lib: <BUILTINS>/react.js:17
       Member 6:
        18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:18
+               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Error:
        41:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
@@ -282,15 +282,15 @@ Error: component.js:40
                ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
-               ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
       Error:
        41:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
        19:   | React$Portal
-               ^^^^^^^^^^^^ React$Portal. See lib: <BUILTINS>/react.js:19
+               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
       Member 8:
        20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:20
+               ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
       Error:
        41:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
@@ -298,7 +298,7 @@ Error: component.js:40
                ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
         Property `@@iterator` is incompatible:
            20:   | Iterable<React$Node>;
-                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:20
+                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
            41:   {{a: 1, b: 2, c: 3}}
                   ^^^^^^^^^^^^^^^^^^ object literal
 
@@ -693,7 +693,7 @@ Error: fun.js:136
     136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
                     ^^^^^^^^^ undefined. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -720,7 +720,7 @@ Error: fun.js:137
     137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
                     ^^^^ null. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -747,7 +747,7 @@ Error: fun.js:138
     138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
                     ^^^^ boolean. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -774,7 +774,7 @@ Error: fun.js:139
     139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
                     ^^^^^ boolean. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -801,7 +801,7 @@ Error: fun.js:140
     140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
                     ^ number. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -828,7 +828,7 @@ Error: fun.js:141
     141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
                     ^^ number. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -853,9 +853,9 @@ Error: fun.js:142
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
     142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                   ^^^^^^^^^^^^ exact type: object type. This type is incompatible with
+                   ^^^^^^^^^^^^ object type. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: Fn | array type
+                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                              ^^ Fn
@@ -878,6 +878,10 @@ Error: fun.js:142
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
 
+Error: spread.js:7
+  7: <Foo>{...["a", "b"]}</Foo>
+     ^^^^^ A spread argument is unsupported here
+
 Error: tabs.js:26
  26: <TabBar />; // Error: `children` is required.
      ^^^^^^^^^^ props of React element `TabBar`. This type is incompatible with
@@ -898,7 +902,7 @@ Error: tabs.js:30
      30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
          ^^^^^^^^ React children array. This type is incompatible with
      24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -925,12 +929,12 @@ Error: tabs.js:30
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -943,7 +947,7 @@ Error: tabs.js:30
            30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                        ^^ JSX text. This type is incompatible with
            18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
             Member 1:
              14:   | void
                      ^^^^ undefined
@@ -970,12 +974,12 @@ Error: tabs.js:30
                      ^^^^^^^ boolean
             Member 4:
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Error:
              30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                          ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -994,7 +998,7 @@ Error: tabs.js:31
      31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
          ^^^^^^^^ React children array. This type is incompatible with
      24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1021,12 +1025,12 @@ Error: tabs.js:31
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -1039,7 +1043,7 @@ Error: tabs.js:31
            31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
                              ^^ JSX text. This type is incompatible with
            18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
             Member 1:
              14:   | void
                      ^^^^ undefined
@@ -1066,12 +1070,12 @@ Error: tabs.js:31
                      ^^^^^^^ boolean
             Member 4:
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Error:
              31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
                                ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -1090,7 +1094,7 @@ Error: tabs.js:32
      32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
          ^^^^^^^^ React children array. This type is incompatible with
      24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1117,12 +1121,12 @@ Error: tabs.js:32
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -1135,7 +1139,7 @@ Error: tabs.js:32
            32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                                    ^^ JSX text. This type is incompatible with
            18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
             Member 1:
              14:   | void
                      ^^^^ undefined
@@ -1162,12 +1166,12 @@ Error: tabs.js:32
                      ^^^^^^^ boolean
             Member 4:
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Error:
              32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                                      ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -1184,9 +1188,9 @@ Error: tabs.js:67
                                           ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
      67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                 ^^^^^^^^^ exact type: object type. This type is incompatible with
+                 ^^^^^^^^^ object type. This type is incompatible with
      24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                                         ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                         ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1213,7 +1217,7 @@ Error: tabs.js:67
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
                    ^^^^^^^^^ object type. This type is incompatible with
@@ -1242,9 +1246,9 @@ Error: tabs.js:68
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                 ^^^^^^^^^ exact type: object type. This type is incompatible with
+                 ^^^^^^^^^ object type. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                   ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1271,7 +1275,7 @@ Error: tabs.js:68
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                    ^^^^^^^^^ object type. This type is incompatible with
@@ -1300,9 +1304,9 @@ Error: tabs.js:68
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                          ^^^^^^^^^ exact type: object type. This type is incompatible with
+                          ^^^^^^^^^ object type. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                   ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1329,7 +1333,7 @@ Error: tabs.js:68
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                             ^^^^^^^^^ object type. This type is incompatible with
@@ -1358,9 +1362,9 @@ Error: tabs.js:73
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      73:   <NotTab/>
-           ^^^^^^^^^ exact type: object type. This type is incompatible with
+           ^^^^^^^^^ object type. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                   ^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
        14:   | void
                ^^^^ undefined
@@ -1387,7 +1391,7 @@ Error: tabs.js:73
                ^^^^^^^ boolean
       Member 4:
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        73:   <NotTab/>
              ^^^^^^^^^ object type. This type is incompatible with
@@ -1823,7 +1827,7 @@ Error: view.js:31
      32:   {{a: 1, b: 2, c: 3}}
             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
      17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -1850,7 +1854,7 @@ Error: view.js:31
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        32:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
@@ -1874,7 +1878,7 @@ Error: view.js:35
      35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
                ^^^^^^^^^^^^^ JSX text. This type is incompatible with
      17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -1901,12 +1905,12 @@ Error: view.js:35
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
                  ^^^^^^^^^^^^^ JSX text. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -1925,7 +1929,7 @@ Error: view.js:36
      36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
                 ^^^^^^^^^^^^^^^ string. This type is incompatible with
      17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -1952,12 +1956,12 @@ Error: view.js:36
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
                   ^^^^^^^^^^^^^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -1976,7 +1980,7 @@ Error: view.js:37
      37: <View>{42}</View>; // Error: Numbers are not allowed as children.
                 ^^ number. This type is incompatible with
      17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2003,12 +2007,12 @@ Error: view.js:37
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        37: <View>{42}</View>; // Error: Numbers are not allowed as children.
                   ^^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2027,7 +2031,7 @@ Error: view.js:38
      38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
          ^^^^^^ React children array. This type is incompatible with
      17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2054,12 +2058,12 @@ Error: view.js:38
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
            ^^^^^^ React children array. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2072,7 +2076,7 @@ Error: view.js:38
            38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
                       ^ number. This type is incompatible with
            10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                         ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                         ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
             Member 1:
               6:   | void
                      ^^^^ undefined
@@ -2099,12 +2103,12 @@ Error: view.js:38
                      ^^^^^^^ boolean
             Member 4:
               9:   | React$Element<any>
-                     ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+                     ^^^^^^^^^^^^^^^^^^ React.Element
             Error:
              38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
                         ^ number. Inexact type is incompatible with exact type
               9:   | React$Element<any>
-                     ^^^^^^^^^^^^^^^^^^ exact type: object type
+                     ^^^^^^^^^^^^^^^^^^ object type
             Member 5:
              10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2125,7 +2129,7 @@ Error: view.js:39
      39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                  ^^^ string. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2152,12 +2156,12 @@ Error: view.js:39
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                    ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2178,7 +2182,7 @@ Error: view.js:39
      39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                       ^^^ string. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2205,12 +2209,12 @@ Error: view.js:39
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                         ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2231,7 +2235,7 @@ Error: view.js:39
      39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                            ^^^ string. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2258,12 +2262,12 @@ Error: view.js:39
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                              ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2284,7 +2288,7 @@ Error: view.js:40
      40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                  ^ number. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2311,12 +2315,12 @@ Error: view.js:40
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                    ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2337,7 +2341,7 @@ Error: view.js:40
      40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                     ^ number. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2364,12 +2368,12 @@ Error: view.js:40
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                       ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2390,7 +2394,7 @@ Error: view.js:40
      40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                        ^ number. This type is incompatible with
      10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | type application of identifier `React$Element` | array type
+                   ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
         6:   | void
                ^^^^ undefined
@@ -2417,12 +2421,12 @@ Error: view.js:40
                ^^^^^^^ boolean
       Member 4:
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                          ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ exact type: object type
+               ^^^^^^^^^^^^^^^^^^ object type
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2433,4 +2437,4 @@ Error: view.js:40
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 111 errors
+Found 112 errors

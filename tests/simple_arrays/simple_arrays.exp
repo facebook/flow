@@ -1,6 +1,6 @@
 Error: array.js:15
  15: bar(0);
-     ^^^^^^ function call
+     ^^^^^^ call of function
  14: function bar(i): string { return a[i]; }
                                       ^^^^ number. This type is incompatible with the expected return type of
  14: function bar(i): string { return a[i]; }

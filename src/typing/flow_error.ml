@@ -174,6 +174,7 @@ type error_message =
   | EDocblockError of Loc.t * docblock_error
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
+  | EUntypedImport of Loc.t * string
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
@@ -289,10 +290,13 @@ and upper_kind =
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
-  | PropertyCompatibility
-      (_, lower_obj_reason, upper_obj_reason, use_op) ->
-    let lower_loc = loc_of_reason lower_obj_reason in
-    let upper_loc = loc_of_reason upper_obj_reason in
+  | PropertyCompatibility {lower; upper; use_op; _} ->
+    let lower_loc = loc_of_reason lower in
+    let upper_loc = loc_of_reason upper in
+    locs_of_use_op (lower_loc::upper_loc::acc) use_op
+  | IndexerKeyCompatibility {lower; upper; use_op} ->
+    let lower_loc = loc_of_reason lower in
+    let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
   | SetProperty reason -> (loc_of_reason reason)::acc
   | TypeArgCompatibility (_, r1, r2, use_op) ->
@@ -459,6 +463,7 @@ let locs_of_error_message = function
   | EParseError (loc, _) -> [loc]
   | EDocblockError (loc, _) -> [loc]
   | EUntypedTypeImport (loc, _) -> [loc]
+  | EUntypedImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
@@ -487,8 +492,8 @@ let suppress_fun_call_param_op op =
   match op with
   | Some r ->
     begin match desc_of_reason r with
-    | RFunctionCall
-    | RConstructorCall
+    | RFunctionCall _
+    | RConstructorCall _
     | RMethodCall _
     | RReactElement _ -> true
     | _ -> false
@@ -499,7 +504,20 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
 
   let mk_info reason extras =
-    loc_of_reason reason, string_of_desc (desc_of_reason reason) :: extras
+    let desc = string_of_desc (desc_of_reason reason) in
+    (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
+     * we want to unwrap the primes and just show A. This looks better in infos.
+     * However, when an identifier wrapped with primes is inside some other text
+     * then we want to keep the primes since they help with readability. *)
+    let desc = if (
+      (String.length desc > 2) &&
+      ((String.get desc 0) = '`') &&
+      ((String.get desc ((String.length desc) - 1)) = '`') &&
+      not (String.contains desc ' ')
+    ) then (
+      String.sub desc 1 ((String.length desc) - 2)
+    ) else desc in
+    loc_of_reason reason, desc :: extras
   in
 
   let info_of_reason r = mk_info r [] in
@@ -662,15 +680,23 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
      Note that `force` is not recursive, as the input message is consumed by
      `extra_info_of_use_op` and will appear in the output. *)
   let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
-  | PropertyCompatibility (x, rl', ru', use_op) ->
+  | PropertyCompatibility {prop; lower=rl'; upper=ru'; use_op} ->
     let extra =
       let prop =
-        if x = "$call" then "Callable property"
-        else if x = "$key" || x = "$value" then "Indexable signature"
-        else spf "Property `%s`" x
+        match prop with
+        | Some "$call" -> "Callable property"
+        | None | Some "$key" | Some "$value" -> "Indexable signature"
+        | Some x -> spf "Property `%s`" x
       in
       extra_info_of_use_op reasons extra msg
         (spf "%s is incompatible:" prop)
+    in
+    let obj_reasons = ordered_reasons (rl', ru') in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops (obj_reasons, extra, msg) use_op
+  | IndexerKeyCompatibility {lower=rl'; upper=ru'; use_op} ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "Indexer key is incompatible:"
     in
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in
@@ -1568,6 +1594,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ~kind:(LintError Lints.UntypedTypeImport)
       [loc, [spf (
         "Importing a type from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
+      ) module_name]]
+
+  | EUntypedImport (loc, module_name) ->
+    mk_error
+      ~kind:(LintError Lints.UntypedImport)
+      [loc, [spf (
+        "Importing from an untyped module makes it `any` and is not safe! "^^
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 

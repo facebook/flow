@@ -75,7 +75,12 @@ let parse_numeric_escape ?(trim_to_byte = false) s =
     Char.chr v
   with _ -> raise (Invalid_string "escaped character too large")
 
-let unescape_double_or_heredoc ~is_heredoc s =
+type literal_kind =
+  | Literal_heredoc
+  | Literal_double_quote
+  | Literal_backtick
+
+let unescape_literal literal_kind s =
   let len = String.length s in
   let buf = Buffer.create len in
   let idx = ref 0 in
@@ -105,10 +110,14 @@ let unescape_double_or_heredoc ~is_heredoc s =
       | 'f'  -> Buffer.add_char buf '\x0c'
       | '\\' -> Buffer.add_char buf '\\'
       | '$'  -> Buffer.add_char buf '$'
+      | '`' ->
+        if literal_kind = Literal_backtick
+        then Buffer.add_char buf '`'
+        else Buffer.add_string buf "\\`"
       | '\"' ->
-        if is_heredoc
-        then Buffer.add_string buf "\\\""
-        else Buffer.add_char buf '\"'
+        if literal_kind = Literal_double_quote
+        then Buffer.add_char buf '\"'
+        else Buffer.add_string buf "\\\""
       | 'u' when !idx < len && s.[!idx] = '{' ->
         let _ = next () in
         let unicode_count = count_f (fun c -> c <> '}') ~max:6 0 in
@@ -143,10 +152,13 @@ let unescape_double_or_heredoc ~is_heredoc s =
   Buffer.contents buf
 
 let unescape_double s =
-  unescape_double_or_heredoc ~is_heredoc:false s
+  unescape_literal Literal_double_quote s
+
+let unescape_backtick s =
+  unescape_literal Literal_backtick s
 
 let unescape_heredoc s =
-  unescape_double_or_heredoc ~is_heredoc:true s
+  unescape_literal Literal_heredoc s
 
 let unescape_single_or_nowdoc ~is_nowdoc s =
   let len = String.length s in

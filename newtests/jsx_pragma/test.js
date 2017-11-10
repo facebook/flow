@@ -51,7 +51,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       // @jsx Foo['Bar']
-                             ^^^ identifier \`Foo\`. Could not resolve name
+                             ^^^ Foo. Could not resolve name
         `,
       ),
   ]),
@@ -67,7 +67,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:        * @jsx Foo['Bar']
-                             ^^^ identifier \`Foo\`. Could not resolve name
+                             ^^^ Foo. Could not resolve name
         `,
       ),
   ]),
@@ -288,7 +288,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
+                     ^^^^^^^^^^^^^^ Bar. Could not resolve name
         `,
       ),
   ]),
@@ -299,6 +299,15 @@ export default suite(({addFile, addFiles, addCode}) => [
       const Bar = 123;
 
       <Bar x="hi" />;
+    `).noNewErrors(),
+  ]),
+  test('Spread syntax in children should work', [
+    addCode(`
+      // @jsx Foo
+      function Foo(elem: number, props: null, child1: 'a', child2: 'b', child3: 'c') {}
+
+      const Bar = 123;
+      <Bar>{...["a", "b", "c"]}</Bar>;
     `).noNewErrors(),
   ]),
   test('Exact prop type with spread still does not work', [
@@ -317,7 +326,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             9:       <Bar {...props} />;
                      ^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
             5:       function Foo(elem: number, props: {| x: string |}) {}
-                                                       ^^^^^^^^^^^^^^^ exact type: object type
+                                                       ^^^^^^^^^^^^^^^ object type
         `,
       ),
   ]),

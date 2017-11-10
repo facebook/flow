@@ -662,7 +662,7 @@ Error: test.js:220
 226: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:227
      v-------------------------------------------------------------------------
@@ -673,7 +673,7 @@ Error: test.js:227
 231: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:232
      v------------------------------------------------
@@ -683,7 +683,7 @@ Error: test.js:232
 235: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:232
      v------------------------------------------------
@@ -713,7 +713,7 @@ Error: test.js:236
 242: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:243
      v-----------------------------------------------------------------------------------------------------
@@ -724,7 +724,7 @@ Error: test.js:243
 248: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:243
      v-----------------------------------------------------------------------------------------------------
@@ -751,7 +751,7 @@ Error: test.js:249
 254: />;
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:253
 253:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1309,7 +1309,7 @@ Error: test.js:406
 412: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:413
      v----------------------------------------------------------------------------
@@ -1320,7 +1320,7 @@ Error: test.js:413
 417: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:418
      v--------------------------------------------------------------------------
@@ -1330,7 +1330,7 @@ Error: test.js:418
 421: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:418
      v--------------------------------------------------------------------------
@@ -1360,7 +1360,7 @@ Error: test.js:422
 428: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:429
      v------------------------------------------------------------------------------
@@ -1371,7 +1371,7 @@ Error: test.js:429
 434: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:429
      v------------------------------------------------------------------------------
@@ -1398,7 +1398,7 @@ Error: test.js:435
 440: />;
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:439
 439:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1780,7 +1780,7 @@ Error: test.js:531
 537: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:538
      v----------------------------------------------------------------------------
@@ -1791,7 +1791,7 @@ Error: test.js:538
 542: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:543
      v---------------------------------------------------
@@ -1801,7 +1801,7 @@ Error: test.js:543
 546: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:543
      v---------------------------------------------------
@@ -1831,7 +1831,7 @@ Error: test.js:547
 553: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:554
      v------------------------------------------------------------------------------
@@ -1842,7 +1842,7 @@ Error: test.js:554
 559: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:554
      v------------------------------------------------------------------------------
@@ -1869,7 +1869,7 @@ Error: test.js:560
 565: />;
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:564
 564:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}

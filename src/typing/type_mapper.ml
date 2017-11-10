@@ -536,6 +536,10 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else MixinT (r, t'')
+    | ToStringT (r, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else ToStringT (r, t'')
     | AdderT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

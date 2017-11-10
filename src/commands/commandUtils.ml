@@ -764,5 +764,12 @@ let send_command (oc:out_channel) (cmd:ServerProt.command): unit =
   Marshal.to_channel oc command [];
   flush oc
 
-let wait_for_response (ic:Timeout.in_channel): ServerProt.response =
+let connect_and_make_request option_values root request =
+  (* Connect *)
+  let ic, oc = connect option_values root in
+
+  (* Send request *)
+  send_command oc request;
+
+  (* Read result *)
   Timeout.input_value ic

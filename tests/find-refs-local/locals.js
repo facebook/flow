@@ -63,3 +63,40 @@ export function exportedFunction(): void {}
 
 console.log(exportedConst);
 exportedFunction();
+
+import {ExternalClass} from './external';
+
+class SuperClass {
+  bar(): void {}
+  baz: string;
+}
+
+class SubClass extends SuperClass {}
+
+type SimilarType = {
+  bar(): void,
+  baz: string,
+};
+
+const superClass = new SuperClass();
+const subClass = new SubClass();
+const similarType: SimilarType = f;
+const externalClass = new ExternalClass();
+
+superClass.bar();
+superClass.bar();
+superClass.baz;
+superClass.baz;
+
+subClass.bar();
+subClass.bar();
+subClass.baz;
+subClass.baz;
+
+similarType.bar();
+similarType.bar();
+similarType.baz;
+similarType.baz;
+
+externalClass.bar();
+externalClass.bar();

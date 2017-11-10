@@ -12,7 +12,7 @@ Error: constructor.js:16
 
 Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ function call
+         ^^^^^^^^^^ call of function
  30:   f.y; // error
          ^ property `y`. Property cannot be accessed on possibly undefined value
  30:   f.y; // error
@@ -20,7 +20,7 @@ Error: constructor.js:36
 
 Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ function call
+         ^^^^^^^^^^ call of function
  31:   f.x; // error
          ^ property `x`. Property cannot be accessed on possibly undefined value
  31:   f.x; // error
@@ -34,7 +34,7 @@ Error: constructor.js:45
 
 Error: constructor.js:69
  69:     super(this); // error (no super call yet)
-         ^^^^^^^^^^^ function call
+         ^^^^^^^^^^^ call of super
  63:     leaked_this.foo()
          ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
  63:     leaked_this.foo()
@@ -62,7 +62,7 @@ Error: super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
                 ^^^^^^^^^^^ property `doesntExist`. Property not found in
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
-          ^^^^^ statics of A
+          ^^^^^ statics of `A`
 
 Error: super.js:19
  19:     super.f(0);

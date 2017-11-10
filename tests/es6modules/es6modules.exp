@@ -100,15 +100,15 @@ Error: es6modules.js:67
 
 Error: es6modules.js:70
  70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-     ^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Constructor cannot be called on
+     ^^^^^^^^^^^^^^^^^^^^^^^^ new `CJS_Clobb_Class_NS`. Constructor cannot be called on
  70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-         ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+         ^^^^^^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:71
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
                                          ^^^^^^^^^^^^^ property `staticNumber3`. Property not found in
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                      ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+                      ^^^^^^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:73
  73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
@@ -142,7 +142,7 @@ Error: es6modules.js:92
  92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
                ^^^^^^^^^^^ property `doesntExist`. Property not found in
  92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
-     ^^^^^^^^^ exports of "CommonJS_Named"
+     ^^^^^^^^^ exports of `CommonJS_Named`
 
 Error: es6modules.js:96
  96: var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
@@ -276,7 +276,7 @@ Error: es6modules.js:183
 183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
                                           ^^^^^^^^^^^ property `doesntExist`. Property not found in
 183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports of "ES6_Default_AnonFunction2"
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports of `ES6_Default_AnonFunction2`
 
 Error: es6modules.js:187
 187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
@@ -420,25 +420,25 @@ Error: test_imports_are_frozen.js:9
   9: DefaultA.numberValue1 = 123; // Error: DefaultA is frozen
      ^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
   9: DefaultA.numberValue1 = 123; // Error: DefaultA is frozen
-     ^^^^^^^^ exports of "A"
+     ^^^^^^^^ exports of `A`
 
 Error: test_imports_are_frozen.js:13
  13: ES6_Named1.varDeclNumber1 = 123; // Error: ES6_Named1 is frozen
      ^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `varDeclNumber1`. Mutation not allowed on
  13: ES6_Named1.varDeclNumber1 = 123; // Error: ES6_Named1 is frozen
-     ^^^^^^^^^^ exports of "ES6_Named1"
+     ^^^^^^^^^^ exports of `ES6_Named1`
 
 Error: test_imports_are_frozen.js:17
  17: CommonJS_Star.numberValue1 = 123; // Error: frozen
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
  17: CommonJS_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Lit"
+     ^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Lit`
 
 Error: test_imports_are_frozen.js:25
  25: CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
  25: CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Frozen"
+     ^^^^^^^^^^^^^^^^^^^^ exports of `CommonJS_Clobbering_Frozen`
 
 Error: test_imports_are_frozen.js:26
  26: CommonJS_Frozen_Star.default.numberValue1 = 123; // Error: frozen
@@ -456,7 +456,7 @@ Error: test_imports_are_frozen.js:43
  43:   ES6_Named1.numberValue = 123; // error, es6 exports are frozen
        ^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue`. Mutation not allowed on
  43:   ES6_Named1.numberValue = 123; // error, es6 exports are frozen
-       ^^^^^^^^^^ CommonJS exports of "ES6_Named1"
+       ^^^^^^^^^^ CommonJS exports of `ES6_Named1`
 
 Error: test_imports_are_frozen.js:51
  51:   CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen

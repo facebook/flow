@@ -2,7 +2,7 @@ Error: class_expr.js:6
   6:     this.x = 123; // error: property not found (must be declared)
               ^ property `x`. Property not found in
   6:     this.x = 123; // error: property not found (must be declared)
-         ^^^^ class expr `Thing`
+         ^^^^ Thing
 
 Error: contra.js:4
   4:   next: this; // error (see below for exploit): `this` should only appear in
@@ -86,7 +86,7 @@ Error: contra.js:53
 
 Error: generics.js:6
   6: class ImplicitNumber extends Implicit { arg: number; }
-                                  ^^^^^^^^ polymorphic type: class type: Implicit. Too few type arguments. Expected at least 1
+                                  ^^^^^^^^ Implicit. Too few type arguments. Expected at least 1
   5: class Implicit<X> { arg: X; val: X; }
                     ^ See type parameters of definition here
 

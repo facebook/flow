@@ -22,7 +22,7 @@ Error: test.js:5
 
 Error: test.js:9
   9: function G(props: { foo: string|numner }) {}
-                                     ^^^^^^ identifier `numner`. Could not resolve name
+                                     ^^^^^^ numner. Could not resolve name
 
 Error: test.js:13
  13: <Z />; // error, expected React component

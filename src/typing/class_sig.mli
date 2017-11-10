@@ -2,7 +2,7 @@
 
 type t
 
-type field = Type.polarity * field'
+type field = Loc.t option * Type.polarity * field'
 and field' = Annot of Type.t | Infer of Func_sig.t
 
 type super =
@@ -37,14 +37,14 @@ val empty:
     Overwrites any existing constructor. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_constructor: Func_sig.t -> t -> t
+val add_constructor: Loc.t option -> Func_sig.t -> t -> t
 
 (** Add constructor override to signature.
 
     Does not overwrite existing constructors. This implements the behavior of
     interfaces, which interpret duplicate definitions as branches of a single
     overloaded constructor. *)
-val append_constructor: Func_sig.t -> t -> t
+val append_constructor: Loc.t option -> Func_sig.t -> t -> t
 
 (** Add field to signature. *)
 val add_field: static:bool -> string -> field -> t -> t
@@ -54,20 +54,20 @@ val add_field: static:bool -> string -> field -> t -> t
     Overwrites any existing synonymous method. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_method: static:bool -> string -> Func_sig.t -> t -> t
+val add_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
 (** Add method override to signature.
 
     Does not overwrite existing synonymous methods. This implements the
     behavior of interfaces, which interpret duplicate definitions as branches
     of a single overloaded method. *)
-val append_method: static:bool -> string -> Func_sig.t -> t -> t
+val append_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
 (** Add getter to signature. *)
-val add_getter: static:bool -> string -> Func_sig.t -> t -> t
+val add_getter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
 (** Add setter to signature. *)
-val add_setter: static:bool -> string -> Func_sig.t -> t -> t
+val add_setter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
 (** Create signature from class AST. *)
 val mk: Context.t ->

@@ -4,7 +4,7 @@ Error: iter.js:7
 
 Error: iter.js:8
   8:     foo(a[k]); // k is a string, which shouldn't be used for array access
-             ^^^^ access of computed property/element. Element cannot be accessed with
+             ^^^^ computed property. Element cannot be accessed with
   8:     foo(a[k]); // k is a string, which shouldn't be used for array access
                ^ string
 
@@ -14,7 +14,7 @@ Error: iter.js:22
 
 Error: iter.js:23
  23:     foo(d[n]); // d is a string, which shouldn't be used for array access
-             ^^^^ access of computed property/element. Element cannot be accessed with
+             ^^^^ computed property. Element cannot be accessed with
  23:     foo(d[n]); // d is a string, which shouldn't be used for array access
                ^ string
 

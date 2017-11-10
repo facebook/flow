@@ -24,7 +24,7 @@ Error: test.js:7
 
 Error: test.js:9
   9: foo(...args); // 2 errors
-     ^^^^^^^^^^^^ function call
+     ^^^^^^^^^^^^ call of function
   2: const args = [3, 4];
                    ^ unused function argument
     1: function foo() {}
@@ -32,7 +32,7 @@ Error: test.js:9
 
 Error: test.js:9
   9: foo(...args); // 2 errors
-     ^^^^^^^^^^^^ function call
+     ^^^^^^^^^^^^ call of function
   2: const args = [3, 4];
                       ^ unused function argument
     1: function foo() {}
@@ -192,7 +192,7 @@ Error: test.js:22
 
 Error: test.js:23
  23: new foo(...args); // 2 errors
-     ^^^^^^^^^^^^^^^^ constructor call
+     ^^^^^^^^^^^^^^^^ new function
   2: const args = [3, 4];
                    ^ unused function argument
     1: function foo() {}
@@ -200,7 +200,7 @@ Error: test.js:23
 
 Error: test.js:23
  23: new foo(...args); // 2 errors
-     ^^^^^^^^^^^^^^^^ constructor call
+     ^^^^^^^^^^^^^^^^ new function
   2: const args = [3, 4];
                       ^ unused function argument
     1: function foo() {}
@@ -208,7 +208,7 @@ Error: test.js:23
 
 Error: test.js:24
  24: new foo(1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+     ^^^^^^^^^^^^^^^^^^^^^^ new function
   2: const args = [3, 4];
                    ^ unused function argument
     1: function foo() {}
@@ -216,7 +216,7 @@ Error: test.js:24
 
 Error: test.js:24
  24: new foo(1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+     ^^^^^^^^^^^^^^^^^^^^^^ new function
   2: const args = [3, 4];
                       ^ unused function argument
     1: function foo() {}

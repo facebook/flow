@@ -20,5 +20,10 @@ let build_id_ohai = build_revision ^ " " ^ get_build_commit_time_string ()
 let build_commit_time = get_build_commit_time ()
 
 (* Monotonically increasing identifier that can be used when we introduce
- * backward incompatible changes in hh_client commands *)
-let build_api_version = 4
+ * backward incompatible changes in hh_client commands, and to signal
+ * new capabilities to clients.
+ * v1 (hvvm 3.15, 11 May 2016) - persistent connection introduced
+ * v4 (hvvm 3.18, 7 Nov 2016) - persistent connection stable
+ * v5 (hvvm 3.23, 17 Nov 2017) - 'hh_client lsp' stable
+ *)
+let build_api_version = 5

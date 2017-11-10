@@ -102,9 +102,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
-    let ic, oc = connect server_flags args.root in
-    send_command oc (ServerProt.STATUS (args.root, include_warnings));
-    let response = wait_for_response ic in
+    let request = ServerProt.STATUS (args.root, include_warnings) in
+    let response: ServerProt.response = connect_and_make_request server_flags args.root request in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
       ~out_channel:stdout ~strip_root ~pretty:args.pretty

@@ -10,13 +10,13 @@ Error: sanity-fall-through.js:12
 
 Error: sanity-invalid-calls.js:10
  10:   if ((1)(s)) {
-           ^^^^^^ function call. Function cannot be called on
+           ^^^^^^ call of number. Function cannot be called on
  10:   if ((1)(s)) {
             ^ number
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-           ^^^^^^^^^^^^^^^ function call. Function cannot be called on
+           ^^^^^^^^^^^^^^^ call of function type + number. Function cannot be called on
  14:   if ((pred + 1)("s")) {
             ^^^^^^^^ number
 

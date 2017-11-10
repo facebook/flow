@@ -157,7 +157,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let m = convert_qualification cx "type-annotation" qualification in
   let _, name = id in
-  let reason = mk_reason (RCustom name) loc in
+  let reason = mk_reason (RType name) loc in
   let t = Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
   ) in
@@ -346,7 +346,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Call" ->
     (match convert_type_params () with
     | fn::args ->
-       let reason = mk_reason RFunctionCall loc in
+       let reason = mk_reason RFunctionCallType loc in
        EvalT (fn, TypeDestructorT (reason, CallType args), mk_id ())
     | _ ->
       error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))
@@ -408,7 +408,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      let reason = mk_reason (RClassType (desc_of_t t)) loc in
+      let reason = mk_reason (RStatics (desc_of_t t)) loc in
       DefT (reason, ClassT t)
     )
 
@@ -580,7 +580,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* other applications with id as head expr *)
   | _ ->
-    let reason = mk_reason (RCustom name) loc in
+    let reason = mk_reason (RType name) loc in
     let c = type_identifier cx name loc in
     mk_nominal_type cx reason tparams_map (c, typeParameters)
 
@@ -648,13 +648,13 @@ let rec convert cx tparams_map = Ast.Type.(function
     let props_map = match List.rev call_props with
       | [] -> props_map
       | [t] ->
-        let p = Field (t, Positive) in
+        let p = Field (None, t, Positive) in
         SMap.add "$call" p props_map
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
         let t = DefT (callable_reason, IntersectionT rep) in
-        let p = Field (t, Positive) in
+        let p = Field (None, t, Positive) in
         SMap.add "$call" p props_map
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
@@ -665,15 +665,15 @@ let rec convert cx tparams_map = Ast.Type.(function
          * __proto__ = Function.prototype. Treat __proto__ as a property *)
         if callable
         then
-          SMap.add "__proto__" (Field (t, Neutral)) props_map,
-          FunProtoT (locationless_reason reason_desc)
+          SMap.add "__proto__" (Field (None, t, Neutral)) props_map,
+          FunProtoT (locationless_reason RFunctionPrototype)
         else
           props_map, t
       | None ->
         props_map,
         if callable
-        then FunProtoT (locationless_reason reason_desc)
-        else ObjProtoT (locationless_reason reason_desc)
+        then FunProtoT (locationless_reason RFunctionPrototype)
+        else ObjProtoT (locationless_reason RObjectPrototype)
     in
     let pmap = Context.make_property_map cx props_map in
     let flags = {
@@ -692,8 +692,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       } ->
       begin match key with
       | Ast.Expression.Object.Property.Literal
-          (_, { Ast.Literal.value = Ast.Literal.String name; _ })
-      | Ast.Expression.Object.Property.Identifier (_, name) ->
+          (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+      | Ast.Expression.Object.Property.Identifier (loc, name) ->
           let t = convert cx tparams_map value in
           if name = "__proto__" && not (_method || optional) && variance = None
           then
@@ -705,7 +705,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           else
             let t = if optional then Type.optional t else t in
             let polarity = if _method then Positive else polarity variance in
-            let props = SMap.add name (Field (t, polarity)) props in
+            let props = SMap.add name (Field (Some loc, t, polarity)) props in
             props, proto
       | _ ->
         Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
@@ -714,22 +714,22 @@ let rec convert cx tparams_map = Ast.Type.(function
 
     (* unsafe getter property *)
     | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (_, name);
+        key = Ast.Expression.Object.Property.Identifier (id_loc, name);
         value = Object.Property.Get (loc, f);
         _ } when Context.enable_unsafe_getters_and_setters cx ->
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let return_t = Type.extract_getter_type function_type in
-      let props = Properties.add_getter name return_t props in
+      let props = Properties.add_getter name (Some id_loc) return_t props in
       props, proto
 
     (* unsafe setter property *)
     | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (_, name);
+        key = Ast.Expression.Object.Property.Identifier (id_loc, name);
         value = Object.Property.Set (loc, f);
         _ } when Context.enable_unsafe_getters_and_setters cx ->
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let param_t = Type.extract_setter_type function_type in
-      let props = Properties.add_setter name param_t props in
+      let props = Properties.add_setter name (Some id_loc) param_t props in
       props, proto
 
 
@@ -879,7 +879,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
   | loc, { TypeParam.name; bound; variance; default; } ->
-    let reason = mk_reason (RCustom name) loc in
+    let reason = mk_reason (RType name) loc in
     let bound = match bound with
     | None -> DefT (reason, MixedT Mixed_everything)
     | Some (_, u) ->

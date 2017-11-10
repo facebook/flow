@@ -489,6 +489,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ToStringT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | AdderT (_, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r
@@ -1201,21 +1205,21 @@ and json_of_prop_binding_impl json_cx (name, p) = Hh_json.(
 and json_of_prop json_cx = check_depth json_of_prop_impl json_cx
 and json_of_prop_impl json_cx p = Hh_json.(
   JSON_Object (match p with
-  | Field (t, polarity) -> [
+  | Field (_loc, t, polarity) -> [
       "field", _json_of_t json_cx t;
       "polarity", json_of_polarity json_cx polarity
     ]
-  | Get t -> [
+  | Get (_loc, t) -> [
       "getter", _json_of_t json_cx t;
     ]
-  | Set t -> [
+  | Set (_loc, t) -> [
       "setter", _json_of_t json_cx t;
     ]
-  | GetSet (t1, t2) -> [
+  | GetSet (_loc1, t1, _loc2, t2) -> [
       "getter", _json_of_t json_cx t1;
       "setter", _json_of_t json_cx t2;
     ]
-  | Method t -> [
+  | Method (_loc, t) -> [
       "method", _json_of_t json_cx t;
     ]
 ))
@@ -2082,6 +2086,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (propref prop)
       (kid ptype)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | ToStringT (_, arg) -> p ~extra:(kid arg) t
   | UnaryMinusT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
@@ -2125,15 +2130,15 @@ and dump_prop ?(depth=3) cx p =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   match p with
-  | Field (t, polarity) ->
+  | Field (_loc, t, polarity) ->
     spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
-  | Get t ->
+  | Get (_loc, t) ->
     spf "Get %s" (kid t)
-  | Set t ->
+  | Set (_loc, t) ->
     spf "Set %s" (kid t)
-  | GetSet (t1, t2) ->
+  | GetSet (_loc1, t1, _loc2, t2) ->
     spf "Get %s Set %s" (kid t1) (kid t2)
-  | Method t ->
+  | Method (_loc, t) ->
     spf "Method %s" (kid t)
 
 (*****************************************************)
@@ -2644,6 +2649,8 @@ let dump_flow_error =
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
+    | EUntypedImport (loc, module_name) ->
+      spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
     | ELintSetting (loc, kind) ->

@@ -24,10 +24,10 @@ Error: disjoint_union.js:21
  21:   if (shape.type === 'square') { // error
            ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
  20: function area2(shape: ExactShape): number {
-                           ^^^^^^^^^^ union: exact type: object type(s)
+                           ^^^^^^^^^^ union: object type(s)
   Member 1:
    17:   {|type: 'rectangle', width: number, height: number|} |
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
    21:   if (shape.type === 'square') { // error
              ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
@@ -35,7 +35,7 @@ Error: disjoint_union.js:21
                  ^^^^^^^^^^^ string literal `rectangle`
   Member 2:
    18:   {|type: 'circle', radius: number|};
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
    21:   if (shape.type === 'square') { // error
              ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead

@@ -800,6 +800,8 @@ class mapper = object(this)
       id this#jsx_fragment frag child (fun frag -> loc, Fragment frag)
     | ExpressionContainer expr ->
       id this#jsx_expression expr child (fun expr -> loc, ExpressionContainer expr)
+    | SpreadChild expr ->
+      id this#expression expr child (fun expr -> loc, SpreadChild expr)
     | Text _ -> child
 
   method jsx_expression (jsx_expr: Loc.t Ast.JSX.ExpressionContainer.t) =

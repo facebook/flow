@@ -138,10 +138,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
 
-    Profiling_js.with_profiling begin fun profiling ->
-      let workers = genv.ServerEnv.workers in
-      let options = genv.ServerEnv.options in
-
+    let workers = genv.ServerEnv.workers in
+    let options = genv.ServerEnv.options in
+    let should_print_summary = Options.should_profile options in
+    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
       let parsed, libs, libs_ok, errors =
         Types_js.init ~profiling ~workers options in
 

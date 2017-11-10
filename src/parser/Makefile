@@ -26,6 +26,7 @@ RUNNER_DEPS=\
 	hack/utils/collections\
 	hack/utils/disk\
 	hack/utils/hh_json\
+	hack/utils/sys\
 	hack/third-party/core\
 	src/common/utils\
 	src/parser\

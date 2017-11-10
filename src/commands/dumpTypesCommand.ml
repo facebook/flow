@@ -99,10 +99,11 @@ let main option_values root json pretty strip_root from path filename () =
 
   let strip_root = if strip_root then Some root else None in
 
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.DUMP_TYPES file);
+  let request = ServerProt.DUMP_TYPES file in
 
-  match (Timeout.input_value ic : ServerProt.dump_types_response) with
+  let response: ServerProt.dump_types_response =
+    connect_and_make_request option_values root request in
+  match response with
   | Error err ->
       handle_error err ~json ~pretty ~strip_root
   | Ok resp ->

@@ -1,8 +1,13 @@
 Error: main.js:6
   6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                   ^^^^^^^^^^^^^^ property `prop`. Property not found in
+                                                   ^^^^^^^^^^^^^^ object type. This type is incompatible with
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
                                           ^^^^^^^^^^^^^^^ object type
+  Property `prop` is incompatible:
+      6: class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                       ^^^^^^^^^^^^^^ property `prop`. Property not found in
+     13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                              ^^^^^^^^^^^^^^^ object type
 
 Error: main.js:12
  12:   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -17,9 +22,14 @@ Error: main.js:12
 
 Error: main.js:13
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+                                          ^^^^^^^^^^^^^^^ object type. This type is incompatible with
   6: class CustomComponent extends React.Component<{prop: string}, void> {}
                                                    ^^^^^^^^^^^^^^ object type
+  Property `prop1` is incompatible:
+     13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                              ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+      6: class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                       ^^^^^^^^^^^^^^ object type
 
 Error: main.js:14
  14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>

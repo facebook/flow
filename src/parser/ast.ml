@@ -906,6 +906,7 @@ and JSX : sig
     | Element of 'M element
     | Fragment of 'M fragment
     | ExpressionContainer of 'M ExpressionContainer.t
+    | SpreadChild of 'M Expression.t
     | Text of Text.t
 
   and 'M element = {

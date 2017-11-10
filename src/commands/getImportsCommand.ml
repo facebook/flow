@@ -40,10 +40,10 @@ let main option_values root json pretty strip_root from modules () =
   FlowEventLogger.set_from from;
   let root = guess_root root in
 
-  let ic, oc = connect option_values root in
+  let request = ServerProt.GET_IMPORTS modules in
+  let (requirements_map, non_flow) : ServerProt.get_imports_response =
+    connect_and_make_request option_values root request in
 
-  send_command oc (ServerProt.GET_IMPORTS modules);
-  let requirements_map, non_flow = (Timeout.input_value ic: ServerProt.get_imports_response) in
   let requirements_map = SMap.fold
     begin fun module_name (requires, req_locs) map ->
       let requirements = Modulename.Set.fold (fun req assoc ->
