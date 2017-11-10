@@ -140,8 +140,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
     let workers = genv.ServerEnv.workers in
     let options = genv.ServerEnv.options in
+
+    MonitorRPC.status_update ~event:ServerStatus.Init_start;
+
     let should_print_summary = Options.should_profile options in
-    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
+    let env = Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
       let parsed, libs, libs_ok, errors =
         Types_js.init ~profiling ~workers options in
 
@@ -174,7 +177,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       } in
       env.collated_errors := Some (regenerate_collated_errors env);
       env
-    end
+    end in
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    env
 
 
   let status_log errors =
@@ -576,6 +581,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     if FilenameSet.is_empty updates
     then env
     else begin
+      MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
       Persistent_connection.send_start_recheck env.connections;
       let options = genv.ServerEnv.options in
       let root = Options.root options in
@@ -590,6 +596,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       env.collated_errors := Some (regenerate_collated_errors env);
       Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
 
+      MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
       Persistent_connection.send_end_recheck env.connections;
       let errors, warnings, _ = get_collated_errors_separate_warnings env in
       Persistent_connection.update_clients env.connections ~errors ~warnings;
@@ -612,6 +619,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
     Hh_logger.debug "Request: %s" (ServerProt.string_of_command command);
+    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         let results: ServerProt.autocomplete_response =
@@ -702,13 +710,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         Persistent_connection.send_ready new_client;
         env := {!env with connections = new_connections}
     end;
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
     !env
 
   let respond_to_persistent_client genv env client msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
-    match msg with
+    Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
+    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+    let env = match msg with
       | Persistent_connection_prot.Subscribe ->
           let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
@@ -781,6 +792,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
             {!env with connections}
           end
+      in
+      MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+      env
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false

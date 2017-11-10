@@ -383,6 +383,7 @@ begin library "flow-shmem"
   requires = [
     "flow-server-files"
     "flow-common"
+    "flow-monitor-rpc"
     "hh-heap"
     "hh-utils-sys"
     "hh-utils-collections"

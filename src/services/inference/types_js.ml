@@ -104,7 +104,7 @@ let parse ~options ~profiling ~workers parse_next =
 let reparse ~options ~profiling ~workers modified =
   with_timer ~options "Parsing" profiling (fun () ->
     let new_or_changed, results =
-      Parsing_service_js.reparse_with_defaults options workers modified in
+      Parsing_service_js.reparse_with_defaults ~with_progress:true options workers modified in
     let parse_ok, unparsed, local_errors = collate_parse_results results in
     new_or_changed, parse_ok, unparsed, local_errors
   )
@@ -361,6 +361,7 @@ let typecheck
     *)
     Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
     Hh_logger.info "Calculating dependencies";
+    MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
     let dependency_graph, component_map =
       calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
 
@@ -882,6 +883,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let dependent_file_count = ref 0 in
 
   let freshparsed_list = FilenameSet.elements freshparsed in
+  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let changed_modules, errors =
     commit_modules_and_resolve_requires
       ~options
@@ -1070,8 +1072,19 @@ let recheck ~options ~workers ~updates env ~force_focus =
 let make_next_files ~libs ~file_options root =
   let make_next_raw =
     Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs in
+  let total = ref 0 in
   fun () ->
-    make_next_raw ()
+    let files = make_next_raw () in
+
+    let finished = !total in
+    let length = List.length files in
+    MonitorRPC.status_update ServerStatus.(Parsing_progress {
+        finished;
+        total = None;
+    });
+    total := finished + length;
+
+    files
     |> List.map (Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
 
@@ -1094,6 +1107,7 @@ let init ~profiling ~workers options =
     init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs in
 
   Hh_logger.info "Resolving dependencies";
+  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let _, errors =
     let parsed_list = FilenameSet.elements parsed in
     let errors = { ServerEnv.

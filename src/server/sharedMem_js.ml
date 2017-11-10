@@ -15,6 +15,7 @@ end
 let collect opts effort =
   let root = Options.root opts in
   let tmp_dir = Options.temp_dir opts in
+  MonitorRPC.status_update ~event:ServerStatus.GC_start;
   let lock_file = Server_files_js.gc_file ~tmp_dir root in
   ignore (Lock.grab lock_file);
   (try SharedMem.collect effort with exn ->

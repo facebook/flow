@@ -193,6 +193,7 @@ end = struct
     let env = ref env in
     while true do
       assert_lock genv;
+      MonitorRPC.status_update ~event:ServerStatus.Ready;
       (* we want to defer processing certain commands until recheck is done *)
       ServerPeriodical.call_before_sleeping();
       let ready_sockets = Queue.create () in
@@ -276,6 +277,9 @@ end = struct
       Server_files.socket_file ~tmp_dir root
     ) in
 
+    (* This will be switched to an MonitorRPC.init in a later diff *)
+    MonitorRPC.disable ();
+
     let dfind = init_dfind options in
 
     let env = with_init_lock ~options ?waiting_channel (fun () ->
@@ -299,6 +303,7 @@ end = struct
   let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_targets options in
+    MonitorRPC.disable ();
     let profiling, env = program_init () in
     let errors, warnings, suppressed_errors = Program.check_once genv env in
     let warnings = if client_include_warnings || Options.should_include_warnings options
