@@ -60,7 +60,7 @@ function mapProps(): (React.ComponentType<any>) => React.ComponentType<any> {
 To start we used `any` for our
 [`React.ComponentType<Props>`](../types/#toc-react-componenttype)s' `Props` types! So
 next we will use a [generic function type](../../types/generics/) to provide
-better types then `any`.
+better types than `any`.
 
 ```js
 import * as React from 'react';
