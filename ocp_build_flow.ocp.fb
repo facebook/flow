@@ -350,6 +350,19 @@ begin library "flow-monitor-server-status"
   ]
 end
 
+begin library "flow-monitor-rpc"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "monitorRPC.mli"
+    "monitorRPC.ml"
+  ]
+  requires = [
+    "hh-utils-sys"
+    "flow-server-protocol"
+  ]
+end
+
 begin library "flow-server-files"
   sort = true
   files = [
