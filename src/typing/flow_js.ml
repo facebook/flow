@@ -769,6 +769,21 @@ module Cache = struct
       Hashtbl.add repos_cache cache_key tvar
   end
 
+  module Fix = struct
+    type cache_key = reason * Type.t
+
+    let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let find reason i =
+      let cache_key = reason, i in
+      try Some (Hashtbl.find cache cache_key)
+      with _ -> None
+
+    let add reason i tvar =
+      let cache_key = reason, i in
+      Hashtbl.add cache cache_key tvar
+  end
+
   (* Cache that records sentinel properties for objects. Cache entries are
      populated before checking against a union of object types, and are used
      while checking against each object type in the union. *)
@@ -801,6 +816,7 @@ module Cache = struct
     repos_cache := Repos_cache.empty;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
+    Hashtbl.clear Fix.cache;
     SentinelProp.cache := Properties.Map.empty
 
   let stats_poly_instantiation () =
@@ -7199,10 +7215,16 @@ and instantiate_poly_param_upper_bounds cx typeparams =
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
 and fix_this_class cx trace reason (r, i) =
-  let this = Tvar.mk cx reason in
-  let i = subst cx (SMap.singleton "this" this) i in
-  rec_unify cx trace this i;
-  DefT (r, ClassT i)
+  let i' = match Cache.Fix.find reason i with
+    | Some i' -> i'
+    | None ->
+      let this = Tvar.mk cx reason in
+      let i' = subst cx (SMap.singleton "this" this) i in
+      Cache.Fix.add reason i i';
+      rec_unify cx trace this i';
+      i'
+  in
+  DefT (r, ClassT i')
 
 and canonicalize_imported_type cx trace reason t =
   match t with
