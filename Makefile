@@ -251,7 +251,7 @@ build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $
 testgen: build-flow
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
-		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-no-links $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
