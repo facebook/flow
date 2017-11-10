@@ -99,9 +99,11 @@ let check err severity_cover suppressions =
         String_utils.is_substring "/node_modules/" (File_key.to_string filename))
     | [] -> false
   in
-  let result = if is_in_dependency && (Option.is_some lint_kind)
-    then Off
-    else result
+  let result = match Errors.kind_of_error err with
+    | Errors.RecursionLimitError -> Err
+    | _ -> if (is_in_dependency && (Option.is_some lint_kind))
+      then Off
+      else result
   in (result, consumed, { suppressions; unused; unused_lint_suppressions; })
 
 (* Gets the locations of the suppression comments that are yet unused *)

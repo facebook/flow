@@ -577,7 +577,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     else spf "`%s`" export_name
   in
 
-  let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
+  let typecheck_error_with_core_infos ?kind ?(suppress_op=false) ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
     let core_infos = List.map (fun (r, msgs) -> mk_info r msgs) core_msgs in
 
@@ -607,15 +607,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     (* main info is core info with optional lib line prepended, and optional
        extra info appended. ops/trace info is held separately in error *)
     let msg_infos = lib_infos @ core_infos in
-    mk_error ?op_info ~trace_infos ?extra msg_infos
+    mk_error ?kind ?op_info ~trace_infos ?extra msg_infos
   in
 
   let typecheck_msgs msg (r1, r2) = [r1, [msg]; r2, []] in
 
-  let typecheck_error msg ?suppress_op ?extra reasons =
+  let typecheck_error msg ?kind ?suppress_op ?extra reasons =
     (* make core info from reasons, message, and optional extra infos *)
     let core_msgs = typecheck_msgs msg reasons in
-    typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
+    typecheck_error_with_core_infos ?kind ?suppress_op ?extra core_msgs
   in
 
   let prop_polarity_error_msg x reasons p1 p2 =
@@ -1349,7 +1349,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ]
 
   | ERecursionLimit reasons ->
-      typecheck_error "*** Recursion limit exceeded ***" reasons
+      typecheck_error ~kind:RecursionLimitError "*** Recursion limit exceeded ***" reasons
 
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
       let msg = spf
