@@ -7,7 +7,6 @@
 
 type start_function =
   ?waiting_fd:Unix.file_descr ->
-  ?log_fd:Unix.file_descr ->
   FlowServerMonitorOptions.t ->
   unit
 

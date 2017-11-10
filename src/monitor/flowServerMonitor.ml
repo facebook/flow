@@ -118,7 +118,7 @@ module LogFlusher = LwtLoop.Make (struct
 end)
 
 (* This is the common entry point for both daemonize and start. *)
-let internal_start ?waiting_fd ?log_fd monitor_options =
+let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _; } = monitor_options in
   let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
@@ -130,6 +130,24 @@ let internal_start ?waiting_fd ?log_fd monitor_options =
    let msg = "Error: another server is already running?\n" in
    FlowExitStatus.(exit ~msg Lock_stolen)
   end;
+
+  (* We can't open the log until we have the lock.
+   *
+   * The daemon wants to redirect all stderr to the log. So we can dup2
+   * `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
+   *)
+  let log_fd =
+    let log_file = monitor_options.FlowServerMonitorOptions.log_file in
+    let fd = Server_daemon.open_log_file log_file in
+    if is_daemon
+    then begin
+      Unix.dup2 fd Unix.stderr;
+      None
+    end else begin
+      Hh_logger.set_log log_file (Unix.out_channel_of_descr fd);
+      Some fd
+    end
+  in
 
   (* Open up the socket immediately. When a client tries to connect to an
    * open socket, it will block. When a client tries to connect to a not-yet-open
@@ -183,7 +201,8 @@ let internal_start ?waiting_fd ?log_fd monitor_options =
   Lwt.wait () |> fst
   |> Lwt_main.run
 
-let daemon_entry_point = FlowServerMonitorDaemon.register_entry_point internal_start
+let daemon_entry_point =
+  FlowServerMonitorDaemon.register_entry_point (internal_start ~is_daemon:true)
 
 (* The entry point for creating a daemonized flow server monitor (like from `flow start`) *)
 let daemonize ~wait ~on_spawn monitor_options =
@@ -211,7 +230,4 @@ let start monitor_options =
    * with some imaginary `flow monitor` command *)
   FlowEventLogger.set_command (Some "monitor");
 
-  let monitor_log_file = monitor_options.FlowServerMonitorOptions.log_file in
-  let log_fd = Server_daemon.open_log_file monitor_log_file in
-  Hh_logger.set_log monitor_log_file (Unix.out_channel_of_descr log_fd);
-  internal_start ?waiting_fd:None ~log_fd monitor_options
+  internal_start ~is_daemon:false ?waiting_fd:None monitor_options

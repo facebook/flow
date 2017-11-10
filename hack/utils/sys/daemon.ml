@@ -250,10 +250,15 @@ let spawn
   | `socket ->
     (** the in and out FD's are the same. Close only once. *)
     Unix.close child_in);
-  if stdin <> Unix.stdin then Unix.close stdin;
-  if stdout <> Unix.stdout then Unix.close stdout;
-  if stderr <> Unix.stderr && stderr <> stdout then
-    Unix.close stderr;
+
+  let close_if_open fd =
+    try Unix.close fd
+    with Unix.Unix_error (Unix.EBADF, _, _) -> ()
+  in
+  if stdin <> Unix.stdin then close_if_open stdin;
+  if stdout <> Unix.stdout then close_if_open stdout;
+  if stderr <> Unix.stderr && stderr <> stdout then close_if_open stderr;
+  
   PidLog.log
     ~reason:(Entry.name_of_entry entry)
     ~no_fail:true

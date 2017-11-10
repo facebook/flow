@@ -9,7 +9,6 @@ let spf = Printf.sprintf
 
 type start_function =
   ?waiting_fd:Unix.file_descr ->
-  ?log_fd:Unix.file_descr ->
   FlowServerMonitorOptions.t ->
   unit
 
@@ -107,8 +106,7 @@ let rec wait_loop ~should_wait child_pid ic =
 
 let daemonize ~wait ~on_spawn ~monitor_options (entry_point: entry_point) =
   let null_fd = Daemon.null_fd () in
-  let log_fd = Server_daemon.open_log_file monitor_options.FlowServerMonitorOptions.log_file in
-  (* Daemon.spawn is creating a new process with log_fd as both the stdout
+  (* Daemon.spawn is creating a new process with /dev/null as both the stdout
    * and stderr. We are NOT leaking stdout and stderr. But the Windows
    * implementation of OCaml does leak stdout and stderr. This means any process
    * that waits for `flow start`'s stdout and stderr to close might wait
@@ -130,7 +128,7 @@ let daemonize ~wait ~on_spawn ~monitor_options (entry_point: entry_point) =
   with Unix_error (EINVAL, _, _) -> ());
 
   let {Daemon.pid; channels = (ic, oc)} =
-    Daemon.spawn (null_fd, log_fd, log_fd) entry_point (
+    Daemon.spawn (null_fd, null_fd, null_fd) entry_point (
       monitor_options,
       FlowEventLogger.get_context ()
     )
