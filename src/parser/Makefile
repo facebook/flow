@@ -12,12 +12,12 @@ JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
 OCB = ocamlbuild -use-ocamlfind -I src/third-party/wtf8
 
 NATIVE_OBJECT_FILES=\
-	hack/utils/files.o\
-	hack/utils/nproc.o\
-	hack/utils/realpath.o\
-	hack/utils/sysinfo.o\
-	hack/utils/processor_info.o\
-	hack/utils/priorities.o
+	hack/utils/sys/files.o\
+	hack/utils/sys/nproc.o\
+	hack/utils/sys/realpath.o\
+	hack/utils/sys/sysinfo.o\
+	hack/utils/sys/processor_info.o\
+	hack/utils/sys/priorities.o
 
 RUNNER_DEPS=\
 	hack/heap\
