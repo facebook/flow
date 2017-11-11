@@ -26,7 +26,7 @@ examples for this extension:
    `ruleset_depth.ml` to `ruleset_exact.ml`. Make classname
    adjustments in there appropriately.
 2. Modify the build file
-3. Then, in codegen.ml, add `ruleset_exact` as one of the engines
+3. Then, in `codegen.ml`, add `ruleset_exact` as one of the engines
 4. Compile the program and run
  
 ## Running Testgen
