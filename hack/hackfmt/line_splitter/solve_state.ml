@@ -42,7 +42,7 @@ let make chunk_group rvm =
 
   let nesting_set, _ =
     List.fold_left chunks ~init:(ISet.empty, ISet.empty)
-      (* We only care about the first occurrence of each nesting id *)
+      (* We only care about the first occurance of each nesting id *)
       ~f:(fun (nset, idset) c ->
         let nid = Chunk.get_nesting_id c in
         if ISet.mem nid idset then
