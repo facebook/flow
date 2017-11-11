@@ -17,10 +17,6 @@
 
 #include <time.h>
 
-#ifdef HH_BUILD_ID
-#include "hphp/runtime/version.h"
-#endif
-
 extern const char* const BuildInfo_kRevision;
 extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
 
@@ -41,8 +37,7 @@ value hh_get_build_revision(void) {
   CAMLlocal1(result);
 
 #ifdef HH_BUILD_ID
-  const char* const buf =
-    STRINGIFY_VALUE(HH_BUILD_ID) "-" HHVM_VERSION_C_STRING_LITERALS;
+  const char* const buf = STRINGIFY_VALUE(HH_BUILD_ID);
 #else
   const char* const buf = BuildInfo_kRevision;
 #endif
