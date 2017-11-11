@@ -38,14 +38,14 @@ CAMLexport value caml_xx_update(value state, value v) {
 
 CAMLexport value caml_xx_update_int(value state, value v) {
   assert(Is_long(v));
-  XXH64_update(&State_val(state), &v, sizeof(v));
+  XXH64_update(&State_val(state), &v, sizeof(value));
   return Val_unit;
 }
 
 CAMLexport value caml_xx_digest(value state) {
   CAMLparam1(state);
   XXH64_hash_t hash = XXH64_digest(&State_val(state));
-  value v = caml_alloc_string(sizeof(XXH64_canonical_t));
-  XXH64_canonicalFromHash((XXH64_canonical_t *)String_val(v), hash);
+  value v = caml_alloc_string(sizeof(XXH64_hash_t));
+  memcpy(String_val(v), &hash, sizeof(XXH64_hash_t));
   CAMLreturn(v);
 }
