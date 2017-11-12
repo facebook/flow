@@ -1618,7 +1618,7 @@ module.exports = {
         '(function test(t, t) { })',
         {
           content: 'function eval() { function inner() { "use strict" } }',
-          explanation: "Esprima counts the implict semicolon in the loc. " +
+          explanation: "Esprima counts the implicit semicolon in the loc. " +
             "Flow doesn't",
           expected_differences: {
             'root.body.0.body.body.0.body.body.0.loc.end.column': {
@@ -1637,7 +1637,7 @@ module.exports = {
         'function hello(a, b) { sayHi(); }',
         {
           content: 'var hi = function() { sayHi() };',
-          explanation: "Esprima counts the implict semicolon in the loc. " +
+          explanation: "Esprima counts the implicit semicolon in the loc. " +
             "Flow doesn't",
           expected_differences: {
             'root.body.0.declarations.0.init.body.body.0.loc.end.column': {
@@ -1656,7 +1656,7 @@ module.exports = {
         'var hi = function arguments() { };',
         {
           content: 'var hello = function hi() { sayHi() };',
-          explanation: "Esprima counts the implict semicolon in the loc. " +
+          explanation: "Esprima counts the implicit semicolon in the loc. " +
             "Flow doesn't",
           expected_differences: {
             'root.body.0.declarations.0.init.body.body.0.loc.end.column': {
@@ -2254,7 +2254,7 @@ module.exports = {
         '\\x',
         {
           content: '"\\',
-          explanation: "Esprima has a non-existant location for the eof",
+          explanation: "Esprima has a non-existent location for the eof",
           expected_differences: {
             'root.errors.0.column': {
               type: 'Wrong error column',
@@ -2923,7 +2923,7 @@ module.exports = {
     'Harmony: Yield Expression': [
         {
           content: '(function* () { yield v })',
-          explanation: "Esprima counts the parens and implict semicolon in " +
+          explanation: "Esprima counts the parens and implicit semicolon in " +
             "its loc. Flow doesn't",
           expected_differences: {
             'root.body.0.expression.body.body.0.loc.end.column': {
@@ -2940,7 +2940,7 @@ module.exports = {
         },
         {
           content: '(function* () { yield *v })',
-          explanation: "Esprima counts the parens and implict semicolon in " +
+          explanation: "Esprima counts the parens and implicit semicolon in " +
             "its loc. Flow doesn't",
           expected_differences: {
             'root.body.0.expression.body.body.0.loc.end.column': {
@@ -2957,7 +2957,7 @@ module.exports = {
         },
         {
           content: 'function* test () { yield *v }',
-          explanation: "Esprima counts the implict semicolon in its loc, flow " +
+          explanation: "Esprima counts the implicit semicolon in its loc, flow " +
             "doesn't",
           expected_differences: {
             'root.body.0.body.body.0.loc.end.column': {
@@ -2974,7 +2974,7 @@ module.exports = {
         },
         {
           content: 'var x = { *test () { yield *v } };',
-          explanation: "Esprima counts the implict semicolon in its loc, flow " +
+          explanation: "Esprima counts the implicit semicolon in its loc, flow " +
             "doesn't. Esprima-fb doesn't include params in onExpression " +
             "location",
           expected_differences: {
@@ -3003,7 +3003,7 @@ module.exports = {
         'function* t() {}',
         {
           content: '(function* () { yield yield 10 })',
-          explanation: "Esprima counts the parens and implict semicolon in " +
+          explanation: "Esprima counts the parens and implicit semicolon in " +
             "its loc. Flow doesn't",
           expected_differences: {
             'root.body.0.expression.body.body.0.loc.end.column': {

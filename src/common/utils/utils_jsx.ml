@@ -98,7 +98,7 @@ let trim_jsx_text =
       let start_column = String.index (List.nth lines first_line) first_char in
       let end_column = String.rindex (List.nth lines last_line) last_char + 1 in
 
-      (* If we're on the first line, then we need to see on whic column the line
+      (* If we're on the first line, then we need to see on which column the line
          starts *)
       let start_column =
         if first_line = 0
