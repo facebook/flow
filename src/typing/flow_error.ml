@@ -1233,7 +1233,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | PropRefComputedOpen ->
           "unexpected open computed property element type"
       | PropRefComputedLiteral ->
-          "unexpected literal computed proprety element type"
+          "unexpected literal computed property element type"
       | ShadowReadComputed ->
           "unexpected shadow read on computed property"
       | ShadowWriteComputed ->

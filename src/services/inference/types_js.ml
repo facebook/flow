@@ -267,7 +267,7 @@ let typecheck
 
   (* The infer_input passed into typecheck basically tells us what the caller wants to typecheck.
    * However, due to laziness, it's possible that certain dependents or dependencies have not been
-   * checked yet. So we need to caluclate all the transitive dependents and transitive dependencies
+   * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
    * and add them to infer_input, unless they're already checked and in unchanged_checked
    *)
   let infer_input =

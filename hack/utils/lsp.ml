@@ -151,7 +151,7 @@ end
 
 (* A document filter denotes a document through properties like language,
    schema or pattern. E.g. language:"typescript",scheme:"file"
-   or langauge:"json",pattern:"**/package.json" *)
+   or language:"json",pattern:"**/package.json" *)
 module DocumentFilter = struct
   type t = {
     language: string option;  (* a language id, like "typescript" *)

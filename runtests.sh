@@ -239,11 +239,11 @@ runtest() {
         # for now this is kind of ad-hoc:
         #
         # 1. The default flow command is check with the --all flag. This flag
-        # can be overriden here with the line "all: false". Anything besides
+        # can be overridden here with the line "all: false". Anything besides
         # "false" is ignored, and the setting itself is ignored if a command
         # besides check is run.
         #
-        # 2. The default flow command can be overriden here by supplying the
+        # 2. The default flow command can be overridden here by supplying the
         # entire command on a line that begins with "cmd:". (Note: for writing
         # incremental tests, use the option below). A line beginning with
         # "stdin:" can additionally supply arguments to pass to the command via

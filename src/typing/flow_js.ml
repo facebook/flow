@@ -3178,7 +3178,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               cx ~trace ~use_op ~reason_op
               (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | 1 ->
-            (* To avoid infinite recursion, let's deconstruct to a simplier case
+            (* To avoid infinite recursion, let's deconstruct to a simpler case
              * where we no longer resolve to a tuple but instead just resolve to
              * an array. *)
             rec_flow cx trace (l, ResolveSpreadT (use_op, reason_op, {
@@ -10845,7 +10845,7 @@ and object_kit =
             | Some (t, _), None -> Some (Field (None, t, prop_polarity))
             | None, Some (t, _) -> Some (Field (None, t, prop_polarity))
             (* If a property is defined in both objects, and the first property's
-             * type includes void then we want to replace every occurence of void
+             * type includes void then we want to replace every occurrence of void
              * with the second property's type. This is consistent with the behavior
              * of function default arguments. If you call a function, `f`, like:
              * `f(undefined)` and there is a default value for the first argument,

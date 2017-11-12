@@ -115,7 +115,7 @@ let autocomplete_filter_members members =
     (* filter out constructor, it shouldn't be called manually *)
     not (key = "constructor")
     &&
-    (* strip out members from prototypes which are implicity created for
+    (* strip out members from prototypes which are implicitly created for
        internal reasons *)
     not (Reason.is_internal_name key)
   ) members
