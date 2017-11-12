@@ -1,6 +1,7 @@
 #define XXH_STATIC_LINKING_ONLY
 #include <xxhash.h>
 #include <assert.h>
+#include <string.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
