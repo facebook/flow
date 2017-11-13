@@ -675,7 +675,9 @@ let resolved_requires_of ~options node_modules_containers f require_loc =
     phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file require_loc =
+let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
+  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
   add_resolved_requires ~audit file resolved_requires;

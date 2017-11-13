@@ -95,10 +95,13 @@ val commit_modules:
     error list FilenameMap.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires:
-  (options:Options.t ->
-   node_modules_containers: SSet.t ->
-   File_key.t -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
+val add_parsed_resolved_requires: (
+  options:Options.t ->
+  node_modules_containers: SSet.t ->
+  File_key.t ->
+  Errors.ErrorSet.t
+) Expensive.t
+
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 
