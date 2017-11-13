@@ -33,8 +33,6 @@ let spec = {
   )
 }
 
-let extract_location req req_locs = SMap.find_unsafe req req_locs
-
 let main option_values json pretty root strip_root from modules () =
   FlowEventLogger.set_from from;
   let root = guess_root root in
@@ -44,9 +42,8 @@ let main option_values json pretty root strip_root from modules () =
     connect_and_make_request option_values root request in
 
   let requirements_map = SMap.fold
-    begin fun module_name (requires, req_locs) map ->
-      let requirements = Modulename.Set.fold (fun req assoc ->
-        let loc = extract_location (Modulename.to_string req) req_locs in
+    begin fun module_name reqlocs map ->
+      let requirements = Modulename.Map.fold (fun req loc assoc ->
         let req = match req with
           | Modulename.String s -> s
           | Modulename.Filename f ->
@@ -55,7 +52,7 @@ let main option_values json pretty root strip_root from modules () =
             else f
         in
         (req, loc)::assoc
-      ) requires [] in
+      ) reqlocs [] in
       SMap.add module_name requirements map
     end
     requirements_map SMap.empty in

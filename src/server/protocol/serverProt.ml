@@ -106,7 +106,7 @@ type find_refs_success = (string * Loc.t list) option
 type find_refs_response = (find_refs_success, string) result
 
 type get_def_response = (Loc.t, string) result
-type get_imports_response = (Modulename.Set.t * Loc.t SMap.t) SMap.t * SSet.t
+type get_imports_response = Loc.t Modulename.Map.t SMap.t * SSet.t
 type infer_type_response = (
   Loc.t * string option * Reason.t list,
   string

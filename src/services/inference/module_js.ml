@@ -21,8 +21,6 @@ open Utils_js
     (1) required and resolved_modules have a lot of redundancy; required is the
     value set of resolved_modules.
 
-    (2) require_loc, too? Indexed by required.
-
     Also, for info:
     (1) checked? We know that requires and phantom dependents for unchecked
     files are empty.
@@ -32,7 +30,6 @@ open Utils_js
 **)
 type resolved_requires = {
   required: Modulename.Set.t; (* required module names *)
-  require_loc: Loc.t SMap.t; (* statement locations *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
                                             to module names they resolve to *)
   phantom_dependents: SSet.t; (* set of paths that were looked up but not found
@@ -677,14 +674,8 @@ let checked_file ~audit f =
 let resolved_requires_of ~options node_modules_containers f require_loc =
   let required, resolved_modules, { paths; errors } =
     imported_modules ~options node_modules_containers f require_loc in
-  let require_loc = SMap.fold
-    (fun r loc require_loc ->
-      let resolved_r = SMap.find_unsafe r resolved_modules in
-      SMap.add (Modulename.to_string resolved_r) loc require_loc)
-    require_loc SMap.empty in
   errors, {
     required;
-    require_loc;
     resolved_modules;
     phantom_dependents = paths;
   }

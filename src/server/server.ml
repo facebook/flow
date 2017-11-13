@@ -428,12 +428,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         let { Module_js.checked; _ } =
           Module_js.get_info_unsafe ~audit:Expensive.warn file in
         if checked then
-          let { Module_js.
-              required = requirements;
-              require_loc = req_locs;
-              _ } =
-          Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
-          (SMap.add module_name_str (requirements, req_locs) map, non_flow)
+          let { Module_js.resolved_modules; _ } =
+            Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
+          let fsig = Parsing_service_js.get_file_sig_unsafe file in
+          let requires = File_sig.(fsig.module_sig.requires) in
+          let mlocs = SMap.fold (fun mref r acc ->
+            let m = SMap.find_unsafe mref resolved_modules in
+            let loc = r.File_sig.loc in
+            Modulename.Map.add m loc acc
+          ) requires Modulename.Map.empty in
+          (SMap.add module_name_str mlocs map, non_flow)
         else
           (map, SSet.add module_name_str non_flow)
       | None ->
