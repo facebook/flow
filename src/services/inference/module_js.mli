@@ -8,7 +8,6 @@
 open Utils_js
 
 type resolved_requires = {
-  required: Modulename.Set.t;      (* required module names *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
 }

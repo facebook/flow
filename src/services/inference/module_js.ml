@@ -17,11 +17,7 @@ open Utils_js
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
-(** TODO [perf] Make resolved_requires tighter.
-    (1) required and resolved_modules have a lot of redundancy; required is the
-    value set of resolved_modules.
-
-    Also, for info:
+(** TODO [perf] Make resolved_requires tighter. For info:
     (1) checked? We know that requires and phantom dependents for unchecked
     files are empty.
 
@@ -29,7 +25,6 @@ open Utils_js
     that's probably guessable.
 **)
 type resolved_requires = {
-  required: Modulename.Set.t; (* required module names *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
                                             to module names they resolve to *)
   phantom_dependents: SSet.t; (* set of paths that were looked up but not found
@@ -619,16 +614,17 @@ let imported_module ~options ~node_modules_containers file loc ?resolution_acc r
   let module M = (val (get_module_system options)) in
   M.imported_module ~options node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options node_modules_containers f require_loc =
+let imported_modules ~options node_modules_containers file require_loc =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      resolution_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
   let resolution_acc = { paths = SSet.empty; errors = [] } in
-  let set, map = SMap.fold (fun r loc (set, map) ->
-    let resolved_r = imported_module ~options ~node_modules_containers f loc ~resolution_acc r in
-    Modulename.Set.add resolved_r set, SMap.add r resolved_r map
-  ) require_loc (Modulename.Set.empty, SMap.empty) in
-  set, map, resolution_acc
+  let resolved_modules = SMap.fold (fun mref loc acc ->
+    let m = imported_module file loc mref
+      ~options ~node_modules_containers ~resolution_acc in
+    SMap.add mref m acc
+  ) require_loc  SMap.empty in
+  resolved_modules, resolution_acc
 
 let choose_provider ~options m files errmap =
   let module M = (val (get_module_system options)) in
@@ -672,10 +668,9 @@ let checked_file ~audit f =
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
 let resolved_requires_of ~options node_modules_containers f require_loc =
-  let required, resolved_modules, { paths; errors } =
+  let resolved_modules, { paths; errors } =
     imported_modules ~options node_modules_containers f require_loc in
   errors, {
-    required;
     resolved_modules;
     phantom_dependents = paths;
   }
