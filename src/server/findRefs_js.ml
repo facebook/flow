@@ -250,9 +250,9 @@ let find_refs options workers env file_input line col global =
             (* TODO support CommonJS *)
             | CommonJS _ -> Ok (Some (name, refs))
             | ES {named; _} -> begin match SMap.get name named with
-                | None
-                | Some None (* lol *) -> Ok (Some (name, refs))
-                | Some (Some loc) ->
+                | None -> Ok (Some (name, refs))
+                | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs))
+                | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
                     if List.mem loc refs then
                       let all_refs_result = find_external_refs options workers env file_key content name refs in
                       all_refs_result >>= fun all_refs -> Ok (Some (name, all_refs))
