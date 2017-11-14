@@ -915,12 +915,13 @@ module Statement
 
   and extract_ident_name (_, name) = name
 
-  and export_specifiers env specifiers =
+  and export_specifiers ?(preceding_comma=true) env specifiers =
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
         List.rev specifiers
     | _ ->
+        if not preceding_comma then error env Error.ExportSpecifierMissingComma;
         let specifier = with_loc (fun env ->
           let local = identifier_name env in
           let exported =
@@ -936,9 +937,8 @@ module Statement
           in
           { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported; }
         ) env in
-        if Peek.token env = T_COMMA
-        then Expect.token env T_COMMA;
-        export_specifiers env (specifier::specifiers)
+        let preceding_comma = Expect.maybe env T_COMMA in
+        export_specifiers ~preceding_comma env (specifier::specifiers)
 
   and assert_export_specifier_identifiers env specifiers =
     let open Statement.ExportNamedDeclaration.ExportSpecifier in

@@ -89,6 +89,7 @@ type t =
   | InvalidNonTypeImportInDeclareModule
   | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
+  | ExportSpecifierMissingComma
   | MalformedUnicode
   | DuplicateConstructor
   | DuplicatePrivateFields of string
@@ -238,6 +239,8 @@ module PP =
         `import typeof` statements"
       | ImportSpecifierMissingComma ->
         "Missing comma between import specifiers"
+      | ExportSpecifierMissingComma ->
+        "Missing comma between export specifiers"
       | MalformedUnicode ->
         "Malformed unicode"
       | DuplicateConstructor ->
