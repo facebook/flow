@@ -302,7 +302,7 @@ class mapper = object(this)
   method conditional (expr: Loc.t Ast.Expression.Conditional.t) =
     let open Ast.Expression.Conditional in
     let { test; consequent; alternate } = expr in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let consequent' = this#expression consequent in
     let alternate' = this#expression alternate in
     if test == test' && consequent == consequent' && alternate == alternate'
@@ -381,7 +381,7 @@ class mapper = object(this)
     let open Ast.Statement.DoWhile in
     let { body; test } = stuff in
     let body' = this#statement body in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     if body == body' && test == test' then stuff
     else { body = body'; test = test' }
 
@@ -464,7 +464,7 @@ class mapper = object(this)
     let open Ast.Statement.For in
     let { init; test; update; body } = stmt in
     let init' = map_opt this#for_statement_init init in
-    let test' = map_opt this#expression test in
+    let test' = map_opt this#predicate_expression test in
     let update' = map_opt this#expression update in
     let body' = this#statement body in
     if init == init' &&
@@ -688,7 +688,7 @@ class mapper = object(this)
   method if_statement (stmt: Loc.t Ast.Statement.If.t) =
     let open Ast.Statement.If in
     let { test; consequent; alternate } = stmt in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
     let alternate' = map_opt this#statement alternate in
@@ -1032,6 +1032,9 @@ class mapper = object(this)
   method pattern_expression (expr: Loc.t Ast.Expression.t) =
     this#expression expr
 
+  method predicate_expression (expr: Loc.t Ast.Expression.t) =
+    this#expression expr
+
   (* TODO *)
   method function_rest_element (expr: Loc.t Ast.Function.RestElement.t) = expr
 
@@ -1160,7 +1163,7 @@ class mapper = object(this)
   method while_ (stuff: Loc.t Ast.Statement.While.t) =
     let open Ast.Statement.While in
     let { test; body } = stuff in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let body' = this#statement body in
     if test == test' && body == body' then stuff
     else { test = test'; body = body' }
