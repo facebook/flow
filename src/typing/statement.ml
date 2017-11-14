@@ -1852,9 +1852,7 @@ and statement cx = Ast.Statement.(
 
         (match importKind with
           | ImportDeclaration.ImportType ->
-            Flow.add_output cx Flow_error.(EImportTypeofNamespace
-              (import_reason, local_name, module_name));
-            [import_loc, local_name, AnyT.why import_reason, None]
+            assert_false "import type * is a parse error"
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason (fst local) import_reason in
             let module_ns_t =

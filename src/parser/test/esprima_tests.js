@@ -4498,7 +4498,9 @@ module.exports = {
       'options': { sourceType: "module" },
       'tests': [
         'import type defaultbinding from "MyModule";',
+        /* TODO This is invalid; Esprima should also error
         'import type * as namespace from "MyModule";',
+        */
         'import type {} from "MyModule";',
         'import type defaultbinding, {} from "MyModule";',
         /* TODO Esprima should support these

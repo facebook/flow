@@ -1520,7 +1520,11 @@ module Statement
         (* `import type from "ModuleName";` *)
         | T_IDENTIFIER { raw = "from"; _ } ->
           with_default ImportValue env
-        | T_MULT
+        | T_MULT ->
+          (* `import type *` is invalid, since the namespace can't be a type *)
+          Eat.token env; (* consume `type` *)
+          error_unexpected env; (* unexpected `*` *)
+          with_specifiers ImportType env
         | T_LCURLY ->
           Eat.token env; (* consume `type` *)
           with_specifiers ImportType env

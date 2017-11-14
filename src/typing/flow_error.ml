@@ -71,7 +71,6 @@ type error_message =
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
-  | EImportTypeofNamespace of reason * string * string
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string
   | ENoNamedExport of reason * string * string option
@@ -333,7 +332,6 @@ let locs_of_error_message = function
   | EImportValueAsType (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsValue (reason, _) -> [loc_of_reason reason]
-  | EImportTypeofNamespace (reason, _, _) -> [loc_of_reason reason]
   | ENoDefaultExport (reason, _, _) -> [loc_of_reason reason]
   | EOnlyDefaultExport (reason, _) -> [loc_of_reason reason]
   | ENoNamedExport (reason, _, _) -> [loc_of_reason reason]
@@ -808,13 +806,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "`%s` is a type, but not a value. In order to import it, please use \
          `import type`."
         export_name]]
-
-  | EImportTypeofNamespace (r, local_name, module_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "This is invalid syntax. Maybe you meant: `import type \
-         %s from %S`?"
-        local_name
-        module_name]]
 
   | ENoDefaultExport (r, module_name, suggestion) ->
       let msg = "This module has no default export." in
