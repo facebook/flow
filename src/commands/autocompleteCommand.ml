@@ -76,9 +76,11 @@ let main option_values json pretty root strip_root from args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let request = ServerProt.AUTOCOMPLETE file in
-  let results : ServerProt.autocomplete_response =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.AUTOCOMPLETE file in
+  let results = match connect_and_make_request option_values root request with
+  | ServerProt.Response.AUTOCOMPLETE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
   if json || pretty
   then (
     results
@@ -91,8 +93,8 @@ let main option_values json pretty root strip_root from args () =
       prerr_endlinef "Error: %s" error
     | Ok completions ->
       List.iter (fun res ->
-        let name = res.ServerProt.res_name in
-        let ty = res.ServerProt.res_ty in
+        let name = res.ServerProt.Response.res_name in
+        let ty = res.ServerProt.Response.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

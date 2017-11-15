@@ -68,7 +68,7 @@ module HumanReadable: ClientProtocol = struct
     | Ok completions ->
         print_endline "Autocomplete results:";
         completions |>
-        List.map (fun r -> r.ServerProt.res_name) |>
+        List.map (fun r -> r.ServerProt.Response.res_name) |>
         List.iter (Printf.printf "  %s\n");
         flush stdout
 

@@ -98,14 +98,13 @@ let main option_values json pretty root strip_root from path filename () =
 
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.DUMP_TYPES file in
+  let request = ServerProt.Request.DUMP_TYPES file in
 
-  let response: ServerProt.dump_types_response =
-    connect_and_make_request option_values root request in
-  match response with
-  | Error err ->
-      handle_error err ~json ~pretty ~strip_root
-  | Ok resp ->
-      handle_response resp ~json ~pretty ~strip_root
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.DUMP_TYPES (Error err) ->
+    handle_error err ~json ~pretty ~strip_root
+  | ServerProt.Response.DUMP_TYPES (Ok resp) ->
+    handle_response resp ~json ~pretty ~strip_root
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

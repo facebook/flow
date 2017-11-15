@@ -123,12 +123,11 @@ let main option_values root error_flags strip_root ignore_flag
     )
   in
 
-  let open ServerProt in
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
-  let request = GEN_FLOW_FILES (filenames, include_warnings) in
-  let response: gen_flow_file_response = connect_and_make_request option_values root request in
-  match (response, out_dir) with
-  | (Error (GenFlowFile_TypecheckError {errors; warnings}), _) ->
+  let request = ServerProt.Request.GEN_FLOW_FILES (filenames, include_warnings) in
+  let open ServerProt.Response in
+  match connect_and_make_request option_values root request, out_dir with
+  | GEN_FLOW_FILES (Error (GenFlowFiles_TypecheckError {errors; warnings})), _ ->
     let strip_root = if strip_root then Some root else None in
     Errors.Cli_output.print_errors
       ~out_channel:stderr
@@ -141,10 +140,10 @@ let main option_values root error_flags strip_root ignore_flag
       "\nIn order to generate a shadow file there must be no type errors!"
     in
     FlowExitStatus.exit ~msg FlowExitStatus.Type_error;
-  | (Error (GenFlowFile_UnexpectedError error_msg), _) ->
+  | GEN_FLOW_FILES (Error (GenFlowFiles_UnexpectedError error_msg)), _ ->
     let msg = spf "Error: %s" error_msg in
     FlowExitStatus.exit ~msg FlowExitStatus.Unknown_error
-  | (Ok results, None) ->
+  | GEN_FLOW_FILES (Ok results), None ->
     (if List.length results <> 1 then (
       let msg =
         "Internal Error: Received multiple results for a single file!"
@@ -153,17 +152,17 @@ let main option_values root error_flags strip_root ignore_flag
     ));
     let (_filepath, result) = List.hd results in
     (match result with
-      | GenFlowFile_FlowFile content ->
+      | GenFlowFiles_FlowFile content ->
         print_endline content
-      | GenFlowFile_NonFlowFile ->
+      | GenFlowFiles_NonFlowFile ->
         print_endline "// This file does not have an @flow at the top!"
     )
-  | (Ok results, Some out_dir) ->
+  | GEN_FLOW_FILES (Ok results), Some out_dir ->
     let out_dir = expand_path out_dir in
     let src_stat = Unix.stat src in
     results |> List.iter (fun (file_path, result) ->
       match result with
-      | GenFlowFile_FlowFile content when src_is_dir ->
+      | GenFlowFiles_FlowFile content when src_is_dir ->
         let dest_path = file_path
           (* File path relative to the src dir *)
           |> Files.relative_path src
@@ -183,7 +182,7 @@ let main option_values root error_flags strip_root ignore_flag
         (try write_file strip_root root content file_path_stat.Unix.st_perm file_path dest_path
         with exn -> prerr_endlinef "Error writing %s:" dest_path; raise exn)
 
-      | GenFlowFile_FlowFile content ->
+      | GenFlowFiles_FlowFile content ->
         let file_name = Filename.basename file_path in
         let dest_path = Filename.concat out_dir file_name in
         let dest_path = dest_path ^ ".flow" in
@@ -192,8 +191,9 @@ let main option_values root error_flags strip_root ignore_flag
         (try write_file strip_root root content file_path_stat.Unix.st_perm file_path dest_path
         with exn -> prerr_endlinef "Error writing %s:" dest_path; raise exn)
 
-      | GenFlowFile_NonFlowFile -> ()
+      | GenFlowFiles_NonFlowFile -> ()
     )
+  | response, _ -> failwith_bad_response ~request ~response
 )
 
 let command = CommandSpec.command spec main

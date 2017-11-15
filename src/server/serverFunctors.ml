@@ -25,7 +25,7 @@ module type SERVER_PROGRAM = sig
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_command :
-    genv -> env -> MonitorProt.request_id * ServerProt.command_with_context -> env
+    genv -> env -> MonitorProt.request_id * ServerProt.Request.command_with_context -> env
   val handle_persistent_client : genv -> env ->
     Persistent_connection_prot.client_id -> Persistent_connection_prot.request -> env
 end

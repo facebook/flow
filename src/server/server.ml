@@ -189,16 +189,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let convert_errors ~errors ~warnings =
     if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
-      ServerProt.NO_ERRORS
+      ServerProt.Response.NO_ERRORS
     else
-      ServerProt.ERRORS {errors; warnings}
+      ServerProt.Response.ERRORS {errors; warnings}
 
   let get_status genv env client_root =
     let server_root = Options.root genv.options in
     if server_root <> client_root then begin
-      ServerProt.DIRECTORY_MISMATCH {
-        ServerProt.server=server_root;
-        ServerProt.client=client_root
+      ServerProt.Response.DIRECTORY_MISMATCH {
+        ServerProt.Response.server=server_root;
+        ServerProt.Response.client=client_root
       }
     end else begin
       (* collate errors by origin *)
@@ -258,7 +258,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           let errors, warnings = Types_js.typecheck_contents ~options ~workers ~env content file in
           convert_errors ~errors ~warnings
         else
-          ServerProt.NOT_COVERED
+          ServerProt.Response.NOT_COVERED
 
   let infer_type
       ~options
@@ -336,7 +336,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             | File_input.FileContent _ ->
               let error_msg = "This command only works with file paths." in
               let error =
-                Some (ServerProt.GenFlowFile_UnexpectedError error_msg)
+                Some (ServerProt.Response.GenFlowFiles_UnexpectedError error_msg)
               in
               (flow_files, non_flow_files, error)
             | File_input.FileName fn ->
@@ -363,7 +363,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
             (* Non-@flow files *)
             let result_contents = non_flow_files |> List.map (fun file ->
-              (File_key.to_string file, ServerProt.GenFlowFile_NonFlowFile)
+              (File_key.to_string file, ServerProt.Response.GenFlowFiles_NonFlowFile)
             ) in
 
             (* Codegen @flow files *)
@@ -371,18 +371,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               let file_path = File_key.to_string file in
               try
                 let code = FlowFileGen.flow_file cx in
-                (file_path, ServerProt.GenFlowFile_FlowFile code)::results
+                (file_path, ServerProt.Response.GenFlowFiles_FlowFile code)::results
               with exn ->
                 failwith (spf "%s: %s" file_path (Printexc.to_string exn))
             ) result_contents flow_files flow_file_cxs in
 
             Ok result_contents
           with exn -> Error (
-            ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
+            ServerProt.Response.GenFlowFiles_UnexpectedError (Printexc.to_string exn)
           )
         end
       end else
-        Error (ServerProt.GenFlowFile_TypecheckError {errors; warnings})
+        Error (ServerProt.Response.GenFlowFiles_TypecheckError {errors; warnings})
     in
     result
 
@@ -593,80 +593,85 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       env
     end
 
-  let handle_command genv env (request_id, { ServerProt.client_logging_context; command; }) =
+  let handle_command
+    genv env (request_id, { ServerProt.Request.client_logging_context; command; }) =
     let env = ref env in
     let respond msg =
-      MonitorRPC.respond_to_request ~request_id ~response:(Marshal.to_bytes msg [])
+      MonitorRPC.respond_to_request ~request_id ~response:msg
 
     in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
-    Hh_logger.debug "Request: %s" (ServerProt.string_of_command command);
+    Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
     MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
     begin match command with
-    | ServerProt.AUTOCOMPLETE fn ->
-        let results: ServerProt.autocomplete_response =
+    | ServerProt.Request.AUTOCOMPLETE fn ->
+        ServerProt.Response.AUTOCOMPLETE (
           autocomplete ~options ~workers ~env client_logging_context fn
-        in
-        respond results
-    | ServerProt.CHECK_FILE (fn, verbose, force, include_warnings) ->
+        ) |> respond
+    | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
         let options = { options with Options.
           opt_verbose = verbose;
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
-        (check_file ~options ~workers ~env ~force fn: ServerProt.response)
-          |> respond
-    | ServerProt.COVERAGE (fn, force) ->
-        (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
-          |> respond
-    | ServerProt.DUMP_TYPES (fn) ->
-        let types: ServerProt.dump_types_response =
-          dump_types ~options ~workers ~env fn
-        in
-        respond types
-    | ServerProt.FIND_MODULE (moduleref, filename) ->
-        (find_module ~options (moduleref, filename): File_key.t option)
-          |> respond
-    | ServerProt.FIND_REFS (fn, line, char, global) ->
-        (find_refs ~options ~workers ~env (fn, line, char, global): ServerProt.find_refs_response)
-          |> respond
-    | ServerProt.FORCE_RECHECK (files, force_focus) ->
-        respond ();
+        ServerProt.Response.CHECK_FILE (
+          check_file ~options ~workers ~env ~force fn: ServerProt.Response.status_response
+        ) |> respond
+    | ServerProt.Request.COVERAGE (fn, force) ->
+        ServerProt.Response.COVERAGE (
+          coverage ~options ~workers ~env ~force fn: ServerProt.Response.coverage_response
+        ) |> respond
+    | ServerProt.Request.DUMP_TYPES (fn) ->
+        ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env fn)
+        |> respond
+    | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
+        ServerProt.Response.FIND_MODULE (
+          find_module ~options (moduleref, filename): File_key.t option
+        ) |> respond
+    | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
+        ServerProt.Response.FIND_REFS (
+          find_refs
+            ~options ~workers ~env (fn, line, char, global): ServerProt.Response.find_refs_response
+        ) |> respond
+    | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
+        respond ServerProt.Response.FORCE_RECHECK;
         let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env ~force_focus updates
-    | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
+    | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
         let options = { options with Options.
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
-        (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
-          |> respond
-    | ServerProt.GET_DEF (fn, line, char) ->
-        let def: ServerProt.get_def_response =
+        ServerProt.Response.GEN_FLOW_FILES (
+          gen_flow_files ~options !env files: ServerProt.Response.gen_flow_files_response
+        ) |> respond
+    | ServerProt.Request.GET_DEF (fn, line, char) ->
+        ServerProt.Response.GET_DEF (
           get_def ~options ~workers ~env client_logging_context (fn, line, char)
-        in
-        respond def
-    | ServerProt.GET_IMPORTS module_names ->
-        (get_imports ~options module_names: ServerProt.get_imports_response)
-          |> respond
-    | ServerProt.INFER_TYPE (fn, line, char, verbose) ->
-        (infer_type
+        ) |> respond
+    | ServerProt.Request.GET_IMPORTS module_names ->
+        ServerProt.Response.GET_IMPORTS (
+          get_imports ~options module_names: ServerProt.Response.get_imports_response
+        ) |> respond
+    | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
+        ServerProt.Response.INFER_TYPE (
+          infer_type
             ~options ~workers ~env
             client_logging_context
-            (fn, line, char, verbose) : ServerProt.infer_type_response)
-          |> respond
-    | ServerProt.PORT (files) ->
-        (port files: ServerProt.port_response)
-          |> respond
-    | ServerProt.STATUS (client_root, include_warnings) ->
+            (fn, line, char, verbose)
+        ) |> respond
+    | ServerProt.Request.PORT (files) ->
+        ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
+        |> respond
+    | ServerProt.Request.STATUS (client_root, include_warnings) ->
         let genv = {genv with
           options = let open Options in {genv.options with
             opt_include_warnings = genv.options.opt_include_warnings || include_warnings
           }
         } in
-        let status: ServerProt.response = get_status genv !env client_root in
-        respond status;
+        let status = get_status genv !env client_root in
+        respond (ServerProt.Response.STATUS status);
         begin match status with
-          | ServerProt.DIRECTORY_MISMATCH {ServerProt.server; ServerProt.client} ->
+          | ServerProt.Response.DIRECTORY_MISMATCH {ServerProt.Response.server; client} ->
               Hh_logger.fatal "Status: Error";
               Hh_logger.fatal "server_dir=%s, client_dir=%s"
                 (Path.to_string server)
@@ -676,9 +681,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               FlowExitStatus.(exit Server_client_directory_mismatch)
           | _ -> ()
         end
-    | ServerProt.SUGGEST (files) ->
-        (suggest ~options ~workers ~env files: ServerProt.suggest_response)
-          |> respond
+    | ServerProt.Request.SUGGEST (files) ->
+        ServerProt.Response.SUGGEST (
+          suggest ~options ~workers ~env files: ServerProt.Response.suggest_response
+        ) |> respond
     end;
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
     !env

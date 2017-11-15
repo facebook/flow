@@ -6,5 +6,5 @@
  *)
 
 include FlowServerMonitorConnection.CONNECTION
-  with type in_message := ServerProt.command_with_context
+  with type in_message := ServerProt.Request.command_with_context
   and type out_message := MonitorProt.monitor_to_client_message

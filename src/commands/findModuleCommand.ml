@@ -41,19 +41,21 @@ let main option_values json pretty root strip_root from moduleref filename () =
     match root with Some root -> Some root | None -> Some filename
   ) in
 
-  let request = ServerProt.FIND_MODULE (moduleref, filename) in
-  let response: File_key.t option =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.FIND_MODULE (moduleref, filename) in
 
-  let result = match response with
-    | Some File_key.LibFile file
+  let result = match connect_and_make_request option_values root request with
+  | ServerProt.Response.FIND_MODULE (
+      Some File_key.LibFile file
     | Some File_key.SourceFile file
     | Some File_key.JsonFile file
-    | Some File_key.ResourceFile file ->
-        if strip_root then Files.relative_path (Path.to_string root) file
-        else file
-    | Some File_key.Builtins -> "(global)"
-    | None -> "(unknown)" in
+    | Some File_key.ResourceFile file
+  ) ->
+    if strip_root then Files.relative_path (Path.to_string root) file
+    else file
+  | ServerProt.Response.FIND_MODULE (Some File_key.Builtins) -> "(global)"
+  | ServerProt.Response.FIND_MODULE None -> "(unknown)"
+  | response -> failwith_bad_response ~request ~response
+  in
   if json || pretty
   then (
     let open Hh_json in

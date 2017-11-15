@@ -126,11 +126,10 @@ let main option_values json pretty root strip_root verbose from path args () =
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let request = ServerProt.INFER_TYPE (file, line, column, verbose) in
-  let response: ServerProt.infer_type_response =
-    connect_and_make_request option_values root request in
-  match response with
-  | Error err -> handle_error err ~json ~pretty
-  | Ok resp -> handle_response resp ~json ~pretty ~strip_root
+  let request = ServerProt.Request.INFER_TYPE (file, line, column, verbose) in
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
+  | ServerProt.Response.INFER_TYPE (Ok resp) -> handle_response resp ~json ~pretty ~strip_root
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

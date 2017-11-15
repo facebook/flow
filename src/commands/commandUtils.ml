@@ -798,8 +798,8 @@ let exe_name = Utils_js.exe_name
  * server *)
 let rec connect_and_make_request =
   (* Sends the command over the socket *)
-  let send_command (oc:out_channel) (cmd:ServerProt.command): unit =
-    let command = { ServerProt.
+  let send_command (oc:out_channel) (cmd:ServerProt.Request.command): unit =
+    let command = { ServerProt.Request.
       client_logging_context = FlowEventLogger.get_context ();
       command = cmd;
     } in
@@ -836,9 +836,9 @@ let rec connect_and_make_request =
           (Tty.spinner())
       end;
       wait_for_response ~quiet ~root ic
-    | MonitorProt.Data bytes ->
+    | MonitorProt.Data response ->
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
-      Marshal.from_bytes bytes 0
+      response
   in
 
   fun ?retries server_flags root request ->
@@ -861,3 +861,10 @@ let rec connect_and_make_request =
           (if retries = 1 then "retry" else "retries")
       end;
       connect_and_make_request ~retries:(retries - 1) server_flags root request
+
+let failwith_bad_response ~request ~response =
+  let msg = Printf.sprintf
+    "Bad response to %S: received %S"
+    (ServerProt.Request.to_string request)
+    (ServerProt.Response.to_string response) in
+  failwith msg

@@ -40,9 +40,11 @@ let main option_values root from files () =
     | None -> Some (List.hd files)
   ) in
   let files = List.map expand_path files in
-  let request = ServerProt.PORT files in
-  let patch_map: ((string, exn) result) SMap.t =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.PORT files in
+  let patch_map = match connect_and_make_request option_values root request with
+  | ServerProt.Response.PORT patch_map -> patch_map
+  | response -> failwith_bad_response ~request ~response
+  in
   SMap.iter (fun file patches_or_err ->
     match patches_or_err with
     | Ok patches ->

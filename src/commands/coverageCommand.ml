@@ -237,15 +237,14 @@ let main
   if debug && json
   then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
 
-  let request = ServerProt.COVERAGE (file, all) in
-  let response: ServerProt.coverage_response =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.COVERAGE (file, all) in
 
-  match response with
-  | Error err ->
-      handle_error ~json ~pretty err
-  | Ok resp ->
-      let content = File_input.content_of_file_input_unsafe file in
-      handle_response ~json ~pretty ~color ~debug resp content
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.COVERAGE (Error err) ->
+    handle_error ~json ~pretty err
+  | ServerProt.Response.COVERAGE (Ok resp) ->
+    let content = File_input.content_of_file_input_unsafe file in
+    handle_response ~json ~pretty ~color ~debug resp content
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

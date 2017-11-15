@@ -18,7 +18,7 @@ val read : timeout:float -> MonitorProt.monitor_to_server_message option
 
 val respond_to_request :
   request_id: MonitorProt.request_id ->
-  response: bytes ->
+  response: ServerProt.Response.response ->
   unit
 
 val respond_to_persistent_connection :

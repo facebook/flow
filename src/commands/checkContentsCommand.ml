@@ -66,8 +66,12 @@ let main option_values json pretty root error_flags strip_root verbose from
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  let request = ServerProt.CHECK_FILE (file, verbose, all, include_warnings) in
-  let response: ServerProt.response = connect_and_make_request option_values root request in
+  let request = ServerProt.Request.CHECK_FILE (file, verbose, all, include_warnings) in
+  let response = match connect_and_make_request option_values root request with
+  | ServerProt.Response.CHECK_FILE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
+
   let stdin_file = match file with
     | File_input.FileContent (None, contents) ->
         Some (Path.make_unsafe "-", contents)
@@ -80,7 +84,7 @@ let main option_values json pretty root error_flags strip_root verbose from
     ~out_channel:stdout ~strip_root ~pretty ~stdin_file
     ~suppressed_errors:([]) in
   match response with
-  | ServerProt.ERRORS {errors; warnings} ->
+  | ServerProt.Response.ERRORS {errors; warnings} ->
       if json
       then
         print_json ~errors ~warnings ()
@@ -97,12 +101,12 @@ let main option_values json pretty root error_flags strip_root verbose from
         let open FlowExitStatus in
         if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
       )
-  | ServerProt.NO_ERRORS ->
+  | ServerProt.Response.NO_ERRORS ->
       if json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
-  | ServerProt.NOT_COVERED ->
+  | ServerProt.Response.NOT_COVERED ->
       if json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "File is not @flow!\n%!";

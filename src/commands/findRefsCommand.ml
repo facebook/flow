@@ -93,21 +93,19 @@ let main option_values json pretty root strip_root from path global args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.FIND_REFS (file, line, column, global) in
+  let request = ServerProt.Request.FIND_REFS (file, line, column, global) in
   (* command result will be a position structure with full file path *)
-  let response: ServerProt.find_refs_response =
-    connect_and_make_request option_values root request in
-  match response with
-  | Ok result ->
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.FIND_REFS (Ok result) ->
     (* format output *)
     print_endline @@
       if json || pretty
       then to_json result ~pretty ~strip_root
       else to_string result option_values ~strip_root
-  | Error exn_msg ->
+  | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not find refs for %s:%d:%d\n%s"
       (File_input.filename_of_file_input file) line column exn_msg
-
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

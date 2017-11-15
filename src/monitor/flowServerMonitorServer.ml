@@ -27,7 +27,7 @@ module Logger = FlowServerMonitorLogger
 module PersistentProt = Persistent_connection_prot
 
 type command =
-| Write_ephemeral_request of ServerProt.command_with_context * EphemeralConnection.t
+| Write_ephemeral_request of ServerProt.Request.command_with_context * EphemeralConnection.t
 | Write_persistent_request of PersistentProt.client_id * PersistentProt.request
 | Notify_new_persistent_connection of PersistentProt.client_id * FlowEventLogger.logging_context
 | Notify_dead_persistent_connection of PersistentProt.client_id
@@ -52,13 +52,13 @@ end = struct
 
   let handle_response ~msg ~connection:_ =
     match msg with
-    | MonitorProt.Response (request_id, bytes) ->
+    | MonitorProt.Response (request_id, response) ->
       Logger.debug "Read a response to request '%s' from the server!" request_id;
       RequestMap.remove ~request_id
       >|= (function
       | None -> Logger.error "Failed to look up request '%s'" request_id
       | Some (_, client) ->
-        let msg = MonitorProt.Data bytes in
+        let msg = MonitorProt.Data response in
         try EphemeralConnection.write_and_close ~msg client
         with Lwt_stream.Closed ->
           Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
@@ -355,7 +355,7 @@ let start monitor_options = KeepAliveLoop.run ~cancel_condition:ExitSignal.signa
 let send_request ~client ~request =
   Logger.debug
     "Adding request (%s) to the command stream"
-    (ServerProt.string_of_command request.ServerProt.command);
+    (ServerProt.Request.to_string request.ServerProt.Request.command);
   push_to_command_stream (Some (Write_ephemeral_request (request, client)))
 
 let send_persistent_request ~client_id ~request =

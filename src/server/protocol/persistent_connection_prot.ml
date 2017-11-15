@@ -23,7 +23,7 @@ type response =
   | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
   | StartRecheck
   | EndRecheck
-  | AutocompleteResult of (ServerProt.autocomplete_response * (* request id *) int)
+  | AutocompleteResult of (ServerProt.Response.autocomplete_response * (* request id *) int)
   | DidOpenAck
   | DidCloseAck
 

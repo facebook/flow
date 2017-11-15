@@ -43,8 +43,11 @@ type args = {
 
 let force_recheck (args:args) server_flags =
   let files = List.map get_path_of_file args.files in
-  let request = ServerProt.FORCE_RECHECK (files, args.focus) in
-  let () = connect_and_make_request server_flags args.root request in
+  let request = ServerProt.Request.FORCE_RECHECK (files, args.focus) in
+  begin match connect_and_make_request server_flags args.root request with
+  | ServerProt.Response.FORCE_RECHECK -> ()
+  | response -> failwith_bad_response ~request ~response
+  end;
   FlowExitStatus.(exit No_error)
 
 let rec find_parent_that_exists path =

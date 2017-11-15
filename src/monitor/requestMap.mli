@@ -6,14 +6,14 @@
  *)
 
 val add:
-  request:ServerProt.command_with_context->
+  request:ServerProt.Request.command_with_context->
   client:EphemeralConnection.t ->
   MonitorProt.request_id Lwt.t
 
 val remove:
   request_id:MonitorProt.request_id ->
-  (ServerProt.command_with_context * EphemeralConnection.t) option Lwt.t
+  (ServerProt.Request.command_with_context * EphemeralConnection.t) option Lwt.t
 
 val remove_all:
   unit ->
-  (ServerProt.command_with_context * EphemeralConnection.t) list Lwt.t
+  (ServerProt.Request.command_with_context * EphemeralConnection.t) list Lwt.t

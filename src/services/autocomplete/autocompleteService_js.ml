@@ -7,7 +7,7 @@
 
 open Autocomplete_js
 open Type_printer
-open ServerProt
+open ServerProt.Response
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in

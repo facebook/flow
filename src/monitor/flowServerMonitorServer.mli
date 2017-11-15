@@ -7,7 +7,7 @@
 
 val send_request :
   client:EphemeralConnection.t ->
-  request:ServerProt.command_with_context ->
+  request:ServerProt.Request.command_with_context ->
   unit
 
 val send_persistent_request :

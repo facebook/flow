@@ -66,12 +66,10 @@ let main option_values json pretty root strip_root from path args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.GET_DEF (file, line, column) in
-  let response: ServerProt.get_def_response =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.GET_DEF (file, line, column) in
 
-  match response with
-  | Ok loc ->
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.GET_DEF (Ok loc) ->
     (* format output *)
     if json || pretty
     then (
@@ -85,10 +83,11 @@ let main option_values json pretty root strip_root from path args () =
       if option_values.from = "vim" || option_values.from = "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
       else print_endline (range_string_of_loc ~strip_root loc)
-  | Error exn_msg ->
+  | ServerProt.Response.GET_DEF (Error exn_msg) ->
       Utils_js.prerr_endlinef
         "Could not get definition for %s:%d:%d\n%s"
         (File_input.filename_of_file_input file) line column
         exn_msg
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main
