@@ -53,6 +53,14 @@ let mk_react_prop_type cx loc typeParameters kind =
   mk_custom_fun cx loc typeParameters
     (ReactPropType (React.PropType.Complex kind))
 
+let add_unclear_type_error_if_not_lib_file cx loc = Loc.(
+  match loc.source with
+    | Some file when not @@ File_key.is_lib_file file ->
+      Flow_js.add_output cx (FlowError.EUnclearType loc)
+    | _ -> ()
+)
+
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -60,7 +68,9 @@ let mk_react_prop_type cx loc typeParameters kind =
 (* converter *)
 let rec convert cx tparams_map = Ast.Type.(function
 
-| loc, Any -> AnyT.at loc
+| loc, Any ->
+  add_unclear_type_error_if_not_lib_file cx loc;
+  AnyT.at loc
 
 | loc, Mixed -> MixedT.at loc
 
@@ -413,12 +423,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "Function" | "function" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_param_arity cx loc typeParameters 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       DefT (reason, AnyFunT)
     )
 
   | "Object" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_param_arity cx loc typeParameters 0 (fun () ->
       let reason = mk_reason RObjectType loc in
       DefT (reason, AnyObjT)

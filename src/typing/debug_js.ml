@@ -2648,6 +2648,8 @@ let dump_flow_error =
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUntypedImport (loc, module_name) ->
       spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
+    | EUnclearType loc ->
+      spf "EUnclearType (%s)" (string_of_loc loc)
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
     | ELintSetting (loc, kind) ->
