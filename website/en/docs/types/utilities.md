@@ -59,6 +59,10 @@ const nope: Country = 'nope'; // 'nope' is not a Country
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
 
+## `$Values<T>` <a class="toc" id="toc-values" href="#toc-values"></a>
+
+Work in progress
+
 ## `$Diff<A, B>` <a class="toc" id="toc-diff" href="#toc-diff"></a>
 
 As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [Object Types](../objects/). Here's an example:
