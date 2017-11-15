@@ -320,7 +320,7 @@ let tests = "require" >::: [
     )
   end;
 
-  "export_default_decl" >:: begin fun ctxt ->
+  "export_default_anon_decl" >:: begin fun ctxt ->
     let source = "export default function() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind (fun named star ->
@@ -329,6 +329,34 @@ let tests = "require" >::: [
       match SMap.find_unsafe "default" named with
       | ExportDefault { local = None } -> () (* pass *)
       | _ -> assert_failure "Unexpected export"
+    )
+  end;
+
+  "export_default_named_func" >:: begin fun ctxt ->
+    let source = "export default function foo() {}" in
+    let {module_sig = {module_kind; _}; _} = visit source in
+    assert_es module_kind (fun named batch ->
+      assert_equal ~ctxt 1 (SMap.cardinal named);
+      assert_equal ~ctxt 0 (SMap.cardinal batch);
+      let loc = match SMap.find_unsafe "default" named with
+      | ExportDefault { local = Some (loc, "foo") } -> loc
+      | _ -> assert_failure "Unexpected export"
+      in
+      assert_equal ~ctxt "foo" (substring_loc source loc)
+    )
+  end;
+
+  "export_default_named_class" >:: begin fun ctxt ->
+    let source = "export default function C() {}" in
+    let {module_sig = {module_kind; _}; _} = visit source in
+    assert_es module_kind (fun named batch ->
+      assert_equal ~ctxt 1 (SMap.cardinal named);
+      assert_equal ~ctxt 0 (SMap.cardinal batch);
+      let loc = match SMap.find_unsafe "default" named with
+      | ExportDefault { local = Some (loc, "C") } -> loc
+      | _ -> assert_failure "Unexpected export"
+      in
+      assert_equal ~ctxt "C" (substring_loc source loc)
     )
   end;
 

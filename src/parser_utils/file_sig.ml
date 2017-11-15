@@ -258,14 +258,15 @@ class requires_calculator ~ast = object(this)
     super#import_declaration decl
 
   method! export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
+    let open Ast.Statement in
     let open Ast.Statement.ExportDefaultDeclaration in
-    begin match decl with
-    | Declaration _
-    | Expression _ ->
-      (* TODO: export default declarations may have a local name *)
-      let export = ExportDefault { local = None } in
-      this#add_exports Ast.Statement.ExportValue [export, "default"] []
-    end;
+    let local =  match decl with
+    | Declaration (_, FunctionDeclaration { Ast.Function.id; _ }) -> id
+    | Declaration (_, ClassDeclaration { Ast.Class.id; _ }) -> id
+    | _ -> None
+    in
+    let export = ExportDefault { local } in
+    this#add_exports ExportValue [export, "default"] [];
     super#export_default_declaration_decl  decl
 
   method! export_named_declaration (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
