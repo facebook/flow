@@ -291,6 +291,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
     >>= (fun (_, status) ->
       ServerInstance.cleanup server
       >>= (fun () ->
+        if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
+        then FlowEventLogger.murdered_by_oom_killer ();
+
         match status with
         | Unix.WEXITED exit_status ->
           let exit_type =
