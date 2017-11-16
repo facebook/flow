@@ -232,7 +232,7 @@ let find_external_refs options workers env file_key content name local_refs =
   all_external_locations >>= fun all_external_locations ->
   Ok (List.concat [all_external_locations; local_refs])
 
-let find_refs options workers env file_input line col global =
+let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in

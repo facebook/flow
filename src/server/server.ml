@@ -387,7 +387,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     result
 
   let find_refs ~options ~workers ~env (file_input, line, col, global) =
-    FindRefs_js.find_refs options workers env file_input line col global
+    FindRefs_js.find_refs ~options ~workers ~env ~file_input ~line ~col ~global
 
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
