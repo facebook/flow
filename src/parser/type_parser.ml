@@ -597,7 +597,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     loc, name
 
   and bounded_type env = with_loc (fun env ->
-    let _, name = type_identifier env in
+    let name = type_identifier env in
     let bound = if Peek.token env = T_COLON then Some (annotation env) else None in
     name, bound
   ) env

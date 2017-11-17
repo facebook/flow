@@ -890,7 +890,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
 and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
-  | loc, { TypeParam.name; bound; variance; default; } ->
+  | _, { TypeParam.name = (loc, name); bound; variance; default; } ->
     let reason = mk_reason (RType name) loc in
     let bound = match bound with
     | None -> DefT (reason, MixedT Mixed_everything)

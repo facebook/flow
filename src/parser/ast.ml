@@ -195,7 +195,7 @@ and Type : sig
     module TypeParam : sig
       type 'M t = 'M * 'M t'
       and 'M t' = {
-        name: string;
+        name: 'M Identifier.t;
         bound: 'M Type.annotation option;
         variance: 'M Variance.t option;
         default: 'M Type.t option;

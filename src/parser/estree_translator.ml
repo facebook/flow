@@ -1229,14 +1229,20 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and type_param (loc, tp) = Type.ParameterDeclaration.TypeParam.(
+  and type_param (loc, { Type.ParameterDeclaration.TypeParam.
+    name = (_, name);
+    bound;
+    variance = tp_var;
+    default;
+  }) =
     node "TypeParameter" loc [|
-      "name", string tp.name;
-      "bound", option type_annotation tp.bound;
-      "variance", option variance tp.variance;
-      "default", option _type tp.default;
+      (* we track the location of the name, but don't expose it here for
+         backwards-compatibility. TODO: change this? *)
+      "name", string name;
+      "bound", option type_annotation bound;
+      "variance", option variance tp_var;
+      "default", option _type default;
     |]
-  )
 
   and type_parameter_instantiation (loc, params) = Type.ParameterInstantiation.(
     node "TypeParameterInstantiation" loc [|
