@@ -155,6 +155,27 @@ setProps({ age: 42 }); // error, name is required
 
 As you may have noticed, the example is not a random one. `$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
 
+Note that `$Diff<A, B>` will error if the object you are removing properties from does not have the property being removed, i.e. if `B` has a key that doesn't exist in `A`:
+
+```js
+// @flow
+type Props = { name: string, age: number };
+type DefaultProps = { age: number, other: string }; // Will error due to this `other` property not being in Props.
+type RequiredProps = $Diff<Props, DefaultProps>;
+
+function setProps(props: RequiredProps) {
+  props.name;
+  // ...
+}
+```
+
+As a workaround, you can specify the property not present in `A` as optional. For example:
+
+```js
+type A = $Diff<{}, {nope: number}>; // Error
+type B = $Diff<{}, {nope: number | void}>; // OK
+```
+
 ## `$PropertyType<T, x>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
 
 A $PropertyType is the type at a given key.
