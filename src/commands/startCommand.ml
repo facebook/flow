@@ -11,8 +11,6 @@
 
 open CommandUtils
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
-
 let spec = { CommandSpec.
   name = "start";
   doc = "Starts a Flow server";

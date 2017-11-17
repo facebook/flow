@@ -8,8 +8,6 @@
 open CommandUtils
 open Utils_js
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
-
 type printer =
   | Json of { pretty: bool }
   | Cli of Errors.Cli_output.error_flags
@@ -102,7 +100,7 @@ module CheckCommand = struct
 
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-    let profiling, errors, warnings, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Server.check_once
       ~shared_mem_config ~client_include_warnings options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
@@ -182,7 +180,7 @@ module FocusCheckCommand = struct
       filenames
       FilenameSet.empty in
 
-    let profiling, errors, warnings, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Server.check_once
       ~shared_mem_config ~client_include_warnings ~focus_targets options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in

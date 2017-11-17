@@ -22,7 +22,6 @@ let (>>=) = Lwt.(>>=)
 let (>|=) = Lwt.(>|=)
 let spf = Printf.sprintf
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
 module Logger = FlowServerMonitorLogger
 module PersistentProt = Persistent_connection_prot
 
@@ -142,7 +141,7 @@ end = struct
       argv;
       _;
     } = monitor_options in
-    let handle = Main.daemonize
+    let handle = Server.daemonize
       ~log_file ~shared_mem_config ~argv server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
