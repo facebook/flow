@@ -7,6 +7,7 @@ Flow provides a set of utility types to operate on other types, and can be usefu
 Table of contents:
 
 - [`$Keys<T>`](#toc-keys)
+- [`$ReadOnly<T>`](#toc-read-only-obj)
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
 - [`$PropertyType<T>`](#toc-propertytype)
@@ -72,6 +73,51 @@ const nope: Country = 'nope'; // 'nope' is not a Country
 ```
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
+
+## `$ReadOnly<T>` <a class="toc" id="toc-read-only-obj" href="#toc-read-only-obj"></a>
+
+`$ReadOnly<T>` is a type that represents the read-only version of a given [object type](../objects/) `T`. A read-only object type is an object type whose keys are all [read-only](../interfaces/#toc-interface-property-variance-read-only-and-write-only).
+
+This means that the following 2 types are equivalent:
+```js
+type ReadOnlyObj = {
+  +key: any,  // read-only field, marked by the `+` annotation
+};
+```
+```js
+type ReadOnlyObj = $ReadOnly<{
+  key: any,
+}>;
+```
+
+This is useful when you need to use a read-only version of an object type you've already defined, without manually having to re-define and annotate each key as read-only. For example:
+
+```js
+// @flow
+type Props = {
+  name: string,
+  age: number,
+  // ...
+};
+
+type ReadOnlyProps = $ReadOnly<Props>;
+
+function render(props: ReadOnlyProps) {
+  const {name, age} = props;  // OK to read
+  props.age = 42;             // Error when writing
+  // ...
+}
+```
+
+Additionally, other utility types, such as [`$ObjMap<T>`](#toc-objmap), may strip any read/write annotations, so `$ReadOnly<T>` is a handy way to quickly make the object read-only again after operating on it:
+
+```js
+type Obj = {
+  +key: any,
+};
+
+type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
+```
 
 ## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
 
