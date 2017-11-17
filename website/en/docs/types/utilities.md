@@ -7,6 +7,7 @@ Flow provides a set of utility types to operate on other types, and can be usefu
 Table of contents:
 
 - [`$Keys<T>`](#toc-keys)
+- [`$Values<T>`](#toc-values)
 - [`$ReadOnly<T>`](#toc-read-only-obj)
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
@@ -73,6 +74,27 @@ const nope: Country = 'nope'; // 'nope' is not a Country
 ```
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
+
+## `$Values<T>` <a class="toc" id="toc-values" href="#toc-values"></a>
+
+`$Values<T>` represents the union type of all the value types of the enumerable properties in an [Object Type](../objects/) `T`.
+
+For example:
+```js
+// @flow
+type Props = {
+  name: string,
+  age: number,
+};
+
+// The following two types are equivalent:
+type PropValues = string | number;
+type Prop$Values = $Values<Props>;
+
+const name: Prop$Values = 'Jon';  // OK
+const age: Prop$Values = 42;  // OK
+const fn: Prop$Values = () => {};  // Error! function is not part of the union type
+```
 
 ## `$ReadOnly<T>` <a class="toc" id="toc-read-only-obj" href="#toc-read-only-obj"></a>
 
