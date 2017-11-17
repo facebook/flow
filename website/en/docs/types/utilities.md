@@ -13,6 +13,7 @@ Table of contents:
 - [`$Diff<A, B>`](#toc-diff)
 - [`$Rest<A, B>`](#toc-rest)
 - [`$PropertyType<T>`](#toc-propertytype)
+- [`$ElementType<T>`](#toc-elementtype)
 - [`$ObjMap<T>`](#toc-objmap)
 - [`$TupleMap<T>`](#toc-tuplemap)
 - [`Class<T>`](#toc-class)
@@ -218,12 +219,9 @@ otherProps.age;  // Error
 
 The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation, which implies that exact object types are treated differently in `$Rest<A, B>`. For example, `$Rest<{|n: number|}, {}>` will result in `{|n?: number|}` because an in-exact empty object may have an `n` property, while `$Diff<{|n: number|}, {}>` will result in `{|n: number|}`.
 
-## `$PropertyType<T, x>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
+## `$PropertyType<T, k>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
 
-A $PropertyType is the type at a given key.
-
-As of Flow v0.36.0, `x` must be a literal string. In future versions, `x` may be allowed to be any type, as long
-as that type exists on the keys of `T`.
+A `$PropertyType<T, k>` is the type at a given key `k`. As of Flow v0.36.0, `k` must be a literal string.
 
 ```js
 // @flow
@@ -281,6 +279,74 @@ class BackboneModel {
 type ID = $PropertyType<Class<BackboneModel>, 'idAttribute'>;
 const someID: ID = '1234';
 const someBadID: ID = true;
+```
+
+## `$ElementType<T, K>` <a class="toc" id="toc-elementtype" href="#toc-elementtype"></a>
+
+`$ElementType<T, K>` is the type that represents the type of every element inside an [array](../arrays), [tuple](../tuples) or [object](../objects) type `T`, that matches the given *key* type `K`.
+
+For example:
+```js
+// @flow
+
+// Using objects:
+type Obj = {
+  name: string,
+  age: number,
+}
+('Jon': $ElementType<Obj, 'name'>);
+(42: $ElementType<Obj, 'age'>);
+(true: $ElementType<Obj, 'name'>); // Nope, `name` is not a boolean
+(true: $ElementType<Obj, 'other'>); // Nope, property `other` is not in Obj
+
+// Using tuples:
+type Tuple = [boolean, string];
+(true: $ElementType<Tuple, 0>);
+('foo': $ElementType<Tuple, 1>);
+('bar': $ElementType<Tuple, 2>); // Nope, can't access position 2
+```
+
+In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
+
+```js
+// @flow
+
+// Using objects
+type Obj = { [key: string]: number };
+(42: $ElementType<Obj, string>);
+(42: $ElementType<Obj, boolean>); // Nope, object keys aren't booleans
+(true: $ElementType<Obj, string>); // Nope, elements are numbers
+
+
+// Using arrays, we don't statically know the size of the array, so you can just use the `number` type as the key:
+type Arr = Array<boolean>;
+(true: $ElementType<Arr, number>);
+(true: $ElementType<Arr, boolean>); // Nope, array indices aren't booleans
+('foo': $ElementType<Arr, number>); // Nope, elements are booleans
+```
+
+You can also nest calls to `$ElementType<T, K>`, which is useful when you need to access the types inside nested structures:
+
+```js
+// @flow
+type NumberObj = {
+  nums: Array<number>,
+};
+
+(42: $ElementType<$ElementType<NumberObj, 'nums'>, number>);
+```
+
+Additionally, one of the things that also makes `$ElementType<T, K>` more powerful that [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
+
+```js
+// @flow
+function getProp<O: {+[string]: mixed}, P: $Keys<O>>(o: O, p: P): $ElementType<O, P> {
+  return o[p];
+}
+
+(getProp({a: 42}, 'a'): number); // OK
+(getProp({a: 42}, 'a'): string); // Error: number is not a string
+getProp({a: 42}, 'b'); // Error: `b` does not exist
 ```
 
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
