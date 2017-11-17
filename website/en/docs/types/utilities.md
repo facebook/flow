@@ -2,6 +2,20 @@
 layout: guide
 ---
 
+Flow provides a set of utility types to operate on other types, and can be useful for different scenarios.
+
+Table of contents:
+
+- [`$Keys<T>`](#toc-keys)
+- [`$Exact<T>`](#toc-exact)
+- [`$Diff<A, B>`](#toc-diff)
+- [`$PropertyType<T>`](#toc-propertytype)
+- [`$ObjMap<T>`](#toc-objmap)
+- [`Class<T>`](#toc-class)
+- [`$Supertype<T>`](#toc-supertype)
+- [`$Subtype<T>`](#toc-subtype)
+- [`Existential Type (*)`](#toc-existential-type)
+
 ## `$Keys<T>` <a class="toc" id="toc-keys" href="#toc-keys"></a>
 
 In Flow you can [use union types similar to enums](../literals/):
@@ -59,6 +73,21 @@ const nope: Country = 'nope'; // 'nope' is not a Country
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
 
+## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
+
+`$Exact<{name: string}>` is a synonym for `{| name: string |}` as in the [Object documentation](../objects/#toc-exact-object-types).
+
+```js
+// @flow
+type ExactUser = $Exact<{name: string}>;
+type ExactUserShorthand = {| name: string |};
+
+const user2 = {name: 'John Wilkes Booth'};
+// These will both be satisfied because they are equivalent
+(user2: ExactUser);
+(user2: ExactUserShorthand);
+```
+
 ## `$Diff<A, B>` <a class="toc" id="toc-diff" href="#toc-diff"></a>
 
 As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [Object Types](../objects/). Here's an example:
@@ -79,50 +108,6 @@ setProps({ age: 42 }); // error, name is required
 ```
 
 As you may have noticed, the example is not a random one. `$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
-
-## `Class<T>` <a class="toc" id="toc-class" href="#toc-class"></a>
-
-Given a type `T` representing instances of a class `C`, the type `Class<T>` is the type of the class `C`.
-For example:
-
-```js
-// @flow
-class Store {}
-class ExtendedStore extends Store {}
-class Model {}
-
-function makeStore(storeClass: Class<Store>) {
-  return new storeClass();
-}
-
-(makeStore(Store): Store);
-(makeStore(ExtendedStore): Store);
-(makeStore(Model): Model); // error
-(makeStore(ExtendedStore): Model); // Flow infers the return type
-```
-
-For classes that take type parameters, you must also provide the parameter. For example:
-
-```js
-// @flow
-class ParamStore<T> {
-  constructor(data: T) {}
-}
-
-function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStore<T> {
-  return new storeClass(data);
-}
-(makeParamStore(ParamStore, 1): ParamStore<number>);
-(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
-```
-
-## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
-
-Work in progress
-
-## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
-
-Work in progress
 
 ## `$PropertyType<T, x>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
 
@@ -187,63 +172,6 @@ class BackboneModel {
 type ID = $PropertyType<Class<BackboneModel>, 'idAttribute'>;
 const someID: ID = '1234';
 const someBadID: ID = true;
-```
-
-## The Existential Type (`*`) <a class="toc" id="toc-the-existential-type" href="#toc-the-existential-type"></a>
-
-`*` is known as the existential type.
-
-An existential type is used as a placeholder to tell Flow to infer the type.
-
-For example, in the `Class<ParamStore<T>>` example, we could have used an existential type for the return:
-
-```js
-// @flow
-function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): * {
-  return new storeClass(data);
-}
-(makeParamStore(ParamStore, 1): ParamStore<number>);
-(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
-```
-
-The `*` can be thought of as an "auto" instruction to Flow, telling it to fill in the type from context.
-
-In comparison to `any`, `*` may allow you to avoid losing type safety.
-
-The existential operator is also useful for automatically filling in types without unnecessary verbosity:
-
-```js
-// @flow
-class DataStore {
-  data: *; // If this property weren't defined, you'd get an error just trying to assign `data`
-  constructor() {
-    this.data = {
-      name: 'DataStore',
-      isOffline: true
-    };
-  }
-  goOnline() {
-    this.data.isOffline = false;
-  }
-  changeName() {
-    this.data.isOffline = 'SomeStore'; // oops, wrong key!
-  }
-}
-```
-
-## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
-
-`$Exact<{name: string}>` is a synonym for `{| name: string |}` as in the [Object documentation](../objects/#toc-exact-object-types).
-
-```js
-// @flow
-type ExactUser = $Exact<{name: string}>;
-type ExactUserShorthand = {| name: string |};
-
-const user2 = {name: 'John Wilkes Booth'};
-// These will both be satisfied because they are equivalent
-(user2: ExactUser);
-(user2: ExactUserShorthand);
 ```
 
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
@@ -316,4 +244,90 @@ props(promises).then(o => {
   // $ExpectError
   (o.a: 43); // Error, flow knows it's 42
 });
+```
+
+## `Class<T>` <a class="toc" id="toc-class" href="#toc-class"></a>
+
+Given a type `T` representing instances of a class `C`, the type `Class<T>` is the type of the class `C`.
+For example:
+
+```js
+// @flow
+class Store {}
+class ExtendedStore extends Store {}
+class Model {}
+
+function makeStore(storeClass: Class<Store>) {
+  return new storeClass();
+}
+
+(makeStore(Store): Store);
+(makeStore(ExtendedStore): Store);
+(makeStore(Model): Model); // error
+(makeStore(ExtendedStore): Model); // Flow infers the return type
+```
+
+For classes that take type parameters, you must also provide the parameter. For example:
+
+```js
+// @flow
+class ParamStore<T> {
+  constructor(data: T) {}
+}
+
+function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStore<T> {
+  return new storeClass(data);
+}
+(makeParamStore(ParamStore, 1): ParamStore<number>);
+(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
+```
+
+## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
+
+Work in progress
+
+## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
+
+Work in progress
+
+## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
+
+`*` is known as the existential type.
+
+An existential type is used as a placeholder to tell Flow to infer the type.
+
+For example, in the `Class<ParamStore<T>>` example, we could have used an existential type for the return:
+
+```js
+// @flow
+function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): * {
+  return new storeClass(data);
+}
+(makeParamStore(ParamStore, 1): ParamStore<number>);
+(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
+```
+
+The `*` can be thought of as an "auto" instruction to Flow, telling it to fill in the type from context.
+
+In comparison to `any`, `*` may allow you to avoid losing type safety.
+
+The existential operator is also useful for automatically filling in types without unnecessary verbosity:
+
+```js
+// @flow
+class DataStore {
+  data: *; // If this property weren't defined, you'd get an error just trying to assign `data`
+  constructor() {
+    this.data = {
+      name: 'DataStore',
+      isOffline: true
+    };
+  }
+  goOnline() {
+    this.data.isOffline = false;
+  }
+  changeName() {
+    this.data.isOffline = 'SomeStore'; // oops, wrong key!
+  }
+}
 ```
