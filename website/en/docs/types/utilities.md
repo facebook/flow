@@ -14,6 +14,7 @@ Table of contents:
 - [`$Rest<A, B>`](#toc-rest)
 - [`$PropertyType<T>`](#toc-propertytype)
 - [`$ObjMap<T>`](#toc-objmap)
+- [`$TupleMap<T>`](#toc-tuplemap)
 - [`Class<T>`](#toc-class)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
@@ -285,11 +286,6 @@ const someBadID: ID = true;
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
 `ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
 
-> ### Warning
-> `$ObjMap` is currently in an unstable state, due to a bug that allows invalid writes.
->
-> For more information, please refer to [#2674](https://github.com/facebook/flow/issues/2674).
-
 Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) in input:
 
 ```js
@@ -314,12 +310,7 @@ type ExtractReturnType = <V>(() => V) => V
 function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
-```
 
-Let's try this out
-
-```js
-// @flow
 const o = {
   a: () => true,
   b: () => 'foo'
@@ -352,6 +343,28 @@ props(promises).then(o => {
   // $ExpectError
   (o.a: 43); // Error, flow knows it's 42
 });
+```
+
+## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
+
+`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a type function `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided type function `F`. This is analogous to the Javascript function `map`.
+
+Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate it's return type like this:
+
+```js
+// @flow
+
+// Typelevel function that takes a `() => V` and returns a `V` (its return type)
+type ExtractReturnType = <V>(() => V) => V
+
+function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
+  return iter.map(fn => fn());
+}
+
+const arr = [() => 'foo', () => 'bar'];
+(run(arr)[0]: string); // OK
+(run(arr)[1]: string); // OK
+(run(arr)[1]: boolean); // Error
 ```
 
 ## `Class<T>` <a class="toc" id="toc-class" href="#toc-class"></a>
