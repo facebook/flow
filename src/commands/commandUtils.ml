@@ -839,6 +839,10 @@ let rec connect_and_make_request =
     | MonitorProt.Data response ->
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
       response
+    | MonitorProt.ServerException exn_str ->
+      if Tty.spinner_used () then Tty.print_clear_line stderr;
+      let msg = Utils_js.spf "Server threw an exception: %s" exn_str in
+      FlowExitStatus.(exit ~msg Unknown_error)
   in
 
   fun ?retries server_flags root request ->

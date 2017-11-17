@@ -28,6 +28,8 @@ type monitor_to_server_message =
 type server_to_monitor_message =
 (* A response to an ephemeral socket's request *)
 | Response of request_id * ServerProt.Response.response
+(* An exception was thrown while processing the request *)
+| RequestFailed of request_id * string
 (* A response to a persistent socket connection *)
 | PersistentConnectionResponse of PersistentProt.client_id * PersistentProt.response
 (* A notification of the server's current status *)
@@ -37,5 +39,7 @@ type server_to_monitor_message =
 type monitor_to_client_message =
 (* The response from the server *)
 | Data of ServerProt.Response.response
+(* The server threw an exception while processing the request *)
+| ServerException of string
 (* The server is currently busy. Please wait for a response *)
 | Please_hold of ServerStatus.status

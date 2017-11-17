@@ -63,6 +63,17 @@ end = struct
         with Lwt_stream.Closed ->
           Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
       )
+    | MonitorProt.RequestFailed (request_id, exn_str) ->
+      Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
+      RequestMap.remove ~request_id
+      >|= (function
+      | None -> Logger.error "Failed to look up request '%s'" request_id
+      | Some (_, client) ->
+        let msg = MonitorProt.ServerException exn_str in
+        try EphemeralConnection.write_and_close ~msg client
+        with Lwt_stream.Closed ->
+          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+      )
     | MonitorProt.StatusUpdate status ->
       StatusStream.update ~status;
       Lwt.return_unit
