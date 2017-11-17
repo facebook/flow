@@ -53,20 +53,6 @@ end = struct
   let sleep_and_check () =
     MonitorRPC.read ~timeout:1.0
 
-  let handle_command ~genv env command =
-    try Program.handle_command genv env command
-    with
-    | Unix.Unix_error (e, _, _) ->
-        Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
-        Printexc.print_backtrace stderr;
-        flush stderr;
-        env
-    | e ->
-        Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
-        Printexc.print_backtrace stderr;
-        flush stderr;
-        env
-
   let exit_due_to_dfind_dying ~genv e =
     let root = Options.root genv.options in
     let tmp_dir = Options.temp_dir genv.options in
@@ -102,12 +88,11 @@ end = struct
       recheck_loop ~dfind genv env
     end
 
-
   let process_message genv env request =
     ServerPeriodical.stamp_connection ();
     match request with
     | MonitorProt.Request (request_id, command) ->
-      handle_command genv env (request_id, command)
+      Program.handle_command genv env (request_id, command)
     | MonitorProt.NewPersistentConnection (client_id, logging_context) ->
       { env with
         connections = Persistent_connection.add_client env.connections client_id logging_context

@@ -78,6 +78,10 @@ let send ~msg =
 let respond_to_request ~request_id ~response =
   send ~msg:(Response (request_id, response))
 
+(* Exception while handling the request *)
+let request_failed ~request_id ~exn_str =
+  send ~msg:(RequestFailed (request_id, exn_str))
+
 (* Send a message to a persistent client *)
 let respond_to_persistent_connection ~client_id ~response =
   send ~msg:(PersistentConnectionResponse (client_id, response))

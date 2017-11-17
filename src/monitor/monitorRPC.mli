@@ -21,6 +21,11 @@ val respond_to_request :
   response: ServerProt.Response.response ->
   unit
 
+val request_failed :
+  request_id: MonitorProt.request_id ->
+  exn_str: string ->
+  unit
+
 val respond_to_persistent_connection :
   client_id: Persistent_connection_prot.client_id ->
   response: Persistent_connection_prot.response ->

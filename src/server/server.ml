@@ -593,7 +593,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       env
     end
 
-  let handle_command
+  let handle_command_unsafe
     genv env (request_id, { ServerProt.Request.client_logging_context; command; }) =
     let env = ref env in
     let respond msg =
@@ -688,6 +688,22 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
     !env
+
+  let handle_command genv env (request_id, command) =
+    try handle_command_unsafe genv env (request_id, command)
+    with exn ->
+      let backtrace = String.trim (Printexc.get_backtrace ()) in
+      let exn_str = Printf.sprintf
+        "%s%s%s"
+        (Printexc.to_string exn)
+        (if backtrace = "" then "" else "\n")
+        backtrace in
+      Hh_logger.error
+        "Uncaught exception while handling a request (%s): %s"
+        (ServerProt.Request.to_string command.ServerProt.Request.command)
+        exn_str;
+      MonitorRPC.request_failed ~request_id ~exn_str;
+      env
 
   let handle_persistent_client genv env client_id msg =
     let env = ref env in
