@@ -213,10 +213,7 @@ class requires_calculator ~ast = object(this)
   method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
-    let loc, name =  match source with
-    | loc, { Ast.Literal.value = Ast.Literal.String name; _ } -> loc, name
-    | _ -> failwith "import declaration source must be a string literal"
-    in
+    let loc, { Ast.StringLiteral.value = name; _ } = source in
     let named: Loc.t Nel.t SMap.t SMap.t ref = ref SMap.empty in
     let ns = ref SMap.empty in
     let types = ref SMap.empty in
@@ -273,10 +270,10 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration} = decl in
     let source = match source with
-    | Some (loc, { Ast.Literal.value = Ast.Literal.String mref; raw = _ }) ->
+    | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
       this#add_es_import mref loc;
       Some (loc, mref)
-    | _ -> None
+    | None -> None
     in
     begin match declaration with
     | None -> () (* assert specifiers <> None *)
@@ -317,7 +314,7 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     let source = match source with
-    | Some (loc, { Ast.Literal.value = Ast.Literal.String mref; raw = _ }) ->
+    | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
       assert (not default); (* declare export default from not supported *)
       this#add_es_import mref loc;
       Some (loc, mref)
@@ -379,8 +376,7 @@ class requires_calculator ~ast = object(this)
   method! declare_module loc (m: Loc.t Ast.Statement.DeclareModule.t) =
     let name = Ast.Statement.DeclareModule.(match m.id with
     | Identifier (_, name) -> name
-    | Literal (_, { Ast.Literal.value = Ast.Literal.String name; _ }) -> name
-    | Literal _ -> failwith "declare module literal id must be a string"
+    | Literal (_, { Ast.StringLiteral.value; _ }) -> value
     ) in
     curr_declare_module <- Some (empty_module_sig);
     let ret = super#declare_module loc m in

@@ -218,7 +218,7 @@ end with type t = Impl.t) = struct
   | loc, DeclareOpaqueType t -> opaque_type ~declare:true (loc, t)
   | loc, DeclareModule m -> DeclareModule.(
       let id = match m.id with
-      | Literal lit -> literal lit
+      | Literal lit -> string_literal lit
       | Identifier id -> identifier id
       in
       node "DeclareModule" loc [|
@@ -235,7 +235,7 @@ end with type t = Impl.t) = struct
         match export.specifiers with
         | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
           node "DeclareExportAllDeclaration" loc [|
-            "source", option literal export.source;
+            "source", option string_literal export.source;
           |]
         | _ ->
           let declaration = match export.declaration with
@@ -252,7 +252,7 @@ end with type t = Impl.t) = struct
             "default", bool export.default;
             "declaration", declaration;
             "specifiers", export_specifiers export.specifiers;
-            "source", option literal export.source;
+            "source", option string_literal export.source;
           |]
       )
     | loc, DeclareModuleExports annot ->
@@ -263,14 +263,14 @@ end with type t = Impl.t) = struct
         match export.specifiers with
         | Some (ExportBatchSpecifier (_, None)) ->
           node "ExportAllDeclaration" loc [|
-            "source", option literal export.source;
+            "source", option string_literal export.source;
             "exportKind", string (export_kind export.exportKind);
           |]
         | _ ->
           node "ExportNamedDeclaration" loc [|
             "declaration", option statement export.declaration;
             "specifiers", export_specifiers export.specifiers;
-            "source", option literal export.source;
+            "source", option string_literal export.source;
             "exportKind", string (export_kind export.exportKind);
           |]
       )
@@ -309,7 +309,7 @@ end with type t = Impl.t) = struct
 
         node "ImportDeclaration" loc [|
           "specifiers", array (Array.of_list specifiers);
-          "source", literal import.source;
+          "source", string_literal import.source;
           "importKind", string (import_kind);
         |]
     )
@@ -952,6 +952,13 @@ end with type t = Impl.t) = struct
         [| "value", value_; "raw", string raw; |]
     in
     node "Literal" loc props
+  )
+
+  and string_literal (loc, lit) = StringLiteral.(
+    node "Literal" loc [|
+      "value", string lit.value;
+      "raw", string lit.raw;
+    |]
   )
 
   and template_literal (loc, value) = Expression.TemplateLiteral.(

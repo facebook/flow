@@ -792,8 +792,7 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
+          Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw; })
       | _ ->
           Statement.DeclareModule.Identifier (Parse.identifier env) in
       let body_loc, (module_kind, body) = with_loc (fun env ->
@@ -879,12 +878,10 @@ module Statement
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
-        let value = Literal.String value in
-        loc, { Literal.value; raw; }
+        loc, { StringLiteral.value; raw; }
     | _ ->
         (* Just make up a string for the error case *)
-        let value = Literal.String "" in
-        let ret = Peek.loc env, { Literal.value; raw = ""; } in
+        let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
         error_unexpected env;
         ret
 
@@ -1288,12 +1285,10 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          loc, { Literal.value; raw; }
+          loc, { StringLiteral.value; raw; }
       | _ ->
           (* Just make up a string for the error case *)
-          let value = Literal.String "" in
-          let ret = Peek.loc env, { Literal.value; raw = ""; } in
+          let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
           error_unexpected env;
           ret
 
@@ -1501,8 +1496,7 @@ module Statement
       | T_STRING (str_loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (str_loc, value, raw, octal));
-        let value = Literal.String value in
-        let source = (str_loc, { Literal.value; raw; }) in
+        let source = (str_loc, { StringLiteral.value; raw; }) in
         Eat.semicolon env;
         Statement.ImportDeclaration {
           importKind = ImportValue;

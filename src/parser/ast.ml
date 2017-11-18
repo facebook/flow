@@ -400,7 +400,7 @@ and Statement : sig
   module DeclareModule : sig
     type 'M id =
       | Identifier of 'M Identifier.t
-      | Literal of ('M * Literal.t)
+      | Literal of ('M * StringLiteral.t)
 
     type 'M module_kind =
       | CommonJS of 'M
@@ -426,7 +426,7 @@ and Statement : sig
     type 'M t = {
       declaration: 'M Statement.t option;
       specifiers: 'M specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
       exportKind: Statement.exportKind;
     }
   end
@@ -462,7 +462,7 @@ and Statement : sig
       default: bool;
       declaration: 'M declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
     }
   end
   module ImportDeclaration : sig
@@ -482,7 +482,7 @@ and Statement : sig
 
     type 'M t = {
       importKind: importKind;
-      source: ('M * Literal.t); (* Always a string literal *)
+      source: ('M * StringLiteral.t);
       default: 'M Identifier.t option;
       specifiers: 'M specifier option;
     }

@@ -275,14 +275,9 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
-      | DeclareModule.Identifier (_, name)
-      | DeclareModule.Literal (_, {
-          Ast.Literal.value = Ast.Literal.String name; _;
-        }) ->
-        name
-      | _ ->
-        (* The only literals that we should see as module names are strings *)
-        assert false in
+      | DeclareModule.Identifier (_, value)
+      | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
+      in
       let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
       let t = Tvar.mk cx r in
       Type_table.set (Context.type_table cx) loc t;
@@ -1511,15 +1506,9 @@ and statement cx = Ast.Statement.(
 
   | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let name = match id with
-    | DeclareModule.Identifier ident -> ident_name ident
-    | DeclareModule.Literal (_, { Ast.Literal.
-        value = Ast.Literal.String str;
-        _;
-      }) ->
-        str
-    | _ ->
-        (* The only literals that we should see as module names are strings *)
-        assert false in
+    | DeclareModule.Identifier (_, value)
+    | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
+    in
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
@@ -1775,14 +1764,7 @@ and statement cx = Ast.Statement.(
 
     let { ImportDeclaration.source; specifiers; default; importKind } = import_decl in
 
-    let module_name = (
-      match source with
-      | _, { Ast.Literal.value = Ast.Literal.String value; _ } -> value
-      | _ -> failwith (
-          "Internal Parser Error: Invalid import source type! Must be a " ^
-          "string literal."
-        )
-    ) in
+    let _, { Ast.StringLiteral.value = module_name; _ } = source in
 
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -1988,18 +1970,11 @@ and export_statement cx loc
           *)
         let source_module_tvar = (
           match source with
-          | Some(src_loc, {
-              Ast.Literal.value = Ast.Literal.String(module_name);
-              _;
-            }) ->
-              let reason =
-                mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
-              in
-              Some(import_ns cx reason module_name src_loc)
-          | Some(_) -> failwith (
-              "Parser Error: `export ... from` must specify a string " ^
-              "literal for the source module name!"
-            )
+          | Some (src_loc, { Ast.StringLiteral.value = module_name; _ }) ->
+            let reason =
+              mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
+            in
+            Some (import_ns cx reason module_name src_loc)
           | None -> None
         ) in
 
@@ -2042,11 +2017,8 @@ and export_statement cx loc
       ) ->
       let source_module_name = (
         match source with
-        | Some(_, {
-            Ast.Literal.value = Ast.Literal.String(module_name);
-            _;
-          }) -> module_name
-        | _ -> failwith (
+        | Some (_, { Ast.StringLiteral.value; _ }) -> value
+        | None -> failwith (
           "Parser Error: `export * from` must specify a string " ^
           "literal for the source module name!"
         )
