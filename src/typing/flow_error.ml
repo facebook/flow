@@ -167,6 +167,32 @@ type error_message =
     }
   | EInvalidPrototype of reason
   | EDeprecatedDeclareExports of Loc.t
+  | EUnimplementedAbstracts of {
+      use_op: use_op;
+      reason: reason;
+      reason_op: reason;
+      static_abstracts: reason list;
+      abstracts: reason list
+    }
+  | EUnimplementedAbstract of {
+      use_op: use_op;
+      reason: reason;
+      reason_op: reason;
+      static: bool;
+      name: string
+    }
+  | EAbstractMask of {
+      nonabstract: reason;
+      abstract: reason
+    }
+  | EAbstractSet of {
+      abstract: reason;
+      setter: reason
+    }
+  | EIllegalMixin of {
+      reason: reason;
+      reason_op: reason
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -293,6 +319,10 @@ let util_use_op_of_msg nope util = function
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
+| EUnimplementedAbstracts {use_op; reason; reason_op; static_abstracts; abstracts} ->
+  util use_op (fun use_op -> EUnimplementedAbstracts {use_op; reason; reason_op; static_abstracts; abstracts})
+| EUnimplementedAbstract {use_op; reason; reason_op; static; name} ->
+  util use_op (fun use_op -> EUnimplementedAbstract {use_op; reason; reason_op; static; name})
 | EIncompatible {lower=_; upper=_; extras=_}
 | EIncompatibleDefs {reason_lower=_; reason_upper=_; extras=_}
 | EIncompatibleGetProp {reason_prop=_; reason_obj=_; special=_}
@@ -380,6 +410,9 @@ let util_use_op_of_msg nope util = function
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
 | EInvalidPrototype (_)
 | EDeprecatedDeclareExports (_)
+| EAbstractMask {nonabstract=_; abstract=_}
+| EAbstractSet {abstract=_; setter=_}
+| EIllegalMixin {reason=_; reason_op=_}
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1782,3 +1815,41 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EInvalidPrototype reason ->
       mk_error ~trace_infos [mk_info reason [
         "Invalid prototype. Expected an object or null."]]
+  | EUnimplementedAbstracts {
+      use_op; reason; reason_op; static_abstracts; abstracts
+    } ->
+      let abstracts =
+        (* Sort abstract reasons by loc. *)
+        let add map reason = LocMap.add (loc_of_reason reason) reason map in
+        List.fold_left add LocMap.empty (static_abstracts@abstracts)
+          |> LocMap.bindings
+          |> List.map snd
+          |> List.map info_of_reason
+      in
+      let extra = [
+        InfoLeaf (
+          (Loc.none, ["Abstract(s):"])::abstracts
+        )
+      ] in
+      let force = true in
+      let reasons = (reason_op, reason) in
+      let msg = "Unimplemented abstract(s) found in" in
+      let extra, msgs = unwrap_use_ops ~force (reasons, extra, msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
+  | EUnimplementedAbstract { use_op; reason; reason_op; static; name } ->
+      let msg = if static
+        then spf "Unimplemented abstract static `%s` found in" name
+        else spf "Unimplemented abstract `%s` found in" name
+      in
+      let reasons = (reason_op, reason) in
+      let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
+  | EAbstractMask { nonabstract; abstract } ->
+      let msg = "Cannot mask non-abstract" in
+      typecheck_error msg (abstract, nonabstract)
+  | EAbstractSet { abstract; setter } ->
+      let msg = "A setter without a getter cannot implement" in
+      typecheck_error msg (setter, abstract)
+  | EIllegalMixin { reason; reason_op } ->
+      let msg = "Illegal mixin" in
+      typecheck_error msg (reason_op, reason)

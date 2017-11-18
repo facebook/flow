@@ -165,7 +165,7 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, Mixin) ->
       let obj = DefT (locationless_reason RObjectType, AnyObjT) in
       let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
-      let tout = class_type obj in
+      let tout = nonabstract_class_type obj in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
       let params_names = [] in
@@ -255,7 +255,7 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, ReactCreateClass) ->
       let component_class =
         let instance = fake_instance "ReactClass" in
-        typeapp (class_type instance) [Locationless.AnyT.t]
+        typeapp (nonabstract_class_type instance) [Locationless.AnyT.t]
       in
       fake_fun ([Some "spec"]) [Locationless.AnyT.t] None component_class
 
@@ -285,13 +285,13 @@ let rec normalize_type_impl cx ids t = match t with
       let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
         let id = Context.make_nominal cx in
-        let instance = fake_instance "React$Element" in
-        typeapp (poly_type id [config_tp] (class_type instance)) [config]
+        let cls = nonabstract_class_type (fake_instance "React$Element") in
+        typeapp (poly_type id [config_tp] cls) [config]
       in
       let component_class =
         let id = Context.make_nominal cx in
-        let instance = fake_instance "ReactClass" in
-        typeapp (poly_type id [config_tp] (class_type instance)) [config]
+        let cls = nonabstract_class_type (fake_instance "ReactClass") in
+        typeapp (poly_type id [config_tp] cls) [config]
       in
       let stateless_functional_component =
         let params_names = [Some "config"; Some "context"] in
@@ -380,13 +380,20 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (desc_of_reason reason) in
       DefT (reason, PolyT (xs, normalize_type_impl cx ids t, id))
 
-  | DefT (reason, ClassT t) ->
+  | DefT (reason, ClassT (t, abstracts)) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      DefT (reason, ClassT (normalize_type_impl cx ids t))
+      let normalize = normalize_type_impl cx ids in
+      DefT (reason, ClassT (normalize t, normalize abstracts))
 
-  | ThisClassT (reason, t) ->
+  | ThisClassT (reason, t, abstracts) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      ThisClassT (reason, normalize_type_impl cx ids t)
+      let normalize = normalize_type_impl cx ids in
+      ThisClassT (reason, normalize t, normalize abstracts)
+
+  | AbstractsT (reason, (static_abstracts, abstracts)) ->
+      let normalize reason = locationless_reason (desc_of_reason reason) in
+      let map = SMap.map normalize in
+      AbstractsT (normalize reason, (map static_abstracts, map abstracts))
 
   | DefT (reason, TypeT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
@@ -593,7 +600,6 @@ and collect_intersection_members ts =
       | _ ->
         TypeSet.add x acc
     ) TypeSet.empty ts
-
 
 let normalize_type cx t =
   normalize_type_impl cx ISet.empty t

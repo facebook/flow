@@ -96,8 +96,8 @@ let run cx trace ~use_op reason_op l u
 
   let component_class props =
     let reason = reason_of_t l in
-    DefT (reason, ClassT (get_builtin_typeapp cx reason
-      "React$Component" [props; AnyT.why reason]))
+    DefT (reason, ClassT (get_builtin_typeapp cx reason "React$Component"
+      [props; AnyT.why reason], abstracts_type l SMap.empty SMap.empty))
   in
 
   (* We create our own FunT instead of using
@@ -196,7 +196,9 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component, component_function tin)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
+    | DefT (r, StrT lit) ->
+      let kind = Property.Explicit (loc_of_reason r) in
+      get_intrinsic `Props lit (Field ((kind, None, tin), Negative))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -226,7 +228,9 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Special case for intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
+    | DefT (r, StrT lit) ->
+      let kind = Property.Explicit (loc_of_reason r) in
+      get_intrinsic `Props lit (Field ((kind, None, tout), Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -261,7 +265,11 @@ let run cx trace ~use_op reason_op l u
         let strict = NonstrictReturning (Some
           (DefT (reason_missing, VoidT), tvar)) in
         let propref = Named (reason_prop, name) in
-        let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
+        let action =
+          let kind = Property.Member (name, loc_of_reason reason_op) in
+          let field = Field ((kind, None, tvar), Positive) in
+          LookupProp (unknown_use, field)
+        in
         (* Lookup the `defaultProps` property. *)
         rec_flow cx trace (component,
           LookupT (reason_op, strict, [], propref, action))
@@ -371,7 +379,10 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
-      let action = LookupProp (unknown_use, Field (None, key_t, Positive)) in
+      let action =
+        let kind = Property.Explicit (loc_of_t config) in
+        LookupProp (unknown_use, Field ((kind, None, key_t), Positive))
+      in
       rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -390,7 +401,10 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
-      let action = LookupProp (unknown_use, Field (None, ref_t, Positive)) in
+      let action =
+        let kind = Property.Explicit (loc_of_t config) in
+        LookupProp (unknown_use, Field ((kind, None, ref_t), Positive))
+      in
       rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
@@ -463,7 +477,7 @@ let run cx trace ~use_op reason_op l u
     let component = l in
     match component with
     (* Class components or legacy components. *)
-    | DefT (_, ClassT component) -> rec_flow_t cx trace (component, tout)
+    | DefT (_, ClassT (component, _)) -> rec_flow_t cx trace (component, tout)
 
     (* Stateless functional components. *)
     | DefT (r, FunT _) ->
@@ -474,7 +488,9 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
+    | DefT (r, StrT lit) ->
+      let kind = Property.Explicit (loc_of_reason r) in
+      get_intrinsic `Instance lit (Field ((kind, None, tout), Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -528,6 +544,7 @@ let run cx trace ~use_op reason_op l u
       let props = SMap.empty in
       let dict = {
         dict_name = None;
+        dict_kind = Property.Explicit Loc.none;
         key = Locationless.AnyT.t;
         value;
         dict_polarity = Neutral;
@@ -584,8 +601,8 @@ let run cx trace ~use_op reason_op l u
       (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
          for reasons descriptions/locations, recursive ReactKit constraints, and
          `resolve` behavior. *)
-      let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (None, t, Neutral)) props in
+      let add_prop k triple (reason, props, dict, flags) =
+        let props = SMap.add k (Field (triple, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =
@@ -603,12 +620,12 @@ let run cx trace ~use_op reason_op l u
           resolve t
         | Some (k, p) ->
           let todo = SMap.remove k todo in
-          match Property.read_t p with
+          match Property.read p with
           | None -> next todo shape
-          | Some t ->
+          | Some (kind, key_loc, t) ->
             rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
-                (ResolveProp (k, todo, shape)), tout)))
+                (ResolveProp (k, kind, key_loc, todo, shape)), tout)))
       in
       (match tool with
       | ResolveObject ->
@@ -633,12 +650,12 @@ let run cx trace ~use_op reason_op l u
         | Error reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict shape)
-      | ResolveProp (k, todo, shape) ->
+      | ResolveProp (k, kind, key_loc, todo, shape) ->
         let t = match coerce_prop_type l with
         | Ok (required, t) -> if required then t else Type.optional t
         | Error _ -> Type.optional (DefT (reason_op, AnyT))
         in
-        next todo (add_prop k t shape))
+        next todo (add_prop k (kind, key_loc, t) shape))
   in
 
   let create_class knot tout =
@@ -658,9 +675,9 @@ let run cx trace ~use_op reason_op l u
       match SMap.get x props with
       | Some _ as p -> p
       | None ->
-        Option.map dict (fun { key; value; dict_polarity; _ } ->
+        Option.map dict (fun { dict_kind; key; value; dict_polarity; _ } ->
           rec_flow_t cx trace (string_key x reason_op, key);
-          Field (None, value, dict_polarity))
+          Field ((dict_kind, None, value), dict_polarity))
     in
 
     let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
@@ -840,10 +857,12 @@ let run cx trace ~use_op reason_op l u
         mod_reason_of_t (replace_reason_const RReactPropTypes) props_t
       in
 
+      let props_kind = Property.Member ("props", loc_of_reason reason_op) in
+      let state_kind = Property.Member ("state", loc_of_reason reason_op) in
       let props =
         SMap.empty
-        |> SMap.add "props" (Field (None, props_t, Neutral))
-        |> SMap.add "state" (Field (None, knot.state_t, Neutral))
+        |> SMap.add "props" (Field ((props_kind, None, props_t), Neutral))
+        |> SMap.add "state" (Field ((state_kind, None, knot.state_t), Neutral))
       in
 
       (* Some spec fields are used to create the instance type, but are not
@@ -877,10 +896,9 @@ let run cx trace ~use_op reason_op l u
         | "componentDidUpdate"
         | "componentWillUnmount"
         | "updateComponent" ->
-          let loc = Property.read_loc v in
-          let v = match Property.read_t v with
+          let v = match Property.read v with
           | None -> v
-          | Some t ->
+          | Some ((_, _, t) as triple) ->
             (* Tie the `this` knot with BindT *)
             let dummy_return = DefT (reason_op, AnyT) in
             let calltype = mk_methodcalltype knot.this [] dummy_return in
@@ -889,7 +907,7 @@ let run cx trace ~use_op reason_op l u
                upper bound (e.g., as a super class), it's more flexible to
                create covariant methods. Otherwise, a subclass could not
                override the `render` method, say. *)
-            Method (loc, t)
+            Method triple
           in
           SMap.add k v props, static_props
 
@@ -904,8 +922,11 @@ let run cx trace ~use_op reason_op l u
           SMap.add k bound_v props, static_props
       ) spec_props (props, SMap.empty) in
 
-      let static_props = static_props
-        |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
+      let static_props =
+        let name = "defaultProps" in
+        let kind = Property.Member (name, loc_of_t knot.default_t) in
+        let field = Field ((kind, None, knot.default_t), Neutral) in
+        SMap.add name field static_props
       in
 
       let reason_component = replace_reason_const RReactComponent reason_op in
@@ -923,6 +944,7 @@ let run cx trace ~use_op reason_op l u
         | Some (Unknown reason) ->
           let dict = Some {
             dict_name = None;
+            dict_kind = Property.Member ("[string]", loc_of_reason reason);
             key = StrT.why reason;
             value = AnyT.why reason;
             dict_polarity = Neutral;
@@ -934,7 +956,7 @@ let run cx trace ~use_op reason_op l u
           reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        Obj_type.mk_with_proto cx reason ~props (class_type super)
+        Obj_type.mk_with_proto cx reason ~props (nonabstract_class_type super)
           ?dict ~exact ~sealed
       in
 
@@ -954,7 +976,7 @@ let run cx trace ~use_op reason_op l u
       let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
       rec_flow_t cx trace (instance, knot.this);
       rec_flow_t cx trace (static, knot.static);
-      rec_flow_t cx trace (class_type instance, tout)
+      rec_flow_t cx trace (nonabstract_class_type instance, tout)
     in
 
     let empty_spec obj = {
@@ -1021,8 +1043,8 @@ let run cx trace ~use_op reason_op l u
       }) stack |> on_resolve_statics
 
     | PropTypes (stack, tool) ->
-      let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (None, t, Neutral)) props in
+      let add_prop k triple (reason, props, dict, flags) =
+        let props = SMap.add k (Field (triple, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =
@@ -1038,11 +1060,11 @@ let run cx trace ~use_op reason_op l u
           }) stack |> on_resolve_prop_types
         | Some (k, p) ->
           let todo = SMap.remove k todo in
-          match Property.read_t p with
+          match Property.read p with
           | None -> next todo prop_types
-          | Some t ->
+          | Some (kind, key_loc, t) ->
             let tool = PropTypes (stack,
-              ResolveProp (k, todo, prop_types)) in
+              ResolveProp (k, kind, key_loc, todo, prop_types)) in
             resolve tool t
       in
       (match tool with
@@ -1073,12 +1095,12 @@ let run cx trace ~use_op reason_op l u
         | Error reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict prop_types)
-      | ResolveProp (k, todo, prop_types) ->
+      | ResolveProp (k, kind, key_loc, todo, prop_types) ->
         let t = match coerce_prop_type l with
         | Ok (required, t) -> if required then t else Type.optional t
         | Error reason -> Type.optional (DefT (reason, AnyT))
         in
-        next todo (add_prop k t prop_types))
+        next todo (add_prop k (kind, key_loc, t) prop_types))
 
     | DefaultProps (todo, acc) ->
       let default_props = Some (maybe_known_of_result (coerce_object l)) in

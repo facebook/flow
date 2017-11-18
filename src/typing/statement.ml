@@ -1564,8 +1564,9 @@ and statement cx = Ast.Statement.(
         let props = SMap.fold (fun x entry acc ->
           match entry with
           | Value {specific; _} ->
-            let loc = Some (entry_loc entry) in
-            Properties.add_field x Neutral loc specific acc
+            let loc = entry_loc entry in
+            let kind = Property.Explicit loc in
+            Properties.add_field x (kind, Some loc, specific) Neutral acc
           | Type _ | Class _ -> acc
         ) module_scope.entries SMap.empty in
         let proto = ObjProtoT reason in
@@ -1593,8 +1594,6 @@ and statement cx = Ast.Statement.(
     Context.pop_declare_module cx;
     Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
-
-
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -2084,19 +2083,20 @@ and export_statement cx loc
 
 and object_prop cx map = Ast.Expression.Object.(function
   (* named prop *)
-  | Property (_, Property.Init {
+  | Property (prop_loc, Property.Init {
       key =
         Property.Identifier (loc, name) |
         Property.Literal (loc, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = v; _ }) ->
-    let t = expression cx v in
-    Properties.add_field name Neutral (Some loc) t map
+      value; _ }) ->
+    let t = expression cx value in
+    let fld = (Type.Property.Explicit prop_loc, Some loc, t) in
+    Properties.add_field name fld Neutral map
 
   (* named method *)
-  | Property (_, Property.Method {
+  | Property (prop_loc, Property.Method {
       key =
         Property.Identifier (loc, name) |
         Property.Literal (loc, {
@@ -2106,7 +2106,8 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = (fn_loc, func);
     }) ->
     let t = expression cx (fn_loc, Ast.Expression.Function func) in
-    Properties.add_field name Neutral (Some loc) t map
+    let fld = (Type.Property.Explicit prop_loc, Some loc, t) in
+    Properties.add_field name fld Neutral map
 
   (* We enable some unsafe support for getters and setters. The main unsafe bit
   *  is that we don't properly havok refinements when getter and setter methods
@@ -2125,7 +2126,8 @@ and object_prop cx map = Ast.Expression.Object.(function
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
     let function_type = mk_function None cx vloc func in
     let return_t = Type.extract_getter_type function_type in
-    Properties.add_getter name (Some id_loc) return_t map
+    let get = (Type.Property.Explicit loc, Some id_loc, return_t) in
+    Properties.add_getter name get map
 
   (* unsafe setter property *)
   | Property (loc, Property.Set {
@@ -2140,7 +2142,8 @@ and object_prop cx map = Ast.Expression.Object.(function
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
     let function_type = mk_function None cx vloc func in
     let param_t = Type.extract_setter_type function_type in
-    Properties.add_setter name (Some id_loc) param_t map
+    let set = (Type.Property.Explicit loc, Some id_loc, param_t) in
+    Properties.add_setter name set map
 
   (* literal LHS *)
   | Property (loc, Property.Init { key = Property.Literal _; _ })
@@ -2487,12 +2490,13 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
         let super = super_ cx super_loc in
+        let use_op = Op (GetProperty prop_reason) in
+        assert_nonabstract cx prop_reason ~use_op super name;
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
         else (
           Tvar.mk_where cx expr_reason (fun tvar ->
-            let use_op = Op (GetProperty prop_reason) in
             Flow.flow cx (
               super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
             )
@@ -2699,6 +2703,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx super_loc in
       let argts = List.map (expression_or_spread cx) arguments in
+      let use_op = Op (FunCallMethod {
+        op=reason;
+        fn=mk_reason (RMethod (Some name)) callee_loc;
+        prop=reason_prop;
+      }) in
+      assert_nonabstract cx reason ~use_op super name;
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype super argts t in
@@ -3793,7 +3803,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             | None ->
                 DefT (mk_reason RBoolean aloc, BoolT (Some true))
       in
-      let p = Field (Some id_loc, atype, Neutral) in
+      let p = Field ((Property.Explicit aloc, Some id_loc, atype), Neutral) in
       (sealed, SMap.add aname p map, result)
     (* Do nothing for namespaced attributes or ignored React attributes. *)
     | Opening.Attribute _ ->
@@ -3822,7 +3832,8 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             children
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
         ) in
-        let p = Field (None, arr, Neutral) in
+        let kind = Property.Explicit (loc_of_reason reason) in
+        let p = Field ((kind, None, arr), Neutral) in
         SMap.add "children" p map
   in
   eval_props ~sealed (map, result)
@@ -3963,6 +3974,19 @@ and jsx_title_member_to_expression member =
       computed = false;
     })
   )
+
+and assert_nonabstract cx reason ~use_op super name =
+  let super, static = match super with
+    | DefT (_, VoidT) -> super, false
+    | ThisTypeAppT _ -> super, false
+    | DefT (_, ClassT (s, _)) -> s, true
+    | _ -> failwith "Unexpected super type"
+  in
+  let assertion =
+    let kind = NonabstractMember (static, name) in
+    AssertNonabstractT (use_op, reason, kind)
+  in
+  Flow.flow cx (super, assertion)
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
@@ -4535,8 +4559,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     in
     let pmap = prop_map_of_object cx properties in
     let props = SMap.fold (fun x p acc ->
-      let loc = Property.read_loc p in
-      match Property.read_t p with
+      match Property.read p with
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
@@ -4544,14 +4567,14 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
           EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
         );
         acc
-      | Some spec ->
+      | Some (kind, key_loc, spec) ->
         let reason = replace_reason (fun desc ->
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let t = Tvar.mk_where cx reason (fun tvar ->
           Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar))
         ) in
-        let p = Field (loc, t, Neutral) in
+        let p = Field ((kind, key_loc, t), Neutral) in
         SMap.add x p acc
     ) pmap SMap.empty in
     Obj_type.mk_with_proto cx reason ~props proto
@@ -4654,7 +4677,7 @@ and mk_class cx loc reason c =
         ~expr:expression
     );
     let class_t = Class_sig.classtype cx class_sig in
-    Flow.unify cx self class_t;
+    Flow.unify cx self class_t; (*Self needs a nonabstract version, no?*)
     class_t
 
 (* Given a function declaration and types for `this` and `super`, extract a
@@ -4721,10 +4744,12 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
 
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
       match typeAnnotation with
-      | (_, (_, Ast.Type.Function
-        { Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest });
-          Ast.Type.Function.returnType;
-          Ast.Type.Function.typeParameters;
+      | (_, (_, Ast.Type.Function { Ast.Type.Function.
+          params = (params_loc, { Ast.Type.Function.Params.params; rest });
+          async = false;
+          generator = false;
+          returnType;
+          typeParameters;
         })) ->
           let param_type_to_param = Ast.Type.Function.(
             fun (l, { Param.name; Param.typeAnnotation; _ }) ->

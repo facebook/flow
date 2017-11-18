@@ -419,8 +419,12 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
+      let abstracts =
+        let reason = mk_reason (RAbstractsOf (desc_of_t t)) loc in
+        AbstractsT (reason, (SMap.empty, SMap.empty))
+      in
       let reason = mk_reason (RStatics (desc_of_t t)) loc in
-      DefT (reason, ClassT t)
+      DefT (reason, ClassT (t, abstracts))
     )
 
   | "Function" | "function" ->
@@ -611,9 +615,13 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Function { Function.
     params = (_, { Function.Params.params; rest });
+    async;
+    generator;
     returnType;
     typeParameters;
   } ->
+  assert(not async);
+  assert(not generator);
   let tparams, tparams_map =
     mk_type_param_declarations cx ~tparams_map typeParameters in
 
@@ -671,24 +679,25 @@ let rec convert cx tparams_map = Ast.Type.(function
     let props_map = match List.rev call_props with
       | [] -> props_map
       | [t] ->
-        let p = Field (None, t, Positive) in
+        let p = Field ((Property.Explicit (loc_of_t t), None, t), Positive) in
         SMap.add "$call" p props_map
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
         let t = DefT (callable_reason, IntersectionT rep) in
-        let p = Field (None, t, Positive) in
+        let p = Field ((Property.Explicit (loc_of_t t0), None, t), Positive) in
         SMap.add "$call" p props_map
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let props_map, proto = match proto with
-      | Some t ->
+      | Some (loc, t) ->
         (* The existence of a callable property already implies that
          * __proto__ = Function.prototype. Treat __proto__ as a property *)
         if callable
         then
-          SMap.add "__proto__" (Field (None, t, Neutral)) props_map,
+          let kind = Property.Explicit loc in
+          SMap.add "__proto__" (Field ((kind, None, t), Neutral)) props_map,
           FunProtoT (locationless_reason RFunctionPrototype)
         else
           props_map, t
@@ -711,12 +720,15 @@ let rec convert cx tparams_map = Ast.Type.(function
     match prop with
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method;
-        static = _; (* object types don't have static props *)
+        abstract;
+        static;
       } ->
+      assert(not abstract);
+      assert(not static);
       begin match key with
       | Ast.Expression.Object.Property.Literal
-          (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
-      | Ast.Expression.Object.Property.Identifier (loc, name) ->
+          (key_loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+      | Ast.Expression.Object.Property.Identifier (key_loc, name) ->
           let t = convert cx tparams_map value in
           if name = "__proto__" && not (_method || optional) && variance = None
           then
@@ -724,12 +736,13 @@ let rec convert cx tparams_map = Ast.Type.(function
             let proto = Tvar.mk_where cx reason (fun tout ->
               Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
-            props, Some (Flow.mk_typeof_annotation cx reason proto)
+            props, Some (loc, Flow.mk_typeof_annotation cx reason proto)
           else
+            let kind = Property.Explicit loc in
             let t = if optional then Type.optional t else t in
             let polarity = if _method then Positive else polarity variance in
-            let props = SMap.add name (Field (Some loc, t, polarity)) props in
-            props, proto
+            let field = Field ((kind, Some key_loc, t), polarity) in
+            SMap.add name field props, proto
       | _ ->
         Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
         props, proto
@@ -738,25 +751,24 @@ let rec convert cx tparams_map = Ast.Type.(function
     (* unsafe getter property *)
     | { Object.Property.
         key = Ast.Expression.Object.Property.Identifier (id_loc, name);
-        value = Object.Property.Get (loc, f);
+        value = Object.Property.Get (get_loc, f);
         _ } ->
-      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
-      let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
-      let return_t = Type.extract_getter_type function_type in
-      let props = Properties.add_getter name (Some id_loc) return_t props in
-      props, proto
+      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters get_loc);
+      let fn_type = convert cx tparams_map (get_loc, Ast.Type.Function f) in
+      let return_t = Type.extract_getter_type fn_type in
+      let get = (Property.Explicit loc, Some id_loc, return_t) in
+      Properties.add_getter name get props, proto
 
     (* unsafe setter property *)
     | { Object.Property.
         key = Ast.Expression.Object.Property.Identifier (id_loc, name);
-        value = Object.Property.Set (loc, f);
+        value = Object.Property.Set (set_loc, f);
         _ } ->
       Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
-      let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
-      let param_t = Type.extract_setter_type function_type in
-      let props = Properties.add_setter name (Some id_loc) param_t props in
-      props, proto
-
+      let fn_type = convert cx tparams_map (set_loc, Ast.Type.Function f) in
+      let param_t = Type.extract_setter_type fn_type in
+      let set = (Property.Explicit loc, Some id_loc, param_t) in
+      Properties.add_setter name set props, proto
 
     | { Object.Property.
         value = Object.Property.Get _ | Object.Property.Set _;
@@ -770,17 +782,18 @@ let rec convert cx tparams_map = Ast.Type.(function
     | None -> Some ([c], None, SMap.empty, None)
     | Some (cs, d, pmap, proto) -> Some (c::cs, d, pmap, proto)
   in
-  let make_dict { Object.Indexer.id; key; value; variance; _ } =
+  let make_dict loc { Object.Indexer.id; key; value; variance; _ } =
     Some { Type.
       dict_name = Option.map id snd;
+      dict_kind = Property.Explicit loc;
       key = convert cx tparams_map key;
       value = convert cx tparams_map value;
       dict_polarity = polarity variance;
     }
   in
   let add_dict loc indexer = function
-    | None -> Some ([], make_dict indexer, SMap.empty, None)
-    | Some (cs, None, pmap, proto) -> Some (cs, make_dict indexer, pmap, proto)
+    | None -> Some ([], make_dict loc indexer, SMap.empty, None)
+    | Some (cs, None, pmap, proto) -> Some (cs, make_dict loc indexer, pmap, proto)
     | Some (_, Some _, _, _) as o ->
       Flow.add_output cx
         FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));

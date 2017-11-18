@@ -101,13 +101,18 @@ class ['a] t = object(self)
     let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
     acc
 
-  | ThisClassT (_, t) -> self#type_ cx pole acc t
+  | ThisClassT (_, t, abstracts) ->
+    let acc = self#type_ cx pole acc t in
+    let acc = self#type_ cx pole acc abstracts in
+    acc
 
   | ThisTypeAppT (_, t, this, ts_opt) ->
     let acc = self#type_ cx pole acc t in
     let acc = self#type_ cx pole acc this in
     let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
     acc
+
+  | AbstractsT _ -> acc
 
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
@@ -138,7 +143,10 @@ class ['a] t = object(self)
 
   | CharSetT _ -> acc
 
-  | ClassT t -> self#type_ cx pole acc t
+  | ClassT (t, abstracts) ->
+    let acc = self#type_ cx pole acc t in
+    let acc = self#type_ cx pole acc abstracts in
+    acc
 
   | InstanceT (static, super, implements, insttype) ->
     let acc = self#type_ cx pole acc static in
@@ -302,7 +310,11 @@ class ['a] t = object(self)
     let acc = self#fun_call_type cx acc fn in
     acc
 
-  | GetStaticsT (_, t)
+  | GetStaticsT (_, t) ->
+    self#type_ cx pole_TODO acc t
+
+  | AssertNonabstractT _ -> acc
+
   | GetProtoT (_, t)
   | SetProtoT (_, t) ->
     self#type_ cx pole_TODO acc t
@@ -318,8 +330,9 @@ class ['a] t = object(self)
   | SuperT (_, _, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
   | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
-  | MixinT (_, t) -> self#type_ cx pole_TODO acc t
+  | MixinT (_, _, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
+  | AccAbstractsT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
   | AdderT (_, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
@@ -623,6 +636,7 @@ class ['a] t = object(self)
   method dict_type cx pole acc d =
     let {
       dict_name = _;
+      dict_kind = _;
       key;
       value;
       dict_polarity = p;
@@ -636,11 +650,12 @@ class ['a] t = object(self)
     |> self#smap (self#prop cx pole) acc
 
   method private prop cx pole acc = function
-    | Field (_, t, p) -> self#type_ cx (P.mult (pole, p)) acc t
-    | Method (_, t) -> self#type_ cx pole acc t
-    | Get (_, t) -> self#type_ cx pole acc t
-    | Set (_, t) -> self#type_ cx (P.inv pole) acc t
-    | GetSet (_, t1, _, t2) ->
+    | Field ((_, _, t), p) -> self#type_ cx (P.mult (pole, p)) acc t
+    | Method (_, _, t) -> self#type_ cx pole acc t
+    | Abstract (_, _, t) -> self#type_ cx pole acc t
+    | Get (_, _, t) -> self#type_ cx pole acc t
+    | Set (_, _, t) -> self#type_ cx (P.inv pole) acc t
+    | GetSet ((_, _, t1), (_, _, t2)) ->
       let acc = self#type_ cx pole acc t1 in
       let acc = self#type_ cx (P.inv pole) acc t2 in
       acc
@@ -855,7 +870,7 @@ class ['a] t = object(self)
       acc
 
   method private object_kit_slice cx acc (_, props, dict, _) =
-    let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
+    let acc = self#smap (fun acc (_, t, _) -> self#type_ cx pole_TODO acc t) acc props in
     let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
     acc
 
@@ -873,7 +888,7 @@ class ['a] t = object(self)
         let acc = self#smap (self#prop cx pole_TODO) acc props in
         let acc = self#react_resolved_object cx acc o in
         acc
-      | ResolveProp (_, props, o) ->
+      | ResolveProp (_, _, _, props, o) ->
         let acc = self#smap (self#prop cx pole_TODO) acc props in
         let acc = self#react_resolved_object cx acc o in
         acc

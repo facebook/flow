@@ -152,8 +152,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "chars", JSON_String (String_utils.CharSet.to_string chars);
     ]
 
-  | DefT (_, ClassT t) -> [
-      "type", _json_of_t json_cx t
+  | DefT (_, ClassT (t, abstracts)) -> [
+      "type", _json_of_t json_cx t;
+      "abstracts", _json_of_t json_cx abstracts
     ]
 
   | DefT (_, InstanceT (static, super, implements, instance)) -> [
@@ -188,8 +189,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ThisClassT (_, t) -> [
-      "type", _json_of_t json_cx t
+  | ThisClassT (_, t, abstracts) -> [
+      "type", _json_of_t json_cx t;
+      "abstracts", _json_of_t json_cx abstracts
     ]
 
   | ThisTypeAppT (_, t, this, targs_opt) -> (
@@ -199,6 +201,15 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ) @ [
       "thisArg", _json_of_t json_cx this;
       "type", _json_of_t json_cx t
+    ]
+
+  | AbstractsT (_, (static_abstracts, abstracts)) ->
+    let static_abstracts = SMap.keys static_abstracts in
+    let abstracts = SMap.keys abstracts in
+    let intern s = JSON_String s in
+    [
+      "staticAbstracts", JSON_Array (List.map intern static_abstracts);
+      "abstracts", JSON_Array (List.map intern abstracts)
     ]
 
   | BoundT tparam -> [
@@ -465,6 +476,18 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | AssertNonabstractT (_, _, nonabstract) ->
+    (match nonabstract with
+      | NonabstractMember (static, name) -> [
+          "target", JSON_String "Member";
+          "static", JSON_Bool static;
+          "name", JSON_String name
+        ]
+      | NonabstractClass -> [
+          "target", JSON_String "Class"
+        ]
+    )
+
   | GetProtoT (_, t)
   | SetProtoT (_, t) -> [
       "type", _json_of_t json_cx t
@@ -488,12 +511,36 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "instance", _json_of_t json_cx t;
     ]
 
-  | MixinT (_, t) -> [
+  | MixinT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
   | ToStringT (_, t) -> [
       "type", _json_of_t json_cx t
+    ]
+
+  | AccAbstractsT (_, masks, local_abstracts, t) ->
+    let intern s = JSON_String s in
+    let json_of_mask mask = JSON_Array (List.map intern (SSet.elements mask)) in
+    let json_of_la la = JSON_Array (List.map intern (SMap.keys la)) in
+    let masks =
+      let (static, nonstatic) = masks in
+      JSON_Object [
+        "static", json_of_mask static;
+        "nonstatic", json_of_mask nonstatic
+      ]
+    in
+    let local_abstracts =
+      let (static, nonstatic) = local_abstracts in
+      JSON_Object [
+        "static", json_of_la static;
+        "nonstatic", json_of_la nonstatic;
+      ]
+    in
+    [
+      "type", _json_of_t json_cx t;
+      "masks", masks;
+      "localAbstracts", local_abstracts
     ]
 
   | AdderT (_, _, l, r) -> [
@@ -1214,22 +1261,25 @@ and json_of_prop_binding_impl json_cx (name, p) = Hh_json.(
 and json_of_prop json_cx = check_depth json_of_prop_impl json_cx
 and json_of_prop_impl json_cx p = Hh_json.(
   JSON_Object (match p with
-  | Field (_loc, t, polarity) -> [
+  | Field ((_loc, _key_loc, t), polarity) -> [
       "field", _json_of_t json_cx t;
       "polarity", json_of_polarity json_cx polarity
     ]
-  | Get (_loc, t) -> [
+  | Get (_loc, _key_loc, t) -> [
       "getter", _json_of_t json_cx t;
     ]
-  | Set (_loc, t) -> [
+  | Set (_loc, _key_loc, t) -> [
       "setter", _json_of_t json_cx t;
     ]
-  | GetSet (_loc1, t1, _loc2, t2) -> [
+  | GetSet ((_loc1, _key_loc1, t1), (_loc2, _key_loc2, t2)) -> [
       "getter", _json_of_t json_cx t1;
       "setter", _json_of_t json_cx t2;
     ]
-  | Method (_loc, t) -> [
+  | Method (_loc, _key_loc, t) -> [
       "method", _json_of_t json_cx t;
+    ]
+  | Abstract (_loc, _key_loc, t) -> [
+      "abstractMethod", _json_of_t json_cx t;
     ]
 ))
 
@@ -1686,7 +1736,7 @@ and dump_t_ (depth, tvars) cx t =
       (kid c)
       (String.concat "; " (List.map (fun tp -> tp.name) tps))
       id) t
-  | ThisClassT (_, inst) -> p ~extra:(kid inst) t
+  | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t
   | DefT (_, ObjT { props_tmap; _ }) -> p t
@@ -1701,7 +1751,7 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, ArrT EmptyAT) -> p ~extra:("EmptyArray") t
   | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
-  | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
+  | DefT (_, ClassT (inst, _)) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT ((_, id), use_desc) ->
@@ -1719,6 +1769,7 @@ and dump_t_ (depth, tvars) cx t =
             (String.concat "; " (List.map kid args))
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
+  | AbstractsT _ -> p t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, MaybeT arg) -> p ~extra:(kid arg) t
   | DefT (_, IntersectionT rep) -> p ~extra:(spf "[%s]"
@@ -1832,8 +1883,21 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveObject -> "ResolveObject"
       | ResolveDict (_, todo, acc) ->
         spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
-      | ResolveProp (k, todo, acc) ->
-        spf "ResolveProp (%s, %s, %s)" k (props todo) (resolved_object acc)
+      | ResolveProp (k, kind, key_loc, todo, acc) ->
+        spf "ResolveProp (%s, %s, %s, %s, %s)"
+          k
+          (match kind with
+          | Property.Member (name, loc) ->
+            spf "Member (%s, %s)" name (string_of_loc loc)
+          | Property.Explicit loc ->
+            spf "Explicit (%s)" (string_of_loc loc)
+          | Property.Custom (msg, loc) ->
+            spf "Custom (%s, %s)" msg (string_of_loc loc))
+          (key_loc |> (function
+            | Some l -> "Some " ^ (string_of_loc l)
+            | None -> "None"))
+          (props todo)
+          (resolved_object acc)
     in
     let simplify_prop_type = SimplifyPropType.(function
       | ArrayOf -> "ArrayOf"
@@ -1885,7 +1949,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | Some {dict_polarity=p; _} -> [(Polarity.sigil p)^"[]"]
     | None -> []
     in
-    let xs = SMap.fold (fun k (t,_) xs ->
+    let xs = SMap.fold (fun k (_,t,_) xs ->
       let opt = match t with DefT (_, OptionalT _) -> "?" | _ -> "" in
       (k^opt)::xs
     ) props xs in
@@ -1968,6 +2032,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (dump_reason cx r)
       id
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
+  | AccAbstractsT (_, _, _, arg) -> p ~extra:(kid arg) t
   | AdderT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
@@ -1976,6 +2041,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertBinaryInRHST _ -> p t
   | AssertForInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
+  | AssertNonabstractT _ -> p t
   | AssertRestParamT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
@@ -2041,7 +2107,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
   | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
-  | MixinT (_, arg) -> p ~extra:(kid arg) t
+  | MixinT (_, _, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignToT (_, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
@@ -2157,16 +2223,18 @@ and dump_prop ?(depth=3) cx p =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   match p with
-  | Field (_loc, t, polarity) ->
+  | Field ((_loc, _key_loc, t), polarity) ->
     spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
-  | Get (_loc, t) ->
+  | Get (_loc, _key_loc, t) ->
     spf "Get %s" (kid t)
-  | Set (_loc, t) ->
+  | Set (_loc, _key_loc, t) ->
     spf "Set %s" (kid t)
-  | GetSet (_loc1, t1, _loc2, t2) ->
+  | GetSet ((_loc1, _key_loc1, t1), (_loc2, _key_loc2, t2)) ->
     spf "Get %s Set %s" (kid t1) (kid t2)
-  | Method (_loc, t) ->
+  | Method (_loc, _key_loc, t) ->
     spf "Method %s" (kid t)
+  | Abstract (_loc, _key_loc, t) ->
+    spf "Abstract %s" (kid t)
 
 (*****************************************************)
 
@@ -2713,3 +2781,33 @@ let dump_flow_error =
         spf "EDeprecatedDeclareExports (%s)" (string_of_loc loc)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
+    | EUnimplementedAbstracts {
+        use_op; reason; reason_op; abstracts; static_abstracts
+      } ->
+        let abstracts = List.map (dump_reason cx) abstracts in
+        let static_abstracts = List.map (dump_reason cx) static_abstracts in
+        spf "EUnimplementedAbstracts { %s; %s; %s; %s; %s }"
+          (spf "use_op = %s" (string_of_use_op use_op))
+          (spf "reason = %s" (dump_reason cx reason))
+          (spf "reason_op = %s" (dump_reason cx reason_op))
+          (spf "abstracts = [%s]" (String.concat "; " abstracts))
+          (spf "static_abstracts = [%s]" (String.concat "; " static_abstracts))
+    | EUnimplementedAbstract { use_op; reason; reason_op; static; name } ->
+        spf "EUnimplementedAbstracts { %s; %s; %s; %s; %s }"
+          (spf "use_op = %s" (string_of_use_op use_op))
+          (spf "reason = %s" (dump_reason cx reason))
+          (spf "reason_op = %s" (dump_reason cx reason_op))
+          (spf "static = %b" static)
+          (spf "name = %s" name)
+    | EAbstractMask { nonabstract; abstract } ->
+        spf "EAbstractMask { nonabstract = %s; abstract = %s }"
+          (dump_reason cx nonabstract)
+          (dump_reason cx abstract)
+    | EAbstractSet { abstract; setter } ->
+        spf "EAbstractSet { abstract = %s; setter = %s }"
+          (dump_reason cx abstract)
+          (dump_reason cx setter)
+    | EIllegalMixin { reason; reason_op } ->
+        spf "EIllegalMixin { reason = %s; reason_op = %s }"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)

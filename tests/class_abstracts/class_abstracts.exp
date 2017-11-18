@@ -1,0 +1,362 @@
+Error: async.js:5
+  5: let a = new A; //ng
+             ^^^^^ new `A`. Unimplemented abstract(s) found in
+  5: let a = new A; //ng
+                 ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract async nonstatic(): Promise<number>;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+    3:   abstract static async static(): Promise<string>;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: async.js:13
+ 13: class C extends A {
+           ^ C. Cannot extend
+ 13: class C extends A {
+                     ^ A
+  Property `nonstatic` is incompatible:
+           v------------------
+     14:   async nonstatic() {
+     15:     return "another string"; //ng, non-number
+     16:   }
+           ^ async function. This type is incompatible with
+      2:   abstract async nonstatic(): Promise<number>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+      The return is incompatible:
+         15:     return "another string"; //ng, non-number
+                 ^^^^^^^^^^^^^^^^^^^^^^^^ async return. Has some incompatible type argument with
+          2:   abstract async nonstatic(): Promise<number>;
+                                           ^^^^^^^^^^^^^^^ Promise
+          Type argument `R` is incompatible:
+             15:     return "another string"; //ng, non-number
+                            ^^^^^^^^^^^^^^^^ string. This type is incompatible with
+              2:   abstract async nonstatic(): Promise<number>;
+                                                       ^^^^^^ number
+
+Error: async.js:13
+ 13: class C extends A {
+           ^ C. Cannot extend
+ 13: class C extends A {
+                     ^ A
+  Property `static` is incompatible:
+           v----------------------
+     17:   static async static() {
+     18:     return 13; //ng, non-string
+     19:   }
+           ^ async function. This type is incompatible with
+      3:   abstract static async static(): Promise<string>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+      The return is incompatible:
+         18:     return 13; //ng, non-string
+                 ^^^^^^^^^^ async return. Has some incompatible type argument with
+          3:   abstract static async static(): Promise<string>;
+                                               ^^^^^^^^^^^^^^^ Promise
+          Type argument `R` is incompatible:
+             18:     return 13; //ng, non-string
+                            ^^ number. This type is incompatible with
+              3:   abstract static async static(): Promise<string>;
+                                                           ^^^^^^ string
+
+Error: declare.js:8
+  8: let a = new A; //ng
+             ^^^^^ new `A`. Unimplemented abstract(s) found in
+  8: let a = new A; //ng
+                 ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract static create(): this;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+    3:   abstract static s(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+    4:   abstract clone(): this;
+         ^^^^^^^^^^^^^^^^^^^^^^ abstract method
+    5:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: declare.js:14
+ 14: let partial = new Partial; //ng
+                   ^^^^^^^^^^^ new `Partial`. Unimplemented abstract(s) found in
+ 14: let partial = new Partial; //ng
+                       ^^^^^^^ abstracts of `Partial`
+  Abstract(s):
+    3:   abstract static s(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+    5:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: extends.js:16
+ 16: let B5: Class<A> = A; //ng
+             ^^^^^^^^ abstracts of `A`. Unimplemented abstract(s) found in
+ 16: let B5: Class<A> = A; //ng
+                        ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:2
+    3:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:3
+
+Error: implement.js:29
+ 29:   set x(k: string): void {} //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ setter. A setter without a getter cannot implement
+ 24:   abstract x(k: string): void;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: implement.js:30
+ 30:   static set y(k: string): void {} //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ setter. A setter without a getter cannot implement
+ 25:   abstract static y(k: string): void;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: implement.js:66
+ 66: let amc = new AbstractMethodConcrete; //ng
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^ new `AbstractMethodConcrete`. Unimplemented abstract(s) found in
+ 66: let amc = new AbstractMethodConcrete; //ng
+                   ^^^^^^^^^^^^^^^^^^^^^^ abstracts of `AbstractMethodConcrete`
+  Abstract(s):
+   63:   abstract x(): string;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+   64:   abstract static y(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: import.js:3
+  3: let a1: A = new A; //ng
+                 ^^^^^ new `A`. Unimplemented abstract(s) found in
+  3: let a1: A = new A; //ng
+                     ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:2
+    3:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:3
+
+Error: import.js:4
+  4: let A2: Class<A> = A; //ng
+             ^^^^^^^^ abstracts of `A`. Unimplemented abstract(s) found in
+  4: let A2: Class<A> = A; //ng
+                        ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:2
+    3:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:3
+
+Error: import.js:6
+  6: let s1: string = A.static_m("qwerty"); //ng
+                      ^^^^^^^^^^^^^^^^^^^^ call of method `static_m`. Unimplemented abstract(s) found in
+  6: let s1: string = A.static_m("qwerty"); //ng
+                      ^ abstracts of `A`
+  Abstract(s):
+    2:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:2
+    3:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. See: A.js:3
+
+Error: mask.js:7
+  7:   abstract x(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+  2:   x: () => string;
+       ^^^^^^^^^^^^^^^^ field
+
+Error: mask.js:8
+  8:   abstract static y(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+  3:   static y: () => string;
+       ^^^^^^^^^^^^^^^^^^^^^^^ field
+
+Error: mask.js:17
+ 17:   abstract x(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 12:   get x(): () => string { return () => "x"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ getter
+
+Error: mask.js:18
+ 18:   abstract static y(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 13:   static get y(): () => string { return () => "static y"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ getter
+
+Error: mask.js:27
+ 27:   abstract x(k: string): void; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 22:   set x(k: string): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ setter
+
+Error: mask.js:28
+ 28:   abstract static y(k: string): void; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 23:   static set y(k: string): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ setter
+
+Error: mask.js:39
+ 39:   abstract x(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 32:   get x(): () => string { return () => "x"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ getter
+
+Error: mask.js:39
+ 39:   abstract x(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 33:   set x(k: string): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ setter
+
+Error: mask.js:40
+ 40:   abstract static y(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 34:   static get y(): () => string { return () => "static y"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ getter
+
+Error: mask.js:40
+ 40:   abstract static y(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 35:   static set y(k: string): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ setter
+
+Error: mask.js:49
+ 49:   abstract x(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 44:   x(): string { return "x"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ method
+
+Error: mask.js:50
+ 50:   abstract static y(): string; //ng
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method. Cannot mask non-abstract
+ 45:   static y(): string { return "static y"; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method
+
+Error: method_body.js:14
+ 14:     super.n = () => 5; //ng
+         ^^^^^^^ statics of `A`. Covariant property `n` incompatible with contravariant use in
+ 14:     super.n = () => 5; //ng
+         ^^^^^^^ assignment of property `n`
+
+Error: method_body.js:15
+ 15:     let k = super.create; //ng
+                       ^^^^^^ property `create`. Unimplemented abstract static `create` found in
+ 12: class AbstractSupers extends A {
+                                  ^ abstracts of `A`
+
+Error: method_body.js:16
+ 16:     return super.create(); //ng
+                ^^^^^^^^^^^^^^ call of method `create`. Unimplemented abstract static `create` found in
+ 12: class AbstractSupers extends A {
+                                  ^ abstracts of `A`
+
+Error: method_body.js:19
+ 19:     super.s = () => "a string"; //ng
+               ^ property `s`. Covariant property `s` incompatible with contravariant use in
+ 19:     super.s = () => "a string"; //ng
+         ^^^^^^^ assignment of property `s`
+
+Error: method_body.js:20
+ 20:     let k = super.clone; //ng
+                       ^^^^^ property `clone`. Unimplemented abstract `clone` found in
+ 20:     let k = super.clone; //ng
+                 ^^^^^ abstracts of `A`
+
+Error: method_body.js:21
+ 21:     return super.clone(); //ng
+                ^^^^^^^^^^^^^ call of method `clone`. Unimplemented abstract `clone` found in
+ 21:     return super.clone(); //ng
+                ^^^^^ abstracts of `A`
+
+Error: mixin.js:12
+ 12: declare class K2 extends Concrete1 mixins Abstract2 {} //ng
+                   ^^ K2. Unimplemented abstract(s) found in
+ 12: declare class K2 extends Concrete1 mixins Abstract2 {} //ng
+                                               ^^^^^^^^^ abstracts of `Abstract2`
+  Abstract(s):
+    7:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:13
+ 13: declare class K3 extends Abstract1 mixins Concrete2 {} //ng
+                   ^^ K3. Unimplemented abstract(s) found in
+ 13: declare class K3 extends Abstract1 mixins Concrete2 {} //ng
+                              ^^^^^^^^^ abstracts of `Abstract1`
+  Abstract(s):
+    4:   abstract m(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:14
+ 14: declare class K4 extends Abstract1 mixins Abstract2 {} //ng
+                   ^^ K4. Unimplemented abstract(s) found in
+ 14: declare class K4 extends Abstract1 mixins Abstract2 {} //ng
+                              ^^^^^^^^^ abstracts of `Abstract1`
+  Abstract(s):
+    4:   abstract m(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:14
+ 14: declare class K4 extends Abstract1 mixins Abstract2 {} //ng
+                   ^^ K4. Unimplemented abstract(s) found in
+ 14: declare class K4 extends Abstract1 mixins Abstract2 {} //ng
+                                               ^^^^^^^^^ abstracts of `Abstract2`
+  Abstract(s):
+    7:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:18
+ 18: declare class K5 mixins AbstractIsect {} //ng
+                             ^^^^^^^^^^^^^ AbstractIsect. Illegal mixin
+ 17: declare var AbstractIsect: T;
+                                ^ T
+
+Error: mixin.js:27
+ 27: let k2 = mix(Abstract1, Concrete2); //ng
+                  ^^^^^^^^^ Abstract1
+ 21:   declare class K extends C1 mixins C2 {}
+                     ^ K. Unimplemented abstract(s) found in
+ 21:   declare class K extends C1 mixins C2 {}
+                               ^^ abstracts of `Abstract1`
+  Abstract(s):
+    4:   abstract m(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:28
+ 28: let k3 = mix(Concrete1, Abstract2); //ng
+                             ^^^^^^^^^ Abstract2
+ 21:   declare class K extends C1 mixins C2 {}
+                     ^ K. Unimplemented abstract(s) found in
+ 21:   declare class K extends C1 mixins C2 {}
+                                         ^^ abstracts of `Abstract2`
+  Abstract(s):
+    7:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:32
+ 32: class K extends mixin(Abstract1, Abstract2) {}
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `mixin`. Unimplemented abstract(s) found in
+ 32: class K extends mixin(Abstract1, Abstract2) {}
+                           ^^^^^^^^^ abstracts of `Abstract1`
+  Abstract(s):
+    4:   abstract m(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: mixin.js:32
+ 32: class K extends mixin(Abstract1, Abstract2) {}
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `mixin`. Unimplemented abstract(s) found in
+ 32: class K extends mixin(Abstract1, Abstract2) {}
+                                      ^^^^^^^^^ abstracts of `Abstract2`
+  Abstract(s):
+    7:   abstract n(): number;
+         ^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: static_property.js:12
+ 12:   return this.static_method();
+              ^^^^^^^^^^^^^^^^^^^^ call of method `static_method`. Unimplemented abstract(s) found in
+ 12:   return this.static_method();
+              ^^^^ abstracts of `B`
+  Abstract(s):
+    9:   abstract static static_method(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+Error: static_property.js:17
+ 17: let s2: string = C.static_field(); //ng
+                      ^^^^^^^^^^^^^^^^ call of method `static_field`. Unimplemented abstract(s) found in
+ 17: let s2: string = C.static_field(); //ng
+                      ^ abstracts of `C`
+  Abstract(s):
+    9:   abstract static static_method(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method
+
+
+Found 41 errors

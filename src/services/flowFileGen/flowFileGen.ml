@@ -24,7 +24,7 @@ let exports_map cx module_name =
 
 let rec mark_declared_classes name t env = Codegen.(Type.(
   match resolve_type t env with
-  | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
+  | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;})), _) ->
     set_class_name class_id name env
   | DefT (_, PolyT (_, t, _)) ->
     mark_declared_classes name t env
@@ -119,7 +119,7 @@ let gen_class_body =
      *)
     let is_static_name_field = static && field_name = "name" && (
       match p with
-      | Field (_, t, _) ->
+      | Field ((_, _, t), _) ->
         (match resolve_type t env with
         | DefT (_, StrT AnyLiteral) -> true
         | _ -> false)
@@ -128,7 +128,7 @@ let gen_class_body =
 
     let is_empty_constructor = not static && field_name = "constructor" && (
       match p with
-      | Method (_, t) ->
+      | Method (_, _, t) ->
         (match resolve_type t env with
         | DefT (_, FunT (_, _, { params; return_t; _ })) ->
           (params = []) && (
@@ -144,8 +144,7 @@ let gen_class_body =
     then env
     else (
       add_str "  " env
-        |> gen_if static (add_str "static ")
-        |> gen_prop field_name p
+        |> gen_prop ~static field_name p
         |> add_str ";\n"
     )
   )) in
@@ -192,17 +191,18 @@ class unexported_class_visitor = object(self)
       let seen = TypeSet.add t seen in
       match t with
       (* class_id = 0 is top of the inheritance chain *)
-      | DefT (_, InstanceT (_, _, _, {class_id; _;}))
+      | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;})), _)
         when class_id = 0 || ISet.mem class_id imported_classids ->
         (env, seen, imported_classids)
 
-      | DefT (r, InstanceT (static, extends, implements, {
+      | ThisClassT (_, DefT (r, InstanceT (static, extends, implements, {
           class_id;
           fields_tmap;
           methods_tmap;
           structural;
           _
-        })) when not (has_class_name class_id env || Reason.is_lib_reason r) ->
+        })), _)
+        when not (has_class_name class_id env || Reason.is_lib_reason r) ->
         let class_name = next_class_name env in
 
         (**
@@ -221,7 +221,7 @@ class unexported_class_visitor = object(self)
         let env =
           match resolve_type extends env with
           | ObjProtoT _ -> env
-          | DefT (_, ClassT t) when (
+          | DefT (_, ClassT (t, _)) when (
               match resolve_type t env with | ObjProtoT _ -> true | _ -> false
             ) -> env
           | ThisTypeAppT (_, extends, _, None) ->
@@ -244,8 +244,12 @@ class unexported_class_visitor = object(self)
 
         let fields = find_props fields_tmap env in
         let methods = find_props methods_tmap env in
-        let env = gen_class_body static fields methods env |> add_str "\n" in
+        let env =
+          gen_class_body static fields methods env |> add_str "\n" in
         (env, seen, imported_classids)
+
+      | DefT (_, InstanceT _) ->
+        failwith "Internal Error: `unexported_class_visitor` reached an InstanceT"
 
       | t -> super#type_ cx pole (env, seen, imported_classids) t
     )
@@ -282,7 +286,7 @@ let gen_local_classes =
     in
     let rec fold_imported_classid _name t set = Type.(
       match Codegen.resolve_type t env with
-      | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
+      | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;})), _) ->
         ISet.add class_id set
       | DefT (_, PolyT (_, t, _)) -> fold_imported_classid _name t set
       | _ -> set
@@ -328,7 +332,7 @@ let gen_named_exports =
           mixins = _;
           structural;
           _;
-        }))) ->
+        })), _) ->
         let fields = Codegen.find_props fields_tmap env in
         let methods = Codegen.find_props methods_tmap env in
         let env = add_str "declare export " env in

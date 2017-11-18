@@ -109,12 +109,12 @@ type reason_desc =
   | ROptional of reason_desc
   | RMaybe of reason_desc
   | RRestArray of reason_desc
-  | RAbstract of reason_desc
   | RTypeApp of reason_desc
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
   | RStatics of reason_desc
   | RSuperOf of reason_desc
+  | RAbstractsOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
   | RVarianceCheck of reason_desc
@@ -127,6 +127,8 @@ type reason_desc =
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
+  | RPropertyDef of reason_desc_property
+  | RMember of string
 
   | RReactProps
   | RReactElement of string option
@@ -146,6 +148,13 @@ and reason_desc_function =
   | RGenerator
   | RAsyncGenerator
   | RNormal
+
+and reason_desc_property =
+  | RFieldDef
+  | RGetterDef
+  | RSetterDef
+  | RMethodDef
+  | RAbstractMethodDef
 
 type reason
 type t = reason (* convenience *)

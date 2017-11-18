@@ -41,16 +41,18 @@ class ['a] t = object(self)
           if t'' == t' then t
           else BoundT t''
       | ExistsT _ -> t
-      | ThisClassT (r, t') ->
+      | ThisClassT (r, t', abstracts) ->
           let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else ThisClassT (r, t'')
+          let abstracts' = self#type_ cx map_cx abstracts in
+          if t'' == t' && abstracts' == abstracts then t
+          else ThisClassT (r, t'', abstracts')
       | ThisTypeAppT (r, t1, t2, tlist_opt) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
           if t1' == t1 && t2' == t2 && tlist_opt' == tlist_opt then t
           else ThisTypeAppT(r, t1', t2', tlist_opt')
+      | AbstractsT _ -> t
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -162,10 +164,11 @@ class ['a] t = object(self)
           if arrtype == arrtype' then t
           else ArrT arrtype'
       | CharSetT _ -> t
-      | ClassT t' ->
+      | ClassT (t', abstracts) ->
           let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else ClassT t''
+          let abstracts' = self#type_ cx map_cx abstracts in
+          if t'' == t' && abstracts' == abstracts then t
+          else ClassT (t'', abstracts')
       | InstanceT (st, su, impl, instt) ->
           let st' = self#type_ cx map_cx st in
           let su' = self#type_ cx map_cx su in
@@ -401,14 +404,15 @@ class ['a] t = object(self)
     else
       { flags; dict_t = dict_t'; props_tmap = props_tmap'; proto_t = proto_t' }
 
-  method dict_type cx map_cx ({dict_name; key; value; dict_polarity} as t) =
+  method dict_type cx map_cx t =
+    let {dict_name; dict_kind; key; value; dict_polarity} = t in
     let key' = self#type_ cx map_cx key in
     let value' = self#type_ cx map_cx value in
     if key' == key && value' == value then t
     else
       let key = key' in
       let value = value' in
-      {dict_name; key; value; dict_polarity}
+      {dict_name; dict_kind; key; value; dict_polarity}
 
   method arr_type cx map_cx t =
     match t with
@@ -506,6 +510,7 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else GetStaticsT (r, t'')
+    | AssertNonabstractT _ -> t
     | GetProtoT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
@@ -539,14 +544,18 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ImplementsT (use_op, t'')
-    | MixinT (r, t') ->
+    | MixinT (use_op, r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else MixinT (r, t'')
+        else MixinT (use_op, r, t'')
     | ToStringT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ToStringT (r, t'')
+    | AccAbstractsT (r, masks, local_abstracts, t') ->
+       let t'' = self#type_ cx map_cx t' in
+       if t'' == t' then t
+       else AccAbstractsT (r, masks, local_abstracts, t'')
     | AdderT (r, flip, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1036,7 +1045,7 @@ class ['a] t = object(self)
         if r' == r then t
         else Resolve r'
     | Super ((reason, props, dict, flags), r) ->
-        let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
+        let props' = SMap.ident_map (fun (k, t, b) -> (k, self#type_ cx map_cx t, b)) props in
         let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
         let r' = self#resolve cx map_cx r in
         if r' == r && props' == props then t
@@ -1205,10 +1214,10 @@ class ['a] t = object(self)
         if tlist' == tlist && resolvednelist' == resolvednelist then t
         else List (tlist', resolvednelist', join)
 
-  method resolved_prop cx map_cx ((t, own) as prop) =
+  method resolved_prop cx map_cx ((k, t, own) as prop) =
     let t' = self#type_ cx map_cx t in
     if t' == t then prop
-    else (t', own)
+    else (k, t', own)
 
   method resolved cx map_cx t =
     let t' = Nel.ident_map (fun ((r, props, dict, flags) as slice) ->
@@ -1313,11 +1322,11 @@ class ['a] t = object(self)
         let obj' = self#resolved_object cx map_cx obj in
         if dict' == dict && props' == props && obj' == obj then t
         else ResolveDict (dict', props', obj')
-    | ResolveProp (s, props, obj) ->
+    | ResolveProp (s, loc, key_loc, props, obj) ->
         let props' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
         let obj' = self#resolved_object cx map_cx obj in
         if props' == props && obj' == obj then t
-        else ResolveProp (s, props', obj')
+        else ResolveProp (s, loc, key_loc, props', obj')
 
   method stack_tail cx map_cx tail = ListUtils.ident_map (self#stack_tail_elem cx map_cx) tail
 
