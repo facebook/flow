@@ -887,21 +887,24 @@ class mapper = object(this)
 
   method object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
-    let (loc, { key; value; _method; shorthand }) = prop in
-    let key' = this#object_key key in
-    let value' = match value with
-      | Init expr ->
-        let expr' = this#expression expr in
-        if expr == expr' then value else Init expr'
-      | Get (loc, fn) ->
-        let fn' = this#function_ fn in
-        if fn == fn' then value else Get (loc, fn')
-      | Set (loc, fn) ->
-        let fn' = this#function_ fn in
-        if fn == fn' then value else Set (loc, fn')
-    in
-    if key == key' && value == value' then prop
-    else (loc, { key = key'; value = value'; _method; shorthand })
+    match prop with
+    | loc, Init { key; value; _method; shorthand } ->
+      let key' = this#object_key key in
+      let value' = this#expression value in
+      if key == key' && value == value' then prop
+      else (loc, Init { key = key'; value = value'; _method; shorthand })
+
+    | loc, Get { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Get { key = key'; value = (fn_loc, fn') })
+
+    | loc, Set { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Set { key = key'; value = (fn_loc, fn') })
 
   method object_key (key: Loc.t Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in

@@ -54,10 +54,12 @@ class ruleset_depth = object(self)
     let obj_expr =
       let prop =
         let open E.Object.Property in
-        E.Object.Property (Loc.none, {key = Identifier (Loc.none, pname);
-                    value = Init (Loc.none, expr);
-                    _method = false;
-                    shorthand = false}) in
+        E.Object.Property (Loc.none, Init {
+          key = Identifier (Loc.none, pname);
+          value = Loc.none, expr;
+          _method = false;
+          shorthand = false
+        }) in
       let properties = [prop] in
       E.Object.(E.Object {properties}) in
     let obj_type =

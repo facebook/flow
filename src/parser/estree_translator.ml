@@ -865,26 +865,26 @@ end with type t = Impl.t) = struct
 
   and object_property = Expression.Object.(function
     | Property (loc, prop) -> Property.(
-      (* This is a slight deviation from the Mozilla spec. In the spec, an object
-        * property is not a proper node, and lacks a location and a "type" field.
-        * Esprima promotes it to a proper node and that is useful, so I'm
-        * following their example *)
-      let key, computed = (match prop.key with
+      let key, value, kind, method_, shorthand = match prop with
+      | Init { key; value; _method; shorthand } ->
+        key, expression value, "init", _method, shorthand
+      | Get { key; value = (loc, func) } ->
+        key, function_expression (loc, func), "get", false, false
+      | Set { key; value = (loc, func) } ->
+        key, function_expression (loc, func), "set", false, false
+      in
+      let key, computed = match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-      | Computed expr -> expression expr, true)  in
-      let value, kind = match prop.value with
-      | Init value -> expression value, "init"
-      | Get value -> function_expression value, "get"
-      | Set value -> function_expression value, "set"
+      | Computed expr -> expression expr, true
       in
       node "Property" loc [|
         "key", key;
         "value", value;
         "kind", string kind;
-        "method", bool prop._method;
-        "shorthand", bool prop.shorthand;
+        "method", bool method_;
+        "shorthand", bool shorthand;
         "computed", bool computed;
       |]
     )

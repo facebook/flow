@@ -2097,19 +2097,21 @@ and export_statement cx loc
 
 and object_prop cx map = Ast.Expression.Object.(function
   (* named prop *)
-  | Property (_, { Property.
+  | Property (_, Property.Init {
       key =
         Property.Identifier (loc, name) |
         Property.Literal (loc, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = Property.Init v; _ }) ->
+      value = v; _ }) ->
     let t = expression cx v in
     Properties.add_field name Neutral (Some loc) t map
 
   (* literal LHS *)
-  | Property (loc, { Property.key = Property.Literal _; _ }) ->
+  | Property (loc, Property.Init { key = Property.Literal _; _ })
+  | Property (loc, Property.Get { key = Property.Literal _; _ })
+  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
     map
@@ -2120,10 +2122,10 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (loc, { Property.
+  | Property (loc, Property.Get {
       key = Property.Identifier (id_loc, name);
-      value = Property.Get (vloc, func);
-      _ }) ->
+      value = (vloc, func);
+    }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let return_t = Type.extract_getter_type function_type in
@@ -2135,10 +2137,10 @@ and object_prop cx map = Ast.Expression.Object.(function
     end
 
   (* unsafe setter property *)
-  | Property (loc, { Property.
+  | Property (loc, Property.Set {
       key = Property.Identifier (id_loc, name);
-      value = Property.Set (vloc, func);
-      _ }) ->
+      value = (vloc, func);
+    }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let param_t = Type.extract_setter_type function_type in
@@ -2151,24 +2153,23 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
-  | Property (loc, { Property.
-      key = Property.Computed _;
-      value = Property.Get _ | Property.Set _;
-      _
-    }) ->
+  | Property (loc, Property.Get { key = Property.Computed _; _ })
+  | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
     map
 
   (* computed LHS silently ignored for now *)
-  | Property (_, { Property.key = Property.Computed _; _ }) ->
+  | Property (_, Property.Init { key = Property.Computed _; _ }) ->
     map
 
   (* spread prop *)
   | SpreadProperty _ ->
     map
 
-  | Property (_, { Property.key = Property.PrivateName _; _ }) ->
+  | Property (_, Property.Init { key = Property.PrivateName _; _ })
+  | Property (_, Property.Get { key = Property.PrivateName _; _ })
+  | Property (_, Property.Set { key = Property.PrivateName _; _ }) ->
     failwith "Internal Error: Non-private field with private name"
 )
 
@@ -2220,9 +2221,9 @@ and object_ cx reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, proto, Some result
-    | Property (_, { Property.
+    | Property (_, Property.Init {
         key = Property.Computed k;
-        value = Property.Init v;
+        value = v;
         _method = _; shorthand = _;
       }) ->
         let k = expression cx k in
@@ -2232,14 +2233,14 @@ and object_ cx reason ?(allow_sealed=true) props =
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
         sealed, SMap.empty, proto, Some result
-    | Property (_, { Property.
+    | Property (_, Property.Init {
         key =
           Property.Identifier (_, "__proto__") |
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String "__proto__";
             _;
           });
-        value = Property.Init v;
+        value = v;
         _method = false;
         shorthand = false;
       }) ->

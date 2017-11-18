@@ -410,26 +410,22 @@ class mapper = object(this)
       (* Initialize dependence info for HeapLocs implied by the obj literal *)
       let open Ast.Expression.Object in
       let { properties=properties } = o' in
-      List.iter
-        (fun prop ->
-          match prop with
-          | Property
-            (_, { Property.key=key;
-                  value=value;
-                  _method=_;
-                  shorthand=_ }) ->
-            (match value, key with
-            | Property.Init (eloc, _),
-              Property.Identifier (_, name) ->
-              let dkey = DepKey.HeapLoc (loc, name) in
-              let dep =
-                { typeDep = Dep.Depends [DepKey.Temp eloc];
-                  valDep = Dep.Depends [DepKey.Temp eloc] } in
-                  dep_map <- DepMap.add dkey dep dep_map
-            | _, _ -> ())
-          | SpreadProperty _ -> ())
-      properties
-      ;
+      List.iter (function
+        | Property (_, Property.Init {
+            key = Property.Identifier (_, name);
+            value = (eloc, _);
+            _method = _;
+            shorthand = _;
+          }) ->
+            let dkey = DepKey.HeapLoc (loc, name) in
+            let dep = {
+              typeDep = Dep.Depends [DepKey.Temp eloc];
+              valDep = Dep.Depends [DepKey.Temp eloc]
+            } in
+            dep_map <- DepMap.add dkey dep dep_map
+        | Property _ -> ()
+        | SpreadProperty _ -> ()
+      ) properties;
       loc, Ast.Expression.Object o'
 
     | loc, Assignment a ->

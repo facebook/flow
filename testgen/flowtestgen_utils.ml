@@ -146,10 +146,10 @@ let rec string_of_pattern (pattern : Loc.t P.t') =
 and string_of_expr (expr : Loc.t E.t') =
   let string_of_proplist plist =
     let helper prop = match prop with
-      | E.Object.Property (_, p) ->
+      | E.Object.Property (_, E.Object.Property.Init p) ->
         let open E.Object.Property in
         (match p.key, p.value with
-         | Identifier (_, name), Init (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
          | _ -> failwith "Unsupported expression")
       | _ -> failwith "Unsupported property" in
     String.concat ", " (List.map helper plist) in
@@ -469,8 +469,7 @@ module Config = struct
 
     (* get all the properties *)
     let prop_list = (List.map (fun p -> match p with
-        | Property (_, prop) ->
-          let k = E.Object.Property.(prop.key) in
+        | Property (_, E.Object.Property.Init { key = k; value = (_, e); _ }) ->
           let k = (match k with
               | E.Object.Property.Literal (_, id) -> Ast.Literal.(match id.value with
                   | String s ->
@@ -481,12 +480,15 @@ module Config = struct
                     s
                   | _ -> failwith "Config key can only be a string")
               | _ -> failwith "Config key can only be a string literal.") in
-          let v = E.Object.Property.(prop.value) in
-          let v = (match v with
-              | E.Object.Property.Init (_, e) -> get_value e
-              | _ -> failwith "Config values can only be expressions.") in
+          let v = get_value e in
           (k, v)
-        | _ -> failwith "Spread properties are not allowed") ast.properties) in
+        | Property (_, E.Object.Property.Get _) ->
+          failwith "Getter properties are not allowed"
+        | Property (_, E.Object.Property.Set _) ->
+          failwith "Setter properties are not allowed"
+        | _ ->
+          failwith "Spread properties are not allowed"
+    ) ast.properties) in
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
@@ -505,8 +507,8 @@ module Config = struct
       let open E.Object.Property in
       List.map (fun (k, v) ->
           let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
-          let value = Init (Loc.none, expr_of_value v) in
-          Property (Loc.none, {key;
+          let value = Loc.none, expr_of_value v in
+          Property (Loc.none, Init {key;
                                value;
                                _method = false;
                                shorthand = false})) c in
@@ -711,6 +713,6 @@ let test_code (code : string) : string option =
 
 let is_typecheck engine_name = engine_name = "union"
 
-let flow_check (code : Loc.t Ast.program) : string option = 
+let flow_check (code : Loc.t Ast.program) : string option =
   ignore code;
   None

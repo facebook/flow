@@ -578,27 +578,28 @@ and Expression : sig
     }
   end
   module Object : sig
-    (* This is a slight deviation from the Mozilla spec. In the spec, an object
-      * property is not a proper node, and lacks a location and a "type" field.
-      * Esprima promotes it to a proper node and that is useful, so I'M
-      * following their example *)
     module Property : sig
       type 'M key =
         | Literal of ('M * Literal.t)
         | Identifier of 'M Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of 'M Expression.t
-      type 'M value =
-        | Init of 'M Expression.t
-        | Get of ('M * 'M Function.t)
-        | Set of ('M * 'M Function.t)
       type 'M t = 'M * 'M t'
-      and 'M t' = {
-        key: 'M key;
-        value: 'M value;
-        _method: bool;
-        shorthand: bool;
-      }
+      and 'M t' =
+        | Init of {
+            key: 'M key;
+            value: 'M Expression.t;
+            _method: bool;
+            shorthand: bool;
+          }
+        | Get of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Set of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
     end
     module SpreadProperty : sig
       type 'M t = 'M * 'M t'

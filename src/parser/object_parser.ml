@@ -181,21 +181,17 @@ module Object
     and get env start_loc =
       let key, (end_loc, fn) = getter_or_setter env true in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Get {
         key;
-        value = Property.Get (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     and set env start_loc =
       let key, (end_loc, fn) = getter_or_setter env false in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Set {
         key;
-        value = Property.Set (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     (* #prod-PropertyDefinition *)
@@ -324,9 +320,9 @@ module Object
         let end_loc, (value, shorthand, _method, errs) = with_loc (
           parse_init ~key ~async ~generator
         ) env in
-        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, {
+        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, Init {
           key;
-          value = Init value;
+          value;
           _method;
           shorthand;
         }), errs
