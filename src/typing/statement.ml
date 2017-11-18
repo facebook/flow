@@ -2121,15 +2121,6 @@ and object_prop cx map = Ast.Expression.Object.(function
     let t = expression cx (fn_loc, Ast.Expression.Function func) in
     Properties.add_field name Neutral (Some loc) t map
 
-  (* literal LHS *)
-  | Property (loc, Property.Init { key = Property.Literal _; _ })
-  | Property (loc, Property.Method { key = Property.Literal _; _ })
-  | Property (loc, Property.Get { key = Property.Literal _; _ })
-  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
-    Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-    map
-
   (* With the enable_unsafe_getters_and_setters option set, we enable some
    * unsafe support for getters and setters. The main unsafe bit is that we
    * don't properly havok refinements when getter and setter methods are called.
@@ -2137,7 +2128,12 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe getter property *)
   | Property (loc, Property.Get {
-      key = Property.Identifier (id_loc, name);
+      key =
+        Property.Identifier (id_loc, name) |
+        Property.Literal (id_loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
       value = (vloc, func);
     }) ->
     if Context.enable_unsafe_getters_and_setters cx then
@@ -2152,7 +2148,12 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe setter property *)
   | Property (loc, Property.Set {
-      key = Property.Identifier (id_loc, name);
+      key =
+        Property.Identifier (id_loc, name) |
+        Property.Literal (id_loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
       value = (vloc, func);
     }) ->
     if Context.enable_unsafe_getters_and_setters cx then
@@ -2164,6 +2165,15 @@ and object_prop cx map = Ast.Expression.Object.(function
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       map
     end
+
+  (* literal LHS *)
+  | Property (loc, Property.Init { key = Property.Literal _; _ })
+  | Property (loc, Property.Method { key = Property.Literal _; _ })
+  | Property (loc, Property.Get { key = Property.Literal _; _ })
+  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
+    Flow.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
+    map
 
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)

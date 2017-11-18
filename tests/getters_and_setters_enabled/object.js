@@ -33,6 +33,9 @@ var obj = {
 
   set [z](x: string) {},
   get [z](): string { return string; },
+
+  set "stringLiteral"(x: number) { },
+  get "stringLiteral"(): number { return 4; },
 };
 
 
@@ -61,3 +64,6 @@ obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
 // And this example shows the danger of using the setter's type.
 var testExampleOrOrderOfGetterAndSetterReordered: number =
   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+
+(obj["stringLiteral"]: string); // err, num !~> string
+obj["stringLiteral"] = "foo"; // err, string !~> num

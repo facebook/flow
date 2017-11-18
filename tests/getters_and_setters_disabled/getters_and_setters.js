@@ -8,6 +8,8 @@ var f = {
   c: 10,
   get ['d']() { return 'foo'; },
   set ['d'](x: number) {},
+  set "stringLiteral"(x: number) { },
+  get "stringLiteral"(): number { return 4; },
 };
 
 type T = {
