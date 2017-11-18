@@ -271,19 +271,11 @@ module Object
       (* #prod-CoverInitializedName *)
       let parse_assignment_pattern ~key env =
         let open Ast.Expression.Object in
-
-        let left = match key with
-        | Property.Literal (loc, lit) -> Some (loc, Ast.Expression.Literal lit)
-        | Property.Identifier id -> Some (fst id, Ast.Expression.Identifier id)
-        | Property.PrivateName _ -> None
-        | Property.Computed _ -> None
-        in
-
-        match left with
-        | Some left ->
+        match key with
+        | Property.Identifier id ->
           let assignment_loc = Peek.loc env in
           Expect.token env T_ASSIGN;
-          let left = Parse.pattern_from_expr env left in
+          let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
           let right = Parse.assignment env in
           let loc = Loc.btwn (fst left) (fst right) in
           (loc, Ast.Expression.(Assignment Assignment.({
@@ -294,7 +286,10 @@ module Object
             if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];
             if_patt = [];
           }
-        | None ->
+
+        | Property.Literal _
+        | Property.PrivateName _
+        | Property.Computed _ ->
           parse_value env
       in
 
