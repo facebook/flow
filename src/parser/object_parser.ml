@@ -247,7 +247,7 @@ module Object
           | Function.BodyExpression (loc, _) -> loc, true
         in
         let loc = Loc.btwn start_loc end_loc in
-        let value = loc, Ast.Expression.(Function Function.({
+        loc, Function.({
           id = None;
           params;
           body;
@@ -258,8 +258,7 @@ module Object
           expression;
           returnType;
           typeParameters;
-        })) in
-        value
+        })
       in
 
       (* PropertyName `:` AssignmentExpression *)
@@ -296,31 +295,34 @@ module Object
       let parse_init ~key ~async ~generator env =
         if async || generator then
           (* the `async` and `*` modifiers are only valid on methods *)
-          parse_method env ~async ~generator, false, true, Pattern_cover.empty_errors
+          let value = parse_method env ~async ~generator in
+          let prop = Method { key; value } in
+          prop, Pattern_cover.empty_errors
         else match Peek.token env with
         | T_RCURLY
         | T_COMMA ->
-          parse_shorthand env key, true, false, Pattern_cover.empty_errors
+          let value = parse_shorthand env key in
+          let prop = Init { key; value; shorthand = true } in
+          prop, Pattern_cover.empty_errors
         | T_LESS_THAN
         | T_LPAREN ->
-          parse_method env ~async ~generator, false, true, Pattern_cover.empty_errors
+          let value = parse_method env ~async ~generator in
+          let prop = Method { key; value } in
+          prop, Pattern_cover.empty_errors
         | T_ASSIGN ->
           let value, errs = parse_assignment_pattern ~key env in
-          value, true, false, errs
+          let prop = Init { key; value; shorthand = true } in
+          prop, errs
         | _ ->
           let value, errs = parse_value env in
-          value, false, false, errs
+          let prop = Init { key; value; shorthand = false } in
+          prop, errs
       in
       fun env start_loc key async generator ->
-        let end_loc, (value, shorthand, _method, errs) = with_loc (
+        let end_loc, (prop, errs) = with_loc (
           parse_init ~key ~async ~generator
         ) env in
-        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, Init {
-          key;
-          value;
-          _method;
-          shorthand;
-        }), errs
+        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
 
     and properties env (props, errs) =
       match Peek.token env with

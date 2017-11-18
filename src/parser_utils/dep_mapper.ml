@@ -414,7 +414,6 @@ class mapper = object(this)
         | Property (_, Property.Init {
             key = Property.Identifier (_, name);
             value = (eloc, _);
-            _method = _;
             shorthand = _;
           }) ->
             let dkey = DepKey.HeapLoc (loc, name) in
@@ -423,7 +422,14 @@ class mapper = object(this)
               valDep = Dep.Depends [DepKey.Temp eloc]
             } in
             dep_map <- DepMap.add dkey dep dep_map
-        | Property _ -> ()
+        (* TODO *)
+        | Property (_, Property.Init {
+            key = Property.Literal _ | Property.PrivateName _ | Property.Computed _;
+            _;
+          })
+        | Property (_, Property.Method _)
+        | Property (_, Property.Get _)
+        | Property (_, Property.Set _) -> ()
         | SpreadProperty _ -> ()
       ) properties;
       loc, Ast.Expression.Object o'

@@ -510,7 +510,6 @@ module Config = struct
           let value = Loc.none, expr_of_value v in
           Property (Loc.none, Init {key;
                                value;
-                               _method = false;
                                shorthand = false})) c in
     {properties = prop_list};;
 

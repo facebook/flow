@@ -57,7 +57,6 @@ class ruleset_depth = object(self)
         E.Object.Property (Loc.none, Init {
           key = Identifier (Loc.none, pname);
           value = Loc.none, expr;
-          _method = false;
           shorthand = false
         }) in
       let properties = [prop] in

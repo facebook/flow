@@ -589,8 +589,11 @@ and Expression : sig
         | Init of {
             key: 'M key;
             value: 'M Expression.t;
-            _method: bool;
             shorthand: bool;
+          }
+        | Method of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
           }
         | Get of {
             key: 'M key;

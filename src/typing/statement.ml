@@ -2108,8 +2108,22 @@ and object_prop cx map = Ast.Expression.Object.(function
     let t = expression cx v in
     Properties.add_field name Neutral (Some loc) t map
 
+  (* named method *)
+  | Property (_, Property.Method {
+      key =
+        Property.Identifier (loc, name) |
+        Property.Literal (loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
+      value = (fn_loc, func);
+    }) ->
+    let t = expression cx (fn_loc, Ast.Expression.Function func) in
+    Properties.add_field name Neutral (Some loc) t map
+
   (* literal LHS *)
   | Property (loc, Property.Init { key = Property.Literal _; _ })
+  | Property (loc, Property.Method { key = Property.Literal _; _ })
   | Property (loc, Property.Get { key = Property.Literal _; _ })
   | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
@@ -2160,7 +2174,8 @@ and object_prop cx map = Ast.Expression.Object.(function
     map
 
   (* computed LHS silently ignored for now *)
-  | Property (_, Property.Init { key = Property.Computed _; _ }) ->
+  | Property (_, Property.Init { key = Property.Computed _; _ })
+  | Property (_, Property.Method { key = Property.Computed _; _ }) ->
     map
 
   (* spread prop *)
@@ -2168,6 +2183,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     map
 
   | Property (_, Property.Init { key = Property.PrivateName _; _ })
+  | Property (_, Property.Method { key = Property.PrivateName _; _ })
   | Property (_, Property.Get { key = Property.PrivateName _; _ })
   | Property (_, Property.Set { key = Property.PrivateName _; _ }) ->
     failwith "Internal Error: Non-private field with private name"
@@ -2224,10 +2240,21 @@ and object_ cx reason ?(allow_sealed=true) props =
     | Property (_, Property.Init {
         key = Property.Computed k;
         value = v;
-        _method = _; shorthand = _;
+        shorthand = _;
       }) ->
         let k = expression cx k in
         let v = expression cx v in
+        let obj = eval_object (map, result) in
+        Flow.flow cx (obj, SetElemT (reason, k, v));
+        (* TODO: vulnerable to race conditions? *)
+        let result = obj in
+        sealed, SMap.empty, proto, Some result
+    | Property (_, Property.Method {
+        key = Property.Computed k;
+        value = fn_loc, fn;
+      }) ->
+        let k = expression cx k in
+        let v = expression cx (fn_loc, Ast.Expression.Function fn) in
         let obj = eval_object (map, result) in
         Flow.flow cx (obj, SetElemT (reason, k, v));
         (* TODO: vulnerable to race conditions? *)
@@ -2241,7 +2268,6 @@ and object_ cx reason ?(allow_sealed=true) props =
             _;
           });
         value = v;
-        _method = false;
         shorthand = false;
       }) ->
         let reason = mk_reason RPrototype (fst v) in
