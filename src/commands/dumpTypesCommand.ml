@@ -25,9 +25,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> flag "--path" (optional string)
@@ -87,7 +86,7 @@ let handle_error err ~json ~pretty ~strip_root =
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root from path filename () =
+let main option_values json pretty root strip_root from path filename () =
   FlowEventLogger.set_from from;
   let json = json || pretty in
   let file = get_file_from_filename_or_stdin path filename in
@@ -99,14 +98,13 @@ let main option_values root json pretty strip_root from path filename () =
 
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.DUMP_TYPES file in
+  let request = ServerProt.Request.DUMP_TYPES file in
 
-  let response: ServerProt.dump_types_response =
-    connect_and_make_request option_values root request in
-  match response with
-  | Error err ->
-      handle_error err ~json ~pretty ~strip_root
-  | Ok resp ->
-      handle_response resp ~json ~pretty ~strip_root
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.DUMP_TYPES (Error err) ->
+    handle_error err ~json ~pretty ~strip_root
+  | ServerProt.Response.DUMP_TYPES (Ok resp) ->
+    handle_response resp ~json ~pretty ~strip_root
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

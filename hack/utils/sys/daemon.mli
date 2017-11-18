@@ -84,6 +84,7 @@ val fork :
    alternate entry point. *)
 val spawn :
   ?channel_mode:[ `pipe | `socket ] ->
+  ?name: string ->
   (* Where the daemon's input and output should go *)
   (Unix.file_descr * Unix.file_descr * Unix.file_descr) ->
   ('param, 'input, 'output) entry -> 'param -> ('output, 'input) handle

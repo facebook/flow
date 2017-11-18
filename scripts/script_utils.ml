@@ -32,7 +32,7 @@ let read_process name args (in_r, _in_w) (out_r, out_w) (err_r, err_w) =
     try Unix.create_process name args in_r out_w err_w
     with Unix.Unix_error (Unix.ENOENT, _, _) ->
       (* On Windows, this is what happens if you call create_process
-       * non_existant_thing *)
+       * non_existent_thing *)
       raise (Failure (name ^ ": command not found"))
     in
   match Unix.waitpid [] pid with
@@ -40,7 +40,7 @@ let read_process name args (in_r, _in_w) (out_r, out_w) (err_r, err_w) =
       input_line (Unix.in_channel_of_descr out_r)
   | _, Unix.WEXITED 127 ->
       (* On Linux & OSX, this is what happens if you call create_process
-       * non_existant_thing *)
+       * non_existent_thing *)
       raise (Failure (name ^ ": command not found"))
   | _, Unix.WEXITED 128 ->
       raise (Failure (input_line (Unix.in_channel_of_descr err_r)))

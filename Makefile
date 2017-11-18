@@ -163,6 +163,7 @@ JS_STUBS=\
 
 NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
+ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
 NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))

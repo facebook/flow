@@ -1,151 +1,151 @@
-Error: test.js:4
-  4: obj.p = 42; // Should error!
+Error: test.js:6
+  6: obj.p = 42; // Should error!
      ^^^ object type. Covariant property `p` incompatible with contravariant use in
-  4: obj.p = 42; // Should error!
+  6: obj.p = 42; // Should error!
      ^^^^^ assignment of property `p`
 
-Error: test.js:12
- 12: multiKeyObj.p = 42; // Should error!
+Error: test.js:14
+ 14: multiKeyObj.p = 42; // Should error!
      ^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 12: multiKeyObj.p = 42; // Should error!
+ 14: multiKeyObj.p = 42; // Should error!
      ^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:13
- 13: multiKeyObj.q = 42; // Should error!
+Error: test.js:15
+ 15: multiKeyObj.q = 42; // Should error!
      ^^^^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
- 13: multiKeyObj.q = 42; // Should error!
+ 15: multiKeyObj.q = 42; // Should error!
      ^^^^^^^^^^^^^ assignment of property `q`
 
-Error: test.js:20
- 20:   unionObj.p = 42; // Should error!
-       ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 20:   unionObj.p = 42; // Should error!
-       ^^^^^^^^^^ assignment of property `p`
-
 Error: test.js:22
- 22:   (unionObj.q: number); // Should error!
-                 ^ property `q`. Property not found in
- 22:   (unionObj.q: number); // Should error!
-        ^^^^^^^^ object type
+ 22:   unionObj.p = 42; // Should error!
+       ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 22:   unionObj.p = 42; // Should error!
+       ^^^^^^^^^^ assignment of property `p`
 
 Error: test.js:24
- 24:   unionObj.p = 42; // Should error!
+ 24:   (unionObj.q: number); // Should error!
+                 ^ property `q`. Property not found in
+ 24:   (unionObj.q: number); // Should error!
+        ^^^^^^^^ object type
+
+Error: test.js:26
+ 26:   unionObj.p = 42; // Should error!
        ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 24:   unionObj.p = 42; // Should error!
+ 26:   unionObj.p = 42; // Should error!
        ^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:25
- 25:   unionObj.q = 42; // Should error!
+Error: test.js:27
+ 27:   unionObj.q = 42; // Should error!
        ^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
- 25:   unionObj.q = 42; // Should error!
+ 27:   unionObj.q = 42; // Should error!
        ^^^^^^^^^^ assignment of property `q`
 
-Error: test.js:34
- 34:   spreadUnionObj.p = 42; // Should error!
+Error: test.js:36
+ 36:   spreadUnionObj.p = 42; // Should error!
        ^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 34:   spreadUnionObj.p = 42; // Should error!
+ 36:   spreadUnionObj.p = 42; // Should error!
        ^^^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:35
- 35:   spreadUnionObj.z = 42; // Should error!
+Error: test.js:37
+ 37:   spreadUnionObj.z = 42; // Should error!
        ^^^^^^^^^^^^^^ object type. Covariant property `z` incompatible with contravariant use in
- 35:   spreadUnionObj.z = 42; // Should error!
+ 37:   spreadUnionObj.z = 42; // Should error!
        ^^^^^^^^^^^^^^^^ assignment of property `z`
-
-Error: test.js:38
- 38:   (spreadUnionObj.q: number); // Should error!
-                       ^ property `q`. Property not found in
- 38:   (spreadUnionObj.q: number); // Should error!
-        ^^^^^^^^^^^^^^ object type
 
 Error: test.js:40
- 40:   spreadUnionObj.p = 42; // Should error!
-       ^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 40:   spreadUnionObj.p = 42; // Should error!
-       ^^^^^^^^^^^^^^^^ assignment of property `p`
-
-Error: test.js:41
- 41:   spreadUnionObj.q = 42; // Should error!
-       ^^^^^^^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
- 41:   spreadUnionObj.q = 42; // Should error!
-       ^^^^^^^^^^^^^^^^ assignment of property `q`
+ 40:   (spreadUnionObj.q: number); // Should error!
+                       ^ property `q`. Property not found in
+ 40:   (spreadUnionObj.q: number); // Should error!
+        ^^^^^^^^^^^^^^ object type
 
 Error: test.js:42
- 42:   spreadUnionObj.z = 42; // Should error!
+ 42:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 42:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:43
+ 43:   spreadUnionObj.q = 42; // Should error!
+       ^^^^^^^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
+ 43:   spreadUnionObj.q = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `q`
+
+Error: test.js:44
+ 44:   spreadUnionObj.z = 42; // Should error!
        ^^^^^^^^^^^^^^ object type. Covariant property `z` incompatible with contravariant use in
- 42:   spreadUnionObj.z = 42; // Should error!
+ 44:   spreadUnionObj.z = 42; // Should error!
        ^^^^^^^^^^^^^^^^ assignment of property `z`
 
-Error: test.js:50
- 50: intersectionObj.p = 42; // Should error!
+Error: test.js:52
+ 52: intersectionObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 50: intersectionObj.p = 42; // Should error!
+ 52: intersectionObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:51
- 51: intersectionObj.q = 42; // Should error!
+Error: test.js:53
+ 53: intersectionObj.q = 42; // Should error!
      ^^^^^^^^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
- 51: intersectionObj.q = 42; // Should error!
+ 53: intersectionObj.q = 42; // Should error!
      ^^^^^^^^^^^^^^^^^ assignment of property `q`
 
-Error: test.js:57
- 57: indexerKeyObj.p = 42; // Should error!
+Error: test.js:59
+ 59: indexerKeyObj.p = 42; // Should error!
      ^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 57: indexerKeyObj.p = 42; // Should error!
+ 59: indexerKeyObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:58
- 58: indexerKeyObj.x = true; // Should error!
+Error: test.js:60
+ 60: indexerKeyObj.x = true; // Should error!
      ^^^^^^^^^^^^^ object type. Covariant property `x` incompatible with contravariant use in
- 58: indexerKeyObj.x = true; // Should error!
+ 60: indexerKeyObj.x = true; // Should error!
      ^^^^^^^^^^^^^^^ assignment of property `x`
 
-Error: test.js:64
- 64: exactObj.p = 42; // Should error!
+Error: test.js:66
+ 66: exactObj.p = 42; // Should error!
      ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 64: exactObj.p = 42; // Should error!
+ 66: exactObj.p = 42; // Should error!
      ^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:69
- 69: spreadObj.p = 42; // Should error!
+Error: test.js:71
+ 71: spreadObj.p = 42; // Should error!
      ^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 69: spreadObj.p = 42; // Should error!
+ 71: spreadObj.p = 42; // Should error!
      ^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:74
- 74: spreadExactObj.p = 42; // Should error!
+Error: test.js:76
+ 76: spreadExactObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 74: spreadExactObj.p = 42; // Should error!
+ 76: spreadExactObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:79
- 79: objWithMethod.p = 42; // Should error!
+Error: test.js:81
+ 81: objWithMethod.p = 42; // Should error!
      ^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 79: objWithMethod.p = 42; // Should error!
+ 81: objWithMethod.p = 42; // Should error!
      ^^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:80
- 80: objWithMethod.fn = () => true; // Should error!
+Error: test.js:82
+ 82: objWithMethod.fn = () => true; // Should error!
      ^^^^^^^^^^^^^ object type. Covariant property `fn` incompatible with contravariant use in
- 80: objWithMethod.fn = () => true; // Should error!
+ 82: objWithMethod.fn = () => true; // Should error!
      ^^^^^^^^^^^^^^^^ assignment of property `fn`
 
-Error: test.js:88
- 88: instance.p = 42; // Should error!
+Error: test.js:90
+ 90: instance.p = 42; // Should error!
      ^^^^^^^^ A. Covariant property `p` incompatible with contravariant use in
- 88: instance.p = 42; // Should error!
+ 90: instance.p = 42; // Should error!
      ^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:93
- 93: writeOnlyObj.p = 42; // Should error!
+Error: test.js:95
+ 95: writeOnlyObj.p = 42; // Should error!
      ^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
- 93: writeOnlyObj.p = 42; // Should error!
+ 95: writeOnlyObj.p = 42; // Should error!
      ^^^^^^^^^^^^^^ assignment of property `p`
 
-Error: test.js:97
- 97: type readOnlyNum = $ReadOnly<number>;
+Error: test.js:99
+ 99: type readOnlyNum = $ReadOnly<number>;
                         ^^^^^^^^^^^^^^^^^ object type. Cannot create an object with read-only properties from
- 97: type readOnlyNum = $ReadOnly<number>;
+ 99: type readOnlyNum = $ReadOnly<number>;
                                   ^^^^^^ number
 
 

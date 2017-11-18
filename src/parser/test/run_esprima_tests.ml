@@ -260,11 +260,11 @@ end = struct
     let open Ast.Expression in
     List.fold_left (fun acc prop ->
       match prop with
-      | Object.Property (_loc, { Object.Property.
+      | Object.Property (_loc, Object.Property.Init {
           key = Object.Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name; raw = _
           });
-          value = Object.Property.Init value;
+          value;
           _method = false; shorthand = false;
         }) ->
           SMap.add name value acc
@@ -394,11 +394,11 @@ end = struct
       (spf "%s: Missing key %S" path name)::acc
 
   let prop_name_and_value = Ast.Expression.(function
-    | { Object.Property.
+    | Object.Property.Init {
         key = Object.Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name; raw = _
         });
-        value = Object.Property.Init value;
+        value;
         _method = false; shorthand = false;
       } -> name, value
     | _ -> failwith "Invalid JSON"
@@ -426,13 +426,20 @@ end = struct
               Object.Property (diff_loc, diff_prop)::props
             else List.fold_left (fun acc exp -> match exp with
               | Object.Property (exp_loc, exp_prop) ->
+                let exp_key = match exp_prop with
+                | Object.Property.Init { key; _ } -> key
+                | _ -> failwith "Invalid JSON"
+                in
                 let exp_name, exp_value = prop_name_and_value exp_prop in
                 if exp_name = diff_name then
                   (* recursively apply diff *)
                   match apply_diff diff_value exp_value with
                   | Some value ->
-                    let prop = Object.Property (exp_loc, { exp_prop with
-                      Object.Property.value = Object.Property.Init value;
+                    let prop = Object.Property (exp_loc, Object.Property.Init {
+                      key = exp_key;
+                      value;
+                      _method = false;
+                      shorthand = false;
                     }) in
                     prop::acc
                   | None ->

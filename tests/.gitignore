@@ -1,1 +1,3 @@
 *.out
+*.log
+*.monitor_log

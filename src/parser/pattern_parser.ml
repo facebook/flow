@@ -21,22 +21,22 @@ module Pattern
   let rec object_from_expr =
     let rec properties env acc = Ast.Expression.Object.(function
       | [] -> List.rev acc
-      | Property (loc, { Property.key; value; shorthand; _method; _ })::remaining ->
+      | Property (loc, prop)::remaining ->
+          let key, pattern, shorthand = match prop with
+          | Property.Init { key; value; shorthand; _method } ->
+            if _method then error_at env (fst value, Parse_error.MethodInDestructuring);
+            key, from_expr env value, shorthand
+          | Property.Get { key; value = (loc, f) }
+          | Property.Set { key; value = (loc, f) } ->
+            (* these should never happen *)
+            error_at env (loc, Parse_error.UnexpectedIdentifier);
+            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
+          in
           let key = match key with
           | Property.Literal lit -> Pattern.Object.Property.Literal lit
           | Property.Identifier id -> Pattern.Object.Property.Identifier id
           | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
           | Property.Computed expr -> Pattern.Object.Property.Computed expr
-          in
-          let pattern = match value with
-          | Property.Init t ->
-              if _method then error_at env (fst t, Parse_error.MethodInDestructuring);
-              from_expr env t
-          | Property.Get (loc, f)
-          | Property.Set (loc, f) ->
-            (* these should never happen *)
-            error_at env (loc, Parse_error.UnexpectedIdentifier);
-            loc, Pattern.Expression (loc, Ast.Expression.Function f)
           in
           let acc = Pattern.(Object.Property (loc, { Object.Property.
             key;

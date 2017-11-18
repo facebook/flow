@@ -23,7 +23,6 @@
 
 open Hh_core
 open ServerProcess
-open ServerProcessTools
 open ServerMonitorUtils
 
 exception Malformed_build_id
@@ -94,7 +93,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
           let was_oom = match proc_stat with
           | Unix.WEXITED code when code = oom_code -> true
-          | _ -> check_dmesg_for_oom process in
+          | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
           SC.on_server_exit monitor_config;
           ServerProcessTools.check_exit_status proc_stat process monitor_config;
           Died_unexpectedly (proc_stat, was_oom))

@@ -47,10 +47,3 @@ type env = {
     collated_errors: collated_errors option ref;
     connections: Persistent_connection.t;
 }
-
-(*****************************************************************************)
-(* Killing the server  *)
-(*****************************************************************************)
-
-let die() =
-  exit(0)

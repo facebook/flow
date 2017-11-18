@@ -3,12 +3,9 @@
 open Lsp
 open Lsp_fmt
 
-module Make (P: sig
-  type t  (* State type, used for request_showMessage *)
+module Make (Jsonrpc: Jsonrpc.SigType) (P: sig
   val get : unit -> Hh_json.json option  (* params of the initialize request *)
 end) = struct
-
-  module Jsonrpc = Jsonrpc.Make(struct type t = P.t end)
 
   (************************************************************************)
   (** Conversions                                                        **)

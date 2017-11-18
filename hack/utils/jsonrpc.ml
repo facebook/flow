@@ -4,149 +4,8 @@
 
 open Hh_core
 
-
-(***************************************************************)
-(* Internal queue functions that run in the daemon process.    *)
-(* The public API for this module comes from Jsonrpc.Make(...) *)
-(***************************************************************)
-
-type internal_queue = {
-  daemon_in_fd : Unix.file_descr; (* fd used by main process to read messages from queue *)
-  messages : queue_message Queue.t;
-}
-
-and timestamped_json = {
-  tj_json: Hh_json.json;
-  tj_timestamp: float;
-}
-
-and queue_message =
-  | Timestamped_json of timestamped_json
-  | Fatal_exception of Marshal_tools.remote_exception_data
-  | Recoverable_exception of Marshal_tools.remote_exception_data
-
-and daemon_operation =
-  | Read
-  | Write
-
-
-(* Try to read a message from the daemon's stdin, which is where all of the
-   editor messages can be read from. May throw if the message is malformed. *)
-let internal_read_message (reader : Buffered_line_reader.t) : timestamped_json =
-  let message = reader |> Http_lite.read_message_utf8 in
-  let tj_json = Hh_json.json_of_string message in
-  let tj_timestamp = Unix.gettimeofday ()
-  in
-  { tj_json; tj_timestamp; }
-
-
-(* Reads messages from the editor on stdin, parses them, and sends them to the
-   main process.
-   This runs in a different process because we also timestamp the messages, so
-   we need to read them as soon as they come in. That is, we can't wait for any
-   server computation to finish if we want to get an accurate timestamp. *)
-let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
-  let out_fd = Daemon.descr_of_out_channel oc in
-  let reader = Buffered_line_reader.create Unix.stdin in
-  let messages_to_send = Queue.create () in
-
-  let rec loop () =
-    let operation =
-      if Buffered_line_reader.has_buffered_content reader
-      then Read
-      else begin
-        let read_fds = [Unix.stdin] in
-        let has_messages_to_send = not (Queue.is_empty messages_to_send) in
-        let write_fds =
-          if has_messages_to_send
-          then [out_fd]
-          else []
-        in
-
-        (* Note that if there are no queued messages, this will always block
-           until we're ready to read, rather than returning `Write`, even if
-           stdout is capable of being written to. Furthermore, we will never
-           need to queue a message to be written until we have read
-           something. *)
-        let readable_fds, _, _ = Unix.select read_fds write_fds [] (-1.0) in
-        let ready_for_read = not (List.is_empty readable_fds) in
-        if ready_for_read
-        then Read
-        else Write
-      end
-    in
-
-    let should_continue = match operation with
-      | Read -> begin
-        try
-          let timestamped_json = internal_read_message reader in
-          Queue.push timestamped_json messages_to_send;
-          true
-        with e ->
-          let message = Printexc.to_string e in
-          let stack = Printexc.get_backtrace () in
-          let edata = { Marshal_tools.message; stack; } in
-          let (should_continue, marshal) = match e with
-            | Hh_json.Syntax_error _ -> true, Recoverable_exception edata
-            | _ -> false, Fatal_exception edata
-          in
-          Marshal_tools.to_fd_with_preamble out_fd marshal;
-          should_continue
-        end
-      | Write ->
-        assert (not (Queue.is_empty messages_to_send));
-        let timestamped_json = Queue.pop messages_to_send in
-        (* We can assume that the entire write will succeed, since otherwise
-           Marshal_tools.to_fd_with_preamble will throw an exception. *)
-        Marshal_tools.to_fd_with_preamble out_fd (Timestamped_json timestamped_json);
-        true
-    in
-    if should_continue then loop ()
-  in
-  loop ()
-
-(*  Main function for the daemon process. *)
-let internal_run_daemon
-    (_dummy_param : unit)
-    (_ic, (oc : queue_message Daemon.out_channel)) =
-  Printexc.record_backtrace true;
-  try
-    internal_run_daemon' oc
-  with e ->
-    (* An exception that's gotten here is not simply a parse error, but
-       something else, so we should terminate the daemon at this point. *)
-    let message = Printexc.to_string e in
-    let stack = Printexc.get_backtrace () in
-    try
-      let out_fd = Daemon.descr_of_out_channel oc in
-      Marshal_tools.to_fd_with_preamble out_fd
-        (Fatal_exception { Marshal_tools.message; stack; })
-    with _ ->
-      (* There may be a broken pipe, for example. We should just give up on
-         reporting the error. *)
-      ()
-
-let internal_entry_point : (unit, unit, queue_message) Daemon.entry =
-  Daemon.register_entry_point "Jsonrpc" internal_run_daemon
-
-let internal_make_queue () : internal_queue =
-  let handle = Daemon.spawn
-    ~channel_mode:`pipe
-    (* We don't technically need to inherit stdout or stderr, but this might be
-       useful in the event that we throw an unexpected exception in the daemon.
-       It's also useful for print-statement debugging of the daemon. *)
-    (Unix.stdin, Unix.stdout, Unix.stderr)
-    internal_entry_point
-    ()
-  in
-  let (ic, _) = handle.Daemon.channels in
-  {
-    daemon_in_fd = Daemon.descr_of_in_channel ic;
-    messages = Queue.create ();
-  }
-
-
-module Make (State: sig type t end) : sig
+module type SigType = sig
+  type state
   type kind = Request | Notification | Response
   val kind_to_string : kind -> string
 
@@ -173,8 +32,8 @@ module Make (State: sig type t end) : sig
   | `Fatal_exception of Marshal_tools.remote_exception_data
   | `Recoverable_exception of Marshal_tools.remote_exception_data ]
 
-  type on_result = result:Hh_json.json option -> State.t -> State.t
-  type on_error = code:int -> message:string -> data:Hh_json.json option -> State.t -> State.t
+  type on_result = result:Hh_json.json option -> state -> state
+  type on_error = code:int -> message:string -> data:Hh_json.json option -> state -> state
   type cancellation_token = unit -> unit
 
   (* 'respond to_this with_that' is for replying to a JsonRPC request. It will send either *)
@@ -192,12 +51,13 @@ module Make (State: sig type t end) : sig
   (* if the controlling loop received a response message, it should call  *)
   (* into dispatch_response, to trigger the appropriate callback that had *)
   (* been passed to the corresponding 'request' method.                   *)
-  val dispatch_response : message -> State.t -> State.t
-  (* For logging purposes, when you receive a response message, you can   *)
-  (* also see what outgoing request method it is in response to.          *)
-  val get_method_for_response : message -> string
-end = struct
+  val dispatch_response : message -> state -> state
+end
 
+
+
+module Make (State: sig type t end) : (SigType with type state = State.t) = struct
+  type state = State.t
   type kind = Request | Notification | Response
 
   let kind_to_string (kind: kind) : string =
@@ -239,14 +99,149 @@ end = struct
     { json; timestamp; id; method_; params; result; error; kind; }
 
 
+  (***************************************************************)
+  (* Internal queue functions that run in the daemon process.    *)
+  (***************************************************************)
+
+  type queue = {
+    daemon_in_fd : Unix.file_descr; (* fd used by main process to read messages from queue *)
+    messages : queue_message Queue.t;
+  }
+
+  and timestamped_json = {
+    tj_json: Hh_json.json;
+    tj_timestamp: float;
+  }
+
+  and queue_message =
+    | Timestamped_json of timestamped_json
+    | Fatal_exception of Marshal_tools.remote_exception_data
+    | Recoverable_exception of Marshal_tools.remote_exception_data
+
+  and daemon_operation =
+    | Read
+    | Write
+
+
+  (* Try to read a message from the daemon's stdin, which is where all of the
+     editor messages can be read from. May throw if the message is malformed. *)
+  let internal_read_message (reader : Buffered_line_reader.t) : timestamped_json =
+    let message = reader |> Http_lite.read_message_utf8 in
+    let tj_json = Hh_json.json_of_string message in
+    let tj_timestamp = Unix.gettimeofday ()
+    in
+    { tj_json; tj_timestamp; }
+
+
+  (* Reads messages from the editor on stdin, parses them, and sends them to the
+     main process.
+     This runs in a different process because we also timestamp the messages, so
+     we need to read them as soon as they come in. That is, we can't wait for any
+     server computation to finish if we want to get an accurate timestamp. *)
+  let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
+    let out_fd = Daemon.descr_of_out_channel oc in
+    let reader = Buffered_line_reader.create Unix.stdin in
+    let messages_to_send = Queue.create () in
+
+    let rec loop () =
+      let operation =
+        if Buffered_line_reader.has_buffered_content reader
+        then Read
+        else begin
+          let read_fds = [Unix.stdin] in
+          let has_messages_to_send = not (Queue.is_empty messages_to_send) in
+          let write_fds =
+            if has_messages_to_send
+            then [out_fd]
+            else []
+          in
+
+          (* Note that if there are no queued messages, this will always block
+             until we're ready to read, rather than returning `Write`, even if
+             stdout is capable of being written to. Furthermore, we will never
+             need to queue a message to be written until we have read
+             something. *)
+          let readable_fds, _, _ = Unix.select read_fds write_fds [] (-1.0) in
+          let ready_for_read = not (List.is_empty readable_fds) in
+          if ready_for_read
+          then Read
+          else Write
+        end
+      in
+
+      let should_continue = match operation with
+        | Read -> begin
+          try
+            let timestamped_json = internal_read_message reader in
+            Queue.push timestamped_json messages_to_send;
+            true
+          with e ->
+            let message = Printexc.to_string e in
+            let stack = Printexc.get_backtrace () in
+            let edata = { Marshal_tools.message; stack; } in
+            let (should_continue, marshal) = match e with
+              | Hh_json.Syntax_error _ -> true, Recoverable_exception edata
+              | _ -> false, Fatal_exception edata
+            in
+            Marshal_tools.to_fd_with_preamble out_fd marshal;
+            should_continue
+          end
+        | Write ->
+          assert (not (Queue.is_empty messages_to_send));
+          let timestamped_json = Queue.pop messages_to_send in
+          (* We can assume that the entire write will succeed, since otherwise
+             Marshal_tools.to_fd_with_preamble will throw an exception. *)
+          Marshal_tools.to_fd_with_preamble out_fd (Timestamped_json timestamped_json);
+          true
+      in
+      if should_continue then loop ()
+    in
+    loop ()
+
+  (*  Main function for the daemon process. *)
+  let internal_run_daemon
+      (_dummy_param : unit)
+      (_ic, (oc : queue_message Daemon.out_channel)) =
+    Printexc.record_backtrace true;
+    try
+      internal_run_daemon' oc
+    with e ->
+      (* An exception that's gotten here is not simply a parse error, but
+         something else, so we should terminate the daemon at this point. *)
+      let message = Printexc.to_string e in
+      let stack = Printexc.get_backtrace () in
+      try
+        let out_fd = Daemon.descr_of_out_channel oc in
+        Marshal_tools.to_fd_with_preamble out_fd
+          (Fatal_exception { Marshal_tools.message; stack; })
+      with _ ->
+        (* There may be a broken pipe, for example. We should just give up on
+           reporting the error. *)
+        ()
+
+  let internal_entry_point : (unit, unit, queue_message) Daemon.entry =
+    Daemon.register_entry_point "Jsonrpc" internal_run_daemon
+
+
   (************************************************)
   (* Queue functions that run in the main process *)
   (************************************************)
 
-  type queue = internal_queue
-
-  let make_queue () =
-    internal_make_queue ()
+  let make_queue () : queue =
+    let handle = Daemon.spawn
+      ~channel_mode:`pipe
+      (* We don't technically need to inherit stdout or stderr, but this might be
+         useful in the event that we throw an unexpected exception in the daemon.
+         It's also useful for print-statement debugging of the daemon. *)
+      (Unix.stdin, Unix.stdout, Unix.stderr)
+      internal_entry_point
+      ()
+    in
+    let (ic, _) = handle.Daemon.channels in
+    {
+      daemon_in_fd = Daemon.descr_of_in_channel ic;
+      messages = Queue.create ();
+    }
 
   let get_read_fd (queue : queue) : Unix.file_descr =
     queue.daemon_in_fd
@@ -355,8 +350,8 @@ end = struct
   (* Output functions for request                 *)
   (************************************************)
 
-  type on_result = result:Hh_json.json option -> State.t -> State.t
-  type on_error = code:int -> message:string -> data:Hh_json.json option -> State.t -> State.t
+  type on_result = result:Hh_json.json option -> state -> state
+  type on_error = code:int -> message:string -> data:Hh_json.json option -> state -> state
   type cancellation_token = unit -> unit
 
   module Callback = struct
@@ -417,15 +412,10 @@ end = struct
       end
     | _ -> None
 
-  let get_method_for_response (response: message) : string =
-    match (get_request_for_response response) with
-    | Some (_, callback) -> callback.Callback.method_
-    | None -> ""
-
   let dispatch_response
       (response: message)
-      (state: State.t)
-    : State.t =
+      (state: state)
+    : state =
     let open Callback in
     let id, on_result, on_error = match (get_request_for_response response) with
       | Some (id, callback) -> (id, callback.on_result, callback.on_error)

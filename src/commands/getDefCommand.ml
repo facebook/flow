@@ -24,9 +24,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> flag "--path" (optional string)
@@ -57,7 +56,7 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main option_values root json pretty strip_root from path args () =
+let main option_values json pretty root strip_root from path args () =
   FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
   let root = guess_root (
@@ -67,12 +66,10 @@ let main option_values root json pretty strip_root from path args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.GET_DEF (file, line, column) in
-  let response: ServerProt.get_def_response =
-    connect_and_make_request option_values root request in
+  let request = ServerProt.Request.GET_DEF (file, line, column) in
 
-  match response with
-  | Ok loc ->
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.GET_DEF (Ok loc) ->
     (* format output *)
     if json || pretty
     then (
@@ -86,10 +83,11 @@ let main option_values root json pretty strip_root from path args () =
       if option_values.from = "vim" || option_values.from = "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
       else print_endline (range_string_of_loc ~strip_root loc)
-  | Error exn_msg ->
+  | ServerProt.Response.GET_DEF (Error exn_msg) ->
       Utils_js.prerr_endlinef
         "Could not get definition for %s:%d:%d\n%s"
         (File_input.filename_of_file_input file) line column
         exn_msg
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

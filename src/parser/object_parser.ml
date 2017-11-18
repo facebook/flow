@@ -181,21 +181,17 @@ module Object
     and get env start_loc =
       let key, (end_loc, fn) = getter_or_setter env true in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Get {
         key;
-        value = Property.Get (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     and set env start_loc =
       let key, (end_loc, fn) = getter_or_setter env false in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Set {
         key;
-        value = Property.Set (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     (* #prod-PropertyDefinition *)
@@ -275,19 +271,11 @@ module Object
       (* #prod-CoverInitializedName *)
       let parse_assignment_pattern ~key env =
         let open Ast.Expression.Object in
-
-        let left = match key with
-        | Property.Literal (loc, lit) -> Some (loc, Ast.Expression.Literal lit)
-        | Property.Identifier id -> Some (fst id, Ast.Expression.Identifier id)
-        | Property.PrivateName _ -> None
-        | Property.Computed _ -> None
-        in
-
-        match left with
-        | Some left ->
+        match key with
+        | Property.Identifier id ->
           let assignment_loc = Peek.loc env in
           Expect.token env T_ASSIGN;
-          let left = Parse.pattern_from_expr env left in
+          let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
           let right = Parse.assignment env in
           let loc = Loc.btwn (fst left) (fst right) in
           (loc, Ast.Expression.(Assignment Assignment.({
@@ -298,7 +286,10 @@ module Object
             if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];
             if_patt = [];
           }
-        | None ->
+
+        | Property.Literal _
+        | Property.PrivateName _
+        | Property.Computed _ ->
           parse_value env
       in
 
@@ -324,9 +315,9 @@ module Object
         let end_loc, (value, shorthand, _method, errs) = with_loc (
           parse_init ~key ~async ~generator
         ) env in
-        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, {
+        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, Init {
           key;
-          value = Init value;
+          value;
           _method;
           shorthand;
         }), errs

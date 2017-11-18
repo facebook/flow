@@ -104,7 +104,7 @@ let parse ~options ~profiling ~workers parse_next =
 let reparse ~options ~profiling ~workers modified =
   with_timer ~options "Parsing" profiling (fun () ->
     let new_or_changed, results =
-      Parsing_service_js.reparse_with_defaults options workers modified in
+      Parsing_service_js.reparse_with_defaults ~with_progress:true options workers modified in
     let parse_ok, unparsed, local_errors = collate_parse_results results in
     new_or_changed, parse_ok, unparsed, local_errors
   )
@@ -162,12 +162,8 @@ let resolve_requires ~options profiling ~workers parsed =
   with_timer ~options "ResolveRequires" profiling (fun () ->
     MultiWorker.call workers
       ~job: (List.fold_left (fun errors_acc filename ->
-        let file_sig = Parsing_service_js.get_file_sig_unsafe filename in
-        let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
-        let errors =
-          Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-            ~node_modules_containers
-            filename require_loc in
+        let errors = Module_js.add_parsed_resolved_requires filename
+          ~options ~node_modules_containers ~audit:Expensive.ok in
         if Errors.ErrorSet.is_empty errors
         then errors_acc
         else FilenameMap.add filename errors errors_acc
@@ -267,7 +263,7 @@ let typecheck
 
   (* The infer_input passed into typecheck basically tells us what the caller wants to typecheck.
    * However, due to laziness, it's possible that certain dependents or dependencies have not been
-   * checked yet. So we need to caluclate all the transitive dependents and transitive dependencies
+   * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
    * and add them to infer_input, unless they're already checked and in unchanged_checked
    *)
   let infer_input =
@@ -291,7 +287,7 @@ let typecheck
   let send_errors_over_connection =
     match persistent_connections with
     | None -> fun _ -> ()
-    | Some conns -> with_timer ~options "MakeSendErrors" profiling (fun () ->
+    | Some clients -> with_timer ~options "MakeSendErrors" profiling (fun () ->
       (* Each merge step uncovers new errors, warnings, suppressions and lint severity covers.
 
          While more suppressions and severity covers may come in later steps, the suppressions and
@@ -341,7 +337,7 @@ let typecheck
         curr_severity_cover := severity_cover;
 
         if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
-          Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
+          Persistent_connection.update_clients ~clients ~errors:new_errors ~warnings:new_warnings
       )
   in
 
@@ -361,6 +357,7 @@ let typecheck
     *)
     Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
     Hh_logger.info "Calculating dependencies";
+    MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
     let dependency_graph, component_map =
       calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
 
@@ -711,7 +708,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_batch deleted;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
@@ -734,7 +731,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
       if Errors.ErrorSet.cardinal error_set > 0
-      then Persistent_connection.update_clients env.ServerEnv.connections
+      then Persistent_connection.update_clients ~clients:env.ServerEnv.connections
         ~errors:error_set ~warnings:FilenameMap.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
@@ -882,6 +879,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let dependent_file_count = ref 0 in
 
   let freshparsed_list = FilenameSet.elements freshparsed in
+  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let changed_modules, errors =
     commit_modules_and_resolve_requires
       ~options
@@ -908,18 +906,16 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Hh_logger.info "Re-resolving directly dependent files";
   (** TODO [perf] Consider oldifying **)
   Module_js.remove_batch_resolved_requires direct_dependent_files;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   let node_modules_containers = !Files.node_modules_containers in
   (* requires in direct_dependent_files must be re-resolved before merging. *)
   with_timer ~options "ReresolveDirectDependents" profiling (fun () ->
     MultiWorker.call workers
       ~job: (fun () files ->
-        List.iter (fun f ->
-          let file_sig = Parsing_service_js.get_file_sig_unsafe f in
-          let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
-          let errors = Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-            ~node_modules_containers f require_loc in
+        List.iter (fun filename ->
+          let errors = Module_js.add_parsed_resolved_requires filename
+            ~options ~node_modules_containers ~audit:Expensive.ok in
           ignore errors (* TODO: why, FFS, why? *)
         ) files
       )
@@ -1029,7 +1025,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       let to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in
       Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
       (** TODO [perf]: Consider `aggressive **)
-      SharedMem_js.collect options `gentle;
+      SharedMem_js.collect `gentle;
 
       (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
@@ -1070,8 +1066,19 @@ let recheck ~options ~workers ~updates env ~force_focus =
 let make_next_files ~libs ~file_options root =
   let make_next_raw =
     Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs in
+  let total = ref 0 in
   fun () ->
-    make_next_raw ()
+    let files = make_next_raw () in
+
+    let finished = !total in
+    let length = List.length files in
+    MonitorRPC.status_update ServerStatus.(Parsing_progress {
+        finished;
+        total = None;
+    });
+    total := finished + length;
+
+    files
     |> List.map (Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
 
@@ -1094,6 +1101,7 @@ let init ~profiling ~workers options =
     init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs in
 
   Hh_logger.info "Resolving dependencies";
+  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let _, errors =
     let parsed_list = FilenameSet.elements parsed in
     let errors = { ServerEnv.

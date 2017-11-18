@@ -218,7 +218,7 @@ end with type t = Impl.t) = struct
   | loc, DeclareOpaqueType t -> opaque_type ~declare:true (loc, t)
   | loc, DeclareModule m -> DeclareModule.(
       let id = match m.id with
-      | Literal lit -> literal lit
+      | Literal lit -> string_literal lit
       | Identifier id -> identifier id
       in
       node "DeclareModule" loc [|
@@ -235,7 +235,7 @@ end with type t = Impl.t) = struct
         match export.specifiers with
         | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
           node "DeclareExportAllDeclaration" loc [|
-            "source", option literal export.source;
+            "source", option string_literal export.source;
           |]
         | _ ->
           let declaration = match export.declaration with
@@ -252,7 +252,7 @@ end with type t = Impl.t) = struct
             "default", bool export.default;
             "declaration", declaration;
             "specifiers", export_specifiers export.specifiers;
-            "source", option literal export.source;
+            "source", option string_literal export.source;
           |]
       )
     | loc, DeclareModuleExports annot ->
@@ -263,14 +263,14 @@ end with type t = Impl.t) = struct
         match export.specifiers with
         | Some (ExportBatchSpecifier (_, None)) ->
           node "ExportAllDeclaration" loc [|
-            "source", option literal export.source;
+            "source", option string_literal export.source;
             "exportKind", string (export_kind export.exportKind);
           |]
         | _ ->
           node "ExportNamedDeclaration" loc [|
             "declaration", option statement export.declaration;
             "specifiers", export_specifiers export.specifiers;
-            "source", option literal export.source;
+            "source", option string_literal export.source;
             "exportKind", string (export_kind export.exportKind);
           |]
       )
@@ -309,7 +309,7 @@ end with type t = Impl.t) = struct
 
         node "ImportDeclaration" loc [|
           "specifiers", array (Array.of_list specifiers);
-          "source", literal import.source;
+          "source", string_literal import.source;
           "importKind", string (import_kind);
         |]
     )
@@ -865,26 +865,26 @@ end with type t = Impl.t) = struct
 
   and object_property = Expression.Object.(function
     | Property (loc, prop) -> Property.(
-      (* This is a slight deviation from the Mozilla spec. In the spec, an object
-        * property is not a proper node, and lacks a location and a "type" field.
-        * Esprima promotes it to a proper node and that is useful, so I'm
-        * following their example *)
-      let key, computed = (match prop.key with
+      let key, value, kind, method_, shorthand = match prop with
+      | Init { key; value; _method; shorthand } ->
+        key, expression value, "init", _method, shorthand
+      | Get { key; value = (loc, func) } ->
+        key, function_expression (loc, func), "get", false, false
+      | Set { key; value = (loc, func) } ->
+        key, function_expression (loc, func), "set", false, false
+      in
+      let key, computed = match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-      | Computed expr -> expression expr, true)  in
-      let value, kind = match prop.value with
-      | Init value -> expression value, "init"
-      | Get value -> function_expression value, "get"
-      | Set value -> function_expression value, "set"
+      | Computed expr -> expression expr, true
       in
       node "Property" loc [|
         "key", key;
         "value", value;
         "kind", string kind;
-        "method", bool prop._method;
-        "shorthand", bool prop.shorthand;
+        "method", bool method_;
+        "shorthand", bool shorthand;
         "computed", bool computed;
       |]
     )
@@ -952,6 +952,13 @@ end with type t = Impl.t) = struct
         [| "value", value_; "raw", string raw; |]
     in
     node "Literal" loc props
+  )
+
+  and string_literal (loc, lit) = StringLiteral.(
+    node "Literal" loc [|
+      "value", string lit.value;
+      "raw", string lit.raw;
+    |]
   )
 
   and template_literal (loc, value) = Expression.TemplateLiteral.(
@@ -1196,14 +1203,14 @@ end with type t = Impl.t) = struct
       "types", array_of_list _type tl;
     |]
 
-  and string_literal_type (loc, s) = Type.StringLiteral.(
+  and string_literal_type (loc, s) = Ast.StringLiteral.(
     node "StringLiteralTypeAnnotation" loc [|
       "value", string s.value;
       "raw", string s.raw;
     |]
   )
 
-  and number_literal_type (loc, s) = Type.NumberLiteral.(
+  and number_literal_type (loc, s) = Ast.NumberLiteral.(
     node "NumberLiteralTypeAnnotation" loc [|
       "value", number s.value;
       "raw", string s.raw;
@@ -1229,14 +1236,20 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and type_param (loc, tp) = Type.ParameterDeclaration.TypeParam.(
+  and type_param (loc, { Type.ParameterDeclaration.TypeParam.
+    name = (_, name);
+    bound;
+    variance = tp_var;
+    default;
+  }) =
     node "TypeParameter" loc [|
-      "name", string tp.name;
-      "bound", option type_annotation tp.bound;
-      "variance", option variance tp.variance;
-      "default", option _type tp.default;
+      (* we track the location of the name, but don't expose it here for
+         backwards-compatibility. TODO: change this? *)
+      "name", string name;
+      "bound", option type_annotation bound;
+      "variance", option variance tp_var;
+      "default", option _type default;
     |]
-  )
 
   and type_parameter_instantiation (loc, params) = Type.ParameterInstantiation.(
     node "TypeParameterInstantiation" loc [|

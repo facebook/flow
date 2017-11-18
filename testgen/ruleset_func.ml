@@ -85,7 +85,7 @@ class ruleset_func = object(self)
 
        TODO: This is a hacky way to account for parameters. The
        correct way to do this is to change every expression
-       that has the variable occurences whose type is the super
+       that has the variable occurrences whose type is the super
        type of the parameter *)
     let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) ::
                (let open T.Function in

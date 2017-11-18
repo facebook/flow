@@ -53,3 +53,4 @@ let recheck
     ~deleted_count:_
     ~dependent_file_count:_
     ~profiling:_ = ()
+let murdered_by_oom_killer _ = ()

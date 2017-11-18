@@ -53,6 +53,14 @@ let mk_react_prop_type cx loc typeParameters kind =
   mk_custom_fun cx loc typeParameters
     (ReactPropType (React.PropType.Complex kind))
 
+let add_unclear_type_error_if_not_lib_file cx loc = Loc.(
+  match loc.source with
+    | Some file when not @@ File_key.is_lib_file file ->
+      Flow_js.add_output cx (FlowError.EUnclearType loc)
+    | _ -> ()
+)
+
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -60,7 +68,9 @@ let mk_react_prop_type cx loc typeParameters kind =
 (* converter *)
 let rec convert cx tparams_map = Ast.Type.(function
 
-| loc, Any -> AnyT.at loc
+| loc, Any ->
+  add_unclear_type_error_if_not_lib_file cx loc;
+  AnyT.at loc
 
 | loc, Mixed -> MixedT.at loc
 
@@ -142,10 +152,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   let elemt = convert cx tparams_map t in
   DefT (r, ArrT (ArrayAT (elemt, None)))
 
-| loc, StringLiteral { StringLiteral.value; _ }  ->
+| loc, StringLiteral { Ast.StringLiteral.value; _ }  ->
   mk_singleton_string loc value
 
-| loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
+| loc, NumberLiteral { Ast.NumberLiteral.value; raw; _ }  ->
   mk_singleton_number loc value raw
 
 | loc, BooleanLiteral value  ->
@@ -330,7 +340,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Exports" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match typeParameters with
-      | Some ((_, StringLiteral { StringLiteral.value; _ })::_) ->
+      | Some ((_, StringLiteral { Ast.StringLiteral.value; _ })::_) ->
           let desc = RCustom (spf "exports of module `%s`" value) in
           let reason = mk_reason desc loc in
           let remote_module_t =
@@ -381,7 +391,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$CharSet" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match typeParameters with
-    | Some [(_, StringLiteral { StringLiteral.value; _ })] ->
+    | Some [(_, StringLiteral { Ast.StringLiteral.value; _ })] ->
         let chars = String_utils.CharSet.of_string value in
         let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
         let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) loc in
@@ -413,12 +423,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "Function" | "function" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_param_arity cx loc typeParameters 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       DefT (reason, AnyFunT)
     )
 
   | "Object" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_param_arity cx loc typeParameters 0 (fun () ->
       let reason = mk_reason RObjectType loc in
       DefT (reason, AnyObjT)
@@ -878,7 +890,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
 and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
-  | loc, { TypeParam.name; bound; variance; default; } ->
+  | _, { TypeParam.name = (loc, name); bound; variance; default; } ->
     let reason = mk_reason (RType name) loc in
     let bound = match bound with
     | None -> DefT (reason, MixedT Mixed_everything)

@@ -499,8 +499,15 @@ let get_defaults ~types_mode ~use_strict options =
 
 (***************************** public ********************************)
 
-let next_of_filename_set workers filenames =
-  MultiWorker.next workers (FilenameSet.elements filenames)
+let progress_fn ~total ~start ~length:_ =
+  let finished = start in
+  MonitorRPC.status_update
+    ServerStatus.(Parsing_progress { total = Some total; finished })
+
+let next_of_filename_set ?(with_progress=false) workers filenames =
+  if with_progress
+  then MultiWorker.next ~progress_fn workers (FilenameSet.elements filenames)
+  else MultiWorker.next workers (FilenameSet.elements filenames)
 
 let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   workers next
@@ -526,11 +533,11 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
 
   results
 
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
-    ~options workers files =
+let reparse
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
-  let next = next_of_filename_set workers files in
+  let next = next_of_filename_set ?with_progress workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
   let modified = results.parse_ok in
@@ -545,7 +552,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -554,11 +561,12 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
   in
   parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next
 
-let reparse_with_defaults ?types_mode ?use_strict options workers files =
+let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers files =
   let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
     get_defaults ~types_mode ~use_strict options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~options workers files
+  reparse
+    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files
 
 let has_ast = ASTHeap.mem
 

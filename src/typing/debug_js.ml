@@ -2349,9 +2349,6 @@ let dump_flow_error =
         spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
         spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-    | EImportTypeofNamespace (reason, local_name, module_name) ->
-        spf "EImportTypeofNamespace (%s, %s, %s)"
-          (dump_reason cx reason) local_name module_name
     | ENoDefaultExport (reason, module_name, _) ->
         spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
     | EOnlyDefaultExport (reason, export_name) ->
@@ -2651,6 +2648,8 @@ let dump_flow_error =
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUntypedImport (loc, module_name) ->
       spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
+    | EUnclearType loc ->
+      spf "EUnclearType (%s)" (string_of_loc loc)
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
     | ELintSetting (loc, kind) ->

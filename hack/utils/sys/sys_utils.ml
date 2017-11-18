@@ -488,3 +488,19 @@ let rec select_non_intr read write exn timeout =
 let rec waitpid_non_intr flags pid =
   try Unix.waitpid flags pid
   with Unix.Unix_error (Unix.EINTR, _, _) -> waitpid_non_intr flags pid
+
+(* Exposing this for a unit test *)
+let find_oom_in_dmesg_output pid name lines =
+  let re = Str.regexp (Printf.sprintf
+      "Out of memory: Kill process \\([0-9]+\\) (%s)" name) in
+  List.exists lines begin fun line ->
+    try
+      ignore @@ Str.search_forward re line 0;
+      let pid_s = Str.matched_group 1 line in
+      int_of_string pid_s = pid
+    with Not_found -> false
+  end
+
+let check_dmesg_for_oom pid name =
+    let dmesg = exec_read_lines ~reverse:true "dmesg" in
+    find_oom_in_dmesg_output pid name dmesg

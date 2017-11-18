@@ -39,6 +39,20 @@ and Literal : sig
     | RegExp of RegExp.t
 end = Literal
 
+and StringLiteral : sig
+  type t = {
+    value: string;
+    raw: string;
+  }
+end = StringLiteral
+
+and NumberLiteral : sig
+  type t = {
+    value: float;
+    raw: string;
+  }
+end = NumberLiteral
+
 and Variance : sig
   type 'M t = 'M * t'
   and t' = Plus | Minus
@@ -141,24 +155,6 @@ and Type : sig
     }
   end
 
-  module StringLiteral : sig
-    type t = {
-      value: string;
-      raw: string;
-    }
-  end
-
-  module NumberLiteral : sig
-    type t = {
-      value: float;
-      raw: string;
-    }
-  end
-
-  module BooleanLiteral : sig
-    type t = bool
-  end
-
   type 'M t = 'M * 'M t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -182,7 +178,7 @@ and Type : sig
     | Tuple of 'M t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
-    | BooleanLiteral of BooleanLiteral.t
+    | BooleanLiteral of bool
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
@@ -195,7 +191,7 @@ and Type : sig
     module TypeParam : sig
       type 'M t = 'M * 'M t'
       and 'M t' = {
-        name: string;
+        name: 'M Identifier.t;
         bound: 'M Type.annotation option;
         variance: 'M Variance.t option;
         default: 'M Type.t option;
@@ -404,7 +400,7 @@ and Statement : sig
   module DeclareModule : sig
     type 'M id =
       | Identifier of 'M Identifier.t
-      | Literal of ('M * Literal.t)
+      | Literal of ('M * StringLiteral.t)
 
     type 'M module_kind =
       | CommonJS of 'M
@@ -430,7 +426,7 @@ and Statement : sig
     type 'M t = {
       declaration: 'M Statement.t option;
       specifiers: 'M specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
       exportKind: Statement.exportKind;
     }
   end
@@ -466,7 +462,7 @@ and Statement : sig
       default: bool;
       declaration: 'M declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
     }
   end
   module ImportDeclaration : sig
@@ -486,7 +482,7 @@ and Statement : sig
 
     type 'M t = {
       importKind: importKind;
-      source: ('M * Literal.t); (* Always a string literal *)
+      source: ('M * StringLiteral.t);
       default: 'M Identifier.t option;
       specifiers: 'M specifier option;
     }
@@ -582,27 +578,28 @@ and Expression : sig
     }
   end
   module Object : sig
-    (* This is a slight deviation from the Mozilla spec. In the spec, an object
-      * property is not a proper node, and lacks a location and a "type" field.
-      * Esprima promotes it to a proper node and that is useful, so I'M
-      * following their example *)
     module Property : sig
       type 'M key =
         | Literal of ('M * Literal.t)
         | Identifier of 'M Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of 'M Expression.t
-      type 'M value =
-        | Init of 'M Expression.t
-        | Get of ('M * 'M Function.t)
-        | Set of ('M * 'M Function.t)
       type 'M t = 'M * 'M t'
-      and 'M t' = {
-        key: 'M key;
-        value: 'M value;
-        _method: bool;
-        shorthand: bool;
-      }
+      and 'M t' =
+        | Init of {
+            key: 'M key;
+            value: 'M Expression.t;
+            _method: bool;
+            shorthand: bool;
+          }
+        | Get of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Set of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
     end
     module SpreadProperty : sig
       type 'M t = 'M * 'M t'

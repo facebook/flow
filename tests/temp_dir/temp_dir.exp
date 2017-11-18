@@ -1,16 +1,16 @@
 --temp-dir:
-  sock file exists
+  sockv2 file exists
   flowlib exists
-  init file exists
   lock file exists
   log file exists
+  monitor log file exists
 
 .flowconfig temp_dir:
-  sock file exists
+  sockv2 file exists
 
 FLOW_TEMP_DIR:
-  sock file exists
+  sockv2 file exists
   flowlib exists
-  init file exists
   lock file exists
   log file exists
+  monitor log file exists

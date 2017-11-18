@@ -278,7 +278,7 @@ let connect_once ~timeout config handoff_options =
   (* 5. SEND CONNECTION TYPE; READ RESPONSE. After this point we have        *)
   (* evidence that the server is able to handle our connection. The          *)
   (* connection type indicates Persistent vs Non-persistent.                 *)
-  (*   | reponse Denied_due_to_existing_persistent_connection.               *)
+  (*   | response Denied_due_to_existing_persistent_connection.               *)
   (*       -> "hh_client lsp" -> raise Lsp.Error_server_start.               *)
   (*   | catch any exception -> unhandled.                                   *)
   (***************************************************************************)

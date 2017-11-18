@@ -1,9 +1,8 @@
 type t =
   (* The generic 0 exit code *)
   | No_error
-  (* Tried and failed to connect to a server due to the server still
-   * initializing *)
-  | Server_initializing
+  (* Killed by Windows task manage *)
+  | Windows_killed_by_task_manager
   (* There are flow errors *)
   | Type_error
   (* A command with a timeout timed out *)
@@ -29,6 +28,8 @@ type t =
   | Server_out_of_date
   (* When the shared memory is missing space (e.g. full /dev/shm) *)
   | Out_of_shared_memory
+  (* The .flowconfig has changed and we're out of date *)
+  | Flowconfig_changed
   (* A weird error where a client talks to the wrong server. Really should
    * never happen *)
   | Server_client_directory_mismatch
@@ -64,7 +65,7 @@ type t =
   *)
 let error_code = function
   | No_error -> 0
-  | Server_initializing -> 1
+  | Windows_killed_by_task_manager -> 1
   | Type_error -> 2
   | Out_of_time -> 3
   | Kill_error -> 4
@@ -78,6 +79,7 @@ let error_code = function
   | Server_out_of_date -> 13
   | Server_client_directory_mismatch -> 14
   | Out_of_shared_memory -> 15
+  | Flowconfig_changed -> 16
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Commandline_usage_error -> 64
   | No_input -> 66
@@ -90,7 +92,8 @@ let error_code = function
 
 (* Return an error type given an error code *)
 let error_type = function
-  | 1 -> Server_initializing
+  | 0 -> No_error
+  | 1 -> Windows_killed_by_task_manager
   | 2 -> Type_error
   | 3 -> Out_of_time
   | 4 -> Kill_error
@@ -104,6 +107,7 @@ let error_type = function
   | 13 -> Server_out_of_date
   | 14 -> Server_client_directory_mismatch
   | 15 -> Out_of_shared_memory
+  | 16 -> Flowconfig_changed
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -133,7 +137,7 @@ let to_string = function
   | Out_of_time -> "Out_of_time"
   | Out_of_retries -> "Out_of_retries"
   | Invalid_flowconfig -> "Invalid_flowconfig"
-  | Server_initializing -> "Server_initializing"
+  | Windows_killed_by_task_manager -> "Windows_killed_by_task_manager"
   | Server_start_failed status ->
       let reason, code = unpack_process_status status in
       Utils_js.spf "Server_start_failed (%s, %d)" reason code
@@ -147,6 +151,7 @@ let to_string = function
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
+  | Flowconfig_changed -> "Flowconfig_changed"
 
 exception Exit_with of t
 

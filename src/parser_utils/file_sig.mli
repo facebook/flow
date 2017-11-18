@@ -24,7 +24,8 @@ type t = {
 and module_sig = {
   requires: require SMap.t;
   module_kind: module_kind;
-  type_exports: Loc.t SMap.t;
+  type_exports_named: type_export SMap.t; (* export type {A, B as C} [from x] *)
+  type_exports_star: export_star SMap.t; (* export type * from "foo" *)
 }
 
 (* We track information about dependencies for each unique module reference in a
@@ -60,11 +61,6 @@ and require = {
    * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
   types: Loc.t Nel.t SMap.t SMap.t;
 
-  (* map from local name to location of namespace type imports
-   * source: import type * as X from "foo";
-   * result: {X:[loc]} *)
-  types_ns: Loc.t Nel.t SMap.t;
-
   (* map from remote name to local names of typeof imports
    * source: import typeof {A, B as C} from "foo";
    * source: import {typeof A, typeof B as C} from "foo";
@@ -80,10 +76,49 @@ and require = {
 (* All modules are assumed to be CommonJS to start with, but if we see an ES
  * module-style import or export, we switch to ES *)
 and module_kind =
-  | CommonJS of { clobbered: Loc.t option }
-  (* named: map from name of export to location of the exported identifier, if there is in fact an
-     identifier *)
-  | ES of { named: Loc.t option SMap.t; batch: Loc.t SMap.t }
+  | CommonJS of {
+    (* loc of assignment to module.exports *)
+    clobbered: Loc.t option
+  }
+  | ES of {
+    (* map from exported name to export data *)
+    named: export SMap.t;
+    (* map from module reference to location of `export *` *)
+    star: export_star SMap.t
+  }
+
+and export =
+  | ExportDefault of {
+    (* may have local name, e.g., `export default function foo {}` *)
+    local: (Loc.t * string) option
+  }
+  | ExportNamed of {
+    (* loc of remote name *)
+    loc: Loc.t;
+    (* may have local name, e.g., `export {foo as bar}` *)
+    local: (Loc.t * string) option;
+    (* module reference for re-exports, e.g., `export {foo} from 'bar'` *)
+    source: (Loc.t * string) option
+  }
+  | ExportNs of {
+    (* loc of remote name *)
+    loc: Loc.t;
+    (* module reference of exported namespace *)
+    source: Loc.t * string
+  }
+
+and export_star =
+  | ExportStar of { star_loc: Loc.t; source_loc: Loc.t }
+
+and type_export =
+  | TypeExportNamed of {
+    (* loc of remote name *)
+    loc: Loc.t;
+    (* may have local name, e.g., `export type {T as U}` *)
+    local: (Loc.t * string) option;
+    (* module reference for re-exports, e.g., `export {T} from 'bar'` *)
+    source: (Loc.t * string) option
+  }
 
 val empty_file_sig: t
 val empty_module_sig: module_sig

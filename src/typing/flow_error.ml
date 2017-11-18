@@ -71,7 +71,6 @@ type error_message =
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
-  | EImportTypeofNamespace of reason * string * string
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string
   | ENoNamedExport of reason * string * string option
@@ -175,6 +174,7 @@ type error_message =
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
   | EUntypedImport of Loc.t * string
+  | EUnclearType of Loc.t
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
@@ -333,7 +333,6 @@ let locs_of_error_message = function
   | EImportValueAsType (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsValue (reason, _) -> [loc_of_reason reason]
-  | EImportTypeofNamespace (reason, _, _) -> [loc_of_reason reason]
   | ENoDefaultExport (reason, _, _) -> [loc_of_reason reason]
   | EOnlyDefaultExport (reason, _) -> [loc_of_reason reason]
   | ENoNamedExport (reason, _, _) -> [loc_of_reason reason]
@@ -464,6 +463,7 @@ let locs_of_error_message = function
   | EDocblockError (loc, _) -> [loc]
   | EUntypedTypeImport (loc, _) -> [loc]
   | EUntypedImport (loc, _) -> [loc]
+  | EUnclearType (loc) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
@@ -577,7 +577,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     else spf "`%s`" export_name
   in
 
-  let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
+  let typecheck_error_with_core_infos ?kind ?(suppress_op=false) ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
     let core_infos = List.map (fun (r, msgs) -> mk_info r msgs) core_msgs in
 
@@ -607,15 +607,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     (* main info is core info with optional lib line prepended, and optional
        extra info appended. ops/trace info is held separately in error *)
     let msg_infos = lib_infos @ core_infos in
-    mk_error ?op_info ~trace_infos ?extra msg_infos
+    mk_error ?kind ?op_info ~trace_infos ?extra msg_infos
   in
 
   let typecheck_msgs msg (r1, r2) = [r1, [msg]; r2, []] in
 
-  let typecheck_error msg ?suppress_op ?extra reasons =
+  let typecheck_error msg ?kind ?suppress_op ?extra reasons =
     (* make core info from reasons, message, and optional extra infos *)
     let core_msgs = typecheck_msgs msg reasons in
-    typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
+    typecheck_error_with_core_infos ?kind ?suppress_op ?extra core_msgs
   in
 
   let prop_polarity_error_msg x reasons p1 p2 =
@@ -808,13 +808,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "`%s` is a type, but not a value. In order to import it, please use \
          `import type`."
         export_name]]
-
-  | EImportTypeofNamespace (r, local_name, module_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "This is invalid syntax. Maybe you meant: `import type \
-         %s from %S`?"
-        local_name
-        module_name]]
 
   | ENoDefaultExport (r, module_name, suggestion) ->
       let msg = "This module has no default export." in
@@ -1233,7 +1226,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | PropRefComputedOpen ->
           "unexpected open computed property element type"
       | PropRefComputedLiteral ->
-          "unexpected literal computed proprety element type"
+          "unexpected literal computed property element type"
       | ShadowReadComputed ->
           "unexpected shadow read on computed property"
       | ShadowWriteComputed ->
@@ -1349,7 +1342,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ]
 
   | ERecursionLimit reasons ->
-      typecheck_error "*** Recursion limit exceeded ***" reasons
+      typecheck_error ~kind:RecursionLimitError "*** Recursion limit exceeded ***" reasons
 
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
       let msg = spf
@@ -1604,6 +1597,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "Importing from an untyped module makes it `any` and is not safe! "^^
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
+  | EUnclearType loc ->
+    mk_error
+      ~kind:(LintError Lints.UnclearType)
+      [loc, ["Unclear type. Using `any`, `Object` or `Function` types is not safe!"]]
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]

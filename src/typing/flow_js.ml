@@ -769,6 +769,21 @@ module Cache = struct
       Hashtbl.add repos_cache cache_key tvar
   end
 
+  module Fix = struct
+    type cache_key = reason * Type.t
+
+    let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let find reason i =
+      let cache_key = reason, i in
+      try Some (Hashtbl.find cache cache_key)
+      with _ -> None
+
+    let add reason i tvar =
+      let cache_key = reason, i in
+      Hashtbl.add cache cache_key tvar
+  end
+
   (* Cache that records sentinel properties for objects. Cache entries are
      populated before checking against a union of object types, and are used
      while checking against each object type in the union. *)
@@ -801,6 +816,7 @@ module Cache = struct
     repos_cache := Repos_cache.empty;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
+    Hashtbl.clear Fix.cache;
     SentinelProp.cache := Properties.Map.empty
 
   let stats_poly_instantiation () =
@@ -3162,7 +3178,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               cx ~trace ~use_op ~reason_op
               (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | 1 ->
-            (* To avoid infinite recursion, let's deconstruct to a simplier case
+            (* To avoid infinite recursion, let's deconstruct to a simpler case
              * where we no longer resolve to a tuple but instead just resolve to
              * an array. *)
             rec_flow cx trace (l, ResolveSpreadT (use_op, reason_op, {
@@ -7199,10 +7215,16 @@ and instantiate_poly_param_upper_bounds cx typeparams =
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
 and fix_this_class cx trace reason (r, i) =
-  let this = Tvar.mk cx reason in
-  let i = subst cx (SMap.singleton "this" this) i in
-  rec_unify cx trace this i;
-  DefT (r, ClassT i)
+  let i' = match Cache.Fix.find reason i with
+    | Some i' -> i'
+    | None ->
+      let this = Tvar.mk cx reason in
+      let i' = subst cx (SMap.singleton "this" this) i in
+      Cache.Fix.add reason i i';
+      rec_unify cx trace this i';
+      i'
+  in
+  DefT (r, ClassT i')
 
 and canonicalize_imported_type cx trace reason t =
   match t with
@@ -10823,7 +10845,7 @@ and object_kit =
             | Some (t, _), None -> Some (Field (None, t, prop_polarity))
             | None, Some (t, _) -> Some (Field (None, t, prop_polarity))
             (* If a property is defined in both objects, and the first property's
-             * type includes void then we want to replace every occurence of void
+             * type includes void then we want to replace every occurrence of void
              * with the second property's type. This is consistent with the behavior
              * of function default arguments. If you call a function, `f`, like:
              * `f(undefined)` and there is a default value for the first argument,

@@ -46,7 +46,7 @@ module type CONNECTION = sig
     name: string ->
     (* The fd from which we should read *)
     in_fd:Lwt_unix.file_descr ->
-    (* The fd to whcih we should write *)
+    (* The fd to which we should write *)
     out_fd:Lwt_unix.file_descr ->
     (* A function that closes the in and out fds *)
     close:(unit -> unit Lwt.t) ->
@@ -60,6 +60,7 @@ module type CONNECTION = sig
   val close_immediately: t -> unit Lwt.t
   val flush_and_close: t -> unit Lwt.t
   val is_closed: t -> bool
+  val wait_for_closed: t -> unit Lwt.t
 end
 
 module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
@@ -76,6 +77,7 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     on_read: msg:ConnectionProcessor.in_message -> connection:t -> unit Lwt.t;
     read_thread: unit Lwt.t;
     command_thread: unit Lwt.t;
+    wait_for_closed_thread: unit Lwt.t;
   }
 
   let send_command conn command =
@@ -91,7 +93,6 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
   let write_and_close ~msg conn =
     send_command conn (WriteAndClose msg);
     close_stream conn
-
 
   (* Doesn't actually close the file descriptors, but does stop all the loops and streams *)
   let stop_everything conn =
@@ -120,6 +121,8 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     >>= conn.close
 
   let is_closed conn = Lwt_stream.is_closed conn.command_stream
+
+  let wait_for_closed conn = conn.wait_for_closed_thread
 
   module CommandLoop = LwtLoop.Make (struct
     type acc = t
@@ -162,7 +165,16 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
   end)
 
   let create ~name ~in_fd ~out_fd ~close ~on_read =
+    let wait_for_closed_thread, close =
+      (* Lwt.wait creates a thread that can't be canceled *)
+      let (wait_for_closed_thread, wakener) = Lwt.wait () in
+      (* If we've already woken the thread, then do nothing *)
+      let wakeup () = try Lwt.wakeup wakener () with Invalid_argument _ -> () in
+      (* On close, wake wait_for_closed_thread *)
+      wait_for_closed_thread, fun () -> close () >|= wakeup
+    in
     let command_stream, push_to_stream = Lwt_stream.create () in
+    (* Lwt.task creates a thread that can be canceled *)
     let (paused_thread, wakener) = Lwt.task () in
     let conn = {
       name;
@@ -174,6 +186,7 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
       on_read;
       command_thread = paused_thread >>= (fun conn -> CommandLoop.run conn);
       read_thread = paused_thread >>= (fun conn -> ReadLoop.run conn);
+      wait_for_closed_thread;
     } in
     let start () = Lwt.wakeup wakener conn in
     Lwt.return (start, conn)

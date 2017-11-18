@@ -350,6 +350,19 @@ begin library "flow-monitor-server-status"
   ]
 end
 
+begin library "flow-monitor-rpc"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "monitorRPC.mli"
+    "monitorRPC.ml"
+  ]
+  requires = [
+    "hh-utils-sys"
+    "flow-server-protocol"
+  ]
+end
+
 begin library "flow-server-files"
   sort = true
   files = [
@@ -370,6 +383,7 @@ begin library "flow-shmem"
   requires = [
     "flow-server-files"
     "flow-common"
+    "flow-monitor-rpc"
     "hh-heap"
     "hh-utils-sys"
     "hh-utils-collections"
@@ -402,7 +416,6 @@ begin library "flow-server"
       "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
-      "serverUtils.ml"
       "persistent_connection.ml"
       "server_files_js.ml"
       "server_files_js.mli"
@@ -461,7 +474,6 @@ begin library "flow-server-utils"
   dirname = "src/server"
   files = [
     "file_input.ml"
-    "serverUtils.ml"
   ]
   requires = [
     "hh-utils-sys"

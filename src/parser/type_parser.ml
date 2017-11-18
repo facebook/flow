@@ -177,7 +177,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         loc, Type.StringLiteral {
-          Type.StringLiteral.value;
+          Ast.StringLiteral.value;
           raw;
         }
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
@@ -185,7 +185,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         if kind = LEGACY_OCTAL
         then strict_error env Error.StrictOctalLiteral;
         loc, Type.NumberLiteral {
-          Type.NumberLiteral.value;
+          Ast.NumberLiteral.value;
           raw;
         }
     | (T_TRUE | T_FALSE) as token ->
@@ -597,7 +597,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     loc, name
 
   and bounded_type env = with_loc (fun env ->
-    let _, name = type_identifier env in
+    let name = type_identifier env in
     let bound = if Peek.token env = T_COLON then Some (annotation env) else None in
     name, bound
   ) env

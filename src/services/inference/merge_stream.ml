@@ -77,6 +77,10 @@ let make dependency_graph leader_map component_map recheck_leader_map =
   components := component_map;
   to_recheck := recheck_leader_map;
 
+  let total_number_of_files =
+    FilenameMap.fold (fun _ files acc -> List.length files + acc) component_map 0 in
+  let files_merged_so_far = ref 0 in
+
   let leader f = FilenameMap.find_unsafe f leader_map in
   let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
     let leader_f = leader f in
@@ -118,9 +122,17 @@ let make dependency_graph leader_map component_map recheck_leader_map =
       in
       let n = min bucket_size jobs in
       let result = take n |> List.map component in
-      if result <> [] then
+      if result <> [] then begin
+        let length = List.fold_left (fun acc element -> match element with
+          | Skip _ -> acc
+          | Component files -> List.length files + acc) 0 result in
+        MonitorRPC.status_update ServerStatus.(Merging_progress {
+          finished = !files_merged_so_far;
+          total = Some total_number_of_files;
+        });
+        files_merged_so_far := !files_merged_so_far + length;
         MultiWorker.Job result
-      else
+      end else
         MultiWorker.Done
 
 (* We know when files are done by having jobs return the files they processed,

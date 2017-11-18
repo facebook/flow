@@ -46,14 +46,6 @@ let bindings_of_variable_declarations =
       bindings_of_pattern acc pattern
   ) []
 
-let bindings_of_export_specifiers =
-  let open Ast.Statement.ExportNamedDeclaration in
-  List.fold_left ExportSpecifier.(fun acc -> function
-    | _, { local = id; exported = None }
-    | _, { exported = Some id; _ } ->
-      id::acc
-  ) []
-
 let partition_directives statements =
   let open Ast.Statement in
   let rec helper directives = function

@@ -13,6 +13,7 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
+  | RecursionLimitError
   | LintError of Lints.lint_kind
 
 let string_of_kind = function
@@ -21,6 +22,7 @@ let string_of_kind = function
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
 | DuplicateProviderError -> "DuplicateProviderError"
+| RecursionLimitError -> "RecursionLimitError"
 | LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
 (* internal rep for core info *)
@@ -284,15 +286,16 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 let compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
-       errors. then both infer warnings and errors at the same priority. then
-       lint errors *)
+       errors, then recursion limit errors. then both infer warnings and errors
+       at the same priority. then lint errors *)
     let order_of_kind = function
     | InternalError -> 1
     | DuplicateProviderError -> 2
     | ParseError -> 3
-    | InferError -> 4
-    | InferWarning -> 4
-    | LintError _ -> 5
+    | RecursionLimitError -> 4
+    | InferError -> 5
+    | InferWarning -> 5
+    | LintError _ -> 6
     in
     fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
   in
@@ -594,6 +597,7 @@ module Cli_output = struct
         (* TODO: is this possible? What happens when there are two `declare
            module`s with the same name? *)
         | DuplicateProviderError -> "Library duplicate provider error:"
+        | RecursionLimitError -> "Library recursion limit error:"
         | LintError lint_kind ->
           let lint_string = Lints.string_of_kind lint_kind in
           Printf.sprintf "Library lint %s (%s):"
@@ -808,6 +812,7 @@ module Json_output = struct
       | InferWarning -> "infer"
       | InternalError -> "internal"
       | DuplicateProviderError -> "duplicate provider"
+      | RecursionLimitError -> "recursion limit exceeded"
       | LintError _ -> "lint"
     in
     let severity_str = output_string_of_severity severity in

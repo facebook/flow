@@ -275,14 +275,9 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
-      | DeclareModule.Identifier (_, name)
-      | DeclareModule.Literal (_, {
-          Ast.Literal.value = Ast.Literal.String name; _;
-        }) ->
-        name
-      | _ ->
-        (* The only literals that we should see as module names are strings *)
-        assert false in
+      | DeclareModule.Identifier (_, value)
+      | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
+      in
       let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
       let t = Tvar.mk cx r in
       Type_table.set (Context.type_table cx) loc t;
@@ -1511,15 +1506,9 @@ and statement cx = Ast.Statement.(
 
   | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let name = match id with
-    | DeclareModule.Identifier ident -> ident_name ident
-    | DeclareModule.Literal (_, { Ast.Literal.
-        value = Ast.Literal.String str;
-        _;
-      }) ->
-        str
-    | _ ->
-        (* The only literals that we should see as module names are strings *)
-        assert false in
+    | DeclareModule.Identifier (_, value)
+    | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
+    in
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
@@ -1775,14 +1764,7 @@ and statement cx = Ast.Statement.(
 
     let { ImportDeclaration.source; specifiers; default; importKind } = import_decl in
 
-    let module_name = (
-      match source with
-      | _, { Ast.Literal.value = Ast.Literal.String value; _ } -> value
-      | _ -> failwith (
-          "Internal Parser Error: Invalid import source type! Must be a " ^
-          "string literal."
-        )
-    ) in
+    let _, { Ast.StringLiteral.value = module_name; _ } = source in
 
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -1852,9 +1834,7 @@ and statement cx = Ast.Statement.(
 
         (match importKind with
           | ImportDeclaration.ImportType ->
-            Flow.add_output cx Flow_error.(EImportTypeofNamespace
-              (import_reason, local_name, module_name));
-            [import_loc, local_name, AnyT.why import_reason, None]
+            assert_false "import type * is a parse error"
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason (fst local) import_reason in
             let module_ns_t =
@@ -1990,18 +1970,11 @@ and export_statement cx loc
           *)
         let source_module_tvar = (
           match source with
-          | Some(src_loc, {
-              Ast.Literal.value = Ast.Literal.String(module_name);
-              _;
-            }) ->
-              let reason =
-                mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
-              in
-              Some(import_ns cx reason module_name src_loc)
-          | Some(_) -> failwith (
-              "Parser Error: `export ... from` must specify a string " ^
-              "literal for the source module name!"
-            )
+          | Some (src_loc, { Ast.StringLiteral.value = module_name; _ }) ->
+            let reason =
+              mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
+            in
+            Some (import_ns cx reason module_name src_loc)
           | None -> None
         ) in
 
@@ -2044,11 +2017,8 @@ and export_statement cx loc
       ) ->
       let source_module_name = (
         match source with
-        | Some(_, {
-            Ast.Literal.value = Ast.Literal.String(module_name);
-            _;
-          }) -> module_name
-        | _ -> failwith (
+        | Some (_, { Ast.StringLiteral.value; _ }) -> value
+        | None -> failwith (
           "Parser Error: `export * from` must specify a string " ^
           "literal for the source module name!"
         )
@@ -2127,19 +2097,21 @@ and export_statement cx loc
 
 and object_prop cx map = Ast.Expression.Object.(function
   (* named prop *)
-  | Property (_, { Property.
+  | Property (_, Property.Init {
       key =
         Property.Identifier (loc, name) |
         Property.Literal (loc, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = Property.Init v; _ }) ->
+      value = v; _ }) ->
     let t = expression cx v in
     Properties.add_field name Neutral (Some loc) t map
 
   (* literal LHS *)
-  | Property (loc, { Property.key = Property.Literal _; _ }) ->
+  | Property (loc, Property.Init { key = Property.Literal _; _ })
+  | Property (loc, Property.Get { key = Property.Literal _; _ })
+  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
     map
@@ -2150,10 +2122,10 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (loc, { Property.
+  | Property (loc, Property.Get {
       key = Property.Identifier (id_loc, name);
-      value = Property.Get (vloc, func);
-      _ }) ->
+      value = (vloc, func);
+    }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let return_t = Type.extract_getter_type function_type in
@@ -2165,10 +2137,10 @@ and object_prop cx map = Ast.Expression.Object.(function
     end
 
   (* unsafe setter property *)
-  | Property (loc, { Property.
+  | Property (loc, Property.Set {
       key = Property.Identifier (id_loc, name);
-      value = Property.Set (vloc, func);
-      _ }) ->
+      value = (vloc, func);
+    }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let function_type = mk_function None cx vloc func in
       let param_t = Type.extract_setter_type function_type in
@@ -2181,24 +2153,23 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
-  | Property (loc, { Property.
-      key = Property.Computed _;
-      value = Property.Get _ | Property.Set _;
-      _
-    }) ->
+  | Property (loc, Property.Get { key = Property.Computed _; _ })
+  | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
     map
 
   (* computed LHS silently ignored for now *)
-  | Property (_, { Property.key = Property.Computed _; _ }) ->
+  | Property (_, Property.Init { key = Property.Computed _; _ }) ->
     map
 
   (* spread prop *)
   | SpreadProperty _ ->
     map
 
-  | Property (_, { Property.key = Property.PrivateName _; _ }) ->
+  | Property (_, Property.Init { key = Property.PrivateName _; _ })
+  | Property (_, Property.Get { key = Property.PrivateName _; _ })
+  | Property (_, Property.Set { key = Property.PrivateName _; _ }) ->
     failwith "Internal Error: Non-private field with private name"
 )
 
@@ -2250,9 +2221,9 @@ and object_ cx reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, proto, Some result
-    | Property (_, { Property.
+    | Property (_, Property.Init {
         key = Property.Computed k;
-        value = Property.Init v;
+        value = v;
         _method = _; shorthand = _;
       }) ->
         let k = expression cx k in
@@ -2262,14 +2233,14 @@ and object_ cx reason ?(allow_sealed=true) props =
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
         sealed, SMap.empty, proto, Some result
-    | Property (_, { Property.
+    | Property (_, Property.Init {
         key =
           Property.Identifier (_, "__proto__") |
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String "__proto__";
             _;
           });
-        value = Property.Init v;
+        value = v;
         _method = false;
         shorthand = false;
       }) ->

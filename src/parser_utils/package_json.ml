@@ -45,9 +45,9 @@ let parse ast =
     let open Ast in
     let open Expression.Object in
     let extract_property package = function
-      | Property(_, { Property.
+      | Property (_, Property.Init {
           key = Property.Literal(_, { Literal.value = Literal.String key; _ });
-          value = Property.Init (_, Expression.Literal { Literal.
+          value = (_, Expression.Literal { Literal.
             value = Literal.String value;
             _
           });

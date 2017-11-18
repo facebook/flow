@@ -273,11 +273,26 @@ let ignore_version_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Ignore the version constraint in .flowconfig"
 )
 
-let log_file_flag prev = CommandSpec.ArgSpec.(
-  prev
-  |> flag "--log-file" string
-      ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
-)
+let log_file_flags =
+  let normalize log_file =
+    let dirname = Path.make (Filename.dirname log_file) in
+    let basename = Filename.basename log_file in
+    Path.concat dirname basename
+    |> Path.to_string
+  in
+
+  let collector main server_log_file monitor_log_file =
+    main (Option.map ~f:normalize server_log_file) (Option.map ~f:normalize monitor_log_file)
+  in
+
+  fun prev -> CommandSpec.ArgSpec.(
+    prev
+    |> collect collector
+    |> flag "--log-file" string
+        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+    |> flag "--monitor-log-file" string
+        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
+  )
 
 let assert_version flowconfig =
   match FlowConfig.required_version flowconfig with
@@ -412,6 +427,12 @@ let lints_flag prev = CommandSpec.ArgSpec.(
     ~doc:"Specify one or more lint rules, comma separated"
 )
 
+let no_restart_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--no-auto-restart" no_arg
+    ~doc:"If the server dies, do not try and restart it; just exit"
+)
+
 let flowconfig_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_flowconfig_flags
@@ -478,10 +499,26 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> quiet_flag
 )
 
-let log_file ~tmp_dir root flowconfig =
+(* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
+let server_and_json_flags =
+  let collect_server_and_json main server_flags json pretty =
+    main { server_flags with
+      quiet = server_flags.quiet || json || pretty
+    } json pretty
+  in
+  fun prev ->
+    prev
+    |> CommandSpec.ArgSpec.collect collect_server_and_json
+    |> server_flags
+    |> json_flags
+
+let server_log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
   | None -> Path.make (Server_files_js.file_of_root "log" ~tmp_dir root)
+
+let monitor_log_file ~tmp_dir root =
+  Path.make (Server_files_js.file_of_root "monitor_log" ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
@@ -641,7 +678,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_strict_mode = strict_mode;
   }
 
-let connect server_flags root =
+let connect ~client_type server_flags root =
   let flowconfig_path = Server_files_js.config_file root in
   let flowconfig = FlowConfig.get flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
@@ -653,7 +690,7 @@ let connect server_flags root =
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
     server_flags.shm_flags.shm_dirs in
   let log_file =
-    Path.to_string (log_file ~tmp_dir root flowconfig) in
+    Path.to_string (server_log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
@@ -676,7 +713,7 @@ let connect server_flags root =
     emoji = FlowConfig.emoji flowconfig;
     quiet = server_flags.quiet;
   } in
-  CommandConnect.connect env
+  CommandConnect.connect ~client_type env
 
 let rec search_for_root config start recursion_limit : Path.t option =
   if start = Path.parent start then None (* Reach fs root, nothing to do. *)
@@ -756,20 +793,82 @@ let range_string_of_loc ~strip_root loc = Loc.(
 
 let exe_name = Utils_js.exe_name
 
-let send_command (oc:out_channel) (cmd:ServerProt.command): unit =
-  let command = { ServerProt.
-    client_logging_context = FlowEventLogger.get_context ();
-    command = cmd;
-  } in
-  Marshal.to_channel oc command [];
-  flush oc
+(* What should we do when we connect to the flow server monitor, but it dies before responding to
+ * us? Well, we should consume a retry and try to connect again, potentially even starting a new
+ * server *)
+let rec connect_and_make_request =
+  (* Sends the command over the socket *)
+  let send_command (oc:out_channel) (cmd:ServerProt.Request.command): unit =
+    let command = { ServerProt.Request.
+      client_logging_context = FlowEventLogger.get_context ();
+      command = cmd;
+    } in
+    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) command;
+    flush oc
+  in
 
-let connect_and_make_request option_values root request =
-  (* Connect *)
-  let ic, oc = connect option_values root in
+  (* Waits for a response over the socket. If the connection dies, this will throw an exception *)
+  let rec wait_for_response ~quiet ~root (ic: Timeout.in_channel) =
+    let use_emoji = Tty.supports_emoji () &&
+      Server_files_js.config_file root
+      |> FlowConfig.get
+      |> FlowConfig.emoji in
 
-  (* Send request *)
-  send_command oc request;
+    let response: MonitorProt.monitor_to_client_message = try
+      Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel ic)
+    with
+    | Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _) ->
+      if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
+      raise End_of_file
+    | exn ->
+      if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
+      raise exn
+    in
 
-  (* Read result *)
-  Timeout.input_value ic
+    match response with
+    (* The server is busy, so we print the server's status and keep reading from the socket *)
+    | MonitorProt.Please_hold status ->
+      if not quiet then begin
+        if Tty.spinner_used () then Tty.print_clear_line stderr;
+        Printf.eprintf
+          "Please wait. %s: %s%!"
+          (ServerStatus.string_of_status ~use_emoji status)
+          (Tty.spinner())
+      end;
+      wait_for_response ~quiet ~root ic
+    | MonitorProt.Data response ->
+      if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
+      response
+    | MonitorProt.ServerException exn_str ->
+      if Tty.spinner_used () then Tty.print_clear_line stderr;
+      let msg = Utils_js.spf "Server threw an exception: %s" exn_str in
+      FlowExitStatus.(exit ~msg Unknown_error)
+  in
+
+  fun ?retries server_flags root request ->
+    let retries = match retries with
+    | None -> server_flags.retries
+    | Some retries -> retries in
+
+    if retries < 0
+    then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
+
+    let quiet = server_flags.quiet in
+    let ic, oc = connect ~client_type:SocketHandshake.Ephemeral server_flags root in
+    send_command oc request;
+    try wait_for_response ~quiet ~root ic
+    with End_of_file ->
+      if not quiet then begin
+        Printf.eprintf
+          "Lost connection to the flow server (%d %s remaining)\n%!"
+          retries
+          (if retries = 1 then "retry" else "retries")
+      end;
+      connect_and_make_request ~retries:(retries - 1) server_flags root request
+
+let failwith_bad_response ~request ~response =
+  let msg = Printf.sprintf
+    "Bad response to %S: received %S"
+    (ServerProt.Request.to_string request)
+    (ServerProt.Response.to_string response) in
+  failwith msg

@@ -39,7 +39,7 @@ Error: requireLazy.js:21
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The first arg to requireLazy() must be a literal array of string literals!
 
 Error: requireLazy.js:22
- 22: requireLazy(['A']); // Error: No calback expression
+ 22: requireLazy(['A']); // Error: No callback expression
      ^^^^^^^^^^^^^^^^^^ The first arg to requireLazy() must be a literal array of string literals!
 
 

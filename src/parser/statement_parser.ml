@@ -792,8 +792,7 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
+          Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw; })
       | _ ->
           Statement.DeclareModule.Identifier (Parse.identifier env) in
       let body_loc, (module_kind, body) = with_loc (fun env ->
@@ -879,12 +878,10 @@ module Statement
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
-        let value = Literal.String value in
-        loc, { Literal.value; raw; }
+        loc, { StringLiteral.value; raw; }
     | _ ->
         (* Just make up a string for the error case *)
-        let value = Literal.String "" in
-        let ret = Peek.loc env, { Literal.value; raw = ""; } in
+        let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
         error_unexpected env;
         ret
 
@@ -915,12 +912,13 @@ module Statement
 
   and extract_ident_name (_, name) = name
 
-  and export_specifiers env specifiers =
+  and export_specifiers ?(preceding_comma=true) env specifiers =
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
         List.rev specifiers
     | _ ->
+        if not preceding_comma then error env Error.ExportSpecifierMissingComma;
         let specifier = with_loc (fun env ->
           let local = identifier_name env in
           let exported =
@@ -936,9 +934,8 @@ module Statement
           in
           { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported; }
         ) env in
-        if Peek.token env = T_COMMA
-        then Expect.token env T_COMMA;
-        export_specifiers env (specifier::specifiers)
+        let preceding_comma = Expect.maybe env T_COMMA in
+        export_specifiers ~preceding_comma env (specifier::specifiers)
 
   and assert_export_specifier_identifiers env specifiers =
     let open Statement.ExportNamedDeclaration.ExportSpecifier in
@@ -1288,12 +1285,10 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          loc, { Literal.value; raw; }
+          loc, { StringLiteral.value; raw; }
       | _ ->
           (* Just make up a string for the error case *)
-          let value = Literal.String "" in
-          let ret = Peek.loc env, { Literal.value; raw = ""; } in
+          let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
           error_unexpected env;
           ret
 
@@ -1501,8 +1496,7 @@ module Statement
       | T_STRING (str_loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (str_loc, value, raw, octal));
-        let value = Literal.String value in
-        let source = (str_loc, { Literal.value; raw; }) in
+        let source = (str_loc, { StringLiteral.value; raw; }) in
         Eat.semicolon env;
         Statement.ImportDeclaration {
           importKind = ImportValue;
@@ -1520,7 +1514,11 @@ module Statement
         (* `import type from "ModuleName";` *)
         | T_IDENTIFIER { raw = "from"; _ } ->
           with_default ImportValue env
-        | T_MULT
+        | T_MULT ->
+          (* `import type *` is invalid, since the namespace can't be a type *)
+          Eat.token env; (* consume `type` *)
+          error_unexpected env; (* unexpected `*` *)
+          with_specifiers ImportType env
         | T_LCURLY ->
           Eat.token env; (* consume `type` *)
           with_specifiers ImportType env

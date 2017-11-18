@@ -11,7 +11,6 @@
   *)
 
 let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 
 module type LOOP = sig
   type acc
@@ -28,7 +27,7 @@ end = struct
   let catch acc exn =
     match exn with
     (* Automatically handle Canceled. No one ever seems to want to handle it manually. *)
-    | Lwt.Canceled -> Lwt.return ()
+    | Lwt.Canceled -> Lwt.return_unit
     | exn -> Loop.catch acc exn
 
   let rec loop acc =
@@ -39,7 +38,7 @@ end = struct
 
   let run ?cancel_condition acc =
     (* Create a waiting thread *)
-    let waiter, wakener = Lwt.wait () in
+    let waiter, wakener = Lwt.task () in
     (* When the waiting thread is woken, it will kick off the loop *)
     let thread = waiter >>= loop in
 
@@ -47,10 +46,12 @@ end = struct
     begin match cancel_condition with
     | None -> ()
     | Some condition ->
-      Lwt.async (fun () ->
-        Lwt_condition.wait condition
-        >|= (fun () -> Lwt.cancel thread)
-      )
+      (* If the condition is hit, cancel the loop thread. If the loop thread finishes, cancel the
+       * condition wait *)
+      Lwt.async (fun () -> Lwt.pick [
+        Lwt.catch (fun () -> thread) (fun _ -> Lwt.return_unit); (* Ignore exceptions here *)
+        Lwt_condition.wait condition;
+      ])
     end;
 
     (* Start things going *)

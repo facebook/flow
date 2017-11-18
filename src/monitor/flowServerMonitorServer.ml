@@ -22,12 +22,11 @@ let (>>=) = Lwt.(>>=)
 let (>|=) = Lwt.(>|=)
 let spf = Printf.sprintf
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
 module Logger = FlowServerMonitorLogger
 module PersistentProt = Persistent_connection_prot
 
 type command =
-| Write_ephemeral_request of ServerProt.command_with_context * EphemeralConnection.t
+| Write_ephemeral_request of ServerProt.Request.command_with_context * EphemeralConnection.t
 | Write_persistent_request of PersistentProt.client_id * PersistentProt.request
 | Notify_new_persistent_connection of PersistentProt.client_id * FlowEventLogger.logging_context
 | Notify_dead_persistent_connection of PersistentProt.client_id
@@ -52,13 +51,24 @@ end = struct
 
   let handle_response ~msg ~connection:_ =
     match msg with
-    | MonitorProt.Response (request_id, bytes) ->
+    | MonitorProt.Response (request_id, response) ->
       Logger.debug "Read a response to request '%s' from the server!" request_id;
       RequestMap.remove ~request_id
       >|= (function
       | None -> Logger.error "Failed to look up request '%s'" request_id
       | Some (_, client) ->
-        let msg = MonitorProt.Data bytes in
+        let msg = MonitorProt.Data response in
+        try EphemeralConnection.write_and_close ~msg client
+        with Lwt_stream.Closed ->
+          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+      )
+    | MonitorProt.RequestFailed (request_id, exn_str) ->
+      Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
+      RequestMap.remove ~request_id
+      >|= (function
+      | None -> Logger.error "Failed to look up request '%s'" request_id
+      | Some (_, client) ->
+        let msg = MonitorProt.ServerException exn_str in
         try EphemeralConnection.write_and_close ~msg client
         with Lwt_stream.Closed ->
           Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
@@ -131,7 +141,7 @@ end = struct
       argv;
       _;
     } = monitor_options in
-    let handle = Main.daemonize_from_monitor
+    let handle = Server.daemonize
       ~log_file ~shared_mem_config ~argv server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
@@ -228,8 +238,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
       (**** Things the server might exit with that implies that the monitor should exit too ****)
 
       | No_error  (* Server exited cleanly *)
+      | Windows_killed_by_task_manager (* Windows task manager killed the server *)
       | Invalid_flowconfig (* Parse/version/etc error. Server will never start correctly. *)
       | Server_client_directory_mismatch (* This is a weird one *)
+      | Flowconfig_changed (* We could survive some config changes, but it's too hard to tell *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)
 
       (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
@@ -249,7 +261,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
       (**** Unrelated exit codes. If we see them then something is wrong ****)
 
-      | Server_initializing
       | Type_error
       | Out_of_time
       | Kill_error
@@ -290,6 +301,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
     >>= (fun (_, status) ->
       ServerInstance.cleanup server
       >>= (fun () ->
+        if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
+        then FlowEventLogger.murdered_by_oom_killer ();
+
         match status with
         | Unix.WEXITED exit_status ->
           let exit_type =
@@ -346,7 +360,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
   let catch _ exn =
     Logger.error ~exn "Exception in KeepAliveLoop";
-    Lwt.return_unit
+    raise exn
 end)
 
 let start monitor_options = KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
@@ -354,7 +368,7 @@ let start monitor_options = KeepAliveLoop.run ~cancel_condition:ExitSignal.signa
 let send_request ~client ~request =
   Logger.debug
     "Adding request (%s) to the command stream"
-    (ServerProt.string_of_command request.ServerProt.command);
+    (ServerProt.Request.to_string request.ServerProt.Request.command);
   push_to_command_stream (Some (Write_ephemeral_request (request, client)))
 
 let send_persistent_request ~client_id ~request =

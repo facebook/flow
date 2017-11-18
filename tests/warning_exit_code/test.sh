@@ -47,6 +47,9 @@ cp warn_flowconfig .flowconfig
 assert_ok "$FLOW" check-contents --include-warnings test.js < test.js
 printf "\n"
 
+# Kill the server before we start messing around with the flowconfig for check-contents.
+assert_ok "$FLOW" stop
+
 echo "Check Contents With Errors (nonzero exit code):"
 cp error_flowconfig .flowconfig
 assert_errors "$FLOW" check-contents --include-warnings test.js < test.js

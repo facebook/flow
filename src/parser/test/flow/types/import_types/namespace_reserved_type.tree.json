@@ -1,6 +1,10 @@
 {
   "errors":[
     {
+      "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":13}},
+      "message":"Unexpected token *"
+    },
+    {
       "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":23}},
       "message":"Unexpected reserved type"
     }

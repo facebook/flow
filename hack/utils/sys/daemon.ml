@@ -234,6 +234,7 @@ let fork
 let spawn
     (type param) (type input) (type output)
     ?(channel_mode = `pipe)
+    ?name
     (stdin, stdout, stderr)
     (entry: (param, input, output) entry)
     (param: param) : (output, input) handle =
@@ -241,7 +242,8 @@ let spawn
     setup_channels channel_mode in
   Entry.set_context entry param (child_in, child_out);
   let exe = Sys_utils.executable_path () in
-  let pid = Unix.create_process exe [|exe|] stdin stdout stderr in
+  let name = Option.value ~default:(Entry.name_of_entry entry) name in
+  let pid = Unix.create_process exe [|exe; name|] stdin stdout stderr in
   Entry.clear_context ();
   (match channel_mode with
   | `pipe ->
@@ -250,10 +252,15 @@ let spawn
   | `socket ->
     (** the in and out FD's are the same. Close only once. *)
     Unix.close child_in);
-  if stdin <> Unix.stdin then Unix.close stdin;
-  if stdout <> Unix.stdout then Unix.close stdout;
-  if stderr <> Unix.stderr && stderr <> stdout then
-    Unix.close stderr;
+
+  let close_if_open fd =
+    try Unix.close fd
+    with Unix.Unix_error (Unix.EBADF, _, _) -> ()
+  in
+  if stdin <> Unix.stdin then close_if_open stdin;
+  if stdout <> Unix.stdout then close_if_open stdout;
+  if stderr <> Unix.stderr && stderr <> stdout then close_if_open stderr;
+  
   PidLog.log
     ~reason:(Entry.name_of_entry entry)
     ~no_fail:true

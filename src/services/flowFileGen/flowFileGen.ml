@@ -54,14 +54,7 @@ let gen_imports env =
       | None ->
         ([], None)
     in
-    let source =
-      match source with
-      | (_, {Literal.value = Literal.String s; _;}) -> s
-      | _ -> failwith (
-        "Internal error: Parsed a non-string for the `from` clause of an " ^
-        "import!"
-      )
-    in
+    let _, { Ast.StringLiteral.value = source; _ } = source in
 
     let env = Codegen.add_str "import " env in
     let env =

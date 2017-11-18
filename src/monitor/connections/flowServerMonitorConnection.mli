@@ -27,13 +27,9 @@ module type CONNECTION = sig
   val close_immediately: t -> unit Lwt.t
   val flush_and_close: t -> unit Lwt.t
   val is_closed: t -> bool
+  val wait_for_closed: t -> unit Lwt.t
 end
 
 module Make : functor (ConnectionProcessor: CONNECTION_PROCESSOR) -> CONNECTION
   with type in_message := ConnectionProcessor.in_message
   and type out_message := ConnectionProcessor.out_message
-
-(*
-module Server : CONNECTION
-  with type in_message = MonitorProt.server_to_monitor_message
-  and type out_message = MonitorProt.monitor_to_server_message *)

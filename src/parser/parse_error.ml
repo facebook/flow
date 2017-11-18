@@ -89,6 +89,7 @@ type t =
   | InvalidNonTypeImportInDeclareModule
   | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
+  | ExportSpecifierMissingComma
   | MalformedUnicode
   | DuplicateConstructor
   | DuplicatePrivateFields of string
@@ -219,8 +220,8 @@ module PP =
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
       | WindowsFloatOfString -> "The Windows version of OCaml has a bug in how \
-          it parses hexidecimal numbers. It is fixed in OCaml 4.03.0. Until we \
-          can switch to 4.03.0, please avoid either hexidecimal notation or \
+          it parses hexadecimal numbers. It is fixed in OCaml 4.03.0. Until we \
+          can switch to 4.03.0, please avoid either hexadecimal notation or \
           Windows."
       | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
           statement!"
@@ -238,6 +239,8 @@ module PP =
         `import typeof` statements"
       | ImportSpecifierMissingComma ->
         "Missing comma between import specifiers"
+      | ExportSpecifierMissingComma ->
+        "Missing comma between export specifiers"
       | MalformedUnicode ->
         "Malformed unicode"
       | DuplicateConstructor ->

@@ -41,12 +41,12 @@ let rec mk_literal_expr (t : Loc.t T.t') : Loc.t E.t' =
     E.Array.(E.Array {elements})
   | T.Object obj_t -> mk_obj_literal_expr obj_t
   | T.StringLiteral lit ->
-    let value = T.StringLiteral.(lit.value) in
-    let raw = T.StringLiteral.(lit.raw) in
+    let value = Ast.StringLiteral.(lit.value) in
+    let raw = Ast.StringLiteral.(lit.raw) in
     E.Literal (Ast.Literal.({value = String value; raw}))
   | T.NumberLiteral lit ->
-    let value = T.NumberLiteral.(lit.value) in
-    let raw = T.NumberLiteral.(lit.raw) in
+    let value = Ast.NumberLiteral.(lit.value) in
+    let raw = Ast.NumberLiteral.(lit.raw) in
     E.Literal (Ast.Literal.({value = Number value; raw}))
   | T.BooleanLiteral value ->
     let raw = if value then "true" else "false" in
@@ -76,11 +76,15 @@ and mk_obj_literal_expr (t : Loc.t T.Object.t) : Loc.t E.t' =
     (* Randomly remove some optional properties *)
     (* |> List.filter (fun (_, o, _) -> (not o) || FRandom.rbool ()) *)
     |> List.map (fun (key, _, expr_t) ->
-       let open E.Object.Property in
-       E.Object.Property (Loc.none, {key;
-                                     value = Init (Loc.none, expr_t);
-                                     _method = false;
-                                     shorthand = false})) in
+        let open E.Object.Property in
+        E.Object.Property (Loc.none, Init {
+          key;
+          value = Loc.none, expr_t;
+          _method = false;
+          shorthand = false
+        })
+       )
+  in
   E.Object.(E.Object {properties = prop_init_list})
 
 (* Check the expression is of the given type *)
@@ -236,10 +240,13 @@ let mk_obj_lit (plist : (string * (Loc.t E.t' * Loc.t T.t')) list) : t =
       let pname = fst p in
       let expr = fst (snd p) in
       let open E.Object.Property in
-      E.Object.Property (Loc.none, {key = Identifier (Loc.none, pname);
-                                    value = Init (Loc.none, expr);
-                                    _method = false;
-                                    shorthand = false})) plist in
+      E.Object.Property (Loc.none, Init {
+        key = Identifier (Loc.none, pname);
+        value = Loc.none, expr;
+        _method = false;
+        shorthand = false
+      })
+  ) plist in
   let open E.Object in
   Expr (E.Object {properties = props})
 

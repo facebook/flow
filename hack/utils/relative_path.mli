@@ -39,6 +39,7 @@ val suffix : t -> string
 val to_absolute : t -> string
 val to_tmp : t -> t
 val to_root : t -> t
+val strip_root_if_possible : string -> string
 
 module Set : module type of Reordered_argument_set(Set.Make(S))
 module Map : module type of Reordered_argument_map(MyMap.Make(S))
