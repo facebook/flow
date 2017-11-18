@@ -1196,14 +1196,14 @@ end with type t = Impl.t) = struct
       "types", array_of_list _type tl;
     |]
 
-  and string_literal_type (loc, s) = Type.StringLiteral.(
+  and string_literal_type (loc, s) = Ast.StringLiteral.(
     node "StringLiteralTypeAnnotation" loc [|
       "value", string s.value;
       "raw", string s.raw;
     |]
   )
 
-  and number_literal_type (loc, s) = Type.NumberLiteral.(
+  and number_literal_type (loc, s) = Ast.NumberLiteral.(
     node "NumberLiteralTypeAnnotation" loc [|
       "value", number s.value;
       "raw", string s.raw;

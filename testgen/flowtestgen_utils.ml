@@ -302,8 +302,8 @@ and string_of_type (t : Loc.t T.t') =
       [(string_of_type t1); (string_of_type t2)]
       @ (trest |> (List.map snd) |> (List.map string_of_type)) in
     String.concat " | " t_strlist
-  | T.StringLiteral st -> T.StringLiteral.(st.raw)
-  | T.NumberLiteral nt -> T.NumberLiteral.(nt.raw)
+  | T.StringLiteral st -> Ast.StringLiteral.(st.raw)
+  | T.NumberLiteral nt -> Ast.NumberLiteral.(nt.raw)
   | T.BooleanLiteral bt -> if bt then "true" else "false"
   | T.Function func ->
     let open T.Function in

@@ -39,6 +39,20 @@ and Literal : sig
     | RegExp of RegExp.t
 end = Literal
 
+and StringLiteral : sig
+  type t = {
+    value: string;
+    raw: string;
+  }
+end = StringLiteral
+
+and NumberLiteral : sig
+  type t = {
+    value: float;
+    raw: string;
+  }
+end = NumberLiteral
+
 and Variance : sig
   type 'M t = 'M * t'
   and t' = Plus | Minus
@@ -141,24 +155,6 @@ and Type : sig
     }
   end
 
-  module StringLiteral : sig
-    type t = {
-      value: string;
-      raw: string;
-    }
-  end
-
-  module NumberLiteral : sig
-    type t = {
-      value: float;
-      raw: string;
-    }
-  end
-
-  module BooleanLiteral : sig
-    type t = bool
-  end
-
   type 'M t = 'M * 'M t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -182,7 +178,7 @@ and Type : sig
     | Tuple of 'M t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
-    | BooleanLiteral of BooleanLiteral.t
+    | BooleanLiteral of bool
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at

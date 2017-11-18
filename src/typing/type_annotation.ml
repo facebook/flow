@@ -152,10 +152,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   let elemt = convert cx tparams_map t in
   DefT (r, ArrT (ArrayAT (elemt, None)))
 
-| loc, StringLiteral { StringLiteral.value; _ }  ->
+| loc, StringLiteral { Ast.StringLiteral.value; _ }  ->
   mk_singleton_string loc value
 
-| loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
+| loc, NumberLiteral { Ast.NumberLiteral.value; raw; _ }  ->
   mk_singleton_number loc value raw
 
 | loc, BooleanLiteral value  ->
@@ -340,7 +340,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Exports" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match typeParameters with
-      | Some ((_, StringLiteral { StringLiteral.value; _ })::_) ->
+      | Some ((_, StringLiteral { Ast.StringLiteral.value; _ })::_) ->
           let desc = RCustom (spf "exports of module `%s`" value) in
           let reason = mk_reason desc loc in
           let remote_module_t =
@@ -391,7 +391,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$CharSet" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match typeParameters with
-    | Some [(_, StringLiteral { StringLiteral.value; _ })] ->
+    | Some [(_, StringLiteral { Ast.StringLiteral.value; _ })] ->
         let chars = String_utils.CharSet.of_string value in
         let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
         let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) loc in

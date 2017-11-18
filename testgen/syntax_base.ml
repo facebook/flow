@@ -41,12 +41,12 @@ let rec mk_literal_expr (t : Loc.t T.t') : Loc.t E.t' =
     E.Array.(E.Array {elements})
   | T.Object obj_t -> mk_obj_literal_expr obj_t
   | T.StringLiteral lit ->
-    let value = T.StringLiteral.(lit.value) in
-    let raw = T.StringLiteral.(lit.raw) in
+    let value = Ast.StringLiteral.(lit.value) in
+    let raw = Ast.StringLiteral.(lit.raw) in
     E.Literal (Ast.Literal.({value = String value; raw}))
   | T.NumberLiteral lit ->
-    let value = T.NumberLiteral.(lit.value) in
-    let raw = T.NumberLiteral.(lit.raw) in
+    let value = Ast.NumberLiteral.(lit.value) in
+    let raw = Ast.NumberLiteral.(lit.raw) in
     E.Literal (Ast.Literal.({value = Number value; raw}))
   | T.BooleanLiteral value ->
     let raw = if value then "true" else "false" in
