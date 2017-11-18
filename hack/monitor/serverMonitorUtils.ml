@@ -25,6 +25,8 @@ type monitor_config =
 (** Informant-induced restart may specify the mini saved state
  * we should load from. *)
 type target_mini_state = {
+  (** True if this is a tiny saved state. *)
+  is_tiny : bool;
   mini_state_everstore_handle : string;
   target_svn_rev : int;
 }
