@@ -9,9 +9,6 @@ open Core_result
 open ServerEnv
 open Utils_js
 
-let try_with f =
-  try f () with exn -> Error (Printexc.to_string exn)
-
 let status_log errors =
   if Errors.ErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"

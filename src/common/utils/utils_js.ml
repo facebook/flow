@@ -231,3 +231,6 @@ module Augmentable(M: MyMap.S) = struct
 end
 
 module AugmentableSMap = Augmentable(SMap)
+
+let try_with f =
+  try f () with exn -> Error (Printexc.to_string exn)
