@@ -10,7 +10,7 @@ val mk_commonjs_module_t :
   Context.t -> Reason.t -> Reason.t -> Type.t -> Type.t
 val mk_resource_module_t : Context.t -> Loc.t -> string -> Type.t
 val require : Context.t -> (Loc.t * string) -> Loc.t -> Type.t
-val import : ?reason:Reason.t -> Context.t -> (Loc.t * string) -> Loc.t -> Type.t
+val import : Context.t -> (Loc.t * string) -> Loc.t -> Type.t
 val import_ns : Context.t -> Reason.t -> (Loc.t * string) -> Loc.t -> Type.t
 val module_t_of_cx : Context.t -> Type.t
 val set_module_t : Context.t -> Reason.t -> (Type.t -> unit) -> unit

@@ -130,7 +130,7 @@ type local_t = {
   annot_table: (Loc.t, Type.t) Hashtbl.t;
   refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
-  mutable declare_module_t: Type.t option;
+  mutable declare_module_ref: string option;
 
   (* map from exists proposition locations to the types of values running through them *)
   mutable exists_checks: ExistsCheck.t LocMap.t;
@@ -224,7 +224,7 @@ let make metadata file module_ref = {
     annot_table = Hashtbl.create 0;
     refs_table = Hashtbl.create 0;
 
-    declare_module_t = None;
+    declare_module_ref = None;
 
     exists_checks = LocMap.empty;
     exists_excuses = LocMap.empty;
@@ -234,10 +234,19 @@ let make metadata file module_ref = {
   }
 }
 
+let push_declare_module cx module_ref =
+  match cx.local.declare_module_ref with
+  | Some _ -> failwith "declare module must be one level deep"
+  | None -> cx.local.declare_module_ref <- Some module_ref
+
+let pop_declare_module cx =
+  match cx.local.declare_module_ref with
+  | None -> failwith "pop empty declare module"
+  | Some _ -> cx.local.declare_module_ref <- None
+
 (* accessors *)
 let all_unresolved cx = cx.local.all_unresolved
 let annot_table cx = cx.local.annot_table
-let declare_module_t cx = cx.local.declare_module_t
 let envs cx = cx.local.envs
 let enable_const_params cx = Global.enable_const_params cx.global
 let enable_unsafe_getters_and_setters cx = Global.enable_unsafe_getters_and_setters cx.global
@@ -279,7 +288,10 @@ let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let require_map cx = cx.local.require_map
 let module_map cx = cx.local.module_map
-let module_ref cx = cx.local.module_ref
+let module_ref cx =
+  match cx.local.declare_module_ref with
+  | Some module_ref -> module_ref
+  | None -> cx.local.module_ref
 let property_maps cx = cx.local.property_maps
 let refs_table cx = cx.local.refs_table
 let export_maps cx = cx.local.export_maps
@@ -349,8 +361,6 @@ let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
   cx.local.all_unresolved <- all_unresolved
-let set_declare_module_t cx t =
-  cx.local.declare_module_t <- t
 let set_envs cx envs =
   cx.local.envs <- envs
 let set_evaluated cx evaluated =

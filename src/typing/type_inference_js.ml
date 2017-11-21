@@ -349,8 +349,18 @@ let scan_for_suppressions cx base_settings comments =
 
 let add_require_tvars =
   let add cx desc loc =
-    (* Utils_js.print_endlinef "add_require: %s" (Loc.to_string ~include_source:true loc); *)
-    Context.add_require cx loc (Tvar.mk cx (Reason.mk_reason desc loc))
+    let reason = Reason.mk_reason desc loc in
+    let t = Tvar.mk cx reason in
+    Context.add_require cx loc t
+  in
+  let add_decl cx m_name desc loc =
+    (* TODO: Imports within `declare module`s can only reference other `declare
+       module`s (for now). This won't fly forever so at some point we'll need to
+       move `declare module` storage into the modulemap just like normal modules
+       and merge them as such. *)
+    let reason = Reason.mk_reason desc loc in
+    let t = Flow_js.get_builtin cx m_name reason in
+    Context.add_require cx loc t
   in
   fun cx file_sig ->
     let open File_sig in
@@ -358,7 +368,15 @@ let add_require_tvars =
       let desc = Reason.RCustom mref in
       List.iter (add cx desc) req.cjs_requires;
       List.iter (add cx desc) req.es_imports;
-    ) file_sig.module_sig.requires
+    ) file_sig.module_sig.requires;
+    SMap.iter (fun _ (_, module_sig) ->
+      SMap.iter (fun mref req ->
+        let m_name = Reason.internal_module_name mref in
+        let desc = Reason.RCustom mref in
+        List.iter (add_decl cx m_name desc) req.cjs_requires;
+        List.iter (add_decl cx m_name desc) req.es_imports;
+      ) module_sig.requires;
+    ) file_sig.declare_modules
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)

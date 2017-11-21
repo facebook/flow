@@ -1504,104 +1504,80 @@ and statement cx = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc decl
 
-  | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
     let name = match id with
     | DeclareModule.Identifier (_, value)
     | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
     in
     let _, { Ast.Statement.Block.body = elements } = body in
 
-    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
-    let t = Env.get_var_declared_type cx (internal_module_name name) loc in
+    let module_ref = Reason.internal_module_name name in
 
     let module_scope = Scope.fresh () in
+    Scope.add_entry
+      (Reason.internal_name "exports")
+      (Scope.Entry.new_var
+        ~loc:Loc.none
+        ~specific:Locationless.EmptyT.t
+        Locationless.MixedT.t)
+      module_scope;
+
     Env.push_var_scope cx module_scope;
     let outer_module_exports_kind = Context.module_kind cx in
-    Context.set_module_kind cx (
-      match kind with
-      | DeclareModule.CommonJS loc -> Context.CommonJSModule (Some loc)
-      | DeclareModule.ES _ -> Context.ESModule
-    );
-    Context.set_declare_module_t cx (Some t);
+    Context.set_module_kind cx (Context.CommonJSModule None);
+    Context.push_declare_module cx module_ref;
+
+    let initial_module_t = module_t_of_cx cx in
 
     toplevel_decls cx elements;
     toplevels cx elements;
 
-    Context.set_declare_module_t cx None;
+    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
+    let module_t = match Context.module_kind cx with
+    | Context.ESModule -> mk_module_t cx reason
+    | Context.CommonJSModule clobbered ->
+      let open Scope in
+      let open Entry in
+      (* TODO: drop `declare var exports` in favor of `declare module.exports` *)
+      let legacy_exports = Scope.get_entry "exports" module_scope in
+      let cjs_exports = match clobbered, legacy_exports with
+      | Some loc, _ -> get_module_exports cx loc
+      | None, Some (Value {specific; _}) -> specific
+      | None, _ ->
+        let props = SMap.fold (fun x entry acc ->
+          match entry with
+          | Value {specific; _} ->
+            let loc = Some (entry_loc entry) in
+            Properties.add_field x Neutral loc specific acc
+          | Type _ | Class _ -> acc
+        ) module_scope.entries SMap.empty in
+        let proto = ObjProtoT reason in
+        Obj_type.mk_with_proto cx reason ~props proto
+      in
+      let type_exports = SMap.fold (fun x entry acc ->
+        match entry with
+        | Type {_type; _} -> SMap.add x _type acc
+        | Value _ | Class _ -> acc
+      ) module_scope.entries SMap.empty in
+      set_module_t cx reason (fun t ->
+        Flow.flow cx (
+          module_t_of_cx cx,
+          ExportNamedT (reason, false, type_exports, t)
+        )
+      );
+      mk_commonjs_module_t cx reason reason cjs_exports
+    in
+
+    Flow.flow_t cx (module_t, initial_module_t);
+
+    let t = Env.get_var_declared_type cx module_ref loc in
+    Flow.flow_t cx (initial_module_t, t);
+
+    Context.pop_declare_module cx;
     Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
-    (match kind with
-      | DeclareModule.CommonJS kind_loc ->
-        (**
-         * TODO(jeffmo): `declare var exports` is deprecated (in favor of
-         * `declare module.exports`). v0.25 retains support for it as
-         * a transitionary grace period, but this will be removed as
-         * early as v0.26.
-         *)
-        let legacy_exports = Scope.get_entry "exports" module_scope in
-        let declared_module_exports =
-          Scope.get_entry (internal_name "declare_module.exports") module_scope
-        in
 
-        let type_exports, cjs_module_exports =
-          let open Scope in
-          let open Entry in
-          match legacy_exports, declared_module_exports with
-          (* TODO: Eventually drop support for legacy "declare var exports" *)
-          | Some (Value {specific=exports; _}), None
-          | _, Some (Value {specific=exports; _}) ->
-            let type_exports = SMap.fold (fun x entry acc ->
-              match entry with
-              | Value _ -> acc
-              | Type {_type; _} -> SMap.add x _type acc
-              | Class _ -> acc
-            ) module_scope.entries SMap.empty in
-            type_exports, exports
-
-          | _, Some (Type _) ->
-            assert_false (
-              "Internal Error: `declare module.exports` was created as a " ^
-              "type binding. This should never happen!"
-            )
-
-          | Some (Class _), _
-          | _, Some (Class _) ->
-            assert_false (
-              "Internal Error: `declare module.exports` was created as a " ^
-              "class binding. This should never happen!"
-            )
-
-          | Some (Type _), None
-          | None, None ->
-            let type_exports, value_exports = SMap.fold (fun x entry (ts, vs) ->
-              let loc = entry_loc entry in
-              match entry with
-              | Value {specific; _} ->
-                ts,
-                SMap.add x (Field (Some loc, specific, Neutral)) vs
-              | Type {_type; _} ->
-                SMap.add x _type ts,
-                vs
-              | Class _ -> (ts, vs)
-            ) module_scope.entries (SMap.empty, SMap.empty) in
-
-            let reason = repos_reason kind_loc reason in
-            let proto = ObjProtoT reason in
-
-            type_exports,
-            Obj_type.mk_with_proto cx reason ~props:value_exports proto
-        in
-
-        let module_t =
-          mk_commonjs_module_t cx reason reason cjs_module_exports in
-        let module_t = Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (module_t, ExportNamedT (reason, false, type_exports, t))
-        ) in
-        Flow.unify cx module_t t;
-      | DeclareModule.ES _ ->
-        Flow.flow_t cx (mk_module_t cx reason, t)
-    )
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -1653,14 +1629,8 @@ and statement cx = Ast.Statement.(
 
   | (loc, DeclareModuleExports annot) ->
     let t = Anno.convert cx SMap.empty (snd annot) in
-
-    if Context.declare_module_t cx <> None then (
-      let name = internal_name "declare_module.exports" in
-      Env.bind_declare_var cx name t loc
-    ) else (
-      set_module_kind cx loc (Context.CommonJSModule(Some loc));
-      set_module_exports cx loc t
-    )
+    set_module_kind cx loc (Context.CommonJSModule(Some loc));
+    set_module_exports cx loc t
 
   | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
       declaration;
@@ -2069,7 +2039,7 @@ and export_statement cx loc
         then set_module_kind cx loc Context.ESModule;
 
         set_module_t cx reason (fun t -> Flow.flow cx (
-          import ~reason cx (source_loc, source_module_name) loc,
+          import cx (source_loc, source_module_name) loc,
           let module_t = module_t_of_cx cx in
           match exportKind with
           | ExportValue -> CopyNamedExportsT(reason, module_t, t)
