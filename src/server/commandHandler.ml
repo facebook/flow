@@ -259,8 +259,9 @@ let get_imports ~options module_names =
         let requires = File_sig.(fsig.module_sig.requires) in
         let mlocs = SMap.fold (fun mref r acc ->
           let m = SMap.find_unsafe mref resolved_modules in
-          let loc = r.File_sig.loc in
-          Modulename.Map.add m loc acc
+          let { File_sig.cjs_requires; es_imports; _ } = r in
+          let locs = List.rev_append cjs_requires es_imports in
+          Modulename.Map.add m locs acc
         ) requires Modulename.Map.empty in
         (SMap.add module_name_str mlocs map, non_flow)
       else
