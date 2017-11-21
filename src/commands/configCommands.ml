@@ -40,6 +40,7 @@ module Init = struct
     | Some str -> Str.split (Str.regexp ";") str
     in
     let ignores = flowconfig_flags.CommandUtils.ignores in
+    let untyped = flowconfig_flags.CommandUtils.untyped in
     let includes = flowconfig_flags.CommandUtils.includes in
     let libs = flowconfig_flags.CommandUtils.libs in
     let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
@@ -51,7 +52,7 @@ module Init = struct
       FlowExitStatus.(exit ~msg Invalid_flowconfig)
     end;
 
-    let config = FlowConfig.init ~ignores ~includes ~libs ~options ~lints in
+    let config = FlowConfig.init ~ignores ~untyped ~includes ~libs ~options ~lints in
 
     let out = Sys_utils.open_out_no_fail file in
     FlowConfig.write config out;

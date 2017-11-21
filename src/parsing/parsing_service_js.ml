@@ -394,7 +394,7 @@ let calc_file_sig ~ast =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode
+  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode ~noflow
   parse_results
   file
 : results =
@@ -416,6 +416,10 @@ let reducer
   | Some content ->
       begin match get_docblock ~max_tokens:max_header_tokens file content with
       | [], info ->
+        let info =
+          if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
+          else info
+        in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok ast ->
             (* Consider the file unchanged if its reparsing info is the same as
@@ -495,7 +499,10 @@ let get_defaults ~types_mode ~use_strict options =
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
   let lazy_mode = Options.is_lazy_mode options in
-  types_mode, use_strict, profile, max_header_tokens, lazy_mode
+  let noflow fn =
+    Files.is_untyped (Options.file_options options) (File_key.to_string fn)
+  in
+  types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow
 
 (***************************** public ********************************)
 
@@ -509,13 +516,14 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   then MultiWorker.next ~progress_fn workers (FilenameSet.elements filenames)
   else MultiWorker.next workers (FilenameSet.elements filenames)
 
-let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
+let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
   workers next
 : results =
   let t = Unix.gettimeofday () in
+  let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode ~noflow in
   let results = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode))
+    ~job: (List.fold_left reducer)
     ~neutral: empty_result
     ~merge: merge
     ~next: next in
@@ -534,12 +542,12 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   results
 
 let reparse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files =
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
   let next = next_of_filename_set ?with_progress workers files in
   let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next in
   let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
@@ -556,17 +564,18 @@ let reparse
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next
 
 let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers files =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow =
     get_defaults ~types_mode ~use_strict options
   in
   reparse
-    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ?with_progress workers files
+    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow ?with_progress
+    workers files
 
 let has_ast = ASTHeap.mem
 
