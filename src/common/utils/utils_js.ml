@@ -234,3 +234,7 @@ module AugmentableSMap = Augmentable(SMap)
 
 let try_with f =
   try f () with exn -> Error (Printexc.to_string exn)
+
+let debug_print_current_stack_trace () =
+  let open Printexc in
+  get_callstack 200 |> raw_backtrace_to_string |> Hh_logger.info "Current backtrace:\n%s"
