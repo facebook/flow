@@ -95,7 +95,7 @@ module Members : sig
   type ('success, 'success_module) generic_t =
     | Success of 'success
     | SuccessModule of 'success_module
-    | FailureMaybeType
+    | FailureNullishType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 

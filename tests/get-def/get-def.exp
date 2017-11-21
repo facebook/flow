@@ -14,3 +14,5 @@ local reference points to namespaced import = {"path":"imports.js","line":10,"en
 class properties = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
 class methods = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}
 refined class properties = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
+members of maybe types = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}
+members of unions with null/void = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}

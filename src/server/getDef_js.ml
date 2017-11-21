@@ -85,7 +85,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       let result_str, t = Flow_js.Members.(match member_result with
         | Success _ -> "SUCCESS", this
         | SuccessModule _ -> "SUCCESS", this
-        | FailureMaybeType -> "FAILURE_NULLABLE", this
+        | FailureNullishType -> "FAILURE_NULLABLE", this
         | FailureAnyType -> "FAILURE_NO_COVERAGE", this
         | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 

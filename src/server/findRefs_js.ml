@@ -201,7 +201,7 @@ end = struct
       | Success _
       | SuccessModule _ ->
           Ok None
-      | FailureMaybeType ->
+      | FailureNullishType ->
           Error "Extracting definition loc from possibly null or undefined value"
       | FailureAnyType ->
           Error "not enough type information to find definition"

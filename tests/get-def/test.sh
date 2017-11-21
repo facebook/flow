@@ -70,3 +70,8 @@ printf "class methods = "
 assert_ok "$FLOW" get-def class.js 10 6 --strip-root --pretty
 printf "refined class properties = "
 assert_ok "$FLOW" get-def class.js 13 8 --strip-root --pretty
+
+printf "members of maybe types = "
+assert_ok "$FLOW" get-def class.js 17 5 --strip-root --pretty
+printf "members of unions with null/void = "
+assert_ok "$FLOW" get-def class.js 21 5 --strip-root --pretty
