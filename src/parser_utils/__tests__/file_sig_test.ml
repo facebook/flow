@@ -712,4 +712,30 @@ let tests = "require" >::: [
           (substring_loc source loc)
     )
   end;
+
+  "merge_requires_cjs" >:: begin fun ctxt ->
+    let source = "require('foo'); require('foo')" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_cjs:(function
+        | [loc1; loc2] when loc1 <> loc2 ->
+          assert_equal ~ctxt "'foo'" (substring_loc source loc1);
+          assert_equal ~ctxt "'foo'" (substring_loc source loc2);
+        | _ -> assert_failure "unexpected cjs requires")
+  end;
+
+  "merge_requires_es" >:: begin fun ctxt ->
+    let source = "import 'foo'; import 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_es:(function
+        | [loc1; loc2] when loc1 <> loc2 ->
+          assert_equal ~ctxt "'foo'" (substring_loc source loc1);
+          assert_equal ~ctxt "'foo'" (substring_loc source loc2);
+        | _ -> assert_failure "unexpected es requires")
+  end;
 ]

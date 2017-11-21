@@ -86,7 +86,7 @@ let merge_requires =
   fun r1 r2 -> {
     loc = r2.loc;
     cjs_requires = List.rev_append r2.cjs_requires r1.cjs_requires;
-    es_imports = List.rev_append r2.es_imports r2.es_imports;
+    es_imports = List.rev_append r2.es_imports r1.es_imports;
     named = SMap.union r1.named r2.named ~combine:nel_smap_union;
     ns = SMap.union r1.ns r2.ns ~combine:nel_append;
     types = SMap.union r1.types r2.types ~combine:nel_smap_union;
