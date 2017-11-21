@@ -347,12 +347,27 @@ let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx base_settings comments
 
+let add_require_tvars =
+  let add cx desc loc =
+    (* Utils_js.print_endlinef "add_require: %s" (Loc.to_string ~include_source:true loc); *)
+    Context.add_require cx loc (Tvar.mk cx (Reason.mk_reason desc loc))
+  in
+  fun cx file_sig ->
+    let open File_sig in
+    SMap.iter (fun mref req ->
+      let desc = Reason.RCustom mref in
+      List.iter (add cx desc) req.cjs_requires;
+      List.iter (add cx desc) req.es_imports;
+    ) file_sig.module_sig.requires
+
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities ~file_sig cx filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
+
+  add_require_tvars cx file_sig;
 
   let module_ref = Context.module_ref cx in
 
@@ -398,12 +413,8 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
-
     let init_exports = Obj_type.mk cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
 
@@ -457,8 +468,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
        confident that we don't support them in any sensible way. *)
     let open File_sig in
     let file_sig = program ~ast in
-    let require_loc_map = require_loc_map file_sig.module_sig in
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map
+    add_require_tvars cx file_sig
   in
 
   let module_scope = Scope.fresh () in

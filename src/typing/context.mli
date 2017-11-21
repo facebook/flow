@@ -9,6 +9,7 @@ module LocMap = Utils_js.LocMap
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
+exception Require_not_found of string
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
 
@@ -76,7 +77,7 @@ val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
-val find_require: t -> string -> Type.t
+val find_require: t -> Loc.t -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
@@ -90,7 +91,7 @@ val is_weak: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
-val require_map: t -> Type.t SMap.t
+val require_map: t -> Type.t LocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
@@ -124,7 +125,7 @@ val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
-val add_require: t -> string -> Type.t -> unit
+val add_require: t -> Loc.t -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit

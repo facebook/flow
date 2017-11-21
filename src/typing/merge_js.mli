@@ -6,11 +6,11 @@
  *)
 
 module Reqs : sig
-  type impl = File_key.t * string * string * File_key.t
-  type dep_impl = Context.t * string * string * File_key.t
-  type unchecked = string * Loc.t * File_key.t
-  type res = string * Loc.t * string * File_key.t
-  type decl = string * Loc.t * Modulename.t * File_key.t
+  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.t * string * Loc.t Nel.t * File_key.t
+  type unchecked = string * Loc.t Nel.t * File_key.t
+  type res = Loc.t Nel.t * string * File_key.t
+  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;

@@ -115,7 +115,7 @@ type local_t = {
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
-  mutable require_map: Type.t SMap.t;
+  mutable require_map: Type.t LocMap.t;
 
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
@@ -211,7 +211,7 @@ let make metadata file module_ref = {
     evaluated = IMap.empty;
     type_graph = Graph_explorer.new_graph ISet.empty;
     all_unresolved = IMap.empty;
-    require_map = SMap.empty;
+    require_map = LocMap.empty;
     module_map = SMap.empty;
 
     errors = Errors.ErrorSet.empty;
@@ -257,9 +257,9 @@ let find_props cx id =
 let find_exports cx id =
   try Type.Exports.Map.find_unsafe id cx.local.export_maps
   with Not_found -> raise (Exports_not_found id)
-let find_require cx r =
-  try SMap.find_unsafe r cx.local.require_map
-  with Not_found -> raise (Require_not_found r)
+let find_require cx loc =
+  try LocMap.find_unsafe loc cx.local.require_map
+  with Not_found -> raise (Require_not_found (Loc.to_string ~include_source:true loc))
 let find_module cx m =
   try SMap.find_unsafe m cx.local.module_map
   with Not_found -> raise (Module_not_found m)
@@ -327,8 +327,8 @@ let add_import_stmt cx stmt =
   cx.local.import_stmts <- stmt::cx.local.import_stmts
 let add_imported_t cx name t =
   cx.local.imported_ts <- SMap.add name t cx.local.imported_ts
-let add_require cx name tvar =
-  cx.local.require_map <- SMap.add name tvar cx.local.require_map
+let add_require cx loc tvar =
+  cx.local.require_map <- LocMap.add loc tvar cx.local.require_map
 let add_module cx name tvar =
   cx.local.module_map <- SMap.add name tvar cx.local.module_map
 let add_property_map cx id pmap =
@@ -397,7 +397,7 @@ let clear_intermediates cx =
   cx.local.exists_excuses <- LocMap.empty;
   cx.local.dep_map <- Dep_mapper.DepMap.empty;
   cx.local.use_def_map <- LocMap.empty;
-  cx.local.require_map <- SMap.empty
+  cx.local.require_map <- LocMap.empty
 
 
 (* utils *)

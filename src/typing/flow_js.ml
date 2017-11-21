@@ -11639,7 +11639,7 @@ let enforce_strict cx id =
      the call, skip_ids contains precisely those ids that correspond to
      requires/imports. *)
   let skip_ids = ref ISet.empty in
-  SMap.iter (fun _ tvar ->
+  LocMap.iter (fun _ tvar ->
     assume_ground cx skip_ids (UseT (UnknownUse, tvar))
   ) (Context.require_map cx);
 

@@ -8,11 +8,11 @@
 module FilenameMap = Utils_js.FilenameMap
 
 module Reqs = struct
-  type impl = File_key.t * string * string * File_key.t
-  type dep_impl = Context.t * string * string * File_key.t
-  type unchecked = string * Loc.t * File_key.t
-  type res = string * Loc.t * string * File_key.t
-  type decl = string * Loc.t * Modulename.t * File_key.t
+  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.t * string * Loc.t Nel.t * File_key.t
+  type unchecked = string * Loc.t Nel.t * File_key.t
+  type res = Loc.t Nel.t * string * File_key.t
+  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -54,15 +54,15 @@ let implicit_require_strict cx master_cx cx_to =
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
+let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
   let from_t = Flow_js.lookup_module cx_from m in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (r, loc, f, cx_to) =
+let explicit_res_require_strict cx (loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -72,7 +72,7 @@ let explicit_res_require_strict cx (r, loc, f, cx_to) =
      unchecked files: we create the export (`any`) on the fly instead of writing
      / reading it to / from the context of each unchecked file. *)
   let from_t = Import_export.mk_resource_module_t cx loc f in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
@@ -91,7 +91,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
     (Type.Strict reason) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect exports of an unchecked module to its import in cx_to. Note that we
@@ -108,7 +108,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
     (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
@@ -239,31 +239,41 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
 
   let open Reqs in
 
-  reqs.impls |> List.iter (fun (fn_from, m, r, fn_to) ->
+  reqs.impls |> List.iter (fun (fn_from, m, locs, fn_to) ->
     let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to);
+    Nel.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to);
+    ) locs;
     Context.add_module cx m (Context.find_module cx_from m)
   );
 
-  reqs.dep_impls |> List.iter (fun (cx_from, m, r, fn_to) ->
+  reqs.dep_impls |> List.iter (fun (cx_from, m, locs, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to)
+    Nel.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
+    ) locs
   );
 
-  reqs.res |> List.iter (fun (r, loc, f, fn_to) ->
+  reqs.res |> List.iter (fun (locs, f, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_res_require_strict cx (r, loc, f, cx_to)
+    Nel.iter (fun loc ->
+      explicit_res_require_strict cx (loc, f, cx_to)
+    ) locs
   );
 
-  reqs.decls |> List.iter (fun (m, loc, resolved_m, fn_to) ->
+  reqs.decls |> List.iter (fun (m, locs, resolved_m, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    Nel.iter (fun loc ->
+      explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    ) locs
   );
 
-  reqs.unchecked |> List.iter (fun (m, loc, fn_to) ->
+  reqs.unchecked |> List.iter (fun (m, locs, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_unchecked_require_strict cx (m, loc, cx_to)
+    Nel.iter (fun loc ->
+      explicit_unchecked_require_strict cx (m, loc, cx_to)
+    ) locs
   );
 
   detect_sketchy_null_checks cx;

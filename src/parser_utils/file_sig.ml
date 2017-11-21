@@ -95,8 +95,14 @@ let merge_requires =
   }
 
 let require_loc_map msig =
-  SMap.fold (fun name {loc; _} acc ->
-    SMap.add name loc acc
+  SMap.fold (fun name {cjs_requires; es_imports; _} acc ->
+    let acc = List.fold_left (fun acc loc ->
+      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
+    ) acc cjs_requires in
+    let acc = List.fold_left (fun acc loc ->
+      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
+    ) acc es_imports in
+    acc
   ) msig.requires SMap.empty
 
 let add_declare_module name m loc fsig = {

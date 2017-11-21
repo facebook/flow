@@ -1764,7 +1764,7 @@ and statement cx = Ast.Statement.(
 
     let { ImportDeclaration.source; specifiers; default; importKind } = import_decl in
 
-    let _, { Ast.StringLiteral.value = module_name; _ } = source in
+    let source_loc, { Ast.StringLiteral.value = module_name; _ } = source in
 
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -1772,7 +1772,7 @@ and statement cx = Ast.Statement.(
       | ImportDeclaration.ImportValue -> Type.ImportValue
     in
 
-    let module_t = import cx module_name import_loc in
+    let module_t = import cx (source_loc, module_name) import_loc in
 
     let get_imported_t get_reason import_kind remote_export_name local_name =
       Tvar.mk_where cx get_reason (fun t ->
@@ -1819,7 +1819,7 @@ and statement cx = Ast.Statement.(
       | Some (ImportDeclaration.ImportNamespaceSpecifier (ns_loc, local)) ->
         let local_name = ident_name local in
 
-        Type_inference_hooks_js.dispatch_import_hook cx module_name ns_loc;
+        Type_inference_hooks_js.dispatch_import_hook cx (source_loc, module_name) ns_loc;
 
         let import_reason =
           let import_str =
@@ -1838,7 +1838,7 @@ and statement cx = Ast.Statement.(
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason (fst local) import_reason in
             let module_ns_t =
-              import_ns cx import_reason module_name (fst source)
+              import_ns cx import_reason (fst source, module_name) import_loc
             in
             let module_ns_typeof =
               Tvar.mk_where cx bind_reason (fun t ->
@@ -1853,7 +1853,7 @@ and statement cx = Ast.Statement.(
               mk_reason (RCustom (spf "exports of `%s`" module_name)) import_loc
             in
             let module_ns_t =
-              import_ns cx reason module_name (fst source)
+              import_ns cx reason (fst source, module_name) import_loc
             in
             Context.add_imported_t cx local_name module_ns_t;
             [fst local, local_name, module_ns_t, None]
@@ -1974,7 +1974,7 @@ and export_statement cx loc
             let reason =
               mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
             in
-            Some (import_ns cx reason module_name src_loc)
+            Some (import_ns cx reason (src_loc, module_name) loc)
           | None -> None
         ) in
 
@@ -2015,9 +2015,9 @@ and export_statement cx loc
       Some (ExportNamedDeclaration.ExportBatchSpecifier
         (batch_loc, star_as_name)
       ) ->
-      let source_module_name = (
+      let source_loc, source_module_name = (
         match source with
-        | Some (_, { Ast.StringLiteral.value; _ }) -> value
+        | Some (loc, { Ast.StringLiteral.value; _ }) -> loc, value
         | None -> failwith (
           "Parser Error: `export * from` must specify a string " ^
           "literal for the source module name!"
@@ -2039,7 +2039,7 @@ and export_statement cx loc
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
-          then import_ns cx reason source_module_name batch_loc
+          then import_ns cx reason (source_loc, source_module_name) loc
           else AnyT.why (
             let config_value =
               if parse_export_star_as = Options.ESPROPOSAL_IGNORE
@@ -2069,7 +2069,7 @@ and export_statement cx loc
         then set_module_kind cx loc Context.ESModule;
 
         set_module_t cx reason (fun t -> Flow.flow cx (
-          import ~reason cx source_module_name loc,
+          import ~reason cx (source_loc, source_module_name) loc,
           let module_t = module_t_of_cx cx in
           match exportKind with
           | ExportValue -> CopyNamedExportsT(reason, module_t, t)
@@ -2560,10 +2560,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } when not (Env.local_scope_entry_exists "require") -> (
       match arguments with
-      | [ Expression (_, Ast.Expression.Literal {
+      | [ Expression (source_loc, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ]
-      | [ Expression (_, TemplateLiteral {
+      | [ Expression (source_loc, TemplateLiteral {
           TemplateLiteral.quasis = [_, {
             TemplateLiteral.Element.value = {
               TemplateLiteral.Element.cooked = module_name; _
@@ -2571,7 +2571,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           }];
           expressions = [];
         }) ] ->
-        require cx module_name loc
+        require cx (source_loc, module_name) loc
       | _ ->
         let ignore_non_literals =
           Context.should_ignore_non_literal_requires cx in
@@ -2600,11 +2600,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
          *)
 
         let element_to_module_tvar tvars = (function
-          | Some(Expression(_, Ast.Expression.Literal({
+          | Some(Expression(source_loc, Ast.Expression.Literal({
               Ast.Literal.value = Ast.Literal.String module_name;
               _;
             }))) ->
-              let module_tvar = require cx module_name loc in
+              let module_tvar = require cx (source_loc, module_name) loc in
               module_tvar::tvars
           | _ ->
               Flow.add_output cx Flow_error.(
@@ -3001,10 +3001,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Import arg -> (
     match arg with
-    | _, Ast.Expression.Literal {
+    | source_loc, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String module_name; _;
       }
-    | _, TemplateLiteral {
+    | source_loc, TemplateLiteral {
         TemplateLiteral.quasis = [_, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = module_name; _
@@ -3017,7 +3017,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let import_reason = mk_reason (RCustom (
           spf "exports of `%s`" module_name
         )) loc in
-        import_ns cx import_reason module_name loc
+        import_ns cx import_reason (source_loc, module_name) loc
       in
 
       let reason = mk_reason (RCustom "async import") loc in

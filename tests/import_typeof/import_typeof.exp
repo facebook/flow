@@ -1,7 +1,5 @@
 Error: import_typeof.js:13
  13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
-                          ^^^^^^^^^^^^^^^ new `ClassFoo1`
- 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
                           ^^^^^^^^^^^^^^^ ClassFoo1. This type is incompatible with
  13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
              ^^^^^^^^^^ statics of `ClassFoo1`
@@ -13,8 +11,6 @@ Error: import_typeof.js:14
                    ^^^^^^^^^^ type ClassFoo1T
 
 Error: import_typeof.js:24
- 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
-                          ^^^^^^^^^^^^^^^ new `ClassFoo2`
  24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
                           ^^^^^^^^^^^^^^^ ClassFoo2. This type is incompatible with
  24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -28,15 +24,11 @@ Error: import_typeof.js:25
 
 Error: import_typeof.js:35
  35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
-                          ^^^^^^^^^^^^^^^ new `ClassFoo3`
- 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
                           ^^^^^^^^^^^^^^^ ClassFoo3. This type is incompatible with
  35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
              ^^^^^^^^^^ statics of `ClassFoo3`
 
 Error: import_typeof.js:45
- 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
-                          ^^^^^^^^^^^^^^^ new `ClassFoo4`
  45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
                           ^^^^^^^^^^^^^^^ ClassFoo4. This type is incompatible with
  45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)

@@ -205,7 +205,7 @@ module type MODULE_SYSTEM = sig
   val imported_module:
     options: Options.t ->
     SSet.t ->
-    File_key.t -> Loc.t ->
+    File_key.t -> Loc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
     string -> Modulename.t
 
@@ -370,7 +370,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options loc ?resolution_acc root_path rel_path =
+  let resolve_relative ~options (loc, _) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path
