@@ -15,11 +15,11 @@ module Utils = Utils_js
 (* Driver *)
 (**********)
 
-let force_annotations cx require_loc_map =
+let force_annotations cx =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
-  Flow_js.enforce_strict cx id (SMap.keys require_loc_map)
+  Flow_js.enforce_strict cx id
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -436,7 +436,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
-  force_annotations cx require_loc_map;
+  force_annotations cx;
 
   ()
 
