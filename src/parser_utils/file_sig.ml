@@ -20,7 +20,6 @@ and module_sig = {
 }
 
 and require = {
-  loc: Loc.t;
   cjs_requires: Loc.t list;
   es_imports: Loc.t list;
   named: Loc.t Nel.t SMap.t SMap.t;
@@ -68,15 +67,24 @@ let empty_file_sig = {
   declare_modules = SMap.empty;
 }
 
-let mk_require
-  ?(cjs_requires = []) ?(es_imports = [])
+let mk_cjs_require loc = {
+  cjs_requires = [loc];
+  es_imports = [];
+  named = SMap.empty;
+  ns = SMap.empty;
+  types = SMap.empty;
+  typesof = SMap.empty;
+  typesof_ns = SMap.empty;
+}
+
+let mk_es_import
   ?(named = SMap.empty)
   ?(ns = SMap.empty)
   ?(types = SMap.empty)
   ?(typesof = SMap.empty)
   ?(typesof_ns = SMap.empty)
   loc =
-  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns }
+  { cjs_requires = []; es_imports = [loc]; named; ns; types; typesof; typesof_ns }
 
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
 
@@ -84,7 +92,6 @@ let merge_requires =
   let nel_smap_union _ a b = Some (SMap.union a b ~combine:combine_nel) in
   let nel_append _ a b = Some (Nel.rev_append a b) in
   fun r1 r2 -> {
-    loc = r2.loc;
     cjs_requires = List.rev_append r2.cjs_requires r1.cjs_requires;
     es_imports = List.rev_append r2.es_imports r1.es_imports;
     named = SMap.union r1.named r2.named ~combine:nel_smap_union;
@@ -115,12 +122,12 @@ let update_sig f fsig = { fsig with module_sig = f fsig.module_sig }
 let set_module_kind module_kind msig = { msig with module_kind }
 
 let add_cjs_require name loc msig =
-  let require = mk_require loc ~cjs_requires:[loc] in
+  let require = mk_cjs_require loc in
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 
 let add_es_import name ?named ?ns ?types ?typesof ?typesof_ns loc msig =
-  let require = mk_require loc ~es_imports:[loc] ?named ?ns ?types ?typesof ?typesof_ns in
+  let require = mk_es_import loc ?named ?ns ?types ?typesof ?typesof_ns in
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 

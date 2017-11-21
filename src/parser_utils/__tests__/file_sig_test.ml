@@ -20,12 +20,11 @@ let substring_loc s loc =
 let call_opt x = function Some f -> f x | None -> ()
 
 let assert_require
-  ?assert_loc ?assert_cjs ?assert_es
+  ?assert_cjs ?assert_es
   ?assert_named ?assert_ns
   ?assert_types
   ?assert_typesof ?assert_typesof_ns
-  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns } =
-  call_opt loc assert_loc;
+  { cjs_requires; es_imports; named; ns; types; typesof; typesof_ns } =
   call_opt cjs_requires assert_cjs;
   call_opt es_imports assert_es;
   call_opt named assert_named;
@@ -70,10 +69,9 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
     assert_require require
-      ~assert_loc:(fun loc ->
-        assert_equal ~ctxt "'foo'" (substring_loc source loc))
-      ~assert_cjs:(fun requires ->
-        assert_equal ~ctxt 1 (List.length requires))
+      ~assert_cjs:(function
+        | [loc] -> assert_equal ~ctxt "'foo'" (substring_loc source loc)
+        | _ -> assert_failure "unexpected cjs require")
   end;
 
   "cjs_require_template_literal" >:: begin fun ctxt ->
@@ -82,10 +80,9 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
     assert_require require
-      ~assert_loc:(fun loc ->
-        assert_equal ~ctxt "`foo`" (substring_loc source loc))
-      ~assert_cjs:(fun requires ->
-        assert_equal ~ctxt 1 (List.length requires))
+      ~assert_cjs:(function
+        | [loc] -> assert_equal ~ctxt "`foo`" (substring_loc source loc)
+        | _ -> assert_failure "unexpected cjs require")
   end;
 
   "es_import" >:: begin fun ctxt ->
@@ -94,10 +91,9 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
     assert_require require
-      ~assert_loc:(fun loc ->
-        assert_equal ~ctxt "'foo'" (substring_loc source loc))
-      ~assert_es:(fun imports ->
-        assert_equal ~ctxt 1 (List.length imports))
+      ~assert_es:(function
+        | [loc] -> assert_equal ~ctxt "'foo'" (substring_loc source loc)
+        | _ -> assert_failure "unexpected es import")
   end;
 
   "es_import_default" >:: begin fun ctxt ->
@@ -269,10 +265,9 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
     assert_require require
-      ~assert_loc:(fun loc ->
-        assert_equal ~ctxt "'foo'" (substring_loc source loc))
-      ~assert_es:(fun imports ->
-        assert_equal ~ctxt 1 (List.length imports))
+      ~assert_es:(function
+        | [loc] -> assert_equal ~ctxt "'foo'" (substring_loc source loc)
+        | _ -> assert_failure "unexpected es import")
   end;
 
   "es_import_dynamic_template_literal" >:: begin fun ctxt ->
@@ -281,10 +276,9 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
     assert_require require
-      ~assert_loc:(fun loc ->
-        assert_equal ~ctxt "`foo`" (substring_loc source loc))
-      ~assert_es:(fun imports ->
-        assert_equal ~ctxt 1 (List.length imports))
+      ~assert_es:(function
+        | [loc] -> assert_equal ~ctxt "`foo`" (substring_loc source loc)
+        | _ -> assert_failure "unexpected es import")
   end;
 
   "cjs_default" >:: begin fun ctxt ->
