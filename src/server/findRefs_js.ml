@@ -28,22 +28,27 @@ let get_ast_result file content =
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
+let get_dependents options workers env file_key content =
+  let docblock = get_docblock file_key content in
+  let modulename = Module_js.exported_module options file_key docblock in
+  Dep_service.dependent_files
+    workers
+    (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
+    probably worth looking at if you are searching for optimizations *)
+    ~unchanged:ServerEnv.(CheckedSet.all !env.checked_files)
+    ~new_or_changed:(FilenameSet.singleton file_key)
+    ~changed_modules:(Modulename.Set.singleton modulename)
+
 module VariableRefs: sig
   val find_refs:
-    File_key.t ->
-    content: string ->
-    Loc.t ->
-    ((string * Loc.t list) option, string) result
-
-  val find_external_refs:
     Options.t ->
     Worker.t list option ->
     ServerEnv.env ref ->
     File_key.t ->
     content: string ->
-    name: string ->
-    Loc.t list ->
-    (Loc.t list, string) result
+    Loc.t ->
+    global: bool ->
+    ((string * Loc.t list) option, string) result
 end = struct
   let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t list, string) result =
     let open File_sig in
@@ -84,7 +89,7 @@ end = struct
     in
     Ok locs
 
-  let find_refs file_key ~content loc =
+  let local_find_refs file_key ~content loc =
     let open Scope_api in
     get_ast_result file_key content >>= fun ast ->
     let scope_info = Scope_builder.program ast in
@@ -102,17 +107,7 @@ end = struct
     end
 
   let find_external_refs options workers env file_key ~content ~name local_refs =
-    let docblock = get_docblock file_key content in
-    let modulename = Module_js.exported_module options file_key docblock in
-    let _, direct_dependents =
-      Dep_service.dependent_files
-        workers
-        (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
-        probably worth looking at if you are searching for optimizations *)
-        ~unchanged:ServerEnv.(CheckedSet.all !env.checked_files)
-        ~new_or_changed:(FilenameSet.singleton file_key)
-        ~changed_modules:(Modulename.Set.singleton modulename)
-    in
+    let _, direct_dependents = get_dependents options workers env file_key content in
     (* Get a map from dependent file path to locations where the symbol in question is imported in
     that file *)
     let imported_locations_result: (Loc.t list, string) result =
@@ -134,7 +129,7 @@ end = struct
         File_key.to_path filekey >>= fun path ->
         let file_input = File_input.FileName path in
         File_input.content_of_file_input file_input >>= fun content ->
-        find_refs filekey ~content imported_loc >>= fun refs_option ->
+        local_find_refs filekey ~content imported_loc >>= fun refs_option ->
         Result.of_option refs_option ~error:"Expected results from local_find_refs" >>= fun (_name, locs) ->
         Ok locs
       end |>
@@ -143,6 +138,33 @@ end = struct
     in
     all_external_locations >>= fun all_external_locations ->
     Ok (List.concat [all_external_locations; local_refs])
+
+  let find_refs options workers env file_key ~content loc ~global =
+    (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
+    first *)
+    local_find_refs file_key content loc >>= function
+      | None -> Ok None
+      | Some (name, refs) ->
+          if global then
+            get_ast_result file_key content >>= fun ast ->
+            let sig_ = File_sig.program ast in
+            let open File_sig in
+            begin match sig_.module_sig.module_kind with
+              (* TODO support CommonJS *)
+              | CommonJS _ -> Ok (Some (name, refs))
+              | ES {named; _} -> begin match SMap.get name named with
+                  | None -> Ok (Some (name, refs))
+                  | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs))
+                  | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
+                      if List.mem loc refs then
+                        let all_refs_result = find_external_refs options workers env file_key content name refs in
+                        all_refs_result >>= fun all_refs -> Ok (Some (name, all_refs))
+                      else
+                        Ok (Some (name, refs))
+                end
+            end
+          else
+            Ok (Some (name, refs))
 end
 
 module PropertyRefs: sig
@@ -256,39 +278,11 @@ end = struct
           Ok (Some (name, refs))
 end
 
-let local_find_refs options workers env file_key file_input loc : ((string * Loc.t list) option, string) result =
-  File_input.content_of_file_input file_input >>= fun content ->
-  VariableRefs.find_refs file_key content loc >>= function
-    | Some _ as result -> Ok result
-    | None -> PropertyRefs.find_refs options workers env content file_key loc
-
 let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
-  (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
-  first *)
-  local_find_refs options workers env file_key file_input loc >>= function
-    | None -> Ok None
-    | Some (name, refs) ->
-        if global then
-          File_input.content_of_file_input file_input >>= fun content ->
-          get_ast_result file_key content >>= fun ast ->
-          let sig_ = File_sig.program ast in
-          let open File_sig in
-          begin match sig_.module_sig.module_kind with
-            (* TODO support CommonJS *)
-            | CommonJS _ -> Ok (Some (name, refs))
-            | ES {named; _} -> begin match SMap.get name named with
-                | None -> Ok (Some (name, refs))
-                | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs))
-                | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
-                    if List.mem loc refs then
-                      let all_refs_result = VariableRefs.find_external_refs options workers env file_key content name refs in
-                      all_refs_result >>= fun all_refs -> Ok (Some (name, all_refs))
-                    else
-                      Ok (Some (name, refs))
-              end
-          end
-        else
-          Ok (Some (name, refs))
+  File_input.content_of_file_input file_input >>= fun content ->
+  VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
+    | Some _ as result -> Ok result
+    | None -> PropertyRefs.find_refs options workers env content file_key loc
