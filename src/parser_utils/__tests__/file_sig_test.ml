@@ -76,6 +76,18 @@ let tests = "require" >::: [
         assert_equal ~ctxt 1 (List.length requires))
   end;
 
+  "cjs_require_template_literal" >:: begin fun ctxt ->
+    let source = "const Foo = require(`foo`)" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_loc:(fun loc ->
+        assert_equal ~ctxt "`foo`" (substring_loc source loc))
+      ~assert_cjs:(fun requires ->
+        assert_equal ~ctxt 1 (List.length requires))
+  end;
+
   "es_import" >:: begin fun ctxt ->
     let source = "import 'foo'" in
     let {module_sig = {requires; _}; _} = visit source in
@@ -87,7 +99,6 @@ let tests = "require" >::: [
       ~assert_es:(fun imports ->
         assert_equal ~ctxt 1 (List.length imports))
   end;
-
 
   "es_import_default" >:: begin fun ctxt ->
     let source = "import Foo from 'foo'" in
@@ -250,6 +261,30 @@ let tests = "require" >::: [
         let loc, rest = SMap.find_unsafe "Foo" typesof_ns in
         assert_equal ~ctxt 0 (List.length rest);
         assert_equal "* as Foo" (substring_loc source loc))
+  end;
+
+  "es_import_dynamic" >:: begin fun ctxt ->
+    let source = "import('foo')" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_loc:(fun loc ->
+        assert_equal ~ctxt "'foo'" (substring_loc source loc))
+      ~assert_es:(fun imports ->
+        assert_equal ~ctxt 1 (List.length imports))
+  end;
+
+  "es_import_dynamic_template_literal" >:: begin fun ctxt ->
+    let source = "import(`foo`)" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_loc:(fun loc ->
+        assert_equal ~ctxt "`foo`" (substring_loc source loc))
+      ~assert_es:(fun imports ->
+        assert_equal ~ctxt 1 (List.length imports))
   end;
 
   "cjs_default" >:: begin fun ctxt ->

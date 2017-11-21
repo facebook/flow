@@ -182,9 +182,14 @@ class requires_calculator ~ast = object(this)
     let open Ast.Expression in
     let { Call.callee; arguments } = expr in
     begin match callee, arguments with
-    | ((_, Identifier (loc, "require")),
-       [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
-      ->
+    | ((_, Identifier (loc, "require")), [Expression (require_loc, (
+        Literal { Ast.Literal.value = Ast.Literal.String v; _ } |
+        TemplateLiteral { TemplateLiteral.
+          quasis = [_, { TemplateLiteral.Element.
+            value = { TemplateLiteral.Element.cooked = v; _ }; _
+          }]; _
+        }
+      ))]) ->
       if not (Scope_api.is_local_use scope_info loc)
       then this#add_cjs_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
@@ -203,9 +208,15 @@ class requires_calculator ~ast = object(this)
   method! import (expr: Loc.t Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
-    | import_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
+    | import_loc, (
+        Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } |
+        TemplateLiteral { TemplateLiteral.
+          quasis = [_, { TemplateLiteral.Element.
+            value = { TemplateLiteral.Element.cooked = v; _ }; _
+          }]; _
+        }
+      ) ->
       this#add_es_import v import_loc
-    (* TODO: match statement.ml support for template literals *)
     | _ -> ()
     end;
     super#expression expr
