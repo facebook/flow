@@ -92,9 +92,27 @@ let main () =
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = depth_engine in
+  let engine = union_engine in
   let all_prog = mk_code engine Config.(config.num_prog) in
   printf "Generated %d programs.\n%!" (List.length all_prog);
+  let type_check_progs = List.filter (fun content ->
+      let result = 
+        if Utils.is_typecheck (engine#get_name ()) then
+          Utils.type_check content
+        else
+          None in
+      match result with
+      | None -> true
+      | Some msg ->
+        Logging.log_type_error content msg;
+        false) all_prog in
+  let batch_result = Utils.batch_run type_check_progs in
+  printf "batch size: %d\n%!" (List.length batch_result);
+  List.iter2 (fun content msg -> match msg with
+      | None -> Logging.log_no_error content
+      | Some msg -> Logging.log_runtime_error content msg) type_check_progs batch_result;
+
+(*
   List.iter (fun content ->
     let type_run_result =
       if Utils.is_typecheck (engine#get_name ())
@@ -106,10 +124,13 @@ let main () =
        | None -> Logging.log_no_error content
        | Some test_error_msg -> Logging.log_runtime_error content test_error_msg)
     | Some type_error_msg -> Logging.log_type_error content type_error_msg) all_prog;
+   *)
   printf "Done!\n%!";
   Logging.print_stats ();
   Logging.close ();;
 
-ignore (Utils.flow_check "var i : string = ([]).length;");
+main ();; 
 
-(* main ();; *)
+(* 
+ignore (Utils.flow_check "var j : boolean = 3;\nvar i : string = [].length;");
+*)

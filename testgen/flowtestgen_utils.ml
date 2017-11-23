@@ -10,6 +10,7 @@ module S = Ast.Statement;;
 module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
+module F = Ast.Function;;
 
 module StrSet = Set.Make(struct
     type t = string
@@ -578,6 +579,146 @@ module Config = struct
     load_json_config_string ~filename content;;
 end
 
+let stub_metadata ~root ~checked = { Context.
+  local_metadata = { Context.
+    checked;
+    munge_underscores = false;
+    (*
+    verbose = Some { Verbose.depth = 2; indent = 2 };
+       *)
+    verbose = None;
+    weak = false;
+    jsx = None;
+    strict = true;
+  };
+  global_metadata = { Context.
+    enable_const_params = false;
+    enable_unsafe_getters_and_setters = true;
+    enforce_strict_type_args = true;
+    enforce_strict_call_arity = true;
+    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+    facebook_fbt = None;
+    ignore_non_literal_requires = false;
+    max_trace_depth = 0;
+    max_workers = 0;
+    root;
+    strip_root = true;
+    suppress_comments = [];
+    suppress_types = SSet.empty;
+  };
+}
+
+let get_master_cx root =
+  Flow_js.fresh_context
+    (stub_metadata ~root ~checked:false)
+    File_key.Builtins
+    Files.lib_module_ref
+
+let flow_check (code : string) : string option =
+(* let flow_check (code : Loc.t Ast.program) : string option =  *)
+  if code = "" then
+    None
+  else
+    let root = Path.dummy_path in
+    let master_cx = get_master_cx root in
+
+    let builtin_metadata = stub_metadata ~root ~checked:true in
+    let lint_severities = LintSettings.default_severities in
+    let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
+    let builtins_cx, _ = Type_inference_js.infer_lib_file   (* The crucial bit *)
+        ~metadata:builtin_metadata ~exclude_syms:SSet.empty ~lint_severities
+        File_key.Builtins builtins_ast in
+    let _ = Merge_js.merge_lib_file builtins_cx master_cx in
+    let reason = Reason.builtin_reason (Reason.RCustom "module") in
+    let builtin_module = Obj_type.mk master_cx reason in
+    Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+    Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
+  (*
+  let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
+  Printf.printf "Lib errors:\n";
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errs errs ();
+  ignore suppressions;
+  ignore lint_suppressions;
+     *)
+
+    let strict_mode = StrictModeSettings.empty in
+    let stub_docblock = { Docblock.
+                          flow = Docblock.(Some OptIn);
+                          preventMunge = None;
+                          providesModule = None;
+                          isDeclarationFile = false;
+                          jsx = None;
+                        } in
+    let input_ast, _ = Parser_flow.program code in
+    let filename = File_key.SourceFile "/tmp/foo.js" in
+    let file_sig = File_sig.program ~ast:input_ast in
+    let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+    let reqs = Merge_js.Reqs.empty in
+    let final_cx = Merge_js.merge_component_strict
+        ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
+        ~get_ast_unsafe:(fun _ -> input_ast)
+        ~get_docblock_unsafe:(fun _ -> stub_docblock)
+        [filename] reqs [] master_cx in  (* merge_component_strict expects the master's sig context here. *)
+    let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
+        Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
+    in 
+    let error_num = Errors.ErrorSet.cardinal errors in
+    if error_num = 0 then
+      None
+    else begin
+      let string_of_errors (json : Hh_json.json) : string =
+        let open Hh_json in
+        let string_of_error (error_json : json) : string = 
+          let error = get_object_exn error_json in
+          let msg_helper (msg_json : json) : string =
+            let msg = get_object_exn msg_json in
+            let desc = get_string_exn (List.assoc "descr" msg) in
+            let loc = get_object_exn (List.assoc "loc" msg) in
+            let start =
+              let start_json = get_object_exn (List.assoc "start" loc) in
+              (Printf.sprintf
+                 "line %d\tcolumn %d\toffset %d" 
+                 (int_of_string (get_number_exn (List.assoc "line" start_json)))
+                 (int_of_string (get_number_exn (List.assoc "column" start_json)))
+                 (int_of_string (get_number_exn (List.assoc "offset" start_json)))) in
+            let eend =
+              let end_json = get_object_exn (List.assoc "end" loc) in
+              (Printf.sprintf
+                 "line %d\tcolumn %d\toffset %d" 
+                 (int_of_string (get_number_exn (List.assoc "line" end_json)))
+                 (int_of_string (get_number_exn (List.assoc "column" end_json)))
+                 (int_of_string (get_number_exn (List.assoc "offset" end_json)))) in
+            Printf.sprintf "Error: %sStart: %s\nEnd: %s\n" desc start eend
+          in
+          String.concat "" (List.map msg_helper (get_array_exn (List.assoc "message" error)))
+        in
+        (List.assoc "errors" (get_object_exn json))
+        |> get_array_exn
+        |> List.map string_of_error
+        |> String.concat "\n"
+      in
+
+      let error_msg =
+        let stdin_file = None in
+        let strip_root = None in
+        let profiling = None in
+        let suppressed_errors = [] in
+        let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+            ~suppressed_errors ~errors ~warnings () in
+        (*
+        Printf.printf "%s\n" (Hh_json.json_to_string ~pretty:false res);
+           *)
+        string_of_errors res in
+    (*
+      Printf.printf "'%s'\n" error_msg;
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errors warnings ();
+       *)
+      Some error_msg
+    end
+
 
 let assert_func = "
 // from http://tinyurl.com/y93dykzv
@@ -688,8 +829,13 @@ let type_check_exit_handler
  *)
 let type_check (code : string) : string option =
   (* Check if we have .flowconfig file *)
+  (*
   let cmd = "flow check-contents" in
   run_cmd code cmd type_check_exit_handler;;
+     *)
+  (Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ code))
+  |> flow_check
+
 
 
 (* Exit handler for running the program *)
@@ -713,107 +859,43 @@ let test_code (code : string) : string option =
 
 let is_typecheck engine_name = engine_name = "union"
 
-let stub_metadata ~root ~checked = { Context.
-  local_metadata = { Context.
-    checked;
-    munge_underscores = false;
-    verbose = None;
-    weak = false;
-    jsx = None;
-    strict = true;
-  };
-  global_metadata = { Context.
-    enable_const_params = false;
-    enable_unsafe_getters_and_setters = true;
-    enforce_strict_type_args = true;
-    enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    facebook_fbt = None;
-    ignore_non_literal_requires = false;
-    max_trace_depth = 0;
-    max_workers = 0;
-    root;
-    strip_root = true;
-    suppress_comments = [];
-    suppress_types = SSet.empty;
-  };
-}
+let batch_run (code_list : string list) : (string option) list =
+  Printf.printf "%d programs\n" (List.length code_list);
+  List.iter (fun code ->
+      Printf.printf "Code =============\n%s\n" code) code_list;
+  let to_stmt (code : string) : string =
+    Printf.sprintf
+"(function () {
+    try {
+      %s
+      console.log('Done');
+    } catch (_err_) {
+      console.log(_err_.message);
+    }
+})();\n" code in
 
-let get_master_cx =
-  let master_cx = ref None in
-  fun root ->
-    match !master_cx with
-    | Some (prev_root, cx) -> assert (prev_root = root); cx
-    | None ->
-      let cx = Flow_js.fresh_context
-        (stub_metadata ~root ~checked:false)
-        File_key.Builtins
-        Files.lib_module_ref in
-      master_cx := Some (root, cx);
-      cx
+  let to_msg_list (output : string) : (string option) list =
+    ignore output;
+    Printf.printf "Output ===========\n%s\n%!" output;
+    let msg_list = Str.split (Str.regexp "====\n") output in
+    Printf.printf "Msg list length: %d\n%!" (List.length msg_list);
+    List.iter (fun msg -> Printf.printf "Message: %s\n%!" msg) msg_list;
+    List.map (fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
 
-let flow_check (code : string) : string option =
-(* let flow_check (code : Loc.t Ast.program) : string option =  *)
-  let root = Path.dummy_path in
-  let master_cx = get_master_cx root in
-  ignore master_cx;
+  let progs = List.map to_stmt code_list in
+  let progs_string = String.concat "console.log('====');\n" progs in
 
-  let builtin_metadata = stub_metadata ~root ~checked:true in
-  let lint_severities = LintSettings.default_severities in
-  Printf.printf "bar1\n%!";
-  let builtins_ast, _ = Parser_flow.program (snd (Flowlib.contents true).(0)) in
-  Printf.printf "bar2\n%!";
-  let cx, _ = Type_inference_js.infer_lib_file
-      ~metadata:builtin_metadata ~exclude_syms:SSet.empty ~lint_severities
-      File_key.Builtins builtins_ast in
-  Printf.printf "bar3\n%!";
-  (*
-  let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
-  Printf.printf "Lib errors:\n";
-  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errs errs ();
-  ignore suppressions;
-  ignore lint_suppressions;
-     *)
-
-  let strict_mode = StrictModeSettings.empty in
-  let stub_docblock = { Docblock.
-                        flow = Docblock.(Some OptIn);
-                        preventMunge = None;
-                        providesModule = None;
-                        isDeclarationFile = false;
-                        jsx = None;
-                      } in
-  let input_ast, _ = Parser_flow.program code in
-  (*
-  let input_metadata = stub_metadata ~root ~checked:true in
-     *)
-  let filename = File_key.SourceFile "/tmp/foo.js" in
-  let file_sig = File_sig.program ~ast:input_ast in
-  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
-  (*
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-  let decls = SMap.fold (fun module_name loc ->
-    List.cons (module_name, loc, Modulename.String module_name, filename)
-  ) require_loc_map [] in
-  let reqs = Merge_js.Reqs.({ empty with decls }) in
-     *)
-  let reqs = Merge_js.Reqs.empty in
-  Printf.printf "foo1\n%!";
-  let final_cx = Merge_js.merge_component_strict
-    ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
-    ~get_ast_unsafe:(fun _ -> input_ast)
-    ~get_docblock_unsafe:(fun _ -> stub_docblock)
-    [filename] reqs [] cx in
-  Printf.printf "foo2\n%!";
-  Type_inference_js.infer_ast
-    ~lint_severities ~file_sig final_cx filename input_ast;
-  Printf.printf "foo3\n%!";
-  let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
-  in 
-  Printf.printf "Input errors:\n";
-  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errors warnings ();
-  None
+  let cmd = "./node_modules/.bin/flow-remove-types" ^ " -a -p | node" in
+  let content = progs_string in
+  Printf.printf "Content =================\n%s\n" content;
+  let ic, oc = Unix.open_process cmd in
+  let out_str = Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
+  Printf.fprintf oc "%s" out_str;
+  close_out oc;
+  let lines = read_all ic in
+  close_in ic;
+  let _  = match (Unix.close_process (ic, oc)) with
+    | Unix.WEXITED code -> code
+    | _ -> failwith "Command exited abnormally." in
+  String.concat "\n" lines
+  |> to_msg_list
