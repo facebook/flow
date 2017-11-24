@@ -84,12 +84,12 @@ type hook_state_t = {
 
   require_hook:
      (Context.t ->
-      string -> Loc.t ->
+      (Loc.t * string) -> Loc.t ->
       unit);
 
   import_hook:
       (Context.t ->
-       string -> Loc.t ->
+       (Loc.t * string) -> Loc.t ->
        unit);
 
   jsx_hook:

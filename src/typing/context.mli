@@ -9,6 +9,7 @@ module LocMap = Utils_js.LocMap
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
+exception Require_not_found of string
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
 
@@ -60,7 +61,6 @@ val from_cache: options:Options.t -> cacheable_t -> t
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
-val declare_module_t: t -> Type.t option
 val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
 val enforce_strict_type_args: t -> bool
@@ -76,7 +76,7 @@ val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
-val find_require: t -> string -> Type.t
+val find_require: t -> Loc.t -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
@@ -90,7 +90,7 @@ val is_weak: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
-val require_map: t -> Type.t SMap.t
+val require_map: t -> Type.t LocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
@@ -117,6 +117,9 @@ val pid_prefix: t -> string
 val copy_of_context: t -> t
 val merge_into: t -> t -> unit
 
+val push_declare_module: t -> string -> unit
+val pop_declare_module: t -> unit
+
 (* mutators *)
 val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
@@ -124,7 +127,7 @@ val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
-val add_require: t -> string -> Type.t -> unit
+val add_require: t -> Loc.t -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
@@ -134,7 +137,6 @@ val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_all_lint_severities: t -> unit
 val remove_tvar: t -> Constraint.ident -> unit
-val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit

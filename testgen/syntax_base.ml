@@ -79,7 +79,6 @@ and mk_obj_literal_expr (t : Loc.t T.Object.t) : Loc.t E.t' =
         E.Object.Property (Loc.none, Init {
           key;
           value = Loc.none, expr_t;
-          _method = false;
           shorthand = false
         })
        )
@@ -242,7 +241,6 @@ let mk_obj_lit (plist : (string * (Loc.t E.t' * Loc.t T.t')) list) : t =
       E.Object.Property (Loc.none, Init {
         key = Identifier (Loc.none, pname);
         value = Loc.none, expr;
-        _method = false;
         shorthand = false
       })
   ) plist in

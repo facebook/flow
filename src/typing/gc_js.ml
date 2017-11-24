@@ -8,6 +8,7 @@
 open Constraint
 open Type
 
+module LocMap = Utils_js.LocMap
 module P = Type.Polarity
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
@@ -208,7 +209,7 @@ let do_gc ~master_cx cx =
    * prevents the visitor from walking their bounds. *)
   |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph master_cx)
   (* Mark tvars reachable from imports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
+  |> LocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
   |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
   (* Collect unmarked tvars from the graph. *)

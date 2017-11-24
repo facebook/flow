@@ -888,11 +888,17 @@ class mapper = object(this)
   method object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
     match prop with
-    | loc, Init { key; value; _method; shorthand } ->
+    | loc, Init { key; value; shorthand } ->
       let key' = this#object_key key in
       let value' = this#expression value in
       if key == key' && value == value' then prop
-      else (loc, Init { key = key'; value = value'; _method; shorthand })
+      else (loc, Init { key = key'; value = value'; shorthand })
+
+    | loc, Method { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Method { key = key'; value = (fn_loc, fn') })
 
     | loc, Get { key; value = (fn_loc, fn) } ->
       let key' = this#object_key key in

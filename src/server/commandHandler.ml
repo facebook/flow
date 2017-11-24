@@ -9,9 +9,6 @@ open Core_result
 open ServerEnv
 open Utils_js
 
-let try_with f =
-  try f () with exn -> Error (Printexc.to_string exn)
-
 let status_log errors =
   if Errors.ErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"
@@ -146,7 +143,7 @@ let find_module ~options (moduleref, filename) =
   let loc = {Loc.none with Loc.source = Some file;} in
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
-    (Context.file cx) loc moduleref in
+    (Context.file cx) (Nel.one loc) moduleref in
   Module_js.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =
@@ -262,8 +259,9 @@ let get_imports ~options module_names =
         let requires = File_sig.(fsig.module_sig.requires) in
         let mlocs = SMap.fold (fun mref r acc ->
           let m = SMap.find_unsafe mref resolved_modules in
-          let loc = r.File_sig.loc in
-          Modulename.Map.add m loc acc
+          let { File_sig.cjs_requires; es_imports; _ } = r in
+          let locs = List.rev_append cjs_requires es_imports in
+          Modulename.Map.add m locs acc
         ) requires Modulename.Map.empty in
         (SMap.add module_name_str mlocs map, non_flow)
       else

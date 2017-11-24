@@ -11,7 +11,7 @@ type getdef_type =
 | Gdloc of Loc.t
 | Gdval of Type.t
 | Gdmem of (string * Type.t)
-| Gdrequire of string * Loc.t
+| Gdrequire of (Loc.t * string) * Loc.t
 
 let id state name =
   let env = Env.all_entries () in
@@ -58,10 +58,10 @@ let getdef_call (state, loc1) _cx name loc2 this_t =
     state := Some (Gdmem (name, this_t))
   )
 
-let getdef_require (state, user_requested_loc) _cx name require_loc =
+let getdef_require (state, user_requested_loc) _cx source require_loc =
   if (Reason.in_range user_requested_loc require_loc)
   then (
-    state := Some (Gdrequire (name, require_loc))
+    state := Some (Gdrequire (source, require_loc))
   )
 
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
@@ -85,7 +85,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       let result_str, t = Flow_js.Members.(match member_result with
         | Success _ -> "SUCCESS", this
         | SuccessModule _ -> "SUCCESS", this
-        | FailureMaybeType -> "FAILURE_NULLABLE", this
+        | FailureNullishType -> "FAILURE_NULLABLE", this
         | FailureAnyType -> "FAILURE_NO_COVERAGE", this
         | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 
@@ -112,14 +112,14 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         | None -> Loc.none
         end
       end
-  | Some Gdrequire (name, require_loc) ->
-      let module_t = Flow_js.resolve_type cx (Context.find_require cx name) in
+  | Some Gdrequire ((source_loc, name), require_loc) ->
+      let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_js.get_file Expensive.warn (
           Module_js.imported_module ~options
             ~node_modules_containers:!Files.node_modules_containers
-            (Context.file cx) require_loc name
+            (Context.file cx) (Nel.one require_loc) name
         ) in
         (match filename with
         | Some file -> Loc.({none with source = Some file;})

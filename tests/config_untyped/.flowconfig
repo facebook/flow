@@ -1,0 +1,5 @@
+[untyped]
+.*/untyped/.*
+
+[options]
+all=false

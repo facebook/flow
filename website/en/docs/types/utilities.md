@@ -8,14 +8,15 @@ Table of contents:
 
 - [`$Keys<T>`](#toc-keys)
 - [`$Values<T>`](#toc-values)
-- [`$ReadOnly<T>`](#toc-read-only-obj)
+- [`$ReadOnly<T>`](#toc-readonly)
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
 - [`$Rest<A, B>`](#toc-rest)
 - [`$PropertyType<T>`](#toc-propertytype)
 - [`$ElementType<T>`](#toc-elementtype)
-- [`$ObjMap<T>`](#toc-objmap)
-- [`$TupleMap<T>`](#toc-tuplemap)
+- [`$ObjMap<T, F>`](#toc-objmap)
+- [`$TupleMap<T, F>`](#toc-tuplemap)
+- [`$Call<F>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
@@ -99,7 +100,7 @@ const age: Prop$Values = 42;  // OK
 const fn: Prop$Values = () => {};  // Error! function is not part of the union type
 ```
 
-## `$ReadOnly<T>` <a class="toc" id="toc-read-only-obj" href="#toc-read-only-obj"></a>
+## `$ReadOnly<T>` <a class="toc" id="toc-readonly" href="#toc-readonly"></a>
 
 `$ReadOnly<T>` is a type that represents the read-only version of a given [object type](../objects/) `T`. A read-only object type is an object type whose keys are all [read-only](../interfaces/#toc-interface-property-variance-read-only-and-write-only).
 
@@ -350,9 +351,10 @@ getProp({a: 42}, 'b'); // Error: `b` does not exist
 ```
 
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
-`ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
 
-Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) in input:
+`ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
+
+Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
 
 ```js
 // @flow
@@ -370,7 +372,7 @@ This is where `ObjMap<T, F>` comes in handy.
 ```js
 // @flow
 
-// let's write a typelevel function that takes a `() => V` and returns a `V` (its return type)
+// let's write a function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V
 
 function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
@@ -413,14 +415,14 @@ props(promises).then(o => {
 
 ## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
 
-`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a type function `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided type function `F`. This is analogous to the Javascript function `map`.
+`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`. This is analogous to the Javascript function `map`.
 
 Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate it's return type like this:
 
 ```js
 // @flow
 
-// Typelevel function that takes a `() => V` and returns a `V` (its return type)
+// Function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V
 
 function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
@@ -431,6 +433,98 @@ const arr = [() => 'foo', () => 'bar'];
 (run(arr)[0]: string); // OK
 (run(arr)[1]: string); // OK
 (run(arr)[1]: boolean); // Error
+```
+
+## `$Call<F>` <a class="toc" id="toc-call" href="#toc-call"></a>
+
+`$Call<F>` is a type that that represents the result of calling the given [function type](../functions) `F`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
+
+Let's see a couple of examples:
+```js
+// @flow
+
+// Takes an object type, returns the type of it's `prop` key
+type ExtractPropType = <T>({prop: T}) => T;
+type Obj = {prop: number};
+type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
+type Nope = $Call<ExtractPropType, {nope: number}>;  // Error: argument doesn't match `Obj`.
+
+(5: PropType); // OK
+(true: PropType);  // Error: PropType is a number
+(5: Nope);  // Error
+```
+
+```js
+// @flow
+
+// Takes a function type, and returns its return type
+// This is useful if you want to get the return type of some function without actually calling it at runtime.
+type ExtractReturnType = <R>(() => R) => R;
+type Fn = () => number;
+type ReturnType = $Call<ExtractReturnType, Fn> // Call `ExtractReturnType` with `Fn` as an argument
+
+(5: ReturnType);  // OK
+(true: ReturnType);  // Error: ReturnType is a number
+```
+
+`$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime. The type-land calls happen statically and will be erased at runtime.
+
+Let's look at a couple of more advanced examples:
+
+```js
+// @flow
+
+// Extracting deeply nested types:
+type NestedObj = {|
+  +status: ?number,
+  +data: ?$ReadOnlyArray<{|
+    +foo: ?{|
+       +bar: number,
+    |},
+  |}>,
+|};
+
+// If you wanted to extract the type for `bar`, you could use $Call:
+type BarType = $Call<
+  <T>({
+    +data: ?$ReadOnlyArray<{
+      +foo: ?{
+        +bar: ?T
+      },
+    }>,
+  }) => T,
+  NestedObj,
+>;
+
+(5: BarType);
+(true: BarType);  // Error: `bar` is not a boolean
+```
+
+```js
+// @flow
+
+// Getting return types:
+function getFirstValue<V>(map: Map<string, V>): ?V {
+  for (const [key, value] of map.entries()) {
+    return value;
+  }
+  return null;
+}
+
+// Using $Call, we can get the actual return type of the function above, without calling it at runtime:
+type Value = $Call<typeof getFirstValue, Map<string, number>>;
+
+(5: Value);
+(true: Value);  // Error: Value is a `number`
+
+
+// We could generalize it further:
+type GetMapValue<M> =
+  $Call<typeof getFirstValue, M>;
+
+(5: GetMapValue<Map<string, number>>);
+(true: GetMapValue<Map<string, boolean>>);
+(true: GetMapValue<Map<string, number>>);  // Error: value is a `number`
 ```
 
 ## `Class<T>` <a class="toc" id="toc-class" href="#toc-class"></a>

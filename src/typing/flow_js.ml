@@ -11150,7 +11150,7 @@ module Members : sig
   type ('success, 'success_module) generic_t =
     | Success of 'success
     | SuccessModule of 'success_module
-    | FailureMaybeType
+    | FailureNullishType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
@@ -11171,7 +11171,7 @@ end = struct
   type ('success, 'success_module) generic_t =
     | Success of 'success
     | SuccessModule of 'success_module
-    | FailureMaybeType
+    | FailureNullishType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
@@ -11186,7 +11186,7 @@ end = struct
         Ok map
     | SuccessModule (named_exports, Some cjs_export) ->
         Ok (SMap.add "default" (None, cjs_export) named_exports)
-    | FailureMaybeType ->
+    | FailureNullishType ->
         Error "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
         Error "not enough type information to autocomplete"
@@ -11202,8 +11202,10 @@ end = struct
     ) (Context.find_props cx fields)
 
   let rec extract_type cx this_t = match this_t with
-    | DefT (_, (MaybeT _ | NullT | VoidT)) ->
-        FailureMaybeType
+    | DefT (_, MaybeT ty) ->
+        extract_type cx ty
+    | DefT (_, (NullT | VoidT)) ->
+        FailureNullishType
     | DefT (_, AnyT) ->
         FailureAnyType
     | DefT (reason, AnyObjT) ->
@@ -11305,7 +11307,7 @@ end = struct
         FailureUnhandledType this_t
 
   let rec extract_members cx = function
-    | FailureMaybeType -> FailureMaybeType
+    | FailureNullishType -> FailureNullishType
     | FailureAnyType -> FailureAnyType
     | FailureUnhandledType t -> FailureUnhandledType t
     | Success (DefT (_, InstanceT (_, super, _,
@@ -11384,9 +11386,9 @@ end = struct
         * every type in the intersection *)
         let ts = List.map (resolve_type cx) (UnionRep.members rep) in
         let members = ts
-          (* Although we'll ignore the any-ish members of the union *)
+          (* Although we'll ignore the any-ish and nullish members of the union *)
           |> List.filter (function
-             | DefT (_, (AnyT | AnyObjT | AnyFunT)) -> false
+             | DefT (_, (AnyT | AnyObjT | AnyFunT | NullT | VoidT)) -> false
              | _ -> true
              )
           |> List.map (extract_members_as_map cx)
@@ -11632,15 +11634,14 @@ and assert_ground_id cx ?(depth=1) skip ids id =
         assert_ground cx ~depth skip ids t
   )
 
-let enforce_strict cx id required =
+let enforce_strict cx id =
   (* First, compute a set of ids to be skipped by calling `assume_ground`. After
      the call, skip_ids contains precisely those ids that correspond to
      requires/imports. *)
   let skip_ids = ref ISet.empty in
-  List.iter (fun r ->
-    let tvar = Context.find_require cx r in
+  LocMap.iter (fun _ tvar ->
     assume_ground cx skip_ids (UseT (UnknownUse, tvar))
-  ) required;
+  ) (Context.require_map cx);
 
   (* With the computed skip_ids, call `assert_ground` to force annotations while
      walking the graph starting from id. Typically, id corresponds to

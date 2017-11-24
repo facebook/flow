@@ -36,9 +36,6 @@ and module_sig = {
  * resolved modules yet, so we don't know where the ref actually points.
  *)
 and require = {
-  (* location of the last require/import *)
-  loc: Loc.t;
-
   (* locations of every require *)
   cjs_requires: Loc.t list;
 
@@ -123,6 +120,6 @@ and type_export =
 val empty_file_sig: t
 val empty_module_sig: module_sig
 
-val require_loc_map: module_sig -> Loc.t SMap.t
+val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
 
 val program: ast:Loc.t Ast.program -> t

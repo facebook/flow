@@ -23,9 +23,11 @@ module Pattern
       | [] -> List.rev acc
       | Property (loc, prop)::remaining ->
           let key, pattern, shorthand = match prop with
-          | Property.Init { key; value; shorthand; _method } ->
-            if _method then error_at env (fst value, Parse_error.MethodInDestructuring);
+          | Property.Init { key; value; shorthand } ->
             key, from_expr env value, shorthand
+          | Property.Method { key; value = (loc, f) } ->
+            error_at env (loc, Parse_error.MethodInDestructuring);
+            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
           | Property.Get { key; value = (loc, f) }
           | Property.Set { key; value = (loc, f) } ->
             (* these should never happen *)

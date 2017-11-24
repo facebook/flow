@@ -300,8 +300,10 @@ module Opts = struct
 end
 
 type config = {
-  (* file blacklist *)
+  (* completely ignored files (both module resolving and typing) *)
   ignores: string list;
+  (* files that should be treated as untyped *)
+  untyped: string list;
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
@@ -324,6 +326,9 @@ end = struct
 
   let ignores o ignores =
     List.iter (fun ex -> (fprintf o "%s\n" ex)) ignores
+
+  let untyped o untyped =
+    List.iter (fun ex -> (fprintf o "%s\n" ex)) untyped
 
   let includes o includes =
     List.iter (fun inc -> (fprintf o "%s\n" inc)) includes
@@ -374,10 +379,18 @@ end = struct
          (string_of_kind kind)))
       strict_mode
 
+  let section_if_nonempty o header f = function
+    | [] -> ()
+    | xs ->
+      section_header o header;
+      f o xs;
+      fprintf o "\n"
+
   let config o config =
     section_header o "ignore";
     ignores o config.ignores;
     fprintf o "\n";
+    section_if_nonempty o "untyped" untyped config.untyped;
     section_header o "include";
     includes o config.includes;
     fprintf o "\n";
@@ -396,6 +409,7 @@ end
 
 let empty_config = {
   ignores = [];
+  untyped = [];
   includes = [];
   libs = [];
   lint_severities = LintSettings.default_severities;
@@ -444,6 +458,10 @@ let parse_libs config lines =
 let parse_ignores config lines =
   let ignores = trim_lines lines in
   { config with ignores; }
+
+let parse_untyped config lines =
+  let untyped = trim_lines lines in
+  { config with untyped; }
 
 let parse_options config lines =
   let open Opts in
@@ -886,6 +904,7 @@ let parse_section config ((section_ln, section), lines) =
   | "lints", _ -> parse_lints config lines
   | "strict", _ -> parse_strict config lines
   | "options", _ -> parse_options config lines
+  | "untyped", _ -> parse_untyped config lines
   | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
@@ -911,13 +930,15 @@ let read filename =
     |> List.filter is_not_comment in
   parse empty_config lines
 
-let init ~ignores ~includes ~libs ~options ~lints =
+let init ~ignores ~untyped ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
+  let untyped_lines = List.map (fun s -> (1, s)) untyped in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
   let lint_lines = List.map (fun s -> (1, s)) lints in
   let config = parse_ignores empty_config ignores_lines in
+  let config = parse_untyped config untyped_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
@@ -944,8 +965,10 @@ let restore (filename, config) = cache := Some (filename, config)
 
 (* Accessors *)
 
-(* file blacklist *)
+(* completely ignored files (both module resolving and typing) *)
 let ignores config = config.ignores
+(* files that should be treated as untyped *)
+let untyped config = config.untyped
 (* non-root include paths *)
 let includes config = config.includes
 (* library paths. no wildcards *)

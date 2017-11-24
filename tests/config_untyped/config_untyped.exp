@@ -1,0 +1,18 @@
+Error: test.js:6
+  6: (typed: number); // error: string ~> number
+      ^^^^^ string. This type is incompatible with
+  6: (typed: number); // error: string ~> number
+             ^^^^^^ number
+
+Error: test.js:9
+  9: const nonexistent = require('./untyped/bogus'); // error, missing module
+                                 ^^^^^^^^^^^^^^^^^ ./untyped/bogus. Required module not found
+
+Error: typed/foo.js:3
+  3: ("string": number); // Error
+      ^^^^^^^^ string. This type is incompatible with
+  3: ("string": number); // Error
+                ^^^^^^ number
+
+
+Found 3 errors

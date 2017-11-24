@@ -104,47 +104,59 @@ Error: object.js:35
  35:   get [z](): string { return string; },
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ computed getters and setters are not yet supported
 
-Error: object.js:44
- 44: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+Error: object.js:47
+ 47: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 44: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+ 47: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
                                ^^^^^^ string
 
-Error: object.js:45
- 45: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+Error: object.js:48
+ 48: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 45: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+ 48: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                ^^^^^^ string
 
-Error: object.js:52
- 52: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+Error: object.js:55
+ 55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
- 52: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+ 55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
-Error: object.js:54
- 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+Error: object.js:57
+ 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+ 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
-Error: object.js:54
- 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+Error: object.js:57
+ 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
- 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+ 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
-Error: object.js:59
- 59: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+Error: object.js:62
+ 62: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                            ^^^^^^^ C. This type is incompatible with
- 59: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+ 62: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
 
-Error: object.js:63
- 63:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+Error: object.js:66
+ 66:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
- 62: var testExampleOrOrderOfGetterAndSetterReordered: number =
+ 65: var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                        ^^^^^^ number
+
+Error: object.js:68
+ 68: (obj["stringLiteral"]: string); // err, num !~> string
+      ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 68: (obj["stringLiteral"]: string); // err, num !~> string
+                            ^^^^^^ string
+
+Error: object.js:69
+ 69: obj["stringLiteral"] = "foo"; // err, string !~> num
+                            ^^^^^ string. This type is incompatible with
+ 69: obj["stringLiteral"] = "foo"; // err, string !~> num
+     ^^^^^^^^^^^^^^^^^^^^ number
 
 Error: object_type.js:36
  36:   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
@@ -276,4 +288,4 @@ Error: variance.js:47
                     ^^^^ Base
 
 
-Found 39 errors
+Found 41 errors

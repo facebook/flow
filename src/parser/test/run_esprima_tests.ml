@@ -265,7 +265,7 @@ end = struct
             Ast.Literal.value = Ast.Literal.String name; raw = _
           });
           value;
-          _method = false; shorthand = false;
+          shorthand = false;
         }) ->
           SMap.add name value acc
       | _ -> failwith "Invalid JSON"
@@ -399,7 +399,7 @@ end = struct
           Ast.Literal.value = Ast.Literal.String name; raw = _
         });
         value;
-        _method = false; shorthand = false;
+        shorthand = false;
       } -> name, value
     | _ -> failwith "Invalid JSON"
   )
@@ -438,7 +438,6 @@ end = struct
                     let prop = Object.Property (exp_loc, Object.Property.Init {
                       key = exp_key;
                       value;
-                      _method = false;
                       shorthand = false;
                     }) in
                     prop::acc

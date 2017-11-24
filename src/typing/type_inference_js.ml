@@ -15,11 +15,11 @@ module Utils = Utils_js
 (* Driver *)
 (**********)
 
-let force_annotations cx require_loc_map =
+let force_annotations cx =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
-  Flow_js.enforce_strict cx id (SMap.keys require_loc_map)
+  Flow_js.enforce_strict cx id
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -347,12 +347,45 @@ let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx base_settings comments
 
+let add_require_tvars =
+  let add cx desc loc =
+    let reason = Reason.mk_reason desc loc in
+    let t = Tvar.mk cx reason in
+    Context.add_require cx loc t
+  in
+  let add_decl cx m_name desc loc =
+    (* TODO: Imports within `declare module`s can only reference other `declare
+       module`s (for now). This won't fly forever so at some point we'll need to
+       move `declare module` storage into the modulemap just like normal modules
+       and merge them as such. *)
+    let reason = Reason.mk_reason desc loc in
+    let t = Flow_js.get_builtin cx m_name reason in
+    Context.add_require cx loc t
+  in
+  fun cx file_sig ->
+    let open File_sig in
+    SMap.iter (fun mref req ->
+      let desc = Reason.RCustom mref in
+      List.iter (add cx desc) req.cjs_requires;
+      List.iter (add cx desc) req.es_imports;
+    ) file_sig.module_sig.requires;
+    SMap.iter (fun _ (_, module_sig) ->
+      SMap.iter (fun mref req ->
+        let m_name = Reason.internal_module_name mref in
+        let desc = Reason.RCustom mref in
+        List.iter (add_decl cx m_name desc) req.cjs_requires;
+        List.iter (add_decl cx m_name desc) req.es_imports;
+      ) module_sig.requires;
+    ) file_sig.declare_modules
+
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities ~file_sig cx filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
+
+  add_require_tvars cx file_sig;
 
   let module_ref = Context.module_ref cx in
 
@@ -398,12 +431,8 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
-
     let init_exports = Obj_type.mk cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
 
@@ -436,7 +465,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
-  force_annotations cx require_loc_map;
+  force_annotations cx;
 
   ()
 
@@ -457,8 +486,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
        confident that we don't support them in any sensible way. *)
     let open File_sig in
     let file_sig = program ~ast in
-    let require_loc_map = require_loc_map file_sig.module_sig in
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map
+    add_require_tvars cx file_sig
   in
 
   let module_scope = Scope.fresh () in

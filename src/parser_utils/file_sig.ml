@@ -20,7 +20,6 @@ and module_sig = {
 }
 
 and require = {
-  loc: Loc.t;
   cjs_requires: Loc.t list;
   es_imports: Loc.t list;
   named: Loc.t Nel.t SMap.t SMap.t;
@@ -68,15 +67,24 @@ let empty_file_sig = {
   declare_modules = SMap.empty;
 }
 
-let mk_require
-  ?(cjs_requires = []) ?(es_imports = [])
+let mk_cjs_require loc = {
+  cjs_requires = [loc];
+  es_imports = [];
+  named = SMap.empty;
+  ns = SMap.empty;
+  types = SMap.empty;
+  typesof = SMap.empty;
+  typesof_ns = SMap.empty;
+}
+
+let mk_es_import
   ?(named = SMap.empty)
   ?(ns = SMap.empty)
   ?(types = SMap.empty)
   ?(typesof = SMap.empty)
   ?(typesof_ns = SMap.empty)
   loc =
-  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns }
+  { cjs_requires = []; es_imports = [loc]; named; ns; types; typesof; typesof_ns }
 
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
 
@@ -84,9 +92,8 @@ let merge_requires =
   let nel_smap_union _ a b = Some (SMap.union a b ~combine:combine_nel) in
   let nel_append _ a b = Some (Nel.rev_append a b) in
   fun r1 r2 -> {
-    loc = r2.loc;
     cjs_requires = List.rev_append r2.cjs_requires r1.cjs_requires;
-    es_imports = List.rev_append r2.es_imports r2.es_imports;
+    es_imports = List.rev_append r2.es_imports r1.es_imports;
     named = SMap.union r1.named r2.named ~combine:nel_smap_union;
     ns = SMap.union r1.ns r2.ns ~combine:nel_append;
     types = SMap.union r1.types r2.types ~combine:nel_smap_union;
@@ -95,8 +102,14 @@ let merge_requires =
   }
 
 let require_loc_map msig =
-  SMap.fold (fun name {loc; _} acc ->
-    SMap.add name loc acc
+  SMap.fold (fun name {cjs_requires; es_imports; _} acc ->
+    let acc = List.fold_left (fun acc loc ->
+      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
+    ) acc cjs_requires in
+    let acc = List.fold_left (fun acc loc ->
+      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
+    ) acc es_imports in
+    acc
   ) msig.requires SMap.empty
 
 let add_declare_module name m loc fsig = {
@@ -109,12 +122,12 @@ let update_sig f fsig = { fsig with module_sig = f fsig.module_sig }
 let set_module_kind module_kind msig = { msig with module_kind }
 
 let add_cjs_require name loc msig =
-  let require = mk_require loc ~cjs_requires:[loc] in
+  let require = mk_cjs_require loc in
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 
 let add_es_import name ?named ?ns ?types ?typesof ?typesof_ns loc msig =
-  let require = mk_require loc ~es_imports:[loc] ?named ?ns ?types ?typesof ?typesof_ns in
+  let require = mk_es_import loc ?named ?ns ?types ?typesof ?typesof_ns in
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 
@@ -182,9 +195,14 @@ class requires_calculator ~ast = object(this)
     let open Ast.Expression in
     let { Call.callee; arguments } = expr in
     begin match callee, arguments with
-    | ((_, Identifier (loc, "require")),
-       [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
-      ->
+    | ((_, Identifier (loc, "require")), [Expression (require_loc, (
+        Literal { Ast.Literal.value = Ast.Literal.String v; _ } |
+        TemplateLiteral { TemplateLiteral.
+          quasis = [_, { TemplateLiteral.Element.
+            value = { TemplateLiteral.Element.cooked = v; _ }; _
+          }]; _
+        }
+      ))]) ->
       if not (Scope_api.is_local_use scope_info loc)
       then this#add_cjs_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
@@ -203,9 +221,15 @@ class requires_calculator ~ast = object(this)
   method! import (expr: Loc.t Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
-    | import_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
+    | import_loc, (
+        Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } |
+        TemplateLiteral { TemplateLiteral.
+          quasis = [_, { TemplateLiteral.Element.
+            value = { TemplateLiteral.Element.cooked = v; _ }; _
+          }]; _
+        }
+      ) ->
       this#add_es_import v import_loc
-    (* TODO: match statement.ml support for template literals *)
     | _ -> ()
     end;
     super#expression expr

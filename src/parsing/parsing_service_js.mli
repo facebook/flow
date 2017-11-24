@@ -60,6 +60,7 @@ val parse:
   profile: bool ->
   max_header_tokens: int ->
   lazy_mode: bool ->
+  noflow: (File_key.t -> bool) ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
@@ -81,6 +82,7 @@ val reparse:
   profile: bool ->
   max_header_tokens: int ->
   lazy_mode: bool ->
+  noflow: (File_key.t -> bool) ->
   ?with_progress: bool ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)

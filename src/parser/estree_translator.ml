@@ -866,8 +866,10 @@ end with type t = Impl.t) = struct
   and object_property = Expression.Object.(function
     | Property (loc, prop) -> Property.(
       let key, value, kind, method_, shorthand = match prop with
-      | Init { key; value; _method; shorthand } ->
-        key, expression value, "init", _method, shorthand
+      | Init { key; value; shorthand } ->
+        key, expression value, "init", false, shorthand
+      | Method { key; value = (loc, func) } ->
+        key, function_expression (loc, func), "init", true, false
       | Get { key; value = (loc, func) } ->
         key, function_expression (loc, func), "get", false, false
       | Set { key; value = (loc, func) } ->

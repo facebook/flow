@@ -18,9 +18,13 @@ Error: imports.js:14
  14: const BarObj2 = require("./untyped_exports"); //Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ untyped-import: Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports`?
 
+Error: imports.js:22
+ 22: import {BeepObj} from './nonexistent.js';
+                           ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+
 Error: imports.js:23
  23: import BoopObj from './nonexistent.js';
                          ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
 
 
-Found 6 errors
+Found 7 errors

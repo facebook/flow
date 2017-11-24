@@ -1504,104 +1504,80 @@ and statement cx = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc decl
 
-  | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
     let name = match id with
     | DeclareModule.Identifier (_, value)
     | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
     in
     let _, { Ast.Statement.Block.body = elements } = body in
 
-    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
-    let t = Env.get_var_declared_type cx (internal_module_name name) loc in
+    let module_ref = Reason.internal_module_name name in
 
     let module_scope = Scope.fresh () in
+    Scope.add_entry
+      (Reason.internal_name "exports")
+      (Scope.Entry.new_var
+        ~loc:Loc.none
+        ~specific:Locationless.EmptyT.t
+        Locationless.MixedT.t)
+      module_scope;
+
     Env.push_var_scope cx module_scope;
     let outer_module_exports_kind = Context.module_kind cx in
-    Context.set_module_kind cx (
-      match kind with
-      | DeclareModule.CommonJS loc -> Context.CommonJSModule (Some loc)
-      | DeclareModule.ES _ -> Context.ESModule
-    );
-    Context.set_declare_module_t cx (Some t);
+    Context.set_module_kind cx (Context.CommonJSModule None);
+    Context.push_declare_module cx module_ref;
+
+    let initial_module_t = module_t_of_cx cx in
 
     toplevel_decls cx elements;
     toplevels cx elements;
 
-    Context.set_declare_module_t cx None;
+    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
+    let module_t = match Context.module_kind cx with
+    | Context.ESModule -> mk_module_t cx reason
+    | Context.CommonJSModule clobbered ->
+      let open Scope in
+      let open Entry in
+      (* TODO: drop `declare var exports` in favor of `declare module.exports` *)
+      let legacy_exports = Scope.get_entry "exports" module_scope in
+      let cjs_exports = match clobbered, legacy_exports with
+      | Some loc, _ -> get_module_exports cx loc
+      | None, Some (Value {specific; _}) -> specific
+      | None, _ ->
+        let props = SMap.fold (fun x entry acc ->
+          match entry with
+          | Value {specific; _} ->
+            let loc = Some (entry_loc entry) in
+            Properties.add_field x Neutral loc specific acc
+          | Type _ | Class _ -> acc
+        ) module_scope.entries SMap.empty in
+        let proto = ObjProtoT reason in
+        Obj_type.mk_with_proto cx reason ~props proto
+      in
+      let type_exports = SMap.fold (fun x entry acc ->
+        match entry with
+        | Type {_type; _} -> SMap.add x _type acc
+        | Value _ | Class _ -> acc
+      ) module_scope.entries SMap.empty in
+      set_module_t cx reason (fun t ->
+        Flow.flow cx (
+          module_t_of_cx cx,
+          ExportNamedT (reason, false, type_exports, t)
+        )
+      );
+      mk_commonjs_module_t cx reason reason cjs_exports
+    in
+
+    Flow.flow_t cx (module_t, initial_module_t);
+
+    let t = Env.get_var_declared_type cx module_ref loc in
+    Flow.flow_t cx (initial_module_t, t);
+
+    Context.pop_declare_module cx;
     Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
-    (match kind with
-      | DeclareModule.CommonJS kind_loc ->
-        (**
-         * TODO(jeffmo): `declare var exports` is deprecated (in favor of
-         * `declare module.exports`). v0.25 retains support for it as
-         * a transitionary grace period, but this will be removed as
-         * early as v0.26.
-         *)
-        let legacy_exports = Scope.get_entry "exports" module_scope in
-        let declared_module_exports =
-          Scope.get_entry (internal_name "declare_module.exports") module_scope
-        in
 
-        let type_exports, cjs_module_exports =
-          let open Scope in
-          let open Entry in
-          match legacy_exports, declared_module_exports with
-          (* TODO: Eventually drop support for legacy "declare var exports" *)
-          | Some (Value {specific=exports; _}), None
-          | _, Some (Value {specific=exports; _}) ->
-            let type_exports = SMap.fold (fun x entry acc ->
-              match entry with
-              | Value _ -> acc
-              | Type {_type; _} -> SMap.add x _type acc
-              | Class _ -> acc
-            ) module_scope.entries SMap.empty in
-            type_exports, exports
-
-          | _, Some (Type _) ->
-            assert_false (
-              "Internal Error: `declare module.exports` was created as a " ^
-              "type binding. This should never happen!"
-            )
-
-          | Some (Class _), _
-          | _, Some (Class _) ->
-            assert_false (
-              "Internal Error: `declare module.exports` was created as a " ^
-              "class binding. This should never happen!"
-            )
-
-          | Some (Type _), None
-          | None, None ->
-            let type_exports, value_exports = SMap.fold (fun x entry (ts, vs) ->
-              let loc = entry_loc entry in
-              match entry with
-              | Value {specific; _} ->
-                ts,
-                SMap.add x (Field (Some loc, specific, Neutral)) vs
-              | Type {_type; _} ->
-                SMap.add x _type ts,
-                vs
-              | Class _ -> (ts, vs)
-            ) module_scope.entries (SMap.empty, SMap.empty) in
-
-            let reason = repos_reason kind_loc reason in
-            let proto = ObjProtoT reason in
-
-            type_exports,
-            Obj_type.mk_with_proto cx reason ~props:value_exports proto
-        in
-
-        let module_t =
-          mk_commonjs_module_t cx reason reason cjs_module_exports in
-        let module_t = Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (module_t, ExportNamedT (reason, false, type_exports, t))
-        ) in
-        Flow.unify cx module_t t;
-      | DeclareModule.ES _ ->
-        Flow.flow_t cx (mk_module_t cx reason, t)
-    )
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -1653,14 +1629,8 @@ and statement cx = Ast.Statement.(
 
   | (loc, DeclareModuleExports annot) ->
     let t = Anno.convert cx SMap.empty (snd annot) in
-
-    if Context.declare_module_t cx <> None then (
-      let name = internal_name "declare_module.exports" in
-      Env.bind_declare_var cx name t loc
-    ) else (
-      set_module_kind cx loc (Context.CommonJSModule(Some loc));
-      set_module_exports cx loc t
-    )
+    set_module_kind cx loc (Context.CommonJSModule(Some loc));
+    set_module_exports cx loc t
 
   | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
       declaration;
@@ -1764,7 +1734,7 @@ and statement cx = Ast.Statement.(
 
     let { ImportDeclaration.source; specifiers; default; importKind } = import_decl in
 
-    let _, { Ast.StringLiteral.value = module_name; _ } = source in
+    let source_loc, { Ast.StringLiteral.value = module_name; _ } = source in
 
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -1772,7 +1742,7 @@ and statement cx = Ast.Statement.(
       | ImportDeclaration.ImportValue -> Type.ImportValue
     in
 
-    let module_t = import cx module_name import_loc in
+    let module_t = import cx (source_loc, module_name) import_loc in
 
     let get_imported_t get_reason import_kind remote_export_name local_name =
       Tvar.mk_where cx get_reason (fun t ->
@@ -1819,7 +1789,7 @@ and statement cx = Ast.Statement.(
       | Some (ImportDeclaration.ImportNamespaceSpecifier (ns_loc, local)) ->
         let local_name = ident_name local in
 
-        Type_inference_hooks_js.dispatch_import_hook cx module_name ns_loc;
+        Type_inference_hooks_js.dispatch_import_hook cx (source_loc, module_name) ns_loc;
 
         let import_reason =
           let import_str =
@@ -1838,7 +1808,7 @@ and statement cx = Ast.Statement.(
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason (fst local) import_reason in
             let module_ns_t =
-              import_ns cx import_reason module_name (fst source)
+              import_ns cx import_reason (fst source, module_name) import_loc
             in
             let module_ns_typeof =
               Tvar.mk_where cx bind_reason (fun t ->
@@ -1853,7 +1823,7 @@ and statement cx = Ast.Statement.(
               mk_reason (RCustom (spf "exports of `%s`" module_name)) import_loc
             in
             let module_ns_t =
-              import_ns cx reason module_name (fst source)
+              import_ns cx reason (fst source, module_name) import_loc
             in
             Context.add_imported_t cx local_name module_ns_t;
             [fst local, local_name, module_ns_t, None]
@@ -1974,7 +1944,7 @@ and export_statement cx loc
             let reason =
               mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
             in
-            Some (import_ns cx reason module_name src_loc)
+            Some (import_ns cx reason (src_loc, module_name) loc)
           | None -> None
         ) in
 
@@ -2015,9 +1985,9 @@ and export_statement cx loc
       Some (ExportNamedDeclaration.ExportBatchSpecifier
         (batch_loc, star_as_name)
       ) ->
-      let source_module_name = (
+      let source_loc, source_module_name = (
         match source with
-        | Some (_, { Ast.StringLiteral.value; _ }) -> value
+        | Some (loc, { Ast.StringLiteral.value; _ }) -> loc, value
         | None -> failwith (
           "Parser Error: `export * from` must specify a string " ^
           "literal for the source module name!"
@@ -2039,7 +2009,7 @@ and export_statement cx loc
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
-          then import_ns cx reason source_module_name batch_loc
+          then import_ns cx reason (source_loc, source_module_name) loc
           else AnyT.why (
             let config_value =
               if parse_export_star_as = Options.ESPROPOSAL_IGNORE
@@ -2069,7 +2039,7 @@ and export_statement cx loc
         then set_module_kind cx loc Context.ESModule;
 
         set_module_t cx reason (fun t -> Flow.flow cx (
-          import ~reason cx source_module_name loc,
+          import cx (source_loc, source_module_name) loc,
           let module_t = module_t_of_cx cx in
           match exportKind with
           | ExportValue -> CopyNamedExportsT(reason, module_t, t)
@@ -2108,13 +2078,18 @@ and object_prop cx map = Ast.Expression.Object.(function
     let t = expression cx v in
     Properties.add_field name Neutral (Some loc) t map
 
-  (* literal LHS *)
-  | Property (loc, Property.Init { key = Property.Literal _; _ })
-  | Property (loc, Property.Get { key = Property.Literal _; _ })
-  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
-    Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-    map
+  (* named method *)
+  | Property (_, Property.Method {
+      key =
+        Property.Identifier (loc, name) |
+        Property.Literal (loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
+      value = (fn_loc, func);
+    }) ->
+    let t = expression cx (fn_loc, Ast.Expression.Function func) in
+    Properties.add_field name Neutral (Some loc) t map
 
   (* With the enable_unsafe_getters_and_setters option set, we enable some
    * unsafe support for getters and setters. The main unsafe bit is that we
@@ -2123,7 +2098,12 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe getter property *)
   | Property (loc, Property.Get {
-      key = Property.Identifier (id_loc, name);
+      key =
+        Property.Identifier (id_loc, name) |
+        Property.Literal (id_loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
       value = (vloc, func);
     }) ->
     if Context.enable_unsafe_getters_and_setters cx then
@@ -2138,7 +2118,12 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* unsafe setter property *)
   | Property (loc, Property.Set {
-      key = Property.Identifier (id_loc, name);
+      key =
+        Property.Identifier (id_loc, name) |
+        Property.Literal (id_loc, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
       value = (vloc, func);
     }) ->
     if Context.enable_unsafe_getters_and_setters cx then
@@ -2151,6 +2136,15 @@ and object_prop cx map = Ast.Expression.Object.(function
       map
     end
 
+  (* literal LHS *)
+  | Property (loc, Property.Init { key = Property.Literal _; _ })
+  | Property (loc, Property.Method { key = Property.Literal _; _ })
+  | Property (loc, Property.Get { key = Property.Literal _; _ })
+  | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
+    Flow.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
+    map
+
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
   | Property (loc, Property.Get { key = Property.Computed _; _ })
@@ -2160,7 +2154,8 @@ and object_prop cx map = Ast.Expression.Object.(function
     map
 
   (* computed LHS silently ignored for now *)
-  | Property (_, Property.Init { key = Property.Computed _; _ }) ->
+  | Property (_, Property.Init { key = Property.Computed _; _ })
+  | Property (_, Property.Method { key = Property.Computed _; _ }) ->
     map
 
   (* spread prop *)
@@ -2168,6 +2163,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     map
 
   | Property (_, Property.Init { key = Property.PrivateName _; _ })
+  | Property (_, Property.Method { key = Property.PrivateName _; _ })
   | Property (_, Property.Get { key = Property.PrivateName _; _ })
   | Property (_, Property.Set { key = Property.PrivateName _; _ }) ->
     failwith "Internal Error: Non-private field with private name"
@@ -2224,10 +2220,21 @@ and object_ cx reason ?(allow_sealed=true) props =
     | Property (_, Property.Init {
         key = Property.Computed k;
         value = v;
-        _method = _; shorthand = _;
+        shorthand = _;
       }) ->
         let k = expression cx k in
         let v = expression cx v in
+        let obj = eval_object (map, result) in
+        Flow.flow cx (obj, SetElemT (reason, k, v));
+        (* TODO: vulnerable to race conditions? *)
+        let result = obj in
+        sealed, SMap.empty, proto, Some result
+    | Property (_, Property.Method {
+        key = Property.Computed k;
+        value = fn_loc, fn;
+      }) ->
+        let k = expression cx k in
+        let v = expression cx (fn_loc, Ast.Expression.Function fn) in
         let obj = eval_object (map, result) in
         Flow.flow cx (obj, SetElemT (reason, k, v));
         (* TODO: vulnerable to race conditions? *)
@@ -2241,7 +2248,6 @@ and object_ cx reason ?(allow_sealed=true) props =
             _;
           });
         value = v;
-        _method = false;
         shorthand = false;
       }) ->
         let reason = mk_reason RPrototype (fst v) in
@@ -2524,10 +2530,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } when not (Env.local_scope_entry_exists "require") -> (
       match arguments with
-      | [ Expression (_, Ast.Expression.Literal {
+      | [ Expression (source_loc, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ]
-      | [ Expression (_, TemplateLiteral {
+      | [ Expression (source_loc, TemplateLiteral {
           TemplateLiteral.quasis = [_, {
             TemplateLiteral.Element.value = {
               TemplateLiteral.Element.cooked = module_name; _
@@ -2535,7 +2541,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           }];
           expressions = [];
         }) ] ->
-        require cx module_name loc
+        require cx (source_loc, module_name) loc
       | _ ->
         let ignore_non_literals =
           Context.should_ignore_non_literal_requires cx in
@@ -2564,11 +2570,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
          *)
 
         let element_to_module_tvar tvars = (function
-          | Some(Expression(_, Ast.Expression.Literal({
+          | Some(Expression(source_loc, Ast.Expression.Literal({
               Ast.Literal.value = Ast.Literal.String module_name;
               _;
             }))) ->
-              let module_tvar = require cx module_name loc in
+              let module_tvar = require cx (source_loc, module_name) loc in
               module_tvar::tvars
           | _ ->
               Flow.add_output cx Flow_error.(
@@ -2965,10 +2971,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Import arg -> (
     match arg with
-    | _, Ast.Expression.Literal {
+    | source_loc, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String module_name; _;
       }
-    | _, TemplateLiteral {
+    | source_loc, TemplateLiteral {
         TemplateLiteral.quasis = [_, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = module_name; _
@@ -2981,7 +2987,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let import_reason = mk_reason (RCustom (
           spf "exports of `%s`" module_name
         )) loc in
-        import_ns cx import_reason module_name loc
+        import_ns cx import_reason (source_loc, module_name) loc
       in
 
       let reason = mk_reason (RCustom "async import") loc in

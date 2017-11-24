@@ -46,7 +46,7 @@ let reqs_of_component ~options component required =
       let r, loc, resolved_r, file = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
-        dep_cxs, Reqs.add_res (r, loc, f, file) reqs
+        dep_cxs, Reqs.add_res (loc, f, file) reqs
       | Some dep ->
         let info = get_info_unsafe ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
@@ -54,12 +54,12 @@ let reqs_of_component ~options component required =
           let m = Files.module_ref dep in
           if List.mem dep component then
             (* impl is part of component *)
-            dep_cxs, Reqs.add_impl (dep, m, r, file) reqs
+            dep_cxs, Reqs.add_impl (dep, m, loc, file) reqs
           else
             (* look up impl sig_context *)
             let leader = Context_cache.find_leader dep in
             let dep_cx = Context_cache.find_sig ~options leader in
-            dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, r, file) reqs
+            dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, loc, file) reqs
         else
           (* unchecked implementation exists *)
           dep_cxs, Reqs.add_unchecked (r, loc, file) reqs
@@ -79,10 +79,10 @@ let merge_strict_context ~options component =
     List.fold_left (fun (required, file_sigs) file ->
       let file_sig = Parsing_service_js.get_file_sig_unsafe file in
       let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-      let required = SMap.fold (fun r loc ->
+      let required = SMap.fold (fun r locs acc ->
         let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
           file r in
-        List.cons (r, loc, resolved_r, file)
+        (r, locs, resolved_r, file) :: acc
       ) require_loc_map required in
       required, FilenameMap.add file file_sig file_sigs
     ) ([], FilenameMap.empty) component in
@@ -110,13 +110,13 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   let file_sig = Parsing_service_js.calc_file_sig ~ast in
   let resolved_rs, required =
     let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-    SMap.fold (fun r loc (resolved_rs, required) ->
+    SMap.fold (fun r locs (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
-        file loc r in
+        file locs r in
       Modulename.Set.add resolved_r resolved_rs,
-      (r, loc, resolved_r, file) :: required
+      (r, locs, resolved_r, file) :: required
     ) require_loc_map (Modulename.Set.empty, [])
   in
   let file_sigs = FilenameMap.singleton file file_sig in
