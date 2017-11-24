@@ -26,8 +26,16 @@ RUNNER_DEPS=\
 	hack/third-party/core\
 	src/common\
 	src/common/utils\
+	src/common/span\
+	src/common/lints\
+	src/common/errors\
+	src/common/profiling\
 	src/stubs\
 	src/parser\
+	src/commands\
+	src/commands/config\
+	src/flowlib\
+	src/typing\
 	src/parser_utils
 
 all: testgen
@@ -48,7 +56,7 @@ build-parser:
 	cd $(TOP); \
 	$(OCB) -no-links $(PARSER_DIR)/parser_flow.cmxa
 
-testgen: build-parser
+testgen: build-parser 
 	cd $(TOP); \
 	$(OCB) \
 		-ocamlc "ocamlopt -ccopt -DNO_SQLITE3" \

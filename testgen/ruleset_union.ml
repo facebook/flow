@@ -10,7 +10,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -147,5 +146,5 @@ end
 class ruleset_random_union = object
   inherit ruleset_union
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 5) > 0) then raise Engine.Backtrack
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 end
