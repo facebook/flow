@@ -175,6 +175,7 @@ module PropertyRefs: sig
     content: string ->
     File_key.t ->
     Loc.t ->
+    global: bool ->
     ((string * Loc.t list) option, string) result
 
 end = struct
@@ -232,7 +233,23 @@ end = struct
             "find-refs on unexpected type of value %s (please file a task!)"
             (string_of_ctor t))
 
-  let find_refs options workers env ~content file_key loc : ((string * Loc.t list) option, string) result =
+  let find_refs_in_file options workers env content file_key def_loc name =
+    let potential_refs: (Type.t * Loc.t) list ref = ref [] in
+    set_get_refs_hook potential_refs name;
+    let check_contents_result = Types_js.basic_check_contents ~options ~workers ~env content file_key in
+    unset_hooks ();
+    check_contents_result >>= fun (_, cx, _) ->
+    !potential_refs |>
+      List.map begin fun (ty, ref_loc) ->
+        extract_def_loc cx ty name >>= fun loc ->
+        match loc with
+          | Some loc when loc = def_loc ->
+              Ok (Some ref_loc)
+          | _ -> Ok None
+      end |> Result.all >>= fun refs ->
+      Ok (List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] refs)
+
+  let find_refs options workers env ~content file_key loc ~global =
     let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
     let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
       let props_access_info = ref None in
@@ -250,20 +267,7 @@ end = struct
               | Some loc -> Ok (Some (loc, name))
     in
     let get_ref_info: Loc.t -> string -> (Loc.t list, string) result = fun def_loc name ->
-      let potential_refs: (Type.t * Loc.t) list ref = ref [] in
-      set_get_refs_hook potential_refs name;
-      let check_contents_result = check_contents () in
-      unset_hooks ();
-      check_contents_result >>= fun (_, cx, _) ->
-      !potential_refs |>
-        List.map begin fun (ty, ref_loc) ->
-          extract_def_loc cx ty name >>= fun loc ->
-          match loc with
-            | Some loc when loc = def_loc ->
-                Ok (Some ref_loc)
-            | _ -> Ok None
-        end |> Result.all >>= fun refs ->
-        Ok (List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] refs)
+      find_refs_in_file options workers env content file_key def_loc name
     in
     get_def_info () >>= fun def_info_opt ->
     match def_info_opt with
@@ -273,9 +277,22 @@ end = struct
           (* Include the def_loc if it is in the same file *)
           let refs = match Loc.(def_loc.source) with
             | Some source when source = file_key -> def_loc::refs
+            | Some _ when global -> def_loc::refs
             | _ -> refs
           in
-          Ok (Some (name, refs))
+          if global then
+            let all_deps, _ = get_dependents options workers env file_key content in
+            let external_refs_result =
+              FilenameSet.elements all_deps |> List.map begin fun dep ->
+                File_key.to_path dep >>= fun path ->
+                File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
+                find_refs_in_file options workers env content dep def_loc name
+              end |> Result.all
+            in
+            external_refs_result >>= fun external_refs ->
+            Ok (Some (name, List.concat (refs::external_refs)))
+          else
+            Ok (Some (name, refs))
 end
 
 let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
@@ -285,4 +302,4 @@ let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
   File_input.content_of_file_input file_input >>= fun content ->
   VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
     | Some _ as result -> Ok result
-    | None -> PropertyRefs.find_refs options workers env content file_key loc
+    | None -> PropertyRefs.find_refs options workers env content file_key loc global

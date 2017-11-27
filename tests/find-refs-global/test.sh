@@ -10,3 +10,7 @@ echo
 echo "shadowing an export:"
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 10 15
 
+echo
+
+echo "class method:"
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 15 3
