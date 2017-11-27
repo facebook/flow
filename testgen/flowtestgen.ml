@@ -11,7 +11,6 @@
 module Utils = Flowtestgen_utils;;
 module Config = Flowtestgen_config;;
 module Logging = Flowtestgen_logging;;
-module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Printf;;
 
@@ -60,7 +59,6 @@ let mk_code engine prog_num =
 let main () =
   sys_init ();
   Random.self_init ();
-  FRandom.init_all_hist ();
   printf "Generating programs...\n%!";
   let base_engine =
     if Config.(config.random)
@@ -95,17 +93,25 @@ let main () =
   let engine = depth_engine in
   let all_prog = mk_code engine Config.(config.num_prog) in
   printf "Generated %d programs.\n%!" (List.length all_prog);
-  List.iter (fun content ->
-    let type_run_result =
-      if Utils.is_typecheck (engine#get_name ())
-      then Utils.type_check content
-      else None in
-    match type_run_result with
-    | None ->
-      (match Utils.test_code content with
-       | None -> Logging.log_no_error content
-       | Some test_error_msg -> Logging.log_runtime_error content test_error_msg)
-    | Some type_error_msg -> Logging.log_type_error content type_error_msg) all_prog;
+
+  (* Filter out all the programs that don't type check *)
+  let type_check_progs = List.filter (fun content ->
+      let result =
+        if Utils.is_typecheck (engine#get_name ()) then
+          Utils.type_check content
+        else
+          None in
+      match result with
+      | None -> true
+      | Some msg ->
+        Logging.log_type_error content msg;
+        false) all_prog in
+
+  (* run all the type check programs *)
+  let batch_result = Utils.batch_run type_check_progs in
+  List.iter2 (fun content msg -> match msg with
+      | None -> Logging.log_no_error content
+      | Some msg -> Logging.log_runtime_error content msg) type_check_progs batch_result;
   printf "Done!\n%!";
   Logging.print_stats ();
   Logging.close ();;
