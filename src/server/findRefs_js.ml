@@ -295,11 +295,20 @@ end = struct
             Ok (Some (name, refs))
 end
 
+let sort_find_refs_result = function
+  | Ok (Some (name, locs)) ->
+      let locs = List.fast_sort Loc.compare locs in
+      Ok (Some (name, locs))
+  | x -> x
+
 let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
   File_input.content_of_file_input file_input >>= fun content ->
-  VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
-    | Some _ as result -> Ok result
-    | None -> PropertyRefs.find_refs options workers env content file_key loc global
+  let unsorted =
+    VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
+      | Some _ as result -> Ok result
+      | None -> PropertyRefs.find_refs options workers env content file_key loc global
+  in
+  sort_find_refs_result unsorted
