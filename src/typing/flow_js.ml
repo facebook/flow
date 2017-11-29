@@ -10098,6 +10098,9 @@ and instantiate_poly_t cx t = function
           prerr_endline "Instantiating poly type failed";
           t
       )
+      | DefT (_, (AnyT | AnyObjT))
+      | DefT (_, (TypeT (DefT (_, (AnyT | AnyObjT))))) ->
+          t
       | _ ->
         assert_false "unexpected args passed to instantiate_poly_t"
 

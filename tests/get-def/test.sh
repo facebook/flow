@@ -75,3 +75,8 @@ printf "members of maybe types = "
 assert_ok "$FLOW" get-def class.js 17 5 --strip-root --pretty
 printf "members of unions with null/void = "
 assert_ok "$FLOW" get-def class.js 21 5 --strip-root --pretty
+
+printf "member of a nonexistent imported type with type parameters = "
+assert_ok "$FLOW" get-def imports.js 16 4 --strip-root --pretty 2>&1
+printf "member of a type alias for \`any\` with type parameters = "
+assert_ok "$FLOW" get-def imports.js 22 4 --strip-root --pretty 2>&1
