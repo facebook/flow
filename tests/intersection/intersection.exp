@@ -14,6 +14,8 @@ Error: test_obj.js:29
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
    29: var e: E = c; // error
+                  ^ c
+   29: var e: E = c; // error
               ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
@@ -26,6 +28,8 @@ Error: test_obj.js:29
    33: type C = { [key: string]: number } & { [key: string]: number };
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
+   29: var e: E = c; // error
+                  ^ c
    29: var e: E = c; // error
               ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };

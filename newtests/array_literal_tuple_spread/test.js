@@ -165,7 +165,9 @@ export default suite(({addFile, addFiles, addCode}) => [
       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
     `).newErrors(
         `
-          test.js:4
+          test.js:6
+            6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal
             4:       var a = [2];
                               ^ number. Expected number literal \`20\`, got \`2\` instead
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];

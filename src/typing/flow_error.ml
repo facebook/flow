@@ -305,6 +305,7 @@ let rec locs_of_use_op acc = function
   | FunParam { lower; upper; use_op } ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Addition
+  | AssignVar _
   | Coercion
   | Cast _
   | FunImplicitReturn
@@ -750,6 +751,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
    * the primary location. *)
+  | AssignVar {init=root; _}
   | Cast {lower=root; _}
     ->
     let rl, ru = reasons in

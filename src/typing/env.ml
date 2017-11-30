@@ -631,8 +631,15 @@ let init_value_entry kind cx name ~has_anno specific loc =
     | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.change_var (scope.id, name, Changeset.Write);
-      if specific != v.general then
-        Flow.flow_t cx (specific, v.general);
+      if specific != v.general then (
+        let use_op = AssignVar {
+          var = if is_internal_name name
+            then None
+            else Some (mk_reason (RIdentifier name) loc);
+          init = reason_of_t specific;
+        } in
+        Flow_js.flow cx (specific, UseT (use_op, v.general));
+      );
       (* note that annotation supercedes specific initializer type *)
       let new_kind =
         match kind with
@@ -879,7 +886,13 @@ let update_var ?(track_ref=false) op cx name specific loc =
     let change = scope.id, name, op in
     Changeset.change_var change;
     let use_op = match op with
-    | Changeset.Write -> UnknownUse
+    | Changeset.Write ->
+      AssignVar {
+        var = if is_internal_name name
+          then None
+          else Some (mk_reason (RIdentifier name) loc);
+        init = reason_of_t specific;
+      }
     | Changeset.Refine -> Internal Refinement
     | Changeset.Read -> UnknownUse (* this is impossible *)
     in

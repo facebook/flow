@@ -283,6 +283,7 @@ module rec TypeTerm : sig
 
   and use_op =
     | Addition
+    | AssignVar of { var: reason option; init: reason }
     | Cast of { lower: reason; upper: reason }
     | Coercion
     | FunCallMissingArg of reason * reason
@@ -2359,6 +2360,7 @@ let string_of_internal_use_op = function
 
 let string_of_use_op = function
   | Addition -> "Addition"
+  | AssignVar _ -> "AssignVar"
   | Cast _ -> "Cast"
   | Coercion -> "Coercion"
   | FunCallMissingArg _ -> "FunCallMissingArg"
