@@ -6095,6 +6095,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extras = [];
       })
 
+    | _, UseT (Cast _ as use_op, u)
     | _, UseT (FunParam _ as use_op, u)
     | _, UseT (PropertyCompatibility _ as use_op, u)
     | _, UseT (IndexerKeyCompatibility _ as use_op, u)

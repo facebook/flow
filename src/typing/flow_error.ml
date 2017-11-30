@@ -306,6 +306,7 @@ let rec locs_of_use_op acc = function
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Addition
   | Coercion
+  | Cast _
   | FunImplicitReturn
   | FunCallMissingArg _
   | FunCallParam
@@ -739,15 +740,24 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-
   | ReactCreateElementCall ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-
   | SetProperty reason_op ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
     extra, (* suppress_op *) false, typecheck_msgs msg (rl, ru)
+  (* Some use_ops always have the definitive location for an error message.
+   * When we have one of these use_ops, make sure that its location is always
+   * the primary location. *)
+  | Cast {lower=root; _}
+    ->
+    let rl, ru = reasons in
+    if Loc.contains (loc_of_reason root) (loc_of_reason rl) then (
+      extra, false, typecheck_msgs msg reasons
+    ) else (
+      extra, true, [root, []; rl, [msg]; ru, []]
+    )
   | _ ->
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
   in

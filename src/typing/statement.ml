@@ -2419,7 +2419,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let t = Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation)
       in Type_table.set (Context.type_table cx) loc t;
       let infer_t = expression cx e in
-      Flow.flow_t cx (infer_t, t);
+      let use_op = Cast {
+        lower = reason_of_t infer_t;
+        upper = reason_of_t t;
+      } in
+      Flow.flow cx (infer_t, UseT (use_op, t));
       t
 
   | Member {

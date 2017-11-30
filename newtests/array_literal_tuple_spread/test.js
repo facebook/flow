@@ -46,24 +46,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`1\`
-            8:       (foo: [0, 1, 2]);
-                               ^ number literal \`1\`
-
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`
-            8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
-
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
-            8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
-
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ array literal. Only tuples and array literals with known elements can flow to
@@ -81,6 +63,30 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ array literal. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
             8:       (foo: [0, 1, 2]);
                            ^^^^^^^^^ tuple type
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ foo
+            6:         foo = [...foo, x];
+                                      ^ number. Expected number literal \`1\`
+            8:       (foo: [0, 1, 2]);
+                               ^ number literal \`1\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ foo
+            6:         foo = [...foo, x];
+                                      ^ number. Expected number literal \`2\`
+            8:       (foo: [0, 1, 2]);
+                                  ^ number literal \`2\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ foo
+            6:         foo = [...foo, x];
+                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+            8:       (foo: [0, 1, 2]);
+                                  ^ number literal \`2\`
         `,
       ),
   ]),

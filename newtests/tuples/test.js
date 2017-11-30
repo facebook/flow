@@ -274,12 +274,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       (rest: [3,40]);
     `).newErrors(
         `
-          test.js:4
-            4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                       ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
-            8:       (rest: [3,40]);
-                               ^^ number literal \`40\`
-
           test.js:6
             6:       (a: 10);
                       ^ number literal \`1\`. Expected number literal \`10\`, got \`1\` instead
@@ -293,6 +287,16 @@ export default suite(({addFile, addFiles, addCode}) => [
                          ^^ number literal \`20\`
 
           test.js:8
+            8:       (rest: [3,40]);
+                      ^^^^ rest
+            4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                       ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
+            8:       (rest: [3,40]);
+                               ^^ number literal \`40\`
+
+          test.js:8
+            8:       (rest: [3,40]);
+                      ^^^^ rest
             8:       (rest: [3,40]);
                                ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
             4:       const tup: [1,2,3,4] = [1,2,3,4];
