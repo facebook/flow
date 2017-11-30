@@ -49,9 +49,23 @@ Error: classes.js:23
 
 Error: classes.js:23
  23:   setState(o: { y_: string }): void { }
-                   ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+       v--------
+ 34:   setState(
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+ 36:     callback?: () => mixed,
+ 37:   ): void;
+       ------^ function type. See lib: <BUILTINS>/react.js:34
+  This parameter is incompatible:
+     23:   setState(o: { y_: string }): void { }
+                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+      Property `y_` is incompatible:
+         23:   setState(o: { y_: string }): void { }
+                           ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:38
  38: Foo.defaultProps = 0;
@@ -149,9 +163,23 @@ Error: classes.js:64
 
 Error: classes.js:64
  64:   setState(o: { y_: string }): void { },
-                   ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+       v--------
+ 34:   setState(
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+ 36:     callback?: () => mixed,
+ 37:   ): void;
+       ------^ function type. See lib: <BUILTINS>/react.js:34
+  This parameter is incompatible:
+     64:   setState(o: { y_: string }): void { },
+                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+      Property `y_` is incompatible:
+         64:   setState(o: { y_: string }): void { },
+                           ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;

@@ -166,9 +166,14 @@ Error: D.js:20
 
 Error: E.js:2
   2: var a : { someProp: number } = function () {};
-             ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
+                                    ^^^^^^^^^^^^^^ function. This type is incompatible with
   2: var a : { someProp: number } = function () {};
-                                    ^^^^^^^^^^^^^^ function
+             ^^^^^^^^^^^^^^^^^^^^ object type
+  Property `someProp` is incompatible:
+      2: var a : { someProp: number } = function () {};
+                 ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
+      2: var a : { someProp: number } = function () {};
+                                        ^^^^^^^^^^^^^^ function
 
 Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"

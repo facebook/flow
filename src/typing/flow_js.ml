@@ -5360,6 +5360,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
+
+    (* FunT ~> ObjT *)
+
     (* TODO: This rule doesn't interact very well with union-type checking. It
        looks up Function.prototype, which currently doesn't appear structurally
        in the function type, and thus may not be fully resolved when the
@@ -5382,22 +5385,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        members, clearly intending for function types to match the former
        instead of the latter. *)
     | DefT (reason, FunT (statics, _, _)),
-      UseT (_, DefT (reason_o, ObjT { props_tmap; _ })) ->
+      UseT (use_op, DefT (reason_o, ObjT { props_tmap; _ })) ->
         if not
-          (quick_error_fun_as_obj cx trace reason statics reason_o
+          (quick_error_fun_as_obj cx trace ~use_op reason statics reason_o
              (Context.find_props cx props_tmap))
         then
           rec_flow cx trace (statics, u)
 
     (* TODO: similar concern as above *)
     | DefT (reason, FunT (statics, _, _)),
-      UseT (_, DefT (reason_inst, InstanceT (_, _, _, {
+      UseT (use_op, DefT (reason_inst, InstanceT (_, _, _, {
         fields_tmap;
         structural = true;
         _;
       }))) ->
       if not
-        (quick_error_fun_as_obj cx trace reason statics reason_inst
+        (quick_error_fun_as_obj cx trace ~use_op reason statics reason_inst
           (SMap.filter (fun x _ -> x = "constructor")
             (Context.find_props cx fields_tmap)))
       then
@@ -6495,7 +6498,7 @@ and is_dictionary_exempt = function
   | _ -> false
 
 (* common case checking a function as an object *)
-and quick_error_fun_as_obj cx trace reason statics reason_o props =
+and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
   let statics_own_props = match statics with
     | DefT (_, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
     | DefT (_, AnyFunT)
@@ -6517,9 +6520,15 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
       )
     ) props in
     SMap.iter (fun x _ ->
+      let use_op = PropertyCompatibility {
+        prop = Some x;
+        lower = reason;
+        upper = reason_o;
+        use_op;
+      } in
       let reason_prop =
         replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-      let err = FlowError.EPropNotFound ((reason_prop, reason), UnknownUse) in
+      let err = FlowError.EPropNotFound ((reason_prop, reason), use_op) in
       add_output cx ~trace err
     ) props_not_found;
     not (SMap.is_empty props_not_found)
