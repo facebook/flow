@@ -60,6 +60,8 @@ val register_entry_point :
   string -> ('param -> ('input, 'output) channel_pair -> unit) ->
   ('param, 'input, 'output) entry
 
+val name_of_entry : ('param, 'input, 'output) entry -> string
+
 (* Handler upon spawn and forked process. *)
 type ('in_, 'out) handle = {
   channels : ('in_, 'out) channel_pair;

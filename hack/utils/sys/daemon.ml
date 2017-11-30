@@ -158,6 +158,8 @@ let exec entry param ic oc =
 
 let register_entry_point = Entry.register
 
+let name_of_entry = Entry.name_of_entry
+
 let fd_of_path path =
   Sys_utils.with_umask 0o111 begin fun () ->
     Sys_utils.mkdir_no_fail (Filename.dirname path);
