@@ -704,6 +704,8 @@ module Cache = struct
             UseT (PropertyCompatibility {c with use_op = UnknownUse}, t)
           | UseT (IndexerKeyCompatibility c, t) when c.use_op <> UnknownUse ->
             UseT (IndexerKeyCompatibility {c with use_op = UnknownUse}, t)
+          | UseT (TupleElementCompatibility c, t) when c.use_op <> UnknownUse ->
+            UseT (TupleElementCompatibility {c with use_op = UnknownUse}, t)
           | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
             UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
           | UseT (FunParam { lower; upper; use_op }, t) when use_op <> UnknownUse ->
@@ -4259,9 +4261,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if l1 <> l2 then
         add_output cx ~trace (FlowError.ETupleArityMismatch
           ((r1, r2), l1, l2, use_op));
+      let n = ref 0 in
       iter2opt (fun t1 t2 ->
         match t1, t2 with
         | Some t1, Some t2 ->
+          n := !n + 1;
+          let use_op = TupleElementCompatibility { n = !n; lower = r1; upper = r2; use_op } in
           flow_to_mutable_child cx trace use_op fresh t1 t2
         | _ -> ()
       ) (ts1, ts2);
@@ -4279,9 +4284,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ArrT EmptyAT), UseT (_, DefT (_, ArrT _)) -> ()
 
     (* Read only arrays are the super type of all tuples and arrays *)
-    | DefT (_, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
-      UseT (_, DefT (_, ArrT (ROArrayAT (t2)))) ->
-      rec_flow_t cx trace (t1, t2)
+    | DefT (r1, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
+      UseT (use_op, DefT (r2, ArrT (ROArrayAT (t2)))) ->
+      let use_op = TypeArgCompatibility ("T", r1, r2, use_op) in
+      rec_flow cx trace (t1, UseT (use_op, t2))
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -6099,6 +6105,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (FunParam _ as use_op, u)
     | _, UseT (PropertyCompatibility _ as use_op, u)
     | _, UseT (IndexerKeyCompatibility _ as use_op, u)
+    | _, UseT (TupleElementCompatibility _ as use_op, u)
     | _, UseT (TypeArgCompatibility _ as use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op

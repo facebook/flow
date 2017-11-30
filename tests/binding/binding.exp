@@ -334,7 +334,7 @@ Error: scope.js:76
 
 Error: scope.js:86
  86:   for (var a /* error: string ~> number */ of xs) {}
-                ^ string. This type is incompatible with
+                                                   ^^ string. This type is incompatible with
  85:   var a: number = 0;
               ^^^^^^ number
 

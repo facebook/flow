@@ -48,6 +48,39 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       (foo: [0, 1, 2]);
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`1\`
+                8:       (foo: [0, 1, 2]);
+                                   ^ number literal \`1\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`2\`
+                8:       (foo: [0, 1, 2]);
+                                      ^ number literal \`2\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`2\`, got \`1\` instead
+                8:       (foo: [0, 1, 2]);
+                                      ^ number literal \`2\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
                       ^^^ array literal. Only tuples and array literals with known elements can flow to
             8:       (foo: [0, 1, 2]);
                            ^^^^^^^^^ tuple type
@@ -63,30 +96,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ array literal. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
             8:       (foo: [0, 1, 2]);
                            ^^^^^^^^^ tuple type
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ foo
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`1\`
-            8:       (foo: [0, 1, 2]);
-                               ^ number literal \`1\`
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ foo
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`
-            8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ foo
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
-            8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
         `,
       ),
   ]),
@@ -167,23 +176,36 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                               ^^^^^^^^^^^^^^^^^^^^^ array literal
-            4:       var a = [2];
-                              ^ number. Expected number literal \`20\`, got \`2\` instead
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                               ^^ number literal \`20\`
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       var a = [2];
+                                  ^ number. Expected number literal \`20\`, got \`2\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                   ^^ number literal \`20\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                         ^ number. Expected number literal \`30\`, got \`3\` instead
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                  ^^ number literal \`30\`
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The sixth tuple element is incompatible:
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                                      ^ number. Expected number literal \`60\`, got \`6\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                             ^^ number literal \`60\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                                  ^ number. Expected number literal \`60\`, got \`6\` instead
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                         ^^ number literal \`60\`
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                             ^ number. Expected number literal \`30\`, got \`3\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                      ^^ number literal \`30\`
         `,
       )
   ]),

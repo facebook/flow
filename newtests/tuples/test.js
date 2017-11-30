@@ -32,9 +32,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:22
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                            ^^^^^^ number. This type is incompatible with
+                                                                                ^^^ read-only array type. This type is incompatible with the expected return type of
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                     ^^^^^^ string
+                                                      ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+            Type argument \`T\` is incompatible:
+               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                ^^^^^^ number. This type is incompatible with
+               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                                         ^^^^^^ string
         `,
       ),
 
@@ -288,19 +293,25 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (rest: [3,40]);
-                      ^^^^ rest
-            4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                       ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
+                      ^^^^ rest. Has some incompatible tuple element with
             8:       (rest: [3,40]);
-                               ^^ number literal \`40\`
+                            ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                           ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
+                8:       (rest: [3,40]);
+                                   ^^ number literal \`40\`
 
           test.js:8
             8:       (rest: [3,40]);
-                      ^^^^ rest
+                      ^^^^ rest. Has some incompatible tuple element with
             8:       (rest: [3,40]);
-                               ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
-            4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                       ^ number literal \`4\`
+                            ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                8:       (rest: [3,40]);
+                                   ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
+                4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                           ^ number literal \`4\`
         `,
       ),
   ]),
@@ -311,29 +322,49 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                        ^ number literal \`1\`
+                                                                                       ^^^^^^ tuple type
+            The first tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                            ^ number literal \`1\`
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                           ^ number literal \`2\`
+                                                                                       ^^^^^^ tuple type
+            The first tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                            ^ number literal \`1\`. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                        ^ number literal \`1\`. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                                                                       ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                               ^ number literal \`2\`
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                           ^ number literal \`2\`. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                                                                       ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                               ^ number literal \`2\`. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
         `,
       ),
   ]),
@@ -344,29 +375,49 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                        ^^^^^^ number. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The first tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                            ^^^^^^ number. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                ^^^^^^ number. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The first tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                            ^^^^^^ number
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                        ^^^^^^ number
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The second tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                    ^^^^^^ number. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                ^^^^^^ number
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The second tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                    ^^^^^^ number
         `,
       ),
    ]),
@@ -377,17 +428,27 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return tup;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(tup: [1, 2]): [number, number] {
-                                                 ^^^^^^ number. Expected number literal \`1\`
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                        ^ number literal \`1\`
+                                                ^^^^^^^^^^^^^^^^ tuple type
+            The first tuple element is incompatible:
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                                     ^^^^^^ number. Expected number literal \`1\`
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                            ^ number literal \`1\`
 
-          test.js:4
+          test.js:5
+            5:         return tup;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(tup: [1, 2]): [number, number] {
-                                                         ^^^^^^ number. Expected number literal \`2\`
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                           ^ number literal \`2\`
+                                                ^^^^^^^^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                                             ^^^^^^ number. Expected number literal \`2\`
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                               ^ number literal \`2\`
         `,
       ),
   ]),

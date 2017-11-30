@@ -408,31 +408,36 @@ Error: FormData.js:52
 
 Error: FormData.js:56
  56: for (let x: number of a.keys()) {} // incorrect
-              ^^^^^^^^^ string. This type is incompatible with
+                           ^^^^^^^^ string. This type is incompatible with
  56: for (let x: number of a.keys()) {} // incorrect
                  ^^^^^^ number
 
 Error: FormData.js:64
  64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                               ^^^^ Blob. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-  Member 1:
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Error:
-   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                 ^^^^ Blob. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Member 2:
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
-  Error:
-   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                 ^^^^ Blob. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                                        ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+     64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                   ^^^^ Blob. This type is incompatible with
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
+      Member 1:
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Error:
+       64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                     ^^^^ Blob. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Member 2:
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+      Error:
+       64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                     ^^^^ Blob. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -448,15 +453,36 @@ Error: FormData.js:65
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                       ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                  ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                           ^^^^^^ number
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                               ^^^^^^ string. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                           ^^^^^^ number. This type is incompatible with
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+
+Error: FormData.js:65
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                   ^^^^^^ string
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -472,37 +498,52 @@ Error: FormData.js:66
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-  Member 1:
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Error:
-   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Member 2:
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
-  Error:
-   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number. This type is incompatible with
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
+      Member 1:
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Error:
+       66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                     ^^^^^^ number. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Member 2:
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+      Error:
+       66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                     ^^^^^^ number. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -524,43 +565,74 @@ Error: FormData.js:67
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                       ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                  ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                           ^^^^^^ number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                           ^^^^^^ number. This type is incompatible with
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:340
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-  Member 1:
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Error:
-   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-  Member 2:
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
-  Error:
-   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  319: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
+
+Error: FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number. This type is incompatible with
+    340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
+      Member 1:
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Error:
+       67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                     ^^^^^^ number. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
+      Member 2:
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+      Error:
+       67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                     ^^^^^^ number. This type is incompatible with
+      319: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
 
 Error: MutationObserver.js:10
  10: new MutationObserver(); // incorrect
@@ -716,4 +788,4 @@ Error: MutationObserver.js:23
                                ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:364
 
 
-Found 49 errors
+Found 51 errors

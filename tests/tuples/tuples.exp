@@ -36,9 +36,14 @@ Error: tuples.js:3
 
 Error: tuples.js:6
   6: var f: [number, string] = [123, 456];
-                                     ^^^ number. This type is incompatible with
+                               ^^^^^^^^^^ array literal. Has some incompatible tuple element with
   6: var f: [number, string] = [123, 456];
-                     ^^^^^^ string
+            ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+      6: var f: [number, string] = [123, 456];
+                                         ^^^ number. This type is incompatible with
+      6: var f: [number, string] = [123, 456];
+                         ^^^^^^ string
 
 
 Found 7 errors

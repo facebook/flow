@@ -20,10 +20,15 @@ Error: apply.js:13
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `apply`
- 19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-                            ^^^ number. Expected number literal `123`, got `456` instead
+  4:   fn: (...Args) => Ret,
+           ^^^^^^^^^^^^^^^^ rest parameter array of function type. Has some incompatible tuple element with
  17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                       ^^^ number literal `123`
+                                ^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+     19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
+                                ^^^ number. Expected number literal `123`, got `456` instead
+     17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                           ^^^ number literal `123`
 
 Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
@@ -63,10 +68,15 @@ Error: apply.js:32
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
- 38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-                                ^^^ number. Expected number literal `123`, got `456` instead
+ 25:   fn: (...Args) => Ret,
+           ^^^^^^^^^^^^^^^^ rest parameter array of function type. Has some incompatible tuple element with
  17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                       ^^^ number literal `123`
+                                ^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
+     38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
+                                    ^^^ number. Expected number literal `123`, got `456` instead
+     17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                           ^^^ number literal `123`
 
 Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args
@@ -201,9 +211,14 @@ Error: jsx.js:40
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
     This parameter is incompatible:
        40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
-                                   ^^^ number. This type is incompatible with
+            ^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of JSX desugared to `JSX(...)`. Has some incompatible tuple element with
        37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
-                                                                        ^^^^^^ string
+                                                                       ^^^^^^^^ tuple type
+        The first tuple element is incompatible:
+           40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
+                                       ^^^ number. This type is incompatible with
+           37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
+                                                                            ^^^^^^ string
   Member 2:
                            v
    18: declare function JSX<

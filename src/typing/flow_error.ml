@@ -300,6 +300,8 @@ let rec locs_of_use_op acc = function
     let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
   | SetProperty reason -> (loc_of_reason reason)::acc
+  | TupleElementCompatibility {lower; upper; use_op; _} ->
+    locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | TypeArgCompatibility (_, r1, r2, use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
   | FunParam { lower; upper; use_op } ->
@@ -704,6 +706,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in
     unwrap_use_ops (obj_reasons, extra, msg) use_op
+  | TupleElementCompatibility {n; lower; upper; use_op} ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "The %s tuple element is incompatible:" (Utils_js.ordinal n))
+    in
+    let msg = "Has some incompatible tuple element with" in
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
   | TypeArgCompatibility (x, reason_op, reason_tapp, use_op) ->
     let extra =
       extra_info_of_use_op reasons extra msg

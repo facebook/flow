@@ -208,10 +208,25 @@ let extension_of_filename filename =
 
 (* ordinal of a number *)
 let ordinal = function
-  | 1 -> "1st"
-  | 2 -> "2nd"
-  | 3 -> "3rd"
-  | n -> spf "%dth" n
+  | 1 -> "first"
+  | 2 -> "second"
+  | 3 -> "third"
+  | 4 -> "fourth"
+  | 5 -> "fifth"
+  | 6 -> "sixth"
+  | 7 -> "seventh"
+  | 8 -> "eigth"
+  | 9 -> "ninth"
+  | n ->
+    let n = string_of_int n in
+    let th = String.get n ((String.length n) - 1) in
+    let th = match th with
+    | '1' -> "st"
+    | '2' -> "nd"
+    | '3' -> "rd"
+    | _ -> "th"
+    in
+    n ^ th
 
 
 (* Module implementing the recommended way to augment a map.

@@ -1659,10 +1659,15 @@ Error: tuple.js:13
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                               ^^^^^^^ boolean. This type is incompatible with
      13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                ^^ JSX text
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The first tuple element is incompatible:
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                   ^^^^^^^ boolean. This type is incompatible with
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                    ^^ JSX text
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1670,10 +1675,15 @@ Error: tuple.js:13
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                        ^^^^^^ string. This type is incompatible with
      13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                   ^^^^ boolean
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The first tuple element is incompatible:
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                    ^^ JSX text. This type is incompatible with
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                   ^^^^^^^ boolean
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1681,10 +1691,63 @@ Error: tuple.js:13
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                                ^^^^^^ number. This type is incompatible with
      13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                        ^^^ JSX text
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The second tuple element is incompatible:
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                            ^^^^^^ string. This type is incompatible with
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                       ^^^^ boolean
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The second tuple element is incompatible:
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                       ^^^^ boolean. This type is incompatible with
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                            ^^^^^^ string
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The third tuple element is incompatible:
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                                    ^^^^^^ number. This type is incompatible with
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                            ^^^ JSX text
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The third tuple element is incompatible:
+         13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                            ^^^ JSX text. This type is incompatible with
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                                    ^^^^^^ number
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1696,39 +1759,6 @@ Error: tuple.js:13
          ^^^^^^^ React children array. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
       6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                ^^ JSX text. This type is incompatible with
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                               ^^^^^^^ boolean
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                   ^^^^ boolean. This type is incompatible with
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                        ^^^^^^ string
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                        ^^^ JSX text. This type is incompatible with
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                                ^^^^^^ number
 
 Error: tuple.js:14
  14: <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
@@ -1748,31 +1778,41 @@ Error: tuple.js:16
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
      16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The first tuple element is incompatible:
+         16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+                     ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                   ^^^^^^^ boolean
+
+Error: tuple.js:16
+ 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+         ^^^^^^^ React children array. Has some incompatible tuple element with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+      The second tuple element is incompatible:
+         16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+                                        ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+          6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                            ^^^^^^ string
+
+Error: tuple.js:16
+ 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
          ^^^^^^^ React children array. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
       6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-
-Error: tuple.js:16
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-     ^^^^^^^ React element `Tuple`. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-                 ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                               ^^^^^^^ boolean
-
-Error: tuple.js:16
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-     ^^^^^^^ React element `Tuple`. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-                                    ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                        ^^^^^^ string
 
 Error: tuple.js:18
  18: <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many

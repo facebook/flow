@@ -1407,9 +1407,7 @@ and statement cx = Ast.Statement.(
           | ForOf.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
-              let repos_tvar loc =
-                Flow.reposition cx loc element_tvar
-              in
+              let repos_tvar _ = Flow.reposition cx (loc_of_t t) element_tvar in
               variable_decl cx decl;
               variable cx kind ~if_uninitialized:repos_tvar vdecl
 

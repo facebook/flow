@@ -303,6 +303,7 @@ module rec TypeTerm : sig
       }
     | ReactCreateElementCall
     | SetProperty of reason
+    | TupleElementCompatibility of { n: int; lower: reason; upper: reason; use_op: use_op }
     | TypeArgCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
@@ -2375,6 +2376,7 @@ let string_of_use_op = function
   | PropertyCompatibility _ -> "PropertyCompatibility"
   | ReactCreateElementCall -> "ReactCreateElementCall"
   | SetProperty _ -> "SetProperty"
+  | TupleElementCompatibility _ -> "TupleElementCompatibility"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
