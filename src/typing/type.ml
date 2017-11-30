@@ -285,6 +285,8 @@ module rec TypeTerm : sig
     | Addition
     | AssignVar of { var: reason option; init: reason }
     | Cast of { lower: reason; upper: reason }
+    | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
+    | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
     | Coercion
     | FunCallMissingArg of reason * reason
     | FunCallParam
@@ -344,7 +346,7 @@ module rec TypeTerm : sig
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * call_arg list * t
-    | SuperT of reason * derived_type
+    | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
     | ToStringT of reason * t
@@ -780,7 +782,7 @@ module rec TypeTerm : sig
   and lookup_action =
   | RWProp of t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
-  | SuperProp of Property.t
+  | SuperProp of use_op * Property.t
   | MatchProp of t
 
   and rw = Read | Write of write_ctx
@@ -2059,7 +2061,7 @@ and reason_of_use_t = function
   | SpecializeT(reason,_,_,_,_) -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
-  | SuperT (reason,_) -> reason
+  | SuperT (_,reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
   | ThisSpecializeT(reason,_,_) -> reason
   | ToStringT (reason, _) -> reason
@@ -2223,7 +2225,7 @@ and mod_reason_of_use_t f = function
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
-  | SuperT (reason, inst) -> SuperT (f reason, inst)
+  | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
   | ToStringT (reason, t) -> ToStringT (f reason, t)
@@ -2363,6 +2365,8 @@ let string_of_use_op = function
   | Addition -> "Addition"
   | AssignVar _ -> "AssignVar"
   | Cast _ -> "Cast"
+  | ClassExtendsCheck _ -> "ClassExtendsCheck"
+  | ClassImplementsCheck _ -> "ClassImplementsCheck"
   | Coercion -> "Coercion"
   | FunCallMissingArg _ -> "FunCallMissingArg"
   | FunCallParam -> "FunCallParam"

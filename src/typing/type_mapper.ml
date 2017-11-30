@@ -520,14 +520,14 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if callargs' == callargs && t'' == t' then t
         else ConstructorT (r, callargs', t'')
-    | SuperT (r, DerivedInstance i) ->
+    | SuperT (op, r, DerivedInstance i) ->
         let i' = self#inst_type cx map_cx i in
         if i' == i then t
-        else SuperT (r, DerivedInstance i')
-    | SuperT (r, DerivedStatics o) ->
+        else SuperT (op, r, DerivedInstance i')
+    | SuperT (op, r, DerivedStatics o) ->
         let o' = self#obj_type cx map_cx o in
         if o' == o then t
-        else SuperT (r, DerivedStatics o')
+        else SuperT (op, r, DerivedStatics o')
     | ImplementsT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
@@ -922,10 +922,10 @@ class ['a] t = object(self)
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
         else LookupProp (use, prop')
-    | SuperProp prop ->
+    | SuperProp (op, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
-        else SuperProp prop'
+        else SuperProp (op, prop')
     | MatchProp t' ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t

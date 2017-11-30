@@ -4922,7 +4922,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, (AnyT | AnyObjT)),
       LookupT (reason_op, _, _, propref, action) ->
       (match action with
-      | SuperProp lp when Property.write_t lp = None ->
+      | SuperProp (_, lp) when Property.write_t lp = None ->
         (* Without this exception, we will call rec_flow_p where
          * `write_t lp = None` and `write_t up = Some`, which is a polarity
          * mismatch error. Instead of this, we could "read" `mixed` from
@@ -5446,13 +5446,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | DefT (_, InstanceT _),
-      SuperT (reason, derived_type) ->
-      let check_super x p =
-        let strict = NonstrictReturning None in
-        let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-        lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
-      in
+    | DefT (ureason, InstanceT _),
+      SuperT (use_op, reason, derived_type) ->
+      let check_super = check_super cx trace ~use_op reason ureason l in
       (match derived_type with
       | DerivedInstance {fields_tmap; methods_tmap; _} ->
         Context.iter_props cx fields_tmap check_super;
@@ -5464,13 +5460,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if inherited_method x then check_super x p
         ))
 
-    | DefT (_, ObjT _), SuperT (reason, derived_type)
-    | DefT (_, AnyObjT), SuperT (reason, derived_type) ->
-      let check_super x p =
-        let strict = NonstrictReturning None in
-        let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-        lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
-      in
+    | DefT (ureason, ObjT _), SuperT (use_op, reason, derived_type)
+    | DefT (ureason, AnyObjT), SuperT (use_op, reason, derived_type) ->
+      let check_super = check_super cx trace ~use_op reason ureason l in
       (match derived_type with
       | DerivedInstance {fields_tmap; methods_tmap; _} ->
         Context.iter_props cx fields_tmap check_super;
@@ -6071,10 +6063,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       })
 
     | _, LookupT (_, _, _, propref, lookup_action) ->
-      let use_op = match lookup_action with
-      | LookupProp (use_op, _) -> Some use_op
-      | _ -> None
-      in
+      let use_op = use_op_of_lookup_action lookup_action in
       add_output cx ~trace (FlowError.EIncompatibleProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
@@ -6181,6 +6170,7 @@ and flow_error_kind_of_upper = function
 
 and use_op_of_lookup_action = function
   | LookupProp (use_op, _) -> Some use_op
+  | SuperProp (use_op, _) -> Some use_op
   | _ -> None
 
 (* some types need to be resolved before proceeding further *)
@@ -6815,6 +6805,20 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
       LookupT (reason_struct, Strict lreason, [], propref,
         LookupProp (use_op, p)))
   );
+
+and check_super cx trace ~use_op lreason ureason t x p =
+  let use_op = PropertyCompatibility {
+    prop = Some x;
+    lower = lreason;
+    upper = replace_reason (function
+      | RStatics desc -> desc
+      | desc -> desc
+    ) ureason;
+    use_op;
+  } in
+  let strict = NonstrictReturning None in
+  let reason_prop = replace_reason_const (RProperty (Some x)) lreason in
+  lookup_prop cx trace t reason_prop lreason strict x (SuperProp (use_op, p))
 
 (*****************)
 (* substitutions *)
@@ -9912,8 +9916,8 @@ and finish_resolve_spread_list =
 and perform_lookup_action cx trace propref p lreason ureason = function
   | LookupProp (use_op, up) ->
     rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
-  | SuperProp lp ->
-    rec_flow_p cx trace ureason lreason propref (lp, p)
+  | SuperProp (use_op, lp) ->
+    rec_flow_p cx trace ~use_op ureason lreason propref (lp, p)
   | RWProp (_, tout, rw) ->
     begin match rw, Property.access rw p with
     (* TODO: Sam, comment repositioning logic here *)

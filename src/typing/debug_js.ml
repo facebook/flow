@@ -472,11 +472,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SuperT (_, DerivedInstance i) -> [
+  | SuperT (_, _, DerivedInstance i) -> [
       "instance", json_of_insttype json_cx i
     ]
 
-  | SuperT (_, DerivedStatics o) -> [
+  | SuperT (_, _, DerivedStatics o) -> [
       "statics", json_of_objtype json_cx o
     ]
 
@@ -1361,7 +1361,7 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "use", JSON_String (string_of_use_op op);
         "prop", json_of_prop json_cx p;
       ]
-    | SuperProp p -> [
+    | SuperProp (_, p) -> [
         "kind", JSON_String "SuperProp";
         "prop", json_of_prop json_cx p;
       ]
@@ -1783,7 +1783,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | RWProp (_, t, Read) -> spf "Read %s" (kid t)
   | RWProp (_, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
-  | SuperProp p -> spf "Super %s" (prop p)
+  | SuperProp (_, p) -> spf "Super %s" (prop p)
   | MatchProp t -> spf "Match %s" (kid t)
   in
 

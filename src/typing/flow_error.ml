@@ -308,8 +308,10 @@ let rec locs_of_use_op acc = function
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Addition
   | AssignVar _
-  | Coercion
   | Cast _
+  | ClassExtendsCheck _
+  | ClassImplementsCheck _
+  | Coercion
   | FunImplicitReturn
   | FunCallMissingArg _
   | FunCallParam
@@ -757,6 +759,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
     extra, (* suppress_op *) false, typecheck_msgs msg (rl, ru)
+  | ClassExtendsCheck _ ->
+    let msg = if not force
+      then "Cannot extend"
+      else msg
+    in
+    extra, (* suppress_op *) false, typecheck_msgs msg reasons
+  | ClassImplementsCheck _ ->
+    let msg = if not force
+      then "Cannot implement"
+      else msg
+    in
+    extra, (* suppress_op *) false, typecheck_msgs msg reasons
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
    * the primary location. *)

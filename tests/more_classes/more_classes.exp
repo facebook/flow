@@ -4,6 +4,25 @@ Error: Bar.js:15
  15:     new Qux().w = "?";
          ^^^^^^^^^^^ number
 
+Error: Foo.js:7
+  7: class Foo extends Qux {
+           ^^^ Foo. Cannot extend
+  7: class Foo extends Qux {
+                       ^^^ Qux
+  Property `fooqux` is incompatible:
+           v-----------------
+     21:   fooqux(x:string) {
+     22:     this.x;
+     23:   }
+           ^ function. This type is incompatible with
+      9:   fooqux(x:number) { }
+           ^^^^^^^^^^^^^^^^^^^^ function. See: Qux.js:9
+      This parameter is incompatible:
+          9:   fooqux(x:number) { }
+                        ^^^^^^ number. This type is incompatible with. See: Qux.js:9
+         21:   fooqux(x:string) {
+                        ^^^^^^ string
+
 Error: Foo.js:10
  10:     this.x = x;
               ^ property `x`. Property cannot be assigned on possibly undefined value
@@ -31,20 +50,6 @@ Error: Foo.js:18
                         ^ number. This type is incompatible with the expected param type of
  14:   bar(z:string,u:string):string {
                       ^^^^^^ string. See: Bar.js:14
-
-Error: Foo.js:21
-       v-----------------
- 21:   fooqux(x:string) {
- 22:     this.x;
- 23:   }
-       ^ function. This type is incompatible with
-  9:   fooqux(x:number) { }
-       ^^^^^^^^^^^^^^^^^^^^ function. See: Qux.js:9
-  This parameter is incompatible:
-      9:   fooqux(x:number) { }
-                    ^^^^^^ number. This type is incompatible with. See: Qux.js:9
-     21:   fooqux(x:string) {
-                    ^^^^^^ string
 
 
 Found 7 errors

@@ -94,11 +94,11 @@ val of_declare_class: Context.t ->
 
 (** Emits constraints to ensure the signature is compatible with its declared
     interface implementations (classes) *)
-val check_implements: Context.t -> t -> unit
+val check_implements: Context.t -> Reason.reason -> t -> unit
 
 (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)
-val check_super: Context.t -> t -> unit
+val check_super: Context.t -> Reason.reason -> t -> unit
 
 (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 val generate_tests: Context.t ->

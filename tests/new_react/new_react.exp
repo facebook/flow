@@ -10,6 +10,56 @@ Error: bad_default_props.js:20
  26: declare class React$Component<Props, State = void> {
                                    ^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:26
 
+Error: classes.js:7
+  7: class Foo extends React.Component<Props, State> {
+           ^^^ Foo. Cannot extend
+  7: class Foo extends React.Component<Props, State> {
+                       ^^^^^^^^^^^^^^^ React.Component
+  Property `setState` is incompatible:
+     23:   setState(o: { y_: string }): void { }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           v--------
+     34:   setState(
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+     36:     callback?: () => mixed,
+     37:   ): void;
+           ------^ function type. See lib: <BUILTINS>/react.js:34
+      This parameter is incompatible:
+         23:   setState(o: { y_: string }): void { }
+                           ^^^^^^^^^^^^^^ object type. This type is incompatible with
+         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
+          Property `y_` is incompatible:
+             23:   setState(o: { y_: string }): void { }
+                               ^^^^^^^^^^^^^^ property `y_`. Property not found in
+             35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
+
+Error: classes.js:7
+  7: class Foo extends React.Component<Props, State> {
+           ^^^ Foo. Cannot extend
+  7: class Foo extends React.Component<Props, State> {
+                       ^^^^^^^^^^^^^^^ React.Component
+  Property `setState` is incompatible:
+     23:   setState(o: { y_: string }): void { }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           v--------
+     34:   setState(
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+     36:     callback?: () => mixed,
+     37:   ): void;
+           ------^ function type. See lib: <BUILTINS>/react.js:34
+      This parameter is incompatible:
+         23:   setState(o: { y_: string }): void { }
+                           ^^^^^^^^^^^^^^ object type. This type is incompatible with
+         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+          Property `y_` is incompatible:
+             23:   setState(o: { y_: string }): void { }
+                               ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+             35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+
 Error: classes.js:15
  15:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
@@ -26,46 +76,6 @@ Error: classes.js:20
                                ^^ string. This type is incompatible with
       5: type State = { y: number };
                            ^^^^^^ number
-
-Error: classes.js:23
- 23:   setState(o: { y_: string }): void { }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v--------
- 34:   setState(
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
- 36:     callback?: () => mixed,
- 37:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:34
-  This parameter is incompatible:
-     23:   setState(o: { y_: string }): void { }
-                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
-     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
-      Property `y_` is incompatible:
-         23:   setState(o: { y_: string }): void { }
-                           ^^^^^^^^^^^^^^ property `y_`. Property not found in
-         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
-
-Error: classes.js:23
- 23:   setState(o: { y_: string }): void { }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v--------
- 34:   setState(
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
- 36:     callback?: () => mixed,
- 37:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:34
-  This parameter is incompatible:
-     23:   setState(o: { y_: string }): void { }
-                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
-     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-      Property `y_` is incompatible:
-         23:   setState(o: { y_: string }): void { }
-                           ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
-         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:38
  38: Foo.defaultProps = 0;
@@ -135,51 +145,81 @@ Error: classes.js:39
      39: var foo: $jsx<number> = <Foo/>;
                                  ^^^^^^ props of React element `Foo`
 
+Error: classes.js:43
+                     v------------------
+ 43: var FooLegacy = React.createClass({
+ 44:   is_mounted: (undefined: ?boolean),
+ 45: 
+...:
+ 76: });
+     -^ call of method `createClass`. This type is incompatible with
+                     v------------------
+ 43: var FooLegacy = React.createClass({
+ 44:   is_mounted: (undefined: ?boolean),
+ 45: 
+...:
+ 76: });
+     -^ LegacyReactComponent
+  Property `setState` is incompatible:
+     64:   setState(o: { y_: string }): void { },
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           v--------
+     34:   setState(
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+     36:     callback?: () => mixed,
+     37:   ): void;
+           ------^ function type. See lib: <BUILTINS>/react.js:34
+      This parameter is incompatible:
+         60:   getInitialState(): { y: string } {
+                              ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+         64:   setState(o: { y_: string }): void { },
+                           ^^^^^^^^^^^^^^ object type
+          Property `y_` is incompatible:
+             64:   setState(o: { y_: string }): void { },
+                               ^^^^^^^^^^^^^^ property `y_`. Property not found in
+             60:   getInitialState(): { y: string } {
+                                  ^^^^^^^^^^^^^^^^^ object type
+
+Error: classes.js:43
+                     v------------------
+ 43: var FooLegacy = React.createClass({
+ 44:   is_mounted: (undefined: ?boolean),
+ 45: 
+...:
+ 76: });
+     -^ call of method `createClass`. This type is incompatible with
+                     v------------------
+ 43: var FooLegacy = React.createClass({
+ 44:   is_mounted: (undefined: ?boolean),
+ 45: 
+...:
+ 76: });
+     -^ LegacyReactComponent
+  Property `setState` is incompatible:
+     64:   setState(o: { y_: string }): void { },
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           v--------
+     34:   setState(
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+     36:     callback?: () => mixed,
+     37:   ): void;
+           ------^ function type. See lib: <BUILTINS>/react.js:34
+      This parameter is incompatible:
+         64:   setState(o: { y_: string }): void { },
+                           ^^^^^^^^^^^^^^ object type. This type is incompatible with
+         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+          Property `y_` is incompatible:
+             64:   setState(o: { y_: string }): void { },
+                               ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+             35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+
 Error: classes.js:57
  57:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
  57:     var _: string = this.props.x;
                 ^^^^^^ string
-
-Error: classes.js:64
- 64:   setState(o: { y_: string }): void { },
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v--------
- 34:   setState(
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
- 36:     callback?: () => mixed,
- 37:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:34
-  This parameter is incompatible:
-     60:   getInitialState(): { y: string } {
-                          ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     64:   setState(o: { y_: string }): void { },
-                       ^^^^^^^^^^^^^^ object type
-      Property `y_` is incompatible:
-         64:   setState(o: { y_: string }): void { },
-                           ^^^^^^^^^^^^^^ property `y_`. Property not found in
-         60:   getInitialState(): { y: string } {
-                              ^^^^^^^^^^^^^^^^^ object type
-
-Error: classes.js:64
- 64:   setState(o: { y_: string }): void { },
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v--------
- 34:   setState(
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
- 36:     callback?: () => mixed,
- 37:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:34
-  This parameter is incompatible:
-     64:   setState(o: { y_: string }): void { },
-                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
-     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-      Property `y_` is incompatible:
-         64:   setState(o: { y_: string }): void { },
-                           ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
-         35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;

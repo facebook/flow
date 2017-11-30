@@ -895,7 +895,7 @@ let run cx trace ~use_op reason_op l u
         mixins = spec.unknown_mixins <> [];
         structural = false;
       } in
-      rec_flow cx trace (super, SuperT (reason_op, DerivedInstance insttype));
+      rec_flow cx trace (super, SuperT (use_op, reason_op, DerivedInstance insttype));
 
       let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
       rec_flow_t cx trace (instance, knot.this);

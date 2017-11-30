@@ -407,20 +407,30 @@ let thistype cx x =
   let static = DefT (sreason, ObjT static_objtype) in
   DefT (reason, InstanceT (static, super, implements, insttype))
 
-let check_implements cx x =
+let check_implements cx def_reason x =
   let this = thistype cx x in
   List.iter (fun i ->
-    Flow.flow cx (i, Type.(ImplementsT (UnknownUse, this)))
+    let use_op = Type.ClassImplementsCheck {
+      def = def_reason;
+      name = x.instance.reason;
+      implements = Type.reason_of_t i;
+    } in
+    Flow.flow cx (i, Type.(ImplementsT (use_op, this)))
   ) x.implements
 
-let check_super cx x =
+let check_super cx def_reason x =
   let x = remove_this x in
   let reason = x.instance.reason in
   let open Type in
   let initialized_static_field_names, static_objtype = statictype cx x.static in
   let insttype = insttype cx ~initialized_static_field_names x in
-  Flow.flow cx (x.static.super, SuperT (reason, DerivedStatics static_objtype));
-  Flow.flow cx (x.instance.super, SuperT (reason, DerivedInstance insttype))
+  let use_op = ClassExtendsCheck {
+    def = def_reason;
+    name = reason;
+    extends = reason_of_t x.instance.super;
+  } in
+  Flow.flow cx (x.static.super, SuperT (use_op, reason, DerivedStatics static_objtype));
+  Flow.flow cx (x.instance.super, SuperT (use_op, reason, DerivedInstance insttype))
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)

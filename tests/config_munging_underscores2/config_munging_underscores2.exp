@@ -1,60 +1,90 @@
-Error: chain.js:4
-  4:   _property1: number;
-                   ^^^^^^ number. This type is incompatible with
- 20:   _property1: string;
-                   ^^^^^^ string
-
-Error: chain.js:5
-  5:   static _sProperty: number;
-                          ^^^^^^ number. This type is incompatible with
- 21:   static _sProperty: string;
-                          ^^^^^^ string
-
-Error: chain.js:20
- 20:   _property1: string;
-                   ^^^^^^ string. This type is incompatible with
-  4:   _property1: number;
-                   ^^^^^^ number
-
-Error: chain.js:21
- 21:   static _sProperty: string;
-                          ^^^^^^ string. This type is incompatible with
-  5:   static _sProperty: number;
-                          ^^^^^^ number
-
-Error: chain.js:27
-       v-------------------
- 27:   _method1(): string {
- 28:     return "yet another string";
- 29:   }
-       ^ function. This type is incompatible with
-       v-------------------
- 10:   _method1(): number {
- 11:     return 1;
- 12:   }
-       ^ function
-  This parameter is incompatible:
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_method1` is incompatible:
+           v-------------------
      27:   _method1(): string {
-                       ^^^^^^ string. This type is incompatible with
+     28:     return "yet another string";
+     29:   }
+           ^ function. This type is incompatible with
+           v-------------------
      10:   _method1(): number {
+     11:     return 1;
+     12:   }
+           ^ function
+      This parameter is incompatible:
+         27:   _method1(): string {
+                           ^^^^^^ string. This type is incompatible with
+         10:   _method1(): number {
+                           ^^^^^^ number
+
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_property1` is incompatible:
+      4:   _property1: number;
+                       ^^^^^^ number. This type is incompatible with
+     20:   _property1: string;
+                       ^^^^^^ string
+
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_property1` is incompatible:
+     20:   _property1: string;
+                       ^^^^^^ string. This type is incompatible with
+      4:   _property1: number;
                        ^^^^^^ number
 
-Error: chain.js:30
-       v--------------------------
- 30:   static _sMethod(): number {
- 31:     return 23;
- 32:   }
-       ^ function. This type is incompatible with
-       v--------------------------
- 13:   static _sMethod(): string {
- 14:     return "some string";
- 15:   }
-       ^ function
-  This parameter is incompatible:
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_sMethod` is incompatible:
+           v--------------------------
      30:   static _sMethod(): number {
-                              ^^^^^^ number. This type is incompatible with
+     31:     return 23;
+     32:   }
+           ^ function. This type is incompatible with
+           v--------------------------
      13:   static _sMethod(): string {
+     14:     return "some string";
+     15:   }
+           ^ function
+      This parameter is incompatible:
+         30:   static _sMethod(): number {
+                                  ^^^^^^ number. This type is incompatible with
+         13:   static _sMethod(): string {
+                                  ^^^^^^ string
+
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_sProperty` is incompatible:
+      5:   static _sProperty: number;
+                              ^^^^^^ number. This type is incompatible with
+     21:   static _sProperty: string;
                               ^^^^^^ string
+
+Error: chain.js:19
+ 19: class B extends A {
+           ^ B. Cannot extend
+ 19: class B extends A {
+                     ^ A
+  Property `_sProperty` is incompatible:
+     21:   static _sProperty: string;
+                              ^^^^^^ string. This type is incompatible with
+      5:   static _sProperty: number;
+                              ^^^^^^ number
 
 
 Found 6 errors

@@ -75,6 +75,37 @@ Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
                           ^^^^^ empty
 
+Error: create_class.js:125
+               v------------------
+125: const L = React.createClass({
+126:   propTypes: {
+127:     foo: React.PropTypes.string.isRequired,
+...:
+171: });
+     -^ call of method `createClass`. This type is incompatible with
+               v------------------
+125: const L = React.createClass({
+126:   propTypes: {
+127:     foo: React.PropTypes.string.isRequired,
+...:
+171: });
+     -^ LegacyReactComponent
+  Property `shouldComponentUpdate` is incompatible:
+    145:   shouldComponentUpdate(nextProps, nextState) {
+                                ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           v---------------------
+     51:   shouldComponentUpdate(
+     52:     nextProps: Props,
+     53:     nextState: State,
+     54:     nextContext: any,
+     55:   ): boolean;
+           ---------^ function type. See lib: <BUILTINS>/react.js:51
+      This parameter is incompatible:
+        150:     return 0; // number ~> bool
+                        ^ number. This type is incompatible with
+         55:   ): boolean;
+                  ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:55
+
 Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -98,22 +129,6 @@ Error: create_class.js:142
           ^^^^^^^^^^^^^ string. This type is incompatible with
 142:     (nextProps.foo: empty); // string ~> empty
                          ^^^^^ empty
-
-Error: create_class.js:145
-145:   shouldComponentUpdate(nextProps, nextState) {
-                            ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v---------------------
- 51:   shouldComponentUpdate(
- 52:     nextProps: Props,
- 53:     nextState: State,
- 54:     nextContext: any,
- 55:   ): boolean;
-       ---------^ function type. See lib: <BUILTINS>/react.js:51
-  This parameter is incompatible:
-    150:     return 0; // number ~> bool
-                    ^ number. This type is incompatible with
-     55:   ): boolean;
-              ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:55
 
 Error: create_class.js:146
 146:     (this.props.foo: empty); // string ~> empty

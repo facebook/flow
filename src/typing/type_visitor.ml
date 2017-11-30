@@ -296,8 +296,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SuperT (_, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
-  | SuperT (_, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
+  | SuperT (_, _, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
+  | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
@@ -753,7 +753,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
   | LookupProp (_, prop)
-  | SuperProp prop ->
+  | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
   | MatchProp t ->
     self#type_ cx pole_TODO acc t

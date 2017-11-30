@@ -1,6 +1,6 @@
 Error: test.js:5
   5: class C1 implements IFoo {} // error: property `foo` not found
-           ^^ C1. This type is incompatible with
+           ^^ C1. Cannot implement
   5: class C1 implements IFoo {} // error: property `foo` not found
                          ^^^^ IFoo
   Property `foo` is incompatible:
@@ -11,7 +11,7 @@ Error: test.js:5
 
 Error: test.js:6
   6: class C2 implements IFoo { foo: number } // error: number <~> string
-           ^^ C2. This type is incompatible with
+           ^^ C2. Cannot implement
   6: class C2 implements IFoo { foo: number } // error: number <~> string
                          ^^^^ IFoo
   Property `foo` is incompatible:
@@ -22,7 +22,7 @@ Error: test.js:6
 
 Error: test.js:6
   6: class C2 implements IFoo { foo: number } // error: number <~> string
-           ^^ C2. This type is incompatible with
+           ^^ C2. Cannot implement
   6: class C2 implements IFoo { foo: number } // error: number <~> string
                          ^^^^ IFoo
   Property `foo` is incompatible:
@@ -33,7 +33,7 @@ Error: test.js:6
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4. This type is incompatible with
+           ^^ C4. Cannot implement
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
                          ^^^^ IFoo
   Property `foo` is incompatible:
@@ -44,7 +44,7 @@ Error: test.js:13
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4. This type is incompatible with
+           ^^ C4. Cannot implement
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
                                ^^^^ IBar
   Property `bar` is incompatible:
@@ -55,7 +55,7 @@ Error: test.js:13
 
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5. This type is incompatible with
+           ^^ C5. Cannot implement
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
                          ^^^^^^^ IFoo
   Property `foo` is incompatible:
@@ -66,7 +66,7 @@ Error: test.js:18
 
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5. This type is incompatible with
+           ^^ C5. Cannot implement
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
                          ^^^^^^^ IFooBar
   Property `bar` is incompatible:

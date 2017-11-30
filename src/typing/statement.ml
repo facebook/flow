@@ -430,7 +430,8 @@ and statement cx = Ast.Statement.(
   in
 
   let interface_helper cx loc (iface_sig, self) =
-    Iface_sig.generate_tests cx (Iface_sig.check_super cx) iface_sig;
+    let def_reason = mk_reason (desc_of_t self) loc in
+    Iface_sig.generate_tests cx (Iface_sig.check_super cx def_reason) iface_sig;
     let t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t;
     Type_table.set (Context.type_table cx) loc t;
@@ -438,16 +439,16 @@ and statement cx = Ast.Statement.(
   in
 
   let interface cx loc decl =
-    let { Interface.id = (_, name); _ } = decl in
-    let reason = DescFormat.instance_reason name loc in
+    let { Interface.id = (name_loc, name); _ } = decl in
+    let reason = DescFormat.instance_reason name name_loc in
     let iface_sig = Iface_sig.of_interface cx reason decl in
     let t = interface_helper cx loc iface_sig in
     Env.init_type cx name t loc
   in
 
   let declare_class cx loc decl =
-    let { DeclareClass.id = (_, name); _ } = decl in
-    let reason = DescFormat.instance_reason name loc in
+    let { DeclareClass.id = (name_loc, name); _ } = decl in
+    let reason = DescFormat.instance_reason name name_loc in
     let class_sig = Iface_sig.of_declare_class cx reason decl in
     let t = interface_helper cx loc class_sig in
     Env.init_var ~has_anno:false cx name t loc
@@ -4531,14 +4532,15 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 )
 
 and mk_class cx loc reason c =
+  let def_reason = repos_reason loc reason in
   let this_in_class = Class_sig.This.in_class c in
   let self = Tvar.mk cx reason in
   let class_sig =
     Class_sig.mk cx loc reason self c ~expr:expression
   in
     class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-      Class_sig.check_super cx class_sig;
-      Class_sig.check_implements cx class_sig;
+      Class_sig.check_super cx def_reason class_sig;
+      Class_sig.check_implements cx def_reason class_sig;
       if this_in_class || not (Class_sig.This.is_bound_to_empty class_sig) then
         Class_sig.toplevels cx class_sig
         ~decls:toplevel_decls

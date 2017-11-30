@@ -36,9 +36,14 @@ Error: a.js:70
 
 Error: a.js:74
  74: class G extends F {
-           ^ G. Contravariant property `prop` incompatible with covariant use in
- 65: class F extends A {
-                     ^ A
+           ^ G. Cannot extend
+ 74: class G extends F {
+                     ^ F
+  Property `prop` is incompatible:
+     74: class G extends F {
+               ^ G. Contravariant property `prop` incompatible with covariant use in
+     65: class F extends A {
+                         ^ A
 
 
 Found 7 errors

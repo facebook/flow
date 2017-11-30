@@ -229,9 +229,18 @@ Error: variance.js:21
  22:   // error: getter incompatible with read/write property
  23:   get x(): B { return b }
  24: });
-     ^ `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
+     ^ `<<anonymous class>>`. Cannot extend
  21: (class extends Base {
                     ^^^^ Base
+  Property `x` is incompatible:
+          v-------------------
+     21: (class extends Base {
+     22:   // error: getter incompatible with read/write property
+     23:   get x(): B { return b }
+     24: });
+         ^ `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
+     21: (class extends Base {
+                        ^^^^ Base
 
 Error: variance.js:26
       v-------------------
@@ -239,9 +248,18 @@ Error: variance.js:26
  27:   // error: setter incompatible with read/write property
  28:   set x(value: B): void {}
  29: });
-     ^ `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
+     ^ `<<anonymous class>>`. Cannot extend
  26: (class extends Base {
                     ^^^^ Base
+  Property `x` is incompatible:
+          v-------------------
+     26: (class extends Base {
+     27:   // error: setter incompatible with read/write property
+     28:   set x(value: B): void {}
+     29: });
+         ^ `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
+     26: (class extends Base {
+                        ^^^^ Base
 
 Error: variance.js:37
       v-------------------
@@ -249,9 +267,18 @@ Error: variance.js:37
  38:   // error: setter incompatible with read-only property
  39:   set pos(value: B): void {}
  40: });
-     ^ `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
+     ^ `<<anonymous class>>`. Cannot extend
  37: (class extends Base {
                     ^^^^ Base
+  Property `pos` is incompatible:
+          v-------------------
+     37: (class extends Base {
+     38:   // error: setter incompatible with read-only property
+     39:   set pos(value: B): void {}
+     40: });
+         ^ `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
+     37: (class extends Base {
+                        ^^^^ Base
 
 Error: variance.js:47
       v-------------------
@@ -259,9 +286,18 @@ Error: variance.js:47
  48:   // error: getter incompatible with write-only property
  49:   get neg(): B { return b }
  50: });
-     ^ `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
+     ^ `<<anonymous class>>`. Cannot extend
  47: (class extends Base {
                     ^^^^ Base
+  Property `neg` is incompatible:
+          v-------------------
+     47: (class extends Base {
+     48:   // error: getter incompatible with write-only property
+     49:   get neg(): B { return b }
+     50: });
+         ^ `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
+     47: (class extends Base {
+                        ^^^^ Base
 
 
 Found 37 errors
