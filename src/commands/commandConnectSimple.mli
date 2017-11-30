@@ -9,6 +9,7 @@ type error =
   | Build_id_mismatch
   | Server_busy
   | Server_missing
+  | Server_socket_missing
 
 val server_exists : tmp_dir:string -> Path.t -> bool
 

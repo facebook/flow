@@ -11,8 +11,12 @@ type error =
   | Build_id_mismatch
   | Server_busy
   | Server_missing
+  | Server_socket_missing (* pre-server-monitor versions used a different socket *)
 
-exception ConnectTimeout
+type connect_exn =
+  | Timeout
+  | Missing_socket
+exception ConnectError of connect_exn
 
 let server_exists ~tmp_dir root =
   not (Lock.check (Server_files.lock_file ~tmp_dir root))
@@ -45,7 +49,11 @@ let open_connection ~timeout ~client_type sockaddr =
   match SockMap.get sockaddr !connections with
   | Some conn -> conn
   | None ->
-      let conn = Timeout.open_connection ~timeout sockaddr in
+      let conn =
+        try Timeout.open_connection ~timeout sockaddr
+        with Unix.Unix_error (Unix.ENOENT, "connect", _) ->
+          raise (ConnectError Missing_socket)
+      in
       connections := SockMap.add sockaddr conn !connections;
       (* It's important that we only write this once per connection *)
       let fd = Unix.descr_of_out_channel (snd conn) in
@@ -82,7 +90,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel ic) in
     Ok (ic, oc, handshake)
   with
-  | ConnectTimeout as e ->
+  | ConnectError Timeout as e ->
       (* Timeouts are expected *)
       raise e
   | e ->
@@ -116,7 +124,7 @@ let connect_once ~client_type ~tmp_dir root =
   try
     Timeout.with_timeout
       ~timeout:1
-      ~on_timeout:(fun _ -> raise ConnectTimeout)
+      ~on_timeout:(fun _ -> raise (ConnectError Timeout))
       ~do_:begin fun timeout ->
         establish_connection ~timeout ~client_type ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
         get_handshake ~timeout sockaddr ic oc
@@ -124,7 +132,12 @@ let connect_once ~client_type ~tmp_dir root =
       verify_handshake ic cstate >>= fun () ->
       Ok (ic, oc)
   with
+  | ConnectError Missing_socket ->
+    if server_exists ~tmp_dir root
+    then Error Server_socket_missing
+    else Error Server_missing
+  | ConnectError Timeout
   | _ ->
-    if not (server_exists ~tmp_dir root)
-    then Error Server_missing
-    else Error Server_busy
+    if server_exists ~tmp_dir root
+    then Error Server_busy
+    else Error Server_missing
