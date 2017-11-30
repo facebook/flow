@@ -127,6 +127,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
+  | RTypeAlias of string * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
@@ -458,6 +459,7 @@ let rec string_of_desc = function
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
   | RType x -> spf "`%s`" (prettify_react_util x)
+  | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _) -> spf "`%s`" x
   | RIdentifier x -> spf "`%s`" (prettify_react_util x)
@@ -567,8 +569,10 @@ let dump_reason ?(strip_root=None) r =
     | None -> ""
     end
 
-let desc_of_reason r =
-  r.desc
+let desc_of_reason ?(unwrap_alias=true) r =
+  match r.desc with
+  | RTypeAlias (_, desc) when unwrap_alias -> desc
+  | desc -> desc
 
 let internal_name name =
   spf ".%s" name
@@ -672,7 +676,7 @@ let reasons_overlap r1 r2 =
 
 (* returns reason with new description and position of original *)
 let replace_reason f r =
-  mk_reason (f (desc_of_reason r)) (loc_of_reason r)
+  mk_reason (f (desc_of_reason ~unwrap_alias:false r)) (loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
   let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
@@ -684,7 +688,7 @@ let repos_reason loc reason =
     let def_loc = def_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
-  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc def_loc_opt
+  mk_reason_with_test_id reason.test_id (desc_of_reason ~unwrap_alias:false reason) loc def_loc_opt
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

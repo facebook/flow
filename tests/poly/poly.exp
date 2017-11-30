@@ -34,9 +34,9 @@ Error: implicit_bounded_instantiation.js:20
 
 Error: phantom.js:7
   7: (a: B); // Error
-      ^ T. Has some incompatible type argument with
+      ^ A. Has some incompatible type argument with
   7: (a: B); // Error
-         ^ T
+         ^ B
   Type argument `Phantom` is incompatible:
       3: type A = T<number>;
                     ^^^^^^ number. This type is incompatible with
@@ -45,9 +45,9 @@ Error: phantom.js:7
 
 Error: phantom.js:7
   7: (a: B); // Error
-      ^ T. Has some incompatible type argument with
+      ^ A. Has some incompatible type argument with
   7: (a: B); // Error
-         ^ T
+         ^ B
   Type argument `Phantom` is incompatible:
       4: type B = T<string>;
                     ^^^^^^ string. This type is incompatible with
@@ -56,9 +56,9 @@ Error: phantom.js:7
 
 Error: phantom.js:15
  15: (c: D); // Error
-      ^ T. Has some incompatible type argument with
+      ^ C. Has some incompatible type argument with
  15: (c: D); // Error
-         ^ T
+         ^ D
   Type argument `Phantom` is incompatible:
      11: type C = T<number>;
                     ^^^^^^ number. This type is incompatible with
@@ -67,9 +67,9 @@ Error: phantom.js:15
 
 Error: phantom.js:15
  15: (c: D); // Error
-      ^ T. Has some incompatible type argument with
+      ^ C. Has some incompatible type argument with
  15: (c: D); // Error
-         ^ T
+         ^ D
   Type argument `Phantom` is incompatible:
      12: type D = T<string>;
                     ^^^^^^ string. This type is incompatible with

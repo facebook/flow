@@ -128,7 +128,7 @@ Error: spread.js:27
  27: ((compose(
  28:   ...fns3,
  29: ))(x2): empty); // Error: object ~> empty
-     -----^ object type. This type is incompatible with
+     -----^ X2. This type is incompatible with
  29: ))(x2): empty); // Error: object ~> empty
              ^^^^^ empty
 

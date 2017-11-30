@@ -15,13 +15,15 @@ export default suite(({addFile, addFiles, addCode}) => [
       import type {aType} from "./forward_only";
       ("asdf": aType);
     `).noNewErrors(),
-    addCode('(42: aType)').newErrors(`
-      test.js:8
-        8: (42: aType)
-            ^^ number. This type is incompatible with
-        8: (42: aType)
-                ^^^^^ string
-    `),
+    addCode('(42: aType)').newErrors(
+                            `
+                              test.js:8
+                                8: (42: aType)
+                                    ^^ number. This type is incompatible with
+                                8: (42: aType)
+                                        ^^^^^ aType
+                            `,
+                          ),
 
 
 
@@ -75,13 +77,15 @@ export default suite(({addFile, addFiles, addCode}) => [
       (42: aType);
     `).noNewErrors(),
 
-    addCode('("asdf": aType);').newErrors(`
-      test.js:8
-        8: ("asdf": aType);
-            ^^^^^^ string. This type is incompatible with
-        8: ("asdf": aType);
-                    ^^^^^ number
-    `),
+    addCode('("asdf": aType);').newErrors(
+                                 `
+                                   test.js:8
+                                     8: ("asdf": aType);
+                                         ^^^^^^ string. This type is incompatible with
+                                     8: ("asdf": aType);
+                                                 ^^^^^ aType
+                                 `,
+                               ),
   ]),
 
   test('local exports override remote exports regardless of export order', [
@@ -93,12 +97,14 @@ export default suite(({addFile, addFiles, addCode}) => [
       (42: aType);
     `).noNewErrors(),
 
-    addCode('("asdf": aType);').newErrors(`
-      test.js:8
-        8: ("asdf": aType);
-            ^^^^^^ string. This type is incompatible with
-        8: ("asdf": aType);
-                    ^^^^^ number
-    `),
+    addCode('("asdf": aType);').newErrors(
+                                 `
+                                   test.js:8
+                                     8: ("asdf": aType);
+                                         ^^^^^^ string. This type is incompatible with
+                                     8: ("asdf": aType);
+                                                 ^^^^^ aType
+                                 `,
+                               ),
   ]),
 ]);

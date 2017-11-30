@@ -43,7 +43,7 @@ Error: class_shapes.js:22
  22: var y : Foo = x;
                    ^ TestClass. This type is incompatible with
  22: var y : Foo = x;
-             ^^^ object type
+             ^^^ Foo
   Property `b` is incompatible:
      22: var y : Foo = x;
                  ^^^ property `b`. Property not found in
@@ -54,7 +54,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `a` is incompatible:
       4:   a: string;    // exists in TestClass
               ^^^^^^ string. This type is incompatible with
@@ -65,7 +65,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `a` is incompatible:
      27:   a: number;  // conflicts with cast to Foo
               ^^^^^^ number. This type is incompatible with
@@ -76,7 +76,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `b` is incompatible:
       5:   b: string;    // doesn't exist
               ^^^^^^ string. This type is incompatible with
@@ -87,7 +87,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `b` is incompatible:
      31:   b: number;  // conflicts with cast to Foo
               ^^^^^^ number. This type is incompatible with
@@ -98,7 +98,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `c` is incompatible:
       6:   c?: ?string;  // exists in TestClass, optional
                 ^^^^^^ string. This type is incompatible with
@@ -109,7 +109,7 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
-             ^^^ object type
+             ^^^ Foo
   Property `c` is incompatible:
      28:   c: ?number; // conflicts with cast to Foo
                ^^^^^^ number. This type is incompatible with

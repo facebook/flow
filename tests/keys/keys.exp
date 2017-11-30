@@ -38,13 +38,13 @@ Error: keys.js:38
  38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
         ^^^ some string with unknown value. Property not found in
  38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
-             ^^^^^^^^^^^^^ object type
+             ^^^^^^^^^^^^^ ObjLit
 
 Error: keys.js:40
  40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
           ^^^ some string with unknown value. Property not found in
  40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
-               ^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^ ObjLit
 
 Error: keys.js:44
  44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit

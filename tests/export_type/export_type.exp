@@ -2,31 +2,31 @@ Error: importer.js:11
  11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ string. This type is incompatible with
  11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-            ^^^^^^^^^^^^ number
+            ^^^^^^^^^^^^ inlinedType1
 
 Error: importer.js:14
  14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
                               ^^^^^^ string. This type is incompatible with
  14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
-            ^^^^^^^^^^^^^^^ number
+            ^^^^^^^^^^^^^^^ standaloneType1
 
 Error: importer.js:17
  17: var f: talias1 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  17: var f: talias1 = 'asdf'; // Error: string ~> number
-            ^^^^^^^ number
+            ^^^^^^^ talias1
 
 Error: importer.js:20
  20: var h: talias3 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  20: var h: talias3 = 'asdf'; // Error: string ~> number
-            ^^^^^^^ number
+            ^^^^^^^ talias2
 
 Error: importer.js:24
  24: var j: talias4 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  24: var j: talias4 = 'asdf'; // Error: string ~> number
-            ^^^^^^^ number
+            ^^^^^^^ talias4
 
 Error: importer.js:29
  29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
@@ -76,7 +76,7 @@ Error: types_only.js:5
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ string. This type is incompatible with
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-            ^^^^^^^^^^^^ number
+            ^^^^^^^^^^^^ inlinedType1
 
 Error: types_only.js:11
  11: export {standaloneType2}; // Error: Missing `type` keyword

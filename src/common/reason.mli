@@ -79,6 +79,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
+  | RTypeAlias of string * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
@@ -204,7 +205,7 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
 val def_loc_of_reason: reason -> Loc.t
-val desc_of_reason: reason -> reason_desc
+val desc_of_reason: ?unwrap_alias:bool -> reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)

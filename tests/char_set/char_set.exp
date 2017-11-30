@@ -26,7 +26,7 @@ Error: test.js:20
  20:   new C(x);
              ^ string literal `abcd`. This type is incompatible with
   6:     constructor(flags?: C$flags): C;
-                             ^^^^^^^ character set `ab`
+                             ^^^^^^^ C$flags
    22: g("abcd");
          ^^^^^^ `c` is not a member of the set
    22: g("abcd");

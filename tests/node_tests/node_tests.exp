@@ -69,7 +69,7 @@ Error: child_process/execSync.js:8
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   267:     options?: child_process$execSyncOpts
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/node.js:267
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ child_process$execSyncOpts. See lib: <BUILTINS>/node.js:267
     Property `timeout` is incompatible:
         8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                      ^^^^^ string. This type is incompatible with

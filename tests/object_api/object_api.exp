@@ -23,7 +23,7 @@ Error: object_create.js:12
 
 Error: object_create.js:17
  17: (o: C);
-      ^ object type. This type is incompatible with
+      ^ O. This type is incompatible with
  17: (o: C);
          ^ C
 

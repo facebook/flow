@@ -56,7 +56,7 @@ Error: lower.js:21
  21: (y.age: number); // Error -- could be void
         ^^^ property `age`. Property not found in
  21: (y.age: number); // Error -- could be void
-      ^ object type
+      ^ Person
 
 Error: lower.js:22
  22: (y.name: number); // Error -- should be string
@@ -68,7 +68,7 @@ Error: lower.js:23
  23: y.bla; // Error -- key not found.
        ^^^ property `bla`. Property not found in
  23: y.bla; // Error -- key not found.
-     ^ object type
+     ^ Person
 
 Error: undefined.js:8
   8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error

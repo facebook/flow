@@ -144,7 +144,7 @@ Error: builtin_intrinsic.js:24
        25:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
        18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
                ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
@@ -257,7 +257,7 @@ Error: component.js:40
        41:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
        18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
                ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
@@ -300,7 +300,7 @@ Error: fun.js:27
      27: <Fun>{() => 42}{() => 42}</Fun>; // Error: Two functions are not allowed.
          ^^^^^ React children array. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:29
  29: <Fun>{() => 42}  </Fun>; // Error: Spaces make it an array.
@@ -311,7 +311,7 @@ Error: fun.js:29
      29: <Fun>{() => 42}  </Fun>; // Error: Spaces make it an array.
          ^^^^^ React children array. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:30
  30: <Fun>  {() => 42}</Fun>; // Error: Spaces make it an array.
@@ -322,7 +322,7 @@ Error: fun.js:30
      30: <Fun>  {() => 42}</Fun>; // Error: Spaces make it an array.
          ^^^^^ React children array. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:37
  37: <Fun>
@@ -338,7 +338,7 @@ Error: fun.js:37
      43:   }}
            ^ function. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
       This parameter is incompatible:
          42:     return '42'; // Error: Must return a number.
                         ^^^^ string. This type is incompatible with
@@ -355,7 +355,7 @@ Error: fun.js:41
  41:     (data.nope: boolean); // Error: `nope` does not exist.
                ^^^^ property `nope`. Property not found in
  41:     (data.nope: boolean); // Error: `nope` does not exist.
-          ^^^^ object type
+          ^^^^ Data
 
 Error: fun.js:46
  46: <Fun>{}</Fun>; // Error: `void` is not allowed.
@@ -388,7 +388,7 @@ Error: fun.js:48
      48: <Fun>{undefined}</Fun>; // Error: `undefined` is not allowed.
                ^^^^^^^^^ undefined. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:49
  49: <Fun>{null}</Fun>; // Error: `null` is not allowed.
@@ -399,7 +399,7 @@ Error: fun.js:49
      49: <Fun>{null}</Fun>; // Error: `null` is not allowed.
                ^^^^ null. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:50
  50: <Fun>{true}</Fun>; // Error: `boolean`s are not allowed.
@@ -410,7 +410,7 @@ Error: fun.js:50
      50: <Fun>{true}</Fun>; // Error: `boolean`s are not allowed.
                ^^^^ boolean. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:51
  51: <Fun>{false}</Fun>; // Error: `boolean`s are not allowed.
@@ -421,7 +421,7 @@ Error: fun.js:51
      51: <Fun>{false}</Fun>; // Error: `boolean`s are not allowed.
                ^^^^^ boolean. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:52
  52: <Fun>{0}</Fun>; // Error: `number`s are not allowed.
@@ -432,7 +432,7 @@ Error: fun.js:52
      52: <Fun>{0}</Fun>; // Error: `number`s are not allowed.
                ^ number. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:53
  53: <Fun>{42}</Fun>; // Error: `number`s are not allowed.
@@ -443,7 +443,7 @@ Error: fun.js:53
      53: <Fun>{42}</Fun>; // Error: `number`s are not allowed.
                ^^ number. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
 
 Error: fun.js:54
  54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
@@ -452,14 +452,14 @@ Error: fun.js:54
                                        ^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
      54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
-              ^^^^^^^^^^^^ object type. This type is incompatible with
+              ^^^^^^^^^^^^ React.Element. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ function type
+                                                      ^^ Fn
       Callable property is incompatible:
          16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                          ^^ function type. Callable signature not found in
+                                                          ^^ Fn. Callable signature not found in
          54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
-                  ^^^^^^^^^^^^ object type
+                  ^^^^^^^^^^^^ React.Element
 
 Error: fun.js:56
  56: <Obj />; // Error: `children` is required.
@@ -481,7 +481,7 @@ Error: fun.js:60
      60: <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
      18: class Obj extends React.Component<{children: Data}, void> {}
-                                                      ^^^^ object type
+                                                      ^^^^ Data
       Property `bar` is incompatible:
          60: <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
                                    ^^^ string. This type is incompatible with
@@ -497,7 +497,7 @@ Error: fun.js:60
      60: <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
      18: class Obj extends React.Component<{children: Data}, void> {}
-                                                      ^^^^ object type
+                                                      ^^^^ Data
       Property `foo` is incompatible:
          60: <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
                          ^^^ string. This type is incompatible with
@@ -513,7 +513,7 @@ Error: fun.js:61
      61: <Obj>{{foo: 1, bar: 2}}{{foo: 1, bar: 2}}</Obj>; // Error: Two objects are not
          ^^^^^ React children array. This type is incompatible with
      18: class Obj extends React.Component<{children: Data}, void> {}
-                                                      ^^^^ object type
+                                                      ^^^^ Data
 
 Error: fun.js:63
  63: <Obj>{{foo: 1, bar: 2}}  </Obj>; // Error: Spaces make it an array.
@@ -524,7 +524,7 @@ Error: fun.js:63
      63: <Obj>{{foo: 1, bar: 2}}  </Obj>; // Error: Spaces make it an array.
          ^^^^^ React children array. This type is incompatible with
      18: class Obj extends React.Component<{children: Data}, void> {}
-                                                      ^^^^ object type
+                                                      ^^^^ Data
 
 Error: fun.js:64
  64: <Obj>  {{foo: 1, bar: 2}}</Obj>; // Error: Spaces make it an array.
@@ -535,7 +535,7 @@ Error: fun.js:64
      64: <Obj>  {{foo: 1, bar: 2}}</Obj>; // Error: Spaces make it an array.
          ^^^^^ React children array. This type is incompatible with
      18: class Obj extends React.Component<{children: Data}, void> {}
-                                                      ^^^^ object type
+                                                      ^^^^ Data
 
 Error: fun.js:71
  71: <FunArrayOnly>{() => 42}</FunArrayOnly>; // Error: A single expression is not
@@ -562,7 +562,7 @@ Error: fun.js:77
          77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
                             ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
          20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                         ^^ function type
+                                                                         ^^ Fn
 
 Error: fun.js:77
  77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
@@ -578,7 +578,7 @@ Error: fun.js:77
          77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
                                                   ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
          20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                         ^^ function type
+                                                                         ^^ Fn
 
 Error: fun.js:80
  80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
@@ -594,7 +594,7 @@ Error: fun.js:80
          80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
                             ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
          20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                         ^^ function type
+                                                                         ^^ Fn
 
 Error: fun.js:83
  83: <FunArrayOnly>
@@ -616,7 +616,7 @@ Error: fun.js:108
     108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
                     ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                      ^^ function type
+                                                                      ^^ Fn
 
 Error: fun.js:108
 108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
@@ -627,7 +627,7 @@ Error: fun.js:108
     108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
                                           ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                      ^^ function type
+                                                                      ^^ Fn
 
 Error: fun.js:111
 111: <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
@@ -638,7 +638,7 @@ Error: fun.js:111
     111: <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
                     ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                      ^^ function type
+                                                                      ^^ Fn
 
 Error: fun.js:134
 134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
@@ -679,7 +679,7 @@ Error: fun.js:136
       136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
                       ^^^^^^^^^ undefined. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -706,7 +706,7 @@ Error: fun.js:137
       137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
                       ^^^^ null. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -733,7 +733,7 @@ Error: fun.js:138
       138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
                       ^^^^ boolean. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -760,7 +760,7 @@ Error: fun.js:139
       139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
                       ^^^^^ boolean. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -787,7 +787,7 @@ Error: fun.js:140
       140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
                       ^ number. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -814,7 +814,7 @@ Error: fun.js:141
       141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
                       ^^ number. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
@@ -831,7 +831,7 @@ Error: fun.js:142
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
     142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                   ^^^^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^^^^ React.Element. This type is incompatible with
      21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                            ^^^^^^^^^^^^^^ union: `Fn` | array type
       Member 1:
@@ -839,20 +839,20 @@ Error: fun.js:142
                                                              ^^ Fn
       Error:
       142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                     ^^^^^^^^^^^^ object type. This type is incompatible with
+                     ^^^^^^^^^^^^ React.Element. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type
+                                                             ^^ Fn
         Callable property is incompatible:
            21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                 ^^ function type. Callable signature not found in
+                                                                 ^^ Fn. Callable signature not found in
           142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                         ^^^^^^^^^^^^ object type
+                         ^^^^^^^^^^^^ React.Element
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
       Error:
       142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                     ^^^^^^^^^^^^ object type. This type is incompatible with
+                     ^^^^^^^^^^^^ React.Element. This type is incompatible with
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
 
@@ -912,7 +912,7 @@ Error: tabs.js:30
        30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -957,7 +957,7 @@ Error: tabs.js:30
              30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                          ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -1008,7 +1008,7 @@ Error: tabs.js:31
        31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -1053,7 +1053,7 @@ Error: tabs.js:31
              31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
                                ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -1104,7 +1104,7 @@ Error: tabs.js:32
        32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
            ^^^^^^^^ React children array. Inexact type is incompatible with exact type
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
@@ -1149,7 +1149,7 @@ Error: tabs.js:32
              32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                                      ^^ JSX text. Inexact type is incompatible with exact type
              17:   | React$Element<typeof Tab>
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
             Member 5:
              18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                      ^^^^^^^^^^^^^^^^^ array type
@@ -1166,7 +1166,7 @@ Error: tabs.js:67
                                           ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
      67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                 ^^^^^^^^^ object type. This type is incompatible with
+                 ^^^^^^^^^ React.Element. This type is incompatible with
      24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
                                                          ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
@@ -1174,7 +1174,7 @@ Error: tabs.js:67
                ^^^^ undefined
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        14:   | void
                ^^^^ undefined
       Member 2:
@@ -1182,7 +1182,7 @@ Error: tabs.js:67
                ^^^^ null
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        15:   | null
                ^^^^ null
       Member 3:
@@ -1190,7 +1190,7 @@ Error: tabs.js:67
                ^^^^^^^ boolean
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        16:   | boolean
                ^^^^^^^ boolean
       Member 4:
@@ -1198,9 +1198,9 @@ Error: tabs.js:67
                ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
         Property `type` is incompatible:
            11: class NotTab extends React.Component<{}, void> {}
                      ^^^^^^ NotTab. This type is incompatible with
@@ -1211,7 +1211,7 @@ Error: tabs.js:67
                ^^^^^^^^^^^^^^^^^ array type
       Error:
        67: <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
 
@@ -1224,7 +1224,7 @@ Error: tabs.js:68
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                 ^^^^^^^^^ object type. This type is incompatible with
+                 ^^^^^^^^^ React.Element. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                    ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
@@ -1232,7 +1232,7 @@ Error: tabs.js:68
                ^^^^ undefined
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        14:   | void
                ^^^^ undefined
       Member 2:
@@ -1240,7 +1240,7 @@ Error: tabs.js:68
                ^^^^ null
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        15:   | null
                ^^^^ null
       Member 3:
@@ -1248,7 +1248,7 @@ Error: tabs.js:68
                ^^^^^^^ boolean
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        16:   | boolean
                ^^^^^^^ boolean
       Member 4:
@@ -1256,9 +1256,9 @@ Error: tabs.js:68
                ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
         Property `type` is incompatible:
            11: class NotTab extends React.Component<{}, void> {}
                      ^^^^^^ NotTab. This type is incompatible with
@@ -1269,7 +1269,7 @@ Error: tabs.js:68
                ^^^^^^^^^^^^^^^^^ array type
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                   ^^^^^^^^^ object type. This type is incompatible with
+                   ^^^^^^^^^ React.Element. This type is incompatible with
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
 
@@ -1282,7 +1282,7 @@ Error: tabs.js:68
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                          ^^^^^^^^^ object type. This type is incompatible with
+                          ^^^^^^^^^ React.Element. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                    ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
@@ -1290,7 +1290,7 @@ Error: tabs.js:68
                ^^^^ undefined
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                            ^^^^^^^^^ object type. This type is incompatible with
+                            ^^^^^^^^^ React.Element. This type is incompatible with
        14:   | void
                ^^^^ undefined
       Member 2:
@@ -1298,7 +1298,7 @@ Error: tabs.js:68
                ^^^^ null
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                            ^^^^^^^^^ object type. This type is incompatible with
+                            ^^^^^^^^^ React.Element. This type is incompatible with
        15:   | null
                ^^^^ null
       Member 3:
@@ -1306,7 +1306,7 @@ Error: tabs.js:68
                ^^^^^^^ boolean
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                            ^^^^^^^^^ object type. This type is incompatible with
+                            ^^^^^^^^^ React.Element. This type is incompatible with
        16:   | boolean
                ^^^^^^^ boolean
       Member 4:
@@ -1314,9 +1314,9 @@ Error: tabs.js:68
                ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                            ^^^^^^^^^ object type. This type is incompatible with
+                            ^^^^^^^^^ React.Element. This type is incompatible with
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
         Property `type` is incompatible:
            11: class NotTab extends React.Component<{}, void> {}
                      ^^^^^^ NotTab. This type is incompatible with
@@ -1327,7 +1327,7 @@ Error: tabs.js:68
                ^^^^^^^^^^^^^^^^^ array type
       Error:
        68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                            ^^^^^^^^^ object type. This type is incompatible with
+                            ^^^^^^^^^ React.Element. This type is incompatible with
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
 
@@ -1340,7 +1340,7 @@ Error: tabs.js:73
          ^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      73:   <NotTab/>
-           ^^^^^^^^^ object type. This type is incompatible with
+           ^^^^^^^^^ React.Element. This type is incompatible with
      18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                    ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
       Member 1:
@@ -1348,7 +1348,7 @@ Error: tabs.js:73
                ^^^^ undefined
       Error:
        73:   <NotTab/>
-             ^^^^^^^^^ object type. This type is incompatible with
+             ^^^^^^^^^ React.Element. This type is incompatible with
        14:   | void
                ^^^^ undefined
       Member 2:
@@ -1356,7 +1356,7 @@ Error: tabs.js:73
                ^^^^ null
       Error:
        73:   <NotTab/>
-             ^^^^^^^^^ object type. This type is incompatible with
+             ^^^^^^^^^ React.Element. This type is incompatible with
        15:   | null
                ^^^^ null
       Member 3:
@@ -1364,7 +1364,7 @@ Error: tabs.js:73
                ^^^^^^^ boolean
       Error:
        73:   <NotTab/>
-             ^^^^^^^^^ object type. This type is incompatible with
+             ^^^^^^^^^ React.Element. This type is incompatible with
        16:   | boolean
                ^^^^^^^ boolean
       Member 4:
@@ -1372,9 +1372,9 @@ Error: tabs.js:73
                ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        73:   <NotTab/>
-             ^^^^^^^^^ object type. This type is incompatible with
+             ^^^^^^^^^ React.Element. This type is incompatible with
        17:   | React$Element<typeof Tab>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
         Property `type` is incompatible:
            11: class NotTab extends React.Component<{}, void> {}
                      ^^^^^^ NotTab. This type is incompatible with
@@ -1385,7 +1385,7 @@ Error: tabs.js:73
                ^^^^^^^^^^^^^^^^^ array type
       Error:
        73:   <NotTab/>
-             ^^^^^^^^^ object type. This type is incompatible with
+             ^^^^^^^^^ React.Element. This type is incompatible with
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
 
@@ -1517,7 +1517,7 @@ Error: text.js:26
                                         ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
      26: <Text><intrinsic/></Text>; // Error: elements are not allowed.
-               ^^^^^^^^^^^^ object type. This type is incompatible with
+               ^^^^^^^^^^^^ React.Element. This type is incompatible with
       5: class Text extends React.Component<{children: string}, void> {}
                                                        ^^^^^^ string
 
@@ -1837,7 +1837,7 @@ Error: view.js:31
        32:   {{a: 1, b: 2, c: 3}}
               ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -1888,7 +1888,7 @@ Error: view.js:35
        35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
                  ^^^^^^^^^^^^^ JSX text. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -1939,7 +1939,7 @@ Error: view.js:36
        36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
                   ^^^^^^^^^^^^^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -1990,7 +1990,7 @@ Error: view.js:37
        37: <View>{42}</View>; // Error: Numbers are not allowed as children.
                   ^^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2041,7 +2041,7 @@ Error: view.js:38
        38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
            ^^^^^^ React children array. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2086,7 +2086,7 @@ Error: view.js:38
              38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
                         ^ number. Inexact type is incompatible with exact type
               9:   | React$Element<any>
-                     ^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^ React.Element
             Member 5:
              10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2139,7 +2139,7 @@ Error: view.js:39
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                    ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2192,7 +2192,7 @@ Error: view.js:39
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                         ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2245,7 +2245,7 @@ Error: view.js:39
        39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                              ^^^ string. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2298,7 +2298,7 @@ Error: view.js:40
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                    ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2351,7 +2351,7 @@ Error: view.js:40
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                       ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2404,7 +2404,7 @@ Error: view.js:40
        40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                          ^ number. Inexact type is incompatible with exact type
         9:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type

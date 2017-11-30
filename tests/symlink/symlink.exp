@@ -2,7 +2,7 @@ Error: qux.js:2
   2: ({ x: "" }: Foo);
       ^^^^^^^^^ object literal. This type is incompatible with
   2: ({ x: "" }: Foo);
-                 ^^^ object type
+                 ^^^ Foo
   Property `x` is incompatible:
       2: ({ x: "" }: Foo);
                ^^ string. This type is incompatible with

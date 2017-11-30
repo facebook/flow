@@ -416,9 +416,9 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React element `Foo`
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ object type. This type is incompatible with
+      ^^^^^^^^^^^^^ React.Element. This type is incompatible with
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `props` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                                            ^^^^^^^^^^^ object type. This type is incompatible with
@@ -434,9 +434,9 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React element `Foo`
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ object type. This type is incompatible with
+      ^^^^^^^^^^^^^ React.Element. This type is incompatible with
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                ^^^ statics of `Foo`. This type is incompatible with
@@ -449,7 +449,7 @@ Error: element_with_component_type.js:8
         5: class Foo extends React.Component<{a: number}> {}
                  ^^^ statics of `Foo`. This type is incompatible with
       137:   | React$StatelessFunctionalComponent<Props>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
         Callable property is incompatible:
           137:   | React$StatelessFunctionalComponent<Props>
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:137
@@ -514,7 +514,7 @@ Error: hoc.js:35
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `Empty`. This type is incompatible with
   137:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
     Callable property is incompatible:
       137:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:137
@@ -546,7 +546,7 @@ Error: hoc.js:36
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   137:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
     Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
@@ -671,7 +671,7 @@ Error: hoc2.js:17
  21: |}) {}
      --^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
@@ -707,7 +707,7 @@ Error: hoc2.js:17
  21: |}) {}
      --^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
@@ -817,7 +817,7 @@ Error: hoc2.js:30
  21: |}) {}
      --^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
@@ -860,7 +860,7 @@ Error: hoc2.js:30
  21: |}) {}
      --^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
@@ -901,7 +901,7 @@ Error: hoc3.js:17
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1001,7 +1001,7 @@ Error: hoc3.js:30
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1044,7 +1044,7 @@ Error: hoc3.js:30
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1085,7 +1085,7 @@ Error: hoc4.js:17
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1151,7 +1151,7 @@ Error: hoc4.js:30
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1184,7 +1184,7 @@ Error: hoc4.js:30
  21: }) {}
      -^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
@@ -1395,7 +1395,7 @@ Error: proptype_custom_validator.js:6
   6:     foo(props, propName, componentName, href) {
 ...:
  14: });
-     -^ function type
+     -^ ReactPropsCheckType
   This parameter is incompatible:
      11:       return (0: mixed); // error: should return ?Error
                           ^^^^^ mixed. This type is incompatible with
@@ -1910,75 +1910,75 @@ Error: proptype_shape.js:24
 
 Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$arrayOf. This type is incompatible with
   7: (React.PropTypes.arrayOf : NoFun);
-                                ^^^^^ function type
+                                ^^^^^ NoFun
   This parameter is incompatible:
     275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:275
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:275
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$arrayOf. This type is incompatible with
   7: (React.PropTypes.arrayOf : NoFun);
-                                ^^^^^ function type
+                                ^^^^^ NoFun
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
     275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:275
+                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:275
 
 Error: proptypes_builtins.js:11
  11: (React.PropTypes.instanceOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$instanceOf. This type is incompatible with
  11: (React.PropTypes.instanceOf : NoFun);
-                                   ^^^^^ function type
+                                   ^^^^^ NoFun
   This parameter is incompatible:
     277:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:277
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:277
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$objectOf. This type is incompatible with
  15: (React.PropTypes.objectOf : NoFun);
-                                 ^^^^^ function type
+                                 ^^^^^ NoFun
   This parameter is incompatible:
     279:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:279
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:279
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$objectOf. This type is incompatible with
  15: (React.PropTypes.objectOf : NoFun);
-                                 ^^^^^ function type
+                                 ^^^^^ NoFun
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
     279:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:279
+                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:279
 
 Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOf. This type is incompatible with
  19: (React.PropTypes.oneOf : NoFun);
-                              ^^^^^ function type
+                              ^^^^^ NoFun
   This parameter is incompatible:
     281:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:281
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:281
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOf. This type is incompatible with
  19: (React.PropTypes.oneOf : NoFun);
-                              ^^^^^ function type
+                              ^^^^^ NoFun
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
@@ -1987,20 +1987,20 @@ Error: proptypes_builtins.js:19
 
 Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOfType. This type is incompatible with
  23: (React.PropTypes.oneOfType : NoFun);
-                                  ^^^^^ function type
+                                  ^^^^^ NoFun
   This parameter is incompatible:
     284:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:284
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:284
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOfType. This type is incompatible with
  23: (React.PropTypes.oneOfType : NoFun);
-                                  ^^^^^ function type
+                                  ^^^^^ NoFun
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
@@ -2009,20 +2009,20 @@ Error: proptypes_builtins.js:23
 
 Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$shape. This type is incompatible with
  27: (React.PropTypes.shape : NoFun);
-                              ^^^^^ function type
+                              ^^^^^ NoFun
   This parameter is incompatible:
     287:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:287
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:287
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
 Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$shape. This type is incompatible with
  27: (React.PropTypes.shape : NoFun);
-                              ^^^^^ function type
+                              ^^^^^ NoFun
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with

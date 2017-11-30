@@ -287,6 +287,7 @@ and upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleUnclassified of string
 
+let desc_of_reason = Reason.desc_of_reason ~unwrap_alias:false
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc

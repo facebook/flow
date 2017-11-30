@@ -18,7 +18,7 @@ Error: two.js:4
     4: const x: Two = false;
                       ^^^^^ boolean. This type is incompatible with
     3: export type Two = string | One;
-                                  ^^^ number
+                                  ^^^ One
 
 
 Found 1 error

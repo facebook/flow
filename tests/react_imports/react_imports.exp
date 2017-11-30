@@ -56,7 +56,7 @@ Error: commonjs-pascal.js:6
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
     Property `key` is incompatible:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:18
@@ -148,7 +148,7 @@ Error: commonjs.js:6
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
     Property `key` is incompatible:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:18
@@ -240,7 +240,7 @@ Error: es-default-pascal.js:6
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
     Property `key` is incompatible:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:18
@@ -371,7 +371,7 @@ Error: es-namespace-pascal.js:6
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
     Property `key` is incompatible:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:18
@@ -463,7 +463,7 @@ Error: es-namespace.js:6
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
    18:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:18
+           ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
     Property `key` is incompatible:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:18

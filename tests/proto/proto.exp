@@ -58,7 +58,7 @@ Error: annot.js:15
  15: (o_optional.q: empty); // error: property `q` not found
                  ^ property `q`. Property not found in
  15: (o_optional.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ object type
+      ^^^^^^^^^^ O_optional
 
 Error: annot.js:16
  16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
@@ -76,7 +76,7 @@ Error: annot.js:21
  21: (o_variance.q: empty); // error: property `q` not found
                  ^ property `q`. Property not found in
  21: (o_variance.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ object type
+      ^^^^^^^^^^ O_variance
 
 Error: annot.js:22
  22: (o_variance.__proto__: empty); // error: object type ~> empty
@@ -88,7 +88,7 @@ Error: annot.js:27
  27: (o_callable.q: empty); // error: property `q` not found
                  ^ property `q`. Property not found in
  27: (o_callable.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ object type
+      ^^^^^^^^^^ O_callable
 
 Error: annot.js:28
  28: (o_callable.__proto__: empty); // error: object type ~> empty

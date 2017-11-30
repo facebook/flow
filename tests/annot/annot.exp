@@ -63,7 +63,7 @@ Error: annot.js:27
  27: var test_obj: ObjType = { 'bar-foo': '23' };
                              ^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
  27: var test_obj: ObjType = { 'bar-foo': '23' };
-                   ^^^^^^^ object type
+                   ^^^^^^^ ObjType
   Property `foo-bar` is incompatible:
      27: var test_obj: ObjType = { 'bar-foo': '23' };
                        ^^^^^^^ property `foo-bar`. Property not found in

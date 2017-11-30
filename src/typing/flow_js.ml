@@ -8011,8 +8011,8 @@ and fire_actions cx trace = List.iter (function
 
 and mk_union_reason r us =
   List.fold_left (fun reason t ->
-    let rdesc = string_of_desc (desc_of_reason reason) in
-    let tdesc = string_of_desc (desc_of_reason (reason_of_t t)) in
+    let rdesc = string_of_desc (desc_of_reason ~unwrap_alias:false reason) in
+    let tdesc = string_of_desc (desc_of_reason ~unwrap_alias:false (reason_of_t t)) in
     let udesc = if not (String_utils.string_starts_with rdesc "union:")
       then spf "union: %s" tdesc
       else if String_utils.string_ends_with rdesc "..."

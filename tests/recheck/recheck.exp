@@ -150,7 +150,7 @@ No errors!
 Test f:
 Error: f2.js:4
   4: (c: { x: number });
-      ^ object type. This type is incompatible with
+      ^ S. This type is incompatible with
   4: (c: { x: number });
          ^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
@@ -161,7 +161,7 @@ Error: f2.js:4
 
 Error: f2.js:4
   4: (c: { x: number });
-      ^ object type. This type is incompatible with
+      ^ S. This type is incompatible with
   4: (c: { x: number });
          ^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
@@ -176,7 +176,7 @@ No errors!
 No errors!
 Error: f2.js:4
   4: (c: { x: number });
-      ^ object type. This type is incompatible with
+      ^ S. This type is incompatible with
   4: (c: { x: number });
          ^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
@@ -187,7 +187,7 @@ Error: f2.js:4
 
 Error: f2.js:4
   4: (c: { x: number });
-      ^ object type. This type is incompatible with
+      ^ S. This type is incompatible with
   4: (c: { x: number });
          ^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
@@ -264,7 +264,7 @@ Error: k.js:4
   4: (x.p: string);
         ^ property `p`. Property not found in
   4: (x.p: string);
-      ^ object type
+      ^ LibK
 
 
 Found 1 error
@@ -273,7 +273,7 @@ Error: k.js:4
   4: (x.p: string);
         ^ property `p`. Property not found in
   4: (x.p: string);
-      ^ object type
+      ^ LibK
 
 
 Found 1 error

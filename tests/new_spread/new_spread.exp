@@ -110,7 +110,7 @@ Error: type.js:30
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-               ^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^ O3
 
 Error: type.js:36
  36: (o4: {|p:T|}); // error: not exact
@@ -172,7 +172,7 @@ Error: type.js:56
  56: ({}: O6); // error: property `p` not found
       ^^ object literal. This type is incompatible with
  56: ({}: O6); // error: property `p` not found
-          ^^ object type
+          ^^ O6
   Property `p` is incompatible:
      56: ({}: O6); // error: property `p` not found
               ^^ property `p`. Property not found in
@@ -183,7 +183,7 @@ Error: type.js:57
  57: ({p:x}: O6); // error: x ~> U
       ^^^^^ object literal. This type is incompatible with
  57: ({p:x}: O6); // error: x ~> U
-             ^^ object type
+             ^^ O6
   Property `p` is incompatible:
      57: ({p:x}: O6); // error: x ~> U
              ^ T. This type is incompatible with
@@ -194,7 +194,7 @@ Error: type.js:62
  62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
  62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-               ^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^ O7
 
 Error: type.js:68
  68: (o8.p: T); // error: U ~> T
@@ -377,93 +377,93 @@ Error: type_mixed.js:18
 
 Error: type_string.js:1
   1: type O1 = {..."foo"}; // error
-               ^^^^^^^^^^ object type. Cannot spread properties from
+               ^^^^^^^^^^ O1. Cannot spread properties from
   1: type O1 = {..."foo"}; // error
                    ^^^^^ string literal `foo`
 
 Error: type_void.js:12
  12: (o1: {||}); // error
-      ^^ object type. Inexact type is incompatible with exact type
+      ^^ O1. Inexact type is incompatible with exact type
  12: (o1: {||}); // error
           ^^^^ object type
 
 Error: type_void.js:13
  13: (o1: {p:T}); // error
-      ^^ object type. This type is incompatible with
+      ^^ O1. This type is incompatible with
  13: (o1: {p:T}); // error
           ^^^^^ object type
   Property `p` is incompatible:
      13: (o1: {p:T}); // error
               ^^^^^ property `p`. Property not found in
      13: (o1: {p:T}); // error
-          ^^ object type
+          ^^ O1
 
 Error: type_void.js:21
  21: (o2: {p:T}); // error
-      ^^ object type. This type is incompatible with
+      ^^ O2. This type is incompatible with
  21: (o2: {p:T}); // error
           ^^^^^ object type
   Property `p` is incompatible:
      21: (o2: {p:T}); // error
               ^^^^^ property `p`. Property not found in
      21: (o2: {p:T}); // error
-          ^^ object type
+          ^^ O2
 
 Error: type_void.js:22
  22: ({}: O2); // error
       ^^ object literal. Inexact type is incompatible with exact type
  22: ({}: O2); // error
-          ^^ object type
+          ^^ O2
 
 Error: type_void.js:23
  23: ({p:x}: O2); // error
       ^^^^^ property `p`. Property not found in
  23: ({p:x}: O2); // error
-             ^^ object type
+             ^^ O2
 
 Error: type_void.js:28
  28: (o3: {||}); // error
-      ^^ object type. Inexact type is incompatible with exact type
+      ^^ O3. Inexact type is incompatible with exact type
  28: (o3: {||}); // error
           ^^^^ object type
 
 Error: type_void.js:29
  29: (o3: {p:T}); // error
-      ^^ object type. This type is incompatible with
+      ^^ O3. This type is incompatible with
  29: (o3: {p:T}); // error
           ^^^^^ object type
   Property `p` is incompatible:
      29: (o3: {p:T}); // error
               ^^^^^ property `p`. Property not found in
      29: (o3: {p:T}); // error
-          ^^ object type
+          ^^ O3
 
 Error: type_void.js:37
  37: (o4: {p:T}); // error
-      ^^ object type. This type is incompatible with
+      ^^ O4. This type is incompatible with
  37: (o4: {p:T}); // error
           ^^^^^ object type
   Property `p` is incompatible:
      37: (o4: {p:T}); // error
               ^^^^^ property `p`. Property not found in
      37: (o4: {p:T}); // error
-          ^^ object type
+          ^^ O4
 
 Error: type_void.js:38
  38: ({}: O4); // error
       ^^ object literal. Inexact type is incompatible with exact type
  38: ({}: O4); // error
-          ^^ object type
+          ^^ O4
 
 Error: type_void.js:39
  39: ({p:x}: O4); // error
       ^^^^^ property `p`. Property not found in
  39: ({p:x}: O4); // error
-             ^^ object type
+             ^^ O4
 
 Error: type_void.js:44
  44: (o5: {p:T}); // error: o5.p is optional
-      ^^ object type. This type is incompatible with
+      ^^ O5. This type is incompatible with
  44: (o5: {p:T}); // error: o5.p is optional
           ^^^^^ object type
   Property `p` is incompatible:
@@ -476,7 +476,7 @@ Error: type_void.js:47
  47: ({p:y}: O5); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  47: ({p:y}: O5); // error: y ~> T
-             ^^ object type
+             ^^ O5
   Property `p` is incompatible:
      47: ({p:y}: O5); // error: y ~> T
              ^ U. This type is incompatible with
@@ -485,7 +485,7 @@ Error: type_void.js:47
 
 Error: type_void.js:53
  53: (o6: {p:T}); // error: o6.p is optional
-      ^^ object type. This type is incompatible with
+      ^^ O6. This type is incompatible with
  53: (o6: {p:T}); // error: o6.p is optional
           ^^^^^ object type
   Property `p` is incompatible:
@@ -498,7 +498,7 @@ Error: type_void.js:56
  56: ({p:y}: O6); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  56: ({p:y}: O6); // error: y ~> T
-             ^^ object type
+             ^^ O6
   Property `p` is incompatible:
      56: ({p:y}: O6); // error: y ~> T
              ^ U. This type is incompatible with

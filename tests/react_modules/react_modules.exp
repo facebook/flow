@@ -58,7 +58,7 @@ Error: es6class-types-callsite.js:18
  18:         <Hello />
              ^^^^^^^^^ props of React element `Hello`. This type is incompatible with
   7: class Hello extends React.Component<Props> {
-                                         ^^^^^ object type. See: es6class-types-module.js:7
+                                         ^^^^^ Props. See: es6class-types-module.js:7
   Property `name` is incompatible:
       7: class Hello extends React.Component<Props> {
                                              ^^^^^ property `name`. Property not found in. See: es6class-types-module.js:7
@@ -69,7 +69,7 @@ Error: es6class-types-callsite.js:19
  19:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`. This type is incompatible with
   8: class HelloLocal extends React.Component<Props> {
-                                              ^^^^^ object type
+                                              ^^^^^ Props
   Property `name` is incompatible:
       8: class HelloLocal extends React.Component<Props> {
                                                   ^^^^^ property `name`. Property not found in

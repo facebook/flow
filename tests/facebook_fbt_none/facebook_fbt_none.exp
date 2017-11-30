@@ -2,7 +2,7 @@ Error: main.js:4
   4: (<fbt />: number); // Error: ReactElement ~> number
       ^^^^^^^ React element `fbt`
   4: (<fbt />: number); // Error: ReactElement ~> number
-      ^^^^^^^ object type. This type is incompatible with
+      ^^^^^^^ React.Element. This type is incompatible with
   4: (<fbt />: number); // Error: ReactElement ~> number
                ^^^^^^ number
 

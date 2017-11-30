@@ -32,13 +32,13 @@ Error: exact_basics.js:49
  49: takesExactlyPerson(subtypeOfPerson); // error
                         ^^^^^^^^^^^^^^^ property `first`. Property not found in
  43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ object type
+                                                 ^^^^^^^^^^^ ExactPerson
 
 Error: exact_basics.js:61
  61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
-                        ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
+                        ^^^^^^^^^^^^^^^^^^^^^^^^ Person. Inexact type is incompatible with exact type
  43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ object type
+                                                 ^^^^^^^^^^^ ExactPerson
 
 Error: exact_basics.js:71
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
@@ -46,30 +46,30 @@ Error: exact_basics.js:71
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
                         ^^^^^^^^^^^^^^^^^^^^^^^ property `first`. Property not found in
  43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ object type
+                                                 ^^^^^^^^^^^ ExactPerson
 
 Error: exact_basics.js:85
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                           ^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+                           ^^^^^^^^^^^^^^^^^^^^^^ ExactPerson. This type is incompatible with the expected param type of
  76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                     ^^^^^^^ object type
+                                                     ^^^^^^^ Person2
   Property `first` is incompatible:
      76: declare function takesSubtypeOfPerson2(person2: Person2): void;
                                                          ^^^^^^^ property `first`. Property not found in
      85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                               ^^^^^^^^^^^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^^^^^^^^^^^ ExactPerson
 
 Error: exact_basics.js:94
  94: takesPersonPred(returnsExactlyPersonPred()); // error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ PersonPred. Unsupported exact type
  94: takesPersonPred(returnsExactlyPersonPred()); // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ PersonPred
 
 Error: prop_test.js:28
  28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
                  ^^^^^ property `state`. Property not found in
  28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-              ^^ object type
+              ^^ Person
 
 Error: unsealed.js:14
  14: f(o); // error: o incompatible with exact type

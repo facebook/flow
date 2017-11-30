@@ -2,7 +2,7 @@ Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
@@ -16,7 +16,7 @@ Error: Bad.js:11
          18: |}>) => React.ComponentType<Props> {
              -^ object type. This type is incompatible with. See: hocs.js:15
          11: const Bad = (props: Props) => null;
-                                 ^^^^^ object type
+                                 ^^^^^ Props
           Property `bar` is incompatible:
              18:     bar: buz,
                           ^^^ string. This type is incompatible with
@@ -27,7 +27,7 @@ Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
 137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
   Callable property is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
@@ -41,7 +41,7 @@ Error: Bad.js:11
          18: |}>) => React.ComponentType<Props> {
              -^ object type. This type is incompatible with. See: hocs.js:15
          11: const Bad = (props: Props) => null;
-                                 ^^^^^ object type
+                                 ^^^^^ Props
           Property `foo` is incompatible:
              11: const Bad = (props: Props) => null;
                                      ^^^^^ property `foo`. Property not found in

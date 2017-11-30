@@ -664,6 +664,15 @@ and statement cx = Ast.Statement.(
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
+      let t =
+        let mod_reason = replace_reason (fun desc -> RTypeAlias (name, desc)) in
+        let rec loop = function
+        | ExactT (r, t) -> ExactT (mod_reason r, loop t)
+        | DefT (r, MaybeT t) -> DefT (mod_reason r, MaybeT (loop t))
+        | t -> mod_reason_of_t mod_reason t
+        in
+        loop t
+      in
       let type_ = poly_type (Context.make_nominal cx) typeparams (DefT (r, TypeT t)) in
       Flow.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;

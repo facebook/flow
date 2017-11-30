@@ -8,13 +8,13 @@ Error: test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
  29: var e: E = c; // error
-            ^ object type
+            ^ E
   Member 1:
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
    29: var e: E = c; // error
-              ^ object type. This type is incompatible with
+              ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
     Indexable signature is incompatible:
@@ -27,7 +27,7 @@ Error: test_obj.js:29
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
    29: var e: E = c; // error
-              ^ object type. This type is incompatible with
+              ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
     Indexable signature is incompatible:

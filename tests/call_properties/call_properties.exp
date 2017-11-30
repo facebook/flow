@@ -194,9 +194,9 @@ Error: F.js:9
 
 Error: use_ops.js:4
   4: (a: B); // error HERE and preserve use ops
-      ^ object type. This type is incompatible with
+      ^ A. This type is incompatible with
   4: (a: B); // error HERE and preserve use ops
-         ^ object type
+         ^ B
   Property `p` is incompatible:
       1: type A = { p: {} }
                        ^^ object type. This type is incompatible with

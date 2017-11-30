@@ -15,13 +15,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": T);')
-      .newErrors(`
-        test.js:9
-          9: ("str": T);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": T);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": T);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": T);
+                       ^ T
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -32,13 +34,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": U);')
-      .newErrors(`
-        test.js:9
-          9: ("str": U);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": U);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": U);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": U);
+                       ^ T
+        `,
+      ),
   ]),
 
   test('Unaliased typeof import', [

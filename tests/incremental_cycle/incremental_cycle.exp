@@ -28,11 +28,11 @@ Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
-          ^ string. See: C.js:6
+          ^ B. See: C.js:6
 
 Error: C.js:6
   6:   b: B;
-          ^ string. This type is incompatible with
+          ^ B. This type is incompatible with
   4:   b: number;
           ^^^^^^ number. See: A.js:4
 
@@ -42,11 +42,11 @@ Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
-          ^ string. See: C.js:6
+          ^ B. See: C.js:6
 
 Error: C.js:6
   6:   b: B;
-          ^ string. This type is incompatible with
+          ^ B. This type is incompatible with
   4:   b: number;
           ^^^^^^ number. See: A.js:4
 
@@ -56,11 +56,11 @@ Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
-          ^ string. See: C.js:6
+          ^ B. See: C.js:6
 
 Error: C.js:6
   6:   b: B;
-          ^ string. This type is incompatible with
+          ^ B. This type is incompatible with
   4:   b: number;
           ^^^^^^ number. See: A.js:4
 

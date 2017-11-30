@@ -30,7 +30,7 @@ Error: es_declare_module.js:18
  18: ('asdf': numType); // Error: string ~> number
       ^^^^^^ string. This type is incompatible with
  18: ('asdf': numType); // Error: string ~> number
-              ^^^^^^^ number
+              ^^^^^^^ numType
 
 Error: es_declare_module.js:20
  20: import {strHidden} from "ES"; // Error: No such export!
@@ -68,7 +68,7 @@ Error: es_declare_module.js:39
  39: ('asdf': T2); // Error: string ~> number
       ^^^^^^ string. This type is incompatible with
  39: ('asdf': T2); // Error: string ~> number
-              ^^ number
+              ^^ T
 
 Error: es_declare_module.js:41
  41: import {exports as nope} from "ES"; // Error: Not an export

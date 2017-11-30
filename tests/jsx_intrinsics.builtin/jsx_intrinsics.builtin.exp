@@ -11,9 +11,9 @@ Error: main.js:6
 
 Error: main.js:12
  12:   <CustomComponent prop="asdf" />; // Error: Bad class type
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
  11: var b: Element<typeof CustomComponentNope> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
       6: class CustomComponent extends React.Component<{prop: string}, void> {}
                ^^^^^^^^^^^^^^^ CustomComponent. This type is incompatible with
@@ -33,9 +33,9 @@ Error: main.js:13
 
 Error: main.js:14
  14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `props` is incompatible:
       6: class CustomComponent extends React.Component<{prop: string}, void> {}
                                                        ^^^^^^^^^^^^^^ object type. This type is incompatible with
@@ -49,9 +49,9 @@ Error: main.js:14
 
 Error: main.js:21
  21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
  21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-            ^^^^^^^^^^^^^^^ object type
+            ^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
      21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
                                    ^^^ React element `div`. Expected string literal `span`, got `div` instead

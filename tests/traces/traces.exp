@@ -200,9 +200,9 @@ Trace:
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ object type. This type is incompatible with the expected return type of
+                ^^^^^^^^^^^^^^ React.Element. This type is incompatible with the expected return type of
  14: function f(b): Element<*> {
-                    ^^^^^^^^^^ object type
+                    ^^^^^^^^^^ React.Element
 Trace:
 * path 1:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }

@@ -22,9 +22,9 @@ Error: interfaces-neg.js:25
 
 Error: type-decls-neg.js:29
  29:   (data: SystemData);
-        ^^^^ object type. This type is incompatible with
+        ^^^^ UserData. This type is incompatible with
  29:   (data: SystemData);
-              ^^^^^^^^^^ object type
+              ^^^^^^^^^^ SystemData
   Property `kind` is incompatible:
      11:   kind: "user",
                  ^^^^^^ string literal `user`. Expected string literal `system`, got `user` instead
@@ -33,9 +33,9 @@ Error: type-decls-neg.js:29
 
 Error: type-decls-neg.js:29
  29:   (data: SystemData);
-        ^^^^ object type. This type is incompatible with
+        ^^^^ UserData. This type is incompatible with
  29:   (data: SystemData);
-              ^^^^^^^^^^ object type
+              ^^^^^^^^^^ SystemData
   Property `kind` is incompatible:
      17:   kind: "system",
                  ^^^^^^^^ string literal `system`. Expected string literal `user`, got `system` instead

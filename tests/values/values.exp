@@ -164,13 +164,13 @@ Error: object_types.js:6
   6: (123: NoProps); // Error: There are no props.
       ^^^ number. This type is incompatible with
   6: (123: NoProps); // Error: There are no props.
-           ^^^^^^^ values type
+           ^^^^^^^ NoProps
 
 Error: object_types.js:7
   7: (345: NoReadProps); // Error: There are no props which can be read.
       ^^^ number. This type is incompatible with
   7: (345: NoReadProps); // Error: There are no props which can be read.
-           ^^^^^^^^^^^ values type
+           ^^^^^^^^^^^ NoReadProps
 
 Error: object_types.js:11
  11: (123: OneProp); // Error: There is no property with the type of number.

@@ -21,14 +21,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                50: (roA: RWA);
-                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                    ^^^ ROA. Covariant property \`p\` incompatible with invariant use in
                50: (roA: RWA);
-                         ^^^ object type
+                         ^^^ RWA
         `,
       ),
     addCode('(droA: dRWA);')
@@ -36,14 +36,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                52: (droA: dRWA);
-                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+                    ^^^^ dROA. Covariant computed property incompatible with invariant use in
                52: (droA: dRWA);
-                          ^^^^ object type
+                          ^^^^ dRWA
         `,
       ),
 
@@ -53,14 +53,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOA. This type is incompatible with
            54: (woA: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                54: (woA: RWA);
-                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                    ^^^ WOA. Contravariant property \`p\` incompatible with invariant use in
                54: (woA: RWA);
-                         ^^^ object type
+                         ^^^ RWA
         `,
       ),
     addCode('(dwoA: dRWA);')
@@ -68,14 +68,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOA. This type is incompatible with
            56: (dwoA: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                56: (dwoA: dRWA);
-                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+                    ^^^^ dWOA. Contravariant computed property incompatible with invariant use in
                56: (dwoA: dRWA);
-                          ^^^^ object type
+                          ^^^^ dRWA
         `,
       ),
 
@@ -90,9 +90,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:62
            62: (rwB: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ RWB. This type is incompatible with
            62: (rwB: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                 9:     type RWA = {p: A}
                                       ^ A. This type is incompatible with
@@ -105,9 +105,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:64
            64: (drwB: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dRWB. This type is incompatible with
            64: (drwB: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                26:     type dRWA = {[string]: A};
                                               ^ A. This type is incompatible with
@@ -122,14 +122,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:66
            66: (roB: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROB. This type is incompatible with
            66: (roB: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                66: (roB: RWA);
-                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                    ^^^ ROB. Covariant property \`p\` incompatible with invariant use in
                66: (roB: RWA);
-                         ^^^ object type
+                         ^^^ RWA
         `,
       ),
     addCode('(droB: dRWA);')
@@ -137,14 +137,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:68
            68: (droB: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROB. This type is incompatible with
            68: (droB: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                68: (droB: dRWA);
-                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+                    ^^^^ dROB. Covariant computed property incompatible with invariant use in
                68: (droB: dRWA);
-                          ^^^^ object type
+                          ^^^^ dRWA
         `,
       ),
 
@@ -154,9 +154,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOB. This type is incompatible with
            70: (woB: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                 9:     type RWA = {p: A}
                                       ^ A. This type is incompatible with
@@ -165,14 +165,14 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:70
            70: (woB: RWA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOB. This type is incompatible with
            70: (woB: RWA);
-                     ^^^ object type
+                     ^^^ RWA
             Property \`p\` is incompatible:
                70: (woB: RWA);
-                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                    ^^^ WOB. Contravariant property \`p\` incompatible with invariant use in
                70: (woB: RWA);
-                         ^^^ object type
+                         ^^^ RWA
         `,
       ),
     addCode('(dwoB: dRWA);')
@@ -180,9 +180,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOB. This type is incompatible with
            72: (dwoB: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                26:     type dRWA = {[string]: A};
                                               ^ A. This type is incompatible with
@@ -191,14 +191,14 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:72
            72: (dwoB: dRWA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOB. This type is incompatible with
            72: (dwoB: dRWA);
-                      ^^^^ object type
+                      ^^^^ dRWA
             Indexable signature is incompatible:
                72: (dwoB: dRWA);
-                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+                    ^^^^ dWOB. Contravariant computed property incompatible with invariant use in
                72: (dwoB: dRWA);
-                          ^^^^ object type
+                          ^^^^ dRWA
         `,
       ),
   ]),
@@ -222,14 +222,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: ROA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOA. This type is incompatible with
            54: (woA: ROA);
-                     ^^^ object type
+                     ^^^ ROA
             Property \`p\` is incompatible:
                54: (woA: ROA);
-                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                    ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
                54: (woA: ROA);
-                         ^^^ object type
+                         ^^^ ROA
         `,
       ),
     addCode('(dwoA: dROA);')
@@ -237,14 +237,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOA. This type is incompatible with
            56: (dwoA: dROA);
-                      ^^^^ object type
+                      ^^^^ dROA
             Indexable signature is incompatible:
                56: (dwoA: dROA);
-                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+                    ^^^^ dWOA. Contravariant computed property incompatible with covariant use in
                56: (dwoA: dROA);
-                          ^^^^ object type
+                          ^^^^ dROA
         `,
       ),
 
@@ -266,14 +266,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: ROA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOB. This type is incompatible with
            70: (woB: ROA);
-                     ^^^ object type
+                     ^^^ ROA
             Property \`p\` is incompatible:
                70: (woB: ROA);
-                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                    ^^^ WOB. Contravariant property \`p\` incompatible with covariant use in
                70: (woB: ROA);
-                         ^^^ object type
+                         ^^^ ROA
         `,
       ),
     addCode('(dwoB: dROA);')
@@ -281,14 +281,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dROA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOB. This type is incompatible with
            72: (dwoB: dROA);
-                      ^^^^ object type
+                      ^^^^ dROA
             Indexable signature is incompatible:
                72: (dwoB: dROA);
-                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+                    ^^^^ dWOB. Contravariant computed property incompatible with covariant use in
                72: (dwoB: dROA);
-                          ^^^^ object type
+                          ^^^^ dROA
         `,
       ),
   ]),
@@ -308,14 +308,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: WOA);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: WOA);
-                     ^^^ object type
+                     ^^^ WOA
             Property \`p\` is incompatible:
                50: (roA: WOA);
-                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                    ^^^ ROA. Covariant property \`p\` incompatible with contravariant use in
                50: (roA: WOA);
-                         ^^^ object type
+                         ^^^ WOA
         `,
       ),
     addCode('(droA: dWOA);')
@@ -323,14 +323,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dWOA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dWOA);
-                      ^^^^ object type
+                      ^^^^ dWOA
             Indexable signature is incompatible:
                52: (droA: dWOA);
-                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+                    ^^^^ dROA. Covariant computed property incompatible with contravariant use in
                52: (droA: dWOA);
-                          ^^^^ object type
+                          ^^^^ dWOA
         `,
       ),
 
@@ -348,9 +348,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:62
            62: (rwB: WOA);
-                ^^^ object type. This type is incompatible with
+                ^^^ RWB. This type is incompatible with
            62: (rwB: WOA);
-                     ^^^ object type
+                     ^^^ WOA
             Property \`p\` is incompatible:
                11:     type WOA = {-p: A}
                                        ^ A. This type is incompatible with
@@ -363,9 +363,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:64
            64: (drwB: dWOA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dRWB. This type is incompatible with
            64: (drwB: dWOA);
-                      ^^^^ object type
+                      ^^^^ dWOA
             Indexable signature is incompatible:
                28:     type dWOA = {-[string]: A};
                                                ^ A. This type is incompatible with
@@ -380,14 +380,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:66
            66: (roB: WOA);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROB. This type is incompatible with
            66: (roB: WOA);
-                     ^^^ object type
+                     ^^^ WOA
             Property \`p\` is incompatible:
                66: (roB: WOA);
-                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                    ^^^ ROB. Covariant property \`p\` incompatible with contravariant use in
                66: (roB: WOA);
-                         ^^^ object type
+                         ^^^ WOA
         `,
       ),
     addCode('(droB: dWOA);')
@@ -395,14 +395,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:68
            68: (droB: dWOA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROB. This type is incompatible with
            68: (droB: dWOA);
-                      ^^^^ object type
+                      ^^^^ dWOA
             Indexable signature is incompatible:
                68: (droB: dWOA);
-                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+                    ^^^^ dROB. Covariant computed property incompatible with contravariant use in
                68: (droB: dWOA);
-                          ^^^^ object type
+                          ^^^^ dWOA
         `,
       ),
 
@@ -412,9 +412,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: WOA);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOB. This type is incompatible with
            70: (woB: WOA);
-                     ^^^ object type
+                     ^^^ WOA
             Property \`p\` is incompatible:
                11:     type WOA = {-p: A}
                                        ^ A. This type is incompatible with
@@ -427,9 +427,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dWOA);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOB. This type is incompatible with
            72: (dwoB: dWOA);
-                      ^^^^ object type
+                      ^^^^ dWOA
             Indexable signature is incompatible:
                28:     type dWOA = {-[string]: A};
                                                ^ A. This type is incompatible with
@@ -448,7 +448,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            42: ({p: new A}: RWB);
                 ^^^^^^^^^^ object literal. This type is incompatible with
            42: ({p: new A}: RWB);
-                            ^^^ object type
+                            ^^^ RWB
             Property \`p\` is incompatible:
                42: ({p: new A}: RWB);
                         ^^^^^ A. This type is incompatible with
@@ -463,7 +463,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            44: ({p: new A}: dRWB);
                 ^^^^^^^^^^ object literal. This type is incompatible with
            44: ({p: new A}: dRWB);
-                            ^^^^ object type
+                            ^^^^ dRWB
             Property \`p\` is incompatible:
                44: ({p: new A}: dRWB);
                         ^^^^^ A. This type is incompatible with
@@ -478,9 +478,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:46
            46: (rwA: RWB);
-                ^^^ object type. This type is incompatible with
+                ^^^ RWA. This type is incompatible with
            46: (rwA: RWB);
-                     ^^^ object type
+                     ^^^ RWB
             Property \`p\` is incompatible:
                 9:     type RWA = {p: A}
                                       ^ A. This type is incompatible with
@@ -493,9 +493,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:48
            48: (drwA: dRWB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dRWA. This type is incompatible with
            48: (drwA: dRWB);
-                      ^^^^ object type
+                      ^^^^ dRWB
             Indexable signature is incompatible:
                26:     type dRWA = {[string]: A};
                                               ^ A. This type is incompatible with
@@ -510,9 +510,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: RWB);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: RWB);
-                     ^^^ object type
+                     ^^^ RWB
             Property \`p\` is incompatible:
                10:     type ROA = {+p: A}
                                        ^ A. This type is incompatible with
@@ -521,14 +521,14 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:50
            50: (roA: RWB);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: RWB);
-                     ^^^ object type
+                     ^^^ RWB
             Property \`p\` is incompatible:
                50: (roA: RWB);
-                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                    ^^^ ROA. Covariant property \`p\` incompatible with invariant use in
                50: (roA: RWB);
-                         ^^^ object type
+                         ^^^ RWB
         `,
       ),
     addCode('(droA: dRWB);')
@@ -536,9 +536,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dRWB);
-                      ^^^^ object type
+                      ^^^^ dRWB
             Indexable signature is incompatible:
                27:     type dROA = {+[string]: A};
                                                ^ A. This type is incompatible with
@@ -547,14 +547,14 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:52
            52: (droA: dRWB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dRWB);
-                      ^^^^ object type
+                      ^^^^ dRWB
             Indexable signature is incompatible:
                52: (droA: dRWB);
-                    ^^^^ object type. Covariant computed property incompatible with invariant use in
+                    ^^^^ dROA. Covariant computed property incompatible with invariant use in
                52: (droA: dRWB);
-                          ^^^^ object type
+                          ^^^^ dRWB
         `,
       ),
 
@@ -564,14 +564,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: RWB);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOA. This type is incompatible with
            54: (woA: RWB);
-                     ^^^ object type
+                     ^^^ RWB
             Property \`p\` is incompatible:
                54: (woA: RWB);
-                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                    ^^^ WOA. Contravariant property \`p\` incompatible with invariant use in
                54: (woA: RWB);
-                         ^^^ object type
+                         ^^^ RWB
         `,
       ),
     addCode('(dwoA: dRWB);')
@@ -579,14 +579,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dRWB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOA. This type is incompatible with
            56: (dwoA: dRWB);
-                      ^^^^ object type
+                      ^^^^ dRWB
             Indexable signature is incompatible:
                56: (dwoA: dRWB);
-                    ^^^^ object type. Contravariant computed property incompatible with invariant use in
+                    ^^^^ dWOA. Contravariant computed property incompatible with invariant use in
                56: (dwoA: dRWB);
-                          ^^^^ object type
+                          ^^^^ dRWB
         `,
       ),
   ]),
@@ -600,7 +600,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            42: ({p: new A}: ROB);
                 ^^^^^^^^^^ object literal. This type is incompatible with
            42: ({p: new A}: ROB);
-                            ^^^ object type
+                            ^^^ ROB
             Property \`p\` is incompatible:
                42: ({p: new A}: ROB);
                         ^^^^^ A. This type is incompatible with
@@ -615,7 +615,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            44: ({p: new A}: dROB);
                 ^^^^^^^^^^ object literal. This type is incompatible with
            44: ({p: new A}: dROB);
-                            ^^^^ object type
+                            ^^^^ dROB
             Property \`p\` is incompatible:
                44: ({p: new A}: dROB);
                         ^^^^^ A. This type is incompatible with
@@ -630,9 +630,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:46
            46: (rwA: ROB);
-                ^^^ object type. This type is incompatible with
+                ^^^ RWA. This type is incompatible with
            46: (rwA: ROB);
-                     ^^^ object type
+                     ^^^ ROB
             Property \`p\` is incompatible:
                 9:     type RWA = {p: A}
                                       ^ A. This type is incompatible with
@@ -645,9 +645,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:48
            48: (drwA: dROB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dRWA. This type is incompatible with
            48: (drwA: dROB);
-                      ^^^^ object type
+                      ^^^^ dROB
             Indexable signature is incompatible:
                26:     type dRWA = {[string]: A};
                                               ^ A. This type is incompatible with
@@ -662,9 +662,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: ROB);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: ROB);
-                     ^^^ object type
+                     ^^^ ROB
             Property \`p\` is incompatible:
                10:     type ROA = {+p: A}
                                        ^ A. This type is incompatible with
@@ -677,9 +677,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dROB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dROB);
-                      ^^^^ object type
+                      ^^^^ dROB
             Indexable signature is incompatible:
                27:     type dROA = {+[string]: A};
                                                ^ A. This type is incompatible with
@@ -694,14 +694,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: ROB);
-                ^^^ object type. This type is incompatible with
+                ^^^ WOA. This type is incompatible with
            54: (woA: ROB);
-                     ^^^ object type
+                     ^^^ ROB
             Property \`p\` is incompatible:
                54: (woA: ROB);
-                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                    ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
                54: (woA: ROB);
-                         ^^^ object type
+                         ^^^ ROB
         `,
       ),
     addCode('(dwoA: dROB);')
@@ -709,14 +709,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dWOA. This type is incompatible with
            56: (dwoA: dROB);
-                      ^^^^ object type
+                      ^^^^ dROB
             Indexable signature is incompatible:
                56: (dwoA: dROB);
-                    ^^^^ object type. Contravariant computed property incompatible with covariant use in
+                    ^^^^ dWOA. Contravariant computed property incompatible with covariant use in
                56: (dwoA: dROB);
-                          ^^^^ object type
+                          ^^^^ dROB
         `,
       ),
   ]),
@@ -736,14 +736,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: WOB);
-                ^^^ object type. This type is incompatible with
+                ^^^ ROA. This type is incompatible with
            50: (roA: WOB);
-                     ^^^ object type
+                     ^^^ WOB
             Property \`p\` is incompatible:
                50: (roA: WOB);
-                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                    ^^^ ROA. Covariant property \`p\` incompatible with contravariant use in
                50: (roA: WOB);
-                         ^^^ object type
+                         ^^^ WOB
         `,
       ),
     addCode('(droA: dWOB);')
@@ -751,14 +751,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dWOB);
-                ^^^^ object type. This type is incompatible with
+                ^^^^ dROA. This type is incompatible with
            52: (droA: dWOB);
-                      ^^^^ object type
+                      ^^^^ dWOB
             Indexable signature is incompatible:
                52: (droA: dWOB);
-                    ^^^^ object type. Covariant computed property incompatible with contravariant use in
+                    ^^^^ dROA. Covariant computed property incompatible with contravariant use in
                52: (droA: dWOB);
-                          ^^^^ object type
+                          ^^^^ dWOB
         `,
       ),
 
@@ -919,9 +919,9 @@ export default suite(({addFile, addFiles, addCode}) => [
       newErrors(
        `
          test.js:46
-          46: (woA: \$Shape<RWA>);
-               ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          46: (woA: \$Shape<RWA>);
+          46: (woA: $Shape<RWA>);
+               ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
+          46: (woA: $Shape<RWA>);
                            ^^^ RWA
        `,
      ),
@@ -937,9 +937,9 @@ export default suite(({addFile, addFiles, addCode}) => [
       newErrors(
        `
          test.js:52
-          52: (woB: \$Shape<RWA>);
-               ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          52: (woB: \$Shape<RWA>);
+          52: (woB: $Shape<RWA>);
+               ^^^ WOB. Contravariant property \`p\` incompatible with covariant use in
+          52: (woB: $Shape<RWA>);
                            ^^^ RWA
        `,
      ),
@@ -973,9 +973,9 @@ export default suite(({addFile, addFiles, addCode}) => [
       newErrors(
        `
          test.js:58
-          58: (woA: \$Shape<RWB>);
-               ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          58: (woA: \$Shape<RWB>);
+          58: (woA: $Shape<RWB>);
+               ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
+          58: (woA: $Shape<RWB>);
                            ^^^ RWB
        `,
      ),

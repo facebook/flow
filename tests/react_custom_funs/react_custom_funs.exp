@@ -6,13 +6,13 @@ Error: clone_element.js:23
  23: React.cloneElement('nope'); // Error: Not a valid element type.
                         ^^^^^^ string. Inexact type is incompatible with exact type
  23: React.cloneElement('nope'); // Error: Not a valid element type.
-                        ^^^^^^ object type
+                        ^^^^^^ React.Element
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                         ^^^^^^^^^^^^^ object literal. This type is incompatible with
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                        ^^^^^^^^^^^^^ object type
+                        ^^^^^^^^^^^^^ React.Element
   Property `key` is incompatible:
      24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                             ^^^^^^^^^^^^^ property `key`. Property not found in
@@ -23,7 +23,7 @@ Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                         ^^^^^^^^^^^^^ object literal. This type is incompatible with
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                        ^^^^^^^^^^^^^ object type
+                        ^^^^^^^^^^^^^ React.Element
   Property `props` is incompatible:
      24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                             ^^^^^^^^^^^^^ property `props`. Property not found in
@@ -34,7 +34,7 @@ Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                         ^^^^^^^^^^^^^ object literal. This type is incompatible with
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                        ^^^^^^^^^^^^^ object type
+                        ^^^^^^^^^^^^^ React.Element
   Property `ref` is incompatible:
      24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                             ^^^^^^^^^^^^^ property `ref`. Property not found in
@@ -309,13 +309,13 @@ Error: create_element.js:42
  42: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
  42: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
 
 Error: create_element.js:43
  43: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
  43: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
 
 Error: create_element.js:44
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -1402,13 +1402,13 @@ Error: create_factory.js:40
  40: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
  40: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
 
 Error: create_factory.js:41
  41: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
  41: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
 
 Error: create_factory.js:42
  42: aFactory(); // Error: Missing `foo` and `bar`.

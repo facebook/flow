@@ -285,7 +285,7 @@ Error: registerElement.js:48
  56:     });
          ^ object literal. This type is incompatible with the expected param type of
 725:   registerElement(type: string, options?: ElementRegistrationOptions): any;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:725
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ ElementRegistrationOptions. See lib: <BUILTINS>/dom.js:725
   Property `prototype` is incompatible:
                           v
      49:       prototype: {
@@ -331,7 +331,7 @@ Error: registerElement.js:48
  56:     });
          ^ object literal. This type is incompatible with the expected param type of
 725:   registerElement(type: string, options?: ElementRegistrationOptions): any;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:725
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ ElementRegistrationOptions. See lib: <BUILTINS>/dom.js:725
   Property `prototype` is incompatible:
                           v
      49:       prototype: {
@@ -1040,7 +1040,7 @@ Error: traversal.js:186
 186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                         ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                 ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                 ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
   This parameter is incompatible:
     186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
@@ -1083,7 +1083,7 @@ Error: traversal.js:188
     188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                           ^^^^^^^^^^^^^^^^ function. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                                        ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                                                        ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
       This parameter is incompatible:
         188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -1457,10 +1457,10 @@ Error: traversal.js:189
     189:     document.createNodeIterator(document_body, -1, {}); // invalid
                                                             ^^ object literal. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                     ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                     ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
       Callable property is incompatible:
         3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                         ^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
+                                         ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
         189:     document.createNodeIterator(document_body, -1, {}); // invalid
                                                                 ^^ object literal
     Member 2:
@@ -1481,7 +1481,7 @@ Error: traversal.js:193
 193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                       ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                 ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                 ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
   This parameter is incompatible:
     193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
@@ -1524,7 +1524,7 @@ Error: traversal.js:195
     195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                         ^^^^^^^^^^^^^^^^ function. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                                        ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                                                        ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
       This parameter is incompatible:
         195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                     ^^^^^^^^ string. This type is incompatible with
@@ -1898,10 +1898,10 @@ Error: traversal.js:196
     196:     document.createTreeWalker(document_body, -1, {}); // invalid
                                                           ^^ object literal. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                     ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3201
+                                     ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
       Callable property is incompatible:
         3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                         ^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
+                                         ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
         196:     document.createTreeWalker(document_body, -1, {}); // invalid
                                                               ^^ object literal
     Member 2:

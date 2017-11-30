@@ -11,9 +11,9 @@ Error: sanity-filter-union.js:16
                                                      ^^^^^^^^ array type
   Type argument `T` is incompatible:
      14: declare var ab: Array<A|B|C>;
-                               ^ object type. This type is incompatible with
+                               ^ A. This type is incompatible with
      16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                               ^ object type
+                                                               ^ B
       Property `kind` is incompatible:
           8: type A = { kind: 'A', u: number }
                               ^^^ string literal `A`. Expected string literal `B`, got `A` instead
@@ -27,9 +27,9 @@ Error: sanity-filter-union.js:16
                                                      ^^^^^^^^ array type
   Type argument `T` is incompatible:
      14: declare var ab: Array<A|B|C>;
-                               ^ object type. This type is incompatible with
+                               ^ A. This type is incompatible with
      16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                               ^ object type
+                                                               ^ B
       Property `kind` is incompatible:
           9: type B = { kind: 'B', v: string }
                               ^^^ string literal `B`. Expected string literal `A`, got `B` instead
@@ -43,14 +43,14 @@ Error: sanity-filter-union.js:16
                                                      ^^^^^^^^ array type
   Type argument `T` is incompatible:
      14: declare var ab: Array<A|B|C>;
-                               ^ object type. This type is incompatible with
+                               ^ A. This type is incompatible with
      16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                               ^ object type
+                                                               ^ B
       Property `v` is incompatible:
          16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
                                                                    ^ property `v`. Property not found in
          14: declare var ab: Array<A|B|C>;
-                                   ^ object type
+                                   ^ A
 
 Error: sanity-filter-union.js:17
  17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
@@ -59,7 +59,7 @@ Error: sanity-filter-union.js:17
                                                      ^^^^^^^^^^ array type
   Type argument `T` is incompatible:
      14: declare var ab: Array<A|B|C>;
-                                 ^ object type. This type is incompatible with
+                                 ^ B. This type is incompatible with
      17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
                                                                ^^^ union: `A` | `C`
       Member 1:
@@ -67,9 +67,9 @@ Error: sanity-filter-union.js:17
                                                                  ^ A
       Error:
        14: declare var ab: Array<A|B|C>;
-                                   ^ object type. This type is incompatible with
+                                   ^ B. This type is incompatible with
        17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                 ^ object type
+                                                                 ^ A
         Property `kind` is incompatible:
             9: type B = { kind: 'B', v: string }
                                 ^^^ string literal `B`. Expected string literal `A`, got `B` instead
@@ -80,9 +80,9 @@ Error: sanity-filter-union.js:17
                                                                    ^ C
       Error:
        14: declare var ab: Array<A|B|C>;
-                                   ^ object type. This type is incompatible with
+                                   ^ B. This type is incompatible with
        17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                   ^ object type
+                                                                   ^ C
         Property `kind` is incompatible:
             9: type B = { kind: 'B', v: string }
                                 ^^^ string literal `B`. Expected string literal `C`, got `B` instead

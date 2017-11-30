@@ -16,7 +16,7 @@ Error: example6.js:9
   9: onString(id);
               ^^ function. Could not decide which case to select
   7: function onString(f: Ambiguous) { f(""); }
-                          ^^^^^^^^^ union type
+                          ^^^^^^^^^ Ambiguous
   Case 1 may work:
     5: type Ambiguous = IDString | IDNullableString;
                         ^^^^^^^^ IDString

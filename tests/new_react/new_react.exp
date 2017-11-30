@@ -20,7 +20,7 @@ Error: classes.js:20
  20:     this.state = { y: "" };
                       ^^^^^^^^^ object literal. This type is incompatible with
  20:     this.state = { y: "" };
-         ^^^^^^^^^^ object type
+         ^^^^^^^^^^ State
   Property `y` is incompatible:
      20:     this.state = { y: "" };
                                ^^ string. This type is incompatible with
@@ -40,12 +40,12 @@ Error: classes.js:23
      23:   setState(o: { y_: string }): void { }
                        ^^^^^^^^^^^^^^ object type. This type is incompatible with
      35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:35
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
       Property `y_` is incompatible:
          23:   setState(o: { y_: string }): void { }
                            ^^^^^^^^^^^^^^ property `y_`. Property not found in
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:35
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:23
  23:   setState(o: { y_: string }): void { }
@@ -89,7 +89,7 @@ Error: classes.js:39
    39: var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ number. This type is incompatible with
   150:   | React$StatelessFunctionalComponent<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:150
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:150
   Member 3:
   151:   | Class<React$Component<any, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:151
@@ -101,9 +101,9 @@ Error: classes.js:39
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ object type. This type is incompatible with
+                             ^^^^^^ React.Element. This type is incompatible with
  39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ object type
+              ^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
       7: class Foo extends React.Component<Props, State> {
                ^^^ statics of `Foo`. This type is incompatible with
@@ -114,7 +114,7 @@ Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ props of React element `Foo`. This type is incompatible with
   7: class Foo extends React.Component<Props, State> {
-                                       ^^^^^ object type
+                                       ^^^^^ Props
   Property `x` is incompatible:
       7: class Foo extends React.Component<Props, State> {
                                            ^^^^^ property `x`. Property not found in
@@ -183,7 +183,7 @@ Error: classes.js:79
    79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                             ^^^^^^ number. This type is incompatible with
   150:   | React$StatelessFunctionalComponent<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:150
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:150
   Member 3:
   151:   | Class<React$Component<any, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:151
@@ -203,9 +203,9 @@ Error: classes.js:79
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ object type. This type is incompatible with
+                                    ^^^^^^^^^^^^ React.Element. This type is incompatible with
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
                          v------------------
      43: var FooLegacy = React.createClass({
@@ -464,9 +464,9 @@ Error: props.js:20
 
 Error: props.js:27
  27: (element: $jsx<Class<FooProps>>);
-      ^^^^^^^ object type. This type is incompatible with
+      ^^^^^^^ React.Element. This type is incompatible with
  27: (element: $jsx<Class<FooProps>>);
-               ^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `props` is incompatible:
                         v
       4:     propTypes: {
@@ -526,13 +526,13 @@ Error: props3.js:49
  49:       bad_one: React.PropTypes.imaginaryType,
                                     ^^^^^^^^^^^^^ property `imaginaryType`. Property not found in
  49:       bad_one: React.PropTypes.imaginaryType,
-                    ^^^^^^^^^^^^^^^ object type
+                    ^^^^^^^^^^^^^^^ ReactPropTypes
 
 Error: props3.js:50
  50:       bad_two: React.PropTypes.string.inRequired,
                                            ^^^^^^^^^^ property `inRequired`. Property not found in
  50:       bad_two: React.PropTypes.string.inRequired,
-                    ^^^^^^^^^^^^^^^^^^^^^^ object type
+                    ^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker
 
 Error: props4.js:9
   9: <JDiv id={42} />;
@@ -705,7 +705,7 @@ Error: state6.js:33
  33:       console.log(prevState.nope); // Error: `nope` does not exist.
                                  ^^^^ property `nope`. Property not found in
  33:       console.log(prevState.nope); // Error: `nope` does not exist.
-                       ^^^^^^^^^ object type
+                       ^^^^^^^^^ State
 
 Error: state6.js:36
  36:       console.log(props.nope); // Error: `nope` does not exist.
@@ -715,7 +715,7 @@ Error: state6.js:36
 
 Error: state6.js:41
  41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                             ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+                             ^^^^^^^^^^^^^ StateUpdater3. This type is incompatible with the expected param type of
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `State` | function type. See lib: <BUILTINS>/react.js:35
   Member 1:
@@ -723,15 +723,15 @@ Error: state6.js:41
                                                                  ^^^^^ State
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ property `$call` of object type. Callable signature not found in
+                               ^^^^^^^^^^^^^ property `$call` of `StateUpdater3`. Callable signature not found in
    13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ object type
+                                                                 ^^^^^ State
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ object type. This type is incompatible with
+                               ^^^^^^^^^^^^^ StateUpdater3. This type is incompatible with
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
     Callable property is incompatible:
@@ -741,7 +741,7 @@ Error: state6.js:41
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
         This parameter is incompatible:
            13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                         ^^^^^ object type. This type is incompatible with
+                                                                         ^^^^^ State. This type is incompatible with
            11: type StateUpdater3 = {(number): number, foo: number, bar: number};
                                       ^^^^^^ number
 

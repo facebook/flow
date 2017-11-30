@@ -2,7 +2,7 @@ Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
                   ^^^^^^^^ null or undefined. This type is incompatible with
  15: function bar0(x : Bar) {
-                       ^^^ object type
+                       ^^^ Bar
 
 Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
@@ -62,7 +62,7 @@ Error: bool.js:44
 
 Error: cond_prop.js:11
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                             ^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+                             ^^^^^^^^^^^^ BadType. This type is incompatible with the expected param type of
   9: function getTypeASTName(typeAST: Type): string {
                                       ^^^^ union: `Name` | `ListType` | `NonNullType`
   Member 1:
@@ -70,40 +70,40 @@ Error: cond_prop.js:11
                    ^^^^ Name
   Error:
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type. This type is incompatible with
+                               ^^^^^^^^^^^^ BadType. This type is incompatible with
     3: type Type = Name | ListType | NonNullType;
-                   ^^^^ object type
+                   ^^^^ Name
     Property `kind` is incompatible:
         3: type Type = Name | ListType | NonNullType;
                        ^^^^ property `kind`. Property not found in
        11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ object type
+                                   ^^^^^^^^^^^^ BadType
   Member 2:
     3: type Type = Name | ListType | NonNullType;
                           ^^^^^^^^ ListType
   Error:
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type. This type is incompatible with
+                               ^^^^^^^^^^^^ BadType. This type is incompatible with
     3: type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ object type
+                          ^^^^^^^^ ListType
     Property `kind` is incompatible:
         3: type Type = Name | ListType | NonNullType;
                               ^^^^^^^^ property `kind`. Property not found in
        11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ object type
+                                   ^^^^^^^^^^^^ BadType
   Member 3:
     3: type Type = Name | ListType | NonNullType;
                                      ^^^^^^^^^^^ NonNullType
   Error:
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type. This type is incompatible with
+                               ^^^^^^^^^^^^ BadType. This type is incompatible with
     3: type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ object type
+                                     ^^^^^^^^^^^ NonNullType
     Property `kind` is incompatible:
         3: type Type = Name | ListType | NonNullType;
                                          ^^^^^^^^^^^ property `kind`. Property not found in
        11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ object type
+                                   ^^^^^^^^^^^^ BadType
 
 Error: cond_prop.js:19
  19:     return x.result; // error
@@ -717,13 +717,13 @@ Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
             ^^^ property `raw`. Property not found in
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
-          ^ object type
+          ^ Orange
 
 Error: tagged_union.js:72
  72:   default: return x.A; // error, x: C and property A not found in type C
                          ^ property `A`. Property not found in
  72:   default: return x.A; // error, x: C and property A not found in type C
-                       ^ object type
+                       ^ C
 
 Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though

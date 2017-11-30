@@ -19,7 +19,7 @@ Error: strings.js:6
   6: var Bad = 'bad';
                ^^^^^ React element `bad`. Property not found in
   6: var Bad = 'bad';
-               ^^^^^ object type
+               ^^^^^ $JSXIntrinsics
 
 Error: strings.js:9
   9: <Div />; // This is fine
@@ -40,7 +40,7 @@ Error: strings.js:11
   7: var Str: string = 'str';
               ^^^^^^ string. Property not found in
   7: var Str: string = 'str';
-              ^^^^^^ object type
+              ^^^^^^ $JSXIntrinsics
 
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
@@ -57,13 +57,13 @@ Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                          ^^^^^ React element `bad`. Property not found in
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ object type
+                         ^^^^^ $JSXIntrinsics
 
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
                          ^^^ string. Property not found in
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ object type
+                         ^^^ $JSXIntrinsics
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually

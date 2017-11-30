@@ -22,7 +22,7 @@ Error: issue-824.js:21
                          ^ I
     Error:
      13:   static bar(p: I & K): bool {
-                         ^ object type. This type is incompatible with
+                         ^ I. This type is incompatible with
       3: type K = B | C;
                   ^ B
     Member 2:
@@ -46,7 +46,7 @@ Error: issue-824.js:21
                          ^ I
     Error:
      13:   static bar(p: I & K): bool {
-                         ^ object type. This type is incompatible with
+                         ^ I. This type is incompatible with
       3: type K = B | C;
                       ^ C
     Member 2:
@@ -162,7 +162,7 @@ Error: test11.js:12
    12: length({ kind: "cons" }); // missing `next`
               ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
    16: type List = Nil | Cons;
-                   ^^^ object type
+                   ^^^ Nil
     Property `kind` is incompatible:
        12: length({ kind: "cons" }); // missing `next`
                           ^^^^^^ string. Expected string literal `nil`, got `cons` instead
@@ -175,7 +175,7 @@ Error: test11.js:12
    12: length({ kind: "cons" }); // missing `next`
               ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
    16: type List = Nil | Cons;
-                         ^^^^ object type
+                         ^^^^ Cons
     Property `next` is incompatible:
        16: type List = Nil | Cons;
                              ^^^^ property `next`. Property not found in
@@ -194,7 +194,7 @@ Error: test11.js:14
    14: length({ kind: "empty" }); // `kind` not found
               ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
    16: type List = Nil | Cons;
-                   ^^^ object type
+                   ^^^ Nil
     Property `kind` is incompatible:
        14: length({ kind: "empty" }); // `kind` not found
                           ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
@@ -207,7 +207,7 @@ Error: test11.js:14
    14: length({ kind: "empty" }); // `kind` not found
               ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
    16: type List = Nil | Cons;
-                         ^^^^ object type
+                         ^^^^ Cons
     Property `kind` is incompatible:
        14: length({ kind: "empty" }); // `kind` not found
                           ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
@@ -233,7 +233,7 @@ Error: test16.js:11
  11: foo(() => qux());
          ^^^^^^^^^^^ function. Could not decide which case to select
  10: function foo(x: Foo) { }
-                     ^^^ union type
+                     ^^^ Foo
   Case 1 may work:
     6: type Foo = T | (() => bool);
                   ^ T
@@ -248,7 +248,7 @@ Error: test16.js:14
  14: bar(() => qux());
          ^^^^^^^^^^^ function. Could not decide which case to select
  13: function bar(x: Bar) { }
-                     ^^^ union type
+                     ^^^ Bar
   Case 2 may work:
     8: type Bar = number | (() => string) | (() => bool);
                             ^^^^^^^^^^^^ function type
@@ -279,7 +279,7 @@ Error: test21.js:11
  11: ({ type: bar(), x: str() }: T);
       ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. Could not decide which case to select
  11: ({ type: bar(), x: str() }: T);
-                                 ^ union type
+                                 ^ T
   Case 1 may work:
     6:   | { type: "FOO", x: number }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -318,7 +318,7 @@ Error: test22.js:20
    20:   else return x.result;
                        ^^^^^^ property `result`. Property not found in
    14: } & Empty;
-           ^^^^^ object type
+           ^^^^^ Empty
 
 Error: test26.js:20
  20: new Record().set('foo', "42");

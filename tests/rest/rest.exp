@@ -869,10 +869,10 @@ Error: type_union.js:14
  14: ({x}: O1<X, Y>); // Error: x is not allowed
       ^^^ object literal. This type is incompatible with
  14: ({x}: O1<X, Y>); // Error: x is not allowed
-           ^^^^^^^^ union: object type(s)
+           ^^^^^^^^ union: `O1`(s)
   Member 1:
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
    14: ({x}: O1<X, Y>); // Error: x is not allowed
         ^^^ property `x`. Property not found in
@@ -880,7 +880,7 @@ Error: type_union.js:14
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
    14: ({x}: O1<X, Y>); // Error: x is not allowed
         ^^^ property `x`. Property not found in
@@ -891,10 +891,10 @@ Error: type_union.js:16
  16: ({x, y}: O1<X, Y>); // Error: x is not allowed
       ^^^^^^ object literal. This type is incompatible with
  16: ({x, y}: O1<X, Y>); // Error: x is not allowed
-              ^^^^^^^^ union: object type(s)
+              ^^^^^^^^ union: `O1`(s)
   Member 1:
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
    16: ({x, y}: O1<X, Y>); // Error: x is not allowed
         ^^^^^^ property `x`. Property not found in
@@ -902,7 +902,7 @@ Error: type_union.js:16
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
    16: ({x, y}: O1<X, Y>); // Error: x is not allowed
         ^^^^^^ property `x`. Property not found in
@@ -913,10 +913,10 @@ Error: type_union.js:21
  21: ({y}: O2<X, Y>); // Error: y is not allowed
       ^^^ object literal. This type is incompatible with
  21: ({y}: O2<X, Y>); // Error: y is not allowed
-           ^^^^^^^^ union: object type(s)
+           ^^^^^^^^ union: `O2`(s)
   Member 1:
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
    21: ({y}: O2<X, Y>); // Error: y is not allowed
         ^^^ property `y`. Property not found in
@@ -924,7 +924,7 @@ Error: type_union.js:21
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
    21: ({y}: O2<X, Y>); // Error: y is not allowed
         ^^^ property `y`. Property not found in
@@ -935,10 +935,10 @@ Error: type_union.js:22
  22: ({x, y}: O2<X, Y>); // Error: y is not allowed
       ^^^^^^ object literal. This type is incompatible with
  22: ({x, y}: O2<X, Y>); // Error: y is not allowed
-              ^^^^^^^^ union: object type(s)
+              ^^^^^^^^ union: `O2`(s)
   Member 1:
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
    22: ({x, y}: O2<X, Y>); // Error: y is not allowed
         ^^^^^^ property `y`. Property not found in
@@ -946,7 +946,7 @@ Error: type_union.js:22
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
    22: ({x, y}: O2<X, Y>); // Error: y is not allowed
         ^^^^^^ property `x`. Property not found in
@@ -957,10 +957,10 @@ Error: type_union.js:25
  25: (o: O3); // OK
       ^ object type. This type is incompatible with
  25: (o: O3); // OK
-         ^^ union: object type(s)
+         ^^ union: `O3`(s)
   Member 1:
    24: type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O3
   Error:
    24: type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                        ^^^^^^^^ undefined property `y`. This type is incompatible with
@@ -968,7 +968,7 @@ Error: type_union.js:25
                                                        ^ Y
   Member 2:
    24: type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O3
   Error:
    24: type O3 = $Rest<{|x: X|} | {|y: Y|}, {|x: X, y: Y|}>; // Error: void ~> X and void ~> Y
                                   ^^^^^^^^ undefined property `x`. This type is incompatible with
@@ -979,10 +979,10 @@ Error: type_union.js:29
  29: ({x}: O4); // Error: x is not allowed
       ^^^ object literal. This type is incompatible with
  29: ({x}: O4); // Error: x is not allowed
-           ^^ union: object type(s)
+           ^^ union: `O4`(s)
   Member 1:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    29: ({x}: O4); // Error: x is not allowed
         ^^^ property `x`. Property not found in
@@ -990,7 +990,7 @@ Error: type_union.js:29
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    29: ({x}: O4); // Error: x is not allowed
         ^^^ property `x`. Property not found in
@@ -1001,10 +1001,10 @@ Error: type_union.js:30
  30: ({y}: O4); // Error: y is not allowed
       ^^^ object literal. This type is incompatible with
  30: ({y}: O4); // Error: y is not allowed
-           ^^ union: object type(s)
+           ^^ union: `O4`(s)
   Member 1:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    30: ({y}: O4); // Error: y is not allowed
         ^^^ property `y`. Property not found in
@@ -1012,7 +1012,7 @@ Error: type_union.js:30
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    30: ({y}: O4); // Error: y is not allowed
         ^^^ property `y`. Property not found in
@@ -1023,10 +1023,10 @@ Error: type_union.js:31
  31: ({x, y}: O4); // Error: x and y are not allowed
       ^^^^^^ object literal. This type is incompatible with
  31: ({x, y}: O4); // Error: x and y are not allowed
-              ^^ union: object type(s)
+              ^^ union: `O4`(s)
   Member 1:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    31: ({x, y}: O4); // Error: x and y are not allowed
         ^^^^^^ property `x`. Property not found in
@@ -1034,7 +1034,7 @@ Error: type_union.js:31
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
    31: ({x, y}: O4); // Error: x and y are not allowed
         ^^^^^^ property `x`. Property not found in
@@ -1149,10 +1149,10 @@ Error: type_union.js:49
  49: (o: O8); // OK
       ^ object type. This type is incompatible with
  49: (o: O8); // OK
-         ^^ union: object type(s)
+         ^^ union: `O8`(s)
   Member 1:
    48: type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O8
   Error:
    48: type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                        ^^^^^^^^ undefined property `y`. This type is incompatible with
@@ -1160,7 +1160,7 @@ Error: type_union.js:49
                                                             ^ Y
   Member 2:
    48: type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O8
   Error:
    48: type O8 = $Rest<{|x: X|} | {|y: Y|}, {|x: X|} | {|y: Y|}>; // Error: void ~> X and void ~> Y
                                   ^^^^^^^^ undefined property `x`. This type is incompatible with
@@ -1171,10 +1171,10 @@ Error: type_union.js:55
  55: ({x, y}: O9); // Error: x and y are not allowed together
       ^^^^^^ object literal. This type is incompatible with
  55: ({x, y}: O9); // Error: x and y are not allowed together
-              ^^ union: object type(s)
+              ^^ union: `O9`(s)
   Member 1:
    51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O9
   Error:
    55: ({x, y}: O9); // Error: x and y are not allowed together
         ^^^^^^ object literal. This type is incompatible with
@@ -1198,7 +1198,7 @@ Error: type_union.js:55
                          ^^^^^^^^ object type
   Member 2:
    51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O9
   Error:
    55: ({x, y}: O9); // Error: x and y are not allowed together
         ^^^^^^ object literal. This type is incompatible with

@@ -48,7 +48,7 @@ Error: import_type.js:47
 
 Error: import_type.js:56
  56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
-                      ^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                      ^^^^^^^^^^^^^^^ AliasFoo3. This type is incompatible with
  56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
              ^^^^^^ number
 

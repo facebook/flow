@@ -48,7 +48,7 @@ Error: regexp.js:26
  26:     RegExp('foo', 'z'); // error
                        ^^^ string literal `z`. This type is incompatible with
 333:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                   ^^^^^^^^^^^^ character set `gimsuy`. See lib: <BUILTINS>/core.js:333
+                                                   ^^^^^^^^^^^^ RegExp$flags. See lib: <BUILTINS>/core.js:333
    26:     RegExp('foo', 'z'); // error
                          ^^^ `z` is not a member of the set
 
@@ -56,7 +56,7 @@ Error: regexp.js:27
  27:     new RegExp('foo', 'z'); // error
                            ^^^ string literal `z`. This type is incompatible with
 335:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                       ^^^^^^^^^^^^ character set `gimsuy`. See lib: <BUILTINS>/core.js:335
+                                                       ^^^^^^^^^^^^ RegExp$flags. See lib: <BUILTINS>/core.js:335
    27:     new RegExp('foo', 'z'); // error
                              ^^^ `z` is not a member of the set
 

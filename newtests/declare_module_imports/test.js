@@ -11,13 +11,15 @@ export default suite(({addFile, addFiles, addCode}) => [
     addFile('flow-typed/lib.js'),
     addCode('import type {BT} from "B";').noNewErrors(),
     addCode('(42: BT);').noNewErrors(),
-    addCode('("str": BT);').newErrors(`
-      test.js:7
-        7: ("str": BT);
-            ^^^^^ string. This type is incompatible with
-        7: ("str": BT);
-                   ^^ number
-    `),
+    addCode('("str": BT);').newErrors(
+                             `
+                               test.js:7
+                                 7: ("str": BT);
+                                     ^^^^^ string. This type is incompatible with
+                                 7: ("str": BT);
+                                            ^^ AT
+                             `,
+                           ),
   ]),
   test('import default', [
     addFile('flow-typed/lib.js'),
@@ -52,7 +54,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                18: (cVal: DT);
                                     ^^^^ object literal. This type is incompatible with
                                18: (cVal: DT);
-                                          ^^ object type
+                                          ^^ DT
                                 Property \`C\` is incompatible:
                                    18: (cVal: DT);
                                               ^^ property \`C\`. Property not found in
@@ -66,7 +68,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  20: (cVal.D: CT);
                                       ^^^^^^ object literal. This type is incompatible with
                                  20: (cVal.D: CT);
-                                              ^^ object type
+                                              ^^ CT
                                   Property \`D\` is incompatible:
                                      20: (cVal.D: CT);
                                                   ^^ property \`D\`. Property not found in
@@ -83,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                26: (dVal: CT);
                                     ^^^^ object literal. This type is incompatible with
                                26: (dVal: CT);
-                                          ^^ object type
+                                          ^^ CT
                                 Property \`D\` is incompatible:
                                    26: (dVal: CT);
                                               ^^ property \`D\`. Property not found in
@@ -97,7 +99,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  28: (dVal.C: DT);
                                       ^^^^^^ object literal. This type is incompatible with
                                  28: (dVal.C: DT);
-                                              ^^ object type
+                                              ^^ DT
                                   Property \`C\` is incompatible:
                                      28: (dVal.C: DT);
                                                   ^^ property \`C\`. Property not found in

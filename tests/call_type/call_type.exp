@@ -104,10 +104,10 @@ Error: union.js:6
   6: ((null: mixed): A); // Error: mixed ~> number | string
              ^^^^^ mixed. This type is incompatible with
   6: ((null: mixed): A); // Error: mixed ~> number | string
-                     ^ union: function call(s)
+                     ^ union: `A`(s)
   Member 1:
     3: type A = $Call<(() => number) | (() => string)>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A
   Error:
     6: ((null: mixed): A); // Error: mixed ~> number | string
                ^^^^^ mixed. This type is incompatible with
@@ -115,7 +115,7 @@ Error: union.js:6
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
   Member 2:
     3: type A = $Call<(() => number) | (() => string)>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A
   Error:
     6: ((null: mixed): A); // Error: mixed ~> number | string
                ^^^^^ mixed. This type is incompatible with
@@ -144,10 +144,10 @@ Error: union.js:14
  14: ((null: mixed): B); // Error: mixed ~> number | string
              ^^^^^ mixed. This type is incompatible with
  14: ((null: mixed): B); // Error: mixed ~> number | string
-                     ^ union: function call(s)
+                     ^ union: `B`(s)
   Member 1:
    11: type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
   Error:
    14: ((null: mixed): B); // Error: mixed ~> number | string
                ^^^^^ mixed. This type is incompatible with
@@ -155,7 +155,7 @@ Error: union.js:14
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
   Member 2:
    11: type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
   Error:
    14: ((null: mixed): B); // Error: mixed ~> number | string
                ^^^^^ mixed. This type is incompatible with
