@@ -898,7 +898,7 @@ module ResolvableTypeJob = struct
     | OpenT tvar ->
       let r, id = tvar in
       if IMap.mem id acc then acc
-      else if is_constant_property_reason r
+      else if is_constant_reason r
       (* It is important to consider reads of constant property names as fully
          resolvable, especially since constant property names are often used to
          store literals that serve as tags for disjoint unions. Unfortunately,

@@ -230,7 +230,7 @@ Error: tvar4.js:33
 
 Error: tvar4.js:38
  38: fn3((x: {foo: number}) => {})({foo: 42});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of call of `fn3`
  38: fn3((x: {foo: number}) => {})({foo: 42});
              ^^^^^^^^^^^^^ undefined property `p`. This type is incompatible with
  27: function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {

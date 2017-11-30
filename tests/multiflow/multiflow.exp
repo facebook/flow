@@ -11,7 +11,7 @@ Error: apply.js:12
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^ call of `apply`
   4:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
  10: function noRest(x: 'hi', y: 123): true { return true; }
@@ -19,7 +19,7 @@ Error: apply.js:13
 
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `apply`
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
                             ^^^ number. Expected number literal `123`, got `456` instead
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -27,7 +27,7 @@ Error: apply.js:19
 
 Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of `apply`
   4:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ rest parameter array of function type. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -35,7 +35,7 @@ Error: apply.js:20
 
 Error: apply.js:21
  21: apply(withRest, ['hi', 123, false]); // Error - too many args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `apply`
   4:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ rest parameter array of function type. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 2 elements of
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -54,7 +54,7 @@ Error: apply.js:31
 
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
  25:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
  10: function noRest(x: 'hi', y: 123): true { return true; }
@@ -62,7 +62,7 @@ Error: apply.js:32
 
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
                                 ^^^ number. Expected number literal `123`, got `456` instead
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -70,7 +70,7 @@ Error: apply.js:38
 
 Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
  25:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ rest parameter array of function type. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -78,7 +78,7 @@ Error: apply.js:39
 
 Error: apply.js:40
  40: applyType(withRest, ['hi', 123, false]); // Error - too many args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
  25:   fn: (...Args) => Ret,
            ^^^^^^^^^^^^^^^^ rest parameter array of function type. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 2 elements of
  17: function withRest(...rest: ['hi', 123]): true { return true; }
@@ -323,7 +323,7 @@ Error: spread.js:19
 
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `funWithRestArray`
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
                                          ^^^^^ string. This type is incompatible with
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
@@ -331,7 +331,7 @@ Error: spread.js:28
 
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of call of function. Has some incompatible type argument with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of call of `funWithRestArray`. Has some incompatible type argument with
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                                          ^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:

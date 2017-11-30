@@ -1,6 +1,6 @@
 Error: annot.js:6
   6: f(x); // error should point to `x` here, not at type alias
-     ^^^^ call of intersection type. Function cannot be called on any member of intersection type
+     ^^^^ call of `f`. Function cannot be called on any member of intersection type
   6: f(x); // error should point to `x` here, not at type alias
      ^ intersection
   Member 1:

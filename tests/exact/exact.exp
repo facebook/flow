@@ -28,7 +28,7 @@ Error: error_continues.js:3
 
 Error: exact_basics.js:49
  49: takesExactlyPerson(subtypeOfPerson); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `takesExactlyPerson`
  49: takesExactlyPerson(subtypeOfPerson); // error
                         ^^^^^^^^^^^^^^^ property `first`. Property not found in
  43: declare function takesExactlyPerson(person: ExactPerson): void;
@@ -42,7 +42,7 @@ Error: exact_basics.js:61
 
 Error: exact_basics.js:71
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `takesExactlyPerson`
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
                         ^^^^^^^^^^^^^^^^^^^^^^^ property `first`. Property not found in
  43: declare function takesExactlyPerson(person: ExactPerson): void;
@@ -100,7 +100,7 @@ Error: unsealed.js:14
 
 Error: unsealed2.js:9
   9:   g(x);
-       ^^^^ call of function
+       ^^^^ call of `g`
  15:     return x.q;
                 ^^^ string. This type is incompatible with the expected return type of
  13: function f(_): number {

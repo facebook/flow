@@ -182,7 +182,7 @@
   "type":"C<number>",
   "reasons":[
     {
-      "desc":"call of function",
+      "desc":"call of `foo`",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -330,7 +330,22 @@
 }
 {
   "type":"string | void",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"optional string",
+      "loc":{
+        "source":"optional.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":10,"offset":46},
+        "end":{"line":4,"column":10,"offset":47}
+      },
+      "path":"optional.js",
+      "line":4,
+      "endline":4,
+      "start":10,
+      "end":10
+    }
+  ],
   "loc":{
     "source":"optional.js",
     "type":"SourceFile",
@@ -345,7 +360,22 @@
 }
 {
   "type":"(x?: string) => string | void",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"function",
+      "loc":{
+        "source":"optional.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":1,"offset":52},
+        "end":{"line":7,"column":3,"offset":55}
+      },
+      "path":"optional.js",
+      "line":7,
+      "endline":7,
+      "start":1,
+      "end":3
+    }
+  ],
   "loc":{
     "source":"optional.js",
     "type":"SourceFile",
@@ -390,7 +420,22 @@
 }
 {
   "type":"{x?: string}",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"object type",
+      "loc":{
+        "source":"optional.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":10,"offset":105},
+        "end":{"line":10,"column":12,"offset":108}
+      },
+      "path":"optional.js",
+      "line":10,
+      "endline":10,
+      "start":10,
+      "end":12
+    }
+  ],
   "loc":{
     "source":"optional.js",
     "type":"SourceFile",
@@ -435,7 +480,22 @@
 }
 {
   "type":"(unknown)",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"optional `x`",
+      "loc":{
+        "source":"optional.js",
+        "type":"SourceFile",
+        "start":{"line":14,"column":10,"offset":143},
+        "end":{"line":14,"column":10,"offset":144}
+      },
+      "path":"optional.js",
+      "line":14,
+      "endline":14,
+      "start":10,
+      "end":10
+    }
+  ],
   "loc":{
     "source":"optional.js",
     "type":"SourceFile",

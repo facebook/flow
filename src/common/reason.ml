@@ -611,8 +611,9 @@ let is_instantiable_reason r =
 
    Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
 *)
-let is_constant_property_reason r =
+let is_constant_reason r =
   match desc_of_reason r with
+  | RIdentifier x
   | RProperty (Some x)
   | RPrivateProperty x
   | RPropertyOf (x,_)

@@ -18,7 +18,7 @@ Error: B.js:7
 
 Error: B.js:10
  10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
-                        ^^^ call of property `foo`
+                        ^^^ call of `f`
  10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                         ^^^ global object. This type is incompatible with
  13: var bad: number = Bad.foo();

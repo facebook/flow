@@ -291,7 +291,7 @@ Error: rest.js:38
 
 Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
-      ^^^^^^^^^^^^ rest parameter array of call of function. This type is incompatible with
+      ^^^^^^^^^^^^ rest parameter array of call of `empty_rest`. This type is incompatible with
  53: (empty_rest(): empty); // Error Array ~> empty
                     ^^^^^ empty
 
@@ -308,13 +308,13 @@ Error: rest.js:58
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg
-     ^^^^^^^^^^^^^^^^^^^^^^ call of function. Called with too few arguments
+     ^^^^^^^^^^^^^^^^^^^^^^ call of `requires_first_param`. Called with too few arguments
    63: function requires_first_param(x: number, ...rest: Array<number>): void {}
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function expects more arguments
 
 Error: rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
-       ^^^^^^ call of function type
+       ^^^^^^ call of `f`
  14: function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
                                                     ^ T. Expected array instead of
  15:   f(123); // Error - number ~> array - luckily this errors
@@ -322,7 +322,7 @@ Error: rest_type.js:15
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ call of `string_rest_t`
+       ^^^^^^^^^^ call of `f`
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                   ^^^^^^ string. Expected array instead of
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
@@ -330,15 +330,15 @@ Error: rest_type.js:20
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ call of `string_rest_t`
+       ^^^^^^^^^^ call of `f`
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ rest parameter array of call of `string_rest_t`. This type is incompatible with
+       ^^^^^^^^^^ rest parameter array of call of `f`. This type is incompatible with
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                   ^^^^^^ string
 
 Error: rest_type.js:31
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
-                          ^^^ rest parameter array of call of `empty_rest`. This type is incompatible with
+                          ^^^ rest parameter array of call of `f`. This type is incompatible with
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
                                ^^^^^ empty
 

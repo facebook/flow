@@ -3083,7 +3083,24 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
 and identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
-  else Env.var_ref ~lookup_mode:ForValue cx name loc
+  else (
+    let t = Env.var_ref ~lookup_mode:ForValue cx name loc in
+    (* We want to make sure that the reason description for the type we return
+     * is always `RIdentifier name`. *)
+    match desc_of_t t with
+    | RIdentifier name' when name = name' -> t
+    | _ ->
+      (match t with
+      (* If this is an `OpenT` we can change its reason description directly. *)
+      | OpenT _ -> mod_reason_of_t (replace_reason_const (RIdentifier name)) t
+      (* If this is not an `OpenT` then create a new type variable with our
+       * desired reason and unify it with our type. This adds a level of
+       * indirection so that we don't modify the underlying reason of our type. *)
+      | _ ->
+        let reason = mk_reason (RIdentifier name) loc in
+        Tvar.mk_where cx reason (Flow.unify cx t)
+      )
+  )
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with

@@ -12,19 +12,19 @@ Error: A.js:13
 
 Error: A.js:18
  18:   return f();
-              ^^^ call of object type. Called with too few arguments
+              ^^^ call of `f`. Called with too few arguments
    17: function d(f: { (x: number): number }): number {
                        ^^^^^^^^^^^^^^^^^^^ function type expects more arguments
 
 Error: A.js:23
  23:   return f();
-              ^^^ call of object type. Callable signature not found in
+              ^^^ call of `f`. Callable signature not found in
  23:   return f();
               ^ object type
 
 Error: A.js:29
  29:   return x();
-              ^^^ call of object literal. Callable signature not found in
+              ^^^ call of `x`. Callable signature not found in
  29:   return x();
               ^ object literal
 

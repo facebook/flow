@@ -30,7 +30,7 @@ Error: classes.js:27
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                               ^^^^^^^^^^ C
+                               ^^^^^^^^^^ new `C`
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
                                      ^^^ number. This type is incompatible with
  25: class C<T: ?string = string> extends A<T> {}
@@ -126,7 +126,7 @@ Error: classes.js:62
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                               ^^^^^^^^^^ I
+                               ^^^^^^^^^^ new `I`
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
                                      ^^^ number. This type is incompatible with
  60: class I<T: ?string = *> extends A<T> {}

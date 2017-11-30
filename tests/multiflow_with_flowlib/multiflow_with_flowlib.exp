@@ -1,6 +1,6 @@
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `funWithRestArray`
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
                                               ^^^^^ string. This type is incompatible with
   5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
@@ -8,7 +8,7 @@ Error: spread.js:14
 
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of call of function. Has some incompatible type argument with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of call of `funWithRestArray`. Has some incompatible type argument with
   5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                                          ^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:

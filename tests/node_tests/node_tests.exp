@@ -38,7 +38,7 @@ Error: buffer/buffer.js:57
 
 Error: child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of property `execSync`. Function cannot be called on any member of intersection type
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `execSync`. Function cannot be called on any member of intersection type
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:

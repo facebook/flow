@@ -303,7 +303,7 @@ Error: destructuring.js:20
 
 Error: destructuring.js:25
  25: bar({x:"",y:0});
-     ^^^^^^^^^^^^^^^ call of function
+     ^^^^^^^^^^^^^^^ call of `bar`
  23:     var o:{x: string; y: number;} = z;
                                          ^ z. This type is incompatible with
  23:     var o:{x: string; y: number;} = z;

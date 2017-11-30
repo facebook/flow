@@ -29,30 +29,55 @@ export default suite(({addFiles, flowCmd}) => [
       ['type-at-pos', '--strip-root', '--json', 'ignore/foo.js', '3', '2'],
     )
       .stdout(
-`{
-  "type": "number",
-  "reasons": [],
-  "loc": {
-    "source": "ignore/foo.js",
-    "type": "SourceFile",
-    "start": {
-      "line": 3,
-      "column": 1,
-      "offset": 33
-    },
-    "end": {
-      "line": 3,
-      "column": 3,
-      "offset": 36
-    }
-  },
-  "path": "ignore/foo.js",
-  "line": 3,
-  "endline": 3,
-  "start": 1,
-  "end": 3
-}`,
-)
+        `
+          {
+            "type": "number",
+            "reasons": [
+              {
+                "desc": "number",
+                "loc": {
+                  "source": "ignore/foo.js",
+                  "type": "SourceFile",
+                  "start": {
+                    "line": 3,
+                    "column": 1,
+                    "offset": 33
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 3,
+                    "offset": 36
+                  }
+                },
+                "path": "ignore/foo.js",
+                "line": 3,
+                "endline": 3,
+                "start": 1,
+                "end": 3
+              }
+            ],
+            "loc": {
+              "source": "ignore/foo.js",
+              "type": "SourceFile",
+              "start": {
+                "line": 3,
+                "column": 1,
+                "offset": 33
+              },
+              "end": {
+                "line": 3,
+                "column": 3,
+                "offset": 36
+              }
+            },
+            "path": "ignore/foo.js",
+            "line": 3,
+            "endline": 3,
+            "start": 1,
+            "end": 3
+          }
+        `,
+      )
       .because('Should work even though directory is ignored'),
   ]),
 
@@ -78,30 +103,55 @@ export default suite(({addFiles, flowCmd}) => [
       ['type-at-pos', '--strip-root', '--json', 'no_flow/foo.js', '3', '2'],
     )
       .stdout(
-`{
-  "type": "number",
-  "reasons": [],
-  "loc": {
-    "source": "no_flow/foo.js",
-    "type": "SourceFile",
-    "start": {
-      "line": 3,
-      "column": 1,
-      "offset": 33
-    },
-    "end": {
-      "line": 3,
-      "column": 3,
-      "offset": 36
-    }
-  },
-  "path": "no_flow/foo.js",
-  "line": 3,
-  "endline": 3,
-  "start": 1,
-  "end": 3
-}`,
-)
+        `
+          {
+            "type": "number",
+            "reasons": [
+              {
+                "desc": "number",
+                "loc": {
+                  "source": "no_flow/foo.js",
+                  "type": "SourceFile",
+                  "start": {
+                    "line": 3,
+                    "column": 1,
+                    "offset": 33
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 3,
+                    "offset": 36
+                  }
+                },
+                "path": "no_flow/foo.js",
+                "line": 3,
+                "endline": 3,
+                "start": 1,
+                "end": 3
+              }
+            ],
+            "loc": {
+              "source": "no_flow/foo.js",
+              "type": "SourceFile",
+              "start": {
+                "line": 3,
+                "column": 1,
+                "offset": 33
+              },
+              "end": {
+                "line": 3,
+                "column": 3,
+                "offset": 36
+              }
+            },
+            "path": "no_flow/foo.js",
+            "line": 3,
+            "endline": 3,
+            "start": 1,
+            "end": 3
+          }
+        `,
+      )
       .because('Should work even though no_flow/foo.js is missing @flow'),
   ]),
 ]);

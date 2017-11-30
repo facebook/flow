@@ -180,7 +180,7 @@ val internal_pattern_name: Loc.t -> string
 
 val is_instantiable_reason: reason -> bool
 
-val is_constant_property_reason: reason -> bool
+val is_constant_reason: reason -> bool
 
 val is_typemap_reason: reason -> bool
 val is_calltype_reason: reason -> bool

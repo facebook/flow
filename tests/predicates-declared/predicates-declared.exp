@@ -16,7 +16,7 @@ Error: sanity-invalid-calls.js:10
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-           ^^^^^^^^^^^^^^^ call of function type + number. Function cannot be called on
+           ^^^^^^^^^^^^^^^ call of `pred` + number. Function cannot be called on
  14:   if ((pred + 1)("s")) {
             ^^^^^^^^ number
 

@@ -118,7 +118,7 @@ Error: test10.js:50
                                              ^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    50: check_obj({ x: id("") });
-                      ^^^^^^ call of function
+                      ^^^^^^ call of `id`
 
 Error: test10.js:59
  59: check_arr([""]);
@@ -288,9 +288,9 @@ Error: test21.js:11
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    11: ({ type: bar(), x: str() }: T);
-                ^^^^^ call of function
+                ^^^^^ call of `bar`
    11: ({ type: bar(), x: str() }: T);
-                          ^^^^^ call of function
+                          ^^^^^ call of `str`
 
 Error: test22.js:20
  20:   else return x.result;

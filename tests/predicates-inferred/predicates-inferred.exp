@@ -12,7 +12,7 @@ Error: sanity-multi-params.js:12
 
 Error: sanity-ordering.js:6
   6: if (dotAccess(obj)) {
-         ^^^^^^^^^^^^^^ call of function
+         ^^^^^^^^^^^^^^ call of `dotAccess`
  15:     head = head[key] || create && (head[key] = {});
                 ^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
  15:     head = head[key] || create && (head[key] = {});
@@ -20,7 +20,7 @@ Error: sanity-ordering.js:6
 
 Error: sanity-ordering.js:6
   6: if (dotAccess(obj)) {
-         ^^^^^^^^^^^^^^ call of function
+         ^^^^^^^^^^^^^^ call of `dotAccess`
  15:     head = head[key] || create && (head[key] = {});
                                         ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
  15:     head = head[key] || create && (head[key] = {});

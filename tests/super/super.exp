@@ -12,7 +12,7 @@ Error: constructor.js:16
 
 Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ call of function
+         ^^^^^^^^^^ call of `leak`
  30:   f.y; // error
          ^ property `y`. Property cannot be accessed on possibly undefined value
  30:   f.y; // error
@@ -20,7 +20,7 @@ Error: constructor.js:36
 
 Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ call of function
+         ^^^^^^^^^^ call of `leak`
  31:   f.x; // error
          ^ property `x`. Property cannot be accessed on possibly undefined value
  31:   f.x; // error
