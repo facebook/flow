@@ -5478,8 +5478,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* addition                                                *)
     (***********************************************************)
 
-    | (l, AdderT (reason, r, u)) ->
-      flow_addition cx trace reason l r u
+    | (l, AdderT (reason, flip, r, u)) ->
+      flow_addition cx trace reason flip l r u
 
     (*********************************************************)
     (* arithmetic/bitwise/update operations besides addition *)
@@ -5509,14 +5509,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* relational comparisons *)
     (**************************)
 
-    | (l, ComparatorT(reason, r)) ->
+    | (l, ComparatorT(reason, flip, r)) ->
       Ops.push reason;
-      flow_comparator cx trace reason l r;
+      flow_comparator cx trace reason flip l r;
       Ops.pop ()
 
-    | (l, EqT(reason, r)) ->
+    | (l, EqT(reason, flip, r)) ->
       Ops.push reason;
-      flow_eq cx trace reason l r;
+      flow_eq cx trace reason flip l r;
       Ops.pop ()
 
     (************************)
@@ -6199,8 +6199,9 @@ and needs_resolution = function
  * TODO: handle symbols (which raise a TypeError, so should be banned)
  *
  **)
-and flow_addition cx trace reason l r u =
-  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, l, u)) else
+and flow_addition cx trace reason flip l r u =
+  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, not flip, l, u)) else
+  let (l, r) = if flip then (r, l) else (l, r) in
   (* disable ops because the left and right sides should already be
      repositioned. *)
   let ops = Ops.clear () in
@@ -6258,9 +6259,10 @@ and flow_addition cx trace reason l r u =
  *   number <> number = number
  *   string <> string = string
  **)
-and flow_comparator cx trace reason l r =
-  if needs_resolution r then rec_flow cx trace (r, ComparatorT (reason, l))
-  else match l, r with
+and flow_comparator cx trace reason flip l r =
+  if needs_resolution r then rec_flow cx trace (r, ComparatorT (reason, not flip, l)) else
+  let (l, r) = if flip then (r, l) else (l, r) in
+  match l, r with
   | DefT (_, StrT _), DefT (_, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) ->
@@ -6274,9 +6276,10 @@ and flow_comparator cx trace reason l r =
  *
  * note: any types may be compared with === (in)equality.
  **)
-and flow_eq cx trace reason l r =
-  if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
-  else if equatable (l, r) then ()
+and flow_eq cx trace reason flip l r =
+  if needs_resolution r then rec_flow cx trace (r, EqT(reason, not flip, l)) else
+  let (l, r) = if flip then (r, l) else (l, r) in
+  if equatable (l, r) then ()
   else
     let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)

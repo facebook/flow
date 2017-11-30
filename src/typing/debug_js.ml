@@ -493,12 +493,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AdderT (_, l, r) -> [
+  | AdderT (_, _, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r
     ]
 
-  | ComparatorT (_, t) -> [
+  | ComparatorT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -517,7 +517,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "sink", _json_of_t json_cx t
     ]
 
-  | EqT (_, t) -> [
+  | EqT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1944,7 +1944,7 @@ and dump_use_t_ (depth, tvars) cx t =
   if depth = 0 then string_of_use_ctor t
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-  | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | AdderT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ArrRestT _ -> p t
   | AssertArithmeticOperandT _ -> p t
@@ -1969,13 +1969,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT (_, EvalDestructor (_, _, arg)) -> p ~extra:(kid arg) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
-  | ComparatorT (_, arg) -> p ~extra:(kid arg) t
+  | ComparatorT (_, _, arg) -> p ~extra:(kid arg) t
   | ConstructorT _ -> p t
   | CopyNamedExportsT _ -> p t
   | CopyTypeExportsT _ -> p t
   | DebugPrintT _ -> p t
   | ElemT _ -> p t
-  | EqT (_, arg) -> p ~extra:(kid arg) t
+  | EqT (_, _, arg) -> p ~extra:(kid arg) t
   | ExportNamedT (_, _, tmap, arg) -> p t
       ~extra:(spf "%s, {%s}"
         (kid arg)

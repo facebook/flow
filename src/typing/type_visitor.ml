@@ -302,12 +302,12 @@ class ['a] t = object(self)
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
 
-  | AdderT (_, a, b) ->
+  | AdderT (_, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
-  | ComparatorT (_, t) -> self#type_ cx pole_TODO acc t
+  | ComparatorT (_, _, t) -> self#type_ cx pole_TODO acc t
   | UnaryMinusT (_, t) -> self#type_ cx pole_TODO acc t
 
   | AssertArithmeticOperandT _
@@ -327,7 +327,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | EqT (_, t)
+  | EqT (_, _, t)
   | NotT (_, t) ->
     self#type_ cx pole_TODO acc t
 

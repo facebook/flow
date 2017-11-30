@@ -347,10 +347,10 @@ module rec TypeTerm : sig
     | ToStringT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of reason * t * t
+    | AdderT of reason * bool * t * t
     (* overloaded relational operator, could be subsumed by general
        overloading *)
-    | ComparatorT of reason * t
+    | ComparatorT of reason * bool * t
     (* unary minus operator on numbers, allows negative number literals *)
     | UnaryMinusT of reason * t
 
@@ -370,7 +370,7 @@ module rec TypeTerm : sig
     | GuardT of predicate * t * t
 
     (* == *)
-    | EqT of reason * t
+    | EqT of reason * bool * t
 
     (* logical operators *)
     | AndT of reason * t * t
@@ -1982,7 +1982,7 @@ and reason_of_defer_use_t = function
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
-  | AdderT (reason,_,_) -> reason
+  | AdderT (reason,_,_,_) -> reason
   | AndT (reason, _, _) -> reason
   | ArrRestT (reason, _, _) -> reason
   | AssertArithmeticOperandT reason -> reason
@@ -2000,13 +2000,13 @@ and reason_of_use_t = function
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | CJSRequireT (reason, _) -> reason
-  | ComparatorT (reason,_) -> reason
+  | ComparatorT (reason,_,_) -> reason
   | ConstructorT (reason,_,_) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | ElemT (reason, _, _) -> reason
-  | EqT (reason, _) -> reason
+  | EqT (reason, _, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
@@ -2126,7 +2126,7 @@ and mod_reason_of_defer_use_t f = function
 
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
-  | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
+  | AdderT (reason, flip, rt, lt) -> AdderT (f reason, flip, rt, lt)
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
@@ -2148,7 +2148,7 @@ and mod_reason_of_use_t f = function
   | CJSExtractNamedExportsT (reason, exports, t2) ->
       CJSExtractNamedExportsT (f reason, exports, t2)
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
-  | ComparatorT (reason, t) -> ComparatorT (f reason, t)
+  | ComparatorT (reason, flip, t) -> ComparatorT (f reason, flip, t)
   | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
       CopyNamedExportsT(f reason, target_module_t, t_out)
@@ -2156,7 +2156,7 @@ and mod_reason_of_use_t f = function
       CopyTypeExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | ElemT (reason, t, action) -> ElemT (f reason, t, action)
-  | EqT (reason, t) -> EqT (f reason, t)
+  | EqT (reason, flip, t) -> EqT (f reason, flip, t)
   | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
   | ExportTypeT (reason, skip_dupes, name, t, t_out) ->

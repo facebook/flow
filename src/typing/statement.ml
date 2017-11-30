@@ -3194,7 +3194,7 @@ and binary cx loc expr = Ast.Expression.Binary.(
         desc_of_reason (reason_of_t t2)
       ) in
       let reason = mk_reason desc loc in
-      Flow.flow cx (t1, EqT (reason,t2));
+      Flow.flow cx (t1, EqT (reason,false,t2));
       BoolT.at loc
 
   | { operator = In; left = (loc1, _) as left; right = (loc2, _) as right } ->
@@ -3230,7 +3230,7 @@ and binary cx loc expr = Ast.Expression.Binary.(
         desc_of_reason (reason_of_t t2)
       ) in
       let reason = mk_reason desc loc in
-      Flow.flow cx (t1, ComparatorT (reason,t2));
+      Flow.flow cx (t1, ComparatorT (reason,false,t2));
       BoolT.at loc
 
   | { operator = LShift; left; right }
@@ -3259,7 +3259,7 @@ and binary cx loc expr = Ast.Expression.Binary.(
       ) in
       let reason = mk_reason desc loc in
       Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (t1, AdderT (reason, t2, t));
+        Flow.flow cx (t1, AdderT (reason, false, t2, t));
       )
 )
 
@@ -3405,8 +3405,8 @@ and assignment cx loc = Ast.Expression.(function
       let rhs_t = expression cx rhs in
       let result_t = Tvar.mk cx reason in
       (* lhs = lhs + rhs *)
-      Flow.flow cx (lhs_t, AdderT (reason, rhs_t, result_t));
-      Flow.flow cx (rhs_t, AdderT (reason, lhs_t, result_t));
+      Flow.flow cx (lhs_t, AdderT (reason, false, rhs_t, result_t));
+      Flow.flow cx (rhs_t, AdderT (reason, false, lhs_t, result_t));
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
@@ -3880,7 +3880,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   let flow_eqt ~strict loc (t1, t2) =
     if not strict then
       let reason = mk_reason (RCustom "non-strict equality comparison") loc in
-      Flow.flow cx (t1, EqT (reason, t2))
+      Flow.flow cx (t1, EqT (reason, false, t2))
   in
 
   (* package result quad from test type, refi key, unrefined type,
