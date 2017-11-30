@@ -7947,8 +7947,12 @@ and guess_and_record_sentinel_prop cx ts =
         Context.find_props cx props_tmap
       | _ -> SMap.empty
       end
-    | DefT (_, ObjT { props_tmap; _ }) -> Context.find_props cx props_tmap
-    | _ -> SMap.empty in
+    | DefT (_, ObjT { props_tmap; _ })
+    | ExactT (_, DefT (_, ObjT { props_tmap; _ }))
+      -> Context.find_props cx props_tmap
+    | _
+      -> SMap.empty
+  in
 
   let is_singleton_type = function
     | AnnotT ((_, id), _) ->
@@ -7988,8 +7992,9 @@ and guess_and_record_sentinel_prop cx ts =
           Cache.SentinelProp.add props_tmap keys
         | _ -> ()
         end
-      | DefT (_, ObjT { props_tmap; _ }) ->
-        Cache.SentinelProp.add props_tmap keys
+      | DefT (_, ObjT { props_tmap; _ })
+      | ExactT (_, DefT (_, ObjT { props_tmap; _ }))
+        -> Cache.SentinelProp.add props_tmap keys
       | _ -> ()
     ) ts
 
