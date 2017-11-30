@@ -208,25 +208,13 @@ Error: relational.js:11
 
 Error: relational.js:14
  14: (1 < x); // 2 errors: null !~> number; undefined !~> number
-          ^ null. This type cannot be compared to
- 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
-      ^ number
-
-Error: relational.js:14
- 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
-          ^ undefined. This type cannot be compared to
+          ^ null or undefined. This type cannot be compared to
  14: (1 < x); // 2 errors: null !~> number; undefined !~> number
       ^ number
 
 Error: relational.js:15
  15: (x < 1); // 2 errors: null !~> number; undefined !~> number
-      ^ null. This type cannot be compared to
- 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
-          ^ number
-
-Error: relational.js:15
- 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
-      ^ undefined. This type cannot be compared to
+      ^ null or undefined. This type cannot be compared to
  15: (x < 1); // 2 errors: null !~> number; undefined !~> number
           ^ number
 
@@ -255,4 +243,4 @@ Error: relational.js:20
       ^^^^^^^^^ undefined
 
 
-Found 48 errors
+Found 46 errors

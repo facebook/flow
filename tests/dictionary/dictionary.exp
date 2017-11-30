@@ -577,18 +577,7 @@ Error: incompatible.js:8
              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Indexable signature is incompatible:
       7: var a : {[key: string]: ?string} = {};
-                                 ^^^^^^^ null. This type is incompatible with
-      8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
-                                 ^^^^^^ string
-
-Error: incompatible.js:8
-  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
-                                       ^ object type. This type is incompatible with
-  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
-      7: var a : {[key: string]: ?string} = {};
-                                 ^^^^^^^ undefined. This type is incompatible with
+                                 ^^^^^^^ null or undefined. This type is incompatible with
       8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                                  ^^^^^^ string
 
@@ -599,18 +588,7 @@ Error: incompatible.js:9
              ^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Indexable signature is incompatible:
       9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-                                 ^^^^^^^ null. This type is incompatible with
-      8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
-                                 ^^^^^^ string
-
-Error: incompatible.js:9
-  9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-                                        ^ object type. This type is incompatible with
-  9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-             ^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
-      9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-                                 ^^^^^^^ undefined. This type is incompatible with
+                                 ^^^^^^^ null or undefined. This type is incompatible with
       8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                                  ^^^^^^ string
 
@@ -777,4 +755,4 @@ Error: test_client.js:3
                                                   ^^^^^^ string. See: test.js:2
 
 
-Found 68 errors
+Found 66 errors

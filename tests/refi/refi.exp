@@ -1,60 +1,30 @@
 Error: bound.js:9
   9:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
-  9:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-Error: bound.js:9
-  9:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
+                          ^ null or undefined. This type is incompatible with
   9:     var y : string = x;  // not ok
                  ^^^^^^ string
 
 Error: bound.js:47
  47:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-Error: bound.js:47
- 47:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
+                          ^ null or undefined. This type is incompatible with
  47:     var y : string = x;  // not ok
                  ^^^^^^ string
 
 Error: bound.js:53
  53:       var y : string = x;  // not ok
-                            ^ null. This type is incompatible with
- 53:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-Error: bound.js:53
- 53:       var y : string = x;  // not ok
-                            ^ undefined. This type is incompatible with
+                            ^ null or undefined. This type is incompatible with
  53:       var y : string = x;  // not ok
                    ^^^^^^ string
 
 Error: heap.js:5
   5:     var y : string = x.p;  // not ok
-                          ^^^ null. This type is incompatible with
-  5:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-Error: heap.js:5
-  5:     var y : string = x.p;  // not ok
-                          ^^^ undefined. This type is incompatible with
+                          ^^^ null or undefined. This type is incompatible with
   5:     var y : string = x.p;  // not ok
                  ^^^^^^ string
 
 Error: heap.js:40
  40:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 40:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-Error: heap.js:40
- 40:       var y : string = x.p;  // not ok
-                            ^^^ undefined. This type is incompatible with
+                            ^^^ null or undefined. This type is incompatible with
  40:       var y : string = x.p;  // not ok
                    ^^^^^^ string
 
@@ -66,25 +36,13 @@ Error: heap.js:48
 
 Error: heap.js:55
  55:     var y : string = x.p;  // not ok
-                          ^^^ null. This type is incompatible with
- 55:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-Error: heap.js:55
- 55:     var y : string = x.p;  // not ok
-                          ^^^ undefined. This type is incompatible with
+                          ^^^ null or undefined. This type is incompatible with
  55:     var y : string = x.p;  // not ok
                  ^^^^^^ string
 
 Error: heap.js:62
  62:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 62:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-Error: heap.js:62
- 62:       var y : string = x.p;  // not ok
-                            ^^^ undefined. This type is incompatible with
+                            ^^^ null or undefined. This type is incompatible with
  62:       var y : string = x.p;  // not ok
                    ^^^^^^ string
 
@@ -186,49 +144,25 @@ Error: lex.js:35
 
 Error: local.js:5
   5:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
-  5:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-Error: local.js:5
-  5:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
+                          ^ null or undefined. This type is incompatible with
   5:     var y : string = x;  // not ok
                  ^^^^^^ string
 
 Error: local.js:47
  47:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-Error: local.js:47
- 47:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
+                          ^ null or undefined. This type is incompatible with
  47:     var y : string = x;  // not ok
                  ^^^^^^ string
 
 Error: local.js:54
  54:       var y : string = x;  // not ok
-                            ^ null. This type is incompatible with
- 54:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-Error: local.js:54
- 54:       var y : string = x;  // not ok
-                            ^ undefined. This type is incompatible with
+                            ^ null or undefined. This type is incompatible with
  54:       var y : string = x;  // not ok
                    ^^^^^^ string
 
 Error: null_tests.js:150
 150:       return super.p;  // not ok
-                  ^^^^^^^ null. This type is incompatible with the expected return type of
-147:   ensure103(): string {
-                    ^^^^^^ string
-
-Error: null_tests.js:150
-150:       return super.p;  // not ok
-                  ^^^^^^^ undefined. This type is incompatible with the expected return type of
+                  ^^^^^^^ null or undefined. This type is incompatible with the expected return type of
 147:   ensure103(): string {
                     ^^^^^^ string
 
@@ -239,4 +173,4 @@ Error: switch.js:49
                                  ^^^^^^ number
 
 
-Found 40 errors
+Found 29 errors

@@ -320,7 +320,7 @@ Error: new_react.js:30
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
-                     ^^^^^^^^^^^^^ null. This type is incompatible with
+                     ^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  32: var x: number = C.displayName;
             ^^^^^^ number
 
@@ -566,13 +566,13 @@ Error: state.js:19
  19:                 {this.state.bar.qux}
                                      ^^^ property `qux`. Property cannot be accessed on possibly null value
  19:                 {this.state.bar.qux}
-                      ^^^^^^^^^^^^^^ null
+                      ^^^^^^^^^^^^^^ null or undefined
 
 Error: state.js:19
  19:                 {this.state.bar.qux}
                                      ^^^ property `qux`. Property cannot be accessed on possibly undefined value
  19:                 {this.state.bar.qux}
-                      ^^^^^^^^^^^^^^ undefined
+                      ^^^^^^^^^^^^^^ null or undefined
 
 Error: state3.js:11
  11:         var a: number = this.state.x; // error

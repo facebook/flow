@@ -34,13 +34,7 @@ Error: test.js:52
 
 Error: test.js:65
  65:       (this.#p : number); // Error #p is null or undefined
-            ^^^^^^^ null. This type is incompatible with
- 65:       (this.#p : number); // Error #p is null or undefined
-                      ^^^^^^ number
-
-Error: test.js:65
- 65:       (this.#p : number); // Error #p is null or undefined
-            ^^^^^^^ undefined. This type is incompatible with
+            ^^^^^^^ null or undefined. This type is incompatible with
  65:       (this.#p : number); // Error #p is null or undefined
                       ^^^^^^ number
 
@@ -177,4 +171,4 @@ Error: test.js:185
                     ^ number literal `3`
 
 
-Found 29 errors
+Found 28 errors

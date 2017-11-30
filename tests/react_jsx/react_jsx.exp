@@ -278,13 +278,13 @@ Error: test.js:119
        ^ propTypes of React component
   Property `number` is incompatible:
     120:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      68:     number: React.PropTypes.number.isRequired,
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: test.js:129
 129:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 128:   number={42}
                ^^ number
 
@@ -454,13 +454,13 @@ Error: test.js:181
                                                    ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     182:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
 Error: test.js:191
 191:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 190:   number={42}
                ^^ number
 
@@ -738,7 +738,7 @@ Error: test.js:243
                                                                ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
@@ -755,7 +755,7 @@ Error: test.js:249
 
 Error: test.js:253
 253:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 252:   number={42}
                ^^ number
 
@@ -925,13 +925,13 @@ Error: test.js:305
                                                            ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     306:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
 Error: test.js:315
 315:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 314:   number={42}
                ^^ number
 
@@ -1101,13 +1101,13 @@ Error: test.js:367
                                         ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     368:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
 Error: test.js:377
 377:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 376:   number={42}
                ^^ number
 
@@ -1385,7 +1385,7 @@ Error: test.js:429
                                                     ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
@@ -1402,7 +1402,7 @@ Error: test.js:435
 
 Error: test.js:439
 439:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 438:   number={42}
                ^^ number
 
@@ -1572,13 +1572,13 @@ Error: test.js:491
                                                    ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     492:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
 Error: test.js:501
 501:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 500:   number={42}
                ^^ number
 
@@ -1856,7 +1856,7 @@ Error: test.js:554
                                                                ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
@@ -1873,7 +1873,7 @@ Error: test.js:560
 
 Error: test.js:564
 564:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 563:   number={42}
                ^^ number
 
@@ -2043,13 +2043,13 @@ Error: test.js:616
                                                    ^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
     617:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
      59:   number: number,
                    ^^^^^^ number
 
 Error: test.js:626
 626:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null. This type is incompatible with
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
 625:   number={42}
                ^^ number
 

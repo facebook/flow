@@ -28,13 +28,7 @@ Error: sanity-ordering.js:6
 
 Error: sanity-ordering.js:7
   7:   (obj.page: Object);
-        ^^^^^^^^ null. This type is incompatible with
-  7:   (obj.page: Object);
-                  ^^^^^^ object type
-
-Error: sanity-ordering.js:7
-  7:   (obj.page: Object);
-        ^^^^^^^^ undefined. This type is incompatible with
+        ^^^^^^^^ null or undefined. This type is incompatible with
   7:   (obj.page: Object);
                   ^^^^^^ object type
 
@@ -63,4 +57,4 @@ Error: sanity.js:16
      ^ Invalid body for predicate function. Expected a simple return statement as body.
 
 
-Found 10 errors
+Found 9 errors

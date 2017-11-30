@@ -48,25 +48,13 @@ Error: base_class.js:51
 
 Error: base_class.js:59
  59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                        ^^^^^^ number
-
-Error: base_class.js:59
- 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                         ^^^^^^ number
 
 Error: base_class.js:61
  61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                           ^^^^^^ number
-
-Error: base_class.js:61
- 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                            ^^^^^^ number
 
@@ -180,49 +168,25 @@ Error: derived_class.js:94
 
 Error: derived_class.js:102
 102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                             ^^^^^^ number
-
-Error: derived_class.js:102
-102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
 102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                              ^^^^^^ number
 
 Error: derived_class.js:104
 104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                                 ^^^^^^ number
-
-Error: derived_class.js:104
-104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
 104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                                  ^^^^^^ number
 
 Error: derived_class.js:107
 107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                              ^^^^^^ number
-
-Error: derived_class.js:107
-107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
 107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                               ^^^^^^ number
 
 Error: derived_class.js:109
 109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-                                                  ^^^^^^ number
-
-Error: derived_class.js:109
-109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
 109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
                                                   ^^^^^^ number
 
@@ -323,4 +287,4 @@ Error: scoping.js:40
                          ^^^^^^ number
 
 
-Found 54 errors
+Found 48 errors

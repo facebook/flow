@@ -18,31 +18,19 @@ Error: FormData.js:14
 
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ null. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
-
-Error: FormData.js:14
- 14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ undefined. This type is incompatible with
+                       ^^^^^^^^^^^^ null or undefined. This type is incompatible with
  14: const d: string = a.get('foo'); // incorrect
               ^^^^^^ string
 
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ null. This type is incompatible with
+                     ^^^^^^^^^^^^ null or undefined. This type is incompatible with
  15: const e: Blob = a.get('foo'); // incorrect
               ^^^^ Blob
 
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
                      ^^^^^^^^^^^^ string. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
-
-Error: FormData.js:15
- 15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ undefined. This type is incompatible with
  15: const e: Blob = a.get('foo'); // incorrect
               ^^^^ Blob
 
@@ -728,4 +716,4 @@ Error: MutationObserver.js:23
                                ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:364
 
 
-Found 51 errors
+Found 49 errors

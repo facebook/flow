@@ -38,18 +38,7 @@ Error: api.js:14
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ null. This type is incompatible with
-     14: Children.forEach(a, (x: number) => {}); // Error
-                                 ^^^^^^ number
-
-Error: api.js:14
- 14: Children.forEach(a, (x: number) => {}); // Error
-                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-232:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
-  This parameter is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ undefined. This type is incompatible with
+                                ^^^^^^^ null or undefined. This type is incompatible with
      14: Children.forEach(a, (x: number) => {}); // Error
                                  ^^^^^^ number
 
@@ -60,18 +49,7 @@ Error: api.js:16
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
   This parameter is incompatible:
       5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ null. This type is incompatible with
-     16: Children.forEach(a, (x: string) => {}); // Error
-                                 ^^^^^^ string
-
-Error: api.js:16
- 16: Children.forEach(a, (x: string) => {}); // Error
-                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-232:       fn: (child: T, index: number) => mixed,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:232
-  This parameter is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ undefined. This type is incompatible with
+                                ^^^^^^^ null or undefined. This type is incompatible with
      16: Children.forEach(a, (x: string) => {}); // Error
                                  ^^^^^^ string
 
@@ -2437,4 +2415,4 @@ Error: view.js:40
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 112 errors
+Found 110 errors

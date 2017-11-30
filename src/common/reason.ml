@@ -57,6 +57,7 @@ end
 
 type reason_desc =
   | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RNullOrVoid
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
@@ -376,6 +377,7 @@ let rec string_of_desc = function
   | RAny -> "any"
   | RVoid -> "undefined"
   | RNull -> "null"
+  | RNullOrVoid -> "null or undefined"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)

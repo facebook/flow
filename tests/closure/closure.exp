@@ -36,7 +36,7 @@ Error: const.js:20
 
 Error: const.js:20
  20:     call_me = () => { var y:number = var_x; };  // error
-                                          ^^^^^ undefined. This type is incompatible with
+                                          ^^^^^ null or undefined. This type is incompatible with
  20:     call_me = () => { var y:number = var_x; };  // error
                                  ^^^^^^ number
 

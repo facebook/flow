@@ -1522,8 +1522,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       )
 
     | DefT (lreason, MaybeT t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      rec_flow cx trace (NullT.why lreason, u);
-      rec_flow cx trace (VoidT.why lreason, u);
+      let lreason = replace_reason_const RNullOrVoid lreason in
+      rec_flow cx trace (NullT.make lreason, u);
+      rec_flow cx trace (VoidT.make lreason, u);
       rec_flow cx trace (t, u);
 
     | DefT (r, OptionalT t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
@@ -2370,8 +2371,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (t, u)
 
     | (DefT (reason, MaybeT t), _) ->
-      rec_flow cx trace (NullT.why reason, u);
-      rec_flow cx trace (VoidT.why reason, u);
+      let reason = replace_reason_const RNullOrVoid reason in
+      rec_flow cx trace (NullT.make reason, u);
+      rec_flow cx trace (VoidT.make reason, u);
       rec_flow cx trace (t, u)
 
     (******************)
@@ -6927,9 +6929,10 @@ and eval_destructor cx ~trace reason t d tout = match t with
   ))), tout)
 | DefT (r, MaybeT t) ->
   let destructor = TypeDestructorT (reason, d) in
+  let reason = replace_reason_const RNullOrVoid r in
   let rep = UnionRep.make
-    (let null = NullT.why r in EvalT (null, destructor, Cache.Eval.id null destructor))
-    (let void = VoidT.why r in EvalT (void, destructor, Cache.Eval.id void destructor))
+    (let null = NullT.make reason in EvalT (null, destructor, Cache.Eval.id null destructor))
+    (let void = VoidT.make reason in EvalT (void, destructor, Cache.Eval.id void destructor))
     [EvalT (t, destructor, Cache.Eval.id t destructor)]
   in
   rec_flow_t cx trace (DefT (r, UnionT rep), tout)

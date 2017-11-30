@@ -18,7 +18,7 @@ Error: loop.js:5
 
 Error: nullable.js:17
  17:     x.y++; // should error
-         ^^^ null. The operand of an arithmetic operation must be a number.
+         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: nullable.js:17
  17:     x.y++; // should error
@@ -26,7 +26,7 @@ Error: nullable.js:17
 
 Error: nullable.js:23
  23:     x.y++; // should error
-         ^^^ null. The operand of an arithmetic operation must be a number.
+         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: nullable.js:23
  23:     x.y++; // should error
@@ -34,7 +34,7 @@ Error: nullable.js:23
 
 Error: nullable.js:29
  29:     x.y++; // should error
-         ^^^ null. The operand of an arithmetic operation must be a number.
+         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: nullable.js:29
  29:     x.y++; // should error
@@ -42,7 +42,7 @@ Error: nullable.js:29
 
 Error: nullable.js:35
  35:     x.y++; // should error
-         ^^^ null. The operand of an arithmetic operation must be a number.
+         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: nullable.js:35
  35:     x.y++; // should error

@@ -397,11 +397,11 @@ Error: test5.js:25
 
 Error: test9.js:12
  12:   return x * x;
-              ^ null. The operand of an arithmetic operation must be a number.
+              ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: test9.js:12
  12:   return x * x;
-                  ^ null. The operand of an arithmetic operation must be a number.
+                  ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 
 Found 25 errors

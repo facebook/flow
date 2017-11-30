@@ -32,13 +32,7 @@ Error: class.js:53
 
 Error: class.js:55
  55: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 55: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                       ^^^^^^ number
-
-Error: class.js:55
- 55: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  55: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
@@ -68,13 +62,7 @@ Error: declare_class.js:42
 
 Error: declare_class.js:44
  44: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 44: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                       ^^^^^^ number
-
-Error: declare_class.js:44
- 44: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  44: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
@@ -124,13 +112,7 @@ Error: object.js:55
 
 Error: object.js:57
  57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                       ^^^^^^ number
-
-Error: object.js:57
- 57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
@@ -172,13 +154,7 @@ Error: object_type.js:41
 
 Error: object_type.js:43
  43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                         ^^^^^^ number
-
-Error: object_type.js:43
- 43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
  43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ number
 
@@ -288,4 +264,4 @@ Error: variance.js:47
                     ^^^^ Base
 
 
-Found 41 errors
+Found 37 errors

@@ -1,12 +1,6 @@
 Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
-                  ^^^^^^^^ null. This type is incompatible with
- 15: function bar0(x : Bar) {
-                       ^^^ object type
-
-Error: assignment.js:16
- 16:   while (x = x.parent) { // can't assign x to ?Bar
-                  ^^^^^^^^ undefined. This type is incompatible with
+                  ^^^^^^^^ null or undefined. This type is incompatible with
  15: function bar0(x : Bar) {
                        ^^^ object type
 
@@ -14,37 +8,37 @@ Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ property `parent`. Property cannot be accessed on possibly null value
  22:   while (x = x.parent) { // x.parent might be null
-                  ^ null
+                  ^ null or undefined
 
 Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ property `parent`. Property cannot be accessed on possibly undefined value
  22:   while (x = x.parent) { // x.parent might be null
-                  ^ undefined
+                  ^ null or undefined
 
 Error: bool.js:12
  12:   x[0]; // error on null and undefined
        ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
  12:   x[0]; // error on null and undefined
-       ^ null
+       ^ null or undefined
 
 Error: bool.js:12
  12:   x[0]; // error on null and undefined
        ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
  12:   x[0]; // error on null and undefined
-       ^ undefined
+       ^ null or undefined
 
 Error: bool.js:18
  18:       x[0]; // error on null and undefined
            ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
  18:       x[0]; // error on null and undefined
-           ^ null
+           ^ null or undefined
 
 Error: bool.js:18
  18:       x[0]; // error on null and undefined
            ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
  18:       x[0]; // error on null and undefined
-           ^ undefined
+           ^ null or undefined
 
 Error: bool.js:24
  24:   if (100 * false) {
@@ -387,11 +381,7 @@ Error: not.js:5
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
-         ^ null. The operand of an arithmetic operation must be a number.
-
-Error: not.js:5
-  5:     x++; // should error for null, void and bool (false)
-         ^ undefined. The operand of an arithmetic operation must be a number.
+         ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
@@ -403,13 +393,13 @@ Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
  11:     x[0]; // should error for null, void and number (0)
-         ^ null
+         ^ null or undefined
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
  11:     x[0]; // should error for null, void and number (0)
-         ^ undefined
+         ^ null or undefined
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
@@ -523,13 +513,7 @@ Error: number.js:116
 
 Error: property.js:71
  71:     return x[y.z];  // error
-                ^^^^^^ null. This type is incompatible with the expected return type of
- 68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
-                                                               ^^^^^^ string
-
-Error: property.js:71
- 71:     return x[y.z];  // error
-                ^^^^^^ undefined. This type is incompatible with the expected return type of
+                ^^^^^^ null or undefined. This type is incompatible with the expected return type of
  68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
@@ -1033,27 +1017,23 @@ Error: typeof.js:77
 
 Error: undef.js:31
  31:     var y = x * 1000;
-                 ^ null. The operand of an arithmetic operation must be a number.
+                 ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: undef.js:38
  38:     var y = x * 1000;
-                 ^ null. The operand of an arithmetic operation must be a number.
+                 ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: undef.js:44
  44:     var y = x.x * 1000;
-                 ^^^ null. The operand of an arithmetic operation must be a number.
+                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: undef.js:51
  51:     var y = x.x * 1000;
-                 ^^^ null. The operand of an arithmetic operation must be a number.
+                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: undef.js:69
  69:     var b = y * 1000; // error
-                 ^ null. The operand of an arithmetic operation must be a number.
-
-Error: undef.js:69
- 69:     var b = y * 1000; // error
-                 ^ undefined. The operand of an arithmetic operation must be a number.
+                 ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: undef.js:74
  74:   if (100 * undefined) {
@@ -1083,35 +1063,35 @@ Error: union.js:19
 
 Error: void.js:31
  31:     var y = x * 1000;
-                 ^ null. The operand of an arithmetic operation must be a number.
+                 ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:38
  38:     var y = x * 1000;
-                 ^ null. The operand of an arithmetic operation must be a number.
+                 ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:44
  44:     var y = x.x * 1000;
-                 ^^^ null. The operand of an arithmetic operation must be a number.
+                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:51
  51:     var y = x.x * 1000;
-                 ^^^ null. The operand of an arithmetic operation must be a number.
+                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:56
  56:   if (x !== null && x !== void(x * 1000)) {
-                                    ^ undefined. The operand of an arithmetic operation must be a number.
+                                    ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:62
  62:   if (x === null || x === void(x * 1000)) {
-                                    ^ undefined. The operand of an arithmetic operation must be a number.
+                                    ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:69
  69:   if (x.x !== null && x.x !== void(x.x * 1000)) {
-                                        ^^^ undefined. The operand of an arithmetic operation must be a number.
+                                        ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:75
  75:   if (x.x === null || x.x === void(x.x * 1000)) {
-                                        ^^^ undefined. The operand of an arithmetic operation must be a number.
+                                        ^^^ null or undefined. The operand of an arithmetic operation must be a number.
 
 Error: void.js:82
  82:   if (100 * void(0)) {
@@ -1122,4 +1102,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 190 errors
+Found 186 errors

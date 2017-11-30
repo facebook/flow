@@ -84,19 +84,13 @@ Error: crypto/crypto.js:12
 
 Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ null. This type is incompatible with
+            ^^^^^^^^^^^ null or undefined. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                          ^^^^^^ number
 
 Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ string. This type is incompatible with
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                         ^^^^^^ number
-
-Error: crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ undefined. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                          ^^^^^^ number
 
@@ -2190,19 +2184,13 @@ Error: json_file/test.js:5
 
 Error: json_file/test.js:6
   6: (data.abc: boolean); // error, should be ?string
-      ^^^^^^^^ null. This type is incompatible with
+      ^^^^^^^^ null or undefined. This type is incompatible with
   6: (data.abc: boolean); // error, should be ?string
                 ^^^^^^^ boolean
 
 Error: json_file/test.js:6
   6: (data.abc: boolean); // error, should be ?string
       ^^^^^^^^ string. This type is incompatible with
-  6: (data.abc: boolean); // error, should be ?string
-                ^^^^^^^ boolean
-
-Error: json_file/test.js:6
-  6: (data.abc: boolean); // error, should be ?string
-      ^^^^^^^^ undefined. This type is incompatible with
   6: (data.abc: boolean); // error, should be ?string
                 ^^^^^^^ boolean
 
@@ -2555,4 +2543,4 @@ Error: process/process.js:14
                                    ^^^^^^ string
 
 
-Found 81 errors
+Found 79 errors
