@@ -1,26 +1,35 @@
 Error: test.js:24
  24: <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `ClassExact_NoProps`
- 24: <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `ClassExact_NoProps`. This type is incompatible with
  22: class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
                                                       ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     24: <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     22: class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+                                                          ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
 
 Error: test.js:36
  36: <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_NoProps`
- 36: <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_NoProps`. This type is incompatible with
  34: const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
                                            ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     36: <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     34: const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
+                                               ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
 
 Error: test.js:44
  44: <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_NoProps`
- 44: <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_NoProps`. This type is incompatible with
  42: const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
                                                       ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     44: <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     42: const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
+                                                          ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
 
 Error: test.js:71
  71: <Legacy_ManyProps />; // Error: There are no props.
@@ -526,16 +535,19 @@ Error: test.js:203
 205:   string2={'bar'}
 ...:
 212: />;
-     -^ React element `ClassExact_ManyProps`
-     v-----------------------------------------------------------
-203: <ClassExact_ManyProps // Error: Extra props are not allowed.
-204:   string1="foo"
-205:   string2={'bar'}
-...:
-212: />;
-     -^ property `a`. Property not found in
+     -^ props of React element `ClassExact_ManyProps`. This type is incompatible with
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `a`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:203
      v-----------------------------------------------------------
@@ -544,16 +556,19 @@ Error: test.js:203
 205:   string2={'bar'}
 ...:
 212: />;
-     -^ React element `ClassExact_ManyProps`
-     v-----------------------------------------------------------
-203: <ClassExact_ManyProps // Error: Extra props are not allowed.
-204:   string1="foo"
-205:   string2={'bar'}
-...:
-212: />;
-     -^ property `b`. Property not found in
+     -^ props of React element `ClassExact_ManyProps`. This type is incompatible with
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `b`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:203
      v-----------------------------------------------------------
@@ -562,16 +577,19 @@ Error: test.js:203
 205:   string2={'bar'}
 ...:
 212: />;
-     -^ React element `ClassExact_ManyProps`
-     v-----------------------------------------------------------
-203: <ClassExact_ManyProps // Error: Extra props are not allowed.
-204:   string1="foo"
-205:   string2={'bar'}
-...:
-212: />;
-     -^ property `c`. Property not found in
+     -^ props of React element `ClassExact_ManyProps`. This type is incompatible with
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `c`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:213
      v----------------------------------------------------------------
@@ -1173,16 +1191,19 @@ Error: test.js:389
 391:   string2={'bar'}
 ...:
 398: />;
-     -^ React element `FunctionExact_ManyProps`
-     v-------------------------------------------------------
-389: <FunctionExact_ManyProps // OK: Other props are allowed.
-390:   string1="foo"
-391:   string2={'bar'}
-...:
-398: />;
-     -^ property `a`. Property not found in
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `a`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:389
      v-------------------------------------------------------
@@ -1191,16 +1212,19 @@ Error: test.js:389
 391:   string2={'bar'}
 ...:
 398: />;
-     -^ React element `FunctionExact_ManyProps`
-     v-------------------------------------------------------
-389: <FunctionExact_ManyProps // OK: Other props are allowed.
-390:   string1="foo"
-391:   string2={'bar'}
-...:
-398: />;
-     -^ property `b`. Property not found in
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `b`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:389
      v-------------------------------------------------------
@@ -1209,16 +1233,19 @@ Error: test.js:389
 391:   string2={'bar'}
 ...:
 398: />;
-     -^ React element `FunctionExact_ManyProps`
-     v-------------------------------------------------------
-389: <FunctionExact_ManyProps // OK: Other props are allowed.
-390:   string1="foo"
-391:   string2={'bar'}
-...:
-398: />;
-     -^ property `c`. Property not found in
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `c`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:399
      v-------------------------------------------------------------------
@@ -1644,16 +1671,19 @@ Error: test.js:514
 516:   string2={'bar'}
 ...:
 523: />;
-     -^ React element `AbstractExact_ManyProps`
-     v--------------------------------------------------------------
-514: <AbstractExact_ManyProps // Error: Other props are not allowed.
-515:   string1="foo"
-516:   string2={'bar'}
-...:
-523: />;
-     -^ property `a`. Property not found in
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `a`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:514
      v--------------------------------------------------------------
@@ -1662,16 +1692,19 @@ Error: test.js:514
 516:   string2={'bar'}
 ...:
 523: />;
-     -^ React element `AbstractExact_ManyProps`
-     v--------------------------------------------------------------
-514: <AbstractExact_ManyProps // Error: Other props are not allowed.
-515:   string1="foo"
-516:   string2={'bar'}
-...:
-523: />;
-     -^ property `b`. Property not found in
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `b`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:514
      v--------------------------------------------------------------
@@ -1680,16 +1713,19 @@ Error: test.js:514
 516:   string2={'bar'}
 ...:
 523: />;
-     -^ React element `AbstractExact_ManyProps`
-     v--------------------------------------------------------------
-514: <AbstractExact_ManyProps // Error: Other props are not allowed.
-515:   string1="foo"
-516:   string2={'bar'}
-...:
-523: />;
-     -^ property `c`. Property not found in
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `c`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
 
 Error: test.js:524
      v-------------------------------------------------------------------

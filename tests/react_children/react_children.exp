@@ -142,9 +142,14 @@ Error: builtin_intrinsic.js:24
                ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Error:
        25:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
+        Property `a` is incompatible:
+           25:   {{a: 1, b: 2, c: 3}}
+                  ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+           18:   | React$Element<any>
+                   ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
                ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
@@ -255,9 +260,14 @@ Error: component.js:40
                ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Error:
        41:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
+        Property `a` is incompatible:
+           41:   {{a: 1, b: 2, c: 3}}
+                  ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+           18:   | React$Element<any>
+                   ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
       Member 7:
        19:   | React$Portal
                ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
@@ -1875,9 +1885,14 @@ Error: view.js:31
                ^^^^^^^^^^^^^^^^^^ React.Element
       Error:
        32:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
         9:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ React.Element
+        Property `a` is incompatible:
+           32:   {{a: 1, b: 2, c: 3}}
+                  ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+            9:   | React$Element<any>
+                   ^^^^^^^^^^^^^^^^^^ React.Element
       Member 5:
        10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type

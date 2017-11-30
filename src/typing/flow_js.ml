@@ -3353,8 +3353,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
+          let use_op = PropertyCompatibility {
+            prop = Some prop_name;
+            lower = rl;
+            upper = ru;
+            use_op;
+          } in
           let rl = replace_reason_const (RProperty (Some prop_name)) rl in
-          let err = FlowError.EPropNotFound ((rl, ru), UnknownUse) in
+          let err = FlowError.EPropNotFound ((rl, ru), use_op) in
           add_output cx ~trace err
       );
       rec_flow cx trace (DefT (rl, ObjT xl), UseT (use_op, DefT (ru, ObjT xu)))

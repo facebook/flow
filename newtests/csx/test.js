@@ -298,9 +298,14 @@ export default suite(({addFile, addFiles, addCode}) => [
           7:       <Bar>Test</Bar>
                    ^^^^^ JSX desugared to \`Bar(...)\`
           7:       <Bar>Test</Bar>
-                   ^^^^^ property \`children\`. Property not found in
+                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
+          Property \`children\` is incompatible:
+              7:       <Bar>Test</Bar>
+                       ^^^^^ property \`children\`. Property not found in
+              6:       function Bar(props: Props) {}
+                                           ^^^^^ Props
       `,
     ),
   ]),

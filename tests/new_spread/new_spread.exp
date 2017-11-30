@@ -164,9 +164,14 @@ Error: type.js:49
 
 Error: type.js:50
  50: ({p:x,q:y}: O5); // error: additional property `q` found
-      ^^^^^^^^^ property `q`. Property not found in
+      ^^^^^^^^^ object literal. This type is incompatible with
  50: ({p:x,q:y}: O5); // error: additional property `q` found
                  ^^ object type
+  Property `q` is incompatible:
+     50: ({p:x,q:y}: O5); // error: additional property `q` found
+          ^^^^^^^^^ property `q`. Property not found in
+     50: ({p:x,q:y}: O5); // error: additional property `q` found
+                     ^^ object type
 
 Error: type.js:56
  56: ({}: O6); // error: property `p` not found
@@ -417,9 +422,14 @@ Error: type_void.js:22
 
 Error: type_void.js:23
  23: ({p:x}: O2); // error
-      ^^^^^ property `p`. Property not found in
+      ^^^^^ object literal. This type is incompatible with
  23: ({p:x}: O2); // error
              ^^ O2
+  Property `p` is incompatible:
+     23: ({p:x}: O2); // error
+          ^^^^^ property `p`. Property not found in
+     23: ({p:x}: O2); // error
+                 ^^ O2
 
 Error: type_void.js:28
  28: (o3: {||}); // error
@@ -457,9 +467,14 @@ Error: type_void.js:38
 
 Error: type_void.js:39
  39: ({p:x}: O4); // error
-      ^^^^^ property `p`. Property not found in
+      ^^^^^ object literal. This type is incompatible with
  39: ({p:x}: O4); // error
              ^^ O4
+  Property `p` is incompatible:
+     39: ({p:x}: O4); // error
+          ^^^^^ property `p`. Property not found in
+     39: ({p:x}: O4); // error
+                 ^^ O4
 
 Error: type_void.js:44
  44: (o5: {p:T}); // error: o5.p is optional

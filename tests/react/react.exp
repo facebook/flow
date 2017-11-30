@@ -789,9 +789,19 @@ Error: hoc2.js:26
  13:   b: number,
  14:   prop: number,
  15: |}> {}
-     -^ property `a`. Property not found in
+     -^ object type. This type is incompatible with
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
+     12:   a: number,
+     13:   b: number,
+     14:   prop: number,
+     15: |}> {}
+         -^ property `a`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: hoc2.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -802,9 +812,19 @@ Error: hoc2.js:26
  13:   b: number,
  14:   prop: number,
  15: |}> {}
-     -^ property `b`. Property not found in
+     -^ object type. This type is incompatible with
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
+     12:   a: number,
+     13:   b: number,
+     14:   prop: number,
+     15: |}> {}
+         -^ property `b`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: hoc2.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
