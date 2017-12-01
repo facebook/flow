@@ -1,3 +1,68 @@
+### 0.60.0
+
+#### Likely to cause new Flow errors:
+
+These changes do not introduce new errors, but error suppressions may need to be moved to the new, more accurate locations.
+
+* Improved positioning of errors involving object types with incompatible indexers.
+* Improved positioning of errors involving the arguments of overloaded function types.
+
+#### New Features:
+
+* Introduced a "server monitor" process that acts as an intermediary between client commands and the Flow server.
+
+  Previously, the server was only able to service one client request at a time and multiple connections would block until the server is free, preventing the server from telling the waiting clients why it's busy. Now, the monitor can accept many requests and respond more intelligently.
+
+  It is also able to detect when the server exits (e.g. when a `package.json` changes) and restart it transparently.
+* `flow find-refs` can now find local references to class properties.
+* New linters:
+  * `unclear-type` warns about uses of `any`, `Object` and `Function`, since they unsafely circumvent the type system.
+  * `untyped-import` warns when `import`ing or `require`ing a module that does not have `@flow`.
+
+#### Notable bug fixes:
+
+* Made the union created by `$Values` on a frozen object maintain singleton literals. That makes this pattern work:
+
+  ```js
+  const Enum = Object.freeze({
+    X: 'x',
+    Y: 'y',
+  });
+  type EnumT = $Values<typeof Enum>
+  ('a': EnumT); // now errors. previously, EnumT was any string
+  ```
+
+* Fixed `Object.keys` and `$Keys` on a dictionary of string literal keys, such that the result is now an array of the string literals instead of a generic string:
+
+  ```js
+  function f(dict: {['hi']: mixed}) {
+    (Object.keys(dict): Array<'hi'>);
+    (Object.keys(dict): Array<'bye'>); // error
+  }
+  ```
+
+* Simplified the types mentioned in some error messages, like from "type application of polymorphic type: class type: Foo" to just "Foo"
+* Fixed `get-def` locations on class and object properties
+* Fixed `get-def` on refined object properties like the second `prop` in `if (foo.prop) foo.prop()`, which previously returned no results
+* Fixed non-termination bugs for predicates on classes, unions and polymorphic `instanceof`
+* Made recursion limit errors unsuppressable. Please report any such errors, they are always Flow bugs!
+
+#### Misc:
+
+* Fixed compilation under ocaml 4.06
+* Added dependency on `lwt` from opam
+* Fixed error behavior of `flow coverage` in `--quiet` and `--json` modes
+* Made `--json` consistently imply `--quiet` in all commands, notably `status`
+* Fixed an issue where a new server may end up writing to the `.log.old` file
+* Various additions to lib definitions, thanks for your contributions!
+
+#### Parser:
+
+* Implemented [JSX spread children](https://github.com/facebook/jsx/pull/59) syntax
+* Made missing commas in export specifiers a parse error
+* Made `import type *` a parse error
+
+
 ### 0.59.0
 
 #### New Features:
