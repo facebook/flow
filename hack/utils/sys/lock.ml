@@ -19,6 +19,7 @@ let lock_fds = ref SMap.empty
  *)
 
 let register_lock lock_file =
+  let _ = Sys_utils.mkdir_no_fail (Filename.dirname lock_file) in
   Sys_utils.with_umask 0o111 begin fun () ->
     let fd = Unix.descr_of_out_channel (open_out lock_file) in
     let st = Unix.fstat fd in
@@ -78,9 +79,7 @@ let _operations lock_file op : bool =
 (**
  * Grabs the file lock and returns true if it the lock was grabbed
  *)
-let grab lock_file : bool =
-  let _ = Sys_utils.mkdir_no_fail (Filename.dirname lock_file) in
-  _operations lock_file Unix.F_TLOCK
+let grab lock_file : bool = _operations lock_file Unix.F_TLOCK
 
 (**
  * Releases a file lock.
@@ -88,7 +87,6 @@ let grab lock_file : bool =
 let release lock_file : bool = _operations lock_file Unix.F_ULOCK
 
 let blocking_grab_then_release lock_file =
-  let _ = Sys_utils.mkdir_no_fail (Filename.dirname lock_file) in
   ignore (_operations lock_file Unix.F_LOCK);
   ignore (release lock_file)
 
