@@ -153,7 +153,10 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
    * open socket, it will block. When a client tries to connect to a not-yet-open
    * socket, it will fail immediately. The blocking behavior is a little nicer
    *)
-  let monitor_socket_fd = Socket.init_unix_socket (Server_files_js.socket_file ~tmp_dir root) in
+  let monitor_socket_fd =
+    Socket.init_unix_socket (Server_files_js.socket_file ~tmp_dir root) in
+  let legacy_socket_fd =
+    Socket.init_unix_socket (Server_files_js.legacy_socket_file ~tmp_dir root) in
 
   (************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************)
 
@@ -195,6 +198,9 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
   (* We can start up the socket acceptor even before the server starts *)
   Lwt.async (fun () ->
     SocketAcceptor.run (Lwt_unix.of_unix_file_descr ~blocking:true monitor_socket_fd)
+  );
+  Lwt.async (fun () ->
+    SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr ~blocking:true legacy_socket_fd)
   );
 
   (* Wait forever! Mwhahahahahaha *)

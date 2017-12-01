@@ -93,6 +93,7 @@ let reset_retries_if_necessary retries = function
   | Error CCS.Server_missing
   | Error CCS.Server_busy -> retries
   | Ok _
+  | Error CCS.Server_socket_missing
   | Error CCS.Build_id_mismatch ->
       { retries with
         retries_remaining = retries.original_retries;
@@ -131,29 +132,7 @@ let rec connect ~client_type env retries start_time =
   match conn with
   | Ok (ic, oc) -> (ic, oc)
   | Error CCS.Server_missing ->
-      if env.autostart then begin
-        let retries =
-          if start_flow_server env
-          then begin
-            if not env.quiet then Printf.eprintf
-              "Started a new flow server: %s%!"
-              (Tty.spinner());
-            retries
-          end else begin
-            if not env.quiet then Printf.eprintf
-              "Failed to start a new flow server (%d %s remaining): %s%!"
-              retries.retries_remaining
-              (if retries.retries_remaining = 1 then "retry" else "retries")
-              (Tty.spinner());
-            consume_retry retries
-          end in
-        connect ~client_type env retries start_time
-      end else begin
-        let msg = Utils_js.spf
-          "\nError: There is no Flow server running in '%s'."
-          (Path.to_string env.root) in
-        FlowExitStatus.(exit ~msg No_server_running)
-      end
+      handle_missing_server ~client_type env retries start_time
   | Error CCS.Server_busy ->
       if not env.quiet then Printf.eprintf
         "The flow server is not responding (%d %s remaining): %s%!"
@@ -162,8 +141,7 @@ let rec connect ~client_type env retries start_time =
         (Tty.spinner());
       connect ~client_type env (consume_retry retries) start_time
   | Error CCS.Build_id_mismatch ->
-      let msg = "The flow server's version didn't match the client's, so it \
-      exited." in
+      let msg = "The flow server's version didn't match the client's, so it exited." in
       if env.autostart
       then
         let start_time = Unix.time () in
@@ -180,6 +158,50 @@ let rec connect ~client_type env retries start_time =
       else
         let msg = "\n"^msg in
         FlowExitStatus.(exit ~msg Build_id_mismatch)
+  | Error CCS.Server_socket_missing ->
+      begin try
+        if not env.quiet then Utils_js.prerr_endlinef
+          "Attempting to kill server for `%s`"
+          (Path.to_string env.root);
+        CommandMeanKill.mean_kill ~tmp_dir:env.tmp_dir env.root;
+        if not env.quiet then Utils_js.prerr_endlinef
+          "Successfully killed server for `%s`"
+          (Path.to_string env.root);
+        let start_time = Unix.time () in
+        handle_missing_server ~client_type env retries start_time
+      with CommandMeanKill.FailedToKill err ->
+        begin if not env.quiet then match err with
+        | Some err -> prerr_endline err
+        | None -> ()
+        end;
+        let msg = Utils_js.spf "Failed to kill server for `%s`" (Path.to_string env.root) in
+        FlowExitStatus.(exit ~msg Kill_error)
+      end
+
+and handle_missing_server ~client_type env retries start_time =
+  if env.autostart then begin
+    let retries =
+      if start_flow_server env
+      then begin
+        if not env.quiet then Printf.eprintf
+          "Started a new flow server: %s%!"
+          (Tty.spinner());
+        retries
+      end else begin
+        if not env.quiet then Printf.eprintf
+          "Failed to start a new flow server (%d %s remaining): %s%!"
+          retries.retries_remaining
+          (if retries.retries_remaining = 1 then "retry" else "retries")
+          (Tty.spinner());
+        consume_retry retries
+      end in
+    connect ~client_type env retries start_time
+  end else begin
+    let msg = Utils_js.spf
+      "\nError: There is no Flow server running in '%s'."
+      (Path.to_string env.root) in
+    FlowExitStatus.(exit ~msg No_server_running)
+  end
 
 let connect ~client_type env =
   let start_time = Unix.time () in
