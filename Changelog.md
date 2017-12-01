@@ -1,3 +1,7 @@
+### 0.60.1
+
+Fixed a bug introduced in 0.60.0 in which Flow would not start if its temp directory did not exist.
+
 ### 0.60.0
 
 #### Likely to cause new Flow errors:
