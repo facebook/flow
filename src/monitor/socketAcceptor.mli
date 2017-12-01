@@ -6,3 +6,4 @@
  *)
 
 val run: Lwt_unix.file_descr -> unit Lwt.t
+val run_legacy: Lwt_unix.file_descr -> unit Lwt.t

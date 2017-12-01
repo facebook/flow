@@ -12,8 +12,6 @@
 open CommandUtils
 open Utils_js
 
-exception FailedToKill of string option
-
 let spec = {
   CommandSpec.
   name = "stop";
@@ -33,31 +31,7 @@ let spec = {
   )
 }
 
-let mean_kill ~tmp_dir root =
-  let pids =
-    try PidLog.get_pids (Server_files_js.pids_file ~tmp_dir root)
-    with PidLog.FailedToGetPids ->
-      let msg = Printf.sprintf
-        "Unable to figure out pids of running Flow server. \
-        Try manually killing it with 'pkill %s' (be careful on shared \
-        devservers)"
-        exe_name
-      in
-      raise (FailedToKill (Some msg))
-  in
-  List.iter (fun (pid, _) ->
-    try
-      pid
-      |> Sys_utils.handle_of_pid_for_termination
-      |> Sys_utils.terminate_process
-    with Unix.Unix_error (Unix.ESRCH, "kill", _) ->
-      (* no such process *)
-      ()
-  ) pids;
-  ignore(Unix.sleep 1);
-  if CommandConnectSimple.server_exists ~tmp_dir root
-  then raise (FailedToKill None);
-  ()
+exception FailedToKillNicely
 
 let main temp_dir from quiet root () =
   let root = guess_root root in
@@ -83,15 +57,12 @@ let main temp_dir from quiet root () =
           while CommandConnectSimple.server_exists ~tmp_dir root do
             incr i;
             if !i < 5 then ignore @@ Unix.sleep 1
-            else raise (FailedToKill None)
+            else raise FailedToKillNicely
           done;
           if not quiet then prerr_endlinef
             "Successfully killed server for `%s`"
             (Path.to_string root)
-        with FailedToKill err ->
-          if not quiet then match err with
-          | Some err -> prerr_endline err
-          | None -> ();
+        with FailedToKillNicely ->
           let msg = spf "Failed to kill server nicely for `%s`" root_s in
           FlowExitStatus.(exit ~msg Kill_error)
         end
@@ -101,16 +72,17 @@ let main temp_dir from quiet root () =
     | Error Build_id_mismatch ->
         if not quiet then prerr_endlinef
           "Successfully killed server for `%s`" root_s
-    | Error Server_busy ->
+    | Error Server_busy
+    | Error Server_socket_missing ->
         begin try
           if not quiet then prerr_endlinef
             "Attempting to meanly kill server for `%s`"
             (Path.to_string root);
-          mean_kill ~tmp_dir root;
+          CommandMeanKill.mean_kill ~tmp_dir root;
           if not quiet then prerr_endlinef
             "Successfully killed server for `%s`"
             (Path.to_string root)
-        with FailedToKill err ->
+        with CommandMeanKill.FailedToKill err ->
           if not quiet then match err with
           | Some err -> prerr_endline err
           | None -> ();

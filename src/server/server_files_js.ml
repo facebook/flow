@@ -22,4 +22,5 @@ let config_file root =
 let lock_file    = file_of_root "lock"
 let pids_file    = file_of_root "pids"
 let socket_file  = file_of_root "sockv2"
+let legacy_socket_file = file_of_root "sock"
 let dfind_log_file = file_of_root "dfind"
