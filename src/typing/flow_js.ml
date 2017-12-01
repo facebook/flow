@@ -1110,6 +1110,8 @@ module ResolvableTypeJob = struct
     let arg_types =
       List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
     collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
+  | GetPropT (_, _, t_out) ->
+    collect_of_type ?log_unresolved cx reason acc t_out
   | _ -> acc
 
 end
@@ -7955,6 +7957,7 @@ and ignore_of_spec = function
   | IntersectionCases (_, CallT (_, {
       call_tout = OpenT (_, id); _
     })) -> Some id
+  | IntersectionCases (_, GetPropT (_, _, OpenT (_, id))) -> Some id
   | _ -> None
 
 (* spec optimization *)

@@ -4,6 +4,12 @@ Error: pred.js:17
  14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
                                                                ^^^^^^^ boolean
 
+Error: proper_blaming.js:9
+  9: x.nope; // error here
+       ^^^^ property `nope`. Property cannot be accessed on possibly null value
+  9: x.nope; // error here
+     ^ null
+
 Error: test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
@@ -41,4 +47,4 @@ Error: test_obj.js:29
                                      ^^^^^^ string
 
 
-Found 2 errors
+Found 3 errors

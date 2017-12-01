@@ -18,28 +18,9 @@ Error: Profile.js:21
 
 Error: Profile.js:22
  22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^^^^^ property `id`. Property cannot be accessed on any member of intersection type
+          ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^^ intersection
-  Member 1:
-   17:     +pic: ProfilePic_imageRef & {|
-                 ^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Profile.graphql.js:17
-  Error:
-   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-                                ^^ property `id`. Property cannot be accessed on
-   17:     +pic: ProfilePic_imageRef & {|
-                 ^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Profile.graphql.js:17
-  Member 2:
-                                       v-
-   17:     +pic: ProfilePic_imageRef & {|
-   18:       +id: string,
-   19:     |},
-           -^ object type. See: Profile.graphql.js:17
-  Error:
-   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-            ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-                                    ^^^^^ empty
+                                  ^^^^^ empty
 
 Error: Profile.js:23
  23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
