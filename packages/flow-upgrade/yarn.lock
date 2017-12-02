@@ -337,6 +337,10 @@ ast-traverse@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/ast-traverse/-/ast-traverse-0.1.1.tgz#69cf2b8386f19dcda1bb1e05d68fe359d8897de6"
 
+ast-types@0.10.1:
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.10.1.tgz#f52fca9715579a14f841d67d7f8d25432ab6a3dd"
+
 ast-types@0.8.12:
   version "0.8.12"
   resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.8.12.tgz#a0d90e4351bb887716c83fd637ebf818af4adfcc"
@@ -344,10 +348,6 @@ ast-types@0.8.12:
 ast-types@0.8.15:
   version "0.8.15"
   resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.8.15.tgz#8eef0827f04dff0ec8857ba925abe3fea6194e52"
-
-ast-types@0.9.12:
-  version "0.9.12"
-  resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.9.12.tgz#b136300d67026625ae15326982ca9918e5db73c9"
 
 ast-types@0.9.6:
   version "0.9.6"
@@ -2490,9 +2490,9 @@ jsbn@~0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
 
-jscodeshift@calebmer/jscodeshift#patch-1:
+jscodeshift@^0.3.32:
   version "0.3.32"
-  resolved "https://codeload.github.com/calebmer/jscodeshift/tar.gz/6b08a65d7d28063265cc2f2d74eaf26d34d3e57d"
+  resolved "https://registry.yarnpkg.com/jscodeshift/-/jscodeshift-0.3.32.tgz#dece5eb602f16340d8d954c7f96ac907c502eabb"
   dependencies:
     async "^1.5.0"
     babel-core "^5"
@@ -2507,7 +2507,7 @@ jscodeshift@calebmer/jscodeshift#patch-1:
     micromatch "^2.3.7"
     node-dir "0.1.8"
     nomnom "^1.8.1"
-    recast calebmer/recast#patch-1
+    recast "^0.12.5"
     temp "^0.8.1"
     write-file-atomic "^1.2.0"
 
@@ -3339,15 +3339,15 @@ recast@^0.11.17:
     private "~0.1.5"
     source-map "~0.5.0"
 
-recast@calebmer/recast#patch-1:
-  version "0.12.6"
-  resolved "https://codeload.github.com/calebmer/recast/tar.gz/572f6db04e9101d749f29dfc5f4249d4d99e021d"
+recast@^0.12.5:
+  version "0.12.9"
+  resolved "https://registry.yarnpkg.com/recast/-/recast-0.12.9.tgz#e8e52bdb9691af462ccbd7c15d5a5113647a15f1"
   dependencies:
-    ast-types "0.9.12"
+    ast-types "0.10.1"
     core-js "^2.4.1"
     esprima "~4.0.0"
     private "~0.1.5"
-    source-map "~0.5.0"
+    source-map "~0.6.1"
 
 regenerate@^1.2.1:
   version "1.3.2"
@@ -3632,6 +3632,10 @@ source-map@~0.2.0:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.2.0.tgz#dab73fbcfc2ba819b4de03bd6f6eaa48164b3f9d"
   dependencies:
     amdefine ">=0.0.4"
+
+source-map@~0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
 
 spdx-correct@~1.0.0:
   version "1.0.2"
