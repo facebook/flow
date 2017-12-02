@@ -529,7 +529,7 @@ module Haste: MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
-        ReversePackageHeap.get package_name |> opt_map (fun package ->
+        ReversePackageHeap.get package_name |> Option.map ~f:(fun package ->
           Files.construct_path package rest
         )
 

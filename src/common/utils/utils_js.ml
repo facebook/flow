@@ -64,42 +64,9 @@ let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
 
 let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
 
-let opt_map f = function
-  | None -> None
-  | Some x -> Some (f x)
-
-let opt_map_default f def = function
-  | None -> def
-  | Some x -> f x
-
-let opt_default def = function
-  | None -> def
-  | Some x -> x
-
-let rec zip lst1 lst2 = match lst1,lst2 with
-  | [], _ -> []
-  | _, [] -> []
-  | (x::xs), (y::ys) -> (x,y) :: zip xs ys
-
-let zipi xs ys =
-  zip xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
-
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
-
-let range_with f a b =
-  if a > b then []
-  else
-    let rec loop j acc =
-      if a <= j then loop (j-1) (f j :: acc)
-      else acc
-    in
-    loop (b-1) []
-
-let range = range_with (fun x -> x)
-
-let repeat n a = range_with (fun _ -> a) 0 n
 
 let rec iter2opt f = function
   | x::xs, y::ys ->
@@ -112,6 +79,13 @@ let rec iter2opt f = function
     f None (Some y);
     iter2opt f ([], ys)
   | [], [] -> ()
+
+let rec toFixpoint f x =
+  let x' = f x in
+  if x = x' then x else toFixpoint f x'
+
+let uncurry f (x,y) = f x y
+let curry f x y = f (x, y)
 
 (**
  * Useful for various places where a user might have typoed a string and the

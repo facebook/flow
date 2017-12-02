@@ -72,8 +72,8 @@ let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =
   {
     kind;
     messages = infos_to_messages infos;
-    op = Utils_js.opt_map info_to_message op_info;
-    trace = Utils_js.opt_map_default infos_to_messages [] trace_infos;
+    op = Option.map op_info ~f:info_to_message;
+    trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages;
     extra
   }
 

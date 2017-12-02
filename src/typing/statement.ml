@@ -4364,7 +4364,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         ) in
         let fun_t, keys, arg_ts, ret_t =
           predicated_call_expression cx (loc, c, exp_args) in
-        let args_with_offset = Utils_js.zipi keys arg_ts in
+        let args_with_offset = ListUtils.zipi keys arg_ts in
         let emp_pred_map = empty_result ret_t in
         List.fold_left (fun pred_map arg_info -> match arg_info with
           | (idx, Some key, unrefined_t) ->

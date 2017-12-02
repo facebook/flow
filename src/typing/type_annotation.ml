@@ -561,10 +561,10 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [DefT (_, SingletonNumT (f, _))] ->
         let n = Pervasives.int_of_float f in
         let key_strs =
-          Utils_js.range 0 n |>
+          ListUtils.range 0 n |>
           List.map (fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
         let emp = Key_map.empty in
-        let tins = Utils_js.repeat n (AnyT.at loc) in
+        let tins = ListUtils.repeat n (AnyT.at loc) in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         DefT (fun_reason, FunT (
           dummy_static static_reason,
