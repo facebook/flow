@@ -1,34 +1,12 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
-      "message":"Unexpected token :"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":20}},
-      "message":"Unexpected identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":1}},
-      "message":"Unexpected token }"
-    },
-    {
-      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-      "message":"Unexpected end of input"
-    },
-    {
-      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-      "message":"Rest parameter must be final parameter of an argument list"
-    }
-  ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":0}},
-  "range":[0,43],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":1}},
+  "range":[0,42],
   "body":[
     {
       "type":"ClassDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":0}},
-      "range":[0,43],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":1}},
+      "range":[0,42],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":7}},
@@ -39,8 +17,8 @@
       },
       "body":{
         "type":"ClassBody",
-        "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":5,"column":0}},
-        "range":[8,43],
+        "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":4,"column":1}},
+        "range":[8,42],
         "body":[
           {
             "type":"ClassProperty",
@@ -79,51 +57,6 @@
             "computed":false,
             "static":false,
             "variance":null
-          },
-          {
-            "type":"MethodDefinition",
-            "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":5,"column":0}},
-            "range":[32,43],
-            "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
-              "range":[32,33],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "value":{
-              "type":"FunctionExpression",
-              "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":5,"column":0}},
-              "range":[34,43],
-              "id":null,
-              "params":[
-                {
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":1}},
-                  "range":[41,42],
-                  "name":"",
-                  "typeAnnotation":null,
-                  "optional":false
-                }
-              ],
-              "body":{
-                "type":"BlockStatement",
-                "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-                "range":[43,43],
-                "body":[]
-              },
-              "async":false,
-              "generator":false,
-              "predicate":null,
-              "expression":false,
-              "returnType":null,
-              "typeParameters":null
-            },
-            "kind":"method",
-            "static":false,
-            "computed":false,
-            "decorators":[]
           }
         ]
       },
@@ -134,5 +67,15 @@
       "decorators":[]
     }
   ],
-  "comments":[]
+  "comments":[],
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
+      "message":"Unexpected token :"
+    },
+    {
+      "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":20}},
+      "message":"Unexpected identifier"
+    }
+  ]
 }

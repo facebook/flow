@@ -80,6 +80,8 @@
                           "optional":false
                         }
                       ],
+                      "async":false,
+                      "generator":false,
                       "returnType":{
                         "type":"VoidTypeAnnotation",
                         "loc":{"source":null,"start":{"line":1,"column":68},"end":{"line":1,"column":72}},
@@ -90,6 +92,7 @@
                     },
                     "method":true,
                     "optional":false,
+                    "abstract":false,
                     "static":false,
                     "variance":null,
                     "kind":"init"

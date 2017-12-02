@@ -49,6 +49,8 @@
               "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":41}},
               "range":[18,41],
               "params":[],
+              "async":false,
+              "generator":false,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":41}},
@@ -83,6 +85,7 @@
             },
             "method":true,
             "optional":false,
+            "abstract":false,
             "static":false,
             "variance":null,
             "kind":"init"

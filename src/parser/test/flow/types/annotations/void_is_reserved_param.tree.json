@@ -47,6 +47,8 @@
             "optional":false
           }
         ],
+        "async":false,
+        "generator":false,
         "returnType":{
           "type":"VoidTypeAnnotation",
           "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":31}},

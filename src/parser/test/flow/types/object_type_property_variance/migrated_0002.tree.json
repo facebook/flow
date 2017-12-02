@@ -50,6 +50,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":false,
             "variance":{
               "type":"Variance",

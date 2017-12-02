@@ -95,6 +95,7 @@
                 },
                 "method":false,
                 "optional":false,
+                "abstract":false,
                 "static":false,
                 "variance":null,
                 "kind":"init"
@@ -118,6 +119,7 @@
                 },
                 "method":false,
                 "optional":false,
+                "abstract":false,
                 "static":false,
                 "variance":null,
                 "kind":"init"

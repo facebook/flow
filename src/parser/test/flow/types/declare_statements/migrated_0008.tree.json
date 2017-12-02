@@ -39,6 +39,8 @@
               "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":38}},
               "range":[18,38],
               "params":[],
+              "async":false,
+              "generator":false,
               "returnType":{
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":38}},
@@ -49,6 +51,7 @@
             },
             "method":true,
             "optional":false,
+            "abstract":false,
             "static":true,
             "variance":null,
             "kind":"init"
@@ -72,6 +75,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":true,
             "variance":null,
             "kind":"init"

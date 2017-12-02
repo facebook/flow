@@ -39,6 +39,8 @@
             "optional":false
           }
         ],
+        "async":false,
+        "generator":false,
         "returnType":{
           "type":"BooleanTypeAnnotation",
           "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":27}},

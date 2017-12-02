@@ -46,6 +46,7 @@
                     },
                     "method":false,
                     "optional":true,
+                    "abstract":false,
                     "static":false,
                     "variance":null,
                     "kind":"init"
@@ -69,6 +70,7 @@
                     },
                     "method":false,
                     "optional":true,
+                    "abstract":false,
                     "static":false,
                     "variance":null,
                     "kind":"init"

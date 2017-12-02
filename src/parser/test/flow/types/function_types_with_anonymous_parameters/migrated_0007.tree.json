@@ -75,6 +75,8 @@
                     "optional":false
                   }
                 ],
+                "async":false,
+                "generator":false,
                 "returnType":{
                   "type":"NumberLiteralTypeAnnotation",
                   "loc":{"source":null,"start":{"line":2,"column":28},"end":{"line":2,"column":31}},

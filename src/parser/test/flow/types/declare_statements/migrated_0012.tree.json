@@ -59,6 +59,8 @@
                   "optional":false
                 }
               ],
+              "async":false,
+              "generator":false,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":42}},
@@ -69,6 +71,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":false,
             "variance":null,
             "kind":"set"
