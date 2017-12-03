@@ -784,6 +784,7 @@ module Object
     let env = env |> with_strict true in
     let start_loc = Peek.loc env in
     let decorators = decorators @ (decorator_list env) in
+    ignore (Expect.maybe env T_ABSTRACT);
     Expect.token env T_CLASS;
     let tmp_env = env |> with_no_let true in
     let id = (

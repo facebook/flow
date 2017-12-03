@@ -669,6 +669,7 @@ module Statement
 
   and declare_class_statement env = with_loc (fun env ->
     Expect.token env T_DECLARE;
+    ignore (Expect.maybe env T_ABSTRACT);
     let fn = declare_class env in
     Statement.DeclareClass fn
   ) env
@@ -837,6 +838,7 @@ module Statement
     then error env Error.UnexpectedTypeDeclaration;
     (* eventually, just emit a wrapper AST node *)
     (match Peek.ith_token ~i:1 env with
+      | T_ABSTRACT
       | T_CLASS ->
           declare_class_statement env
       | T_INTERFACE ->

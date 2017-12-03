@@ -681,6 +681,7 @@ module Peek = struct
   let is_class env =
     match token env with
     | T_CLASS
+    | T_ABSTRACT
     | T_AT -> true
     | _ -> false
 end

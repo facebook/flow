@@ -195,7 +195,6 @@ module rec Parse : PARSER = struct
     | T_CASE
     | T_DEFAULT
     | T_EXTENDS
-    | T_ABSTRACT (*TJP: I may retract this if I end up adding support for the `abstract` prefix on `class`.*)
     | T_STATIC
     | T_EXPORT (* TODO *)
     | T_ELLIPSIS ->
