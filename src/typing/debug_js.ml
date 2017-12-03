@@ -749,7 +749,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | SentinelPropTestT (_, l, key, sense, sentinel, result) -> [
       "l", _json_of_t json_cx l;
-      "key", JSON_String key;
+      "key", JSON_String (string_of_key key);
       "sense", JSON_Bool sense;
       "sentinel", (match sentinel with
       | SentinelStr s -> JSON_String s
@@ -1281,7 +1281,8 @@ and json_of_binary_test_impl _json_cx b = Hh_json.(
   ] @
   match b with
   | InstanceofTest -> []
-  | SentinelProp s -> ["key", JSON_String s]
+  | SentinelProp (StringKey s) -> ["key", JSON_String s]
+  | SentinelProp (NumberKey n) -> ["key", JSON_Number (spf "%g" n)]
 ))
 
 and json_of_node json_cx = check_depth json_of_node_impl json_cx

@@ -26,6 +26,7 @@ type reason_desc =
   | RTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess
+  | RTupleLength of int
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
