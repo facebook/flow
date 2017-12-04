@@ -685,12 +685,12 @@ and statement cx = Ast.Statement.(
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
-      let t = Option.map ~f:(Anno.convert cx typeparams_map) impltype in
+      let underlying_t = Option.map ~f:(Anno.convert cx typeparams_map) impltype in
       let opaque_arg_polarities = List.fold_left (fun acc tparam ->
         SMap.add tparam.name tparam.polarity acc) SMap.empty typeparams in
-      let supertype = Option.map supertype (Anno.convert cx typeparams_map) in
-      let opaquetype = { underlying_t = t;
-                         super_t = supertype;
+      let super_t = Option.map supertype (Anno.convert cx typeparams_map) in
+      let opaquetype = { underlying_t;
+                         super_t;
                          opaque_id = Context.make_nominal cx;
                          opaque_arg_polarities;
                          opaque_type_args = typeparams_map;
@@ -699,8 +699,13 @@ and statement cx = Ast.Statement.(
       Flow.check_polarity cx Positive t;
       let type_ = poly_type (Context.make_nominal cx) typeparams (DefT (r, TypeT t)) in
       let open Flow in
-      Option.iter ~f:(fun st -> generate_tests cx r typeparams (fun map_ ->
-        flow_t cx (subst cx map_ t, subst cx map_ st))) supertype;
+      let () = match underlying_t, super_t with
+      | Some l, Some u ->
+        generate_tests cx r typeparams (fun map_ ->
+          flow_t cx (subst cx map_ l, subst cx map_ u)
+        )
+      | _ -> ()
+      in
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
