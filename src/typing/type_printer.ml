@@ -52,6 +52,7 @@ let parenthesize t_str enclosure triggers =
  *)
 let rec type_printer_impl ~size override enclosure cx t =
   let pp = type_printer ~size override in
+  let pp_opt = type_printer_opt ~size override in
 
   let rec prop x = function
     | Field (_, t, polarity) -> spf "%s%s: %s"
@@ -111,7 +112,7 @@ let rec type_printer_impl ~size override enclosure cx t =
   | None ->
     match t with
     | OpenT (_, id) ->
-        spf "TYPE_%d" id
+        Some (spf "TYPE_%d" id)
 
     | DefT (r, NumT _)
     | DefT (r, StrT _)
@@ -120,19 +121,20 @@ let rec type_printer_impl ~size override enclosure cx t =
     | DefT (r, MixedT _)
     | DefT (r, AnyT)
     | DefT (r, NullT)
-      -> string_of_desc (desc_of_reason r)
+      -> Some (string_of_desc (desc_of_reason r))
 
-    | BoundT typeparam -> typeparam.name
+    | BoundT typeparam -> Some typeparam.name
 
-    | DefT (_, SingletonStrT s) -> spf "'%s'" s
-    | DefT (_, SingletonNumT (_, raw)) -> raw
-    | DefT (_, SingletonBoolT b) -> string_of_bool b
+    | DefT (_, SingletonStrT s) -> Some (spf "'%s'" s)
+    | DefT (_, SingletonNumT (_, raw)) -> Some raw
+    | DefT (_, SingletonBoolT b) -> Some (string_of_bool b)
 
-    | DefT (_, CharSetT chars) -> spf "$CharSet<%S>" (String_utils.CharSet.to_string chars)
+    | DefT (_, CharSetT chars) ->
+        Some (spf "$CharSet<%S>" (String_utils.CharSet.to_string chars))
 
     (* reasons for VoidT use "undefined" for more understandable error output.
        For parsable types we need to use "void" though, thus overwrite it. *)
-    | DefT (_, VoidT) -> "void"
+    | DefT (_, VoidT) -> Some "void"
 
     | DefT (_, FunT (_, _, ft)) ->
         let {
@@ -158,31 +160,33 @@ let rec type_printer_impl ~size override enclosure cx t =
             (params |> String.concat ", ")
             (pp EnclosureNone cx t)
         in
-        parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
+        Some (parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect])
 
     | DefT (_, ObjT {props_tmap = flds; dict_t; _}) ->
-        string_of_obj flds dict_t ~exact:false
+        Some (string_of_obj flds dict_t ~exact:false)
 
     | ExactT (_, DefT (_, ObjT {props_tmap = flds; dict_t; _})) ->
-        string_of_obj flds dict_t ~exact:true
+        Some (string_of_obj flds dict_t ~exact:true)
 
     | ExactT (_, t) ->
-        spf "$Exact<%s>" (pp EnclosureNone cx t)
+        Some (spf "$Exact<%s>" (pp EnclosureNone cx t))
 
     | DefT (_, ArrT (ArrayAT (t, None))) ->
-        spf "Array<%s>" (pp EnclosureNone cx t)
+        Some (spf "Array<%s>" (pp EnclosureNone cx t))
     | DefT (_, ArrT (ROArrayAT t)) ->
-        spf "$ReadOnlyArray<%s>" (pp EnclosureNone cx t)
+        Some (spf "$ReadOnlyArray<%s>" (pp EnclosureNone cx t))
     | DefT (_, ArrT (ArrayAT (_, Some ts)))
     | DefT (_, ArrT (TupleAT (_, ts))) ->
-        ts
-        |> List.map (pp EnclosureNone cx)
-        |> String.concat ", "
-        |> spf "[%s]"
-    | DefT (_, ArrT EmptyAT) -> "$EmptyArray"
+        Some (
+          ts
+          |> List.map (pp EnclosureNone cx)
+          |> String.concat ", "
+          |> spf "[%s]"
+        )
+    | DefT (_, ArrT EmptyAT) -> Some "$EmptyArray"
 
     | DefT (reason, InstanceT _) ->
-        DescFormat.name_of_instance_reason reason
+        Some (DescFormat.name_of_instance_reason reason)
 
     | DefT (_, TypeAppT (c,ts)) ->
         let type_s =
@@ -193,10 +197,10 @@ let rec type_printer_impl ~size override enclosure cx t =
               |> String.concat ", "
             )
         in
-        parenthesize type_s enclosure [EnclosureMaybe]
+        Some (parenthesize type_s enclosure [EnclosureMaybe])
 
     | DefT (_, MaybeT t) ->
-        spf "?%s" (pp EnclosureMaybe cx t)
+        Some (spf "?%s" (pp EnclosureMaybe cx t))
 
     | DefT (_, PolyT (xs, t, _)) ->
         let xs_str =
@@ -216,109 +220,105 @@ let rec type_printer_impl ~size override enclosure cx t =
             end
             cx t)
         in
-        parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
+        Some (parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe])
 
     | DefT (_, IntersectionT rep) ->
         let mems = List.map (pp EnclosureIntersect cx) (InterRep.members rep) in
         let mems = dedup_strlist mems in
         let type_s = String.concat " & " mems in
-        parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
+        Some (parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe])
 
     | DefT (_, UnionT rep) ->
-        let mems = List.map (pp EnclosureUnion cx) (UnionRep.members rep) in
+        let mems =
+          UnionRep.members rep
+          |> List.fold_left (fun acc mem ->
+            match pp_opt EnclosureUnion cx mem with
+            | Some mem -> mem::acc
+            | None -> acc
+          ) []
+          |> List.rev
+        in
         let mems = dedup_strlist mems in
         let type_s = String.concat " | " mems in
-        parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
+        Some (parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe])
 
     | DefT (_, OptionalT t) ->
         let type_s = pp EnclosureNone cx t in
-        begin match enclosure with
-        | EnclosureParam | EnclosureProp -> type_s
-        | _ -> type_s ^ " | void"
-        end
+        Some (
+          match enclosure with
+          | EnclosureParam | EnclosureProp -> type_s
+          | _ -> type_s ^ " | void"
+        )
 
     (* The following types are not syntax-supported in all cases *)
-    | AnnotT ((_, id), _) -> spf "ANNOT_TYPE_%d" id
-    | OpaqueT (_, {opaque_name; _}) -> opaque_name
-    | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
-    | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
+    | AnnotT ((_, id), _) -> Some (spf "ANNOT_TYPE_%d" id)
+    | OpaqueT (_, {opaque_name; _}) -> Some opaque_name
+    | KeysT (_, t) -> Some (spf "$Keys<%s>" (pp EnclosureNone cx t))
+    | ShapeT t -> Some (spf "$Shape<%s>" (pp EnclosureNone cx t))
 
     (* The following types are not syntax-supported *)
     | DefT (_, ClassT t) ->
-        spf "[class: %s]" (pp EnclosureNone cx t)
+        Some (spf "[class: %s]" (pp EnclosureNone cx t))
 
     | DefT (_, TypeT t) ->
-        spf "[type: %s]" (pp EnclosureNone cx t)
+        Some (spf "[type: %s]" (pp EnclosureNone cx t))
 
     | AnyWithUpperBoundT t ->
-        spf "$Subtype<%s>" (pp EnclosureNone cx t)
+        Some (spf "$Subtype<%s>" (pp EnclosureNone cx t))
 
     | AnyWithLowerBoundT t ->
-        spf "$Supertype<%s>" (pp EnclosureNone cx t)
+        Some (spf "$Supertype<%s>" (pp EnclosureNone cx t))
 
     | DefT (_, AnyObjT) ->
-        "Object"
+        Some "Object"
 
     | DefT (_, AnyFunT) ->
-        "Function"
+        Some "Function"
 
     | InternalT (IdxWrapper (_, t)) ->
-      spf "$IdxWrapper<%s>" (pp enclosure cx t)
+        Some (spf "$IdxWrapper<%s>" (pp enclosure cx t))
 
     | ThisClassT _ ->
-        "This"
+        Some "This"
 
     | ReposT (_, t)
     | InternalT (ReposUpperT (_, t)) ->
-        pp enclosure cx t
+        Some (pp enclosure cx t)
 
     | OpenPredT (_, t, m_pos, m_neg) ->
         let l_pos = Key_map.elements m_pos in
         let l_neg = Key_map.elements m_neg in
         let str_of_pair (k,p) = spf "%s -> %s"
           (Key.string_of_key k) (string_of_predicate p) in
-        spf "$OpenPred (%s) [+: %s] [-: %s]" (pp EnclosureNone cx t)
-          (l_pos |> List.map str_of_pair |> String.concat ", ")
-          (l_neg |> List.map str_of_pair |> String.concat ", ")
+        Some (
+          spf "$OpenPred (%s) [+: %s] [-: %s]" (pp EnclosureNone cx t)
+            (l_pos |> List.map str_of_pair |> String.concat ", ")
+            (l_neg |> List.map str_of_pair |> String.concat ", ")
+        )
 
     | ExistsT _ ->
-        "*"
+        Some "*"
 
     (* TODO: Fix these *)
 
-    | FunProtoT _ ->
-        "function proto"
-
-    | FunProtoBindT _ ->
-        "FunctionProtoBind"
-
-    | CustomFunT _ ->
-        "CustomFunction"
-
-    | FunProtoApplyT _ ->
-        "FunctionProtoApply"
-
-    | EvalT _ ->
-        "Eval"
-
-    | ThisTypeAppT _ ->
-        "This Type App"
-
-    | ModuleT _ ->
-        "Module"
-
-    | InternalT (ChoiceKitT _) ->
-        "ChoiceKit"
-
-    | TypeDestructorTriggerT _ ->
-        "TvarDestructor"
+    | FunProtoT _
+    | FunProtoBindT _
+    | CustomFunT _
+    | FunProtoApplyT _
+    | EvalT _
+    | ThisTypeAppT _
+    | ModuleT _
+    | InternalT (ChoiceKitT _)
+    | TypeDestructorTriggerT _
+    | MatchingPropT _
+      ->
+        None
 
     | FunProtoCallT _
     | ObjProtoT _
     | NullProtoT _
     | InternalT (ExtendsT _)
-    | MergedT _
-    | MatchingPropT _ ->
+    | MergedT _ ->
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 
@@ -339,10 +339,15 @@ and instance_of_poly_type_printer ~size override enclosure cx = function
   | t
     -> type_printer ~size override enclosure cx t
 
-and type_printer ~size override enclosure cx t =
-  count_calls ~counter:size ~default:"..." (fun () ->
+and type_printer_opt ~size override enclosure cx t =
+  count_calls ~counter:size ~default:(Some "...") (fun () ->
     type_printer_impl ~size override enclosure cx t
   )
+
+and type_printer ~size override enclosure cx t =
+  match type_printer_opt ~size override enclosure cx t with
+  | Some str -> str
+  | None -> "(internal)"
 
 (* pretty printer *)
 let string_of_t_ =
