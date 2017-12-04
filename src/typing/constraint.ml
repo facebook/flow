@@ -73,9 +73,12 @@ and constraints =
     upper bounds, respectively. See the __flow function for how these structures
     are populated and operated on.  Here the map keys are tvar ids, with trace
     info as values.
+
+    The use_op in the lower TypeMap represents the use_op when a lower bound
+    was added.
 **)
 and bounds = {
-  mutable lower: Trace.t TypeMap.t;
+  mutable lower: (Trace.t * Type.use_op) TypeMap.t;
   mutable upper: Trace.t UseTypeMap.t;
   mutable lowertvars: Trace.t IMap.t;
   mutable uppertvars: Trace.t IMap.t;

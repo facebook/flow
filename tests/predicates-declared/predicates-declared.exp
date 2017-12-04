@@ -60,7 +60,7 @@ Error: sanity-pred-with-body.js:6
 
 Error: sanity-return-type.js:3
   3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                                   ^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+                                                   ^^^^^^^^^^^^^^^^ boolean. This type is incompatible with the expected return type of
   3: declare function f2(x: mixed): string %checks(Array.isArray(x));
                                     ^^^^^^ string
 

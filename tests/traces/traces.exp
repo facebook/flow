@@ -13,7 +13,7 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
-                         ^ ~> UseT(UnknownUse, OpenT) [`x`] (from path 3)
+                         ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
   3: function f0(x) { g0(x) }
                          ^ OpenT [`x`]
   3: function f0(x) { g0(x) }
@@ -41,7 +41,7 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                               ^ ~> UseT(UnknownUse, OpenT) [`y`] (from path 3)
+                               ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
   8: function f1(x, y) { g1(x, y) }
                                ^ OpenT [`y`]
   8: function f1(x, y) { g1(x, y) }
@@ -62,7 +62,7 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ StrT [string]
  14: f2(function(x) { return x * x });
-                             ^ ~> UseT(UnknownUse, OpenT) [`x`] (from path 2)
+                             ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
                              ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
@@ -88,7 +88,7 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ StrT [string]
  14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(UnknownUse, OpenT) [`x`] (from path 2)
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
                                  ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
@@ -114,7 +114,7 @@ Trace:
  19: function double(n) { return n * 2 }
                                  ^ StrT [string]
  19: function double(n) { return n * 2 }
-                                 ^ ~> UseT(UnknownUse, OpenT) [`n`] (from path 2)
+                                 ^ ~> UseT(FunParam, OpenT) [`n`] (from path 2)
  19: function double(n) { return n * 2 }
                                  ^ OpenT [`n`]
  19: function double(n) { return n * 2 }

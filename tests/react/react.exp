@@ -75,37 +75,6 @@ Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-Error: create_class.js:125
-               v------------------
-125: const L = React.createClass({
-126:   propTypes: {
-127:     foo: React.PropTypes.string.isRequired,
-...:
-171: });
-     -^ call of method `createClass`. This type is incompatible with
-               v------------------
-125: const L = React.createClass({
-126:   propTypes: {
-127:     foo: React.PropTypes.string.isRequired,
-...:
-171: });
-     -^ LegacyReactComponent
-  Property `shouldComponentUpdate` is incompatible:
-    145:   shouldComponentUpdate(nextProps, nextState) {
-                                ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-           v---------------------
-     51:   shouldComponentUpdate(
-     52:     nextProps: Props,
-     53:     nextState: State,
-     54:     nextContext: any,
-     55:   ): boolean;
-           ---------^ function type. See lib: <BUILTINS>/react.js:51
-      The return is incompatible:
-        150:     return 0; // number ~> bool
-                        ^ number. This type is incompatible with
-         55:   ): boolean;
-                  ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:55
-
 Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -153,6 +122,12 @@ Error: create_class.js:149
           ^^^^^^^^^^^^^ number. This type is incompatible with
 149:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
+
+Error: create_class.js:150
+150:     return 0; // number ~> bool
+                ^ number. This type is incompatible with the expected return type of
+ 55:   ): boolean;
+          ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:55
 
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
@@ -623,589 +598,406 @@ Error: hoc.js:43
      43: <WrappedFun />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^ props of React element `WrappedFun`
 
-Error: hoc2.js:17
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v-------------------------------------
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         --^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ object type
-          Property `a` is incompatible:
-             18:   a: number,
-                      ^^^^^^ number. This type is incompatible with
-             32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                                ^^^^^ string
-
-Error: hoc2.js:17
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v-------------------------------------
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         --^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ object type
-          Property `a` is incompatible:
-             32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                                ^^^^^ string. This type is incompatible with
-             18:   a: number,
-                      ^^^^^^ number
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type
+  Property `a` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
+     12:   a: number,
+     13:   b: number,
+     14:   prop: number,
+     15: |}> {}
+         -^ property `a`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: hoc2.js:23
  23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type
+  Property `a` is incompatible:
      12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `a` is incompatible:
-         12:   a: number,
-                  ^^^^^^ number. This type is incompatible with
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `a` is incompatible:
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string. This type is incompatible with
-         12:   a: number,
-                  ^^^^^^ number
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         12:   a: number,
-                  ^^^^^^ number. This type is incompatible with
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string. This type is incompatible with
-         12:   a: number,
-                  ^^^^^^ number
-
-Error: hoc2.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `a` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `a`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `b` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `b`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `a`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `b` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `b`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:30
- 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v-------------------------------------
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         --^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ object type
-          Property `a` is incompatible:
-                                                     v-
-             17: function MyFunctionComponent(props: {|
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: |}) {}
-                 -^ property `a`. Property not found in
-              6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:30
- 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v-------------------------------------
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         --^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ object type
-          Property `b` is incompatible:
-                                                     v-
-             17: function MyFunctionComponent(props: {|
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: |}) {}
-                 -^ property `b`. Property not found in
-              6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc3.js:17
-     v------------------------------------
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
-     17: function MyFunctionComponent(props: {
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
-          Property `a` is incompatible:
-             32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                                ^^^^^ string. This type is incompatible with
-             18:   a: number,
-                      ^^^^^^ number
-
-Error: hoc3.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
+              ^^^^^^ number. This type is incompatible with
      28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                                   v
-     11: class MyComponent extends React.Component<{
+                                ^^^^^ string
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type
+  Property `a` is incompatible:
+     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                                ^^^^^ string. This type is incompatible with
+     12:   a: number,
+              ^^^^^^ number
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type
+  Property `b` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
      12:   a: number,
      13:   b: number,
      14:   prop: number,
-     15: }> {}
-         ^ object type
-      Property `a` is incompatible:
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string. This type is incompatible with
-         12:   a: number,
-                  ^^^^^^ number
+     15: |}> {}
+         -^ property `b`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type. This type is incompatible with
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
+     12:   a: number,
+     13:   b: number,
+     14:   prop: number,
+     15: |}> {}
+         -^ property `a`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type. This type is incompatible with
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     12:   a: number,
+              ^^^^^^ number. This type is incompatible with
+     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                                ^^^^^ string
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type. This type is incompatible with
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                                ^^^^^ string. This type is incompatible with
+     12:   a: number,
+              ^^^^^^ number
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                 ^^^^^^^^^^^^^^^^^^^^ call of `connect`
+                                               v-
+ 11: class MyComponent extends React.Component<{|
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: |}> {}
+     -^ object type. This type is incompatible with
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+                                                   v-
+     11: class MyComponent extends React.Component<{|
+     12:   a: number,
+     13:   b: number,
+     14:   prop: number,
+     15: |}> {}
+         -^ property `b`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: hoc2.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                         v-
+ 17: function MyFunctionComponent(props: {|
+ 18:   a: number,
+ 19:   b: number,
+ 20:   prop: number,
+ 21: |}) {}
+     -^ object type
+  Property `a` is incompatible:
+                                             v-
+     17: function MyFunctionComponent(props: {|
+     18:   a: number,
+     19:   b: number,
+     20:   prop: number,
+     21: |}) {}
+         -^ property `a`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: hoc2.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                         v-
+ 17: function MyFunctionComponent(props: {|
+ 18:   a: number,
+ 19:   b: number,
+ 20:   prop: number,
+ 21: |}) {}
+     -^ object type
+  Property `a` is incompatible:
+     18:   a: number,
+              ^^^^^^ number. This type is incompatible with
+     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                        ^^^^^ string
+
+Error: hoc2.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                         v-
+ 17: function MyFunctionComponent(props: {|
+ 18:   a: number,
+ 19:   b: number,
+ 20:   prop: number,
+ 21: |}) {}
+     -^ object type
+  Property `a` is incompatible:
+     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                        ^^^^^ string. This type is incompatible with
+     18:   a: number,
+              ^^^^^^ number
+
+Error: hoc2.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                         v-
+ 17: function MyFunctionComponent(props: {|
+ 18:   a: number,
+ 19:   b: number,
+ 20:   prop: number,
+ 21: |}) {}
+     -^ object type
+  Property `b` is incompatible:
+                                             v-
+     17: function MyFunctionComponent(props: {|
+     18:   a: number,
+     19:   b: number,
+     20:   prop: number,
+     21: |}) {}
+         -^ property `b`. Property not found in
+      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: hoc3.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
+                                               v
+ 11: class MyComponent extends React.Component<{
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: }> {}
+     ^ object type
+  Property `a` is incompatible:
                                                    v
      11: class MyComponent extends React.Component<{
      12:   a: number,
      13:   b: number,
      14:   prop: number,
      15: }> {}
-         ^ object type
-      Property `a` is incompatible:
-                                                       v
-         11: class MyComponent extends React.Component<{
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: }> {}
-             ^ property `a`. Property not found in
-         26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+         ^ property `a`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
 Error: hoc3.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
+                                               v
+ 11: class MyComponent extends React.Component<{
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: }> {}
+     ^ object type
+  Property `b` is incompatible:
                                                    v
      11: class MyComponent extends React.Component<{
      12:   a: number,
      13:   b: number,
      14:   prop: number,
      15: }> {}
-         ^ object type
-      Property `b` is incompatible:
-                                                       v
-         11: class MyComponent extends React.Component<{
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: }> {}
-             ^ property `b`. Property not found in
-         26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+         ^ property `b`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+
+Error: hoc3.js:28
+ 28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
+                                               v
+ 11: class MyComponent extends React.Component<{
+ 12:   a: number,
+ 13:   b: number,
+ 14:   prop: number,
+ 15: }> {}
+     ^ object type
+  Property `a` is incompatible:
+     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                                ^^^^^ string. This type is incompatible with
+     12:   a: number,
+              ^^^^^^ number
 
 Error: hoc3.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v------------------------------------
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+                                         v
  17: function MyFunctionComponent(props: {
  18:   a: number,
  19:   b: number,
  20:   prop: number,
  21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
+     ^ object type
+  Property `a` is incompatible:
+                                             v
      17: function MyFunctionComponent(props: {
      18:   a: number,
      19:   b: number,
      20:   prop: number,
      21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
-          Property `a` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `a`. Property not found in
-             30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
+         ^ property `a`. Property not found in
+     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
 Error: hoc3.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v------------------------------------
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+                                         v
  17: function MyFunctionComponent(props: {
  18:   a: number,
  19:   b: number,
  20:   prop: number,
  21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
+     ^ object type
+  Property `b` is incompatible:
+                                             v
      17: function MyFunctionComponent(props: {
      18:   a: number,
      19:   b: number,
      20:   prop: number,
      21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
-          Property `b` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `b`. Property not found in
-             30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
+         ^ property `b`. Property not found in
+     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
-Error: hoc4.js:17
-     v------------------------------------
+Error: hoc3.js:32
+ 32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+                                         v
  17: function MyFunctionComponent(props: {
  18:   a: number,
  19:   b: number,
  20:   prop: number,
  21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
-     17: function MyFunctionComponent(props: {
+     ^ object type
+  Property `a` is incompatible:
+     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                        ^^^^^ string. This type is incompatible with
      18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-          Property `a` is incompatible:
-             32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                                ^^^^^ string. This type is incompatible with
-             18:   a: number,
-                      ^^^^^^ number
+              ^^^^^^ number
+
+Error: hoc4.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+ 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
+
+Error: hoc4.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+ 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
+
+Error: hoc4.js:24
+ 24: const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `connect`
+ 32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                        ^^^^^ string. This type is incompatible with
+     18:   a: number,
+              ^^^^^^ number
 
 Error: hoc4.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1239,72 +1031,6 @@ Error: hoc4.js:28
                                 ^^^^^ string. This type is incompatible with
      12:   a: number,
               ^^^^^^ number
-
-Error: hoc4.js:30
- 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v------------------------------------
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
-     17: function MyFunctionComponent(props: {
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-          Property `a` is incompatible:
-              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-             30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
-
-Error: hoc4.js:30
- 30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
-     v------------------------------------
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     -^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-         v------------------------------------
-     17: function MyFunctionComponent(props: {
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         -^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      The first parameter is incompatible:
-         30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-          Property `b` is incompatible:
-              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
-             30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
@@ -1486,22 +1212,6 @@ Error: proptype_arrayOf.js:43
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                       ^ number
 
-Error: proptype_custom_validator.js:6
-  6:     foo(props, propName, componentName, href) {
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-                   v------------------
-  4: var Example = React.createClass({
-  5:   propTypes: {
-  6:     foo(props, propName, componentName, href) {
-...:
- 14: });
-     -^ ReactPropsCheckType
-  The return is incompatible:
-     11:       return (0: mixed); // error: should return ?Error
-                          ^^^^^ mixed. This type is incompatible with
-    267:   href?: string) => ?Error;
-                              ^^^^^ Error. See lib: <BUILTINS>/react.js:267
-
 Error: proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
             ^^^^^^^^ string. This type is incompatible with
@@ -1525,6 +1235,12 @@ Error: proptype_custom_validator.js:10
             ^^^^ undefined. This type is incompatible with
  10:       (href: empty); // error: href is an optional string
                   ^^^^^ empty
+
+Error: proptype_custom_validator.js:11
+ 11:       return (0: mixed); // error: should return ?Error
+                      ^^^^^ mixed. This type is incompatible with the expected return type of
+267:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:267
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />

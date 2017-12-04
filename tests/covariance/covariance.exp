@@ -12,8 +12,8 @@ Error: test.js:3
 Error: test.js:4
   4: y[0] = ""; // error
             ^^ string. This type is incompatible with
-  2: var b: CovArrayVerbose<number,*> = [];
-                            ^^^^^^ number
+  4: y[0] = ""; // error
+     ^^^^ number
 
 Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }

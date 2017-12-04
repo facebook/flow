@@ -24,7 +24,7 @@ Error: generics.js:28
 
 Error: generics.js:38
  38: h1.foo(["..."]);
-            ^^^^^^^ array literal. Has some incompatible type argument with
+            ^^^^^^^ array literal. This type is incompatible with the expected param type of
  39: var h2:F<Array<Array<Array<number>>>> = h1;
                           ^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:

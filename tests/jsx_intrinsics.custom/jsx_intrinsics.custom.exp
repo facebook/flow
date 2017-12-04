@@ -23,8 +23,6 @@ Error: strings.js:6
 
 Error: strings.js:9
   9: <Div />; // This is fine
-     ^^^^^^^ React element `Div`
-  9: <Div />; // This is fine
      ^^^^^^^ props of React element `Div`. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4

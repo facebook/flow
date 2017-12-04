@@ -30,9 +30,18 @@ Error: classes.js:27
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                               ^^^^^^^^^^ new `C`
+                               ^^^^^^^^^^ C. Has some incompatible type argument with
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                                     ^^^ number. This type is incompatible with
+                   ^^^^^^^^^ C
+  Type argument `T` is incompatible:
+     27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                         ^^^^^^ number. This type is incompatible with
+     25: class C<T: ?string = string> extends A<T> {}
+                     ^^^^^^ string
+
+Error: classes.js:27
+ 27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                                     ^^^ number. This type is incompatible with the expected param type of
  25: class C<T: ?string = string> extends A<T> {}
                  ^^^^^^ string
 
@@ -131,11 +140,20 @@ Error: classes.js:62
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                               ^^^^^^^^^^ new `I`
+                               ^^^^^^^^^^ I. Has some incompatible type argument with
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                                     ^^^ number. This type is incompatible with
+                   ^^^^^^^^^ I
+  Type argument `T` is incompatible:
+     62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                         ^^^^^^ number. This type is incompatible with
+     60: class I<T: ?string = *> extends A<T> {}
+                     ^^^^^^ string
+
+Error: classes.js:62
+ 62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                                     ^^^ number. This type is incompatible with the expected param type of
  60: class I<T: ?string = *> extends A<T> {}
                  ^^^^^^ string
 
 
-Found 22 errors
+Found 24 errors

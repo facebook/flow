@@ -4,16 +4,11 @@ Error: constructors.js:3
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean
 
-Error: constructors.js:22
- 22: exports.Foo2 = (Foo: Class<IFoo>);
-                                ^^^^ statics of `IFoo`. This type is incompatible with
- 22: exports.Foo2 = (Foo: Class<IFoo>);
-                     ^^^ function
-  Property `y` is incompatible:
-      5: Foo.y = 0; // has static property y
-                 ^ number. This type is incompatible with
-     19:   static y: boolean; // error, should have declared static y: number instead
-                     ^^^^^^^ boolean
+Error: constructors.js:5
+  5: Foo.y = 0; // has static property y
+             ^ number. This type is incompatible with
+  5: Foo.y = 0; // has static property y
+     ^^^^^ boolean
 
 Error: test.js:2
   2: var x: string = new Foo().x; // error, found number instead of string

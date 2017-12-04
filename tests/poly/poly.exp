@@ -22,13 +22,13 @@ Error: annot.js:10
 
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
-            ^^ number. This type is incompatible with
+            ^^ number. This type is incompatible with the expected param type of
   7: class C<T: Middle> {
                 ^^^^^^ Middle
 
 Error: implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle
-            ^^^^^^^^^^ Base. This type is incompatible with
+            ^^^^^^^^^^ Base. This type is incompatible with the expected param type of
   7: class C<T: Middle> {
                 ^^^^^^ Middle
 

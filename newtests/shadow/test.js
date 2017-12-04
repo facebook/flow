@@ -172,8 +172,8 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:9
             9: proto.p = 0;
                          ^ number. This type is incompatible with
-            7: var o: {p: string} = Object.create(proto);
-                          ^^^^^^ string
+            9: proto.p = 0;
+               ^^^^^^^ string
         `,
       ),
   ]),

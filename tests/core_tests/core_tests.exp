@@ -98,35 +98,77 @@ Error: regexp.js:27
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                            ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+                           ^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+581:     constructor(iterable?: Iterable<T>): void;
+                                ^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:581
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+             19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                        ^ number. This type is incompatible with
+            580: declare class WeakSet<T: Object> {
+                                          ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                               ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+                           ^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+581:     constructor(iterable?: Iterable<T>): void;
+                                ^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:581
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+             19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                           ^ number. This type is incompatible with
+            580: declare class WeakSet<T: Object> {
+                                          ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                  ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+                           ^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+581:     constructor(iterable?: Iterable<T>): void;
+                                ^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:581
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+             19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                              ^ number. This type is incompatible with
+            580: declare class WeakSet<T: Object> {
+                                          ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
 
 Error: weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ new `WeakSet`
- 29: function* numbers(): Iterable<number> {
-                                   ^^^^^^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+                           ^^^^^^^^^ $Iterable. This type is incompatible with the expected param type of
+581:     constructor(iterable?: Iterable<T>): void;
+                                ^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:581
+  Type argument `Yield` is incompatible:
+     29: function* numbers(): Iterable<number> {
+                                       ^^^^^^ number. This type is incompatible with
+    580: declare class WeakSet<T: Object> {
+                                  ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
 
 
 Found 13 errors

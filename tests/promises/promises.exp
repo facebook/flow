@@ -47,7 +47,7 @@ Error: all.js:24
 
 Error: all.js:27
  27: Promise.all(0); // Error: expected array instead of number
-                 ^ number. This type is incompatible with
+                 ^ number. This type is incompatible with the expected param type of
 608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                        ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:

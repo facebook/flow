@@ -1350,14 +1350,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if not_linked (id1, bounds1) (id2, bounds2) then (
             add_upper_edges cx trace (id1, bounds1) (id2, bounds2);
             add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
-            flows_across cx trace bounds1.lower bounds2.upper;
+            flows_across cx trace ~use_op bounds1.lower bounds2.upper;
           );
 
       | Unresolved bounds1, Resolved t2 ->
           edges_and_flows_to_t cx trace (id1, bounds1) (UseT (use_op, t2))
 
       | Resolved t1, Unresolved bounds2 ->
-          edges_and_flows_from_t cx trace t1 (id2, bounds2)
+          edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
 
       | Resolved t1, Resolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
@@ -1385,7 +1385,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let id2, constraints2 = find_constraints cx tvar in
       (match constraints2 with
       | Unresolved bounds2 ->
-          edges_and_flows_from_t cx trace t1 (id2, bounds2)
+          edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
 
       | Resolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
@@ -3808,12 +3808,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let args = List.rev (match ft2.rest_param with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      let use_op = match desc_of_reason ureason with
-      (* TODO: This exists to support a legacy behavior of ResolveSpreadT.
-       * Refactor how React use_ops work and remove this special case. *)
-      | RReactSFC -> Op ReactCreateElementCall
-      | _ -> use_op
-      in
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
@@ -8897,23 +8891,32 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 
 **)
 
+and flow_use_op op1 =
+  mod_op_of_use_t (fun op2 ->
+    if root_use_op op2 = UnknownUse && root_use_op op1 <> UnknownUse
+      then op1
+      else op2)
+
 (* for each l in ls: l => u *)
 and flows_to_t cx trace ls u =
-  ls |> TypeMap.iter (fun l trace_l ->
-    join_flow cx [trace_l;trace] (l,u)
+  ls |> TypeMap.iter (fun l (trace_l, use_op) ->
+    let u = flow_use_op use_op u in
+    join_flow cx [trace_l; trace] (l, u)
   )
 
 (* for each u in us: l => u *)
-and flows_from_t cx trace l us =
+and flows_from_t cx trace ~use_op l us =
   us |> UseTypeMap.iter (fun u trace_u ->
-    join_flow cx [trace;trace_u] (l,u)
+    let u = flow_use_op use_op u in
+    join_flow cx [trace; trace_u] (l, u)
   )
 
 (* for each l in ls, u in us: l => u *)
-and flows_across cx trace ls us =
-  ls |> TypeMap.iter (fun l trace_l ->
+and flows_across cx trace ~use_op ls us =
+  ls |> TypeMap.iter (fun l (trace_l, use_op') ->
     us |> UseTypeMap.iter (fun u trace_u ->
-      join_flow cx [trace_l;trace;trace_u] (l,u)
+      let u = flow_use_op use_op' (flow_use_op use_op u) in
+      join_flow cx [trace_l; trace; trace_u] (l, u)
     )
   )
 
@@ -8922,8 +8925,8 @@ and add_upper u trace bounds =
   bounds.upper <- UseTypeMap.add u trace bounds.upper
 
 (* bounds.lower += l *)
-and add_lower l trace bounds =
-  bounds.lower <- TypeMap.add l trace bounds.lower
+and add_lower l (trace, use_op) bounds =
+  bounds.lower <- TypeMap.add l (trace, use_op) bounds.lower
 
 (* Helper for functions that follow. *)
 (* Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
@@ -8951,7 +8954,7 @@ and iter_with_filter cx bindings skip_id each =
 and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
   if not opt then add_upper t2 trace bounds1;
   iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-    add_upper t2 (Trace.concat_trace[trace_l;trace]) bounds
+    add_upper t2 (Trace.concat_trace [trace_l; trace]) bounds
   )
 
 (* for each id in id2 + bounds2.uppertvars:
@@ -8960,10 +8963,10 @@ and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 (** When going through bounds2.uppertvars, filter out id2. **)
 (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
-and edges_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
-  if not opt then add_lower t1 trace bounds2;
+and edges_from_t cx trace ~use_op ?(opt=false) t1 (id2, bounds2) =
+  if not opt then add_lower t1 (trace, use_op) bounds2;
   iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-    add_lower t1 (Trace.concat_trace[trace;trace_u]) bounds
+    add_lower t1 (Trace.concat_trace [trace; trace_u], use_op) bounds
   )
 
 (* for each id' in id + bounds.lowertvars:
@@ -8978,8 +8981,8 @@ and edges_to_ts cx trace ?(opt=false) (id, bounds) us =
    id'.bounds.lower += ls
 *)
 and edges_from_ts cx trace ?(opt=false) ls (id, bounds) =
-  ls |> TypeMap.iter (fun l trace_l ->
-    edges_from_t cx (Trace.concat_trace[trace_l;trace]) ~opt l (id, bounds)
+  ls |> TypeMap.iter (fun l (trace_l, use_op) ->
+    edges_from_t cx (Trace.concat_trace [trace_l; trace]) ~use_op ~opt l (id, bounds)
   )
 
 (* for each id in id1 + bounds1.lowertvars:
@@ -9000,10 +9003,10 @@ and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 *)
 (** As an invariant, bounds2.upper should already contain id.bounds.upper for
     each id in bounds2.uppertvars. **)
-and edges_and_flows_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
+and edges_and_flows_from_t cx trace ~use_op ?(opt=false) t1 (id2, bounds2) =
   if not (TypeMap.mem t1 bounds2.lower) then (
-    edges_from_t cx trace ~opt t1 (id2, bounds2);
-    flows_from_t cx trace t1 bounds2.upper
+    edges_from_t cx trace ~use_op ~opt t1 (id2, bounds2);
+    flows_from_t cx trace ~use_op t1 bounds2.upper
   )
 
 (* bounds.uppertvars += id *)
@@ -9079,9 +9082,9 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
     let cond1 = not_linked (id1, bounds1) (id2, bounds2) in
     let cond2 = not_linked (id2, bounds2) (id1, bounds1) in
     if cond1 then
-      flows_across cx trace bounds1.lower bounds2.upper;
+      flows_across cx trace ~use_op bounds1.lower bounds2.upper;
     if cond2 then
-      flows_across cx trace bounds2.lower bounds1.upper;
+      flows_across cx trace ~use_op bounds2.lower bounds1.upper;
     if cond1 then (
       add_upper_edges cx trace ~opt:true (id1, bounds1) (id2, bounds2);
       add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
@@ -9095,13 +9098,13 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
   | Unresolved bounds1, Resolved t2 ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
-    edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
+    edges_and_flows_from_t cx trace ~use_op ~opt:true t2 (id1, bounds1);
     replace_node cx id1 (Goto id2);
 
   | Resolved t1, Unresolved bounds2 ->
     let t1_use = UseT (use_op, t1) in
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
-    edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
+    edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
     replace_node cx id2 (Goto id1);
 
   | Resolved t1, Resolved t2 ->
@@ -9131,7 +9134,7 @@ and resolve_id cx trace ~use_op id t =
   | Unresolved bounds ->
     replace_node cx id (Root { root with constraints = Resolved t });
     edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
-    edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
+    edges_and_flows_from_t cx trace ~use_op ~opt:true t (id, bounds);
 
   | Resolved t_ ->
     rec_unify cx trace ~use_op t_ t

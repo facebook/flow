@@ -33,7 +33,7 @@ Trace:
  12:   return bar();
               ^^^ FunT [function]
  12:   return bar();
-              ^^^ ~> UseT(UnknownUse, OpenT) [function] (from path 5)
+              ^^^ ~> UseT(AssignVar, OpenT) [function] (from path 5)
  12:   return bar();
               ^^^ OpenT [`bar`]
  12:   return bar();
