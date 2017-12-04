@@ -5479,6 +5479,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************)
     (* opaque types part 2 *)
     (***********************)
+
+    (* Don't refine opaque types based on its bound *)
+    | OpaqueT _, PredicateT (p, t) -> predicate cx trace t l p
+    | OpaqueT _, GuardT (pred, result, sink) -> guard cx trace l pred result sink
+
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
     | OpaqueT (_, {super_t = Some t; _}), _ ->
         rec_flow cx trace (t, u)
