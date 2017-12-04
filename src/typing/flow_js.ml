@@ -2630,9 +2630,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* If the ids are equal, we use flow_type_args to make sure that the type arguments of each
      * are compatible with each other. If there are no type args, this doesn't do anything *)
-    | OpaqueT (_, {opaque_id = id1; opaque_arg_polarities = ps; opaque_type_args = ltargs; _}),
-      UseT (_, OpaqueT (_, {opaque_id = id2; opaque_type_args = utargs; _})) when id1 = id2 ->
-        flow_type_args cx trace ps ltargs utargs
+    | OpaqueT (lreason, {opaque_id = id1; opaque_arg_polarities = ps; opaque_type_args = ltargs; _}),
+      UseT (use_op, OpaqueT (ureason, {opaque_id = id2; opaque_type_args = utargs; _})) when id1 = id2 ->
+        flow_type_args cx trace ~use_op lreason ureason ps ltargs utargs
 
     (* Repositioning should happen before opaque types are considered so that we can
      * have the "most recent" location when we do look at the opaque type *)
@@ -4313,7 +4313,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             assert_false "unexpected difference in class_ids in flow_instts");
           let { type_args = tmap1; arg_polarities = pmap; _ } = instance in
           let { type_args = tmap2; _ } = instance_super in
-          flow_type_args cx trace pmap tmap1 tmap2
+          let ureason = replace_reason (function RExtends desc -> desc | desc -> desc) reason_op in
+          flow_type_args cx trace ~use_op reason ureason pmap tmap1 tmap2
         end
       else
         (* If this instance type has declared implementations, any structural
@@ -6738,8 +6739,9 @@ and generate_tests =
 (* inheritance utils *)
 (*********************)
 
-and flow_type_args cx trace pmap tmap1 tmap2 =
+and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
   tmap1 |> SMap.iter (fun x t1 ->
+    let use_op = TypeArgCompatibility (x, lreason, ureason, use_op) in
     let t2 = SMap.find_unsafe x tmap2 in
     (* type_args contains a mixture of args to type params declared on the
        instance's class, and args to outer-scope type params.
@@ -6747,10 +6749,10 @@ and flow_type_args cx trace pmap tmap1 tmap2 =
        it'll take some upstream refactoring to handle variance to in-scope
        type params - meanwhile, we fall back to neutral (invariant) *)
     (match SMap.get x pmap with
-    | Some Negative -> rec_flow_t cx trace (t2, t1)
-    | Some Positive -> rec_flow_t cx trace (t1, t2)
+    | Some Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+    | Some Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
     | Some Neutral
-    | None -> rec_unify cx trace t1 t2)
+    | None -> rec_unify cx trace ~use_op t1 t2)
   )
 
 and inherited_method x = x <> "constructor" && x <> "$call"

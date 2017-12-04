@@ -130,15 +130,25 @@ Error: import.js:18
 
 Error: import.js:21
  21: ((new B3().bar(): B3<string>): A2<number>); // error
-                          ^^^^^^ string. This type is incompatible with
+                       ^^^^^^^^^^ A2. Has some incompatible type argument with
  21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                       ^^^^^^ number
+                                    ^^^^^^^^^^ A2
+  Type argument `X` is incompatible:
+     21: ((new B3().bar(): B3<string>): A2<number>); // error
+                              ^^^^^^ string. This type is incompatible with
+     21: ((new B3().bar(): B3<string>): A2<number>); // error
+                                           ^^^^^^ number
 
 Error: import.js:21
  21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                       ^^^^^^ number. This type is incompatible with
+                       ^^^^^^^^^^ A2. Has some incompatible type argument with
  21: ((new B3().bar(): B3<string>): A2<number>); // error
-                          ^^^^^^ string
+                                    ^^^^^^^^^^ A2
+  Type argument `X` is incompatible:
+     21: ((new B3().bar(): B3<string>): A2<number>); // error
+                                           ^^^^^^ number. This type is incompatible with
+     21: ((new B3().bar(): B3<string>): A2<number>); // error
+                              ^^^^^^ string
 
 Error: import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error

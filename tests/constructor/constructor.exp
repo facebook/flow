@@ -4,15 +4,25 @@ Error: constructor.js:6
 
 Error: constructor.js:15
  15: (new Foo(123): Bar<string>); // error, number !~> string
-              ^^^ number. This type is incompatible with
+      ^^^^^^^^^^^^ Bar. Has some incompatible type argument with
  15: (new Foo(123): Bar<string>); // error, number !~> string
-                        ^^^^^^ string
+                    ^^^^^^^^^^^ Bar
+  Type argument `T` is incompatible:
+     15: (new Foo(123): Bar<string>); // error, number !~> string
+                  ^^^ number. This type is incompatible with
+     15: (new Foo(123): Bar<string>); // error, number !~> string
+                            ^^^^^^ string
 
 Error: constructor.js:22
  22: (new Baz(123): Baz<string>); // error, number !~> string
-              ^^^ number. This type is incompatible with
+      ^^^^^^^^^^^^ Baz. Has some incompatible type argument with
  22: (new Baz(123): Baz<string>); // error, number !~> string
-                        ^^^^^^ string
+                    ^^^^^^^^^^^ Baz
+  Type argument `T` is incompatible:
+     22: (new Baz(123): Baz<string>); // error, number !~> string
+                  ^^^ number. This type is incompatible with
+     22: (new Baz(123): Baz<string>); // error, number !~> string
+                            ^^^^^^ string
 
 
 Found 3 errors

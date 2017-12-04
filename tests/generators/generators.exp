@@ -30,6 +30,27 @@ Error: class.js:67
  67:     var x: number = yield *inner(); // error: string ~> number
                 ^^^^^^ number
 
+Error: class.js:72
+ 72:     yield *xs;
+                ^^ array type. This type is incompatible with
+ 72:     yield *xs;
+         ^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      This parameter is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Next` is incompatible:
+            125: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
+                                                          ^^ string. This type is incompatible with
+            500: type Iterator<+T> = $Iterator<T,void,void>;
+                                                      ^^^^ undefined. See lib: <BUILTINS>/core.js:500
+
 Error: class.js:98
  98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                              ^ number. This type is incompatible with
@@ -63,12 +84,6 @@ Error: class.js:122
         ^ string. This type is incompatible with
 122:   (x : number) // error: string ~> number
             ^^^^^^ number
-
-Error: class.js:125
-125: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                              ^^ string. This type is incompatible with
-500: type Iterator<+T> = $Iterator<T,void,void>;
-                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:500
 
 Error: class.js:128
 128:   (x : string) // error: number ~> string
@@ -168,11 +183,26 @@ Error: generators.js:87
  87:   var x: number = yield *inner(); // error: string ~> number
               ^^^^^^ number
 
-Error: generators.js:94
- 94: delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                     ^^ string. This type is incompatible with
-500: type Iterator<+T> = $Iterator<T,void,void>;
-                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:500
+Error: generators.js:92
+ 92:   yield *xs;
+              ^^ array type. This type is incompatible with
+ 92:   yield *xs;
+       ^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      This parameter is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Next` is incompatible:
+             94: delegate_next_iterable([]).next(""); // error: Iterator has no next value
+                                                 ^^ string. This type is incompatible with
+            500: type Iterator<+T> = $Iterator<T,void,void>;
+                                                      ^^^^ undefined. See lib: <BUILTINS>/core.js:500
 
 Error: generators.js:100
 100:   (x : string) // error: number ~> string

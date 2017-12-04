@@ -68,9 +68,14 @@ Error: classes.js:41
 
 Error: classes.js:42
  42: var d_star: D<*> = new D(10); // error, number ~> string
-                              ^^ number. This type is incompatible with
- 36: class D<S, T = string> extends A<T> {}
-                    ^^^^^^ string
+                        ^^^^^^^^^ D. Has some incompatible type argument with
+ 42: var d_star: D<*> = new D(10); // error, number ~> string
+                 ^^^^ D
+  Type argument `T` is incompatible:
+     42: var d_star: D<*> = new D(10); // error, number ~> string
+                                  ^^ number. This type is incompatible with
+     36: class D<S, T = string> extends A<T> {}
+                        ^^^^^^ string
 
 Error: classes.js:44
  44: (d_number.p: boolean); // Error number ~> boolean

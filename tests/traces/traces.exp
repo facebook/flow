@@ -132,22 +132,28 @@ Trace:
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Error: Traces2.js:7
-  7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
+Error: Traces2.js:10
+             v------------------
+ 10: var B = React.createClass({
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+ 12: });
+     -^ React.Component. Has some incompatible type argument with
+             v------------------
+ 10: var B = React.createClass({
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+ 12: });
+     -^ React.Component
 Trace:
 * path 1:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 2)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, ObjT) [propTypes of React component] (from path 2)
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
 159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
 * path 3:
              v------------------
  10: var B = React.createClass({
@@ -159,28 +165,39 @@ Trace:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
      -^ ~> ExtendsUseT [extends `React.Component`] (from [not shown])
-  Property `foo` is incompatible:
+  Type argument `Props` is incompatible:
       7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
      11:   propTypes: { bar: React.PropTypes.string.isRequired }
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+      Property `foo` is incompatible:
+          7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+         11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 
-Error: Traces2.js:11
+Error: Traces2.js:10
+             v------------------
+ 10: var B = React.createClass({
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
-  7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+ 12: });
+     -^ React.Component. Has some incompatible type argument with
+             v------------------
+ 10: var B = React.createClass({
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+ 12: });
+     -^ React.Component
 Trace:
 * path 1:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 2)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, ObjT) [propTypes of React component] (from path 2)
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
 159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
 * path 3:
              v------------------
  10: var B = React.createClass({
@@ -192,11 +209,16 @@ Trace:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
  12: });
      -^ ~> ExtendsUseT [extends `React.Component`] (from [not shown])
-  Property `bar` is incompatible:
+  Type argument `Props` is incompatible:
      11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
       7:   propTypes: { foo: React.PropTypes.string.isRequired }
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+      Property `bar` is incompatible:
+         11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+          7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;
