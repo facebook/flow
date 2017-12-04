@@ -350,7 +350,7 @@ module rec TypeTerm : sig
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of use_op * reason * call_arg list * t
-    | SuperT of  use_op * reason * derived_type
+    | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
     | ToStringT of reason * t
@@ -2241,6 +2241,39 @@ and mod_reason_of_use_t f = function
   | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, r2), targs) ->
       ConcretizeTypeAppsT (use_op, t1, (t2, ts2, f r2), targs)
   | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
+
+let rec mod_op_of_use_t f u =
+  let util op make =
+    let op' = f op in
+    if op' == op then u else make op'
+  in
+  match u with
+  | UseT (op, t) -> util op (fun op -> UseT (op, t))
+  | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
+  | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
+  | MethodT (op, r1, r2, p, f) -> util op (fun op -> MethodT (op, r1, r2, p, f))
+  | SetPropT (op, r, p, w, t) -> util op (fun op -> SetPropT (op, r, p, w, t))
+  | SetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> SetPrivatePropT (op, r, s, c, b, t))
+  | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
+  | SetElemT (op, r, t1, t2) -> util op (fun op -> SetElemT (op, r, t1, t2))
+  | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
+  | ReposLowerT (r, d, u2) ->
+    let u2' = mod_op_of_use_t f u2 in
+    if u2' == u2 then u else ReposLowerT (r, d, u2')
+  | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
+  | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
+  | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
+  | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
+  | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
+  | TypeAppVarianceCheckT (op, r1, r2, ts) ->
+    util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
+  | ConcretizeTypeAppsT (op, x1, x2, b) -> util op (fun op -> ConcretizeTypeAppsT (op, x1, x2, b))
+  | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
+  | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
+  | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
+  | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
+  | _ -> u
 
 (* type comparison mod reason *)
 let reasonless_compare =

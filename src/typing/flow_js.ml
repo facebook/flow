@@ -699,22 +699,23 @@ module Cache = struct
            effect on type checking. However, recursively nested use ops can pose
            non-termination problems. To ensure proper caching, we hash use ops
            to just their top-level structure. *)
-        let u = match u with
-          | UseT (PropertyCompatibility c, t) when c.use_op <> UnknownUse ->
-            UseT (PropertyCompatibility {c with use_op = UnknownUse}, t)
-          | UseT (IndexerKeyCompatibility c, t) when c.use_op <> UnknownUse ->
-            UseT (IndexerKeyCompatibility {c with use_op = UnknownUse}, t)
-          | UseT (TupleElementCompatibility c, t) when c.use_op <> UnknownUse ->
-            UseT (TupleElementCompatibility {c with use_op = UnknownUse}, t)
-          | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
-            UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
-          | UseT (FunCompatibility c, t) when c.use_op <> UnknownUse ->
-            UseT (FunCompatibility {c with use_op = UnknownUse}, t)
-          | UseT (FunParam c, t) when c.use_op <> UnknownUse ->
-            UseT (FunParam {c with use_op = UnknownUse}, t)
-          | UseT (FunReturn c, t) when c.use_op <> UnknownUse ->
-            UseT (FunReturn {c with use_op = UnknownUse}, t)
-          | _ -> u in
+        let u = mod_op_of_use_t (function
+          | PropertyCompatibility c when c.use_op <> UnknownUse ->
+            PropertyCompatibility {c with use_op = UnknownUse}
+          | IndexerKeyCompatibility c when c.use_op <> UnknownUse ->
+            IndexerKeyCompatibility {c with use_op = UnknownUse}
+          | TupleElementCompatibility c when c.use_op <> UnknownUse ->
+            TupleElementCompatibility {c with use_op = UnknownUse}
+          | TypeArgCompatibility (s, r1, r2, use_op) when use_op <> UnknownUse ->
+            TypeArgCompatibility (s, r1, r2, UnknownUse)
+          | FunCompatibility c when c.use_op <> UnknownUse ->
+            FunCompatibility {c with use_op = UnknownUse}
+          | FunParam c when c.use_op <> UnknownUse ->
+            FunParam {c with use_op = UnknownUse}
+          | FunReturn c when c.use_op <> UnknownUse ->
+            FunReturn {c with use_op = UnknownUse}
+          | use_op -> use_op
+        ) u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
           prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
