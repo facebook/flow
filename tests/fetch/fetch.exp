@@ -269,7 +269,7 @@ Error: request.js:24
                    ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 598:       onFulfill?: (value: R) => Promise<U> | U,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  This parameter is incompatible:
+  The first parameter is incompatible:
     999:     text(): Promise<string>;
                              ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:999
      24: h.text().then((t: Buffer) => t); // incorrect
@@ -280,7 +280,7 @@ Error: request.js:26
                           ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 598:       onFulfill?: (value: R) => Promise<U> | U,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  This parameter is incompatible:
+  The first parameter is incompatible:
      26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ Buffer. This type is incompatible with
     995:     arrayBuffer(): Promise<ArrayBuffer>;
@@ -502,7 +502,7 @@ Error: response.js:42
                    ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 598:       onFulfill?: (value: R) => Promise<U> | U,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  This parameter is incompatible:
+  The first parameter is incompatible:
     973:     text(): Promise<string>;
                              ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:973
      42: h.text().then((t: Buffer) => t); // incorrect
@@ -513,7 +513,7 @@ Error: response.js:44
                           ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 598:       onFulfill?: (value: R) => Promise<U> | U,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  This parameter is incompatible:
+  The first parameter is incompatible:
      44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ Buffer. This type is incompatible with
     969:     arrayBuffer(): Promise<ArrayBuffer>;

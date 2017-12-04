@@ -651,7 +651,7 @@ Error: MutationObserver.js:12
                           ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 368:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:368
-  This parameter is incompatible:
+  The first parameter is incompatible:
     368:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
                                          ^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with. See lib: <BUILTINS>/bom.js:368
      12: new MutationObserver((n: number) => {}); // incorrect

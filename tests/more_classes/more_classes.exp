@@ -17,7 +17,7 @@ Error: Foo.js:7
            ^ function. This type is incompatible with
       9:   fooqux(x:number) { }
            ^^^^^^^^^^^^^^^^^^^^ function. See: Qux.js:9
-      This parameter is incompatible:
+      The first parameter is incompatible:
           9:   fooqux(x:number) { }
                         ^^^^^^ number. This type is incompatible with. See: Qux.js:9
          21:   fooqux(x:string) {

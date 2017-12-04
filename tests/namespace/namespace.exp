@@ -9,7 +9,7 @@ Error: namespace.js:3
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   3: var f: T = function(x:string): void { }
             ^ T
-  This parameter is incompatible:
+  The first parameter is incompatible:
       2: type T = (x:number) => void;
                      ^^^^^^ number. This type is incompatible with
       3: var f: T = function(x:string): void { }

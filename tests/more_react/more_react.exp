@@ -51,7 +51,7 @@ Error: checkPropTypes.js:12
                                                                                          ^^^^^^^^^ function. This type is incompatible with the expected param type of
 195:     getStack: ?(() => ?string)
                      ^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:195
-  This parameter is incompatible:
+  The return is incompatible:
      12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                    ^^^ number. This type is incompatible with
     195:     getStack: ?(() => ?string)

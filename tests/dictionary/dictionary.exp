@@ -737,7 +737,7 @@ Error: test.js:4
               ^^^^^^^^ function. This type is incompatible with
       4: var o: { foo: QueryFunction } = {
                        ^^^^^^^^^^^^^ QueryFunction
-      This parameter is incompatible:
+      The return is incompatible:
           6:     return params.count; // error, number ~/~ string
                         ^^^^^^^^^^^^ number. This type is incompatible with
           2: type QueryFunction = (params: Params) => string;
@@ -748,7 +748,7 @@ Error: test_client.js:3
              ^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   3: o.foo = function (params) {
      ^^^^^ QueryFunction
-  This parameter is incompatible:
+  The return is incompatible:
       4:   return params.count; // error, number ~/~ string
                   ^^^^^^^^^^^^ number. This type is incompatible with
       2: type QueryFunction = (params: Params) => string;

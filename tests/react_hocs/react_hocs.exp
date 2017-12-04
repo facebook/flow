@@ -8,7 +8,7 @@ Error: Bad.js:11
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
     122:   (props: Props, context: any): React$Node,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      This parameter is incompatible:
+      The first parameter is incompatible:
                                      v-
          15: ): (React.ComponentType<{|
          16:   ...Props,
@@ -33,7 +33,7 @@ Error: Bad.js:11
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
     122:   (props: Props, context: any): React$Node,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      This parameter is incompatible:
+      The first parameter is incompatible:
                                      v-
          15: ): (React.ComponentType<{|
          16:   ...Props,

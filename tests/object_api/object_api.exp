@@ -123,7 +123,7 @@ Error: object_prototype.js:39
                                      ^^^^^^^^^^ function type. This type is incompatible with
  39: var xToString2 : () => number = x.toString; // error
                       ^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      54:     toString(): string;
                          ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:54
      39: var xToString2 : () => number = x.toString; // error
@@ -170,7 +170,7 @@ Error: object_prototype.js:72
                                                        ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
  72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
                             ^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      50:     hasOwnProperty(prop: any): boolean;
                                         ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:50
      72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -199,7 +199,7 @@ Error: object_prototype.js:98
        ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
  97: var xPropertyIsEnumerable2 : (prop: string) => number =
                                   ^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      52:     propertyIsEnumerable(prop: any): boolean;
                                               ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:52
      97: var xPropertyIsEnumerable2 : (prop: string) => number =
@@ -246,7 +246,7 @@ Error: object_prototype.js:151
                                            ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                             ^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
     407:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
                                                                                              ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:407
     151: var xToLocaleString2 : () => number = x.toLocaleString; // error

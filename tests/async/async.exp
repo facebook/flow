@@ -35,7 +35,7 @@ Error: async2.js:32
                                   ^^^^^^^^ async function. This type is incompatible with
  32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
                      ^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      26:   async function voidoid1() {
                                     ^ Promise. This type is incompatible with
      32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>

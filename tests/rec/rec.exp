@@ -71,7 +71,7 @@ Error: test3.js:13
               ^ P. This type is incompatible with the expected return type of
  12: function bar(x: P<number>): () => P<number> {
                                  ^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      10: type P<X> = () => Q<P<X>>;
                            ^^^^^^^ Q. This type is incompatible with
      12: function bar(x: P<number>): () => P<number> {

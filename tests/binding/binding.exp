@@ -343,7 +343,7 @@ Error: scope.js:92
                            ^ function. This type is incompatible with
  92:     x: () => string = f // error: number ~> string
             ^^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The return is incompatible:
      93:   ): number {
               ^^^^^^ number. This type is incompatible with
      92:     x: () => string = f // error: number ~> string

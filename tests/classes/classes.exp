@@ -14,7 +14,7 @@ Error: C.js:3
            ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       2:   foo(x:number):void { }
            ^^^^^^^^^^^^^^^^^^^^^^ function. See: A.js:2
-      This parameter is incompatible:
+      The first parameter is incompatible:
           2:   foo(x:number):void { }
                      ^^^^^^ number. This type is incompatible with. See: A.js:2
           4:   foo(x:string):void { }

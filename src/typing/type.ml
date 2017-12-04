@@ -288,12 +288,15 @@ module rec TypeTerm : sig
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
     | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
     | Coercion
-    | FunCallMissingArg of reason * reason
-    | FunCallParam
-    | FunCallThis of reason
+    | FunCall of { op: reason; fn: reason }
+    | FunCallMethod of { op: reason; fn: reason; prop: reason }
+    | FunCompatibility of { lower: reason; upper: reason; use_op: use_op }
+    | FunParam of { n: int; lower: reason; upper: reason; use_op: use_op }
+    | FunReturn of { lower: reason; upper: reason; use_op: use_op }
+    | FunReturnStatement
     | FunImplicitReturn
-    | FunParam of { lower: reason; upper: reason; use_op: use_op }
-    | FunReturn
+    | FunCallThis of reason
+    | FunCallMissingArg of reason * reason
     | GetProperty of reason
     | IndexerKeyCompatibility of { lower: reason; upper: reason; use_op: use_op }
     | Internal of internal_use_op
@@ -2368,12 +2371,15 @@ let string_of_use_op = function
   | ClassExtendsCheck _ -> "ClassExtendsCheck"
   | ClassImplementsCheck _ -> "ClassImplementsCheck"
   | Coercion -> "Coercion"
-  | FunCallMissingArg _ -> "FunCallMissingArg"
-  | FunCallParam -> "FunCallParam"
-  | FunCallThis _ -> "FunCallThis"
-  | FunImplicitReturn -> "FunImplicitReturn"
+  | FunCall _ -> "FunCall"
+  | FunCallMethod _ -> "FunCallMethod"
+  | FunCompatibility _ -> "FunCompatibility"
   | FunParam _ -> "FunParam"
-  | FunReturn -> "FunReturn"
+  | FunReturn _ -> "FunReturn"
+  | FunReturnStatement -> "FunReturnStatement"
+  | FunImplicitReturn -> "FunImplicitReturn"
+  | FunCallMissingArg _ -> "FunCallMissingArg"
+  | FunCallThis _ -> "FunCallThis"
   | GetProperty _ -> "GetProperty"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)

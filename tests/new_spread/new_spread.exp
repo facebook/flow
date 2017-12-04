@@ -3,7 +3,7 @@ Error: cross_module/app.js:5
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
-  This parameter is incompatible:
+  The first parameter is incompatible:
       3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                              ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       5: const app = fn((o: {a: number, b: number}) => {});
@@ -19,7 +19,7 @@ Error: cross_module/app.js:5
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
-  This parameter is incompatible:
+  The first parameter is incompatible:
       3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                              ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       5: const app = fn((o: {a: number, b: number}) => {});
@@ -35,7 +35,7 @@ Error: cross_module/app.js:8
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
-  This parameter is incompatible:
+  The first parameter is incompatible:
       3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                              ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       8: export default fn((o: {a: number, b: number}) => {});
@@ -51,7 +51,7 @@ Error: cross_module/app.js:8
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
-  This parameter is incompatible:
+  The first parameter is incompatible:
       3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
                                              ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       8: export default fn((o: {a: number, b: number}) => {});

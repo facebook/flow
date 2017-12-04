@@ -8,7 +8,7 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   2: function g0(y:string) { }
-                   ^^^^^^ ~> UseT(FunCallParam, StrT) [string] (from path 2)
+                   ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 2)
 * path 2:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
@@ -22,7 +22,7 @@ Trace:
   4: f0(0);
         ^ NumT [number]
   3: function f0(x) { g0(x) }
-                 ^ ~> UseT(FunCallParam, OpenT) [`x`] (from [not shown])
+                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [`x`]
 
@@ -36,7 +36,7 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   7: function g1(a:string, b:string) { }
-                             ^^^^^^ ~> UseT(FunCallParam, StrT) [string] (from path 2)
+                             ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 2)
 * path 2:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
@@ -50,7 +50,7 @@ Trace:
   9: f1("hey", 0);
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                    ^ ~> UseT(FunCallParam, OpenT) [`y`] (from [not shown])
+                    ^ ~> UseT(FunParam, OpenT) [`y`] (from [not shown])
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [`y`]
 

@@ -940,7 +940,7 @@ and statement cx = Ast.Statement.(
         ]
       | _ -> t
       in
-      Flow.flow cx (t, UseT (FunReturn, ret));
+      Flow.flow cx (t, UseT (FunReturnStatement, ret));
       Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Return
 
@@ -2689,7 +2689,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype super argts t in
-        let use_op = FunCallParam in
+        let use_op = FunCallMethod {
+          op=reason;
+          fn=mk_reason (RMethod (Some name)) callee_loc;
+          prop=reason_prop;
+        } in
         Flow.flow cx (
           super,
           MethodT (use_op, reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2739,7 +2743,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
-        let use_op = FunCallParam in
+        let use_op = FunCall {
+          op=reason;
+          fn=mk_reason RSuper ploc;
+        } in
         Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype)))
 
   (******************************************)
@@ -2876,7 +2883,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           SpreadArg (AnyT.why reason) ]
         ret
       in
-      let use_op = FunCallParam in
+      let use_op = FunCall {
+        op=reason;
+        fn=reason_of_t t;
+      } in
       Flow.flow cx (t, CallT (use_op, reason, ft));
       ret
 
@@ -3059,7 +3069,10 @@ and predicated_call_expression_ cx loc callee arguments =
 and new_call cx tok class_ argts =
   let reason = mk_reason (RConstructorCall (desc_of_t class_)) tok in
   Tvar.mk_where cx reason (fun t ->
-    let use_op = FunCallParam in
+    let use_op = FunCall {
+      op=reason;
+      fn=reason_of_t class_;
+    } in
     Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
   )
 
@@ -3068,7 +3081,10 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Tvar.mk_where cx reason (fun t ->
     let frame = Env.peek_frame () in
     let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
-    let use_op = FunCallParam in
+    let use_op = FunCall {
+      op=reason;
+      fn=reason_of_t func_t;
+    } in
     Flow.flow cx (func_t, CallT (use_op, reason, app))
   )
 
@@ -3088,7 +3104,10 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let frame = Env.peek_frame () in
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
-        let use_op = FunCallParam in
+        let use_op = FunCall {
+          op=reason;
+          fn=reason_of_t f;
+        } in
         Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
@@ -3101,7 +3120,11 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
-        let use_op = FunCallParam in
+        let use_op = FunCallMethod {
+          op=reason;
+          fn=mk_reason (RMethod (Some name)) (Loc.btwn expr_loc prop_loc);
+          prop=reason_prop;
+        } in
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app))
       )
   )

@@ -77,7 +77,7 @@ Error: tvar3.js:21
           ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  11: declare function fn2<T>(x: (T) => void): T => void;
                                 ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      21: (fn2((a: A) => {}): B => void); // Error: B ~> A
                              ^ B. This type is incompatible with
      21: (fn2((a: A) => {}): B => void); // Error: B ~> A
@@ -94,7 +94,7 @@ Error: tvar3.js:22
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  12: declare function fn3<T>(x: T, y: (T) => void): T;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
               ^ A. This type is incompatible with
      22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
@@ -105,7 +105,7 @@ Error: tvar3.js:23
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  13: declare function fn4<T>(x: T, y: (T) => void): T => void;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
               ^ A. This type is incompatible with
      23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
@@ -116,7 +116,7 @@ Error: tvar3.js:23
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  13: declare function fn4<T>(x: T, y: (T) => void): T => void;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
                                 ^ C. This type is incompatible with
      23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
@@ -133,7 +133,7 @@ Error: tvar3.js:26
           ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  16: declare function fn6<T>(x: (T) => void): ($NonMaybeType<T>) => void;
                                 ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      26: (fn6((a: A) => {}): B => void); // Error: B ~> A
                              ^ B. This type is incompatible with
      16: declare function fn6<T>(x: (T) => void): ($NonMaybeType<T>) => void;
@@ -150,7 +150,7 @@ Error: tvar3.js:27
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  17: declare function fn7<T>(x: T, y: (T) => void): $NonMaybeType<T>;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
               ^ A. This type is incompatible with
      17: declare function fn7<T>(x: T, y: (T) => void): $NonMaybeType<T>;
@@ -161,7 +161,7 @@ Error: tvar3.js:27
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  17: declare function fn7<T>(x: T, y: (T) => void): $NonMaybeType<T>;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
               ^ A. This type is incompatible with
      27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
@@ -172,7 +172,7 @@ Error: tvar3.js:28
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
               ^ A. This type is incompatible with
      18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
@@ -183,7 +183,7 @@ Error: tvar3.js:28
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
               ^ A. This type is incompatible with
      28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
@@ -194,7 +194,7 @@ Error: tvar3.js:28
              ^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
                                       ^^^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
                                 ^ C. This type is incompatible with
      18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
@@ -217,7 +217,7 @@ Error: tvar4.js:33
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  27: function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
                                   ^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
                                                   ^^^^^^^^^ object literal. This type is incompatible with
      27: function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
@@ -253,7 +253,7 @@ Error: tvar4.js:47
          ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
  40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
                                     ^^^^^^^^^ function type
-  This parameter is incompatible:
+  The first parameter is incompatible:
      47: fn4((x: {p: string}) => {})(42);
                                      ^^ number. This type is incompatible with
      40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {

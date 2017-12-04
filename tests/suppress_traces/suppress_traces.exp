@@ -26,7 +26,7 @@ Trace:
  12:   return bar();
               ^^^^^ ~> UseT(UnknownUse, OpenT) [call of `bar`] (from path 4)
  11: function foo(x: string) {
-                            ^ ~> UseT(FunReturn, OpenT) [return]
+                            ^ ~> UseT(FunReturnStatement, OpenT) [return]
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> ReposLowerT [return] (from path 6)
 * path 4:

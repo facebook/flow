@@ -304,7 +304,8 @@ let rec locs_of_use_op acc = function
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | TypeArgCompatibility (_, r1, r2, use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
-  | FunParam { lower; upper; use_op } ->
+  | FunParam {use_op=FunCompatibility {lower; upper; use_op}; _}
+  | FunReturn {use_op=FunCompatibility {lower; upper; use_op}; _} ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Addition
   | AssignVar _
@@ -313,15 +314,20 @@ let rec locs_of_use_op acc = function
   | ClassImplementsCheck _
   | Coercion
   | FunImplicitReturn
+  | FunParam _
+  | FunReturn _
+  | FunCall _
+  | FunCallMethod _
   | FunCallMissingArg _
-  | FunCallParam
-  | FunReturn
+  | FunReturnStatement
+  | FunCompatibility _
   | GetProperty _
   | ReactCreateElementCall
   | TypeRefinement
   | UnknownUse
   | Internal _
-  | MissingTupleElement _ -> acc
+  | MissingTupleElement _
+    -> acc
 
 let locs_of_error_message = function
   | EIncompatible { lower = (reason_lower, _); upper = (reason_upper, _); _ } ->
@@ -723,7 +729,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let msg = "Has some incompatible type argument with" in
     unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
-  | FunReturn when not force ->
+  | FunReturnStatement when not force ->
     let msg = "This type is incompatible with the expected return type of" in
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
   | FunImplicitReturn when not force ->
@@ -732,7 +738,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       (string_of_desc (desc_of_reason lreason))
     in
     extra, (* suppress_op *) false, [ureason, [msg]]
-  | FunCallParam ->
+  (* TODO: Use a more stable approach to pick the right use_op. In an
+   * upcoming diff. This is to prevent React errors from regressing in
+   * the meantime. *)
+  | FunParam {use_op=ReactCreateElementCall; _} ->
+    let suppress_op = suppress_fun_call_param_op op in
+    extra, suppress_op, typecheck_msgs msg reasons
+  | FunParam {use_op=(FunCall _ | FunCallMethod _); _} ->
     let reasons, msg =
       if not force then
         let reasons' = ordered_reasons reasons in
@@ -747,9 +759,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-  | FunParam { lower; upper; use_op } ->
+  | FunParam {n; use_op=FunCompatibility {lower; upper; use_op}; _} ->
     let extra =
-      extra_info_of_use_op reasons extra msg "This parameter is incompatible:"
+      extra_info_of_use_op reasons extra msg
+        (spf "The %s parameter is incompatible:" (Utils_js.ordinal n))
+    in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
+  | FunReturn {use_op=FunCompatibility {lower; upper; use_op}; _} ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "The return is incompatible:"
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
@@ -775,14 +794,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
    * the primary location. *)
-  | AssignVar {init=root; _}
-  | Cast {lower=root; _}
+  | AssignVar {init=op; _}
+  | Cast {lower=op; _}
+  | FunCall {op; _}
+  | FunCallMethod {op; _}
     ->
     let rl, ru = reasons in
-    if Loc.contains (loc_of_reason root) (loc_of_reason rl) then (
+    if Loc.contains (loc_of_reason op) (loc_of_reason rl) then (
       extra, false, typecheck_msgs msg reasons
     ) else (
-      extra, true, [root, []; rl, [msg]; ru, []]
+      extra, true, [op, []; rl, [msg]; ru, []]
     )
   | _ ->
     extra, (* suppress_op *) false, typecheck_msgs msg reasons

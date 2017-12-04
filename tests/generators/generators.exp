@@ -40,7 +40,7 @@ Error: class.js:72
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         197:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -193,7 +193,7 @@ Error: generators.js:92
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         197:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
         503:     @@iterator(): $Iterator<Yield,Return,Next>;

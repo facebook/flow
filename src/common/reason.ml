@@ -130,6 +130,7 @@ type reason_desc =
   | RTypeAlias of string * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
+  | RMethod of string option
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option
@@ -462,6 +463,8 @@ let rec string_of_desc = function
   | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _) -> spf "`%s`" x
+  | RMethod (Some x) -> spf "method `%s`" x
+  | RMethod None -> "computed method"
   | RIdentifier x -> spf "`%s`" (prettify_react_util x)
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
   | RMethodCall (Some x) -> spf "call of method `%s`" x

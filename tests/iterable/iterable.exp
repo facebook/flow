@@ -8,7 +8,7 @@ Error: array.js:7
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         197:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -29,7 +29,7 @@ Error: array.js:8
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         197:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -50,7 +50,7 @@ Error: caching_bug.js:21
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         197:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -93,7 +93,7 @@ Error: map.js:14
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:541
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         541:     @@iterator(): Iterator<[K, V]>;
                                ^^^^^^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:541
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -114,7 +114,7 @@ Error: set.js:14
              ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:566
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         566:     @@iterator(): Iterator<T>;
                                ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:566
         503:     @@iterator(): $Iterator<Yield,Return,Next>;
@@ -135,7 +135,7 @@ Error: string.js:5
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:288
     503:     @@iterator(): $Iterator<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      This parameter is incompatible:
+      The return is incompatible:
         288:     @@iterator(): Iterator<string>;
                                ^^^^^^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:288
         503:     @@iterator(): $Iterator<Yield,Return,Next>;

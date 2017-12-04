@@ -100,7 +100,7 @@ Error: import.js:7
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       2:   foo(): this { return this; }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. See: export.js:2
-      This parameter is incompatible:
+      The return is incompatible:
           8:   foo(): B1 { return new B1(); } // error
                       ^^ B1. This type is incompatible with
           2:   foo(): this { return this; }
@@ -116,7 +116,7 @@ Error: import.js:13
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       7:   foo(): this { return this; }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. See: export.js:7
-      This parameter is incompatible:
+      The return is incompatible:
          14:   foo(): B3<X> { return new B3(); } // error
                       ^^^^^ B3. This type is incompatible with
           7:   foo(): this { return this; }
@@ -210,7 +210,7 @@ Error: test.js:47
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
      38:   bar(): this { return this; }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
-      This parameter is incompatible:
+      The return is incompatible:
          51:   bar(): Override2 { return new Override2; } // error (cf. OK above)
                       ^^^^^^^^^ Override2. This type is incompatible with
          38:   bar(): this { return this; }
@@ -226,7 +226,7 @@ Error: test.js:47
            ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
      42:   grault(that: Base2) { }
            ^^^^^^^^^^^^^^^^^^^^^^^ function
-      This parameter is incompatible:
+      The first parameter is incompatible:
          42:   grault(that: Base2) { }
                             ^^^^^ Base2. This type is incompatible with
          56:   grault(that: this) { } // error, too
@@ -242,7 +242,7 @@ Error: test.js:47
            ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
      42:   grault(that: Base2) { }
            ^^^^^^^^^^^^^^^^^^^^^^^ function
-      This parameter is incompatible:
+      The first parameter is incompatible:
          42:   grault(that: Base2) { }
                             ^^^^^ Base2. This type is incompatible with
          56:   grault(that: this) { } // error, too

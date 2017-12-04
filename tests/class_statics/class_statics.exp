@@ -14,7 +14,7 @@ Error: test.js:9
            ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       4:   static foo(x: number) { }
            ^^^^^^^^^^^^^^^^^^^^^^^^^ function
-      This parameter is incompatible:
+      The first parameter is incompatible:
           4:   static foo(x: number) { }
                              ^^^^^^ number. This type is incompatible with
          11:   static foo(x: string) { } // error?

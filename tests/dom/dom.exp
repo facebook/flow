@@ -316,7 +316,7 @@ Error: registerElement.js:48
         ...:
         540:     ) => mixed) &
                  ---------^ function type. See lib: <BUILTINS>/dom.js:535
-          This parameter is incompatible:
+          The second parameter is incompatible:
             537:       oldAttributeValue: null,
                                           ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:537
              52:           oldVal: string, // Error: This might be null
@@ -362,7 +362,7 @@ Error: registerElement.js:48
         ...:
         554:     ) => mixed);
                  ---------^ function type. See lib: <BUILTINS>/dom.js:549
-          This parameter is incompatible:
+          The third parameter is incompatible:
             552:       newAttributeValue: null,
                                           ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:552
              53:           newVal: string, // Error: This might be null
@@ -1041,7 +1041,7 @@ Error: traversal.js:186
                                                         ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                  ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  This parameter is incompatible:
+  The return is incompatible:
     186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
           v--------------------------------
@@ -1084,7 +1084,7 @@ Error: traversal.js:188
                                                                           ^^^^^^^^^^^^^^^^ function. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                                                         ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-      This parameter is incompatible:
+      The return is incompatible:
         188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                       ^^^^^^^^ string. This type is incompatible with
               v--------------------------------
@@ -1482,7 +1482,7 @@ Error: traversal.js:193
                                                       ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                  ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  This parameter is incompatible:
+  The return is incompatible:
     193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
           v--------------------------------
@@ -1525,7 +1525,7 @@ Error: traversal.js:195
                                                                         ^^^^^^^^^^^^^^^^ function. This type is incompatible with
     3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                                                         ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-      This parameter is incompatible:
+      The return is incompatible:
         195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                     ^^^^^^^^ string. This type is incompatible with
               v--------------------------------

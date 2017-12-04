@@ -708,8 +708,12 @@ module Cache = struct
             UseT (TupleElementCompatibility {c with use_op = UnknownUse}, t)
           | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
             UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
-          | UseT (FunParam { lower; upper; use_op }, t) when use_op <> UnknownUse ->
-            UseT (FunParam { lower; upper; use_op = UnknownUse }, t)
+          | UseT (FunCompatibility c, t) when c.use_op <> UnknownUse ->
+            UseT (FunCompatibility {c with use_op = UnknownUse}, t)
+          | UseT (FunParam c, t) when c.use_op <> UnknownUse ->
+            UseT (FunParam {c with use_op = UnknownUse}, t)
+          | UseT (FunReturn c, t) when c.use_op <> UnknownUse ->
+            UseT (FunReturn {c with use_op = UnknownUse}, t)
           | _ -> u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
@@ -3811,6 +3815,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, FunT (_, _, ft1)),
       UseT (use_op, DefT (ureason, FunT (_, _, ft2))) ->
+      let use_op = FunCompatibility { lower = lreason; upper = ureason; use_op } in
       rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
       let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
       let args = List.rev (match ft2.rest_param with
@@ -3820,7 +3825,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* TODO: This exists to support a legacy behavior of ResolveSpreadT.
        * Refactor how React use_ops work and remove this special case. *)
       | RReactSFC -> ReactCreateElementCall
-      | _ -> FunParam { lower = lreason; upper = ureason; use_op }
+      | _ -> use_op
       in
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
@@ -3868,8 +3873,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Ok map ->
             rec_flow cx trace (ft1.return_t,
               SubstOnPredT (reason, map, ft2.return_t))
-      else
+      else (
+        let use_op = FunReturn {
+          lower = reason_of_t ft1.return_t;
+          upper = reason_of_t ft2.return_t;
+          use_op;
+        } in
         rec_flow cx trace (ft1.return_t, UseT (use_op, ft2.return_t))
+      )
 
     (* FunT ~> CallT *)
 
@@ -6090,7 +6101,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Coercion, u) ->
       add_output cx ~trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
-    | _, UseT (FunCallParam, u) ->
+    | _, UseT (FunParam {use_op=(FunCall _ | FunCallMethod _); _}, u) ->
       add_output cx ~trace
         (FlowError.EFunCallParam (reason_of_t l, reason_of_t u))
 
@@ -6102,7 +6113,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace
         (FlowError.EFunImplicitReturn (reason_of_t l, reason_of_t u))
 
-    | _, UseT (FunReturn, u) ->
+    | _, UseT (FunReturnStatement, u) ->
       add_output cx ~trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
 
     | _, UseT (SetProperty reason_op, u) ->
@@ -6114,6 +6125,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (Cast _ as use_op, u)
     | _, UseT (FunParam _ as use_op, u)
+    | _, UseT (FunReturn _ as use_op, u)
     | _, UseT (PropertyCompatibility _ as use_op, u)
     | _, UseT (IndexerKeyCompatibility _ as use_op, u)
     | _, UseT (TupleElementCompatibility _ as use_op, u)
@@ -9470,15 +9482,18 @@ and multiflow_subtype cx trace ~use_op reason_op args ft =
 (* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
  * all unused parameters *)
 and multiflow_full
-  cx ~trace ~use_op reason_op ~is_call ~def_reason
+  cx ~trace ~use_op reason_op ~is_strict ~def_reason
   ~spread_arg ~rest_param (arglist, parlist) =
 
   let unused_parameters, _ = multiflow_partial
-    cx ~trace ~use_op reason_op ~is_call ~def_reason
+    cx ~trace ~use_op reason_op ~is_strict ~def_reason
     ~spread_arg ~rest_param (arglist, parlist) in
 
   List.iter (fun (_, param) ->
-    let is_call = is_call || use_op = FunCallParam in
+    let is_call = match use_op with
+    | FunCall _ | FunCallMethod _ -> true
+    | _ -> false
+    in
     let (reason_desc, use_op) = if is_call
       then (RVoid, FunCallMissingArg (reason_op, def_reason))
       else (RTooFewArgsExpectedRest, UnknownUse)
@@ -9496,7 +9511,7 @@ and multiflow_full
  * all the regular arguments. There may also be a rest parameter.
  *)
 and multiflow_partial =
-  let rec multiflow_non_spreads cx ~trace ~use_op (arglist, parlist) =
+  let rec multiflow_non_spreads cx ~trace ~use_op n (arglist, parlist) =
     match (arglist, parlist) with
     (* Do not complain on too many arguments.
        This pattern is ubiqutous and causes a lot of noise when complained about.
@@ -9515,22 +9530,28 @@ and multiflow_partial =
          instead, let it flow through transparently, so that we point at the
          place that constrained the type arg. this is pretty hacky. *)
       let tout =
+        let use_op = FunParam {
+          n;
+          lower=(reason_of_t tin);
+          upper=(reason_of_t tout);
+          use_op;
+        } in
         let u = UseT (use_op, tout) in
         match desc_of_t tin with
         | RTypeParam _ -> u
         | _ -> ReposLowerT (reason_of_t tin, false, u)
       in
       flow_opt cx ~trace (tin, tout);
-      multiflow_non_spreads cx ~trace ~use_op (tins,touts)
+      multiflow_non_spreads cx ~trace ~use_op (n + 1) (tins,touts)
 
 
   in
-  fun cx ~trace ~use_op ~is_call ~def_reason ~spread_arg ~rest_param
+  fun cx ~trace ~use_op ~is_strict ~def_reason ~spread_arg ~rest_param
     reason_op (arglist, parlist) ->
 
     (* Handle all the non-spread arguments and all the non-rest parameters *)
     let unused_arglist, unused_parlist =
-      multiflow_non_spreads cx ~trace ~use_op (arglist, parlist) in
+      multiflow_non_spreads cx ~trace ~use_op 1 (arglist, parlist) in
 
     (* If there is a spread argument, it will consume all the unused parameters *)
     let unused_parlist = match spread_arg with
@@ -9549,7 +9570,7 @@ and multiflow_partial =
     (* If there is a rest parameter, it will consume all the unused arguments *)
     begin match rest_param with
     | None ->
-      if is_call && Context.enforce_strict_call_arity cx
+      if is_strict && Context.enforce_strict_call_arity cx
       then begin
         List.iter (fun unused_arg ->
           FlowError.EFunctionCallExtraArg (
@@ -9848,7 +9869,7 @@ and finish_resolve_spread_list =
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
 
     let params, rest_param = multiflow_partial
-      cx ~trace ~use_op reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
+      cx ~trace ~use_op reason_op ~is_strict:true ~def_reason ~spread_arg ~rest_param
       (args, params) in
     let params_names, params_tlist = List.split params in
 
@@ -9871,7 +9892,7 @@ and finish_resolve_spread_list =
 
   (* This is used for things like function application, where all the arguments
    * are applied to a function *)
-  let finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call ft resolved =
+  let finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict ft resolved =
     (* Multiflows always come out of a flow *)
     let trace = match trace with
     | Some trace -> trace
@@ -9881,7 +9902,7 @@ and finish_resolve_spread_list =
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
     multiflow_full
-      cx ~trace ~use_op reason_op ~is_call ~def_reason
+      cx ~trace ~use_op reason_op ~is_strict ~def_reason
       ~spread_arg ~rest_param (args, params)
 
   in
@@ -9920,9 +9941,9 @@ and finish_resolve_spread_list =
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
     | ResolveSpreadsToMultiflowCallFull (_, ft) ->
-      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call:true ft resolved
+      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:true ft resolved
     | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
-      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call:false ft resolved
+      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:false ft resolved
     | ResolveSpreadsToCustomFunCall (_, kind, tout) ->
       finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->

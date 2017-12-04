@@ -2265,7 +2265,7 @@ Error: process/nextTick.js:13
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                           ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  This parameter is incompatible:
+  The first parameter is incompatible:
      14:   0, // Error: number ~> string
            ^ number. This type is incompatible with
      13:   (a: string, b: number, c: boolean) => {},
@@ -2276,7 +2276,7 @@ Error: process/nextTick.js:13
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                           ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  This parameter is incompatible:
+  The third parameter is incompatible:
      16:   null // Error: null ~> boolean
            ^^^^ null. This type is incompatible with
      13:   (a: string, b: number, c: boolean) => {},
@@ -2287,7 +2287,7 @@ Error: process/nextTick.js:20
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                           ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  This parameter is incompatible:
+  The second parameter is incompatible:
      22:   'y', // Error: string ~> number
            ^^^ string. This type is incompatible with
      20:   (a: string, b: number, c: boolean) => {},

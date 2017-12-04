@@ -82,6 +82,7 @@ type reason_desc =
   | RTypeAlias of string * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc
+  | RMethod of string option
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option

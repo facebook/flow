@@ -8,7 +8,7 @@ Error: fun.js:5
                      ^^^^^^^ function. This type is incompatible with
       2:   (): void;
            ^^^^^^^^ function type
-      This parameter is incompatible:
+      The return is incompatible:
           5: var f0: F = () => 0; // error: number ~> void
                                ^ number. This type is incompatible with
           2:   (): void;
@@ -197,7 +197,7 @@ Error: test4.js:9
                    ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
     6:   bar(f: (x: number) => void): void;
                 ^^^^^^^^^^^^^^^^^^^ function type
-    This parameter is incompatible:
+    The first parameter is incompatible:
         6:   bar(f: (x: number) => void): void;
                         ^^^^^^ number. This type is incompatible with
         9: new C().bar((x: string) => { }); // error, number ~/~> string

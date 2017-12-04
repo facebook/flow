@@ -24,7 +24,7 @@ Error: classes.js:7
      36:     callback?: () => mixed,
      37:   ): void;
            ------^ function type. See lib: <BUILTINS>/react.js:34
-      This parameter is incompatible:
+      The first parameter is incompatible:
          23:   setState(o: { y_: string }): void { }
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -49,7 +49,7 @@ Error: classes.js:7
      36:     callback?: () => mixed,
      37:   ): void;
            ------^ function type. See lib: <BUILTINS>/react.js:34
-      This parameter is incompatible:
+      The first parameter is incompatible:
          23:   setState(o: { y_: string }): void { }
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -169,7 +169,7 @@ Error: classes.js:43
      36:     callback?: () => mixed,
      37:   ): void;
            ------^ function type. See lib: <BUILTINS>/react.js:34
-      This parameter is incompatible:
+      The first parameter is incompatible:
          60:   getInitialState(): { y: string } {
                               ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
          64:   setState(o: { y_: string }): void { },
@@ -204,7 +204,7 @@ Error: classes.js:43
      36:     callback?: () => mixed,
      37:   ): void;
            ------^ function type. See lib: <BUILTINS>/react.js:34
-      This parameter is incompatible:
+      The first parameter is incompatible:
          64:   setState(o: { y_: string }): void { },
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -741,7 +741,7 @@ Error: state6.js:29
          -^ function. This type is incompatible with
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-  This parameter is incompatible:
+  The return is incompatible:
                                   v------------------------------------
      29:     this.setState(() => ({ // Error: `bar` should be a number.
      30:       bar: '42',
@@ -807,7 +807,7 @@ Error: state6.js:41
                                  ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
        35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-        This parameter is incompatible:
+        The first parameter is incompatible:
            13: class MyComponent extends React.Component<{prop: number}, State> {
                                                                          ^^^^^ State. This type is incompatible with
            11: type StateUpdater3 = {(number): number, foo: number, bar: number};
