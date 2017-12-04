@@ -2475,7 +2475,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":4,"column":5,"offset":38},
+          "end":{"line":4,"column":5,"offset":39}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":4,
+        "endline":4,
+        "start":5,
+        "end":5
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
@@ -2490,7 +2511,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":5,"column":5,"offset":52},
+          "end":{"line":5,"column":5,"offset":53}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":5,
+        "endline":5,
+        "start":5,
+        "end":5
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
@@ -2556,7 +2598,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":6,"column":5,"offset":72},
+          "end":{"line":6,"column":5,"offset":73}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":6,
+        "endline":6,
+        "start":5,
+        "end":5
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
@@ -2586,7 +2649,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":7,"column":5,"offset":93},
+          "end":{"line":7,"column":5,"offset":94}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":7,
+        "endline":7,
+        "start":5,
+        "end":5
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
@@ -2652,7 +2736,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":8,"column":5,"offset":115},
+          "end":{"line":8,"column":5,"offset":116}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":8,
+        "endline":8,
+        "start":5,
+        "end":5
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
@@ -2751,8 +2856,8 @@
         "def_loc":{
           "source":"[LIB] core.js",
           "type":"LibFile",
-          "start":{"line":238,"column":1,"offset":8571},
-          "end":{"line":285,"column":1,"offset":11054}
+          "start":{"line":238,"column":15,"offset":8585},
+          "end":{"line":238,"column":19,"offset":8590}
         },
         "path":"predicates.js",
         "line":9,
@@ -2811,7 +2916,28 @@
   },
   {
     "type":"{FOO: string}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object literal",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":9,"column":19,"offset":156},
+          "end":{"line":9,"column":19,"offset":157}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":18},
+          "end":{"line":3,"column":22,"offset":32}
+        },
+        "path":"predicates.js",
+        "line":9,
+        "endline":9,
+        "start":19,
+        "end":19
+      }
+    ],
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",

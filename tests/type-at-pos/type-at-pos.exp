@@ -809,7 +809,22 @@ predicates.js - y (refined obj): {
 }
 predicates.js - if (y.FOO) obj: {
   "type":"{FOO: string}",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"object literal",
+      "loc":{
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":5,"offset":119},
+        "end":{"line":9,"column":5,"offset":120}
+      },
+      "path":"predicates.js",
+      "line":9,
+      "endline":9,
+      "start":5,
+      "end":5
+    }
+  ],
   "loc":{
     "source":"predicates.js",
     "type":"SourceFile",
@@ -839,7 +854,22 @@ predicates.js - if (y.FOO) prop: {
 }
 predicates.js - if (y.FOO == '') obj: {
   "type":"{FOO: string}",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"object literal",
+      "loc":{
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":5,"offset":133},
+        "end":{"line":10,"column":5,"offset":134}
+      },
+      "path":"predicates.js",
+      "line":10,
+      "endline":10,
+      "start":5,
+      "end":5
+    }
+  ],
   "loc":{
     "source":"predicates.js",
     "type":"SourceFile",
@@ -884,7 +914,22 @@ predicates.js - if (y.FOO == '') prop: {
 }
 predicates.js - if (y.FOO === '') obj: {
   "type":"{FOO: string}",
-  "reasons":[],
+  "reasons":[
+    {
+      "desc":"object literal",
+      "loc":{
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":11,"column":5,"offset":153},
+        "end":{"line":11,"column":5,"offset":154}
+      },
+      "path":"predicates.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    }
+  ],
   "loc":{
     "source":"predicates.js",
     "type":"SourceFile",
