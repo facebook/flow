@@ -155,6 +155,8 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                         ^^^^^^^^^^^^^^^ object type
     Error:
+     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+               ^ intersection type
      30: declare var x: { a: boolean; } & { b: string };
                         ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      16:     bar(x: { a: number }): number;
@@ -168,6 +170,8 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
     Error:
+     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+               ^ intersection type
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      16:     bar(x: { a: number }): number;
@@ -189,6 +193,8 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                         ^^^^^^^^^^^^^^^ object type
     Error:
+     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+               ^ intersection type
      30: declare var x: { a: boolean; } & { b: string };
                         ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      17:     bar(x: { a: string }): string;
@@ -202,6 +208,8 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
     Error:
+     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+               ^ intersection type
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      17:     bar(x: { a: string }): string;

@@ -744,7 +744,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | FunParam {use_op=ReactCreateElementCall; _} ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-  | FunParam {use_op=(FunCall _ | FunCallMethod _); _} ->
+  | FunParam {lower; use_op=(FunCall _ | FunCallMethod _); _} ->
     let reasons, msg =
       if not force then
         let reasons' = ordered_reasons reasons in
@@ -757,8 +757,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       else
         reasons, msg
     in
+    (* Always prefer the location from our use_op. use_ops should never have the
+     * wrong primary location. *)
+    let msgs = if Loc.contains (loc_of_reason lower) (loc_of_reason (fst reasons))
+      then typecheck_msgs msg reasons
+      else (lower, [])::(typecheck_msgs msg reasons)
+    in
     let suppress_op = suppress_fun_call_param_op op in
-    extra, suppress_op, typecheck_msgs msg reasons
+    extra, suppress_op, msgs
   | FunParam {n; use_op=FunCompatibility {lower; upper; use_op}; _} ->
     let extra =
       extra_info_of_use_op reasons extra msg
