@@ -2621,11 +2621,12 @@ let dump_flow_error =
         spf "EFunctionCallMissingArg (%s, %s)"
           (dump_reason cx reason_op)
           (dump_reason cx reason_def)
-    | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
-        spf "EFunctionCallExtraArg (%s, %s, %d)"
+    | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+        spf "EFunctionCallExtraArg (%s, %s, %d, %s)"
           (dump_reason cx  unused_reason)
           (dump_reason cx def_reason)
           param_count
+          (string_of_use_op use_op)
     | EUnsupportedSetProto reason ->
         spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
     | EDuplicateModuleProvider { module_name; provider; conflict } ->

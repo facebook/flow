@@ -170,9 +170,9 @@ Error: FormData.js:29
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Error:
    29: a.set('foo', 'bar', 'baz'); // incorrect
-                           ^^^^^ unused function argument
-    328:     set(name: string, value: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:328
+                           ^^^^^ unused function argument. No more than 2 arguments are expected by
+  328:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -320,9 +320,9 @@ Error: FormData.js:41
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Error:
    41: a.append('foo', 'bar', 'baz'); // incorrect
-                              ^^^^^ unused function argument
-    332:     append(name: string, value: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:332
+                              ^^^^^ unused function argument. No more than 2 arguments are expected by
+  332:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333

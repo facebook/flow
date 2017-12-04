@@ -32,9 +32,9 @@ Error: buffer/buffer.js:57
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:111
   Error:
    57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                                                                  ^^^^^^^^^^^^^^^^^^^ unused function argument
-    111:   static from(value: Iterable<number>): this;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/node.js:111
+                                                                  ^^^^^^^^^^^^^^^^^^^ unused function argument. No more than 1 argument is expected by
+  111:   static from(value: Iterable<number>): this;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:111
 
 Error: child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
@@ -366,9 +366,9 @@ Error: http/server.js:69
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                                   ^^^^^^^^^^^ unused function argument
-    1099:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1099
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1099:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:70
  70: server.listen({}, function() {}, 'localhost', 123);
@@ -420,9 +420,9 @@ Error: http/server.js:70
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                                        ^^^^^^^^^^^ unused function argument
-    1099:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1099
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1099:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -474,9 +474,9 @@ Error: http/server.js:71
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    71: server.listen({}, () => {}, 123);
-                                   ^^^ unused function argument
-    1099:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1099
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
+  1099:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:72
  72: server.listen({}, function() {}, 123);
@@ -528,9 +528,9 @@ Error: http/server.js:72
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    72: server.listen({}, function() {}, 123);
-                                        ^^^ unused function argument
-    1099:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1099
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
+  1099:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:73
  73: server.listen(() => {}, 123);
@@ -890,9 +890,9 @@ Error: http/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    79: server.listen(8080, () => {}, 'localhost', 123);
-                                     ^^^^^^^^^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -944,9 +944,9 @@ Error: http/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    80: server.listen(8080, function() {}, 'localhost', 123);
-                                          ^^^^^^^^^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -998,9 +998,9 @@ Error: http/server.js:81
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    81: server.listen(8080, () => {}, 123);
-                                     ^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -1052,9 +1052,9 @@ Error: http/server.js:82
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    82: server.listen(8080, function() {}, 123);
-                                          ^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -1106,9 +1106,9 @@ Error: http/server.js:83
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    83: server.listen(8080, () => {}, 'localhost');
-                                     ^^^^^^^^^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -1160,9 +1160,9 @@ Error: http/server.js:84
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    84: server.listen(8080, function() {}, 'localhost');
-                                          ^^^^^^^^^^^ unused function argument
-    1097:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1097
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1097:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
@@ -1348,9 +1348,9 @@ Error: https/server.js:69
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                                   ^^^^^^^^^^^ unused function argument
-    1137:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1137
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1137:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:70
  70: server.listen({}, function() {}, 'localhost', 123);
@@ -1402,9 +1402,9 @@ Error: https/server.js:70
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                                        ^^^^^^^^^^^ unused function argument
-    1137:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1137
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1137:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -1456,9 +1456,9 @@ Error: https/server.js:71
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    71: server.listen({}, () => {}, 123);
-                                   ^^^ unused function argument
-    1137:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1137
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
+  1137:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:72
  72: server.listen({}, function() {}, 123);
@@ -1510,9 +1510,9 @@ Error: https/server.js:72
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    72: server.listen({}, function() {}, 123);
-                                        ^^^ unused function argument
-    1137:     listen(handle: Object, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1137
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
+  1137:     listen(handle: Object, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:73
  73: server.listen(() => {}, 123);
@@ -1872,9 +1872,9 @@ Error: https/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    79: server.listen(8443, () => {}, 'localhost', 123);
-                                     ^^^^^^^^^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -1926,9 +1926,9 @@ Error: https/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    80: server.listen(8443, function() {}, 'localhost', 123);
-                                          ^^^^^^^^^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -1980,9 +1980,9 @@ Error: https/server.js:81
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    81: server.listen(8443, () => {}, 123);
-                                     ^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -2034,9 +2034,9 @@ Error: https/server.js:82
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    82: server.listen(8443, function() {}, 123);
-                                          ^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -2088,9 +2088,9 @@ Error: https/server.js:83
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    83: server.listen(8443, () => {}, 'localhost');
-                                     ^^^^^^^^^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -2142,9 +2142,9 @@ Error: https/server.js:84
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    84: server.listen(8443, function() {}, 'localhost');
-                                          ^^^^^^^^^^^ unused function argument
-    1135:     listen(port?: number, callback?: Function): Server;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1135
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
+  1135:     listen(port?: number, callback?: Function): Server;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
@@ -2428,9 +2428,9 @@ Error: process/process.js:12
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Error:
    12: process.emitWarning("blah", 42); // error
-                                   ^^ unused function argument
-    1929:   emitWarning(warning: string | Error): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/node.js:1929
+                                   ^^ unused function argument. No more than 1 argument is expected by
+  1929:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Member 2:
   1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1930
@@ -2487,17 +2487,17 @@ Error: process/process.js:13
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Error:
    13: process.emitWarning("blah", "blah", 42); // error
-                                   ^^^^^^ unused function argument
-    1929:   emitWarning(warning: string | Error): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/node.js:1929
+                                   ^^^^^^ unused function argument. No more than 1 argument is expected by
+  1929:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Member 2:
   1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1930
   Error:
    13: process.emitWarning("blah", "blah", 42); // error
-                                           ^^ unused function argument
-    1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/node.js:1930
+                                           ^^ unused function argument. No more than 2 arguments are expected by
+  1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1930
   Member 3:
   1931:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931

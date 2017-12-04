@@ -14,9 +14,9 @@ Error: date.js:18
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    18: new Date({});
-                ^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
@@ -52,17 +52,17 @@ Error: date.js:19
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    19: new Date(2015, '6');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    19: new Date(2015, '6');
-                      ^^^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^^^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -90,17 +90,17 @@ Error: date.js:20
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    20: new Date(2015, 6, '18');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    20: new Date(2015, 6, '18');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -128,17 +128,17 @@ Error: date.js:21
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    21: new Date(2015, 6, 18, '11');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    21: new Date(2015, 6, 18, '11');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -166,17 +166,17 @@ Error: date.js:22
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    22: new Date(2015, 6, 18, 11, '55');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    22: new Date(2015, 6, 18, 11, '55');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -204,17 +204,17 @@ Error: date.js:23
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -242,17 +242,17 @@ Error: date.js:24
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -280,17 +280,17 @@ Error: date.js:25
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-                ^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-                      ^ unused function argument
-    367:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:367
+                      ^ unused function argument. No more than 1 argument is expected by
+  367:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
   Member 3:
   368:     constructor(dateString: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
@@ -304,9 +304,9 @@ Error: date.js:25
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:369
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-                                              ^^^^^^^^ unused function argument
-    369:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 7 arguments. See lib: <BUILTINS>/core.js:369
+                                              ^^^^^^^^ unused function argument. No more than 7 arguments are expected by
+  369:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:369
 
 Error: date.js:26
  26: new Date('2015', 6);
@@ -318,9 +318,9 @@ Error: date.js:26
            ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Error:
    26: new Date('2015', 6);
-                ^^^^^^ unused function argument
-    366:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:366
+                ^^^^^^ unused function argument. No arguments are expected by
+  366:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:366
   Member 2:
   367:     constructor(timestamp: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:367
@@ -334,9 +334,9 @@ Error: date.js:26
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
   Error:
    26: new Date('2015', 6);
-                        ^ unused function argument
-    368:     constructor(dateString: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:368
+                        ^ unused function argument. No more than 1 argument is expected by
+  368:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:368
   Member 4:
   369:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:369

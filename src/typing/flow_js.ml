@@ -9576,7 +9576,8 @@ and multiflow_partial =
           FlowError.EFunctionCallExtraArg (
             mk_reason RFunctionUnusedArgument (loc_of_t unused_arg),
             def_reason,
-            List.length parlist
+            List.length parlist,
+            use_op
           )
           |> add_output cx ~trace
         ) unused_arglist

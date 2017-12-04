@@ -162,7 +162,7 @@ type error_message =
   | EReactKit of (reason * reason) * React.tool
   | EReactElementFunArity of reason * string * int
   | EFunctionCallMissingArg of (reason * reason)
-  | EFunctionCallExtraArg of (reason * reason * int)
+  | EFunctionCallExtraArg of reason * reason * int * use_op
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
       module_name: string;
@@ -465,8 +465,8 @@ let locs_of_error_message = function
   | EReactElementFunArity (reason, _, _) -> [loc_of_reason reason]
   | EFunctionCallMissingArg (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EFunctionCallExtraArg (reason1, reason2, _) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EFunctionCallExtraArg (reason1, reason2, _, use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
   | EDuplicateModuleProvider { module_name = _; provider; conflict; } ->
       [
@@ -1609,22 +1609,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ]]
     ]
 
-  | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
-    let core_msgs = [
-      unused_reason, [];
-    ] in
-    let expects = match param_count with
-    | 0 -> "expects no arguments"
-    | 1 -> "expects no more than 1 argument"
-    | n -> spf "expects no more than %d arguments" n in
-    let extra = [
-      InfoLeaf [def_loc_of_reason def_reason, [spf
-        "%s %s"
-        (string_of_desc (desc_of_reason def_reason))
-        expects
-      ]];
-    ] in
-    typecheck_error_with_core_infos ~extra core_msgs
+  | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+    let msg = match param_count with
+    | 0 -> "No arguments are expected by"
+    | 1 -> "No more than 1 argument is expected by"
+    | n -> spf "No more than %d arguments are expected by" n
+    in
+    let extra, _, msgs = unwrap_use_ops ((unused_reason, def_reason), [], msg) use_op in
+    typecheck_error_with_core_infos ~extra ~suppress_op:true msgs
 
   | EUnsupportedSetProto reason ->
       mk_error ~trace_infos [mk_info reason [
