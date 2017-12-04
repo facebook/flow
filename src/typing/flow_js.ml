@@ -1657,7 +1657,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ()
 
     | _, BecomeT (reason, t) ->
-      rec_unify cx trace (reposition ~trace cx (loc_of_reason reason) l) t
+      rec_unify cx trace ~use_op:unknown_use (reposition ~trace cx (loc_of_reason reason) l) t
 
     (***********************)
     (* guarded unification *)
@@ -1671,7 +1671,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         are processed only when the corresponding triggers fire. *)
 
     | (_, UnifyT(t,t_other)) ->
-      rec_unify cx trace t t_other
+      rec_unify cx trace ~use_op:unknown_use t t_other
 
     (*********************************************************************)
     (* `import type` creates a properly-parameterized type alias for the *)
@@ -4342,8 +4342,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* any can function as class or function type, hence ok for annotations *)
       rec_flow cx trace (l, BecomeT (reason, t))
 
-    | DefT (_, TypeT l), UseT (_, DefT (_, TypeT u)) ->
-      rec_unify cx trace l u
+    | DefT (_, TypeT l), UseT (use_op, DefT (_, TypeT u)) ->
+      rec_unify cx trace ~use_op l u
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, DefT (ru, TypeT _)) ->
@@ -4356,9 +4356,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         UseT (use_op, u))
 
     | DefT (_, FunT (static1, prototype, _)),
-      UseT (_, DefT (_, ClassT (DefT (_, InstanceT (static2, _, _, _)) as u_))) ->
-      rec_unify cx trace static1 static2;
-      rec_unify cx trace prototype u_
+      UseT (use_op, DefT (_, ClassT (DefT (_, InstanceT (static2, _, _, _)) as u_))) ->
+      rec_unify cx trace ~use_op static1 static2;
+      rec_unify cx trace ~use_op prototype u_
 
     | DefT (_, AnyT), UseT (use_op, DefT (_, ClassT u)) ->
       rec_flow cx trace (l, UseT (use_op, u))
@@ -5884,7 +5884,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        FunProtoT _ |
        (* TODO: why would mixed appear here? *)
        DefT (_, MixedT (Mixed_truthy | Mixed_non_maybe))),
-      LookupT (_, NonstrictReturning t_opt, [], _, _) ->
+      LookupT (_, NonstrictReturning t_opt, [], _, action) ->
       (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -5897,8 +5897,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          a condition, in which case we consider the object's property to be
          `mixed`.
       *)
+      let use_op = Option.value ~default:unknown_use (use_op_of_lookup_action action) in
       begin match t_opt with
-      | Some (not_found, t) -> rec_unify cx trace t not_found
+      | Some (not_found, t) -> rec_unify cx trace ~use_op t not_found
       | None -> ()
       end
 
@@ -7199,7 +7200,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
   | None -> t
   | Some rs ->
     let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
-    rec_unify cx trace t t_;
+    rec_unify cx trace ~use_op:unknown_use t t_;
     t_
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
@@ -7244,7 +7245,7 @@ and fix_this_class cx trace reason (r, i) =
       let this = Tvar.mk cx reason in
       let i' = subst cx (SMap.singleton "this" this) i in
       Cache.Fix.add reason i i';
-      rec_unify cx trace this i';
+      rec_unify cx trace ~use_op:unknown_use this i';
       i'
   in
   DefT (r, ClassT i')
@@ -8018,7 +8019,7 @@ and guess_and_record_sentinel_prop cx ts =
 
 and fire_actions cx trace = List.iter (function
   | _, Speculation.Action.Flow (l, u) -> rec_flow cx trace (l, u)
-  | _, Speculation.Action.Unify (t1, t2) -> rec_unify cx trace t1 t2
+  | _, Speculation.Action.Unify (use_op, t1, t2) -> rec_unify cx trace ~use_op t1 t2
 )
 
 and mk_union_reason r us =
@@ -9147,7 +9148,7 @@ and ok_unify = function
   | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ | MergedT _ -> false
   | _ -> true
 
-and __unify cx ?(use_op=unknown_use) t1 t2 trace =
+and __unify cx ~use_op t1 t2 trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
@@ -9180,7 +9181,7 @@ and __unify cx ?(use_op=unknown_use) t1 t2 trace =
      is, then when speculation is complete, the action either fires or is
      discarded depending on whether the case that created the action is
      selected or not. *)
-  if not Speculation.(defer_action cx (Action.Unify (t1, t2))) then
+  if not Speculation.(defer_action cx (Action.Unify (use_op, t1, t2))) then
 
   match t1, t2 with
 
@@ -9201,7 +9202,7 @@ and __unify cx ?(use_op=unknown_use) t1 t2 trace =
         with each other, then instances parameterized by these *)
     let args1 = instantiate_poly_param_upper_bounds cx params1 in
     let args2 = instantiate_poly_param_upper_bounds cx params2 in
-    List.iter2 (rec_unify cx trace) args1 args2;
+    List.iter2 (rec_unify cx trace ~use_op) args1 args2;
     let inst1 =
       let r = reason_of_t t1 in
       instantiate_poly_with_targs cx trace
@@ -9210,13 +9211,13 @@ and __unify cx ?(use_op=unknown_use) t1 t2 trace =
       let r = reason_of_t t2 in
       instantiate_poly_with_targs cx trace
         ~use_op ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
-    rec_unify cx trace inst1 inst2
+    rec_unify cx trace ~use_op inst1 inst2
 
   | DefT (_, ArrT (ArrayAT(t1, ts1))),
     DefT (_, ArrT (ArrayAT(t2, ts2))) ->
     let ts1 = Option.value ~default:[] ts1 in
     let ts2 = Option.value ~default:[] ts2 in
-    array_unify cx trace (ts1, t1, ts2, t2)
+    array_unify cx trace ~use_op (ts1, t1, ts2, t2)
 
   | DefT (r1, ArrT (TupleAT (_, ts1))),
     DefT (r2, ArrT (TupleAT (_, ts2))) ->
@@ -9227,7 +9228,7 @@ and __unify cx ?(use_op=unknown_use) t1 t2 trace =
         ((r1, r2), l1, l2, use_op));
     iter2opt (fun t1 t2 ->
       match t1, t2 with
-      | Some t1, Some t2 -> rec_unify cx trace t1 t2
+      | Some t1, Some t2 -> rec_unify cx trace ~use_op t1 t2
       | _ -> ()
     ) (ts1, ts2)
 
@@ -9275,15 +9276,15 @@ and __unify cx ?(use_op=unknown_use) t1 t2 trace =
   | DefT (_, FunT (_, _, funtype1)), DefT (_, FunT (_, _, funtype2))
       when List.length funtype1.params =
            List.length funtype2.params ->
-    rec_unify cx trace funtype1.this_t funtype2.this_t;
+    rec_unify cx trace ~use_op funtype1.this_t funtype2.this_t;
     List.iter2 (fun (_, t1) (_, t2) ->
-      rec_unify cx trace t1 t2
+      rec_unify cx trace ~use_op t1 t2
     ) funtype1.params funtype2.params;
-    rec_unify cx trace funtype1.return_t funtype2.return_t
+    rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
 
   | DefT (_, TypeAppT (c1, ts1)), DefT (_, TypeAppT (c2, ts2))
     when c1 = c2 && List.length ts1 = List.length ts2 ->
-    List.iter2 (rec_unify cx trace) ts1 ts2
+    List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
 
   | _ ->
     naive_unify cx trace ~use_op t1 t2
@@ -9431,20 +9432,20 @@ and array_flow cx trace use_op lit1 r1 ?(index=0) = function
 (* TODO: either ensure that array_unify is the same as array_flow both ways, or
    document why not. *)
 (* array helper *)
-and array_unify cx trace = function
+and array_unify cx trace ~use_op = function
   | [], e1, [], e2 ->
     (* general element1 = general element2 *)
-    rec_unify cx trace e1 e2
+    rec_unify cx trace ~use_op e1 e2
 
   | ts1, _, [], e2
   | [], e2, ts1, _ ->
     (* specific element1 = general element2 *)
-    List.iter (fun t1 -> rec_unify cx trace t1 e2) ts1
+    List.iter (fun t1 -> rec_unify cx trace ~use_op t1 e2) ts1
 
   | t1 :: ts1, e1, t2 :: ts2, e2 ->
     (* specific element1 = specific element2 *)
-    rec_unify cx trace t1 t2;
-    array_unify cx trace (ts1, e1, ts2, e2)
+    rec_unify cx trace ~use_op t1 t2;
+    array_unify cx trace ~use_op (ts1, e1, ts2, e2)
 
 
 (*******************************************************************)
@@ -10301,7 +10302,7 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
 (* Wrapper functions around __unify that manage traces. Use these functions for
    all recursive calls in the implementation of __unify. *)
 
-and rec_unify cx trace ?(use_op=unknown_use) t1 t2 =
+and rec_unify cx trace ~use_op t1 t2 =
   let max = Context.max_trace_depth cx in
   __unify cx ~use_op t1 t2 (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
@@ -10312,7 +10313,7 @@ and unify_opt cx ?trace t1 t2 =
     let max = Context.max_trace_depth cx in
     Trace.rec_trace ~max t1 (UseT (unknown_use, t2)) trace
   in
-  __unify cx t1 t2 trace
+  __unify cx ~use_op:unknown_use t1 t2 trace
 
 (* Externally visible function for unification. *)
 (* Calls internal entry point and traps runaway recursion. *)

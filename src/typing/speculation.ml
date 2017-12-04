@@ -14,7 +14,7 @@ module Action = struct
 
   type t =
   | Flow of Type.t * Type.use_t
-  | Unify of Type.t * Type.t
+  | Unify of Type.use_op * Type.t * Type.t
 
   (* Extract tvars involved in an action. *)
   let tvars =
@@ -29,14 +29,14 @@ module Action = struct
       -> IMap.empty
     | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
     | Flow (t1, _) -> f t1 IMap.empty
-    | Unify (t1, t2) -> f t1 (f t2 IMap.empty)
+    | Unify (_, t1, t2) -> f t1 (f t2 IMap.empty)
 
   (* Decide when two actions are the same. We use reasonless compare for types
      involved in the actions. *)
   let rec eq = function
     | Flow (t1, t2), Flow (t1_, t2_) ->
       eq_t (t1, t1_) && eq_use_t (t2, t2_)
-    | Unify (t1, t2), Unify (t1_, t2_) ->
+    | Unify (_, t1, t2), Unify (_, t1_, t2_) ->
       eq_t (t1, t1_) && eq_t (t2, t2_)
     | _ -> false
 
