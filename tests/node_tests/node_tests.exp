@@ -2260,56 +2260,35 @@ Error: os/userInfo.js:14
  14: (u3.username: string); // error
                    ^^^^^^ string
 
-Error: process/nextTick.js:13
+Error: process/nextTick.js:14
+ 14:   0, // Error: number ~> string
+       ^ number. This type is incompatible with the expected param type of
  13:   (a: string, b: number, c: boolean) => {},
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  The first parameter is incompatible:
-     14:   0, // Error: number ~> string
-           ^ number. This type is incompatible with
-     13:   (a: string, b: number, c: boolean) => {},
-               ^^^^^^ string
+           ^^^^^^ string
 
-Error: process/nextTick.js:13
+Error: process/nextTick.js:16
+ 16:   null // Error: null ~> boolean
+       ^^^^ null. This type is incompatible with the expected param type of
  13:   (a: string, b: number, c: boolean) => {},
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  The third parameter is incompatible:
-     16:   null // Error: null ~> boolean
-           ^^^^ null. This type is incompatible with
-     13:   (a: string, b: number, c: boolean) => {},
-                                     ^^^^^^^ boolean
+                                 ^^^^^^^ boolean
 
-Error: process/nextTick.js:20
+Error: process/nextTick.js:22
+ 22:   'y', // Error: string ~> number
+       ^^^ string. This type is incompatible with the expected param type of
  20:   (a: string, b: number, c: boolean) => {},
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1957
-  The second parameter is incompatible:
-     22:   'y', // Error: string ~> number
-           ^^^ string. This type is incompatible with
-     20:   (a: string, b: number, c: boolean) => {},
-                          ^^^^^^ number
+                      ^^^^^^ number
 
-Error: process/nextTick.js:27
+Error: process/nextTick.js:26
+     v----------------
+ 26: process.nextTick(
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-           ^^^^^^ string. This type is incompatible with
+ 28: );
+     ^ call of method `nextTick`
+inconsistent use of library definitions
 1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1957
-
-Error: process/nextTick.js:27
- 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-                      ^^^^^^ number. This type is incompatible with
-1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1957
-
-Error: process/nextTick.js:27
- 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-                                 ^^^^^^^ boolean. This type is incompatible with
-1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1957
+                          ^^^^^^^^^^^^^^^ function type. Called with too few arguments. See lib: <BUILTINS>/node.js:1957
+   27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function expects more arguments
 
 Error: process/process.js:10
  10: process.emitWarning(); // error
@@ -2543,4 +2522,4 @@ Error: process/process.js:14
                                    ^^^^^^ string
 
 
-Found 79 errors
+Found 77 errors

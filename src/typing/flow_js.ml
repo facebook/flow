@@ -559,7 +559,7 @@ module ImplicitTypeArgument = struct
      unique instantiation and unify it with other explicit instantiations. *)
   let mk_targ cx typeparam reason_op =
     let reason = replace_reason (fun desc ->
-      RTypeParam (typeparam.name, desc)
+      RTypeParam (typeparam.name, desc, loc_of_reason reason_op)
     ) reason_op in
     Tvar.mk cx reason
 end
@@ -1367,7 +1367,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* process Y ~> U *)
     (******************)
 
-    | (OpenT(_, tvar), t2) ->
+    | (OpenT(r, tvar), t2) ->
+      let t2 = match desc_of_reason r with
+      | RTypeParam (_, _, loc) ->
+        mod_op_of_use_t (fun op -> Frame (ImplicitTypeParam loc, op)) t2
+      | _ -> t2
+      in
+
       let id1, constraints1 = find_constraints cx tvar in
       (match constraints1 with
       | Unresolved bounds1 ->
@@ -3994,14 +4000,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, ReactCreateClass),
       CallT (use_op, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      let loc_op = loc_of_reason reason_op in
       let ops = Ops.clear () in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
       let knot = { React.CreateClass.
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
-        state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d)));
-        default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d)));
+        state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d, loc_op)));
+        default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d, loc_op)));
       } in
       rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
@@ -8858,6 +8865,37 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 (* /predicate *)
 (*******************************************************************)
 
+and flow_use_op op1 u =
+  mod_op_of_use_t (fun op2 ->
+    let alt = fold_use_op
+      (function
+        (* If the root of the previous use_op is UnknownUse and our alternate
+         * use_op does not have an UnknownUse root then we use our
+         * alternate use_op. *)
+        | UnknownUse -> true
+        | _ -> false)
+      (fun alt -> function
+        (* If the use was added to an implicit type param then we want to use
+         * our alternate if the implicit type param use_op chain is inside
+         * the implicit type param instantiation. This means we always prefer
+         * pointing to the use_op chain outside of the type parameter
+         * instantiation. This ensures suppression comments are added to the
+         * correct location.
+         *
+         * Instead of using locs to pick our chain, there may be some type
+         * theory rule we can employ. However, such a rule would likely depend
+         * on tracking the inputs/outputs when type parameters are instantiated.
+         * For now, using locs is cleaner then adding unreliable bits to type
+         * parameter uses in inputs/outputs. *)
+        | ImplicitTypeParam loc_op when not alt ->
+          let loc2 = loc_of_root_use_op (root_of_use_op op2) in
+          Loc.contains loc_op loc2
+        | _ -> alt)
+      op2
+    in
+    if alt && root_of_use_op op1 <> UnknownUse then op1 else op2
+  ) u
+
 (***********************)
 (* bounds manipulation *)
 (***********************)
@@ -8890,12 +8928,6 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     bounds, all the bounds of its root are also included.
 
 **)
-
-and flow_use_op op1 =
-  mod_op_of_use_t (fun op2 ->
-    if root_use_op op2 = UnknownUse && root_use_op op1 <> UnknownUse
-      then op1
-      else op2)
 
 (* for each l in ls: l => u *)
 and flows_to_t cx trace ls u =
@@ -9618,7 +9650,7 @@ and multiflow_partial =
         let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
         resolve_spread_list cx ~use_op ~reason_op:arg_array_reason elems resolve_to
       ) in
-      rec_flow_t cx trace (arg_array, rest_param);
+      rec_flow cx trace (arg_array, UseT (use_op, rest_param));
 
       unused_parlist, Some (name, loc, unused_rest_param)
     end

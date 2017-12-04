@@ -304,6 +304,7 @@ module rec TypeTerm : sig
     | FunCompatibility of { lower: reason; upper: reason }
     | FunParam of { n: int; lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
+    | ImplicitTypeParam of Loc.t
     | IndexerKeyCompatibility of { lower: reason; upper: reason }
     | PropertyCompatibility of { prop: string option; lower: reason; upper: reason }
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
@@ -1944,9 +1945,36 @@ let any_propagating_use_t = function
   | UseT _
     -> false
 
-let rec root_use_op = function
+let rec fold_use_op f1 f2 = function
+| Op root -> f1 root
+| Frame (frame, use_op) ->
+  let acc = fold_use_op f1 f2 use_op in
+  f2 acc frame
+
+let rec root_of_use_op = function
 | Op use_op -> use_op
-| Frame (_, use_op) -> root_use_op use_op
+| Frame (_, use_op) -> root_of_use_op use_op
+
+let loc_of_root_use_op = function
+| AssignVar {init=op; _}
+| Cast {lower=op; _}
+| ClassExtendsCheck {def=op; _}
+| ClassImplementsCheck {def=op; _}
+| FunCall {op; _}
+| FunCallMethod {op; _}
+| GetProperty op
+| SetProperty op
+  -> loc_of_reason op
+| Addition
+| Coercion
+| FunCallMissingArg _
+| FunCallThis _
+| FunImplicitReturn
+| FunReturnStatement
+| Internal _
+| ReactCreateElementCall
+| UnknownUse
+  -> Loc.none
 
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
@@ -2423,6 +2451,7 @@ let string_of_frame_use_op = function
 | FunCompatibility _ -> "FunCompatibility"
 | FunParam _ -> "FunParam"
 | FunReturn _ -> "FunReturn"
+| ImplicitTypeParam _ -> "ImplicitTypeParam"
 | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
 | PropertyCompatibility _ -> "PropertyCompatibility"
 | TupleElementCompatibility _ -> "TupleElementCompatibility"
@@ -2431,6 +2460,11 @@ let string_of_frame_use_op = function
 let string_of_use_op = function
 | Op root -> string_of_root_use_op root
 | Frame (frame, _) -> string_of_frame_use_op frame
+
+let string_of_use_op_rec =
+  fold_use_op
+    (string_of_root_use_op)
+    (fun acc use_op -> spf "%s(%s)" (string_of_frame_use_op use_op) acc)
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)

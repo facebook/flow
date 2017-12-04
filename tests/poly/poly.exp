@@ -20,6 +20,35 @@ Error: annot.js:10
          10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                                 ^^ object type
 
+Error: error.js:8
+  8: newFn1('string'); // The error should point here.
+            ^^^^^^^^ string. This type is incompatible with the expected param type of
+  7: const newFn1 = fn1((x: number) => {});
+                            ^^^^^^ number
+
+Error: error.js:12
+ 12: newFn2((x: string) => {}); // The error should point here.
+            ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+ 10: declare function fn2<T>(x: T): ((T) => void) => void;
+                                     ^^^^^^^^^^^ function type
+  The first parameter is incompatible:
+     11: const newFn2 = fn2(42);
+                            ^^ number. This type is incompatible with
+     12: newFn2((x: string) => {}); // The error should point here.
+                    ^^^^^^ string
+
+Error: error.js:15
+ 15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+         ^^ number. This type is incompatible with the expected param type of
+ 15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+                 ^^^^^^ string
+
+Error: error.js:20
+ 20: (newVal4: string); // The error should point here.
+      ^^^^^^^ number. This type is incompatible with
+ 20: (newVal4: string); // The error should point here.
+               ^^^^^^ string
+
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
             ^^ number. This type is incompatible with the expected param type of
@@ -126,4 +155,4 @@ Error: test.js:7
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
 
-Found 12 errors
+Found 16 errors

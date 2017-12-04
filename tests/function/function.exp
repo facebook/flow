@@ -314,9 +314,9 @@ Error: rest.js:64
 
 Error: rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
-       ^^^^^^ call of `f`
+         ^^^ number
  14: function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
-                                                    ^ T. Expected array instead of
+                                                    ^ T. This type is incompatible with the expected param type of
  15:   f(123); // Error - number ~> array - luckily this errors
          ^^^ number
 

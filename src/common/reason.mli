@@ -81,7 +81,7 @@ type reason_desc =
   | RType of string
   | RTypeAlias of string * reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * reason_desc
+  | RTypeParam of string * reason_desc * Loc.t
   | RMethod of string option
   | RMethodCall of string option
   | RParameter of string option

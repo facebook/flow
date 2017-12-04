@@ -1752,6 +1752,8 @@ and dump_use_t_ (depth, tvars) cx t =
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
   let prop p = dump_prop_ (depth-1, tvars) cx p in
 
+  let string_of_use_op = string_of_use_op_rec in
+
   let call_arg_kid = function
   | Arg t -> kid t
   | SpreadArg t -> spf "...%s" (kid t)
@@ -1943,6 +1945,11 @@ and dump_use_t_ (depth, tvars) cx t =
 
   if depth = 0 then string_of_use_ctor t
   else match t with
+  | UseT (use_op, OpenT (r, id)) ->
+    spf "UseT (%s, OpenT (%S, %d))"
+      (string_of_use_op use_op)
+      (dump_reason cx r)
+      id
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
@@ -2259,6 +2266,7 @@ let string_of_default = Default.fold
 
 let dump_flow_error =
   let open Flow_error in
+  let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
   | PackageHeapNotFound _ -> "PackageHeapNotFound"
   | AbnormalControlFlow -> "AbnormalControlFlow"
@@ -2464,11 +2472,12 @@ let dump_flow_error =
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, _) ->
-        spf "ETupleArityMismatch (%s, %s, %d, %d, _)"
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
+        spf "ETupleArityMismatch (%s, %s, %d, %d, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
+          (string_of_use_op use_op)
     | ENonLitArrayToTuple (reason1, reason2) ->
         spf "ENonLitArrayToTuple (%s, %s)"
           (dump_reason cx reason1)

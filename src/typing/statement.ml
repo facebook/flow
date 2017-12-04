@@ -3088,7 +3088,7 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
     Flow.flow cx (func_t, CallT (use_op, reason, app))
   )
 
-and method_call cx reason ?(call_strict_arity=true) prop_loc
+and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr (loc_of_reason reason) with
@@ -3104,10 +3104,10 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let frame = Env.peek_frame () in
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
-        let use_op = Op (FunCall {
+        let use_op = if not use_op then unknown_use else (Op (FunCall {
           op=reason;
           fn=reason_of_t f;
-        }) in
+        })) in
         Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
@@ -3120,11 +3120,11 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
-        let use_op = Op (FunCallMethod {
+        let use_op = if not use_op then unknown_use else (Op (FunCallMethod {
           op=reason;
           fn=mk_reason (RMethod (Some name)) (Loc.btwn expr_loc prop_loc);
           prop=reason_prop;
-        }) in
+        })) in
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app))
       )
   )
@@ -4561,7 +4561,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     ) in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) [Arg arg_t]
+    method_call cx reason prop_loc ~use_op:false (expr, obj_t, m) [Arg arg_t]
 
   (* TODO *)
   | (_, args) ->

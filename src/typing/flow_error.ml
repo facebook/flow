@@ -307,6 +307,8 @@ let rec locs_of_use_op acc = function
   | Frame (FunParam _, Frame (FunCompatibility {lower; upper}, use_op))
   | Frame (FunReturn _, Frame (FunCompatibility {lower; upper}, use_op)) ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
+  | Frame (ImplicitTypeParam _, use_op)
+    -> locs_of_use_op acc use_op
   | Frame (FunParam _, _)
   | Frame (FunReturn _, _)
   | Frame (FunCompatibility _, _)
@@ -736,12 +738,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       (string_of_desc (desc_of_reason lreason))
     in
     extra, (* suppress_op *) false, [ureason, [msg]]
-  (* TODO: Use a more stable approach to pick the right use_op. In an
-   * upcoming diff. This is to prevent React errors from regressing in
-   * the meantime. *)
-  | Frame (FunParam _, Op ReactCreateElementCall) ->
-    let suppress_op = suppress_fun_call_param_op op in
-    extra, suppress_op, typecheck_msgs msg reasons
   | Frame (FunParam {lower; _}, Op (FunCall _ | FunCallMethod _)) ->
     let reasons, msg =
       if not force then
@@ -779,6 +775,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | Op ReactCreateElementCall ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
+  | Frame (ImplicitTypeParam _, use_op) ->
+    unwrap_use_ops ~force (reasons, extra, msg) use_op
   | Op (SetProperty reason_op) ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
