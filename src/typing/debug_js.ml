@@ -1956,8 +1956,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
-  | CallT (_,_,{call_args_tlist;call_tout;call_this_t;_}) -> p
-      ~extra:(spf "<this: %s>(%s) => %s"
+  | CallT (use_op,_,{call_args_tlist;call_tout;call_this_t;_}) -> p
+      ~extra:(spf "%s, <this: %s>(%s) => %s"
+        (string_of_use_op use_op)
         (kid call_this_t)
         (String.concat "; " (List.map call_arg_kid call_args_tlist))
         (kid call_tout)) t
@@ -2036,19 +2037,19 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
   | ReposUseT (_, use_desc, use_op, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
-  | ResolveSpreadT (_, _, {rrt_resolve_to; _;}) ->
+  | ResolveSpreadT (use_op, _, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, tout)
       | ResolveSpreadsToArrayLiteral (_, tout)
       | ResolveSpreadsToArray (_, tout)
       | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
-        p ~extra:(kid tout) t
+        p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tout)) t
       | ResolveSpreadsToCallT (_, tin) ->
-        p ~extra:(kid tin) t
+        p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tin)) t
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _
-        -> p t)
+        -> p ~extra:(string_of_use_op use_op) t)
   | SentinelPropTestT (_, l, _key, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)

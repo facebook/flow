@@ -9561,7 +9561,7 @@ and multiflow_partial =
        * should flow VoidT to every remaining parameter, however we don't. This
        * is consistent with how we treat arrays almost everywhere else *)
       List.iter
-        (fun (_, param) -> rec_flow_t cx trace (spread_arg_elemt, param))
+        (fun (_, param) -> rec_flow cx trace (spread_arg_elemt, UseT (use_op, param)))
         unused_parlist;
       []
 
