@@ -467,17 +467,6 @@ Error: FormData.js:65
                                           ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                       ^^^^^^^^^^^^^^^^ tuple type
-  The first tuple element is incompatible:
-     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                           ^^^^^^ number. This type is incompatible with
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
-
-Error: FormData.js:65
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
   The second tuple element is incompatible:
     340:     entries(): Iterator<[string, FormDataEntryValue]>;
                                           ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
@@ -573,17 +562,6 @@ Error: FormData.js:67
                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
      67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                            ^^^^^^ number
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The first tuple element is incompatible:
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                           ^^^^^^ number. This type is incompatible with
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                  ^^^^^^ string. See lib: <BUILTINS>/bom.js:340
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -788,4 +766,4 @@ Error: MutationObserver.js:23
                                ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:364
 
 
-Found 51 errors
+Found 49 errors

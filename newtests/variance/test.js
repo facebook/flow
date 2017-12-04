@@ -94,10 +94,10 @@ export default suite(({addFile, addFiles, addCode}) => [
            62: (rwB: RWA);
                      ^^^ RWA
             Property \`p\` is incompatible:
-                9:     type RWA = {p: A}
-                                      ^ A. This type is incompatible with
                12:     type RWB = {p: B}
-                                      ^ B
+                                      ^ B. This type is incompatible with
+                9:     type RWA = {p: A}
+                                      ^ A
         `,
       ),
     addCode('(drwB: dRWA);')
@@ -109,10 +109,10 @@ export default suite(({addFile, addFiles, addCode}) => [
            64: (drwB: dRWA);
                       ^^^^ dRWA
             Indexable signature is incompatible:
-               26:     type dRWA = {[string]: A};
-                                              ^ A. This type is incompatible with
                29:     type dRWB = {[string]: B};
-                                              ^ B
+                                              ^ B. This type is incompatible with
+               26:     type dRWA = {[string]: A};
+                                              ^ A
         `,
       ),
 

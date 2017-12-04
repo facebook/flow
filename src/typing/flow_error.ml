@@ -286,6 +286,7 @@ let rec locs_of_use_op acc = function
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Frame (FunMissingArg _, use_op)
   | Frame (ImplicitTypeParam _, use_op)
+  | Frame (UnifyFlip, use_op)
     -> locs_of_use_op acc use_op
   | Frame (FunParam _, _)
   | Frame (FunReturn _, _)
@@ -629,6 +630,50 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ) branches
   in
 
+  (* Unification produces two errors. One for both sides. For example,
+   * {p: number} ~> {p: string} errors on both number ~> string and
+   * string ~> number. Showing both errors to our user is often redundant.
+   * So we use this utility to flip the string ~> number case and produce an
+   * error identical to one we've produced before. These two errors will be
+   * deduped in our ErrorSet. *)
+  let dedupe_by_flip =
+    (* Flip the lower/upper reasons of a frame_use_op. *)
+    let flip_frame = function
+    | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
+    | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
+    | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
+    | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
+    | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
+    | TupleElementCompatibility c ->
+      TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
+    | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
+    | FunMissingArg _
+    | ImplicitTypeParam _
+    | UnifyFlip
+      as use_op -> use_op
+    in
+    (* Loop over through the use_op chain. *)
+    let rec loop = function
+    (* Roots don't flip. *)
+    | Op _ as use_op -> (false, use_op)
+    (* Start flipping if we are on the reverse side of unification. *)
+    | Frame (UnifyFlip, use_op) ->
+      let (flip, use_op) = loop use_op in
+      (not flip, use_op)
+    (* If we are in flip mode then flip our frame. *)
+    | Frame (frame, use_op) ->
+      let (flip, use_op) = loop use_op in
+      if flip
+        then (true, Frame (flip_frame frame, use_op))
+        else (false, Frame (frame, use_op))
+    in
+    fun (lower, upper) use_op ->
+      let (flip, use_op) = loop use_op in
+      if flip
+        then ((upper, lower), use_op)
+        else ((lower, upper), use_op)
+  in
+
   (* NB: Some use_ops, like FunReturn, completely replace the `msg` argument.
      Sometimes we call unwrap_use_ops from an error variant that has some
      interesting information in `msg`, like EIncompatibleWithExact. In those
@@ -747,6 +792,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
    * error message. *)
   | Frame (FunCompatibility _, use_op)
   | Frame (ImplicitTypeParam _, use_op)
+  | Frame (UnifyFlip, use_op)
     -> unwrap_use_ops ~force (reasons, extra, msg) use_op
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
@@ -1491,6 +1537,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
+      let ((l_reason, u_reason), use_op) =
+        dedupe_by_flip (l_reason, u_reason) use_op in
       let extra, msgs =
         let msg = "This type is incompatible with" in
         unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in

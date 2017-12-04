@@ -139,17 +139,6 @@ Error: import.js:21
      21: ((new B3().bar(): B3<string>): A2<number>); // error
                                            ^^^^^^ number
 
-Error: import.js:21
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                       ^^^^^^^^^^ A2. Has some incompatible type argument with
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                    ^^^^^^^^^^ A2
-  Type argument `X` is incompatible:
-     21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                           ^^^^^^ number. This type is incompatible with
-     21: ((new B3().bar(): B3<string>): A2<number>); // error
-                              ^^^^^^ string
-
 Error: import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
@@ -257,4 +246,4 @@ Error: test.js:56
                     ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
 
-Found 41 errors
+Found 40 errors

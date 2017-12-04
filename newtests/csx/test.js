@@ -375,22 +375,6 @@ export default suite(({addFile, addFiles, addCode}) => [
               5:       type Props = {|children: ['A']|};
                                                 ^^^^^ tuple type
               The first tuple element is incompatible:
-                  5:       type Props = {|children: ['A']|};
-                                                     ^^^ string literal \`A\`. This type is incompatible with
-                  7:       <Bar>{42}</Bar>
-                                 ^^ number
-
-        test.js:7
-          7:       <Bar>{42}</Bar>
-                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-          Property \`children\` is incompatible:
-              7:       <Bar>{42}</Bar>
-                       ^^^^^ JSX element \`Bar\`. Has some incompatible tuple element with
-              5:       type Props = {|children: ['A']|};
-                                                ^^^^^ tuple type
-              The first tuple element is incompatible:
                   7:       <Bar>{42}</Bar>
                                  ^^ number. This type is incompatible with
                   5:       type Props = {|children: ['A']|};

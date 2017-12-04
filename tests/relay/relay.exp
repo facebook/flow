@@ -197,8 +197,8 @@ Error: more.js:98
          23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
                                                                                     ^^^^^^^^^^^^^^^^^^^^ FragmentReference
           Type argument `T` is incompatible:
-             43:   +__typeof: RelayModernTypedFlowtest_user$reference,
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
+             23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+                          ^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
              86:   +__fragments: FragmentReference<{thing: true}>,
                                                    ^^^^^^^^^^^^^ object type
 
@@ -225,8 +225,8 @@ Error: more.js:98
           Type argument `T` is incompatible:
              86:   +__fragments: FragmentReference<{thing: true}>,
                                                    ^^^^^^^^^^^^^ object type. This type is incompatible with
-             23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                          ^^^^^^^^^^^^^^ FragmentTypeof
+             43:   +__typeof: RelayModernTypedFlowtest_user$reference,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof
 
 Error: more.js:121
      v------------
@@ -302,8 +302,8 @@ Error: more.js:150
              25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
                                                                                                                        ^^^^^^^^^^^^^^^^^^^^ FragmentReference
               Type argument `T` is incompatible:
-                 49:   +__typeof: RelayModernTypedFlowtest_users$reference,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
+                 25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                              ^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
                  86:   +__fragments: FragmentReference<{thing: true}>,
                                                        ^^^^^^^^^^^^^ object type
 
@@ -335,8 +335,8 @@ Error: more.js:150
               Type argument `T` is incompatible:
                  86:   +__fragments: FragmentReference<{thing: true}>,
                                                        ^^^^^^^^^^^^^ object type. This type is incompatible with
-                 25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                              ^^^^^^^^^^^^^^ FragmentTypeof
+                 49:   +__typeof: RelayModernTypedFlowtest_users$reference,
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof
 
 Error: more.js:174
 174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;

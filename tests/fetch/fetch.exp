@@ -130,10 +130,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `cache` is incompatible:
-    931:     cache?: CacheType;
-                     ^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:931
     982:     cache: CacheType;
-                    ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:982
+                    ^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:982
+    931:     cache?: CacheType;
+                     ^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:931
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -141,10 +141,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `credentials` is incompatible:
-    932:     credentials?: CredentialsType;
-                           ^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:932
     983:     credentials: CredentialsType;
-                          ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:983
+                          ^^^^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:983
+    932:     credentials?: CredentialsType;
+                           ^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:932
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -152,10 +152,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `headers` is incompatible:
-    933:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/bom.js:933
     984:     headers: Headers;
-                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:984
+                      ^^^^^^^ Headers. This type is incompatible with. See lib: <BUILTINS>/bom.js:984
+    933:     headers?: HeadersInit;
+                       ^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:933
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -163,10 +163,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `headers` is incompatible:
-    933:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:933
     984:     headers: Headers;
-                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:984
+                      ^^^^^^^ Headers. This type is incompatible with. See lib: <BUILTINS>/bom.js:984
+    933:     headers?: HeadersInit;
+                       ^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:933
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -174,10 +174,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `integrity` is incompatible:
-    934:     integrity?: string;
-                         ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:934
     985:     integrity: string;
-                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:985
+                        ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:985
+    934:     integrity?: string;
+                         ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:934
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -185,10 +185,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `method` is incompatible:
-    936:     method?: string;
-                      ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:936
     986:     method: string;
-                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:986
+                     ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:986
+    936:     method?: string;
+                      ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:936
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -196,10 +196,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `mode` is incompatible:
-    937:     mode?: ModeType;
-                    ^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:937
     987:     mode: ModeType;
-                   ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:987
+                   ^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:987
+    937:     mode?: ModeType;
+                    ^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:937
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -207,10 +207,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `redirect` is incompatible:
-    938:     redirect?: RedirectType;
-                        ^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:938
     988:     redirect: RedirectType;
-                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:988
+                       ^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:988
+    938:     redirect?: RedirectType;
+                        ^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:938
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -218,10 +218,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `referrerPolicy` is incompatible:
-    940:     referrerPolicy?: ReferrerPolicyType;
-                              ^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:940
     990:     referrerPolicy: ReferrerPolicyType;
-                             ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:990
+                             ^^^^^^^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:990
+    940:     referrerPolicy?: ReferrerPolicyType;
+                              ^^^^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:940
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -229,10 +229,10 @@ Error: request.js:6
 977:     constructor(input: RequestInfo, init?: RequestOptions): void;
                                                 ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
   Property `referrer` is incompatible:
-    939:     referrer?: string;
-                        ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:939
     989:     referrer: string;
-                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:989
+                       ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:989
+    939:     referrer?: string;
+                        ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:939
 
 Error: request.js:8
   8: const f: Request = new Request({}) // incorrect

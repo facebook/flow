@@ -30,12 +30,6 @@ Error: lex.js:59
 
 Error: locals.js:1
   1: var x:string = 0;
-           ^^^^^^ string. This type is incompatible with
-  2: var x:number = 1;
-           ^^^^^^ number
-
-Error: locals.js:1
-  1: var x:string = 0;
                     ^ number. This type is incompatible with
   1: var x:string = 0;
            ^^^^^^ string
@@ -52,17 +46,11 @@ Error: locals.js:2
   1: var x:string = 0;
            ^^^^^^ string
 
-Error: locals.js:10
- 10:         var x: number | string = 1337;
-                    ^^^^^^ number. This type is incompatible with
+Error: locals.js:12
  12:         var x: bool = true;
-                    ^^^^ boolean
-
-Error: locals.js:10
+                    ^^^^ boolean. This type is incompatible with
  10:         var x: number | string = 1337;
-                             ^^^^^^ string. This type is incompatible with
- 12:         var x: bool = true;
-                    ^^^^ boolean
+                    ^^^^^^ number
 
 Error: locals.js:12
  12:         var x: bool = true;
@@ -85,6 +73,12 @@ Error: locals.js:12
                       ^^^^ boolean. This type is incompatible with
    10:         var x: number | string = 1337;
                                ^^^^^^ string
+
+Error: locals.js:12
+ 12:         var x: bool = true;
+                    ^^^^ boolean. This type is incompatible with
+ 10:         var x: number | string = 1337;
+                             ^^^^^^ string
 
 Error: locals.js:12
  12:         var x: bool = true;
@@ -127,4 +121,4 @@ Error: locals.js:22
                              ^^^^^^ number
 
 
-Found 16 errors
+Found 15 errors

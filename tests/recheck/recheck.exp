@@ -159,19 +159,8 @@ Error: f2.js:4
       4: (c: { x: number });
                   ^^^^^^ number
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ S. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: (c: { x: number });
-                  ^^^^^^ number. This type is incompatible with
-      4: type S = { x: string };
-                       ^^^^^^ string. See: f1.js:4
 
-
-Found 2 errors
+Found 1 error
 No errors!
 No errors!
 Error: f2.js:4
@@ -185,19 +174,8 @@ Error: f2.js:4
       4: (c: { x: number });
                   ^^^^^^ number
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ S. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: (c: { x: number });
-                  ^^^^^^ number. This type is incompatible with
-      4: type S = { x: string };
-                       ^^^^^^ string. See: f1.js:4
 
-
-Found 2 errors
+Found 1 error
 
 Test g:
 No errors!
@@ -245,19 +223,8 @@ Error: m3.js:6
       6: (x: T<number>);
                ^^^^^^ number
 
-Error: m3.js:6
-  6: (x: T<number>);
-      ^ T. Has some incompatible type argument with
-  6: (x: T<number>);
-         ^^^^^^^^^ T
-  Type argument `X` is incompatible:
-      6: (x: T<number>);
-               ^^^^^^ number. This type is incompatible with
-      5: export var x: T<string> = null;
-                         ^^^^^^ string. See: m1.js:5
 
-
-Found 2 errors
+Found 1 error
 
 Test k:
 Error: k.js:4

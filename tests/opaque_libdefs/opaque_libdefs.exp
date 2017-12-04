@@ -27,17 +27,6 @@ Error: test.js:22
      21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
                                                                          ^^^^^^ string
 
-Error: test.js:22
- 22:     return x; // Error: string ~> number, number ~> string
-                ^ PolyStack. This type is incompatible with the expected return type of
- 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                           ^^^^^^^^^^^^^^^^^ PolyStack
-  Type argument `T` is incompatible:
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                                         ^^^^^^ string. This type is incompatible with
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                     ^^^^^^ number
-
 Error: test.js:27
  27:     return x; // Error string ~> number
                 ^ Contra. This type is incompatible with the expected return type of
@@ -50,4 +39,4 @@ Error: test.js:27
                                       ^^^^^^ number
 
 
-Found 6 errors
+Found 5 errors

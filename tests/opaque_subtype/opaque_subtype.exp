@@ -31,17 +31,6 @@ Error: importtest.js:31
      30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
                                                       ^^^^^^ string
 
-Error: importtest.js:31
- 31:     return x;
-                ^ PolyFoo. This type is incompatible with the expected return type of
- 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                          ^^^^^^^^^^^^^^^ PolyFoo
-  Type argument `T` is incompatible:
-     30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                                      ^^^^^^ string. This type is incompatible with
-     30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                    ^^^^^^ number
-
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
                 ^^^ number. This type is incompatible with
@@ -108,4 +97,4 @@ Error: typeapp-test.js:5
        ^^^^^^ assignment of property `p`
 
 
-Found 16 errors
+Found 15 errors

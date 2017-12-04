@@ -15,17 +15,6 @@ Error: test3.js:6
       6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
                                   ^^^^^^^^^^^ array type
 
-Error: test3.js:6
-  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                                             ^ A. Has some incompatible type argument with
-  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A
-  Type argument `Z` is incompatible:
-      6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                                  ^^^^^^^^^^^ array type. This type is incompatible with
-      2: class B extends A<string, number, bool> {}
-                                           ^^^^ boolean
-
 Error: test4.js:7
   7: foo((new C: C<O>), { f_: 0 });
                         ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
@@ -49,4 +38,4 @@ Error: test4.js:13
                     ^^^^^^^^^ object literal
 
 
-Found 5 errors
+Found 4 errors

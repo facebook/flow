@@ -15,17 +15,6 @@ Error: error_continues.js:3
       3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
                                    ^^^^^^ string
 
-Error: error_continues.js:3
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-            ^^^^^^^^^^^ object type. This type is incompatible with
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                          ^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                                   ^^^^^^ string. This type is incompatible with
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                    ^^^^^^ number
-
 Error: exact_basics.js:49
  49: takesExactlyPerson(subtypeOfPerson); // error
                         ^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
@@ -128,4 +117,4 @@ Error: use_ops.js:6
                    ^^^^^^^^^^^^^ object type
 
 
-Found 13 errors
+Found 12 errors

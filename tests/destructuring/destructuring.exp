@@ -231,12 +231,6 @@ Error: defaults.js:80
 
 Error: defaults.js:80
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ number. This type is incompatible with
- 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ string
-
-Error: defaults.js:80
- 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                ^ string. This type is incompatible with
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                ^ number
@@ -449,4 +443,4 @@ Error: unannotated.js:8
        ^ object literal
 
 
-Found 68 errors
+Found 67 errors

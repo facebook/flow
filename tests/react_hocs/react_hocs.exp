@@ -7,19 +7,19 @@ Error: Bad.js:14
   9: ): (React.ComponentType<OutputProps>) => React.ComponentType<InputProps> {
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ComponentType. See: hocs.js:9
   Type argument `P` is incompatible:
+     11: const Bad = (props: Props) => null;
+                             ^^^^^ Props. This type is incompatible with
                                  v-
      15: ): (React.ComponentType<{|
      16:   ...Props,
      17:   ...ExtraProps,
      18: |}>) => React.ComponentType<Props> {
-         -^ object type. This type is incompatible with. See: hocs.js:15
-     11: const Bad = (props: Props) => null;
-                             ^^^^^ Props
+         -^ object type. See: hocs.js:15
       Property `bar` is incompatible:
-         18:     bar: buz,
-                      ^^^ string. This type is incompatible with
           8:   bar: number,
-                    ^^^^^^ number
+                    ^^^^^^ number. This type is incompatible with
+         18:     bar: buz,
+                      ^^^ string
 
 Error: Bad.js:14
        v---------------------------------------------

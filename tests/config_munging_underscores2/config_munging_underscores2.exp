@@ -26,17 +26,6 @@ Error: chain.js:19
  19: class B extends A {
                      ^ A
   Property `_property1` is incompatible:
-      4:   _property1: number;
-                       ^^^^^^ number. This type is incompatible with
-     20:   _property1: string;
-                       ^^^^^^ string
-
-Error: chain.js:19
- 19: class B extends A {
-           ^ B. Cannot extend
- 19: class B extends A {
-                     ^ A
-  Property `_property1` is incompatible:
      20:   _property1: string;
                        ^^^^^^ string. This type is incompatible with
       4:   _property1: number;
@@ -70,21 +59,10 @@ Error: chain.js:19
  19: class B extends A {
                      ^ A
   Property `_sProperty` is incompatible:
-      5:   static _sProperty: number;
-                              ^^^^^^ number. This type is incompatible with
-     21:   static _sProperty: string;
-                              ^^^^^^ string
-
-Error: chain.js:19
- 19: class B extends A {
-           ^ B. Cannot extend
- 19: class B extends A {
-                     ^ A
-  Property `_sProperty` is incompatible:
      21:   static _sProperty: string;
                               ^^^^^^ string. This type is incompatible with
       5:   static _sProperty: number;
                               ^^^^^^ number
 
 
-Found 6 errors
+Found 4 errors

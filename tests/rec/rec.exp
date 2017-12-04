@@ -9,17 +9,6 @@ Error: issue-598.js:7
       7: function bar(y: F<number>): F<string> { return y; }
                                        ^^^^^^ string
 
-Error: issue-598.js:7
-  7: function bar(y: F<number>): F<string> { return y; }
-                                                    ^ F. This type is incompatible with the expected return type of
-  7: function bar(y: F<number>): F<string> { return y; }
-                                 ^^^^^^^^^ F
-  Type argument `A` is incompatible:
-      7: function bar(y: F<number>): F<string> { return y; }
-                                       ^^^^^^ string. This type is incompatible with
-      7: function bar(y: F<number>): F<string> { return y; }
-                           ^^^^^^ number
-
 Error: test.js:6
   6: (p.x: string); // error
       ^^^ number. This type is incompatible with
@@ -55,17 +44,6 @@ Error: test2.js:30
      30: ((new C: C<number>): D<string>) // error: number ~/~ string
                                 ^^^^^^ string
 
-Error: test2.js:30
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-              ^^^^^^^^^ D. Has some incompatible type argument with
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                          ^^^^^^^^^ D
-  Type argument `X` is incompatible:
-     30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                                ^^^^^^ string. This type is incompatible with
-     30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                    ^^^^^^ number
-
 Error: test3.js:13
  13:   return x; // terminate despite expanding types, error
               ^ P. This type is incompatible with the expected return type of
@@ -83,4 +61,4 @@ Error: test3.js:13
                                ^^^^^^^ Q
 
 
-Found 9 errors
+Found 7 errors

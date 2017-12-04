@@ -72,17 +72,6 @@ Error: phantom.js:7
       4: type B = T<string>;
                     ^^^^^^ string
 
-Error: phantom.js:7
-  7: (a: B); // Error
-      ^ A. Has some incompatible type argument with
-  7: (a: B); // Error
-         ^ B
-  Type argument `Phantom` is incompatible:
-      4: type B = T<string>;
-                    ^^^^^^ string. This type is incompatible with
-      3: type A = T<number>;
-                    ^^^^^^ number
-
 Error: phantom.js:15
  15: (c: D); // Error
       ^ C. Has some incompatible type argument with
@@ -93,17 +82,6 @@ Error: phantom.js:15
                     ^^^^^^ number. This type is incompatible with
      12: type D = T<string>;
                     ^^^^^^ string
-
-Error: phantom.js:15
- 15: (c: D); // Error
-      ^ C. Has some incompatible type argument with
- 15: (c: D); // Error
-         ^ D
-  Type argument `Phantom` is incompatible:
-     12: type D = T<string>;
-                    ^^^^^^ string. This type is incompatible with
-     11: type C = T<number>;
-                    ^^^^^^ number
 
 Error: poly.js:17
  17: var x:string = foo.x;
@@ -155,4 +133,4 @@ Error: test.js:7
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
 
-Found 16 errors
+Found 14 errors

@@ -48,26 +48,6 @@ Error: identity.js:24
  27: }): Foo);
          ^^^ object type
   Property `a` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     25:   a: string, // Error: string ~> number
-              ^^^^^^ string
-
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `a` is incompatible:
      25:   a: string, // Error: string ~> number
               ^^^^^^ string. This type is incompatible with
                     v-------
@@ -77,26 +57,6 @@ Error: identity.js:24
     ...:
      11: >;
          ^ number
-
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `b` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     26:   b: string, // Error: string ~> number
-              ^^^^^^ string
 
 Error: identity.js:24
             v
@@ -191,26 +151,6 @@ Error: identity.js:38
  40:   b: string, // Error: number ~> string
  41: });
      ^ object type
-  Property `a` is incompatible:
-     39:   a: string, // Error: number ~> string
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
   Property `b` is incompatible:
                     v-------
       5: type Foo = $ObjMap<
@@ -221,26 +161,6 @@ Error: identity.js:38
          ^ number. This type is incompatible with
      40:   b: string, // Error: number ~> string
               ^^^^^^ string
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `b` is incompatible:
-     40:   b: string, // Error: number ~> string
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
 
 Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
@@ -438,4 +358,4 @@ Error: optional.js:17
             ^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 27 errors
+Found 23 errors

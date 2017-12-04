@@ -26,17 +26,6 @@ Error: test.js:9
   9: class B extends A {
                      ^ A
   Property `x` is incompatible:
-      2:   static x: number;
-                     ^^^^^^ number. This type is incompatible with
-     10:   static x: string; // error?
-                     ^^^^^^ string
-
-Error: test.js:9
-  9: class B extends A {
-           ^ B. Cannot extend
-  9: class B extends A {
-                     ^ A
-  Property `x` is incompatible:
      10:   static x: string; // error?
                      ^^^^^^ string. This type is incompatible with
       2:   static x: number;
@@ -109,4 +98,4 @@ Error: test.js:54
                      ^^^^^^ string
 
 
-Found 15 errors
+Found 14 errors

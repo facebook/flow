@@ -9058,6 +9058,8 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
 (* unification *)
 (***************)
 
+and unify_flip use_op = Frame (UnifyFlip, use_op)
+
 (* Chain a root to another root. If both roots are unresolved, this amounts to
    copying over the bounds of one root to another, and adding all the
    connections necessary when two non-unifiers flow to each other. If one or
@@ -9071,7 +9073,7 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
     if cond1 then
       flows_across cx trace ~use_op bounds1.lower bounds2.upper;
     if cond2 then
-      flows_across cx trace ~use_op bounds2.lower bounds1.upper;
+      flows_across cx trace ~use_op:(unify_flip use_op) bounds2.lower bounds1.upper;
     if cond1 then (
       add_upper_edges cx trace ~opt:true (id1, bounds1) (id2, bounds2);
       add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
@@ -9085,11 +9087,11 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
   | Unresolved bounds1, Resolved t2 ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
-    edges_and_flows_from_t cx trace ~use_op ~opt:true t2 (id1, bounds1);
+    edges_and_flows_from_t cx trace ~use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
     replace_node cx id1 (Goto id2);
 
   | Resolved t1, Unresolved bounds2 ->
-    let t1_use = UseT (use_op, t1) in
+    let t1_use = UseT (unify_flip use_op, t1) in
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
     replace_node cx id2 (Goto id1);
@@ -9107,7 +9109,7 @@ and merge_ids cx trace ~use_op id1 id2 =
   else if root1.rank < root2.rank
   then goto cx trace ~use_op (id1, root1) (id2, root2)
   else if root2.rank < root1.rank
-  then goto cx trace ~use_op (id2, root2) (id1, root1)
+  then goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
   else (
     replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
     goto cx trace ~use_op (id1, root1) (id2, root2);
@@ -9191,7 +9193,7 @@ and __unify cx ~use_op t1 t2 trace =
   | OpenT (_, id), t when ok_unify t ->
     resolve_id cx trace ~use_op id t
   | t, OpenT (_, id) when ok_unify t ->
-    resolve_id cx trace ~use_op id t
+    resolve_id cx trace ~use_op:(unify_flip use_op) id t
 
   | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
     when id1 = id2 -> ()
@@ -9350,8 +9352,9 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
    bidirectional flows. This means that the destructuring work is duplicated,
    and we're missing some opportunities for nested unification. *)
 
-and naive_unify cx trace ?(use_op=unknown_use) t1 t2 =
-  rec_flow_t cx trace ~use_op (t1,t2); rec_flow_t cx trace ~use_op (t2,t1)
+and naive_unify cx trace ~use_op t1 t2 =
+  rec_flow_t cx trace ~use_op (t1, t2);
+  rec_flow_t cx trace ~use_op:(unify_flip use_op) (t2, t1)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value

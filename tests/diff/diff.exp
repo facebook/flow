@@ -92,16 +92,5 @@ Error: undefined.js:10
      10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                                             ^ A
 
-Error: undefined.js:10
- 10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-            ^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                            ^ A. This type is incompatible with
-     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                    ^^^^ undefined
 
-
-Found 9 errors
+Found 8 errors

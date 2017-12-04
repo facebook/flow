@@ -22,20 +22,9 @@ Error: test.js:19
              ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `y` is incompatible:
      19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                  ^^^^^^ string. This type is incompatible with
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                                    ^^^^^^ number
-
-Error: test.js:19
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                                                                                     ^^^^^^ number. This type is incompatible with
      19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                                   ^^^^^^ string
 
 
-Found 4 errors
+Found 3 errors

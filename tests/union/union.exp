@@ -56,12 +56,6 @@ Error: union.js:8
 
 Error: union.js:9
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ C. This type is incompatible with
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ D
-
-Error: union.js:9
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ D. This type is incompatible with
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ C
@@ -73,4 +67,4 @@ Error: yuge.js:23
               ^^^^^^^^^ number enum
 
 
-Found 7 errors
+Found 6 errors

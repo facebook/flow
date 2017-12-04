@@ -4,17 +4,6 @@ Error: B.js:5
   5: class B extends A {
                      ^ A
   Property `c` is incompatible:
-      5:   c: string;
-              ^^^^^^ string. This type is incompatible with. See: A.js:5
-      6:   c: C;
-              ^ C
-
-Error: B.js:5
-  5: class B extends A {
-           ^ B. Cannot extend
-  5: class B extends A {
-                     ^ A
-  Property `c` is incompatible:
       6:   c: C;
               ^ C. This type is incompatible with
       5:   c: string;
@@ -26,41 +15,6 @@ Error: C.js:5
   5: class C extends A {
                      ^ A
   Property `b` is incompatible:
-      4:   b: number;
-              ^^^^^^ number. This type is incompatible with. See: A.js:4
-      6:   b: B;
-              ^ B
-
-Error: C.js:5
-  5: class C extends A {
-           ^ C. Cannot extend
-  5: class C extends A {
-                     ^ A
-  Property `b` is incompatible:
-      6:   b: B;
-              ^ B. This type is incompatible with
-      4:   b: number;
-              ^^^^^^ number. See: A.js:4
-
-
-Found 4 errors
-Error: C.js:5
-  5: class C extends A {
-           ^ C. Cannot extend
-  5: class C extends A {
-                     ^ A
-  Property `b` is incompatible:
-      4:   b: number;
-              ^^^^^^ number. This type is incompatible with. See: A.js:4
-      6:   b: B;
-              ^ B
-
-Error: C.js:5
-  5: class C extends A {
-           ^ C. Cannot extend
-  5: class C extends A {
-                     ^ A
-  Property `b` is incompatible:
       6:   b: B;
               ^ B. This type is incompatible with
       4:   b: number;
@@ -74,11 +28,13 @@ Error: C.js:5
   5: class C extends A {
                      ^ A
   Property `b` is incompatible:
-      4:   b: number;
-              ^^^^^^ number. This type is incompatible with. See: A.js:4
       6:   b: B;
-              ^ B
+              ^ B. This type is incompatible with
+      4:   b: number;
+              ^^^^^^ number. See: A.js:4
 
+
+Found 1 error
 Error: C.js:5
   5: class C extends A {
            ^ C. Cannot extend
@@ -91,18 +47,7 @@ Error: C.js:5
               ^^^^^^ number. See: A.js:4
 
 
-Found 2 errors
-Error: C.js:5
-  5: class C extends A {
-           ^ C. Cannot extend
-  5: class C extends A {
-                     ^ A
-  Property `b` is incompatible:
-      4:   b: number;
-              ^^^^^^ number. This type is incompatible with. See: A.js:4
-      6:   b: B;
-              ^ B
-
+Found 1 error
 Error: C.js:5
   5: class C extends A {
            ^ C. Cannot extend
@@ -115,4 +60,4 @@ Error: C.js:5
               ^^^^^^ number. See: A.js:4
 
 
-Found 2 errors
+Found 1 error

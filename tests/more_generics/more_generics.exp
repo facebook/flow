@@ -11,9 +11,9 @@ Error: poly.js:10
                         ^^^^^^^^ array type
   Type argument `T` is incompatible:
      10: function foo5<T>():Array<T> { return x; }
-                       ^ T. This type is incompatible with
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`. This type is incompatible with
      10: function foo5<T>():Array<T> { return x; }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+                       ^ T
 
 Error: poly.js:20
  20: function foo7<R>(x:R):R { return foo5(); }

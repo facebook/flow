@@ -174,7 +174,7 @@ Trace:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, ObjT) [propTypes of React component] (from path 2)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnifyFlip, ObjT) [propTypes of React component] (from path 2)
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
@@ -206,7 +206,7 @@ Trace:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(TypeArgCompatibility, ObjT) [propTypes of React component] (from path 2)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnifyFlip, ObjT) [propTypes of React component] (from path 2)
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]

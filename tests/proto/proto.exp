@@ -27,17 +27,6 @@ Error: annot.js:9
   9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
                                  ^ object type
   Property `q` is incompatible:
-      1: type O = {p: number, __proto__: {q: string}};
-                                             ^^^^^^ string. This type is incompatible with
-      9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-                                ^ number
-
-Error: annot.js:9
-  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-                                 ^ object type
-  Property `q` is incompatible:
       9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
                                 ^ number. This type is incompatible with
       1: type O = {p: number, __proto__: {q: string}};
@@ -197,4 +186,4 @@ Error: null.js:18
                        ^^^^^ empty
 
 
-Found 31 errors
+Found 30 errors

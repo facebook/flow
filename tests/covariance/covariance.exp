@@ -4,10 +4,10 @@ Error: test.js:3
   3: var y: CovArrayVerbose<mixed,*> = b;
             ^^^^^^^^^^^^^^^^^^^^^^^^ CovArrayVerbose
   Type argument `X` is incompatible:
-      3: var y: CovArrayVerbose<mixed,*> = b;
-                                ^^^^^ mixed. This type is incompatible with
       2: var b: CovArrayVerbose<number,*> = [];
-                                ^^^^^^ number
+                                ^^^^^^ number. This type is incompatible with
+      3: var y: CovArrayVerbose<mixed,*> = b;
+                                ^^^^^ mixed
 
 Error: test.js:4
   4: y[0] = ""; // error
@@ -21,10 +21,10 @@ Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                 ^^^^^^^^^^^^^^^^^^^^^^^^ CovArrayVerbose
   Type argument `X` is incompatible:
-      8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                                    ^^^^^ mixed. This type is incompatible with
       6: class NVerbose<E,I:E> {
-               ^^^^^^^^ some incompatible instantiation of `E`
+               ^^^^^^^^ some incompatible instantiation of `E`. This type is incompatible with
+      8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
+                                    ^^^^^ mixed
 
 Error: test.js:13
  13: (nv.x[0]: string); // error

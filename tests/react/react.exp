@@ -626,22 +626,6 @@ Error: hoc2.js:6
  15: |}> {}
      -^ object type
   Property `a` is incompatible:
-     12:   a: number,
-              ^^^^^^ number. This type is incompatible with
-     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                ^^^^^ string
-
-Error: hoc2.js:6
-  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                               v-
- 11: class MyComponent extends React.Component<{|
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: |}> {}
-     -^ object type
-  Property `a` is incompatible:
      28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                                 ^^^^^ string. This type is incompatible with
      12:   a: number,
@@ -688,22 +672,6 @@ Error: hoc2.js:6
          -^ property `a`. Property not found in
       6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:6
-  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                         v-
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     -^ object type
-  Property `a` is incompatible:
-     18:   a: number,
-              ^^^^^^ number. This type is incompatible with
-     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                        ^^^^^ string
 
 Error: hoc2.js:6
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
@@ -778,22 +746,6 @@ Error: hoc2.js:11
               ^^^^^^ number. This type is incompatible with
      28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                                 ^^^^^ string
-
-Error: hoc2.js:11
-                                               v-
- 11: class MyComponent extends React.Component<{|
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: |}> {}
-     -^ object type. This type is incompatible with
-  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                ^^^^^ string. This type is incompatible with
-     12:   a: number,
-              ^^^^^^ number
 
 Error: hoc2.js:11
                                                v-
@@ -2014,4 +1966,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 165 errors
+Found 162 errors

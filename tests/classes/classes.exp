@@ -61,17 +61,6 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
              ^^^ Foo
   Property `a` is incompatible:
-      4:   a: string;    // exists in TestClass
-              ^^^^^^ string. This type is incompatible with
-     27:   a: number;  // conflicts with cast to Foo
-              ^^^^^^ number
-
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `a` is incompatible:
      27:   a: number;  // conflicts with cast to Foo
               ^^^^^^ number. This type is incompatible with
       4:   a: string;    // exists in TestClass
@@ -83,32 +72,10 @@ Error: class_shapes.js:35
  35: var w : Foo = z;
              ^^^ Foo
   Property `b` is incompatible:
-      5:   b: string;    // doesn't exist
-              ^^^^^^ string. This type is incompatible with
-     31:   b: number;  // conflicts with cast to Foo
-              ^^^^^^ number
-
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `b` is incompatible:
      31:   b: number;  // conflicts with cast to Foo
               ^^^^^^ number. This type is incompatible with
       5:   b: string;    // doesn't exist
               ^^^^^^ string
-
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `c` is incompatible:
-      6:   c?: ?string;  // exists in TestClass, optional
-                ^^^^^^ string. This type is incompatible with
-     28:   c: ?number; // conflicts with cast to Foo
-               ^^^^^^ number
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
@@ -158,17 +125,6 @@ Error: statics.js:10
      10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
                 ^^^^^^ number
 
-Error: statics.js:10
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of `C`. This type is incompatible with
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-         ^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-                ^^^^^^ number. This type is incompatible with
-      4:   static p: string;
-                     ^^^^^^ string
-
 Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ object type. This type is incompatible with
@@ -188,4 +144,4 @@ Error: statics.js:25
               ^^^^^ empty
 
 
-Found 23 errors
+Found 19 errors
