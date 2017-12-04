@@ -281,7 +281,7 @@ module rec TypeTerm : sig
     | Refinement
     | WidenEnv
 
-  and use_op =
+  and root_use_op =
     | Addition
     | AssignVar of { var: reason option; init: reason }
     | Cast of { lower: reason; upper: reason }
@@ -290,29 +290,28 @@ module rec TypeTerm : sig
     | Coercion
     | FunCall of { op: reason; fn: reason }
     | FunCallMethod of { op: reason; fn: reason; prop: reason }
-    | FunCompatibility of { lower: reason; upper: reason; use_op: use_op }
-    | FunParam of { n: int; lower: reason; upper: reason; use_op: use_op }
-    | FunReturn of { lower: reason; upper: reason; use_op: use_op }
     | FunReturnStatement
     | FunImplicitReturn
     | FunCallThis of reason
     | FunCallMissingArg of reason * reason
     | GetProperty of reason
-    | IndexerKeyCompatibility of { lower: reason; upper: reason; use_op: use_op }
     | Internal of internal_use_op
-    | MissingTupleElement of int
-    | PropertyCompatibility of {
-        prop: string option;
-        lower: reason;
-        upper: reason;
-        use_op: use_op;
-      }
     | ReactCreateElementCall
     | SetProperty of reason
-    | TupleElementCompatibility of { n: int; lower: reason; upper: reason; use_op: use_op }
-    | TypeArgCompatibility of string * reason * reason * use_op
-    | TypeRefinement
     | UnknownUse
+
+  and frame_use_op =
+    | FunCompatibility of { lower: reason; upper: reason }
+    | FunParam of { n: int; lower: reason; upper: reason }
+    | FunReturn of { lower: reason; upper: reason }
+    | IndexerKeyCompatibility of { lower: reason; upper: reason }
+    | PropertyCompatibility of { prop: string option; lower: reason; upper: reason }
+    | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
+    | TypeArgCompatibility of string * reason * reason
+
+  and use_op =
+    | Op of root_use_op
+    | Frame of frame_use_op * use_op
 
   and use_t =
     (* def types can be used as upper bounds *)
@@ -1945,6 +1944,10 @@ let any_propagating_use_t = function
   | UseT _
     -> false
 
+let rec root_use_op = function
+| Op use_op -> use_op
+| Frame (_, use_op) -> root_use_op use_op
+
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
    the type system), so printing the reason provides a good idea of what the
@@ -2133,7 +2136,7 @@ and mod_reason_of_defer_use_t f = function
   | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
 and mod_reason_of_use_t f = function
-  | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
+  | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | AdderT (reason, flip, rt, lt) -> AdderT (f reason, flip, rt, lt)
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
@@ -2397,33 +2400,37 @@ let string_of_internal_use_op = function
   | Refinement -> "Refinement"
   | WidenEnv -> "WidenEnv"
 
+let string_of_root_use_op = function
+| Addition -> "Addition"
+| AssignVar _ -> "AssignVar"
+| Cast _ -> "Cast"
+| ClassExtendsCheck _ -> "ClassExtendsCheck"
+| ClassImplementsCheck _ -> "ClassImplementsCheck"
+| Coercion -> "Coercion"
+| FunCall _ -> "FunCall"
+| FunCallMethod _ -> "FunCallMethod"
+| FunCallMissingArg _ -> "FunCallMissingArg"
+| FunCallThis _ -> "FunCallThis"
+| FunImplicitReturn -> "FunImplicitReturn"
+| FunReturnStatement -> "FunReturnStatement"
+| GetProperty _ -> "GetProperty"
+| Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
+| ReactCreateElementCall -> "ReactCreateElementCall"
+| SetProperty _ -> "SetProperty"
+| UnknownUse -> "UnknownUse"
+
+let string_of_frame_use_op = function
+| FunCompatibility _ -> "FunCompatibility"
+| FunParam _ -> "FunParam"
+| FunReturn _ -> "FunReturn"
+| IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
+| PropertyCompatibility _ -> "PropertyCompatibility"
+| TupleElementCompatibility _ -> "TupleElementCompatibility"
+| TypeArgCompatibility _ -> "TypeArgCompatibility"
+
 let string_of_use_op = function
-  | Addition -> "Addition"
-  | AssignVar _ -> "AssignVar"
-  | Cast _ -> "Cast"
-  | ClassExtendsCheck _ -> "ClassExtendsCheck"
-  | ClassImplementsCheck _ -> "ClassImplementsCheck"
-  | Coercion -> "Coercion"
-  | FunCall _ -> "FunCall"
-  | FunCallMethod _ -> "FunCallMethod"
-  | FunCompatibility _ -> "FunCompatibility"
-  | FunParam _ -> "FunParam"
-  | FunReturn _ -> "FunReturn"
-  | FunReturnStatement -> "FunReturnStatement"
-  | FunImplicitReturn -> "FunImplicitReturn"
-  | FunCallMissingArg _ -> "FunCallMissingArg"
-  | FunCallThis _ -> "FunCallThis"
-  | GetProperty _ -> "GetProperty"
-  | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
-  | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
-  | MissingTupleElement _ -> "MissingTupleElement"
-  | PropertyCompatibility _ -> "PropertyCompatibility"
-  | ReactCreateElementCall -> "ReactCreateElementCall"
-  | SetProperty _ -> "SetProperty"
-  | TupleElementCompatibility _ -> "TupleElementCompatibility"
-  | TypeArgCompatibility _ -> "TypeArgCompatibility"
-  | TypeRefinement -> "TypeRefinement"
-  | UnknownUse -> "UnknownUse"
+| Op root -> string_of_root_use_op root
+| Frame (frame, _) -> string_of_frame_use_op frame
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
@@ -2657,6 +2664,8 @@ let this_typeapp t this tparams =
 let annot use_desc = function
   | OpenT tvar -> AnnotT (tvar, use_desc)
   | t -> t
+
+let unknown_use = Op UnknownUse
 
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are

@@ -915,7 +915,7 @@ and statement cx = Ast.Statement.(
             let funt = Flow.get_builtin cx "$await" reason in
             let callt = mk_functioncalltype reason [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
-            Flow.flow cx (funt, CallT (UnknownUse, reason, callt))
+            Flow.flow cx (funt, CallT (unknown_use, reason, callt))
           )
         ]
       | Scope.Generator ->
@@ -940,7 +940,7 @@ and statement cx = Ast.Statement.(
         ]
       | _ -> t
       in
-      Flow.flow cx (t, UseT (FunReturnStatement, ret));
+      Flow.flow cx (t, UseT (Op FunReturnStatement, ret));
       Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Return
 
@@ -1965,7 +1965,7 @@ and export_statement cx loc
           match source_module_tvar with
           | Some(tvar) ->
             Tvar.mk_where cx reason (fun t ->
-              Flow.flow cx (tvar, GetPropT (UnknownUse, reason, Named (reason, local_name), t))
+              Flow.flow cx (tvar, GetPropT (unknown_use, reason, Named (reason, local_name), t))
             )
           | None ->
             Env.var_ref ~lookup_mode cx local_name loc
@@ -2238,7 +2238,7 @@ and object_ cx reason ?(allow_sealed=true) props =
         let k = expression cx k in
         let v = expression cx v in
         let obj = eval_object (map, result) in
-        Flow.flow cx (obj, SetElemT (UnknownUse, reason, k, v));
+        Flow.flow cx (obj, SetElemT (unknown_use, reason, k, v));
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
         sealed, SMap.empty, proto, Some result
@@ -2249,7 +2249,7 @@ and object_ cx reason ?(allow_sealed=true) props =
         let k = expression cx k in
         let v = expression cx (fn_loc, Ast.Expression.Function fn) in
         let obj = eval_object (map, result) in
-        Flow.flow cx (obj, SetElemT (UnknownUse, reason, k, v));
+        Flow.flow cx (obj, SetElemT (unknown_use, reason, k, v));
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
         sealed, SMap.empty, proto, Some result
@@ -2423,10 +2423,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let t = Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation)
       in Type_table.set (Context.type_table cx) loc t;
       let infer_t = expression cx e in
-      let use_op = Cast {
+      let use_op = Op (Cast {
         lower = reason_of_t infer_t;
         upper = reason_of_t t;
-      } in
+      }) in
       Flow.flow cx (infer_t, UseT (use_op, t));
       t
 
@@ -2442,7 +2442,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let tobj = expression cx _object in
         let tind = expression cx index in
         Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (tobj, GetElemT (UnknownUse, reason, tind, t))
+          Flow.flow cx (tobj, GetElemT (unknown_use, reason, tind, t))
         )
       )
 
@@ -2479,7 +2479,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         then AnyT.at ploc
         else (
           Tvar.mk_where cx expr_reason (fun tvar ->
-            let use_op = GetProperty prop_reason in
+            let use_op = Op (GetProperty prop_reason) in
             Flow.flow cx (
               super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
             )
@@ -2540,7 +2540,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Tvar.mk_where cx reason (fun tout ->
           let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
           let reason_op = reason in
-          Flow.resolve_spread_list cx ~use_op:UnknownUse ~reason_op elem_spread_list resolve_to
+          Flow.resolve_spread_list cx ~use_op:unknown_use ~reason_op elem_spread_list resolve_to
         )
     )
 
@@ -2689,11 +2689,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype super argts t in
-        let use_op = FunCallMethod {
+        let use_op = Op (FunCallMethod {
           op=reason;
           fn=mk_reason (RMethod (Some name)) callee_loc;
           prop=reason_prop;
-        } in
+        }) in
         Flow.flow cx (
           super,
           MethodT (use_op, reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2743,10 +2743,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
-        let use_op = FunCall {
+        let use_op = Op (FunCall {
           op=reason;
           fn=mk_reason RSuper ploc;
-        } in
+        }) in
         Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype)))
 
   (******************************************)
@@ -2883,10 +2883,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           SpreadArg (AnyT.why reason) ]
         ret
       in
-      let use_op = FunCall {
+      let use_op = Op (FunCall {
         op=reason;
         fn=reason_of_t t;
-      } in
+      }) in
       Flow.flow cx (t, CallT (use_op, reason, ft));
       ret
 
@@ -2913,7 +2913,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           let t_out = StrT.at loc in
           List.iter (fun expr ->
             let e = expression cx expr in
-            Flow.flow cx (e, UseT (Coercion, t_out));
+            Flow.flow cx (e, UseT (Op Coercion, t_out));
           ) expressions;
           t_out
       end
@@ -3069,10 +3069,10 @@ and predicated_call_expression_ cx loc callee arguments =
 and new_call cx tok class_ argts =
   let reason = mk_reason (RConstructorCall (desc_of_t class_)) tok in
   Tvar.mk_where cx reason (fun t ->
-    let use_op = FunCall {
+    let use_op = Op (FunCall {
       op=reason;
       fn=reason_of_t class_;
-    } in
+    }) in
     Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
   )
 
@@ -3081,10 +3081,10 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Tvar.mk_where cx reason (fun t ->
     let frame = Env.peek_frame () in
     let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
-    let use_op = FunCall {
+    let use_op = Op (FunCall {
       op=reason;
       fn=reason_of_t func_t;
-    } in
+    }) in
     Flow.flow cx (func_t, CallT (use_op, reason, app))
   )
 
@@ -3104,10 +3104,10 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let frame = Env.peek_frame () in
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
-        let use_op = FunCall {
+        let use_op = Op (FunCall {
           op=reason;
           fn=reason_of_t f;
-        } in
+        }) in
         Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
@@ -3120,11 +3120,11 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
-        let use_op = FunCallMethod {
+        let use_op = Op (FunCallMethod {
           op=reason;
           fn=mk_reason (RMethod (Some name)) (Loc.btwn expr_loc prop_loc);
           prop=reason_prop;
-        } in
+        }) in
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app))
       )
   )
@@ -3400,7 +3400,7 @@ and assignment cx loc = Ast.Expression.(function
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
-            let use_op = SetProperty reason in
+            let use_op = Op (SetProperty reason) in
             Flow.flow cx (super, SetPropT (use_op, reason, Named (prop_reason, name), Normal, t))
 
         (* _object.#name = e *)
@@ -3417,7 +3417,7 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
-              let use_op = SetProperty reason in
+              let use_op = Op (SetProperty reason) in
               Flow.flow cx (o, SetPrivatePropT (use_op, reason, name, class_entries, false, t));
               post_assignment_havoc ~private_:true name expr lhs_loc t
             )
@@ -3440,7 +3440,7 @@ and assignment cx loc = Ast.Expression.(function
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
-              let use_op = SetProperty reason in
+              let use_op = Op (SetProperty reason) in
               Flow.flow cx (o, SetPropT (use_op, reason, Named (prop_reason, name), wr_ctx, t));
               post_assignment_havoc ~private_:false name expr lhs_loc t
             )
@@ -3454,7 +3454,7 @@ and assignment cx loc = Ast.Expression.(function
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let a = expression cx _object in
             let i = expression cx index in
-            let use_op = SetProperty reason in
+            let use_op = Op (SetProperty reason) in
             Flow.flow cx (a, SetElemT (use_op, reason, i, t));
 
             (* types involved in the assignment itself are computed
@@ -3775,7 +3775,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let arr = Tvar.mk_where cx reason (fun tout ->
           Flow.resolve_spread_list
             cx
-            ~use_op:UnknownUse
+            ~use_op:unknown_use
             ~reason_op:reason
             children
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
@@ -3802,7 +3802,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
         let reason_createElement =
           mk_reason (RProperty (Some "createElement")) eloc in
         Flow.flow cx (react, MethodT (
-          UnknownUse,
+          unknown_use,
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
@@ -4324,7 +4324,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "Array.isArray") callee_loc in
       let fn_t = Tvar.mk_where cx reason (fun t ->
         let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
-        let use_op = GetProperty prop_reason in
+        let use_op = Op (GetProperty prop_reason) in
         Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t))
       ) in
       Type_table.set (Context.type_table cx) prop_loc fn_t;
@@ -4432,7 +4432,7 @@ and condition cx e =
 and get_private_field cx reason tobj (prop_reason, name) =
   Tvar.mk_where cx reason (fun t ->
     let class_entries = Env.get_class_entries () in
-    let use_op = GetProperty prop_reason in
+    let use_op = Op (GetProperty prop_reason) in
     let get_prop_u = GetPrivatePropT (use_op, reason, name, class_entries, false, t) in
     Flow.flow cx (tobj, get_prop_u)
   )
@@ -4449,7 +4449,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
     let get_prop_u =
       if is_cond
       then TestPropT (reason, Named (prop_reason, name), t)
-      else GetPropT (GetProperty prop_reason, reason, Named (prop_reason, name), t)
+      else GetPropT (Op (GetProperty prop_reason), reason, Named (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)
   )
@@ -4492,7 +4492,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let t = Tvar.mk_where cx reason (fun tvar ->
-          Flow.flow cx (spec, GetPropT (UnknownUse, reason, Named (reason, "value"), tvar))
+          Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar))
         ) in
         let p = Field (loc, t, Neutral) in
         SMap.add x p acc
@@ -4524,8 +4524,8 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let spec = expression cx config in
     let tvar = Tvar.mk cx reason in
     let prop_reason = mk_reason (RProperty (Some x)) ploc in
-    Flow.flow cx (spec, GetPropT (UnknownUse, reason, Named (reason, "value"), tvar));
-    Flow.flow cx (o, SetPropT (UnknownUse, reason, Named (prop_reason, x), Normal, tvar));
+    Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
+    Flow.flow cx (o, SetPropT (unknown_use, reason, Named (prop_reason, x), Normal, tvar));
     o
 
   | ("defineProperties", [ Expression e;
@@ -4545,8 +4545,8 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let tvar = Tvar.mk cx reason in
-        Flow.flow cx (spec, GetPropT (UnknownUse, reason, Named (reason, "value"), tvar));
-        Flow.flow cx (o, SetPropT (UnknownUse, reason, Named (reason, x), Normal, tvar));
+        Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
+        Flow.flow cx (o, SetPropT (unknown_use, reason, Named (reason, x), Normal, tvar));
     );
     o
 

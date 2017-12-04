@@ -290,43 +290,41 @@ and upper_kind =
 let desc_of_reason = Reason.desc_of_reason ~unwrap_alias:false
 
 let rec locs_of_use_op acc = function
-  | FunCallThis reason -> (loc_of_reason reason)::acc
-  | PropertyCompatibility {lower; upper; use_op; _} ->
+  | Op (FunCallThis reason) -> (loc_of_reason reason)::acc
+  | Frame (PropertyCompatibility {lower; upper; _}, use_op) ->
     let lower_loc = loc_of_reason lower in
     let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
-  | IndexerKeyCompatibility {lower; upper; use_op} ->
+  | Frame (IndexerKeyCompatibility {lower; upper}, use_op) ->
     let lower_loc = loc_of_reason lower in
     let upper_loc = loc_of_reason upper in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
-  | SetProperty reason -> (loc_of_reason reason)::acc
-  | TupleElementCompatibility {lower; upper; use_op; _} ->
+  | Op (SetProperty reason) -> (loc_of_reason reason)::acc
+  | Frame (TupleElementCompatibility {lower; upper; _}, use_op) ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
-  | TypeArgCompatibility (_, r1, r2, use_op) ->
+  | Frame (TypeArgCompatibility (_, r1, r2), use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
-  | FunParam {use_op=FunCompatibility {lower; upper; use_op}; _}
-  | FunReturn {use_op=FunCompatibility {lower; upper; use_op}; _} ->
+  | Frame (FunParam _, Frame (FunCompatibility {lower; upper}, use_op))
+  | Frame (FunReturn _, Frame (FunCompatibility {lower; upper}, use_op)) ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
-  | Addition
-  | AssignVar _
-  | Cast _
-  | ClassExtendsCheck _
-  | ClassImplementsCheck _
-  | Coercion
-  | FunImplicitReturn
-  | FunParam _
-  | FunReturn _
-  | FunCall _
-  | FunCallMethod _
-  | FunCallMissingArg _
-  | FunReturnStatement
-  | FunCompatibility _
-  | GetProperty _
-  | ReactCreateElementCall
-  | TypeRefinement
-  | UnknownUse
-  | Internal _
-  | MissingTupleElement _
+  | Frame (FunParam _, _)
+  | Frame (FunReturn _, _)
+  | Frame (FunCompatibility _, _)
+  | Op Addition
+  | Op (AssignVar _)
+  | Op (Cast _)
+  | Op (ClassExtendsCheck _)
+  | Op (ClassImplementsCheck _)
+  | Op Coercion
+  | Op (FunImplicitReturn)
+  | Op (FunCall _)
+  | Op (FunCallMethod _)
+  | Op (FunCallMissingArg _)
+  | Op FunReturnStatement
+  | Op (GetProperty _)
+  | Op ReactCreateElementCall
+  | Op UnknownUse
+  | Op (Internal _)
     -> acc
 
 let locs_of_error_message = function
@@ -694,10 +692,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
      Note that `force` is not recursive, as the input message is consumed by
      `extra_info_of_use_op` and will appear in the output. *)
   let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
-  | PropertyCompatibility {prop; lower=rl'; upper=ru'; use_op} ->
+  | Frame (PropertyCompatibility {prop=x; lower=rl'; upper=ru'; _}, use_op) ->
     let extra =
       let prop =
-        match prop with
+        match x with
         | Some "$call" -> "Callable property"
         | None | Some "$key" | Some "$value" -> "Indexable signature"
         | Some x -> spf "Property `%s`" x
@@ -708,31 +706,31 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in
     unwrap_use_ops (obj_reasons, extra, msg) use_op
-  | IndexerKeyCompatibility {lower=rl'; upper=ru'; use_op} ->
+  | Frame (IndexerKeyCompatibility {lower=rl'; upper=ru'}, use_op) ->
     let extra =
       extra_info_of_use_op reasons extra msg "Indexer key is incompatible:"
     in
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in
     unwrap_use_ops (obj_reasons, extra, msg) use_op
-  | TupleElementCompatibility {n; lower; upper; use_op} ->
+  | Frame (TupleElementCompatibility {n; lower; upper}, use_op) ->
     let extra =
       extra_info_of_use_op reasons extra msg
         (spf "The %s tuple element is incompatible:" (Utils_js.ordinal n))
     in
     let msg = "Has some incompatible tuple element with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-  | TypeArgCompatibility (x, reason_op, reason_tapp, use_op) ->
+  | Frame (TypeArgCompatibility (x, reason_op, reason_tapp), use_op) ->
     let extra =
       extra_info_of_use_op reasons extra msg
         (spf "Type argument `%s` is incompatible:" x)
     in
     let msg = "Has some incompatible type argument with" in
     unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
-  | FunReturnStatement when not force ->
+  | Op FunReturnStatement when not force ->
     let msg = "This type is incompatible with the expected return type of" in
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
-  | FunImplicitReturn when not force ->
+  | Op FunImplicitReturn when not force ->
     let lreason, ureason = reasons in
     let msg = spf "This type is incompatible with an implicitly-returned %s"
       (string_of_desc (desc_of_reason lreason))
@@ -741,10 +739,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   (* TODO: Use a more stable approach to pick the right use_op. In an
    * upcoming diff. This is to prevent React errors from regressing in
    * the meantime. *)
-  | FunParam {use_op=ReactCreateElementCall; _} ->
+  | Frame (FunParam _, Op ReactCreateElementCall) ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-  | FunParam {lower; use_op=(FunCall _ | FunCallMethod _); _} ->
+  | Frame (FunParam {lower; _}, Op (FunCall _ | FunCallMethod _)) ->
     let reasons, msg =
       if not force then
         let reasons' = ordered_reasons reasons in
@@ -765,33 +763,33 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, msgs
-  | FunParam {n; use_op=FunCompatibility {lower; upper; use_op}; _} ->
+  | Frame (FunParam {n; _}, Frame (FunCompatibility {lower; upper}, use_op)) ->
     let extra =
       extra_info_of_use_op reasons extra msg
         (spf "The %s parameter is incompatible:" (Utils_js.ordinal n))
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-  | FunReturn {use_op=FunCompatibility {lower; upper; use_op}; _} ->
+  | Frame (FunReturn _, Frame (FunCompatibility {lower; upper}, use_op)) ->
     let extra =
       extra_info_of_use_op reasons extra msg "The return is incompatible:"
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-  | ReactCreateElementCall ->
+  | Op ReactCreateElementCall ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-  | SetProperty reason_op ->
+  | Op (SetProperty reason_op) ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
     extra, (* suppress_op *) false, typecheck_msgs msg (rl, ru)
-  | ClassExtendsCheck _ ->
+  | Op (ClassExtendsCheck _) ->
     let msg = if not force
       then "Cannot extend"
       else msg
     in
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
-  | ClassImplementsCheck _ ->
+  | Op (ClassImplementsCheck _) ->
     let msg = if not force
       then "Cannot implement"
       else msg
@@ -800,10 +798,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
    * the primary location. *)
-  | AssignVar {init=op; _}
-  | Cast {lower=op; _}
-  | FunCall {op; _}
-  | FunCallMethod {op; _}
+  | Op (AssignVar {init=op; _})
+  | Op (Cast {lower=op; _})
+  | Op (FunCall {op; _})
+  | Op (FunCallMethod {op; _})
     ->
     let rl, ru = reasons in
     if Loc.contains (loc_of_reason op) (loc_of_reason rl) then (
@@ -974,7 +972,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EPropNotFound (reasons, use_op) ->
-      let use_op = match use_op with SetProperty _ -> UnknownUse | _ -> use_op in
+      let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
       let extra, suppress_op, msgs =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
       typecheck_error_with_core_infos ~extra ~suppress_op msgs
@@ -1015,7 +1013,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       begin match use_op with
       | Some use_op ->
-        let use_op = match use_op with SetProperty _ -> UnknownUse | _ -> use_op in
+        let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
         let extra, suppress_op, msgs =
           unwrap_use_ops ~force:true (reasons, [], msg) use_op in
         typecheck_error_with_core_infos ~extra ~suppress_op msgs

@@ -221,9 +221,10 @@ let autocomplete_jsx
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = Tvar.mk_where cx reason (fun tvar ->
+      let use_op = Type.Op Type.UnknownUse in
       flow cx (
         component_instance,
-        Type.GetPropT (Type.UnknownUse, reason, Type.Named (reason, "props"), tvar))
+        Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar))
     ) in
     autocomplete_member
       profiling

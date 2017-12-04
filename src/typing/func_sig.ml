@@ -331,29 +331,29 @@ let toplevels id cx this super ~decls ~stmts ~expr
     let use_op, void_t = match kind with
     | Ordinary
     | Ctor ->
-      FunImplicitReturn, VoidT.at loc
+      Op FunImplicitReturn, VoidT.at loc
     | Async ->
       let reason = mk_reason (RCustom "Promise<void>") loc in
       let promise = Flow.get_builtin cx "Promise" reason in
-      FunImplicitReturn, typeapp promise [VoidT.at loc]
+      Op FunImplicitReturn, typeapp promise [VoidT.at loc]
     | Generator ->
       let reason = mk_reason (RCustom "Generator<Yield,void,Next>") loc in
       let return_t = VoidT.at loc in
-      FunImplicitReturn,
+      Op FunImplicitReturn,
       Flow.get_builtin_typeapp cx reason "Generator" [yield_t; return_t; next_t]
     | AsyncGenerator ->
       let reason = mk_reason (RCustom "AsyncGenerator<Yield,void,Next>") loc in
       let return_t = VoidT.at loc in
-      FunImplicitReturn,
+      Op FunImplicitReturn,
       Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; return_t; next_t]
     | FieldInit e ->
       let return_t = expr cx e in
-      UnknownUse, return_t
+      unknown_use, return_t
     | Predicate ->
       let loc = loc_of_reason reason in
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
-      FunImplicitReturn, VoidT.at loc
+      Op FunImplicitReturn, VoidT.at loc
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))
   );

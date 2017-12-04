@@ -409,13 +409,15 @@ let thistype cx x =
 
 let check_implements cx def_reason x =
   let this = thistype cx x in
+  let reason = x.instance.reason in
+  let open Type in
   List.iter (fun i ->
-    let use_op = Type.ClassImplementsCheck {
+    let use_op = Op (ClassImplementsCheck {
       def = def_reason;
-      name = x.instance.reason;
-      implements = Type.reason_of_t i;
-    } in
-    Flow.flow cx (i, Type.(ImplementsT (use_op, this)))
+      name = reason;
+      implements = reason_of_t i;
+    }) in
+    Flow.flow cx (i, ImplementsT (use_op, this))
   ) x.implements
 
 let check_super cx def_reason x =
@@ -424,11 +426,11 @@ let check_super cx def_reason x =
   let open Type in
   let initialized_static_field_names, static_objtype = statictype cx x.static in
   let insttype = insttype cx ~initialized_static_field_names x in
-  let use_op = ClassExtendsCheck {
+  let use_op = Op (ClassExtendsCheck {
     def = def_reason;
     name = reason;
     extends = reason_of_t x.instance.super;
-  } in
+  }) in
   Flow.flow cx (x.static.super, SuperT (use_op, reason, DerivedStatics static_objtype));
   Flow.flow cx (x.instance.super, SuperT (use_op, reason, DerivedInstance insttype))
 
@@ -455,7 +457,7 @@ let mk_super cx tparams_map c targs = Type.(
          this-specialize `c`. *)
       let reason = reason_of_t c in
       let c = Tvar.mk_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (UnknownUse, reason, reason, None, None, tvar))
+        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
       ) in
       this_typeapp c this None
   | Some params ->

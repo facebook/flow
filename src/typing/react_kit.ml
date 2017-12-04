@@ -138,7 +138,7 @@ let run cx trace ~use_op reason_op l u
      * find in the intrinsics map. *)
     let intrinsic = Tvar.mk cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (UnknownUse, reason, (match literal with
+    rec_flow cx trace (intrinsics, GetPropT (unknown_use, reason, (match literal with
       | Literal (_, name) ->
         Named (replace_reason_const (RReactElement (Some name)) reason, name)
       | _ -> Computed l
@@ -158,7 +158,7 @@ let run cx trace ~use_op reason_op l u
       Strict reason_op,
       [],
       propref,
-      LookupProp (UnknownUse, prop)
+      LookupProp (unknown_use, prop)
     ))
   in
 
@@ -323,7 +323,7 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
-      let action = LookupProp (UnknownUse, Field (None, key_t, Positive)) in
+      let action = LookupProp (unknown_use, Field (None, key_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -342,7 +342,7 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
-      let action = LookupProp (UnknownUse, Field (None, ref_t, Positive)) in
+      let action = LookupProp (unknown_use, Field (None, ref_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
@@ -368,7 +368,7 @@ let run cx trace ~use_op reason_op l u
           let strict = NonstrictReturning (Some
             (DefT (reason_missing, VoidT), tvar)) in
           let propref = Named (reason_prop, name) in
-          let action = LookupProp (UnknownUse, Field (None, tvar, Positive)) in
+          let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
           (* Lookup the `defaultProps` property. *)
           rec_flow cx trace (component,
             LookupT (reason_op, strict, [], propref, action))
@@ -497,7 +497,7 @@ let run cx trace ~use_op reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
+          rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
             SimplifyPropType (OneOf
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -518,7 +518,7 @@ let run cx trace ~use_op reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
+          rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
             SimplifyPropType (OneOfType
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -559,7 +559,7 @@ let run cx trace ~use_op reason_op l u
           match Property.read_t p with
           | None -> next todo shape
           | Some t ->
-            rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
+            rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
                 (ResolveProp (k, todo, shape)), tout)))
       in
@@ -576,7 +576,7 @@ let run cx trace ~use_op reason_op l u
           (match dict with
           | None -> next todo shape
           | Some dicttype ->
-            rec_flow cx trace (dicttype.value, ReactKitT (UnknownUse, reason_op,
+            rec_flow cx trace (dicttype.value, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
         | Error _ -> resolve (DefT (reason_op, AnyT)))
@@ -629,7 +629,7 @@ let run cx trace ~use_op reason_op l u
      * of the bound function call *)
 
     let resolve tool t =
-      rec_flow cx trace (t, ReactKitT (UnknownUse, reason_op,
+      rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
         CreateClass (tool, knot, tout)))
     in
 
@@ -637,7 +637,7 @@ let run cx trace ~use_op reason_op l u
       let reason = reason_of_t t in
       let return_t = Tvar.mk cx reason in
       let funcall = mk_methodcalltype this [] return_t in
-      rec_flow cx trace (t, CallT (UnknownUse, reason, funcall));
+      rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
       resolve tool return_t
     in
 
@@ -831,7 +831,7 @@ let run cx trace ~use_op reason_op l u
             (* Tie the `this` knot with BindT *)
             let dummy_return = DefT (reason_op, AnyT) in
             let calltype = mk_methodcalltype knot.this [] dummy_return in
-            rec_flow cx trace (t, BindT (UnknownUse, reason_op, calltype, true));
+            rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an
                upper bound (e.g., as a super class), it's more flexible to
                create covariant methods. Otherwise, a subclass could not
@@ -842,7 +842,7 @@ let run cx trace ~use_op reason_op l u
 
         | _ ->
           let bound_v = Property.map_t (fun t ->
-            let use_op = UnknownUse in
+            let use_op = unknown_use in
             let destructor = Bind knot.this in
             let id = mk_id () in
             ignore (mk_type_destructor cx ~trace use_op reason_op t destructor id);

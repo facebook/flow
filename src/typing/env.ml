@@ -632,12 +632,12 @@ let init_value_entry kind cx name ~has_anno specific loc =
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.change_var (scope.id, name, Changeset.Write);
       if specific != v.general then (
-        let use_op = AssignVar {
+        let use_op = Op (AssignVar {
           var = if is_internal_name name
             then None
             else Some (mk_reason (RIdentifier name) loc);
           init = reason_of_t specific;
-        } in
+        }) in
         Flow_js.flow cx (specific, UseT (use_op, v.general));
       );
       (* note that annotation supercedes specific initializer type *)
@@ -887,14 +887,14 @@ let update_var ?(track_ref=false) op cx name specific loc =
     Changeset.change_var change;
     let use_op = match op with
     | Changeset.Write ->
-      AssignVar {
+      Op (AssignVar {
         var = if is_internal_name name
           then None
           else Some (mk_reason (RIdentifier name) loc);
         init = reason_of_t specific;
-      }
-    | Changeset.Refine -> Internal Refinement
-    | Changeset.Read -> UnknownUse (* this is impossible *)
+      })
+    | Changeset.Refine -> Op (Internal Refinement)
+    | Changeset.Read -> unknown_use (* this is impossible *)
     in
     Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v));
     (* add updated entry *)
@@ -943,7 +943,7 @@ let refine_const cx name specific loc =
     let change = scope.id, name, Changeset.Refine in
     Changeset.change_var change;
     let general = Entry.general_of_value v in
-    Flow.flow cx (specific, UseT (Internal Refinement, general));
+    Flow.flow cx (specific, UseT (Op (Internal Refinement), general));
     let update = Value {
       v with value_state = State.Initialized; specific
     } in
@@ -1001,8 +1001,8 @@ let merge_env =
   let create_union cx loc name l1 l2 =
     let reason = mk_reason (RIdentifier name) loc in
     Tvar.mk_where cx reason (fun tvar ->
-      Flow.flow cx (l1, UseT (Internal MergeEnv, tvar));
-      Flow.flow cx (l2, UseT (Internal MergeEnv, tvar));
+      Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
+      Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar));
     )
   in
 
@@ -1019,7 +1019,7 @@ let merge_env =
     (* general case *)
     else
       let tvar = create_union cx loc name specific1 specific2 in
-      Flow.flow cx (tvar, UseT (Internal MergeEnv, general0));
+      Flow.flow cx (tvar, UseT (Op (Internal MergeEnv), general0));
       tvar
   in
 
@@ -1155,7 +1155,7 @@ let copy_env =
     (* for values, flow env2's specific type into env1's specific type *)
     | Some Value v1, Some Value v2 ->
       (* flow child2's specific type to child1 in place *)
-      Flow.flow cx (v2.specific, UseT (Internal CopyEnv, v1.specific));
+      Flow.flow cx (v2.specific, UseT (Op (Internal CopyEnv), v1.specific));
       (* update state *)
       if v1.value_state < State.Initialized
         && v2.value_state >= State.MaybeInitialized
@@ -1202,7 +1202,7 @@ let copy_env =
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
     | Some { refined = t1; _ }, Some { refined = t2; _ } ->
-      Flow.flow cx (t2, UseT (Internal CopyEnv, t1))
+      Flow.flow cx (t2, UseT (Op (Internal CopyEnv), t1))
     (* uneven cases imply refi was added after splitting: remove *)
     | _ ->
       ()
@@ -1230,8 +1230,8 @@ let widen_env =
     else
       let reason = mk_reason (RIdentifier name) loc in
       let tvar = Tvar.mk cx reason in
-      Flow.flow cx (specific, UseT (Internal WidenEnv, tvar));
-      Flow.flow cx (tvar, UseT (Internal WidenEnv, general));
+      Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
+      Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
       Some tvar
   in
 
