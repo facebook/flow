@@ -309,7 +309,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       );
     ]
 
-  | TypeDestructorTriggerT (_, s, t) -> [
+  | TypeDestructorTriggerT (_, _, s, t) -> [
       "destructor", json_of_destructor json_cx s;
       "type", _json_of_t json_cx t;
     ]
@@ -531,7 +531,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SpecializeT (_, _, cache, targs_opt, tvar) -> [
+  | SpecializeT (_, _, _, cache, targs_opt, tvar) -> [
       "cache", json_of_specialize_cache json_cx cache
     ] @ (
       match targs_opt with
@@ -1189,7 +1189,7 @@ and json_of_defer_use_t_impl json_cx = Hh_json.(function
   | DestructuringT (_, s) -> JSON_Object [
       "selector", json_of_selector json_cx s
     ]
-  | TypeDestructorT (_, s) -> JSON_Object [
+  | TypeDestructorT (_, _, s) -> JSON_Object [
       "destructor", json_of_destructor json_cx s
     ]
 )
@@ -1588,7 +1588,7 @@ and dump_t_ (depth, tvars) cx t =
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
       spf "Destructure %s on %s" (string_of_selector selector) t
-    | TypeDestructorT (_, destructor) ->
+    | TypeDestructorT (_, _, destructor) ->
       spf "TypeDestruct %s on %s" (string_of_destructor destructor) t
   in
 
@@ -1727,7 +1727,7 @@ and dump_t_ (depth, tvars) cx t =
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | InternalT (ChoiceKitT _) -> p t
-  | TypeDestructorTriggerT (_, s, x) -> p ~extra:(spf "%s on upper, %s"
+  | TypeDestructorTriggerT (_, _, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
   | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
@@ -2073,7 +2073,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
-  | SpecializeT (_, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
+  | SpecializeT (_, _, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
       | Some args -> spf "%s, [%s], %s"
           (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)
       | None -> spf "%s, %s"

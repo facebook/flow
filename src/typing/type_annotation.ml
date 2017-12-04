@@ -248,7 +248,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match convert_type_params () with
       | [t; DefT (_, SingletonStrT key)] ->
         EvalT (t, TypeDestructorT
-          (mk_reason (RCustom "property type") loc, PropertyType key), mk_id())
+          (UnknownUse, mk_reason (RType "$PropertyType") loc, PropertyType key), mk_id())
       | _ ->
         error_type cx loc (FlowError.EPropertyTypeAnnot loc)
     )
@@ -261,7 +261,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t = List.nth ts 0 in
       let e = List.nth ts 1 in
       EvalT (t, TypeDestructorT
-        (mk_reason (RCustom "element type") loc, ElementType e), mk_id())
+        (UnknownUse, mk_reason (RType "$ElementType") loc, ElementType e), mk_id())
     )
 
   (* $NonMaybeType<T> acts as the type T without null and void *)
@@ -269,7 +269,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (mk_reason (RCustom "non-maybe type") loc, NonMaybeType), mk_id())
+        (UnknownUse, mk_reason (RType "$NonMaybeType") loc, NonMaybeType), mk_id())
     )
 
   (* $Shape<T> matches the shape of T *)
@@ -285,7 +285,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      EvalT (t1, TypeDestructorT (mk_reason RObjectType loc,
+      EvalT (t1, TypeDestructorT (UnknownUse, mk_reason RObjectType loc,
         RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)), mk_id ())
     )
 
@@ -296,6 +296,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       EvalT (
         t,
         TypeDestructorT (
+          UnknownUse,
           mk_reason RObjectType loc,
           ReadOnlyType
         ),
@@ -316,7 +317,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (mk_reason (RCustom "values type") loc, ValuesType), mk_id())
+        (UnknownUse, mk_reason (RCustom "values type") loc, ValuesType), mk_id())
     )
 
   | "$Exact" ->
@@ -331,7 +332,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      EvalT (t1, TypeDestructorT (mk_reason RObjectType loc,
+      EvalT (t1, TypeDestructorT (UnknownUse, mk_reason RObjectType loc,
         RestType (Type.Object.Rest.Sound, t2)), mk_id ())
     )
 
@@ -357,7 +358,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     (match convert_type_params () with
     | fn::args ->
        let reason = mk_reason RFunctionCallType loc in
-       EvalT (fn, TypeDestructorT (reason, CallType args), mk_id ())
+       EvalT (fn, TypeDestructorT (UnknownUse, reason, CallType args), mk_id ())
     | _ ->
       error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))
 
@@ -367,7 +368,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RTupleMap loc in
-      EvalT (t1, TypeDestructorT (reason, TypeMap (TupleMap t2)), mk_id ())
+      EvalT (t1, TypeDestructorT (UnknownUse, reason, TypeMap (TupleMap t2)), mk_id ())
     )
 
   | "$ObjMap" ->
@@ -376,7 +377,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RObjectMap loc in
-      EvalT (t1, TypeDestructorT (reason, TypeMap (ObjectMap t2)), mk_id ())
+      EvalT (t1, TypeDestructorT (UnknownUse, reason, TypeMap (ObjectMap t2)), mk_id ())
     )
 
   | "$ObjMapi" ->
@@ -385,7 +386,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RObjectMapi loc in
-      EvalT (t1, TypeDestructorT (reason, TypeMap (ObjectMapi t2)), mk_id ())
+      EvalT (t1, TypeDestructorT (UnknownUse, reason, TypeMap (ObjectMapi t2)), mk_id ())
     )
 
   | "$CharSet" ->
@@ -499,14 +500,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (mk_reason (RCustom "React element props") loc,
+        (UnknownUse, mk_reason (RCustom "React element props") loc,
           ReactElementPropsType), mk_id ())
     )
   | "React$ElementRef" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (mk_reason (RCustom "React element instance") loc,
+        (UnknownUse, mk_reason (RCustom "React element instance") loc,
           ReactElementRefType), mk_id ())
     )
   | "$Facebookism$Merge" ->
@@ -816,7 +817,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     let open Type.Object.Spread in
     let reason = mk_reason RObjectType loc in
     let target = Annot {make_exact = exact} in
-    EvalT (t, TypeDestructorT (reason, SpreadType (target, ts)), mk_id ()))
+    EvalT (t, TypeDestructorT (UnknownUse, reason, SpreadType (target, ts)), mk_id ()))
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

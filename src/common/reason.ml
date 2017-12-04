@@ -401,7 +401,7 @@ let rec string_of_desc = function
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall d -> spf "call of %s" (string_of_desc d)
-  | RFunctionCallType -> "function call" (* TODO *)
+  | RFunctionCallType -> "`$Call`"
   | RFunctionUnusedArgument -> "unused function argument"
   | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
   | RJSXIdentifier (raw_jsx, name) ->

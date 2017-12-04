@@ -455,7 +455,7 @@ let mk_super cx tparams_map c targs = Type.(
          this-specialize `c`. *)
       let reason = reason_of_t c in
       let c = Tvar.mk_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (reason, reason, None, None, tvar))
+        Flow.flow cx (c, SpecializeT (UnknownUse, reason, reason, None, None, tvar))
       ) in
       this_typeapp c this None
   | Some params ->

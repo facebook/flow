@@ -40,12 +40,6 @@ Error: recompose.js:23
 184:     round(x: number): number;
                   ^^^^^^ number. See lib: <BUILTINS>/core.js:184
 
-Error: spread.js:6
-  6: declare var fns3: Array<<O>(O) => $PropertyType<O, 'p'>>;
-                                       ^^^^^^^^^^^^^^^^^^^^^ property type. Property not found in
- 22:   ...fns3, // Error: Cannot get p on number
-          ^^^^ Number
-
 Error: spread.js:8
       v-------
   8: (compose(
@@ -104,6 +98,17 @@ Error: spread.js:17
           ^^^^ string. This type is incompatible with the expected param type of
   5: declare var fns2: Array<(number) => string>;
                               ^^^^^^ number
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ^ call of `compose`
+  6: declare var fns3: Array<<O>(O) => $PropertyType<O, 'p'>>;
+                                       ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 22:   ...fns3, // Error: Cannot get p on number
+          ^^^^ Number
 
 Error: spread.js:21
       v-------

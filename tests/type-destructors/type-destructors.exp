@@ -14,14 +14,60 @@ Error: element_type.js:18
  18: ('hello world': Obj_Elem);
                      ^^^^^^^^ number
 
+Error: errors.js:12
+ 12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
+              ^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
+                            ^^ object type
+
+Error: errors.js:16
+ 16: (null: B); // We should get an error on this line.
+      ^^^^ null
+  6: type P<O> = $PropertyType<O, 'p'>;
+                 ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 15: type B = P<{}>;
+                ^^ object type
+
+Error: errors.js:18
+ 18: fn1({x: 42}); // We should get an error on this line.
+     ^^^^^^^^^^^^ call of `fn1`
+  7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
+                                                    ^^^ property `p`. Property not found in
+ 18: fn1({x: 42}); // We should get an error on this line.
+         ^^^^^^^ object literal
+
+Error: errors.js:20
+ 20: fn2({x: 42})(); // We should get an error on this line.
+     ^^^^^^^^^^^^ call of `fn2`
+  8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
+                                                     ^^^ property `p`. Property not found in
+ 20: fn2({x: 42})(); // We should get an error on this line.
+         ^^^^^^^ object literal
+
+Error: errors.js:22
+ 22: fn3({x: 42}); // We should get an error on this line.
+     ^^^^^^^^^^^^ call of `fn3`
+  9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
+                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 22: fn3({x: 42}); // We should get an error on this line.
+         ^^^^^^^ object literal
+
+Error: errors.js:24
+ 24: fn4({x: 42})(); // We should get an error on this line.
+     ^^^^^^^^^^^^ call of `fn4`
+ 10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
+                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 24: fn4({x: 42})(); // We should get an error on this line.
+         ^^^^^^^ object literal
+
 Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error
                    ^ number. This type is incompatible with the expected return type of
   3: function foo(x: ?string): $NonMaybeType<?string> {
-                               ^^^^^^^^^^^^^^^^^^^^^^ union: non-maybe type(s)
+                               ^^^^^^^^^^^^^^^^^^^^^^ union: `$NonMaybeType`(s)
   Member 1:
     3: function foo(x: ?string): $NonMaybeType<?string> {
-                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+                                 ^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
   Error:
     5:   else return 0; // this should be an error
                      ^ number. This type is incompatible with
@@ -29,7 +75,7 @@ Error: non_maybe_type.js:5
                                  ^^^^^^^^^^^^^^^^^^^^^^ empty
   Member 2:
     3: function foo(x: ?string): $NonMaybeType<?string> {
-                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+                                 ^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
   Error:
     5:   else return 0; // this should be an error
                      ^ number. This type is incompatible with
@@ -37,7 +83,7 @@ Error: non_maybe_type.js:5
                                  ^^^^^^^^^^^^^^^^^^^^^^ empty
   Member 3:
     3: function foo(x: ?string): $NonMaybeType<?string> {
-                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+                                 ^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
   Error:
     5:   else return 0; // this should be an error
                      ^ number. This type is incompatible with
@@ -200,15 +246,19 @@ Error: tvar3.js:28
      18: declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
                                                          ^^^^^^^^^^^^^^^^ B
 
-Error: tvar4.js:3
+Error: tvar4.js:24
+ 24: fn1({p: 42}, (x: {}) => {});
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `fn1`
   3: function fn1<T: {p: any}>(a: T, b: T => void): $PropertyType<T, 'p'> {
-                                                    ^^^^^^^^^^^^^^^^^^^^^ property type. Property not found in
+                                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  24: fn1({p: 42}, (x: {}) => {});
                       ^^ object type
 
-Error: tvar4.js:8
+Error: tvar4.js:25
+ 25: fn2({p: 42}, (x: {}) => {})('foo');
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `fn2`
   8: function fn2<T: {p: any}>(a: T, b: T => void): ($PropertyType<T, 'p'>) => void {
-                                                     ^^^^^^^^^^^^^^^^^^^^^ property type. Property not found in
+                                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  25: fn2({p: 42}, (x: {}) => {})('foo');
                       ^^ object type
 
@@ -236,12 +286,6 @@ Error: tvar4.js:38
  27: function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
                                                              ^^^^^^ number
 
-Error: tvar4.js:40
- 40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ property type. Property not found in
- 51: fn4((x: {}) => {})(42);
-             ^^ object type
-
 Error: tvar4.js:43
  43:   return p => a({p});
                      ^^^ object literal. This type is incompatible with the expected param type of
@@ -259,14 +303,22 @@ Error: tvar4.js:47
      40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
                                                      ^^^^^^^^^^^^^^^^^^^^^ string
 
+Error: tvar4.js:51
+ 51: fn4((x: {}) => {})(42);
+     ^^^^^^^^^^^^^^^^^^ call of `fn4`
+ 40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+ 51: fn4((x: {}) => {})(42);
+             ^^ object type
+
 Error: union.js:2
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                             ^^^^ boolean. This type is incompatible with
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: non-maybe type(s)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `$NonMaybeType`(s)
   Member 1:
     2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
   Error:
     2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                               ^^^^ boolean. This type is incompatible with
@@ -274,7 +326,7 @@ Error: union.js:2
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
   Member 2:
     2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
   Error:
     2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                               ^^^^ boolean. This type is incompatible with
@@ -285,10 +337,10 @@ Error: union.js:4
   4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                         ^^^^ boolean. This type is incompatible with
   4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: property type(s)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `$PropertyType`(s)
   Member 1:
     4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $PropertyType
   Error:
     4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                           ^^^^ boolean. This type is incompatible with
@@ -296,7 +348,7 @@ Error: union.js:4
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
   Member 2:
     4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $PropertyType
   Error:
     4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                           ^^^^ boolean. This type is incompatible with
@@ -326,4 +378,4 @@ Error: union.js:10
                  ^^^^^^^^^^^^^^^^^^^^^ number
 
 
-Found 32 errors
+Found 38 errors

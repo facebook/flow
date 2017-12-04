@@ -18,7 +18,7 @@ let run cx trace ~use_op reason_op l u
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
-  ~(mk_type_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> bool * Type.t)
+  ~(mk_type_destructor: Context.t -> trace:Trace.t -> use_op -> reason -> t -> Type.destructor -> int -> bool * Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
   ~(union_of_ts: reason -> Type.t list -> Type.t)
   ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
@@ -842,10 +842,11 @@ let run cx trace ~use_op reason_op l u
 
         | _ ->
           let bound_v = Property.map_t (fun t ->
+            let use_op = UnknownUse in
             let destructor = Bind knot.this in
             let id = mk_id () in
-            ignore (mk_type_destructor cx ~trace reason_op t destructor id);
-            EvalT (t, TypeDestructorT (reason_op, destructor), id)
+            ignore (mk_type_destructor cx ~trace use_op reason_op t destructor id);
+            EvalT (t, TypeDestructorT (use_op, reason_op, destructor), id)
           ) v in
           SMap.add k bound_v props, static_props
       ) spec_props (SMap.empty, SMap.empty) in

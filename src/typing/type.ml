@@ -171,7 +171,7 @@ module rec TypeTerm : sig
     | InternalT of internal_t
 
     (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of reason * destructor * t
+    | TypeDestructorTriggerT of use_op * reason * destructor * t
 
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
@@ -263,7 +263,7 @@ module rec TypeTerm : sig
        programmed to do more than just destruct types---e.g., they handle
        defaults---and these additional behaviors cannot be covered by a simple
        implementation of destructors. *)
-    | TypeDestructorT of reason * destructor
+    | TypeDestructorT of use_op * reason * destructor
 
   and internal_t =
     (* toolkit for making choices *)
@@ -387,7 +387,7 @@ module rec TypeTerm : sig
     | NotT of reason * t
 
     (* operation on polymorphic types *)
-    (** SpecializeT(_, _, cache, targs, tresult) instantiates a polymorphic type
+    (** SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
         with type arguments targs, and flows the result into tresult. If cache
         is set, it looks up a cache of existing instantiations for the type
         parameters of the polymorphic type, unifying the type arguments with
@@ -396,7 +396,7 @@ module rec TypeTerm : sig
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
     **)
-    | SpecializeT of reason * reason * specialize_cache * t list option * t
+    | SpecializeT of use_op * reason * reason * specialize_cache * t list option * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)
@@ -972,7 +972,7 @@ module rec TypeTerm : sig
   and choice_use_tool =
   | FullyResolveType of ident
   | TryFlow of int * spec
-  | EvalDestructor of int * destructor * t_out
+  | EvalDestructor of int * defer_use_t * t_out
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
@@ -1958,7 +1958,7 @@ let rec reason_of_t = function
   | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
-  | TypeDestructorTriggerT (reason, _, _) -> reason
+  | TypeDestructorTriggerT (_, reason, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
@@ -1985,7 +1985,7 @@ let rec reason_of_t = function
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
-  | TypeDestructorT (reason, _) ->
+  | TypeDestructorT (_, reason, _) ->
       reason
 
 and reason_of_use_t = function
@@ -2061,7 +2061,7 @@ and reason_of_use_t = function
   | SetPropT (_,reason,_,_,_) -> reason
   | SetPrivatePropT (_,reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
-  | SpecializeT(reason,_,_,_,_) -> reason
+  | SpecializeT(_,reason,_,_,_,_) -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
   | SuperT (_,reason,_) -> reason
@@ -2102,7 +2102,7 @@ let rec mod_reason_of_t f = function
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
-  | TypeDestructorTriggerT (reason, d, t) -> TypeDestructorTriggerT (f reason, d, t)
+  | TypeDestructorTriggerT (use_op, reason, d, t) -> TypeDestructorTriggerT (use_op, f reason, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
   | EvalT (t, defer_use_t, id) ->
@@ -2130,7 +2130,7 @@ let rec mod_reason_of_t f = function
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
-  | TypeDestructorT (reason, s) -> TypeDestructorT (f reason, s)
+  | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
@@ -2223,8 +2223,8 @@ and mod_reason_of_use_t f = function
   | SetPrivatePropT (use_op, reason, n, scopes, static, t) ->
       SetPrivatePropT (use_op, f reason, n, scopes, static, t)
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
-  | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
-      SpecializeT (f reason_op, reason_tapp, cache, ts, t)
+  | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
+      SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)

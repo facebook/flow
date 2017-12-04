@@ -26,7 +26,7 @@ class ['a] t = object(self)
 
   | InternalT (ChoiceKitT (_, Trigger)) -> acc
 
-  | TypeDestructorTriggerT (_, d, t) ->
+  | TypeDestructorTriggerT (_, _, d, t) ->
     let acc = self#destructor cx acc d in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -178,7 +178,7 @@ class ['a] t = object(self)
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
-  | TypeDestructorT (_, d) -> self#destructor cx acc d
+  | TypeDestructorT (_, _, d) -> self#destructor cx acc d
 
   method private selector cx acc = function
   | Prop _ -> acc
@@ -337,7 +337,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
-  | SpecializeT (_, _, _, ts, t) ->
+  | SpecializeT (_, _, _, _, ts, t) ->
     let acc = self#opt (List.fold_left (self#type_ cx pole_TODO)) acc ts in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -781,7 +781,7 @@ class ['a] t = object(self)
     self#try_flow_spec cx acc spec
   | EvalDestructor (id, d, tout) ->
     let acc = self#tvar cx pole_TODO acc r id in
-    let acc = self#destructor cx acc d in
+    let acc = self#defer_use_type cx acc d in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 

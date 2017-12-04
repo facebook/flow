@@ -108,11 +108,11 @@ class ['a] t = object(self)
           if t1' == t1 && t2' == t2 then t
           else InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
-      | TypeDestructorTriggerT (r, d, x) ->
+      | TypeDestructorTriggerT (u, r, d, x) ->
           let d' = self#destructor cx map_cx d in
           let x' = self#type_ cx map_cx x in
           if d == d' && x == x' then t
-          else TypeDestructorTriggerT (r, d', x')
+          else TypeDestructorTriggerT (u, r, d', x')
       | CustomFunT (r, kind) ->
           let kind' = self#custom_fun_kind cx map_cx kind in
           if kind' == kind then t
@@ -216,10 +216,10 @@ class ['a] t = object(self)
         let s' = self#selector cx map_cx s in
         if s' == s then t
         else DestructuringT (r, s')
-    | TypeDestructorT (r, d) ->
+    | TypeDestructorT (u, r, d) ->
         let d' = self#destructor cx map_cx d in
         if d == d' then t
-        else TypeDestructorT (r, d')
+        else TypeDestructorT (u, r, d')
 
   method export_types cx map_cx ({exports_tmap; cjs_export; has_every_named_export} as t) =
     let exports_tmap' = self#exports cx map_cx exports_tmap in
@@ -587,11 +587,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else NotT (r, t'')
-    | SpecializeT (r1, r2, cache, tlist_opt, t') ->
+    | SpecializeT (u, r1, r2, cache, tlist_opt, t') ->
         let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
         let t'' = self#type_ cx map_cx t' in
         if tlist_opt' == tlist_opt && t'' == t' then t
-        else SpecializeT (r1, r2, cache, tlist_opt', t'')
+        else SpecializeT (u, r1, r2, cache, tlist_opt', t'')
     | ThisSpecializeT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1090,7 +1090,7 @@ class ['a] t = object(self)
         if spec' == spec then t
         else TryFlow (i, spec')
     | EvalDestructor (id, d, tout) ->
-        let d' = self#destructor cx map_cx d in
+        let d' = self#defer_use_type cx map_cx d in
         let tout' = self#type_ cx map_cx tout in
         if d' == d && tout' == tout then t
         else EvalDestructor (id, d', tout')
