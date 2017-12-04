@@ -92,6 +92,7 @@ let status_update =
   let last_status = ref ServerStatus.initial_status in
 
   fun ~event ->
+    if !state = Disabled then () else
     let new_status = ServerStatus.update ~event ~status:!last_status in
     if new_status <> !last_status
     then begin
