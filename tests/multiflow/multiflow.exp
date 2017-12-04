@@ -312,14 +312,6 @@ Error: spread.js:19
 
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `funWithRestArray`
- 28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-                                         ^^^^^ string. This type is incompatible with
- 14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                           ^^^ number literal `123`
-
-Error: spread.js:28
- 28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of call of `funWithRestArray`. Has some incompatible type argument with
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                                          ^^^^^^^^^^^^^ array type
@@ -328,6 +320,12 @@ Error: spread.js:28
                                              ^^^^^ string. This type is incompatible with
      14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                                                    ^^^^^^ number
+
+Error: spread.js:28
+ 28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
+                                         ^^^^^ string. This type is incompatible with
+ 14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
+                                           ^^^ number literal `123`
 
 
 Found 24 errors

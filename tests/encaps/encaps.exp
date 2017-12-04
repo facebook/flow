@@ -4,9 +4,7 @@ Error: encaps.js:3
   3: var s1 = `l${a.x}r`; // error: no prop x in A
                   ^ A
 
-Error: encaps.js:9
-  9: var s2 = tag `l${42}r`;
-              ^^^^^^^^^^^^^ encaps tag
+Error: encaps.js:6
   6:     var x:number = strings[0]; // error: string ~> number
                         ^^^^^^^^^^ string. This type is incompatible with
   6:     var x:number = strings[0]; // error: string ~> number

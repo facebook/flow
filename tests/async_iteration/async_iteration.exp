@@ -1,6 +1,4 @@
-Error: delegate_yield.js:7
-  7: delegate_next().next(0);
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+Error: delegate_yield.js:3
   3:     var x: void = yield; // error: number ~> void
                        ^^^^^ number. This type is incompatible with
   3:     var x: void = yield; // error: number ~> void

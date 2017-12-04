@@ -1401,11 +1401,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* any with uses *)
     (*****************)
 
-    | MergedT (reason, _), _ ->
-      rec_flow cx trace (EmptyT.why reason, u)
-
     | _, UseT (_, MergedT (_, uses)) ->
       List.iter (fun u -> rec_flow cx trace (l, u)) uses
+
+    | MergedT _, ReposUseT (reason, use_desc, use_op, l) ->
+      let loc = loc_of_reason reason in
+      let desc = if use_desc then Some (desc_of_reason reason) else None in
+      let u = reposition cx ~trace loc ?desc l in
+      rec_flow cx trace (l, UseT (use_op, u))
+
+    | MergedT (reason, _), _ ->
+      rec_flow cx trace (EmptyT.why reason, u)
 
     (****************)
     (* eval, contd. *)
@@ -6115,21 +6121,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extras = [];
       })
 
-    | _, UseT ((Frame _ | Op (
-        Cast _
-      | ReactCreateElementCall _
-      | ReactGetIntrinsic _
-    ) as use_op), u) ->
+    | _, UseT (use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))
-
-    | l, UseT (_, u) ->
-      add_output cx ~trace (FlowError.EIncompatibleDefs {
-        reason_lower = reason_of_t l;
-        reason_upper = reason_of_t u;
-        extras = [];
-      })
 
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible {

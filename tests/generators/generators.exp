@@ -24,6 +24,18 @@ Error: class.js:24
      23:   *stmt_return_err(): Generator<void, number, void> {
                                                ^^^^^^ number
 
+Error: class.js:28
+ 28:     var x: boolean = yield 0; // error: number ~> boolean
+                          ^^^^^^^ number. This type is incompatible with
+ 28:     var x: boolean = yield 0; // error: number ~> boolean
+                ^^^^^^^ boolean
+
+Error: class.js:49
+ 49:       var x: number = yield; // error: string ~> number
+                           ^^^^^ string. This type is incompatible with
+ 49:       var x: number = yield; // error: string ~> number
+                  ^^^^^^ number
+
 Error: class.js:67
  67:     var x: number = yield *inner(); // error: string ~> number
                          ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -36,27 +48,11 @@ Error: class.js:98
  98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                  ^^^^^^ string
 
-Error: class.js:100
-100: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
- 28:     var x: boolean = yield 0; // error: number ~> boolean
-                          ^^^^^^^ number. This type is incompatible with
- 28:     var x: boolean = yield 0; // error: number ~> boolean
-                ^^^^^^^ boolean
-
 Error: class.js:104
 104:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
 104:   (infer_stmt_next : boolean) // error: string ~> boolean
                           ^^^^^^^ boolean
-
-Error: class.js:119
-119: examples.delegate_next_generator().next("");
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
- 49:       var x: number = yield; // error: string ~> number
-                           ^^^^^ string. This type is incompatible with
- 49:       var x: number = yield; // error: string ~> number
-                  ^^^^^^ number
 
 Error: class.js:122
 122:   (x : number) // error: string ~> number
@@ -87,14 +83,6 @@ Error: class_failure.js:12
                                              ^ number. This type is incompatible with
  12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                  ^^^^^^ string
-
-Error: class_failure.js:14
- 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
-  5:     var x: boolean = yield 0; // error: number ~> boolean
-                          ^^^^^^^ number. This type is incompatible with
-  5:     var x: boolean = yield 0; // error: number ~> boolean
-                ^^^^^^^ boolean
 
 Error: class_failure.js:19
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -128,19 +116,17 @@ Error: generators.js:23
      22: function *stmt_return_err(): Generator<void, number, void> {
                                                       ^^^^^^ number
 
+Error: generators.js:27
+ 27:   var x: boolean = yield 0;
+                        ^^^^^^^ number. This type is incompatible with
+ 27:   var x: boolean = yield 0;
+              ^^^^^^^ boolean
+
 Error: generators.js:30
  30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
                                     ^ number. This type is incompatible with
  30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
                                         ^^^^^^ string
-
-Error: generators.js:31
- 31: var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^ call of method `next`
- 27:   var x: boolean = yield 0;
-                        ^^^^^^^ number. This type is incompatible with
- 27:   var x: boolean = yield 0;
-              ^^^^^^^ boolean
 
 Error: generators.js:35
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -148,9 +134,7 @@ Error: generators.js:35
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
                           ^^^^^^^ boolean
 
-Error: generators.js:69
- 69: delegate_next_generator().next("");
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+Error: generators.js:65
  65:     var x: number = yield; // error: string ~> number
                          ^^^^^ string. This type is incompatible with
  65:     var x: number = yield; // error: string ~> number
@@ -241,4 +225,4 @@ Error: throw.js:24
                             ^^^^^^ string
 
 
-Found 36 errors
+Found 35 errors

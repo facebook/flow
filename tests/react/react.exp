@@ -1010,8 +1010,6 @@ Error: hoc4.js:28
 
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
-                     ^^^^^^^^^^^^^^^^^^^^^ new property `Component`
-  7: var b: number = new react.Component(); // Error: ReactComponent ~> number
                      ^^^^^^^^^^^^^^^^^^^^^ React.Component. This type is incompatible with
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
             ^^^^^^ number

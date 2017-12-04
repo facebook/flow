@@ -37,10 +37,10 @@ Error: apply.js:22
 Error: apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
-  1: function test(a: string, b: number): number {
-                                 ^^^^^^ number. This type is incompatible with
 288:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. See lib: <BUILTINS>/core.js:288
+                                ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:288
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
@@ -329,8 +329,6 @@ Error: rest_type.js:20
                                   ^^^^^^ string
 
 Error: rest_type.js:20
- 20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ call of `f`
  20:   f('hello'); // Error - string ~> array - luckily this errors
        ^^^^^^^^^^ rest parameter array of call of `f`. This type is incompatible with
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
