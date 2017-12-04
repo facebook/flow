@@ -722,3 +722,12 @@ let json_truncate_string
       if if_reformat_multiline then json_to_multiline truncated_json
       else json_to_string truncated_json
   end
+
+let get_field accessor on_failure json =
+  let open Access in
+  let on_failure af = on_failure (access_failure_to_string af) in
+  counit_with on_failure (return json >>= accessor)
+
+let get_field_opt accessor json =
+  let open Access in
+  to_option (return json >>= accessor)

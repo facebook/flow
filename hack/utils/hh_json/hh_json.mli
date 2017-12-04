@@ -174,6 +174,11 @@ module type Access = sig
   val get_number_int : string -> json * keytrace -> int m
   val get_array: string -> json * keytrace -> (json list) m
   val get_val: string -> json * keytrace -> json m (* any expected type *)
+
+
 end
 
 module Access : Access
+
+val get_field : (json * Access.keytrace -> 'a Access.m) -> (string -> 'a) -> json -> 'a
+val get_field_opt : (json * Access.keytrace -> 'a Access.m) -> json -> 'a option
