@@ -948,7 +948,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: $Shape<RWB>);').
       newErrors(
        `
-         test.js:9
+         test.js:54
+          54: (rwA: $Shape<RWB>);
+               ^^^ rwA
            9:     type RWA = {p: A}
                                  ^ A. This type is incompatible with
           12:     type RWB = {p: B}
@@ -960,7 +962,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: $Shape<RWB>);').
       newErrors(
        `
-         test.js:10
+         test.js:56
+          56: (roA: $Shape<RWB>);
+               ^^^ roA
           10:     type ROA = {+p: A}
                                   ^ A. This type is incompatible with
           12:     type RWB = {p: B}

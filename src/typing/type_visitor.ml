@@ -259,21 +259,21 @@ class ['a] t = object(self)
     let acc = self#fun_call_type cx acc fn in
     acc
 
-  | SetPropT (_, p, _, t)
-  | GetPropT (_, p, t)
+  | SetPropT (_, _, p, _, t)
+  | GetPropT (_, _, p, t)
   | TestPropT (_, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetPrivatePropT (_, _, scopes, _, t)
-  | GetPrivatePropT (_, _, scopes, _, t) ->
+  | SetPrivatePropT (_, _, _, scopes, _, t)
+  | GetPrivatePropT (_, _, _, scopes, _, t) ->
     let acc = List.fold_left (self#class_binding cx) acc scopes in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetElemT (_, e, t)
-  | GetElemT (_, e, t) ->
+  | SetElemT (_, _, e, t)
+  | GetElemT (_, _, e, t) ->
     let acc = self#type_ cx pole_TODO acc e in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -397,7 +397,7 @@ class ['a] t = object(self)
 
   | HasOwnPropT _ -> acc
 
-  | ElemT (_, t, action) ->
+  | ElemT (_, _, t, action) ->
     let acc = self#type_ cx pole_TODO acc t in
     let acc = self#elem_action cx acc action in
     acc
@@ -748,7 +748,7 @@ class ['a] t = object(self)
     Nel.fold_left (self#props cx pole_TODO) acc props
 
   method private lookup_action cx acc = function
-  | RWProp (t1, t2, _) ->
+  | RWProp (_, t1, t2, _) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     acc

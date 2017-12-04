@@ -138,7 +138,7 @@ let run cx trace ~use_op reason_op l u
      * find in the intrinsics map. *)
     let intrinsic = Tvar.mk cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (reason, (match literal with
+    rec_flow cx trace (intrinsics, GetPropT (UnknownUse, reason, (match literal with
       | Literal (_, name) ->
         Named (replace_reason_const (RReactElement (Some name)) reason, name)
       | _ -> Computed l

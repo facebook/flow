@@ -223,7 +223,7 @@ let autocomplete_jsx
     let props_object = Tvar.mk_where cx reason (fun tvar ->
       flow cx (
         component_instance,
-        Type.GetPropT (reason, Type.Named (reason, "props"), tvar))
+        Type.GetPropT (Type.UnknownUse, reason, Type.Named (reason, "props"), tvar))
     ) in
     autocomplete_member
       profiling

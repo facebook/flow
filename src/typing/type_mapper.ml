@@ -455,41 +455,41 @@ class ['a] t = object(self)
         let funcall' = self#fun_call_type cx map_cx funcall in
         if prop' == prop && funcall' == funcall then t
         else MethodT (r1, r2, prop', funcall')
-    | SetPropT (r, prop, i, t') ->
+    | SetPropT (use_op, r, prop, i, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
-        else SetPropT (r, prop', i, t'')
-    | SetPrivatePropT (r, prop, scopes, static, t') ->
+        else SetPropT (use_op, r, prop', i, t'')
+    | SetPrivatePropT (use_op, r, prop, scopes, static, t') ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if t'' == t' && scopes' == scopes then t
-        else SetPrivatePropT (r, prop, scopes', static, t'')
-    | GetPropT (r, prop, t') ->
+        else SetPrivatePropT (use_op, r, prop, scopes', static, t'')
+    | GetPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
-        else GetPropT (r, prop', t'')
-    | GetPrivatePropT (r, prop, scopes, static, t') ->
+        else GetPropT (use_op, r, prop', t'')
+    | GetPrivatePropT (use_op, r, prop, scopes, static, t') ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if t'' == t' && scopes' == scopes then t
-        else GetPrivatePropT (r, prop, scopes', static, t'')
+        else GetPrivatePropT (use_op, r, prop, scopes', static, t'')
     | TestPropT (r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
         else TestPropT (r, prop', t'')
-    | SetElemT (r, t1, t2) ->
+    | SetElemT (use_op, r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else SetElemT (r, t1', t2')
-    | GetElemT (r, t1, t2) ->
+        else SetElemT (use_op, r, t1', t2')
+    | GetElemT (use_op, r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else GetElemT (r, t1', t2')
+        else GetElemT (use_op, r, t1', t2')
     | CallElemT (r1, r2, t', funcall) ->
         let t'' = self#type_ cx map_cx t' in
         let funcall' = self#fun_call_type cx map_cx funcall in
@@ -676,11 +676,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else GetValuesT (r, t'')
-    | ElemT (r, t', action) ->
+    | ElemT (use_op, r, t', action) ->
         let t'' = self#type_ cx map_cx t' in
         let action' = self#elem_action cx map_cx action in
         if t'' == t' && action' == action then t
-        else ElemT (r, t'', action')
+        else ElemT (use_op, r, t'', action')
     | MakeExactT (r, cont) ->
         let cont' = self#cont cx map_cx cont in
         if cont' == cont then t
@@ -913,11 +913,11 @@ class ['a] t = object(self)
 
   method lookup_action cx map_cx t =
     match t with
-    | RWProp (t1, t2, rw) ->
+    | RWProp (use_op, t1, t2, rw) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else RWProp (t1', t2', rw)
+        else RWProp (use_op, t1', t2', rw)
     | LookupProp (use, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t

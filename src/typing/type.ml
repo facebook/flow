@@ -322,18 +322,18 @@ module rec TypeTerm : sig
     | BindT of reason * funcalltype * bool (* pass-through *)
     | CallT of reason * funcalltype
     | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
-    | SetPropT of reason * propref * write_ctx * t
+    | SetPropT of use_op * reason * propref * write_ctx * t
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
-    | SetPrivatePropT of reason * string * class_binding list * bool * t
-    | GetPropT of reason * propref * t
+    | SetPrivatePropT of use_op * reason * string * class_binding list * bool * t
+    | GetPropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
-    | GetPrivatePropT of reason * string * class_binding list * bool * t
+    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
     | TestPropT of reason * propref * t
-    | SetElemT of reason * t * t
-    | GetElemT of reason * t * t
+    | SetElemT of use_op * reason * t * t
+    | GetElemT of use_op * reason * t * t
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
@@ -465,7 +465,7 @@ module rec TypeTerm : sig
     | GetValuesT of reason * t
 
     (* Element access *)
-    | ElemT of reason * t * elem_action
+    | ElemT of use_op * reason * t * elem_action
 
     (* exact ops *)
     | MakeExactT of reason * cont
@@ -780,7 +780,7 @@ module rec TypeTerm : sig
   | ShadowWrite of Properties.id Nel.t
 
   and lookup_action =
-  | RWProp of t (* original target *) * t (* in/out type *) * rw
+  | RWProp of use_op * t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
   | SuperProp of use_op * Property.t
   | MatchProp of t
@@ -1941,7 +1941,6 @@ let any_propagating_use_t = function
   | UseT _
     -> false
 
-
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
    the type system), so printing the reason provides a good idea of what the
@@ -2010,16 +2009,16 @@ and reason_of_use_t = function
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
-  | ElemT (reason, _, _) -> reason
+  | ElemT (_, reason, _, _) -> reason
   | EqT (reason, _, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
-  | GetElemT (reason,_,_) -> reason
+  | GetElemT (_,reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
-  | GetPropT (reason,_,_) -> reason
-  | GetPrivatePropT (reason,_,_,_, _) -> reason
+  | GetPropT (_,reason,_,_) -> reason
+  | GetPrivatePropT (_,reason,_,_,_, _) -> reason
   | GetProtoT (reason,_) -> reason
   | GetStaticsT (reason,_) -> reason
   | GuardT (_, _, t) -> reason_of_t t
@@ -2054,9 +2053,9 @@ and reason_of_use_t = function
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
   | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
-  | SetElemT (reason,_,_) -> reason
-  | SetPropT (reason,_,_,_) -> reason
-  | SetPrivatePropT (reason,_,_,_,_) -> reason
+  | SetElemT (_,reason,_,_) -> reason
+  | SetPropT (_,reason,_,_,_) -> reason
+  | SetPrivatePropT (_,reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
@@ -2160,7 +2159,7 @@ and mod_reason_of_use_t f = function
   | CopyTypeExportsT (reason, target_module_t, t_out) ->
       CopyTypeExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
-  | ElemT (reason, t, action) -> ElemT (f reason, t, action)
+  | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
   | EqT (reason, flip, t) -> EqT (f reason, flip, t)
   | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
@@ -2168,12 +2167,12 @@ and mod_reason_of_use_t f = function
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
   | ExtendsUseT (use_op, reason, ts, t1, t2) ->
     ExtendsUseT(use_op, f reason, ts, t1, t2)
-  | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
+  | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
-  | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
-  | GetPrivatePropT (reason, name, bindings, static, t) ->
-      GetPrivatePropT (f reason, name, bindings, static, t)
+  | GetPropT (use_op, reason, n, t) -> GetPropT (use_op, f reason, n, t)
+  | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
+      GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
@@ -2215,10 +2214,10 @@ and mod_reason_of_use_t f = function
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
-  | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
-  | SetPropT (reason, n, i, t) -> SetPropT (f reason, n, i, t)
-  | SetPrivatePropT (reason, n, scopes, static, t) ->
-      SetPrivatePropT (f reason, n, scopes, static, t)
+  | SetElemT (use_op, reason, it, et) -> SetElemT (use_op, f reason, it, et)
+  | SetPropT (use_op, reason, n, i, t) -> SetPropT (use_op, f reason, n, i, t)
+  | SetPrivatePropT (use_op, reason, n, scopes, static, t) ->
+      SetPrivatePropT (use_op, f reason, n, scopes, static, t)
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)

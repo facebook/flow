@@ -435,20 +435,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "useDesc", JSON_Bool use_desc;
     ]
 
-  | SetPropT (_, name, _, t)
-  | GetPropT (_, name, t)
+  | SetPropT (_, _, name, _, t)
+  | GetPropT (_, _, name, t)
   | TestPropT (_, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
-  | SetPrivatePropT (_, name, _, _, t)
-  | GetPrivatePropT (_, name, _, _, t) -> [
+  | SetPrivatePropT (_, _, name, _, _, t)
+  | GetPrivatePropT (_, _, name, _, _, t) -> [
       "propRef", JSON_String name;
       "propType", _json_of_t json_cx t
   ]
 
-  | SetElemT (_, indext, elemt)
-  | GetElemT (_, indext, elemt) -> [
+  | SetElemT (_, _, indext, elemt)
+  | GetElemT (_, _, indext, elemt) -> [
       "indexType", _json_of_t json_cx indext;
       "elemType", _json_of_t json_cx elemt
     ]
@@ -646,7 +646,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ElemT (_, base, action) -> [
+  | ElemT (_, _, base, action) -> [
       "baseType", _json_of_t json_cx base;
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
@@ -1351,7 +1351,7 @@ and json_of_lookup_action json_cx =
 and json_of_lookup_action_impl json_cx action = Hh_json.(
   JSON_Object (
     match action with
-    | RWProp (_, t, rw) -> [
+    | RWProp (_, _, t, rw) -> [
         "kind", JSON_String "RWProp";
         "rw", JSON_String (string_of_rw rw);
         "t", _json_of_t json_cx t
@@ -1780,8 +1780,8 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let lookup_action = function
-  | RWProp (_, t, Read) -> spf "Read %s" (kid t)
-  | RWProp (_, t, Write _) -> spf "Write %s" (kid t)
+  | RWProp (_, _, t, Read) -> spf "Read %s" (kid t)
+  | RWProp (_, _, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp (_, p) -> spf "Super %s" (prop p)
   | MatchProp t -> spf "Match %s" (kid t)
@@ -1983,13 +1983,13 @@ and dump_use_t_ (depth, tvars) cx t =
           (List.map (fun (x,_) -> x)
             (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
-  | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
-  | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | GetPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
-  | GetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | GetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
   | GetProtoT (_, arg) -> p ~extra:(kid arg) t
@@ -2064,11 +2064,11 @@ and dump_use_t_ (depth, tvars) cx t =
   | SubstOnPredT _ -> p t
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-  | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | SetPropT (_, _, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
-  | SetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t

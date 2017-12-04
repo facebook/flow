@@ -169,7 +169,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let _, name = id in
   let reason = mk_reason (RType name) loc in
   let t = Tvar.mk_where cx reason (fun t ->
-    Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
+    Flow.flow cx (m, GetPropT (UnknownUse, reason, Named (reason, name), t));
   ) in
   let typeParameters = extract_type_param_instantiations typeParameters in
   mk_nominal_type cx reason tparams_map (t, typeParameters)
@@ -836,7 +836,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
     let reason = mk_reason desc loc in
     Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (m, GetPropT (reason, Named (reason, name), t));
+      Flow.flow cx (m, GetPropT (UnknownUse, reason, Named (reason, name), t));
     )
 
   | Unqualified (loc, name) ->
