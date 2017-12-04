@@ -293,7 +293,6 @@ module rec TypeTerm : sig
     | FunReturnStatement
     | FunImplicitReturn
     | FunCallThis of reason
-    | FunCallMissingArg of reason * reason
     | GetProperty of reason
     | Internal of internal_use_op
     | ReactCreateElementCall
@@ -302,6 +301,7 @@ module rec TypeTerm : sig
 
   and frame_use_op =
     | FunCompatibility of { lower: reason; upper: reason }
+    | FunMissingArg of reason * reason
     | FunParam of { n: int; lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
     | ImplicitTypeParam of Loc.t
@@ -1967,7 +1967,6 @@ let loc_of_root_use_op = function
   -> loc_of_reason op
 | Addition
 | Coercion
-| FunCallMissingArg _
 | FunCallThis _
 | FunImplicitReturn
 | FunReturnStatement
@@ -2437,7 +2436,6 @@ let string_of_root_use_op = function
 | Coercion -> "Coercion"
 | FunCall _ -> "FunCall"
 | FunCallMethod _ -> "FunCallMethod"
-| FunCallMissingArg _ -> "FunCallMissingArg"
 | FunCallThis _ -> "FunCallThis"
 | FunImplicitReturn -> "FunImplicitReturn"
 | FunReturnStatement -> "FunReturnStatement"
@@ -2449,6 +2447,7 @@ let string_of_root_use_op = function
 
 let string_of_frame_use_op = function
 | FunCompatibility _ -> "FunCompatibility"
+| FunMissingArg _ -> "FunMissingArg"
 | FunParam _ -> "FunParam"
 | FunReturn _ -> "FunReturn"
 | ImplicitTypeParam _ -> "ImplicitTypeParam"

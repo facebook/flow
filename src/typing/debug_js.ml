@@ -2626,10 +2626,6 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EReactElementFunArity (reason, _, _) ->
         spf "EReactElementFunArity (%s)" (dump_reason cx reason)
-    | EFunctionCallMissingArg (reason_op, reason_def) ->
-        spf "EFunctionCallMissingArg (%s, %s)"
-          (dump_reason cx reason_op)
-          (dump_reason cx reason_def)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
         spf "EFunctionCallExtraArg (%s, %s, %d, %s)"
           (dump_reason cx  unused_reason)

@@ -6120,10 +6120,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         reason_of_t l, reason_of_t u, use_op
       ))
 
-    | _, UseT (Op (FunCallMissingArg (reason_op, reason_def)), _) ->
-      add_output cx ~trace
-        (FlowError.EFunctionCallMissingArg (reason_op, reason_def))
-
     | l, UseT (_, u) ->
       add_output cx ~trace (FlowError.EIncompatibleDefs {
         reason_lower = reason_of_t l;
@@ -7905,10 +7901,6 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
       reason, msg
     ) ts in
     begin match spec with
-      | UnionCases (Op (FunCallMissingArg (reason_op, reason_def)), _, _) ->
-        add_output cx ~trace
-          (FlowError.EFunctionCallMissingArg (reason_op, reason_def))
-
       | UnionCases (use_op, l, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
@@ -9518,16 +9510,8 @@ and multiflow_full
     ~spread_arg ~rest_param (arglist, parlist) in
 
   List.iter (fun (_, param) ->
-    let is_call = match use_op with
-    | Op (FunCall _ | FunCallMethod _) -> true
-    | _ -> false
-    in
-    let (reason_desc, use_op) = if is_call
-      then (RVoid, Op (FunCallMissingArg (reason_op, def_reason)))
-      else (RTooFewArgsExpectedRest, unknown_use)
-    in
-    let reason = replace_reason_const reason_desc reason_op in
-    rec_flow cx trace (DefT (reason, VoidT), UseT (use_op, param));
+    let use_op = Frame (FunMissingArg (reason_op, def_reason), use_op) in
+    rec_flow cx trace (VoidT.why reason_op, UseT (use_op, param));
   ) unused_parameters
 
 (* This is a tricky function. The simple description is that it flows all the

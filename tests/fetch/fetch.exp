@@ -66,15 +66,15 @@ Error: headers.js:4
 
 Error: headers.js:9
   9: e.append('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
-  887:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:887
+     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Too few arguments passed to
+887:     append(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:887
 
 Error: headers.js:10
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
-  887:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:887
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Too few arguments passed to
+887:     append(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:887
 
 Error: headers.js:10
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
@@ -84,15 +84,15 @@ Error: headers.js:10
 
 Error: headers.js:12
  12: e.set('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
-  894:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:894
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Too few arguments passed to
+894:     set(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:894
 
 Error: headers.js:13
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
-  894:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:894
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Too few arguments passed to
+894:     set(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:894
 
 Error: headers.js:13
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
@@ -120,9 +120,9 @@ Error: headers.js:28
 
 Error: request.js:2
   2: const a: Request = new Request(); // incorrect
-                        ^^^^^^^^^^^^^ new `Request`. Called with too few arguments
-  977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:977
+                        ^^^^^^^^^^^^^ new `Request`. Too few arguments passed to
+977:     constructor(input: RequestInfo, init?: RequestOptions): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:977
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -543,15 +543,15 @@ Error: urlsearchparams.js:4
 
 Error: urlsearchparams.js:9
   9: e.append('key1'); // not correct
-     ^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
-  901:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:901
+     ^^^^^^^^^^^^^^^^ call of method `append`. Too few arguments passed to
+901:     append(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:901
 
 Error: urlsearchparams.js:10
  10: e.append({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Called with too few arguments
-  901:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:901
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Too few arguments passed to
+901:     append(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:901
 
 Error: urlsearchparams.js:10
  10: e.append({'key1': 'value1'}); // not correct
@@ -561,15 +561,15 @@ Error: urlsearchparams.js:10
 
 Error: urlsearchparams.js:12
  12: e.set('key1'); // not correct
-     ^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
-  909:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:909
+     ^^^^^^^^^^^^^ call of method `set`. Too few arguments passed to
+909:     set(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:909
 
 Error: urlsearchparams.js:13
  13: e.set({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Called with too few arguments
-  909:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/bom.js:909
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Too few arguments passed to
+909:     set(name: string, value: string): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:909
 
 Error: urlsearchparams.js:13
  13: e.set({'key1': 'value1'}); // not correct

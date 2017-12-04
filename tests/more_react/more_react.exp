@@ -18,25 +18,25 @@ Error: App.react.js:36
 
 Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `checkPropTypes`. Called with too few arguments
-                                               v---
-  190:   declare export function checkPropTypes<V>(
-  191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-  192:     values: V,
-  ...:
-  196:   ) : void;
-         -------^ function type expects more arguments. See lib: <BUILTINS>/react.js:190
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `checkPropTypes`. Too few arguments passed to
+                                             v---
+190:   declare export function checkPropTypes<V>(
+191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+192:     values: V,
+...:
+196:   ) : void;
+       -------^ function type. See lib: <BUILTINS>/react.js:190
 
 Error: checkPropTypes.js:8
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `checkPropTypes`. Called with too few arguments
-                                               v---
-  190:   declare export function checkPropTypes<V>(
-  191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-  192:     values: V,
-  ...:
-  196:   ) : void;
-         -------^ function type expects more arguments. See lib: <BUILTINS>/react.js:190
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `checkPropTypes`. Too few arguments passed to
+                                             v---
+190:   declare export function checkPropTypes<V>(
+191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+192:     values: V,
+...:
+196:   ) : void;
+       -------^ function type. See lib: <BUILTINS>/react.js:190
 
 Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found

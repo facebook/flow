@@ -2284,11 +2284,10 @@ Error: process/nextTick.js:26
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
  28: );
      ^ call of method `nextTick`
-inconsistent use of library definitions
 1957:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. Called with too few arguments. See lib: <BUILTINS>/node.js:1957
-   27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function expects more arguments
+                          ^^^^^^^^^^^^^^^ function type. Too few arguments passed to. See lib: <BUILTINS>/node.js:1957
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: process/process.js:10
  10: process.emitWarning(); // error
@@ -2300,25 +2299,25 @@ Error: process/process.js:10
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Error:
    10: process.emitWarning(); // error
-       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Called with too few arguments
-    1929:   emitWarning(warning: string | Error): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/node.js:1929
+       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
+  1929:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1929
   Member 2:
   1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1930
   Error:
    10: process.emitWarning(); // error
-       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Called with too few arguments
-    1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/node.js:1930
+       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
+  1930:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1930
   Member 3:
   1931:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931
   Error:
    10: process.emitWarning(); // error
-       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Called with too few arguments
-    1931:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/node.js:1931
+       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
+  1931:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931
   Member 4:
           v-----------
   1932:   emitWarning(
@@ -2329,14 +2328,14 @@ Error: process/process.js:10
           ------^ function type. See lib: <BUILTINS>/node.js:1932
   Error:
    10: process.emitWarning(); // error
-       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Called with too few arguments
-            v-----------
-    1932:   emitWarning(
-    1933:     warning: string,
-    1934:     type: string,
-    ...:
-    1937:   ): void;
-            ------^ function type expects more arguments. See lib: <BUILTINS>/node.js:1932
+       ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
+          v-----------
+  1932:   emitWarning(
+  1933:     warning: string,
+  1934:     type: string,
+  ...:
+  1937:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1932
 
 Error: process/process.js:11
  11: process.emitWarning(42); // error

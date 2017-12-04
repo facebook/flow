@@ -8,11 +8,11 @@ Error: apply.js:12
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^ call of `apply`
+                   ^^^^^^ array literal
   4:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+           ^^^^^^^^^^^^^^^^ function type. Too few arguments passed to
  10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
@@ -53,11 +53,11 @@ Error: apply.js:31
 
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of `applyType`
+                       ^^^^^^ array literal
  25:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+           ^^^^^^^^^^^^^^^^ function type. Too few arguments passed to
  10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123

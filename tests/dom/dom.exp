@@ -192,9 +192,9 @@ Error: HTMLInputElement.js:7
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:2808
   Error:
     7:     el.setRangeText('foo', 123); // end is required
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Called with too few arguments
-    2808:   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects more arguments. See lib: <BUILTINS>/dom.js:2808
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Too few arguments passed to
+  2808:   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:2808
 
 Error: HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value

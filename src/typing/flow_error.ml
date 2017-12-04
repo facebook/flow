@@ -161,7 +161,6 @@ type error_message =
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
   | EReactElementFunArity of reason * string * int
-  | EFunctionCallMissingArg of (reason * reason)
   | EFunctionCallExtraArg of reason * reason * int * use_op
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
@@ -307,6 +306,7 @@ let rec locs_of_use_op acc = function
   | Frame (FunParam _, Frame (FunCompatibility {lower; upper}, use_op))
   | Frame (FunReturn _, Frame (FunCompatibility {lower; upper}, use_op)) ->
     locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
+  | Frame (FunMissingArg _, use_op)
   | Frame (ImplicitTypeParam _, use_op)
     -> locs_of_use_op acc use_op
   | Frame (FunParam _, _)
@@ -321,7 +321,6 @@ let rec locs_of_use_op acc = function
   | Op (FunImplicitReturn)
   | Op (FunCall _)
   | Op (FunCallMethod _)
-  | Op (FunCallMissingArg _)
   | Op FunReturnStatement
   | Op (GetProperty _)
   | Op ReactCreateElementCall
@@ -463,8 +462,6 @@ let locs_of_error_message = function
   | EReactKit ((reason1, reason2), _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EReactElementFunArity (reason, _, _) -> [loc_of_reason reason]
-  | EFunctionCallMissingArg (reason1, reason2) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
   | EFunctionCallExtraArg (reason1, reason2, _, use_op) ->
       (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
@@ -772,11 +769,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
+  | Frame (FunMissingArg (op, def), use_op) ->
+    let msg = "Too few arguments passed to" in
+    unwrap_use_ops ~force:true ((op, def), [], msg) use_op
   | Op ReactCreateElementCall ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
-  | Frame (ImplicitTypeParam _, use_op) ->
-    unwrap_use_ops ~force (reasons, extra, msg) use_op
   | Op (SetProperty reason_op) ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
@@ -793,6 +791,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       else msg
     in
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
+  (* Passthrough some frame use_ops that don't participate in the
+   * error message. *)
+  | Frame (FunCompatibility _, use_op)
+  | Frame (ImplicitTypeParam _, use_op)
+    -> unwrap_use_ops ~force (reasons, extra, msg) use_op
   (* Some use_ops always have the definitive location for an error message.
    * When we have one of these use_ops, make sure that its location is always
    * the primary location. *)
@@ -1594,16 +1597,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [mk_info reason [
         "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
       ]]
-
-  | EFunctionCallMissingArg (reason_op, reason_def) ->
-    typecheck_error_with_core_infos [
-      (reason_op, ["Called with too few arguments"])
-    ] ~extra:[
-      InfoLeaf [def_loc_of_reason reason_def, [spf
-        "%s expects more arguments"
-        (string_of_desc (desc_of_reason reason_def))
-      ]]
-    ]
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
     let msg = match param_count with
