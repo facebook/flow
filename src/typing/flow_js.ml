@@ -10788,7 +10788,7 @@ and object_kit =
      * The resulting object only has a property if the property is own in props1 and
      * it is not an own property of props2.
      *)
-    let rest cx trace reason merge_mode
+    let rest cx trace ~use_op reason merge_mode
       (r1, props1, dict1, flags1)
       (r2, props2, dict2, flags2) =
       let props = SMap.merge (fun k p1 p2 ->
@@ -10800,23 +10800,23 @@ and object_kit =
         | _, Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
         | Sound, Some (t1, _), Some (t2, false), _
         | Sound, Some (t1, _), Some (t2, _), false ->
-          rec_flow_t cx trace (t1, optional t2);
+          rec_flow cx trace (t1, UseT (use_op, optional t2));
           Some (Field (None, optional t1, Neutral))
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
          * source object. *)
         | _, None, Some (t2, _), _ ->
           let reason = replace_reason_const (RUndefinedProperty k) r1 in
-          rec_flow_t cx trace (VoidT.make reason, t2);
+          rec_flow cx trace (VoidT.make reason, UseT (use_op, t2));
           None
         | _, Some (t1, _), Some (t2, _), _ ->
-          rec_flow_t cx trace (t1, t2);
+          rec_flow cx trace (t1, UseT (use_op, t2));
           None
         (* If we have some property in our first object and none in our second
          * object, but our second object is inexact then we want to make our
          * property optional and flow that type to mixed. *)
         | Sound, Some (t1, _), None, false ->
-          rec_flow_t cx trace (t1, MixedT.make r2);
+          rec_flow cx trace (t1, UseT (use_op, MixedT.make r2));
           Some (Field (None, optional t1, Neutral))
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
@@ -10837,7 +10837,7 @@ and object_kit =
          * dictionary, but we make the value optional since any set of keys may have
          * been removed. *)
         | Some dict1, Some dict2 ->
-          rec_flow_t cx trace (dict1.value, dict2.value);
+          rec_flow cx trace (dict1.value, UseT (use_op, dict2.value));
           Some ({
             dict_name = None;
             key = dict1.key;
@@ -10865,7 +10865,7 @@ and object_kit =
         rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Rest (options, state), tout))
       | Done base ->
         let xs = Nel.map_concat (fun slice ->
-          Nel.map (rest cx trace reason options slice) x
+          Nel.map (rest cx trace ~use_op reason options slice) x
         ) base in
         let t = match xs with
           | (x, []) -> x
