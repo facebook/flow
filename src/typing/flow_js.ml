@@ -9494,7 +9494,7 @@ and multiflow_full
  * all the regular arguments. There may also be a rest parameter.
  *)
 and multiflow_partial =
-  let rec multiflow_non_spreads cx ~trace ~use_op n (arglist, parlist) =
+  let rec multiflow_non_spreads cx ~use_op n (arglist, parlist) =
     match (arglist, parlist) with
     (* Do not complain on too many arguments.
        This pattern is ubiqutous and causes a lot of noise when complained about.
@@ -9502,7 +9502,7 @@ and multiflow_partial =
     *)
     | (_, [])
     (* No more arguments *)
-    | ([], _) -> arglist, parlist
+    | ([], _) -> [], arglist, parlist
 
     | (tin::tins, (_, tout)::touts) ->
       (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
@@ -9523,28 +9523,27 @@ and multiflow_partial =
         | RTypeParam _ -> u
         | _ -> ReposLowerT (reason_of_t tin, false, u)
       in
-      flow_opt cx ~trace (tin, tout);
-      multiflow_non_spreads cx ~trace ~use_op (n + 1) (tins,touts)
-
-
+      let used_pairs, unused_arglist, unused_parlist =
+        multiflow_non_spreads cx ~use_op (n + 1) (tins, touts) in
+      (tin, tout)::used_pairs, unused_arglist, unused_parlist
   in
   fun cx ~trace ~use_op ~is_strict ~def_reason ~spread_arg ~rest_param
     reason_op (arglist, parlist) ->
 
     (* Handle all the non-spread arguments and all the non-rest parameters *)
-    let unused_arglist, unused_parlist =
-      multiflow_non_spreads cx ~trace ~use_op 1 (arglist, parlist) in
+    let used_pairs, unused_arglist, unused_parlist =
+      multiflow_non_spreads cx ~use_op 1 (arglist, parlist) in
 
     (* If there is a spread argument, it will consume all the unused parameters *)
-    let unused_parlist = match spread_arg with
-    | None -> unused_parlist
+    let used_pairs, unused_parlist = match spread_arg with
+    | None -> used_pairs, unused_parlist
     | Some spread_arg_elemt ->
       (* The spread argument may be an empty array and to be 100% correct, we
        * should flow VoidT to every remaining parameter, however we don't. This
        * is consistent with how we treat arrays almost everywhere else *)
-      List.iter
-        (fun (_, param) -> rec_flow cx trace (spread_arg_elemt, UseT (use_op, param)))
-        unused_parlist;
+      used_pairs @ List.map
+        (fun (_, param) -> (spread_arg_elemt, UseT (use_op, param)))
+        unused_parlist,
       []
 
     in
@@ -9564,8 +9563,14 @@ and multiflow_partial =
           |> add_output cx ~trace
         ) unused_arglist
       end;
+      (* Flow the args and params after we add the EFunctionCallExtraArg error.
+       * This improves speculation error reporting. *)
+      List.iter (rec_flow cx trace) used_pairs;
+
       unused_parlist, rest_param
     | Some (name, loc, rest_param) ->
+      List.iter (rec_flow cx trace) used_pairs;
+
       let orig_rest_reason = repos_reason loc (reason_of_t rest_param) in
 
       (* We're going to build an array literal with all the unused arguments

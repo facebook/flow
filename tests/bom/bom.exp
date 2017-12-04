@@ -200,9 +200,9 @@ Error: FormData.js:32
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Error:
    32: a.set('bar', new File([], 'q'), 2) // incorrect
-                    ^^^^^^^^^^^^^^^^^ File. This type is incompatible with the expected param type of
+                                       ^ unused function argument. No more than 2 arguments are expected by
   328:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -230,9 +230,9 @@ Error: FormData.js:35
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Error:
    35: a.set('bar', new Blob, 2) // incorrect
-                    ^^^^^^^^ Blob. This type is incompatible with the expected param type of
+                              ^ unused function argument. No more than 2 arguments are expected by
   328:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -350,9 +350,9 @@ Error: FormData.js:45
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Error:
    45: a.append('bar', new File([], 'q'), 2) // incorrect
-                       ^^^^^^^^^^^^^^^^^ File. This type is incompatible with the expected param type of
+                                          ^ unused function argument. No more than 2 arguments are expected by
   332:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:332
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333
@@ -380,9 +380,9 @@ Error: FormData.js:48
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Error:
    48: a.append('bar', new Blob, 2) // incorrect
-                       ^^^^^^^^ Blob. This type is incompatible with the expected param type of
+                                 ^ unused function argument. No more than 2 arguments are expected by
   332:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:332
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333

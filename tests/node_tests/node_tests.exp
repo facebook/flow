@@ -8,17 +8,17 @@ Error: buffer/buffer.js:57
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:108
   Error:
    57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+                                                                  ^^^^^^^^^^^^^^^^^^^ unused function argument. No more than 1 argument is expected by
   108:   static from(value: Buffer): Buffer;
-                            ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:108
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:108
   Member 2:
   109:   static from(value: string, encoding?: buffer$Encoding): Buffer;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:109
   Error:
    57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+                                                                                       ^^ unused function argument. No more than 2 arguments are expected by
   109:   static from(value: string, encoding?: buffer$Encoding): Buffer;
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:109
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:109
   Member 3:
   110:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:110
@@ -334,33 +334,33 @@ Error: http/server.js:69
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                ^^^ unused function argument. No more than 3 arguments are expected by
   1095:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1095
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Member 3:
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                ^^^ unused function argument. No more than 3 arguments are expected by
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1096
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Member 4:
   1097:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
@@ -388,33 +388,33 @@ Error: http/server.js:70
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                     ^^^ unused function argument. No more than 3 arguments are expected by
   1095:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1095
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Member 3:
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                     ^^^ unused function argument. No more than 3 arguments are expected by
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1096
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Member 4:
   1097:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
@@ -458,17 +458,17 @@ Error: http/server.js:71
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    71: server.listen({}, () => {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    71: server.listen({}, () => {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
@@ -512,17 +512,17 @@ Error: http/server.js:72
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    72: server.listen({}, function() {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    72: server.listen({}, function() {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
@@ -674,25 +674,25 @@ Error: http/server.js:75
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                     ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                     ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                               ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:76
  76: server.listen(function() {}, 'localhost', 123);
@@ -728,25 +728,25 @@ Error: http/server.js:76
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                     ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1097:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1097
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
   Member 5:
   1098:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                     ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                                    ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:77
  77: server.listen(() => {}, 'localhost');
@@ -874,17 +874,17 @@ Error: http/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Error:
    79: server.listen(8080, () => {}, 'localhost', 123);
-                           ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                  ^^^ unused function argument. No more than 3 arguments are expected by
   1095:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                            ^^^^^^ number. See lib: <BUILTINS>/node.js:1095
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Member 3:
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Error:
    79: server.listen(8080, () => {}, 'localhost', 123);
-                           ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                  ^^^ unused function argument. No more than 3 arguments are expected by
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1096
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Member 4:
   1097:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
@@ -898,17 +898,17 @@ Error: http/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    79: server.listen(8080, () => {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    79: server.listen(8080, () => {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:80
  80: server.listen(8080, function() {}, 'localhost', 123);
@@ -928,17 +928,17 @@ Error: http/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Error:
    80: server.listen(8080, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                       ^^^ unused function argument. No more than 3 arguments are expected by
   1095:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                            ^^^^^^ number. See lib: <BUILTINS>/node.js:1095
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1095
   Member 3:
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Error:
    80: server.listen(8080, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                       ^^^ unused function argument. No more than 3 arguments are expected by
   1096:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1096
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1096
   Member 4:
   1097:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1097
@@ -952,17 +952,17 @@ Error: http/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    80: server.listen(8080, function() {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    80: server.listen(8080, function() {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:81
  81: server.listen(8080, () => {}, 123);
@@ -1006,17 +1006,17 @@ Error: http/server.js:81
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    81: server.listen(8080, () => {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    81: server.listen(8080, () => {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:82
  82: server.listen(8080, function() {}, 123);
@@ -1060,17 +1060,17 @@ Error: http/server.js:82
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    82: server.listen(8080, function() {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    82: server.listen(8080, function() {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:83
  83: server.listen(8080, () => {}, 'localhost');
@@ -1114,17 +1114,17 @@ Error: http/server.js:83
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    83: server.listen(8080, () => {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    83: server.listen(8080, () => {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:84
  84: server.listen(8080, function() {}, 'localhost');
@@ -1168,17 +1168,17 @@ Error: http/server.js:84
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Error:
    84: server.listen(8080, function() {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1098:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1098
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1098
   Member 6:
   1099:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
   Error:
    84: server.listen(8080, function() {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1099:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1099
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
 
 Error: https/server.js:67
  67: server.listen(() => {}, {});
@@ -1316,33 +1316,33 @@ Error: https/server.js:69
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                ^^^ unused function argument. No more than 3 arguments are expected by
   1133:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1133
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Member 3:
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                ^^^ unused function argument. No more than 3 arguments are expected by
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1134
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Member 4:
   1135:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
@@ -1370,33 +1370,33 @@ Error: https/server.js:70
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                     ^^^ unused function argument. No more than 3 arguments are expected by
   1133:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1133
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Member 3:
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                                     ^^^ unused function argument. No more than 3 arguments are expected by
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1134
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Member 4:
   1135:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
@@ -1440,17 +1440,17 @@ Error: https/server.js:71
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    71: server.listen({}, () => {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    71: server.listen({}, () => {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                   ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
@@ -1494,17 +1494,17 @@ Error: https/server.js:72
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    72: server.listen({}, function() {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    72: server.listen({}, function() {}, 123);
-                     ^^ object literal. This type is incompatible with the expected param type of
+                                        ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
@@ -1656,25 +1656,25 @@ Error: https/server.js:75
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                     ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                     ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    75: server.listen(() => {}, 'localhost', 123);
-                               ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
+                                            ^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:76
  76: server.listen(function() {}, 'localhost', 123);
@@ -1710,25 +1710,25 @@ Error: https/server.js:76
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                     ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1135:     listen(port?: number, callback?: Function): Server;
-                          ^^^^^^ number. See lib: <BUILTINS>/node.js:1135
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
   Member 5:
   1136:     listen(path: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                     ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    76: server.listen(function() {}, 'localhost', 123);
-                                    ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
+                                                 ^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:77
  77: server.listen(() => {}, 'localhost');
@@ -1856,17 +1856,17 @@ Error: https/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Error:
    79: server.listen(8443, () => {}, 'localhost', 123);
-                           ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                  ^^^ unused function argument. No more than 3 arguments are expected by
   1133:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                            ^^^^^^ number. See lib: <BUILTINS>/node.js:1133
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Member 3:
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Error:
    79: server.listen(8443, () => {}, 'localhost', 123);
-                           ^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                  ^^^ unused function argument. No more than 3 arguments are expected by
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1134
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Member 4:
   1135:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
@@ -1880,17 +1880,17 @@ Error: https/server.js:79
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    79: server.listen(8443, () => {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    79: server.listen(8443, () => {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:80
  80: server.listen(8443, function() {}, 'localhost', 123);
@@ -1910,17 +1910,17 @@ Error: https/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Error:
    80: server.listen(8443, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                       ^^^ unused function argument. No more than 3 arguments are expected by
   1133:     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                            ^^^^^^ number. See lib: <BUILTINS>/node.js:1133
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1133
   Member 3:
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Error:
    80: server.listen(8443, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ function. This type is incompatible with the expected param type of
+                                                       ^^^ unused function argument. No more than 3 arguments are expected by
   1134:     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1134
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1134
   Member 4:
   1135:     listen(port?: number, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1135
@@ -1934,17 +1934,17 @@ Error: https/server.js:80
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    80: server.listen(8443, function() {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    80: server.listen(8443, function() {}, 'localhost', 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:81
  81: server.listen(8443, () => {}, 123);
@@ -1988,17 +1988,17 @@ Error: https/server.js:81
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    81: server.listen(8443, () => {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    81: server.listen(8443, () => {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:82
  82: server.listen(8443, function() {}, 123);
@@ -2042,17 +2042,17 @@ Error: https/server.js:82
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    82: server.listen(8443, function() {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    82: server.listen(8443, function() {}, 123);
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:83
  83: server.listen(8443, () => {}, 'localhost');
@@ -2096,17 +2096,17 @@ Error: https/server.js:83
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    83: server.listen(8443, () => {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    83: server.listen(8443, () => {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                     ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: https/server.js:84
  84: server.listen(8443, function() {}, 'localhost');
@@ -2150,17 +2150,17 @@ Error: https/server.js:84
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Error:
    84: server.listen(8443, function() {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1136:     listen(path: string, callback?: Function): Server;
-                         ^^^^^^ string. See lib: <BUILTINS>/node.js:1136
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1136
   Member 6:
   1137:     listen(handle: Object, callback?: Function): Server;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
   Error:
    84: server.listen(8443, function() {}, 'localhost');
-                     ^^^^ number. This type is incompatible with the expected param type of
+                                          ^^^^^^^^^^^ unused function argument. No more than 2 arguments are expected by
   1137:     listen(handle: Object, callback?: Function): Server;
-                           ^^^^^^ object type. See lib: <BUILTINS>/node.js:1137
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1137
 
 Error: invalid_package_file/package.json:1
   1: 
