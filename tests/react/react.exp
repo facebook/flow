@@ -234,9 +234,19 @@ Error: create_class_initial_state_sealed.js:45
        -^ State
   Error:
    45:     this.setState({ q: 0 }); // property `q` not found
-                         ^^^^^^^^ property `q` of object literal. Property not found in
+                         ^^^^^^^^ object literal. This type is incompatible with
+       v------------------
+   40: React.createClass({
    41:   getInitialState(): { p: number } {
-                        ^^^^^^^^^^^^^^^^^ object type
+   42:     return { p: 0 };
+  ...:
+   50: });
+       -^ State
+    Property `q` is incompatible:
+       45:     this.setState({ q: 0 }); // property `q` not found
+                             ^^^^^^^^ property `q` of object literal. Property not found in
+       41:   getInitialState(): { p: number } {
+                            ^^^^^^^^^^^^^^^^^ object type
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
@@ -278,9 +288,19 @@ Error: create_class_initial_state_sealed.js:81
        -^ State
   Error:
    81:     this.setState({ baz: 0 }); // property `baz`  not found
-                         ^^^^^^^^^^ property `baz` of object literal. Property not found in
+                         ^^^^^^^^^^ object literal. This type is incompatible with
+       v------------------
+   71: React.createClass({
+   72:   mixins: [{
    73:     getInitialState(): { foo: number } {
-                          ^^^^^^^^^^^^^^^^^^^ object type
+  ...:
+   86: });
+       -^ State
+    Property `baz` is incompatible:
+       81:     this.setState({ baz: 0 }); // property `baz`  not found
+                             ^^^^^^^^^^ property `baz` of object literal. Property not found in
+       73:     getInitialState(): { foo: number } {
+                              ^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35

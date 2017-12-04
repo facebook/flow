@@ -67,69 +67,124 @@ Error: clone_element.js:34
 
 Error: clone_element.js:40
  40: React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                           ^^^^^^^^^^^^^^^^ property `bar` of props. Property not found in
-  8: class A extends React.Component<{foo: number}, void> {}
-                                     ^^^^^^^^^^^^^ object type
+                           ^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 40: React.cloneElement(a, {foo: 1, bar: 2}); // OK
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `bar` is incompatible:
+     40: React.cloneElement(a, {foo: 1, bar: 2}); // OK
+                               ^^^^^^^^^^^^^^^^ property `bar` of props. Property not found in
+      8: class A extends React.Component<{foo: number}, void> {}
+                                         ^^^^^^^^^^^^^ object type
 
 Error: clone_element.js:41
  41: React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
-                                 ^^^ string. This type is incompatible with
-  8: class A extends React.Component<{foo: number}, void> {}
-                                           ^^^^^^ number
+                           ^^^^^^^^^^ props. This type is incompatible with
+ 41: React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `foo` is incompatible:
+     41: React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+                                     ^^^ string. This type is incompatible with
+      8: class A extends React.Component<{foo: number}, void> {}
+                                               ^^^^^^ number
 
 Error: clone_element.js:47
  47: React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
-                                 ^^^ string. This type is incompatible with
-  9: class B extends React.Component<{foo: number, bar: number}, void> {}
-                                           ^^^^^^ number
+                           ^^^^^^^^^^ props. This type is incompatible with
+ 47: React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `foo` is incompatible:
+     47: React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+                                     ^^^ string. This type is incompatible with
+      9: class B extends React.Component<{foo: number, bar: number}, void> {}
+                                               ^^^^^^ number
 
 Error: clone_element.js:53
  53: React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
-                                      ^^^^ string. This type is incompatible with
- 10: class C extends React.Component<{children: number}, void> {}
-                                                ^^^^^^ number
+                           ^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 53: React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     53: React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+                                          ^^^^ string. This type is incompatible with
+     10: class C extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
 
 Error: clone_element.js:57
  57: React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
- 10: class C extends React.Component<{children: number}, void> {}
-                                                ^^^^^^ number
+                           ^^ props. This type is incompatible with
+ 57: React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     57: React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
+     10: class C extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
 
 Error: clone_element.js:58
  58: React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
- 10: class C extends React.Component<{children: number}, void> {}
-                                                ^^^^^^ number
+                           ^^^^^^^^^ props. This type is incompatible with
+ 58: React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     58: React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
+     10: class C extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
 
 Error: clone_element.js:59
  59: React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
- 10: class C extends React.Component<{children: number}, void> {}
-                                                ^^^^^^ number
+                           ^^^^ props. This type is incompatible with
+ 59: React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     59: React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. This type is incompatible with
+     10: class C extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
 
 Error: clone_element.js:63
  63: React.cloneElement(d, {children: 42}); // Error: `children` is an array.
-                                      ^^ number. This type is incompatible with
- 11: class D extends React.Component<{children: Array<number>}, void> {}
-                                                ^^^^^^^^^^^^^ array type
+                           ^^^^^^^^^^^^^^ props. This type is incompatible with
+ 63: React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     63: React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+                                          ^^ number. This type is incompatible with
+     11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
 
 Error: clone_element.js:65
  65: React.cloneElement(d, {}, 42); // Error: `children` is an array.
-                               ^^ number. This type is incompatible with
- 11: class D extends React.Component<{children: Array<number>}, void> {}
-                                                ^^^^^^^^^^^^^ array type
+                           ^^ props. This type is incompatible with
+ 65: React.cloneElement(d, {}, 42); // Error: `children` is an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     65: React.cloneElement(d, {}, 42); // Error: `children` is an array.
+                                   ^^ number. This type is incompatible with
+     11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
 
 Error: clone_element.js:66
  66: React.cloneElement(d, undefined, 42); // Error: `children` is an array.
-                                      ^^ number. This type is incompatible with
- 11: class D extends React.Component<{children: Array<number>}, void> {}
-                                                ^^^^^^^^^^^^^ array type
+                           ^^^^^^^^^ props. This type is incompatible with
+ 66: React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     66: React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+                                          ^^ number. This type is incompatible with
+     11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
 
 Error: clone_element.js:67
  67: React.cloneElement(d, null, 42); // Error: `children` is an array.
-                                 ^^ number. This type is incompatible with
- 11: class D extends React.Component<{children: Array<number>}, void> {}
-                                                ^^^^^^^^^^^^^ array type
+                           ^^^^ props. This type is incompatible with
+ 67: React.cloneElement(d, null, 42); // Error: `children` is an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`
+  Property `children` is incompatible:
+     67: React.cloneElement(d, null, 42); // Error: `children` is an array.
+                                     ^^ number. This type is incompatible with
+     11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
 
 Error: create_element.js:7
   7: React.createElement(); // Error: Needs a minimum of two arguments.

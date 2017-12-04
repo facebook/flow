@@ -4190,6 +4190,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* TODO: ShapeT should have its own reason *)
         let reason_op = reason_of_t proto in
         iter_real_props cx mapr (fun x p ->
+          let use_op = Frame (PropertyCompatibility {
+            prop = Some x;
+            lower = reason;
+            upper = reason_of_t proto;
+          }, use_op) in
           match Property.read_t p with
           | Some t ->
             let reason_prop = replace_reason (fun desc ->

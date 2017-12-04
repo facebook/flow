@@ -950,11 +950,14 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:54
           54: (rwA: $Shape<RWB>);
-               ^^^ rwA
-           9:     type RWA = {p: A}
-                                 ^ A. This type is incompatible with
-          12:     type RWB = {p: B}
-                                 ^ B
+               ^^^ RWA. This type is incompatible with
+          54: (rwA: $Shape<RWB>);
+                           ^^^ RWB
+           Property \`p\` is incompatible:
+               9:     type RWA = {p: A}
+                                     ^ A. This type is incompatible with
+              12:     type RWB = {p: B}
+                                     ^ B
        `,
      ),
 
@@ -964,11 +967,14 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:56
           56: (roA: $Shape<RWB>);
-               ^^^ roA
-          10:     type ROA = {+p: A}
-                                  ^ A. This type is incompatible with
-          12:     type RWB = {p: B}
-                                 ^ B
+               ^^^ ROA. This type is incompatible with
+          56: (roA: $Shape<RWB>);
+                           ^^^ RWB
+           Property \`p\` is incompatible:
+              10:     type ROA = {+p: A}
+                                      ^ A. This type is incompatible with
+              12:     type RWB = {p: B}
+                                     ^ B
        `,
      ),
 

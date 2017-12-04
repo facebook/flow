@@ -654,10 +654,23 @@ Error: state3.js:13
    18: });
        -^ State
   Error:
+                             v
+   13:         this.setState({
    14:             x: false // error
-                      ^^^^^ boolean. This type is incompatible with
+   15:         })
+               ^ object literal. This type is incompatible with
+                       v------------------
+    2: var TestState = React.createClass({
+    3: 
     4:     getInitialState: function(): { x: string; } {
-                                             ^^^^^^ string
+  ...:
+   18: });
+       -^ State
+    Property `x` is incompatible:
+       14:             x: false // error
+                          ^^^^^ boolean. This type is incompatible with
+        4:     getInitialState: function(): { x: string; } {
+                                                 ^^^^^^ string
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
@@ -693,9 +706,19 @@ Error: state4.js:9
        -^ State
   Error:
     9:     this.setState({ y: 0 });
-                         ^^^^^^^^ property `y` of object literal. Property not found in
+                         ^^^^^^^^ object literal. This type is incompatible with
+               v------------------
+    3: var C = React.createClass({
     4:   getInitialState: function(): { x: number } {
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+    5:     return { x: 0 };
+  ...:
+   13: });
+       -^ State
+    Property `y` is incompatible:
+        9:     this.setState({ y: 0 });
+                             ^^^^^^^^ property `y` of object literal. Property not found in
+        4:   getInitialState: function(): { x: number } {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
@@ -734,10 +757,18 @@ Error: state6.js:29
    13: class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ State
   Error:
+                                v------------------------------------
+   29:     this.setState(() => ({ // Error: `bar` should be a number.
    30:       bar: '42',
-                  ^^^^ string. This type is incompatible with
-    7: type State = {foo: number, bar: number};
-                                       ^^^^^^ number
+   31:     }));
+           ^ object literal. This type is incompatible with
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ State
+    Property `bar` is incompatible:
+       30:       bar: '42',
+                      ^^^^ string. This type is incompatible with
+        7: type State = {foo: number, bar: number};
+                                           ^^^^^^ number
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                                                             ^^^^ undefined. See lib: <BUILTINS>/react.js:35
@@ -772,9 +803,14 @@ Error: state6.js:41
                                                                  ^^^^^ State
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ property `$call` of `StateUpdater3`. Callable signature not found in
+                               ^^^^^^^^^^^^^ StateUpdater3. This type is incompatible with
    13: class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ State
+    Callable property is incompatible:
+       41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
+                                   ^^^^^^^^^^^^^ property `$call` of `StateUpdater3`. Callable signature not found in
+       13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                     ^^^^^ State
   Member 2:
    35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
