@@ -410,8 +410,8 @@ Error: issue-2674.js:21
 Error: issue-2674.js:22
  22: c[0] = 'BAR'; // error
             ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`
+ 22: c[0] = 'BAR'; // error
+     ^^^^ string literal `FOO`
 
 Error: objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'

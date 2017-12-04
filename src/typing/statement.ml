@@ -3368,7 +3368,7 @@ and assignment cx loc = Ast.Expression.(function
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
-            let use_op = UnknownUse in
+            let use_op = SetProperty reason in
             Flow.flow cx (super, SetPropT (use_op, reason, Named (prop_reason, name), Normal, t))
 
         (* _object.#name = e *)
@@ -3385,7 +3385,7 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
-              let use_op = UnknownUse in
+              let use_op = SetProperty reason in
               Flow.flow cx (o, SetPrivatePropT (use_op, reason, name, class_entries, false, t));
               post_assignment_havoc ~private_:true name expr lhs_loc t
             )
@@ -3408,7 +3408,7 @@ and assignment cx loc = Ast.Expression.(function
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
-              let use_op = UnknownUse in
+              let use_op = SetProperty reason in
               Flow.flow cx (o, SetPropT (use_op, reason, Named (prop_reason, name), wr_ctx, t));
               post_assignment_havoc ~private_:false name expr lhs_loc t
             )
@@ -3422,7 +3422,7 @@ and assignment cx loc = Ast.Expression.(function
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let a = expression cx _object in
             let i = expression cx index in
-            let use_op = UnknownUse in
+            let use_op = SetProperty reason in
             Flow.flow cx (a, SetElemT (use_op, reason, i, t));
 
             (* types involved in the assignment itself are computed

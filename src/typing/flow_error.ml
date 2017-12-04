@@ -936,6 +936,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EPropNotFound (reasons, use_op) ->
+      let use_op = match use_op with SetProperty _ -> UnknownUse | _ -> use_op in
       let extra, suppress_op, msgs =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
       typecheck_error_with_core_infos ~extra ~suppress_op msgs
@@ -976,6 +977,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       begin match use_op with
       | Some use_op ->
+        let use_op = match use_op with SetProperty _ -> UnknownUse | _ -> use_op in
         let extra, suppress_op, msgs =
           unwrap_use_ops ~force:true (reasons, [], msg) use_op in
         typecheck_error_with_core_infos ~extra ~suppress_op msgs

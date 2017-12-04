@@ -9936,10 +9936,6 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       let loc = loc_of_reason ureason in
       rec_flow_t cx trace (reposition cx ~trace loc t, tout)
     | Write _, Some t ->
-      let use_op = match desc_of_reason ureason with
-      | RPropertyAssignment _ -> SetProperty ureason
-      | _ -> use_op
-      in
       rec_flow cx trace (tout, UseT (use_op, t))
     | _, None ->
       let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
