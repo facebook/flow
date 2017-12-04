@@ -63,6 +63,7 @@ assert_ok \
 printf "function_expression.js:21:3 = "
 assert_ok \
   "$FLOW" type-at-pos function_expressions.js 21 3 --strip-root --pretty
+
 printf "predicates.js - null: "
 assert_ok \
   "$FLOW" type-at-pos predicates.js 4 12 --strip-root --pretty
@@ -75,6 +76,28 @@ assert_ok \
 printf "predicates.js - isArray: "
 assert_ok \
   "$FLOW" type-at-pos predicates.js 6 15 --strip-root --pretty
+
+printf "predicates.js - y (refined obj): "
+assert_ok "$FLOW" type-at-pos predicates.js 8 5 --strip-root --pretty
+printf "predicates.js - if (y.FOO) obj: "
+assert_ok "$FLOW" type-at-pos predicates.js 9 5 --strip-root --pretty
+printf "predicates.js - if (y.FOO) prop: "
+assert_ok "$FLOW" type-at-pos predicates.js 9 8 --strip-root --pretty
+printf "predicates.js - if (y.FOO == '') obj: "
+assert_ok "$FLOW" type-at-pos predicates.js 10 5 --strip-root --pretty
+printf "predicates.js - if (y.FOO == '') prop: "
+assert_ok "$FLOW" type-at-pos predicates.js 10 8 --strip-root --pretty
+printf "predicates.js - if (y.FOO === '') obj: "
+assert_ok "$FLOW" type-at-pos predicates.js 11 5 --strip-root --pretty
+printf "predicates.js - if (y.FOO === '') prop: "
+assert_ok "$FLOW" type-at-pos predicates.js 11 8 --strip-root --pretty
+printf "predicates.js - if (y.FOO == null) prop: "
+assert_ok "$FLOW" type-at-pos predicates.js 12 8 --strip-root --pretty
+printf "predicates.js - if (y.FOO == undefined) prop: "
+assert_ok "$FLOW" type-at-pos predicates.js 13 8 --strip-root --pretty
+printf "predicates.js - if (Array.isArray(y.FOO)): "
+assert_ok "$FLOW" type-at-pos predicates.js 14 22 --strip-root --pretty
+
 printf "templates.js:2:7 = "
 assert_ok \
   "$FLOW" type-at-pos templates.js 2 7 --strip-root --pretty
