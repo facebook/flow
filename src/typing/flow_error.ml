@@ -272,7 +272,7 @@ and upper_kind =
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
   | IncompatibleObjSealT
-  | IncompatibleArrRestT
+  | IncompatibleArrRestT of use_op
   | IncompatibleSuperT
   | IncompatibleMixinT
   | IncompatibleSpecializeT
@@ -564,7 +564,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | IncompatibleObjAssignFromT -> "Expected object instead of"
     | IncompatibleObjRestT -> "Expected object instead of"
     | IncompatibleObjSealT -> "Expected object instead of"
-    | IncompatibleArrRestT -> "Expected array instead of"
+    | IncompatibleArrRestT _ -> "Expected array instead of"
     | IncompatibleSuperT -> "Cannot inherit"
     | IncompatibleMixinT -> "Expected class instead of"
     | IncompatibleSpecializeT -> "Expected polymorphic type instead of"
@@ -821,8 +821,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       upper = (reason_upper, upper_kind);
       extras;
     } ->
-      let extra = speculation_extras extras in
-      typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
+      (match upper_kind with
+      | IncompatibleArrRestT use_op
+        ->
+        let extra = speculation_extras extras in
+        let extra, _suppress_op, msgs =
+          let msg = err_msg_use lower_kind upper_kind in
+          unwrap_use_ops ((reason_upper, reason_lower), extra, msg) use_op in
+        typecheck_error_with_core_infos ~extra ~suppress_op:true msgs
+      | _ ->
+        let extra = speculation_extras extras in
+        typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
+      )
 
   | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
       let reasons = ordered_reasons (reason_lower, reason_upper) in

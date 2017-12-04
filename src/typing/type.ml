@@ -453,7 +453,7 @@ module rec TypeTerm : sig
     | ObjTestT of reason * t * t
 
     (* assignment rest element in array pattern *)
-    | ArrRestT of reason * int * t
+    | ArrRestT of use_op * reason * int * t
 
     (* Guarded unification *)
     | UnifyT of t * t (* bidirectional *)
@@ -1992,7 +1992,7 @@ and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
   | AdderT (reason,_,_,_) -> reason
   | AndT (reason, _, _) -> reason
-  | ArrRestT (reason, _, _) -> reason
+  | ArrRestT (_, reason, _, _) -> reason
   | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
@@ -2136,7 +2136,7 @@ and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
   | AdderT (reason, flip, rt, lt) -> AdderT (f reason, flip, rt, lt)
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
-  | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
+  | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)

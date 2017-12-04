@@ -5117,7 +5117,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* array pattern can consume the rest of an array *)
     (**************************************************)
 
-    | DefT (_, ArrT arrtype), ArrRestT (reason, i, tout) ->
+    | DefT (_, ArrT arrtype), ArrRestT (_, reason, i, tout) ->
       let arrtype = match arrtype with
       | ArrayAT (_, None)
       | ROArrayAT _
@@ -5127,7 +5127,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let a = DefT (reason, ArrT arrtype) in
       rec_flow_t cx trace (a, tout)
 
-    | DefT (_, AnyT), ArrRestT (reason, _, tout) ->
+    | DefT (_, AnyT), ArrRestT (_, reason, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
 
     (**************)
@@ -6177,7 +6177,7 @@ and flow_error_kind_of_upper = function
   | ObjAssignFromT _ -> FlowError.IncompatibleObjAssignFromT
   | ObjRestT _ -> FlowError.IncompatibleObjRestT
   | ObjSealT _ -> FlowError.IncompatibleObjSealT
-  | ArrRestT _ -> FlowError.IncompatibleArrRestT
+  | ArrRestT (use_op, _, _, _) -> FlowError.IncompatibleArrRestT use_op
   | SuperT _ -> FlowError.IncompatibleSuperT
   | MixinT _ -> FlowError.IncompatibleMixinT
   | SpecializeT _ -> FlowError.IncompatibleSpecializeT
@@ -6920,7 +6920,7 @@ and eval_selector cx ?trace reason curr_t s i =
       | Prop x -> GetPropT (UnknownUse, reason, Named (reason, x), tvar)
       | Elem key -> GetElemT (UnknownUse, reason, key, tvar)
       | ObjRest xs -> ObjRestT (reason, xs, tvar)
-      | ArrRest i -> ArrRestT (reason, i, tvar)
+      | ArrRest i -> ArrRestT (UnknownUse, reason, i, tvar)
       | Default -> PredicateT (NotP VoidP, tvar)
       | Become -> BecomeT (reason, tvar)
       | Refine p -> RefineT (reason, p, tvar)
@@ -9598,7 +9598,7 @@ and multiflow_partial =
         let rest_reason = reason_of_t rest_param in
         Tvar.mk_derivable_where cx rest_reason (fun tout ->
           let i = List.length rev_elems in
-          rec_flow cx trace (rest_param, ArrRestT (orig_rest_reason, i, tout))
+          rec_flow cx trace (rest_param, ArrRestT (use_op, orig_rest_reason, i, tout))
         )
       | Some _ ->
         (* If there is a spread argument, then a tuple rest parameter will error

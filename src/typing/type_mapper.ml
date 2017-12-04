@@ -654,10 +654,10 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ObjTestProtoT (r, t'')
-    | ArrRestT (r, i, t') ->
+    | ArrRestT (op, r, i, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ArrRestT (r, i, t'')
+        else ArrRestT (op, r, i, t'')
     | UnifyT (t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

@@ -381,7 +381,7 @@ class ['a] t = object(self)
   | ObjFreezeT (_, t)
   | ObjRestT (_, _, t)
   | ObjSealT (_, t)
-  | ArrRestT (_, _, t) ->
+  | ArrRestT (_, _, _, t) ->
     self#type_ cx pole_TODO acc t
 
   | UnifyT (t1, t2) ->

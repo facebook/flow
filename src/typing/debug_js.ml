@@ -624,7 +624,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "resultType", _json_of_t json_cx res
     ]
 
-  | ArrRestT (_, i, t) -> [
+  | ArrRestT (_, _, i, t) -> [
       "index", JSON_Number (string_of_int i);
       "resultType", _json_of_t json_cx t
     ]
@@ -1946,7 +1946,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ArrRestT _ -> p t
+  | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
   | AssertArithmeticOperandT _ -> p t
   | AssertBinaryInLHST _ -> p t
   | AssertBinaryInRHST _ -> p t
@@ -2300,7 +2300,7 @@ let dump_flow_error =
   | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
   | IncompatibleObjRestT -> "IncompatibleObjRestT"
   | IncompatibleObjSealT -> "IncompatibleObjSealT"
-  | IncompatibleArrRestT -> "IncompatibleArrRestT"
+  | IncompatibleArrRestT _ -> "IncompatibleArrRestT"
   | IncompatibleSuperT -> "IncompatibleSuperT"
   | IncompatibleMixinT -> "IncompatibleMixinT"
   | IncompatibleSpecializeT -> "IncompatibleSpecializeT"
