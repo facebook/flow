@@ -59,7 +59,7 @@ Error: checkPropTypes.js:12
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props of React element `D`. This type is incompatible with
+     ^^^^^ props. This type is incompatible with
                   v
   9:   propTypes: {
  10:     name: React.PropTypes.string.isRequired,
@@ -74,11 +74,11 @@ Error: propTypes.js:15
      12:   }
            ^ property `name`. Property not found in
      15: <D />; // errors: properties `name` and `title` not found
-         ^^^^^ props of React element `D`
+         ^^^^^ props
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props of React element `D`. This type is incompatible with
+     ^^^^^ props. This type is incompatible with
                   v
   9:   propTypes: {
  10:     name: React.PropTypes.string.isRequired,
@@ -93,7 +93,7 @@ Error: propTypes.js:15
      12:   }
            ^ property `title`. Property not found in
      15: <D />; // errors: properties `name` and `title` not found
-         ^^^^^ props of React element `D`
+         ^^^^^ props
 
 
 Found 9 errors

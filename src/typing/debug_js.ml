@@ -1588,8 +1588,11 @@ and dump_t_ (depth, tvars) cx t =
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
       spf "Destructure %s on %s" (string_of_selector selector) t
-    | TypeDestructorT (_, _, destructor) ->
-      spf "TypeDestruct %s on %s" (string_of_destructor destructor) t
+    | TypeDestructorT (use_op, _, destructor) ->
+      spf "%s, TypeDestruct %s on %s"
+        (string_of_use_op use_op)
+        (string_of_destructor destructor)
+        t
   in
 
   let string_of_mixed_flavor = function
@@ -1994,7 +1997,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
-  | GetPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | GetPropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
+      (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
   | GetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
@@ -2589,10 +2593,11 @@ let dump_flow_error =
         spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
-    | EInvalidObjectKit { reason; reason_op; _ } ->
-        spf "EInvalidObjectKit { reason = %s; reason_op = %s }"
+    | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
+        spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
+          (string_of_use_op use_op)
     | EInvalidTypeof (loc, name) ->
         spf "EInvalidTypeof (%s, %S)" (string_of_loc loc) name
     | EBinaryInLHS reason ->
@@ -2620,10 +2625,11 @@ let dump_flow_error =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
-    | EReactKit ((reason1, reason2), _) ->
-        spf "EReactKit (%s, %s, _)"
+    | EReactKit ((reason1, reason2), _, use_op) ->
+        spf "EReactKit (%s, %s, _, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->
         spf "EReactElementFunArity (%s)" (dump_reason cx reason)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->

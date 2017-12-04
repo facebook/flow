@@ -25,7 +25,7 @@ let run cx trace ~use_op reason_op l u
   =
   let err_incompatible reason =
     add_output cx ~trace (Flow_error.EReactKit
-      ((reason_op, reason), u))
+      ((reason_op, reason), u, use_op))
   in
 
   (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
@@ -138,7 +138,12 @@ let run cx trace ~use_op reason_op l u
      * find in the intrinsics map. *)
     let intrinsic = Tvar.mk cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (unknown_use, reason, (match literal with
+    let use_op = Op (ReactGetIntrinsic {
+      literal = (match literal with
+        | Literal (_, name) -> replace_reason_const (RIdentifier name) reason
+        | _ -> reason);
+    }) in
+    rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
       | Literal (_, name) ->
         Named (replace_reason_const (RReactElement (Some name)) reason, name)
       | _ -> Computed l
@@ -244,7 +249,10 @@ let run cx trace ~use_op reason_op l u
     | t::ts, None ->
       (* Create a reason where the location is between our first and last known
        * argument. *)
-      let r = replace_reason_const RReactChildren reason_op in
+      let r = mk_reason RReactChildren (match use_op with
+      | Op (ReactCreateElementCall {children; _}) -> children
+      | _ -> loc_of_reason reason_op)
+      in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
     (* If we only have a spread of unknown length then React may not pass in
      * children, React may pass in a single child, or React may pass in an array
@@ -265,9 +273,11 @@ let run cx trace ~use_op reason_op l u
      * element type is the union of the known argument and the spread type. *)
     | t::[], Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
-      let r = replace_reason_const
+      let r = mk_reason
         (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
-        reason_op
+        (match use_op with
+        | Op (ReactCreateElementCall {children; _}) -> children
+        | _ -> loc_of_reason reason_op)
       in
       Some (union_of_ts r [
         t;
@@ -278,7 +288,10 @@ let run cx trace ~use_op reason_op l u
      * of all argument types and the spread argument type. *)
     | t::ts, Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
-      let r = replace_reason_const RReactChildren reason_op in
+      let r = mk_reason RReactChildren (match use_op with
+      | Op (ReactCreateElementCall {children; _}) -> children
+      | _ -> loc_of_reason reason_op)
+      in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
@@ -383,21 +396,8 @@ let run cx trace ~use_op reason_op l u
       let open Object in
       let open Object.ReactConfig in
       (* We need to treat config input as a literal here so we ensure it has the
-       * RReactElement or RReactElementProps reason. *)
-      let reason = replace_reason (fun desc ->
-        (* Get the element name from the current reason. *)
-        let name = match desc with
-        | RReactElement x -> x
-        | RReactElementProps x -> x
-        | _ -> None in
-        (* If we have no children then we are just looking at the props. *)
-        if Option.is_none children
-          then RReactElementProps name
-          else RReactElement name
-      ) (if Option.is_none children
-        then reason_of_t config
-        else reason_op)
-      in
+       * RReactProps reason description. *)
+      let reason = replace_reason_const RReactProps (reason_of_t config) in
       (* Create the final config object using the ReactConfig object kit tool and
        * flow it to our type for props. *)
       rec_flow cx trace (config,

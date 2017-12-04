@@ -295,7 +295,8 @@ module rec TypeTerm : sig
     | FunCallThis of reason
     | GetProperty of reason
     | Internal of internal_use_op
-    | ReactCreateElementCall
+    | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
+    | ReactGetIntrinsic of { literal: reason }
     | SetProperty of reason
     | UnknownUse
 
@@ -1963,6 +1964,7 @@ let loc_of_root_use_op = function
 | FunCall {op; _}
 | FunCallMethod {op; _}
 | GetProperty op
+| ReactCreateElementCall {op; _}
 | SetProperty op
   -> loc_of_reason op
 | Addition
@@ -1970,8 +1972,8 @@ let loc_of_root_use_op = function
 | FunCallThis _
 | FunImplicitReturn
 | FunReturnStatement
+| ReactGetIntrinsic _
 | Internal _
-| ReactCreateElementCall
 | UnknownUse
   -> Loc.none
 
@@ -2441,7 +2443,8 @@ let string_of_root_use_op = function
 | FunReturnStatement -> "FunReturnStatement"
 | GetProperty _ -> "GetProperty"
 | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
-| ReactCreateElementCall -> "ReactCreateElementCall"
+| ReactCreateElementCall _ -> "ReactCreateElementCall"
+| ReactGetIntrinsic _ -> "ReactGetIntrinsic"
 | SetProperty _ -> "SetProperty"
 | UnknownUse -> "UnknownUse"
 

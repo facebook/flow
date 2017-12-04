@@ -3541,32 +3541,45 @@ and collapse_children cx children = Ast.JSX.(
   |> List.rev)
 
 and jsx cx = Ast.JSX.(
-  function { openingElement; children; _ } ->
+  function { openingElement; children; closingElement } ->
+  let locs =
+    let open_, _ = openingElement in
+    match closingElement with
+    | Some (close, _) -> Loc.btwn open_ close, open_, Loc.btwn_exclusive open_ close
+    | _ -> open_, open_, open_
+  in
   let children = collapse_children cx children in
-  jsx_title cx openingElement children
+  jsx_title cx openingElement children locs
 )
 
 and jsx_fragment cx = Ast.JSX.(
-  function { frag_openingElement; frag_children; _ } ->
-  let eloc = frag_openingElement in
+  function { frag_openingElement; frag_children; frag_closingElement } ->
+  let locs =
+    let open_ = frag_openingElement in
+    match frag_closingElement with
+    | Some close -> Loc.btwn open_ close, open_, Loc.btwn_exclusive open_ close
+    | _ -> open_, open_, open_
+  in
+  let _, loc_opening, _ = locs in
   let children = collapse_children cx frag_children in
   let fragment =
-    let reason = mk_reason (RIdentifier "React.Fragment") eloc in
-    let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
+    let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
+    let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
     get_prop ~is_cond:false cx reason react (reason, "Fragment")
   in
-  jsx_desugar cx "React.Fragment" fragment (NullT.at eloc) [] children eloc
+  jsx_desugar cx "React.Fragment" fragment (NullT.at loc_opening) [] children locs
 )
 
-and jsx_title cx openingElement children = Ast.JSX.(
-  let eloc, { Opening.name; attributes; _ } = openingElement in
+and jsx_title cx openingElement children locs = Ast.JSX.(
+  let _, loc_opening, _ = locs in
+  let _, { Opening.name; attributes; _ } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
 
   match (name, facebook_fbt, jsx_mode) with
   | (Identifier (_, { Identifier.name }), Some facebook_fbt, _)
       when name = "fbt" ->
-    let fbt_reason = mk_reason (RCustom "`<fbt/>`") eloc in
+    let fbt_reason = mk_reason (RCustom "`<fbt/>`") loc_opening in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
   (**
@@ -3575,38 +3588,41 @@ and jsx_title cx openingElement children = Ast.JSX.(
    *)
   | (Identifier (loc, { Identifier.name }), _, Some Options.CSX) ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
-    then AnyT.at eloc
+    then AnyT.at loc_opening
     else begin
-      let reason = mk_reason (RJSXElement(Some name)) eloc in
-      let c = Env.get_var cx name eloc in
+      let reason = mk_reason (RJSXElement (Some name)) loc_opening in
+      let c = identifier cx name loc in
       (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
       let o = jsx_mk_props cx reason c name attributes children in
       (* Sucks to also pass children to jsx_desugar here, they're ignored *)
-      jsx_desugar cx name c o attributes children eloc
+      jsx_desugar cx name c o attributes children locs
     end
 
   | Identifier (loc, { Identifier.name }), _, _
       when name = String.capitalize_ascii name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
-    then AnyT.at eloc
+    then AnyT.at loc_opening
     else begin
       let el =
         if jsx_mode = None
         then RReactElement (Some name) else RJSXElement (Some name) in
-      let reason = mk_reason el eloc in
-      let c = Env.get_var cx name eloc in
+      let reason = mk_reason el loc_opening in
+      let c = identifier cx name loc in
       let o = jsx_mk_props cx reason c name attributes children in
-      jsx_desugar cx name c o attributes children eloc
+      jsx_desugar cx name c o attributes children locs
     end
 
   (* In React we use a string literal type instead of fetching a full component
    * type from $JSXIntrinsics. React.createElement() then handles intrinsic type
    * checking. *)
   | (Identifier (loc, { Identifier.name }), _, _) when jsx_mode = None ->
-    let reason = mk_reason (RReactElement (Some name)) loc in
-    let c = DefT (reason, SingletonStrT name) in
+    let c =
+      let reason = mk_reason (RIdentifier name) loc in
+      DefT (reason, SingletonStrT name)
+    in
+    let reason = mk_reason (RReactElement (Some name)) loc_opening in
     let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children eloc
+    jsx_desugar cx name c o attributes children locs
 
   | (Identifier (loc, { Identifier.name }), _, _) ->
       (**
@@ -3624,7 +3640,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       let jsx_intrinsics =
         Flow.get_builtin_type
           cx
-          (mk_reason (RCustom "JSX Intrinsics lookup") eloc)
+          (mk_reason (RCustom "JSX Intrinsics lookup") loc)
           "$JSXIntrinsics"
       in
 
@@ -3642,7 +3658,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
        *)
      let component_t_reason =
        let desc = RCustom (spf "JSX Intrinsic: `%s`" name) in
-       mk_reason desc eloc
+       mk_reason desc loc
      in
      let component_t =
        if jsx_mode = None
@@ -3650,7 +3666,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
         let prop_t =
           if Type_inference_hooks_js.dispatch_member_hook
             cx name loc jsx_intrinsics
-          then AnyT.at eloc
+          then AnyT.at loc
           else get_prop
             ~is_cond:false
             cx
@@ -3663,26 +3679,26 @@ and jsx_title cx openingElement children = Ast.JSX.(
       else DefT (component_t_reason, StrT (Literal (None, name))) in
       let o = jsx_mk_props cx component_t_reason
         component_t name attributes children in
-      jsx_desugar cx name component_t o attributes children eloc
+      jsx_desugar cx name component_t o attributes children locs
 
   | MemberExpression member, _, None ->
     let name = jsx_title_member_to_string member in
     let el = RReactElement (Some name) in
-    let reason = mk_reason el eloc in
+    let reason = mk_reason el loc_opening in
     let c = jsx_title_member_to_expression member in
     let c = expression cx c in
     let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children eloc
+    jsx_desugar cx name c o attributes children locs
 
   | _ ->
       (* TODO? covers namespaced names as element names *)
-      AnyT.at eloc
+      AnyT.at loc_opening
 )
 
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let is_react = Context.jsx cx = None in
   let reason_props = replace_reason_const
-    (if is_react then RReactElementProps (Some name) else RJSXElementProps name)
+    (if is_react then RReactProps else RJSXElementProps name)
     reason in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
@@ -3786,23 +3802,28 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   eval_props ~sealed (map, result)
 )
 
-and jsx_desugar cx name component_t props attributes children eloc =
+and jsx_desugar cx name component_t props attributes children locs =
+  let loc_element, loc_opening, loc_children = locs in
   match Context.jsx cx with
   | None ->
-      let reason = mk_reason (RReactElement (Some name)) eloc in
-      let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
+      let reason = mk_reason (RReactElement (Some name)) loc_opening in
+      let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
       let children = List.map (function
-          | UnresolvedArg a -> a
-          | UnresolvedSpreadArg a ->
-              (* TODO - the location might be wrong here? *)
-              Flow.add_output cx Flow_error.(EUnsupportedSyntax (eloc, SpreadArgument));
-              AnyT.why (reason_of_t a)
+        | UnresolvedArg a -> a
+        | UnresolvedSpreadArg a ->
+            Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc_children, SpreadArgument));
+            AnyT.why (reason_of_t a)
       ) children in
       Tvar.mk_where cx reason (fun tvar ->
         let reason_createElement =
-          mk_reason (RProperty (Some "createElement")) eloc in
+          mk_reason (RProperty (Some "createElement")) loc_opening in
+        let use_op = Op (ReactCreateElementCall {
+          op = repos_reason loc_element reason_createElement;
+          component = reason_of_t component_t;
+          children = loc_children;
+        }) in
         Flow.flow cx (react, MethodT (
-          unknown_use,
+          use_op,
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
@@ -3813,18 +3834,18 @@ and jsx_desugar cx name component_t props attributes children eloc =
         ))
       )
   | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
-      let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) eloc in
+      let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_opening in
 
       (* A JSX element with no attributes should pass in null as the second
        * arg *)
       let props = match attributes with
-      | [] -> NullT.at eloc
+      | [] -> NullT.at loc_opening
       | _ -> props in
       let argts =
         [Arg component_t; Arg props] @
         (List.map (function
-            | UnresolvedArg c -> Arg c
-            | UnresolvedSpreadArg c -> SpreadArg c
+          | UnresolvedArg c -> Arg c
+          | UnresolvedSpreadArg c -> SpreadArg c
         ) children) in
       Ast.Expression.(match jsx_expr with
       | _, Member {
@@ -3832,15 +3853,15 @@ and jsx_desugar cx name component_t props attributes children eloc =
         property = Member.PropertyIdentifier (prop_loc, name);
           _;
         } ->
-          let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
+          let ot = jsx_pragma_expression cx raw_jsx_expr loc_opening _object in
           method_call cx reason ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
       | _ ->
-          let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
+          let f = jsx_pragma_expression cx raw_jsx_expr loc_opening jsx_expr in
           func_call cx reason ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
-      let reason = mk_reason (RJSXFunctionCall name) eloc in
+      let reason = mk_reason (RJSXFunctionCall name) loc_opening in
       func_call cx reason ~call_strict_arity:false component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that

@@ -6115,7 +6115,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extras = [];
       })
 
-    | _, UseT ((Frame _ | Op (Cast _) as use_op), u) ->
+    | _, UseT ((Frame _ | Op (
+        Cast _
+      | ReactCreateElementCall _
+      | ReactGetIntrinsic _
+    ) as use_op), u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))
@@ -6323,8 +6327,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | RObjectPatternRestProp
   | RFunction _
   | RStatics (RFunction _)
+  | RReactProps
   | RReactElement _
-  | RReactElementProps _
   | RJSXElementProps _ -> true
   | _ -> lflags.frozen
   in
@@ -10398,22 +10402,23 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
     ) in
     rec_flow_t cx trace (DefT (reason_op, funt), tout)
 
-  | ReactCreateElement -> (match args with
+  | ReactCreateElement ->
+    (match args with
     (* React.createElement(component) *)
     | component::[] ->
       Ops.push reason_op;
       let config =
-        let r = replace_reason_const (RReactElementProps None) reason_op in
+        let r = replace_reason_const RReactProps reason_op in
         Obj_type.mk_with_proto
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in
-      rec_flow cx trace (component, ReactKitT (Op ReactCreateElementCall, reason_op,
+      rec_flow cx trace (component, ReactKitT (use_op, reason_op,
         React.CreateElement (false, config, ([], None), tout)));
       Ops.pop ()
     (* React.createElement(component, config, ...children) *)
     | component::config::children ->
       Ops.push reason_op;
-      rec_flow cx trace (component, ReactKitT (Op ReactCreateElementCall, reason_op,
+      rec_flow cx trace (component, ReactKitT (use_op, reason_op,
         React.CreateElement (false, config, (children, spread_arg), tout)));
       Ops.pop ()
     (* React.createElement() *)
@@ -10448,7 +10453,7 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       );
       (* Create a React element using the config and children. *)
       rec_flow cx trace (component,
-        ReactKitT (Op ReactCreateElementCall, reason_op,
+        ReactKitT (use_op, reason_op,
           React.CreateElement (true, config, (children, spread_arg), tout)));
       Ops.pop ()
     (* React.cloneElement() *)
@@ -10461,19 +10466,19 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
     | [] ->
       Ops.push reason_op;
       let config =
-        let r = replace_reason_const (RReactElementProps None) reason_op in
+        let r = replace_reason_const RReactProps reason_op in
         Obj_type.mk_with_proto
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in
       rec_flow cx trace (component,
-        ReactKitT (Op ReactCreateElementCall, reason_op,
+        ReactKitT (use_op, reason_op,
           React.CreateElement (false, config, ([], None), tout)));
       Ops.pop ()
     (* React.createFactory(component)(config, ...children) *)
     | config::children ->
       Ops.push reason_op;
       rec_flow cx trace (component,
-        ReactKitT (Op ReactCreateElementCall, reason_op,
+        ReactKitT (use_op, reason_op,
           React.CreateElement (false, config, (children, spread_arg), tout)));
       Ops.pop ())
 
@@ -11190,6 +11195,7 @@ and object_kit =
         tool;
         reason = reason_of_t t;
         reason_op = reason;
+        use_op;
       })
   in
 

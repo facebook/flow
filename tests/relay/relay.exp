@@ -24,7 +24,7 @@ Error: Profile.js:22
 
 Error: Profile.js:23
  23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `ProfilePic`. This type is incompatible with
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `image` is incompatible:
@@ -41,29 +41,29 @@ Error: ProfilePic.js:17
 
 Error: main.js:15
  15: <Profile user={userRef} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `foo` is incompatible:
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
      15: <Profile user={userRef} />; // Error: Missing foo
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props
 
 Error: main.js:16
  16: <Profile foo={42} />; // Error: Missing user
-     ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
      16: <Profile foo={42} />; // Error: Missing user
-         ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+         ^^^^^^^^^^^^^^^^^^^^ props
 
 Error: main.js:17
  17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `foo` is incompatible:
@@ -74,29 +74,29 @@ Error: main.js:17
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `foo` is incompatible:
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
      18: <Profile />; // Error: Missing user and foo
-         ^^^^^^^^^^^ props of React element `Profile`
+         ^^^^^^^^^^^ props
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
      18: <Profile />; // Error: Missing user and foo
-         ^^^^^^^^^^^ props of React element `Profile`
+         ^^^^^^^^^^^ props
 
 Error: main.js:19
  19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
@@ -107,7 +107,7 @@ Error: main.js:19
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `foo` is incompatible:
@@ -118,7 +118,7 @@ Error: main.js:20
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
@@ -129,7 +129,7 @@ Error: main.js:20
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `foo` is incompatible:
@@ -140,7 +140,7 @@ Error: main.js:21
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
@@ -151,7 +151,7 @@ Error: main.js:21
 
 Error: more.js:92
  92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `user` is incompatible:
@@ -167,18 +167,18 @@ Error: more.js:92
 
 Error: more.js:95
  95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `user` is incompatible:
      35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in
      95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `user` is incompatible:
@@ -204,7 +204,7 @@ Error: more.js:98
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `user` is incompatible:
@@ -235,7 +235,7 @@ Error: more.js:121
 123:   string="x"
 ...:
 127: />;
-     -^ props of React element `SingularTest`. This type is incompatible with
+     -^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `optionalUser` is incompatible:
@@ -251,7 +251,7 @@ Error: more.js:121
 
 Error: more.js:144
 144: <PluralTest users={null} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `users` is incompatible:
@@ -267,18 +267,18 @@ Error: more.js:144
 
 Error: more.js:147
 147: <PluralTest nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `users` is incompatible:
      35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `users`. Property not found in
     147: <PluralTest nullableUsers={null} />;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `users` is incompatible:
@@ -309,7 +309,7 @@ Error: more.js:150
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `users` is incompatible:
@@ -340,7 +340,7 @@ Error: more.js:150
 
 Error: more.js:174
 174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `PluralTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `optionalUsers` is incompatible:
@@ -356,7 +356,7 @@ Error: more.js:174
 
 Error: more.js:177
 177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `onClick` is incompatible:
@@ -372,7 +372,7 @@ Error: more.js:177
 
 Error: more.js:180
 180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `SingularTest`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
  35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string` is incompatible:

@@ -117,16 +117,16 @@ export default suite(({addFile, addFiles, addCode}) => [
         test.js:8
           8:       <Bar />;
                    ^^^^^^^ JSX desugared to \`Foo(...)\`
-          5:       const Bar = 123;
-                               ^^^ number. This type is incompatible with the expected param type of
+          8:       <Bar />;
+                    ^^^ number. This type is incompatible with the expected param type of
           6:       function Foo(x: string) {}
                                    ^^^^^^ string
 
         test.js:12
          12:         <Bar />;
                      ^^^^^^^ JSX desugared to \`Foo(...)\`
-          5:       const Bar = 123;
-                               ^^^ number. This type is incompatible with the expected param type of
+         12:         <Bar />;
+                      ^^^ number. This type is incompatible with the expected param type of
          11:         const Foo = (y: boolean) => {};
                                      ^^^^^^^ boolean
       `,
@@ -246,7 +246,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:       <baz />;
                      ^^^^^^^ JSX desugared to \`Foo(...)\`
             7:       <baz />;
-                     ^^^^^^^ JSX Intrinsic: \`baz\`. Expected string literal \`bar\`, got \`baz\` instead
+                      ^^^ JSX Intrinsic: \`baz\`. Expected string literal \`bar\`, got \`baz\` instead
             5:       function Foo(elem: "bar") {}
                                         ^^^^^ string literal \`bar\`
         `,
@@ -288,7 +288,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ Bar. Could not resolve name
+                      ^^^ Bar. Could not resolve name
         `,
       ),
   ]),

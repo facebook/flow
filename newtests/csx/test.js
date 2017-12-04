@@ -29,7 +29,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:5
           5:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ Bar. Could not resolve name
+                    ^^^ Bar. Could not resolve name
       `,
     ),
   ]),

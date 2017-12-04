@@ -52,19 +52,19 @@ Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                    ^^^ property `foo`. Property not found in
   9: <Good buz={2} qux={3} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:9
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:9
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                         ^^^ property `buz`. Property not found in
   8: <Good foo={1} qux={3} />; // Error: Missing buz
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:8
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:8
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                              ^^^ property `qux`. Property not found in
   7: <Good foo={1} buz={2} />; // Error: Missing qux
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:7
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:7
 
 Error: Good.js:17
  17:     buz: buz * 2,

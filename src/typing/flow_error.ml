@@ -148,7 +148,7 @@ type error_message =
   | EExperimentalExportStarAs of Loc.t
   | EIndeterminateModuleType of Loc.t
   | EUnreachable of Loc.t
-  | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason }
+  | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
   | EInvalidTypeof of Loc.t * string
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
@@ -159,7 +159,7 @@ type error_message =
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
-  | EReactKit of (reason * reason) * React.tool
+  | EReactKit of (reason * reason) * React.tool * use_op
   | EReactElementFunArity of reason * string * int
   | EFunctionCallExtraArg of reason * reason * int * use_op
   | EUnsupportedSetProto of reason
@@ -323,7 +323,8 @@ let rec locs_of_use_op acc = function
   | Op (FunCallMethod _)
   | Op FunReturnStatement
   | Op (GetProperty _)
-  | Op ReactCreateElementCall
+  | Op (ReactCreateElementCall _)
+  | Op (ReactGetIntrinsic _)
   | Op UnknownUse
   | Op (Internal _)
     -> acc
@@ -444,8 +445,8 @@ let locs_of_error_message = function
   | EExperimentalExportStarAs (loc) -> [loc]
   | EIndeterminateModuleType (loc) -> [loc]
   | EUnreachable (loc) -> [loc]
-  | EInvalidObjectKit { reason; reason_op; _ } ->
-      [loc_of_reason reason_op; loc_of_reason reason]
+  | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
+      (loc_of_reason reason_op)::(loc_of_reason reason)::(locs_of_use_op [] use_op)
   | EInvalidTypeof (loc, _) -> [loc]
   | EBinaryInLHS (reason) -> [loc_of_reason reason]
   | EBinaryInRHS (reason) -> [loc_of_reason reason]
@@ -459,8 +460,8 @@ let locs_of_error_message = function
   | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
       (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EUnsupportedImplements (reason) -> [loc_of_reason reason]
-  | EReactKit ((reason1, reason2), _) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EReactKit ((reason1, reason2), _, use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EReactElementFunArity (reason, _, _) -> [loc_of_reason reason]
   | EFunctionCallExtraArg (reason1, reason2, _, use_op) ->
       (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
@@ -506,7 +507,8 @@ let suppress_fun_call_param_op op =
     | RFunctionCall _
     | RConstructorCall _
     | RMethodCall _
-    | RReactElement _ -> true
+    | RReactElement _
+    | RReactProps -> true
     | _ -> false
     end
   | None -> false
@@ -772,9 +774,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | Frame (FunMissingArg (op, def), use_op) ->
     let msg = "Too few arguments passed to" in
     unwrap_use_ops ~force:true ((op, def), [], msg) use_op
-  | Op ReactCreateElementCall ->
+  | Op (ReactCreateElementCall _) ->
     let suppress_op = suppress_fun_call_param_op op in
     extra, suppress_op, typecheck_msgs msg reasons
+  | Op (ReactGetIntrinsic {literal}) ->
+    let msg = "Is not a valid React JSX intrinsic" in
+    extra, false, [literal, [msg]]
   | Op (SetProperty reason_op) ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
@@ -1483,7 +1488,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EUnreachable loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
 
-  | EInvalidObjectKit { tool; reason; reason_op } ->
+  | EInvalidObjectKit { tool; reason; reason_op; use_op } ->
       let open Object in
       let msg = match tool with
         | ReadOnly -> "Cannot create an object with read-only properties from"
@@ -1499,7 +1504,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             | Config _ -> "Cannot compare React props with"
             | Defaults _ -> "Cannot use React default props from")
       in
-      typecheck_error msg (reason_op, reason)
+      let extra, _, msgs =
+        unwrap_use_ops ((reason_op, reason), [], msg) use_op in
+      typecheck_error_with_core_infos ~extra ~suppress_op:true msgs
 
   | EInvalidTypeof (loc, typename) ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
@@ -1550,7 +1557,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [mk_info reason [
         "Argument to implements clause must be an interface"]]
 
-  | EReactKit (reasons, tool) ->
+  | EReactKit (reasons, tool, use_op) ->
       let open React in
       let expected_prop_type = "Expected a React PropType instead of" in
       let resolve_object prop = function
@@ -1591,7 +1598,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | CreateClass (tool, _, _) -> create_class tool
       | CreateElement _ -> "Expected React component instead of"
       in
-      typecheck_error msg reasons
+      let extra, _, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra ~suppress_op:true msgs
 
   | EReactElementFunArity (reason, fn, n) ->
       mk_error ~trace_infos [mk_info reason [

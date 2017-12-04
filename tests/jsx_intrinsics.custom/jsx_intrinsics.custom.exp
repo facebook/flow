@@ -1,6 +1,6 @@
 Error: main.js:6
   6: <div id={42} />; // Error: (`id` prop) number ~> string
-      ^^^ props of React element `div`. This type is incompatible with
+     ^^^^^^^^^^^^^^^ props. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
   Property `id` is incompatible:
@@ -15,47 +15,41 @@ Error: main.js:9
   9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
                                  ^^^^^^ number
 
-Error: strings.js:6
-  6: var Bad = 'bad';
-               ^^^^^ React element `bad`. Property not found in
-  6: var Bad = 'bad';
-               ^^^^^ $JSXIntrinsics
-
 Error: strings.js:9
   9: <Div />; // This is fine
-     ^^^^^^^ props of React element `Div`. This type is incompatible with
+     ^^^^^^^ props. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
   Property `id` is incompatible:
       4:   div: $JSXIntrinsic<{id: string}>,
                               ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
       9: <Div />; // This is fine
-         ^^^^^^^ props of React element `Div`
+         ^^^^^^^ props
+
+Error: strings.js:10
+ 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
+      ^^^ bad. Is not a valid React JSX intrinsic
 
 Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^ React element `Str`
-  7: var Str: string = 'str';
-              ^^^^^^ string. Property not found in
-  7: var Str: string = 'str';
-              ^^^^^^ $JSXIntrinsics
+      ^^^ string. Property not found in
+ 11: <Str />; // Error: string ~> keys of JSXIntrinsics
+      ^^^ $JSXIntrinsics
 
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
-                                ^^ props of React element. This type is incompatible with
+                                ^^ props. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
   Property `id` is incompatible:
       4:   div: $JSXIntrinsic<{id: string}>,
                               ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
      13: React.createElement('div', {}); // This is fine
-                                    ^^ props of React element
+                                    ^^ props
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ React element `bad`. Property not found in
- 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ $JSXIntrinsics
+                         ^^^^^ bad. Is not a valid React JSX intrinsic
 
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
@@ -65,7 +59,7 @@ Error: strings.js:15
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually
-     ^^^^^^^^^^^^^^^ props of React element `Div`. This type is incompatible with
+     ^^^^^^^^^^^^^^^ props. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
   Property `id` is incompatible:

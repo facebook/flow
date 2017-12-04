@@ -127,13 +127,13 @@ type reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
 
+  | RReactProps
   | RReactElement of string option
   | RReactClass
   | RReactComponent
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string option
   | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of reason_desc

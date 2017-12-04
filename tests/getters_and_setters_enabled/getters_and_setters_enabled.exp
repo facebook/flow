@@ -172,7 +172,7 @@ Error: object_type.js:52
 
 Error: react.js:15
  15: (<Example />); // error: property `a` not found
-      ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+      ^^^^^^^^^^^ props. This type is incompatible with
                   v
   8:   propTypes: {
   9:     get a() { return React.PropTypes.number.isRequired; },
@@ -189,11 +189,11 @@ Error: react.js:15
      12:   }
            ^ property `a`. Property not found in
      15: (<Example />); // error: property `a` not found
-          ^^^^^^^^^^^ props of React element `Example`
+          ^^^^^^^^^^^ props
 
 Error: react.js:17
  17: (<Example a="bad" />); // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
                   v
   8:   propTypes: {
   9:     get a() { return React.PropTypes.number.isRequired; },
@@ -209,7 +209,7 @@ Error: react.js:17
 
 Error: react.js:18
  18: (<Example a={0} c={0} />); // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
                   v
   8:   propTypes: {
   9:     get a() { return React.PropTypes.number.isRequired; },

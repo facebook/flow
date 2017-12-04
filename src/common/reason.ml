@@ -175,13 +175,13 @@ type reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
 
+  | RReactProps
   | RReactElement of string option
   | RReactClass
   | RReactComponent
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string option
   | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of reason_desc
@@ -524,25 +524,22 @@ let rec string_of_desc = function
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "CommonJS exports of `%s`" x
 
+  | RReactProps -> "props"
   | RReactElement x ->
     (match x with
-    | Some x -> spf "React element `%s`" x
+    | Some x -> spf "`%s` element" x
     | None -> "React element")
   | RReactClass -> "React class"
   | RReactComponent -> "React component"
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactElementProps x ->
-    (match x with
-    | Some x -> spf "props of React element `%s`" x
-    | None -> "props of React element")
   | RReactPropTypes -> "propTypes of React component"
-  | RReactChildren -> "React children array"
+  | RReactChildren -> "children array"
   | RReactChildrenOrType desc ->
-    spf "React children array or %s" (string_of_desc desc)
+    spf "children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc ->
-    spf "React children array, undefined, or %s" (string_of_desc desc)
+    spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
 
 let string_of_reason ?(strip_root=None) r =

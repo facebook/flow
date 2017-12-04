@@ -48,15 +48,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
-            3: const arr = [1,2,3];
-                              ^ number
-
-          test.js:7
-            7: React.createElement(...arr, {})
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
             3: const arr = [1,2,3];
                             ^ number
+
+          test.js:7
+            7: React.createElement(...arr, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                              ^ props. Cannot compare React props with
+            3: const arr = [1,2,3];
+                              ^ number
         `,
       ),
     addCode('React.createElement(({}: any), ...arr)')
@@ -64,7 +66,9 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: React.createElement(({}: any), ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                            ^ props. Cannot compare React props with
             3: const arr = [1,2,3];
                             ^ number
         `,
@@ -74,15 +78,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot compare React props with
-            3: const arr = [1,2,3];
-                              ^ number
-
-          test.js:11
-           11: React.createElement(...arr, ...arr)
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
             3: const arr = [1,2,3];
                             ^ number
+
+          test.js:11
+           11: React.createElement(...arr, ...arr)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                              ^ props. Cannot compare React props with
+            3: const arr = [1,2,3];
+                              ^ number
         `,
       ),
   ]),

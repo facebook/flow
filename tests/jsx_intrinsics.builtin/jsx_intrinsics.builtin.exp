@@ -4,8 +4,8 @@ Error: main.js:12
  11: var b: Element<typeof CustomComponentNope> =
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
-      6: class CustomComponent extends React.Component<{prop: string}, void> {}
-               ^^^^^^^^^^^^^^^ CustomComponent. This type is incompatible with
+     12:   <CustomComponent prop="asdf" />; // Error: Bad class type
+            ^^^^^^^^^^^^^^^ CustomComponent. This type is incompatible with
       7: class CustomComponentNope extends React.Component<{prop: string}, void> {}
                ^^^^^^^^^^^^^^^^^^^ CustomComponentNope
 
@@ -31,8 +31,8 @@ Error: main.js:14
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
-      6: class CustomComponent extends React.Component<{prop: string}, void> {}
-               ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
+     14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+            ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
      13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component
       Type argument `Props` is incompatible:
@@ -52,8 +52,8 @@ Error: main.js:14
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
-      6: class CustomComponent extends React.Component<{prop: string}, void> {}
-               ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
+     14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+            ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
      13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component
       Type argument `Props` is incompatible:
@@ -74,7 +74,7 @@ Error: main.js:21
             ^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
      21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                                   ^^^ React element `div`. Expected string literal `span`, got `div` instead
+                                   ^^^ div. Expected string literal `span`, got `div` instead
      21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
                         ^^^^^^ string literal `span`
 
