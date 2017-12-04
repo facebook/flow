@@ -410,16 +410,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | BindT (_, funtype, pass) -> [
+  | BindT (_, _, funtype, pass) -> [
       "funType", json_of_funcalltype json_cx funtype;
       "passThrough", JSON_Bool pass
     ]
 
-  | CallT (_, funtype) -> [
+  | CallT (_, _, funtype) -> [
       "funType", json_of_funcalltype json_cx funtype
     ]
 
-  | MethodT (_, _, propref, funtype) -> [
+  | MethodT (_, _, _, propref, funtype) -> [
       "propRef", json_of_propref json_cx propref;
       "funType", json_of_funcalltype json_cx funtype
     ]
@@ -467,7 +467,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ConstructorT (_, args, t) -> [
+  | ConstructorT (_, _, args, t) -> [
       "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
@@ -1956,7 +1956,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
-  | CallT (_,{call_args_tlist;call_tout;call_this_t;_}) -> p
+  | CallT (_,_,{call_args_tlist;call_tout;call_this_t;_}) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid call_this_t)
         (String.concat "; " (List.map call_arg_kid call_args_tlist))
@@ -2013,7 +2013,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_action action)) t
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
-  | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+  | MethodT (_, _, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignToT (_, arg1, arg2, _) -> p t

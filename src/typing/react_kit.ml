@@ -637,7 +637,7 @@ let run cx trace ~use_op reason_op l u
       let reason = reason_of_t t in
       let return_t = Tvar.mk cx reason in
       let funcall = mk_methodcalltype this [] return_t in
-      rec_flow cx trace (t, CallT (reason, funcall));
+      rec_flow cx trace (t, CallT (UnknownUse, reason, funcall));
       resolve tool return_t
     in
 
@@ -831,7 +831,7 @@ let run cx trace ~use_op reason_op l u
             (* Tie the `this` knot with BindT *)
             let dummy_return = DefT (reason_op, AnyT) in
             let calltype = mk_methodcalltype knot.this [] dummy_return in
-            rec_flow cx trace (t, BindT (reason_op, calltype, true));
+            rec_flow cx trace (t, BindT (UnknownUse, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an
                upper bound (e.g., as a super class), it's more flexible to
                create covariant methods. Otherwise, a subclass could not

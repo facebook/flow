@@ -442,19 +442,19 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t'; in
         if t'' == t' then t
         else UseT (u, t'')
-    | BindT (r, funcall, passthrough) ->
+    | BindT (op, r, funcall, passthrough) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall == funcall' then t
-        else BindT (r, funcall', passthrough)
-    | CallT (r, funcall) ->
+        else BindT (op, r, funcall', passthrough)
+    | CallT (op, r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall == funcall' then t
-        else CallT (r, funcall')
-    | MethodT (r1, r2, prop, funcall) ->
+        else CallT (op, r, funcall')
+    | MethodT (op, r1, r2, prop, funcall) ->
         let prop' = self#prop_ref cx map_cx prop in
         let funcall' = self#fun_call_type cx map_cx funcall in
         if prop' == prop && funcall' == funcall then t
-        else MethodT (r1, r2, prop', funcall')
+        else MethodT (op, r1, r2, prop', funcall')
     | SetPropT (use_op, r, prop, i, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -515,11 +515,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ReposUseT (r, use_desc, use_op, t'')
-    | ConstructorT (r, callargs, t') ->
+    | ConstructorT (op, r, callargs, t') ->
         let callargs' = ListUtils.ident_map (self#call_arg cx map_cx) callargs in
         let t'' = self#type_ cx map_cx t' in
         if callargs' == callargs && t'' == t' then t
-        else ConstructorT (r, callargs', t'')
+        else ConstructorT (op, r, callargs', t'')
     | SuperT (op, r, DerivedInstance i) ->
         let i' = self#inst_type cx map_cx i in
         if i' == i then t

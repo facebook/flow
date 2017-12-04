@@ -320,9 +320,9 @@ module rec TypeTerm : sig
     (*************)
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | BindT of reason * funcalltype * bool (* pass-through *)
-    | CallT of reason * funcalltype
-    | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
+    | BindT of use_op * reason * funcalltype * bool (* pass-through *)
+    | CallT of use_op * reason * funcalltype
+    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of use_op * reason * propref * write_ctx * t
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
@@ -346,8 +346,8 @@ module rec TypeTerm : sig
     | ReposUseT of reason * bool (* use_desc *) * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of reason * call_arg list * t
-    | SuperT of use_op * reason * derived_type
+    | ConstructorT of use_op * reason * call_arg list * t
+    | SuperT of  use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
     | ToStringT of reason * t
@@ -1997,16 +1997,16 @@ and reason_of_use_t = function
   | AssertRestParamT reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
-  | BindT (reason, _, _) -> reason
+  | BindT (_, reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
-  | CallT (reason, _) -> reason
+  | CallT (_, reason, _) -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | CJSRequireT (reason, _) -> reason
   | ComparatorT (reason,_,_) -> reason
-  | ConstructorT (reason,_,_) -> reason
+  | ConstructorT (_,reason,_,_) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
@@ -2036,7 +2036,7 @@ and reason_of_use_t = function
   | LookupT(reason, _, _, _, _) -> reason
   | MakeExactT (reason, _) -> reason
   | MapTypeT (reason, _, _) -> reason
-  | MethodT (reason,_,_,_) -> reason
+  | MethodT (_,reason,_,_,_) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
   | ObjAssignToT (reason, _, _, _) -> reason
@@ -2141,20 +2141,20 @@ and mod_reason_of_use_t f = function
   | AssertRestParamT reason -> AssertRestParamT (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
-  | BindT (reason, ft, pass) -> BindT (f reason, ft, pass)
+  | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) ->
       CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) ->
       CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) ->
       CallOpenPredT (f reason, sense, key, l, t)
-  | CallT (reason, ft) -> CallT (f reason, ft)
+  | CallT (use_op, reason, ft) -> CallT (use_op, f reason, ft)
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) ->
       CJSExtractNamedExportsT (f reason, exports, t2)
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
   | ComparatorT (reason, flip, t) -> ComparatorT (f reason, flip, t)
-  | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
+  | ConstructorT (use_op, reason, ts, t) -> ConstructorT (use_op, f reason, ts, t)
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
       CopyNamedExportsT(f reason, target_module_t, t_out)
   | CopyTypeExportsT (reason, target_module_t, t_out) ->
@@ -2193,8 +2193,8 @@ and mod_reason_of_use_t f = function
   | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
-  | MethodT (reason_call, reason_lookup, name, ft) ->
-      MethodT (f reason_call, reason_lookup, name, ft)
+  | MethodT (use_op, reason_call, reason_lookup, name, ft) ->
+      MethodT (use_op, f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
   | ObjAssignToT (reason, t, t2, kind) ->

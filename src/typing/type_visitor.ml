@@ -250,11 +250,11 @@ class ['a] t = object(self)
   | UseT (_, t) ->
     self#type_ cx Negative acc t
 
-  | BindT (_, fn, _)
-  | CallT (_, fn) ->
+  | BindT (_, _, fn, _)
+  | CallT (_, _, fn) ->
     self#fun_call_type cx acc fn
 
-  | MethodT (_, _, p, fn) ->
+  | MethodT (_, _, _, p, fn) ->
     let acc = self#propref cx acc p in
     let acc = self#fun_call_type cx acc fn in
     acc
@@ -291,7 +291,7 @@ class ['a] t = object(self)
   | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
   | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
-  | ConstructorT (_, args, t) ->
+  | ConstructorT (_, _, args, t) ->
     let acc = List.fold_left (self#call_arg cx) acc args in
     let acc = self#type_ cx pole_TODO acc t in
     acc

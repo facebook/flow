@@ -915,7 +915,7 @@ and statement cx = Ast.Statement.(
             let funt = Flow.get_builtin cx "$await" reason in
             let callt = mk_functioncalltype reason [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
-            Flow.flow cx (funt, CallT (reason, callt))
+            Flow.flow cx (funt, CallT (UnknownUse, reason, callt))
           )
         ]
       | Scope.Generator ->
@@ -2689,9 +2689,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype super argts t in
+        let use_op = FunCallParam in
         Flow.flow cx (
           super,
-          MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
+          MethodT (use_op, reason, reason_lookup, Named (reason_prop, name), funtype)
         )
       )
 
@@ -2738,7 +2739,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
-        Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
+        let use_op = FunCallParam in
+        Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype)))
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
@@ -2874,7 +2876,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           SpreadArg (AnyT.why reason) ]
         ret
       in
-      Flow.flow cx (t, CallT (reason, ft));
+      let use_op = FunCallParam in
+      Flow.flow cx (t, CallT (use_op, reason, ft));
       ret
 
   | TemplateLiteral {
@@ -3056,7 +3059,8 @@ and predicated_call_expression_ cx loc callee arguments =
 and new_call cx tok class_ argts =
   let reason = mk_reason (RConstructorCall (desc_of_t class_)) tok in
   Tvar.mk_where cx reason (fun t ->
-    Flow.flow cx (class_, ConstructorT (reason, argts, t));
+    let use_op = FunCallParam in
+    Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
   )
 
 and func_call cx reason ?(call_strict_arity=true) func_t argts =
@@ -3064,7 +3068,8 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Tvar.mk_where cx reason (fun t ->
     let frame = Env.peek_frame () in
     let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
-    Flow.flow cx (func_t, CallT(reason, app))
+    let use_op = FunCallParam in
+    Flow.flow cx (func_t, CallT (use_op, reason, app))
   )
 
 and method_call cx reason ?(call_strict_arity=true) prop_loc
@@ -3083,7 +3088,8 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let frame = Env.peek_frame () in
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
-        Flow.flow cx (f, CallT (reason, app));
+        let use_op = FunCallParam in
+        Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
       Env.havoc_heap_refinements ();
@@ -3095,7 +3101,8 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
-        Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
+        let use_op = FunCallParam in
+        Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app))
       )
   )
 
@@ -3772,6 +3779,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
         let reason_createElement =
           mk_reason (RProperty (Some "createElement")) eloc in
         Flow.flow cx (react, MethodT (
+          UnknownUse,
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),

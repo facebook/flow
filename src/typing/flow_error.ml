@@ -1566,7 +1566,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error_with_core_infos [
       (reason_op, ["Called with too few arguments"])
     ] ~extra:[
-      InfoLeaf [loc_of_reason reason_def, [spf
+      InfoLeaf [def_loc_of_reason reason_def, [spf
         "%s expects more arguments"
         (string_of_desc (desc_of_reason reason_def))
       ]]
@@ -1581,7 +1581,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | 1 -> "expects no more than 1 argument"
     | n -> spf "expects no more than %d arguments" n in
     let extra = [
-      InfoLeaf [loc_of_reason def_reason, [spf
+      InfoLeaf [def_loc_of_reason def_reason, [spf
         "%s %s"
         (string_of_desc (desc_of_reason def_reason))
         expects

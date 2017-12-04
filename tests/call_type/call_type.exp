@@ -34,7 +34,7 @@ Error: test.js:19
  19: (42: D); // Error: number ~> undefined
       ^^ number. This type is incompatible with
  19: (42: D); // Error: number ~> undefined
-          ^ undefined
+          ^ undefined (too few arguments, expected default/rest parameters)
 
 Error: test.js:24
  24: ((null: mixed): E); // Error: mixed ~> number

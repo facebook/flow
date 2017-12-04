@@ -492,9 +492,9 @@ let rec assume_ground cx ?(depth=1) ids t =
       (parts of) requires/imports. *)
 
   | GetPropT (_, _, _, t)
-  | CallT (_, { call_tout = t; _ })
-  | MethodT (_, _, _, { call_tout = t; _ })
-  | ConstructorT (_, _, t) ->
+  | CallT (_, _, { call_tout = t; _ })
+  | MethodT (_, _, _, _, { call_tout = t; _ })
+  | ConstructorT (_, _, _, t) ->
     assume_ground cx ~depth:(depth + 1) ids (UseT (UnknownUse, t))
 
   | _ -> ()
@@ -1106,7 +1106,7 @@ module ResolvableTypeJob = struct
   and collect_of_use ?log_unresolved cx reason acc = function
   | UseT (_, t) ->
     collect_of_type ?log_unresolved cx reason acc t
-  | CallT (_, fct) ->
+  | CallT (_, _, fct) ->
     let arg_types =
       List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
     collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
@@ -2189,7 +2189,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, AnyFunT), GetPropT (_, _, Named (_, x), _)
     | DefT (reason, AnyFunT), SetPropT (_, _, Named (_, x), _, _)
     | DefT (reason, AnyFunT), LookupT (_, _, _, Named (_, x), _)
-    | DefT (reason, AnyFunT), MethodT (_, _, Named (_, x), _)
+    | DefT (reason, AnyFunT), MethodT (_, _, _, Named (_, x), _)
         when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (DefT (_, AnyFunT), UseT (_, u)) when function_like u -> ()
@@ -2255,7 +2255,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *    reason to throw all of this clownerous hackery away...
      *)
     | CustomFunT (_, Idx),
-      CallT (reason_op, {
+      CallT (use_op, reason_op, {
         call_this_t;
         call_args_tlist;
         call_tout;
@@ -2266,7 +2266,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | (Arg obj)::(Arg cb)::[] ->
           let wrapped_obj = InternalT (IdxWrapper (reason_op, obj)) in
           let callback_result = Tvar.mk_where cx reason_op (fun t ->
-            rec_flow cx trace (cb, CallT (reason_op, {
+            rec_flow cx trace (cb, CallT (use_op, reason_op, {
               call_this_t;
               call_args_tlist = [Arg wrapped_obj];
               call_tout = t;
@@ -3068,7 +3068,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        without preparation (see below). This is because in these cases, the
        return type is intended to be 0-1, whereas preparation (as implemented
        currently) destroys 0-1 behavior. *)
-    | DefT (r, IntersectionT rep), CallT (reason, _) when is_calltype_reason reason ->
+    | DefT (r, IntersectionT rep), CallT (_, reason, _) when is_calltype_reason reason ->
       try_intersection cx trace u r rep
 
     (** All other pairs with an intersection lower bound come here. Before
@@ -3785,7 +3785,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          positions we should be able to subject reasons to arbitrary tweaking,
          without fearing regressions in termination guarantees.
       *)
-      | CallT (_, calltype) when not (is_typemap_reason reason_op) ->
+      | CallT (_, _, calltype) when not (is_typemap_reason reason_op) ->
         let arg_reasons = List.map (function
           | Arg t -> reason_of_t t
           | SpreadArg t -> reason_of_t t
@@ -3806,6 +3806,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)
+
+    (* FunT ~> FunT *)
 
     | DefT (lreason, FunT (_, _, ft1)),
       UseT (use_op, DefT (ureason, FunT (_, _, ft2))) ->
@@ -3869,18 +3871,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       else
         rec_flow cx trace (ft1.return_t, UseT (use_op, ft2.return_t))
 
+    (* FunT ~> CallT *)
+
     | DefT (reason_fundef, FunT (_, _,
         ({ this_t = o1; params = _; return_t = t1;
           closure_t = func_scope_id; changeset; _ } as ft))),
-      CallT (reason_callsite,
+      CallT (use_op, reason_callsite,
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
           call_closure_t = call_scope_id; call_strict_arity})
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
       if call_strict_arity
-      then multiflow_call cx trace reason_callsite tins2 ft
-      else multiflow_subtype cx trace ~use_op:FunCallParam reason_callsite tins2 ft;
+      then multiflow_call cx trace ~use_op reason_callsite tins2 ft
+      else multiflow_subtype cx trace ~use_op reason_callsite tins2 ft;
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
@@ -3901,29 +3905,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       havoc_call_env cx func_scope_id call_scope_id changeset;
 
     | DefT (reason_fundef, (AnyFunT | AnyT)),
-      CallT (reason_op,
+      CallT (use_op, reason_op,
         { call_this_t; call_args_tlist; call_tout; call_closure_t=_;
           call_strict_arity=_;}) ->
       let any = AnyT.why reason_fundef in
       rec_flow_t cx trace (call_this_t, any);
-      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
       rec_flow_t cx trace (AnyT.why reason_op, call_tout)
 
     (* Special handlers for builtin functions *)
 
     | CustomFunT (_, ObjectAssign),
-      CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
       let dest_t = extract_non_spread cx ~trace dest_t in
       let t = chain_objects cx ~trace reason_op dest_t ts in
       rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, ObjectGetPrototypeOf),
-      CallT (reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
       let l = extract_non_spread cx ~trace arg in
       rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
 
     | CustomFunT (_, ObjectSetPrototypeOf),
-      CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
       let target = extract_non_spread cx ~trace arg1 in
       let proto = extract_non_spread cx ~trace arg2 in
       rec_flow cx trace (target, SetProtoT (reason_op, proto));
@@ -3979,7 +3983,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, u)
 
     | CustomFunT (_, ReactPropType React.PropType.Complex kind),
-      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       let open React in
       let tool = match kind with
       | PropType.ArrayOf -> SimplifyPropType.ArrayOf
@@ -3998,7 +4002,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
 
     | CustomFunT (_, ReactCreateClass),
-      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       let ops = Ops.clear () in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
@@ -4008,7 +4012,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d)));
         default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d)));
       } in
-      rec_flow cx trace (spec, ReactKitT (UnknownUse, reason_op,
+      rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.set ops
 
@@ -4020,27 +4024,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        handling. Terminate with extreme prejudice. *)
 
     | CustomFunT (_, MergeInto),
-      CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
       let dest_t = extract_non_spread cx ~trace dest_t in
       ignore (chain_objects cx ~trace reason_op dest_t ts);
       rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
     | CustomFunT (_, MergeDeepInto),
-      CallT (reason_op, { call_tout; _ }) ->
+      CallT (_, reason_op, { call_tout; _ }) ->
       (* TODO *)
       rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
     | CustomFunT (_, Merge),
-      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
       rec_flow_t cx trace (spread_objects cx reason_op call_args_tlist, call_tout)
 
     | CustomFunT (_, Mixin),
-      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
       let t = class_type (spread_objects cx reason_op call_args_tlist) in
       rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, DebugPrint),
-      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
       List.iter (fun arg -> match arg with
         | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
         | SpreadArg t ->
@@ -4055,8 +4059,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | ReactCloneElement
         | ReactElementFactory _
        as kind)),
-      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
-      resolve_call_list cx ~trace ~use_op:FunCallParam reason_op args (
+      CallT (use_op, reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
+      resolve_call_list cx ~trace ~use_op reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
     | CustomFunT (reason, _), _ when function_like_op u ->
@@ -4132,9 +4136,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (****************************************)
 
     | DefT (reason, (ObjT _ | InstanceT _)), (
-        UseT (_, DefT (reason_op, (FunT _ | AnyFunT))) |
-        BindT (reason_op, _, _) |
-        CallT (reason_op, _)
+        UseT (use_op, DefT (reason_op, (FunT _ | AnyFunT))) |
+        BindT (use_op, reason_op, _, _) |
+        CallT (use_op, reason_op, _)
       ) ->
       let tvar = Tvar.mk cx (
         replace_reason (fun desc ->
@@ -4142,7 +4146,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) reason
       ) in
       let strict = match u with
-        | BindT (reason_op, {call_tout; _}, true) ->
+        | BindT (_, reason_op, {call_tout; _}, true) ->
           (* Pass-through binding an object should not error if the object lacks
              a callable property. Instead, we should flow the object to the
              output tvar. This nonstrict lookup will unify the object with
@@ -4162,7 +4166,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           use_op;
         } in
         LookupProp (use_op, Field (None, u_def, Positive))
-      | _ -> RWProp (UnknownUse, l, tvar, Read)
+      | _ ->
+        RWProp (use_op, l, tvar, Read)
       in
       lookup_prop cx trace l reason_op reason strict "$call" action;
       rec_flow cx trace (tvar, u)
@@ -4367,7 +4372,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*********************************************************)
 
     | DefT (reason, ClassT this),
-      ConstructorT (reason_op, args, t) ->
+      ConstructorT (use_op, reason_op, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason in
       Ops.push reason_op;
       (* call this.constructor(args) *)
@@ -4376,7 +4381,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
           this,
-          MethodT (reason_op, reason_o, propref, funtype)
+          MethodT (use_op, reason_op, reason_o, propref, funtype)
         );
       ) in
       (* return this *)
@@ -4391,7 +4396,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         this_t = this;
         return_t = ret;
         _ } as ft))),
-      ConstructorT (reason_op, args, t) ->
+      ConstructorT (use_op, reason_op, args, t) ->
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason_const RNewObject reason_op in
@@ -4404,30 +4409,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** call function with this = new_obj, params = args **)
       Ops.push reason_op;
       rec_flow_t cx trace (new_obj, this);
-      multiflow_call cx trace reason_op args ft;
+      multiflow_call cx trace ~use_op reason_op args ft;
       Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | DefT (_, AnyFunT), ConstructorT (reason_op, args, t) ->
+    | DefT (_, AnyFunT), ConstructorT (use_op, reason_op, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason_op in
       call_args_iter
-        (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
+        (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.why reason_op)))
         args;
       rec_flow_t cx trace (DefT (reason_o, AnyObjT), t);
 
-    | DefT (_, AnyT), ConstructorT (reason_op, args, t) ->
+    | DefT (_, AnyT), ConstructorT (use_op, reason_op, args, t) ->
       call_args_iter (fun t ->
-        rec_flow_t cx trace (t, AnyT.why reason_op)
+        rec_flow cx trace (t, UseT (use_op, AnyT.why reason_op))
       ) args;
       rec_flow_t cx trace (AnyT.why reason_op, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
-    | DefT (_, AnyFunT), MethodT (reason_op, _, _, { call_args_tlist; call_tout; _}) ->
+    | DefT (_, AnyFunT), MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _}) ->
       let any = AnyT.why reason_op in
-      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
       rec_flow_t cx trace (any, call_tout)
 
     (*************************)
@@ -4618,7 +4623,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
-      MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
+      MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), funtype)
       -> (* TODO: closure *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
@@ -4628,17 +4633,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if instance.mixins then NonstrictReturning None
         else Strict reason_c
       in
-      get_prop cx trace ~use_op:UnknownUse reason_prop reason_lookup strict l super x methods funt;
+      get_prop cx trace ~use_op reason_prop reason_lookup strict l super x methods funt;
 
       (* suppress ops while calling the function. if `funt` is a `FunT`, then
          `CallT` will set its own ops during the call. if `funt` is something
          else, then something like `VoidT ~> CallT` doesn't need the op either
          because we want to point at the call and undefined thing. *)
       let ops = Ops.clear () in
-      rec_flow cx trace (funt, CallT (reason_call, funtype));
+      rec_flow cx trace (funt, CallT (use_op, reason_call, funtype));
       Ops.set ops
 
-    | DefT (_, InstanceT _), MethodT (reason_call, _, Computed _, _) ->
+    | DefT (_, InstanceT _), MethodT (_, reason_call, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
@@ -4973,21 +4978,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | DefT (_, ObjT _), MethodT(_, _, Named (_, "constructor"), _) -> ()
+    | DefT (_, ObjT _), MethodT(_, _, _, Named (_, "constructor"), _) -> ()
 
     | DefT (reason_obj, ObjT o),
-      MethodT (reason_call, reason_lookup, propref, funtype) ->
+      MethodT (use_op, reason_call, reason_lookup, propref, funtype) ->
       let t = Tvar.mk_where cx reason_lookup (fun tout ->
-        read_obj_prop cx trace ~use_op:UnknownUse o propref reason_obj reason_lookup tout
+        read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout
       ) in
-      rec_flow cx trace (t, CallT (reason_call, funtype))
+      rec_flow cx trace (t, CallT (use_op, reason_call, funtype))
 
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
     | DefT (_, (AnyObjT | AnyT)),
-      MethodT (reason_op, _, _, { call_args_tlist; call_tout; _}) ->
+      MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _}) ->
       let any = AnyT.why reason_op in
-      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
       rec_flow_t cx trace (any, call_tout)
 
     (******************************************)
@@ -5030,7 +5035,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ReadElem t -> GetPropT (use_op, reason_op, propref, t)
       | WriteElem t -> SetPropT (use_op, reason_op, propref, Normal, t)
       | CallElem (reason_call, ft) ->
-        MethodT (reason_call, reason_op, propref, ft)
+        MethodT (use_op, reason_call, reason_op, propref, ft)
       in
       rec_flow cx trace (o, u)
 
@@ -5094,7 +5099,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | DefT (_, ArrT _), SetPropT (_, _, Named (_, "constructor"), _, _)
-    | DefT (_, ArrT _), MethodT (_, _, Named (_, "constructor"), _) ->
+    | DefT (_, ArrT _), MethodT (_, _, _, Named (_, "constructor"), _) ->
       ()
 
     (**************************************************)
@@ -5248,7 +5253,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | FunProtoCallT _,
-      CallT (reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
       begin match call_args_tlist with
       (* func.call() *)
       | [] ->
@@ -5256,19 +5261,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           call_this_t = VoidT.why reason_op;
           call_args_tlist = [];
         } in
-        rec_flow cx trace (func, CallT (reason_op, funtype))
+        rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
 
       (* func.call(this_t, ...call_args_tlist) *)
       | (Arg call_this_t)::call_args_tlist ->
         let funtype = { funtype with call_this_t; call_args_tlist } in
-        rec_flow cx trace (func, CallT (reason_op, funtype))
+        rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
 
       (* func.call(...call_args_tlist) *)
       | (SpreadArg _ as first_arg)::_ ->
         let call_this_t = extract_non_spread cx ~trace first_arg in
 
         let funtype = { funtype with call_this_t; } in
-        rec_flow cx trace (func, CallT (reason_op, funtype))
+        rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
       end
 
     (*******************************************)
@@ -5277,7 +5282,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* resolves the arguments... *)
     | FunProtoApplyT _,
-        CallT (reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+        CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
       begin match call_args_tlist with
       (* func.apply() *)
       | [] ->
@@ -5285,12 +5290,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             call_this_t = VoidT.why reason_op;
             call_args_tlist = [];
           } in
-          rec_flow cx trace (func, CallT (reason_op, funtype))
+          rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
 
       (* func.apply(this_arg) *)
       | (Arg this_arg)::[] ->
           let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
-          rec_flow cx trace (func, CallT (reason_op, funtype))
+          rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
 
       (* func.apply(this_arg, ts) *)
       | first_arg::(Arg ts)::_ ->
@@ -5305,7 +5310,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * it early *)
         let t = Tvar.mk_where cx reason_op (fun t ->
           let resolve_to = ResolveSpreadsToCallT (funtype, t) in
-          resolve_call_list cx ~trace ~use_op:FunCallParam reason_op call_args_tlist resolve_to
+          resolve_call_list cx ~trace ~use_op reason_op call_args_tlist resolve_to
         ) in
         rec_flow_t cx trace (func, t)
 
@@ -5325,17 +5330,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (************************************************************************)
 
     | FunProtoBindT _,
-      CallT (reason_op, ({
+      CallT (use_op, reason_op, ({
         call_this_t = func;
         call_args_tlist = first_arg::call_args_tlist;
         _
       } as funtype)) ->
       let call_this_t = extract_non_spread cx ~trace first_arg in
       let funtype = { funtype with call_this_t; call_args_tlist } in
-      rec_flow cx trace (func, BindT (reason_op, funtype, false))
+      rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
 
     | DefT (reason, FunT (_, _, ({this_t = o1; _} as ft))),
-      BindT (reason_op, {
+      BindT (use_op, reason_op, {
         call_this_t = o2;
         call_args_tlist = tins2;
         call_tout; call_closure_t=_; call_strict_arity = _;
@@ -5347,11 +5352,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
         let resolve_to =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
-        resolve_call_list cx ~trace ~use_op:FunCallParam reason tins2 resolve_to;
+        resolve_call_list cx ~trace ~use_op reason tins2 resolve_to;
         Ops.pop ()
 
     | DefT (_, (AnyT | AnyFunT)),
-      BindT (reason, {
+      BindT (use_op, reason, {
         call_this_t;
         call_args_tlist;
         call_tout;
@@ -5359,11 +5364,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }, _) ->
       rec_flow_t cx trace (AnyT.why reason, call_this_t);
       call_args_iter (fun param_t ->
-        rec_flow_t cx trace (AnyT.why reason, param_t)
+        rec_flow cx trace (AnyT.why reason, UseT (use_op, param_t))
       ) call_args_tlist;
       rec_flow_t cx trace (l, call_tout)
 
-    | _, BindT (_, { call_tout; _ }, true) ->
+    | _, BindT (_, _, { call_tout; _ }, true) ->
       rec_flow_t cx trace (l, call_tout)
 
     (***********************************************)
@@ -5704,10 +5709,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* When a class value flows to a function annotation or call site, check for
        the presence of a $call property in the former (as a static) compatible
        with the latter. *)
-    | DefT (_, ClassT _), (UseT (_, DefT (reason, FunT _)) | CallT (reason, _)) ->
+    | DefT (_, ClassT _), (UseT (use_op, DefT (reason, FunT _)) | CallT (use_op, reason, _)) ->
       let propref = Named (reason, "$call") in
       rec_flow cx trace (l,
-        GetPropT (UnknownUse, reason, propref, tvar_with_constraint ~trace cx u))
+        GetPropT (use_op, reason, propref, tvar_with_constraint ~trace cx u))
 
     (* For a function type to be used as a class type, the following must hold:
        - the class's instance type must be a subtype of the function's prototype
@@ -6983,7 +6988,7 @@ and eval_destructor cx ~trace reason t d tout = match t with
     UseT (UnknownUse, DefT (maybe_r, MaybeT tout))
   | PropertyType x -> GetPropT (UnknownUse, reason, Named (reason, x), tout)
   | ElementType t -> GetElemT (UnknownUse, reason, t, tout)
-  | Bind t -> BindT (reason, mk_methodcalltype t [] tout, true)
+  | Bind t -> BindT (UnknownUse, reason, mk_methodcalltype t [] tout, true)
   | SpreadType (options, todo_rev) ->
     let open Object in
     let open Object.Spread in
@@ -7004,7 +7009,7 @@ and eval_destructor cx ~trace reason t d tout = match t with
     let args = List.map (fun arg -> Arg arg) args in
     let call = mk_functioncalltype reason args tout in
     let call = {call with call_strict_arity = false} in
-    CallT (reason, call)
+    CallT (UnknownUse, reason, call)
   | TypeMap tmap -> MapTypeT (reason, tmap, tout)
   | ReactElementPropsType -> ReactKitT (UnknownUse, reason, React.GetProps tout)
   | ReactElementRefType -> ReactKitT (UnknownUse, reason, React.GetRef tout)
@@ -7529,7 +7534,7 @@ and parts_to_replace = function
     (match ft.rest_param with
     | Some (_, _, t) when patt_that_needs_concretization t -> t::ts
     | _ -> ts)
-  | CallT (_, callt) ->
+  | CallT (_, _, callt) ->
     List.fold_left (fun acc -> function
       | Arg t | SpreadArg t when patt_that_needs_concretization t -> t::acc
       | _ -> acc
@@ -7571,10 +7576,10 @@ and replace_parts =
     let resolved, rest_param = replace_rest_param (resolved, ft.rest_param) in
     assert (resolved = []);
     UseT (op, DefT (r, FunT (t1, t2, { ft with params; rest_param })))
-  | CallT (r, callt) ->
+  | CallT (op, r, callt) ->
     let resolved, call_args_tlist = replace_args [] (resolved, callt.call_args_tlist) in
     assert (resolved = []);
-    CallT (r, { callt with call_args_tlist })
+    CallT (op, r, { callt with call_args_tlist })
   | u -> u
 
 (************************)
@@ -7962,7 +7967,7 @@ and choices_of_spec = function
     -> ts
 
 and ignore_of_spec = function
-  | IntersectionCases (_, CallT (_, {
+  | IntersectionCases (_, CallT (_, _, {
       call_tout = OpenT (_, id); _
     })) -> Some id
   | IntersectionCases (_, GetPropT (_, _, _, OpenT (_, id))) -> Some id
@@ -9453,9 +9458,9 @@ and array_unify cx trace = function
 (*******************************************************************)
 
 (* Process spread arguments and then apply the arguments to the parameters *)
-and multiflow_call cx trace reason_op args ft =
+and multiflow_call cx trace ~use_op reason_op args ft =
   let resolve_to = ResolveSpreadsToMultiflowCallFull (mk_id (), ft) in
-  resolve_call_list cx ~trace ~use_op:FunCallParam reason_op args resolve_to
+  resolve_call_list cx ~trace ~use_op reason_op args resolve_to
 
 (* Process spread arguments and then apply the arguments to the parameters *)
 and multiflow_subtype cx trace ~use_op reason_op args ft =
@@ -9882,25 +9887,25 @@ and finish_resolve_spread_list =
   in
 
   (* Similar to finish_multiflow_full but for custom functions. *)
-  let finish_custom_fun_call cx ?trace ~reason_op kind tout resolved =
+  let finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved =
     (* Multiflows always come out of a flow *)
     let trace = match trace with
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
-    custom_fun_call cx trace reason_op kind args spread_arg tout
+    custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout
   in
 
   (* This is used for things like Function.prototype.apply, whose second arg is
    * basically a spread argument that we'd like to resolve *)
-  let finish_call_t cx ?trace ~reason_op funcalltype resolved tin =
+  let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
     let flattened = flatten_spread_args resolved in
     let call_args_tlist = List.map (function
       | ResolvedArg t -> Arg t
       | ResolvedSpreadArg (r, arrtype) -> SpreadArg (DefT (r, ArrT arrtype))
       | ResolvedAnySpreadArg r -> SpreadArg (AnyT.why r)) flattened in
-    let call_t = CallT (reason_op, { funcalltype with call_args_tlist; }) in
+    let call_t = CallT (use_op, reason_op, { funcalltype with call_args_tlist; }) in
     flow_opt cx ?trace (tin, call_t)
 
   in
@@ -9919,9 +9924,9 @@ and finish_resolve_spread_list =
     | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
       finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call:false ft resolved
     | ResolveSpreadsToCustomFunCall (_, kind, tout) ->
-      finish_custom_fun_call cx ?trace ~reason_op kind tout resolved
+      finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->
-      finish_call_t cx ?trace ~reason_op funcalltype resolved tin
+      finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
   )
 
 and perform_lookup_action cx trace propref p lreason ureason = function
@@ -9959,7 +9964,7 @@ and perform_elem_action cx trace ~use_op reason_op value = function
     rec_flow_t cx trace (reposition cx ~trace loc value, t)
   | WriteElem t -> rec_flow cx trace (t, UseT (use_op, value))
   | CallElem (reason_call, ft) ->
-    rec_flow cx trace (value, CallT (reason_call, ft))
+    rec_flow cx trace (value, CallT (use_op, reason_call, ft))
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
@@ -10348,11 +10353,11 @@ and react_kit cx trace ~use_op reason_op l u =
     ~filter_maybe
     cx trace ~use_op reason_op l u
 
-and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
+and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
     let tin = Tvar.mk cx reason_op in
     let tvar = Tvar.mk cx reason_op in
-    run_compose cx trace reason_op reverse args spread_arg tin tvar;
+    run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
     let funt = FunT (
       dummy_static reason_op,
       dummy_prototype,
@@ -10454,25 +10459,27 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
 
 (* Creates the appropriate constraints for the compose() function and its
  * reversed variant. *)
-and run_compose cx trace reason_op reverse fns spread_fn tin tout =
+and run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tout =
   match reverse, fns, spread_fn with
     (* Call the tail functions in our array first and call our head function
      * last after that. *)
     | false, fn::fns, _ ->
-      let reason = reason_of_t fn in
+      let reason = replace_reason_const (RCustom "compose intermediate value")
+        (reason_of_t fn) in
       let tvar = Tvar.mk_where cx reason (fun tvar ->
-        run_compose cx trace reason_op reverse fns spread_fn tin tvar) in
+        run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar) in
       rec_flow cx trace (fn,
-        CallT (reason, mk_functioncalltype reason_op[Arg tvar] tout))
+        CallT (use_op, reason, mk_functioncalltype reason_op [Arg tvar] tout))
 
     (* If the compose function is reversed then we want to call the tail
      * functions in our array after we call the head function. *)
     | true, fn::fns, _ ->
-      let reason = reason_of_t fn in
+      let reason = replace_reason_const (RCustom "compose intermediate value")
+        (reason_of_t fn) in
       let tvar = Tvar.mk_where cx reason (fun tvar ->
         rec_flow cx trace (fn,
-          CallT (reason, mk_functioncalltype reason_op[Arg tin] tvar))) in
-      run_compose cx trace reason_op reverse fns spread_fn tvar tout
+          CallT (use_op, reason, mk_functioncalltype reason_op [Arg tin] tvar))) in
+      run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
 
     (* If there are no functions and no spread function then we are an identity
      * function. *)
@@ -10529,9 +10536,9 @@ and run_compose cx trace reason_op reverse fns spread_fn tin tout =
      * The implementation of Flow should be able to terminate these recursive
      * constraints. If it doesn't then we have a bug. *)
     | _, [], Some spread_fn ->
-      run_compose cx trace reason_op reverse [] None tin tout;
-      run_compose cx trace reason_op reverse [spread_fn] None tin tout;
-      run_compose cx trace reason_op reverse [spread_fn] None tout tin
+      run_compose cx trace ~use_op reason_op reverse [] None tin tout;
+      run_compose cx trace ~use_op reason_op reverse [spread_fn] None tin tout;
+      run_compose cx trace ~use_op reason_op reverse [spread_fn] None tout tin
 
 and object_kit =
   let open Object in
