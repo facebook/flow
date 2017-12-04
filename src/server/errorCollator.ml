@@ -41,7 +41,7 @@ let regenerate =
         then begin
           let err =
             let msg = Flow_error.EUnusedSuppression loc in
-            Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
+            Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg in
           let file_warnings = FilenameMap.get source_file warnings
             |> Option.value ~default:ErrorSet.empty
             |> ErrorSet.add err in

@@ -1,6 +1,4 @@
-Error: example1.js:6
-  6: pipe("hello", null); // error
-     ^^^^^^^^^^^^^^^^^^^ call of `pipe`
+Error: example1.js:3
   3: function pipe(x, f) { f(x); }
                            ^^^^ call of `f`. Function cannot be called on possibly null value
   3: function pipe(x, f) { f(x); }

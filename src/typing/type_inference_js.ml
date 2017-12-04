@@ -175,7 +175,7 @@ let scan_for_lint_suppressions =
 
   let add_error cx (loc, kind) =
     let err = FlowError.ELintSetting (loc, kind) in
-    FlowError.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) err
+    FlowError.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) err
     |> Context.add_error cx
   in
 

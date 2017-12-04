@@ -150,7 +150,7 @@ let commit_modules ~options profiling ~workers
           match err with
           | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
             let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
-            let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
+            let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
             Errors.ErrorSet.add error acc
         ) Errors.ErrorSet.empty errors in
         update_errset acc file errset
@@ -200,7 +200,7 @@ let commit_modules_and_resolve_requires
 let error_set_of_merge_exception file exc =
   let loc = Loc.({ none with source = Some file }) in
   let msg = Flow_error.(EInternal (loc, MergeJobException exc)) in
-  let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
+  let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
 let calc_deps ~options ~profiling ~workers to_merge =

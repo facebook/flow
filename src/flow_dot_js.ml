@@ -42,7 +42,7 @@ let rec js_of_json = function
 
 let error_of_parse_error source_file (loc, err) =
   let flow_err = Flow_error.EParseError (loc, err) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let load_lib_files ~master_cx ~metadata files
     save_parse_errors save_infer_errors save_suppressions save_lint_suppressions =

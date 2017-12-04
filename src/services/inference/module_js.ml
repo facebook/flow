@@ -683,8 +683,7 @@ let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
   add_resolved_requires ~audit file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
-    ~trace_reasons:[] ~op:(Flow_error.Ops.peek ())
-    ~source_file:file msg) acc) Errors.ErrorSet.empty errors
+      ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any

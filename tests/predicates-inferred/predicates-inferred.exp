@@ -10,27 +10,23 @@ Error: sanity-multi-params.js:12
  12:     return x.join();
                 ^ String
 
-Error: sanity-ordering.js:6
-  6: if (dotAccess(obj)) {
-         ^^^^^^^^^^^^^^ call of `dotAccess`
- 15:     head = head[key] || create && (head[key] = {});
-                ^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 15:     head = head[key] || create && (head[key] = {});
-                ^^^^ undefined
-
-Error: sanity-ordering.js:6
-  6: if (dotAccess(obj)) {
-         ^^^^^^^^^^^^^^ call of `dotAccess`
- 15:     head = head[key] || create && (head[key] = {});
-                                        ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
- 15:     head = head[key] || create && (head[key] = {});
-                                        ^^^^ undefined
-
 Error: sanity-ordering.js:7
   7:   (obj.page: Object);
         ^^^^^^^^ null or undefined. This type is incompatible with
   7:   (obj.page: Object);
                   ^^^^^^ object type
+
+Error: sanity-ordering.js:15
+ 15:     head = head[key] || create && (head[key] = {});
+                ^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
+ 15:     head = head[key] || create && (head[key] = {});
+                ^^^^ undefined
+
+Error: sanity-ordering.js:15
+ 15:     head = head[key] || create && (head[key] = {});
+                                        ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
+ 15:     head = head[key] || create && (head[key] = {});
+                                        ^^^^ undefined
 
 Error: sanity-unbound-var.js:13
  13:     return x;

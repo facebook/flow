@@ -114,7 +114,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
 let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     let msg = Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc } in
-    Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) msg
+    Flow_error.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) msg
     |> Context.add_error cx
   in
 

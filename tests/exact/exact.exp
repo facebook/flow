@@ -104,9 +104,7 @@ Error: unsealed.js:14
     4: function f(o: {p: string} | $Exact<{}>): string {
                                    ^^^^^^^^^^ object type
 
-Error: unsealed2.js:9
-  9:   g(x);
-       ^^^^ call of `g`
+Error: unsealed2.js:15
  15:     return x.q;
                 ^^^ string. This type is incompatible with the expected return type of
  13: function f(_): number {

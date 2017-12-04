@@ -93,8 +93,6 @@ Error: spread.js:16
 
 Error: spread.js:17
  17:   ...fns2, // Error: string ~> number
-          ^^^^ compose intermediate value
- 17:   ...fns2, // Error: string ~> number
           ^^^^ string. This type is incompatible with the expected param type of
   5: declare var fns2: Array<(number) => string>;
                               ^^^^^^ number

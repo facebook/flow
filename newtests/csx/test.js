@@ -194,8 +194,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
-          8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
@@ -223,8 +221,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     .newErrors(
       `
         test.js:8
-          8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
           8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
@@ -295,8 +291,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     .newErrors(
       `
         test.js:7
-          7:       <Bar>Test</Bar>
-                   ^^^^^ JSX desugared to \`Bar(...)\`
           7:       <Bar>Test</Bar>
                    ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
           6:       function Bar(props: Props) {}

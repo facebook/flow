@@ -116,15 +116,11 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar />;
-                   ^^^^^^^ JSX desugared to \`Foo(...)\`
-          8:       <Bar />;
                     ^^^ number. This type is incompatible with the expected param type of
           6:       function Foo(x: string) {}
                                    ^^^^^^ string
 
         test.js:12
-         12:         <Bar />;
-                     ^^^^^^^ JSX desugared to \`Foo(...)\`
          12:         <Bar />;
                       ^^^ number. This type is incompatible with the expected param type of
          11:         const Foo = (y: boolean) => {};
@@ -165,8 +161,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar />;
-                     ^^^^^^^ JSX desugared to \`Foo(...)\`
-            8:       <Bar />;
                      ^^^^^^^ null. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: { x: string }) {}
                                                        ^^^^^^^^^^^^^ object type
@@ -184,15 +178,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                     ^^^^^ JSX desugared to \`Foo(...)\`
-            8:       <Bar>{true}{/regex/}</Bar>
                            ^^^^ boolean. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                      ^^^^^^ number
 
           test.js:8
-            8:       <Bar>{true}{/regex/}</Bar>
-                     ^^^^^ JSX desugared to \`Foo(...)\`
             8:       <Bar>{true}{/regex/}</Bar>
                                  ^^^^^^^ RegExp. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
@@ -244,8 +234,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <baz />;
-                     ^^^^^^^ JSX desugared to \`Foo(...)\`
-            7:       <baz />;
                       ^^^ JSX Intrinsic: \`baz\`. Expected string literal \`bar\`, got \`baz\` instead
             5:       function Foo(elem: "bar") {}
                                         ^^^^^ string literal \`bar\`
@@ -263,8 +251,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       .newErrors(
         `
           test.js:8
-            8:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
             8:       <Bar y="hi" />;
                      ^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: {x: string}) {}
@@ -322,8 +308,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:       <Bar {...props} />;
-                     ^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
-            9:       <Bar {...props} />;
                      ^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
             5:       function Foo(elem: number, props: {| x: string |}) {}
                                                        ^^^^^^^^^^^^^^^ object type
@@ -352,17 +336,13 @@ export default suite(({addFile, addFiles, addCode}) => [
       </Bar>;
     `).newErrors(
         `
-          test.js:14
-           14:       <Bar>
-                     ^^^^^ JSX desugared to \`Foo(...)\`
+          test.js:16
            16:         hi
                        ^^ JSX text. Expected string literal \`hello\`, got \`hi\` instead
             8:         child1: 'hello',
                                ^^^^^^^ string literal \`hello\`
 
-          test.js:14
-           14:       <Bar>
-                     ^^^^^ JSX desugared to \`Foo(...)\`
+          test.js:18
            18:         bye
                        ^ JSX text. Expected string literal \`bye\`, got \`bye there\` instead
            10:         child3: 'bye',
@@ -391,31 +371,23 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:16
            16:       <Bar> {true}
-                     ^^^^^ JSX desugared to \`Foo(...)\`
-           16:       <Bar> {true}
                           ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
             8:         child1: "should be single space",
                                ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be single space\`
 
           test.js:16
            16:       <Bar> {true}
-                     ^^^^^ JSX desugared to \`Foo(...)\`
-           16:       <Bar> {true}
                             ^^^^ boolean. This type is incompatible with the expected param type of
             9:         child2: "should be true",
                                ^^^^^^^^^^^^^^^^ string literal \`should be true\`
 
-          test.js:16
-           16:       <Bar> {true}
-                     ^^^^^ JSX desugared to \`Foo(...)\`
+          test.js:17
            17:       {''} </Bar>;
                       ^^ string. Expected string literal \`should be empty string\`, got \`\` instead
            10:         child3: "should be empty string",
                                ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be empty string\`
 
-          test.js:16
-           16:       <Bar> {true}
-                     ^^^^^ JSX desugared to \`Foo(...)\`
+          test.js:17
            17:       {''} </Bar>;
                          ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
            11:         child4: "should be single space",
@@ -436,8 +408,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       .newErrors(
         `
           test.js:9
-            9:       (<Bar>    First
-                      ^^^^^ JSX desugared to \`Foo(...)\`
             9:       (<Bar>    First
                            ^ JSX text. Expected string literal \`First Middle Last\`, got \`    First Middle Last     \` instead
             8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
@@ -467,8 +437,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       .newErrors(
         `
           test.js:24
-           24: (<Bar>First    Middle    Last</Bar>)
-                ^^^^^ JSX desugared to \`Foo(...)\`
            24: (<Bar>First    Middle    Last</Bar>)
                      ^^^^^^^^^^^^^^^^^^^^^^^ JSX text. Expected string literal \`First Middle Last\`, got \`First    Middle    Last\` instead
             8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};

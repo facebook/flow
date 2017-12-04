@@ -24,8 +24,6 @@ open Constraint
 open Type
 
 module FlowError = Flow_error
-module Ops = FlowError.Ops
-
 
 (* type exemplar set - reasons are not considered in compare *)
 module TypeExSet = Set.Make(struct
@@ -1131,15 +1129,13 @@ let add_output cx ?trace msg =
         Trace.reasons_of_trace ~level:max_trace_depth trace
     in
 
-    let op = Ops.peek () in
-
     (* catch no-loc errors early, before they get into error map *)
-    if Loc.source (Flow_error.loc_of_error ~op msg) = None then
+    if Loc.source (Flow_error.loc_of_error msg) = None then
       assert_false (
         spf "add_output: no source for error: %s"
         (Debug_js.dump_flow_error cx msg));
 
-    let error = FlowError.error_of_msg ~trace_reasons ~op ~source_file:(Context.file cx) msg in
+    let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
     Context.add_error cx error
   end
 
@@ -3883,22 +3879,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
           call_closure_t = call_scope_id; call_strict_arity})
       ->
-      Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (Op (FunCallThis reason_callsite), o1));
       if call_strict_arity
       then multiflow_call cx trace ~use_op reason_callsite tins2 ft
       else multiflow_subtype cx trace ~use_op reason_callsite tins2 ft;
-      Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
          call. clears the op stack because the result of the call is not the
          call itself. *)
-      let ops = Ops.clear () in
       rec_flow_t cx trace (
         reposition cx ~trace (loc_of_reason reason_callsite) t1,
         t2
       );
-      Ops.set ops;
 
       (if Context.is_verbose cx then
         prerr_endlinef "%shavoc_call_env fundef %s callsite %s"
@@ -4007,7 +3999,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | CustomFunT (_, ReactCreateClass),
       CallT (use_op, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       let loc_op = loc_of_reason reason_op in
-      let ops = Ops.clear () in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
       let knot = { React.CreateClass.
@@ -4018,7 +4009,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       } in
       rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
-      Ops.set ops
 
     | _, ReactKitT (use_op, reason_op, tool) ->
       react_kit cx trace ~use_op reason_op l tool
@@ -4380,7 +4370,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, ClassT this),
       ConstructorT (use_op, reason_op, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason in
-      Ops.push reason_op;
       (* call this.constructor(args) *)
       let ret = Tvar.mk_where cx reason_op (fun t ->
         let funtype = mk_methodcalltype this args t in
@@ -4392,7 +4381,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       (* return this *)
       rec_flow cx trace (ret, ObjTestT(reason_op, this, t));
-      Ops.pop ();
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)
@@ -4413,10 +4401,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let pmap = Context.make_property_map cx SMap.empty in
       let new_obj = DefT (reason_c, ObjT (mk_objecttype ~flags dict pmap proto)) in
       (** call function with this = new_obj, params = args **)
-      Ops.push reason_op;
       rec_flow_t cx trace (new_obj, this);
       multiflow_call cx trace ~use_op reason_op args ft;
-      Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
@@ -4539,13 +4525,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
       SetPropT (use_op, reason_op, Named (reason_prop, x), wr_ctx, tin) ->
-      let ops = Ops.clear () in
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = Strict reason_c in
       set_prop cx ~wr_ctx trace ~use_op reason_prop reason_op strict l super x fields tin;
-      Ops.set ops
 
     | DefT (reason_c, InstanceT _),
       SetPrivatePropT (_, reason_op, _, [], _, _) ->
@@ -4645,9 +4629,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          `CallT` will set its own ops during the call. if `funt` is something
          else, then something like `VoidT ~> CallT` doesn't need the op either
          because we want to point at the call and undefined thing. *)
-      let ops = Ops.clear () in
       rec_flow cx trace (funt, CallT (use_op, reason_call, funtype));
-      Ops.set ops
 
     | DefT (_, InstanceT _), MethodT (_, reason_call, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
@@ -4729,7 +4711,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (lreason, ObjT { props_tmap = mapr; _ }),
       ObjAssignFromT (reason_op, proto, t, ObjAssign) ->
       let props_to_skip = ["$call"] in
-      Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
           (* move the reason to the call site instead of the definition, so
@@ -4751,7 +4732,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ))
         )
       );
-      Ops.pop ();
       rec_flow_t cx trace (proto, t)
 
     | DefT (lreason, InstanceT (_, _, _, { fields_tmap; methods_tmap; _ })),
@@ -4917,7 +4897,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_obj, ObjT o),
       LookupT (reason_op, strict, try_ts_on_failure, propref, action) ->
-      let ops = Ops.clear () in
       (match get_obj_prop cx trace o propref reason_op with
       | Some p ->
         perform_lookup_action cx trace propref p reason_obj reason_op action
@@ -4931,7 +4910,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         rec_flow cx trace (o.proto_t,
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
-      Ops.set ops
 
     | DefT (reason, (AnyT | AnyObjT)),
       LookupT (reason_op, _, _, propref, action) ->
@@ -5356,13 +5334,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }, _) ->
         (* TODO: closure *)
 
-        Ops.push reason_op;
         rec_flow_t cx trace (o2,o1);
 
         let resolve_to =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
         resolve_call_list cx ~trace ~use_op reason tins2 resolve_to;
-        Ops.pop ()
 
     | DefT (_, (AnyT | AnyFunT)),
       BindT (use_op, reason, {
@@ -5539,14 +5515,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************)
 
     | (l, ComparatorT(reason, flip, r)) ->
-      Ops.push reason;
       flow_comparator cx trace reason flip l r;
-      Ops.pop ()
 
     | (l, EqT(reason, flip, r)) ->
-      Ops.push reason;
       flow_eq cx trace reason flip l r;
-      Ops.pop ()
 
     (************************)
     (* unary minus operator *)
@@ -6218,7 +6190,6 @@ and flow_addition cx trace reason flip l r u =
   let (l, r) = if flip then (r, l) else (l, r) in
   (* disable ops because the left and right sides should already be
      repositioned. *)
-  let ops = Ops.clear () in
   begin match l, r with
   | DefT (_, StrT _), DefT (_, StrT _)
   | DefT (_, StrT _), DefT (_, NumT _)
@@ -6264,7 +6235,6 @@ and flow_addition cx trace reason flip l r u =
     rec_flow cx trace (r, UseT (Op Addition, fake_str));
     rec_flow cx trace (fake_str, UseT (Op Addition, u));
   end;
-  Ops.set ops
 
 (**
  * relational comparisons like <, >, <=, >=
@@ -7754,15 +7724,13 @@ and resolve_binding cx trace reason (id, tvar) =
    details on branches. See also speculative_matches, which calls this function
    iteratively and processes its results. *)
 and speculative_match cx trace branch l u =
-  let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
   let cache = !Cache.FlowConstraint.cache in
   Speculation.set_speculative branch;
   let restore () =
     Speculation.restore_speculative ();
     Cache.FlowConstraint.cache := cache;
-    TypeAppExpansion.set typeapp_stack;
-    Ops.set ops
+    TypeAppExpansion.set typeapp_stack
   in
   try
     rec_flow cx trace (l, u);
@@ -8098,8 +8066,7 @@ and lookup_prop cx trace l reason_prop reason_op strict x action =
   rec_flow cx trace (l, LookupT (reason_op, strict, [], propref, action))
 
 and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
-  let ops = Ops.clear () in
-  begin match SMap.get x map with
+  match SMap.get x map with
   | Some p ->
     let action = RWProp (use_op, l, tout, Read) in
     let propref = Named (reason_prop, x) in
@@ -8108,8 +8075,6 @@ and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
       (RWProp (use_op, l, tout, Read))
-  end;
-  Ops.set ops
 
 and set_prop cx ?(wr_ctx=Normal) trace ~use_op reason_prop reason_op strict l super x pmap tin =
   match SMap.get x pmap with
@@ -8142,7 +8107,6 @@ and get_obj_prop cx trace o propref reason_op =
   | _ -> None
 
 and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
-  let ops = Ops.clear () in
   let l = DefT (reason_obj, ObjT o) in
   (match get_obj_prop cx trace o propref reason_op with
   | Some p ->
@@ -8173,8 +8137,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
       | _ ->
         let reason_prop = reason_of_t elem_t in
         add_output cx ~trace (FlowError.EObjectComputedPropertyAccess
-          (reason_op, reason_prop)));
-  Ops.set ops
+          (reason_op, reason_prop)))
 
 and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin =
   let l = DefT (reason_obj, ObjT o) in
@@ -10401,21 +10364,17 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
     (match args with
     (* React.createElement(component) *)
     | component::[] ->
-      Ops.push reason_op;
       let config =
         let r = replace_reason_const RReactProps reason_op in
         Obj_type.mk_with_proto
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in
       rec_flow cx trace (component, ReactKitT (use_op, reason_op,
-        React.CreateElement (false, config, ([], None), tout)));
-      Ops.pop ()
+        React.CreateElement (false, config, ([], None), tout)))
     (* React.createElement(component, config, ...children) *)
     | component::config::children ->
-      Ops.push reason_op;
       rec_flow cx trace (component, ReactKitT (use_op, reason_op,
-        React.CreateElement (false, config, (children, spread_arg), tout)));
-      Ops.pop ()
+        React.CreateElement (false, config, (children, spread_arg), tout)))
     (* React.createElement() *)
     | _ ->
       (* If we don't have the arguments we need, add an arity error. *)
@@ -10424,7 +10383,6 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | ReactCloneElement -> (match args with
     (* React.cloneElement(element) *)
     | element::[] ->
-      Ops.push reason_op;
       (* Create the expected type for our element with a fresh tvar in the
        * component position. *)
       let expected_element =
@@ -10433,11 +10391,9 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       (* Flow the element arg to our expected element. *)
       rec_flow_t cx trace (element, expected_element);
       (* Flow our expected element to the return type. *)
-      rec_flow_t cx trace (expected_element, tout);
-      Ops.pop ()
+      rec_flow_t cx trace (expected_element, tout)
     (* React.cloneElement(element, config, ...children) *)
     | element::config::children ->
-      Ops.push reason_op;
       (* Create a tvar for our component. *)
       let component = Tvar.mk cx reason_op in
       (* Flow the element arg to the element type we expect. *)
@@ -10449,8 +10405,7 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       (* Create a React element using the config and children. *)
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (true, config, (children, spread_arg), tout)));
-      Ops.pop ()
+          React.CreateElement (true, config, (children, spread_arg), tout)))
     (* React.cloneElement() *)
     | _ ->
       (* If we don't have the arguments we need, add an arity error. *)
@@ -10459,7 +10414,6 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | ReactElementFactory component -> (match args with
     (* React.createFactory(component)() *)
     | [] ->
-      Ops.push reason_op;
       let config =
         let r = replace_reason_const RReactProps reason_op in
         Obj_type.mk_with_proto
@@ -10467,15 +10421,12 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       in
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (false, config, ([], None), tout)));
-      Ops.pop ()
+          React.CreateElement (false, config, ([], None), tout)))
     (* React.createFactory(component)(config, ...children) *)
     | config::children ->
-      Ops.push reason_op;
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (false, config, (children, spread_arg), tout)));
-      Ops.pop ())
+          React.CreateElement (false, config, (children, spread_arg), tout))))
 
   | ObjectAssign
   | ObjectGetPrototypeOf

@@ -66,17 +66,7 @@ Error: optional.js:7
   4: var foo:(x?:number)=>void = bar;
                  ^^^^^^ number
 
-Error: optional.js:9
-  9: qux(0,0); // Error, number ~> string
-     ^^^^^^^^ call of `qux`
-  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
-                                                          ^^^^ number. This type is incompatible with the expected return type of
-  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
-                                  ^^^^^^ string
-
-Error: optional.js:10
- 10: qux(0,...[42, ""]); // Error, number ~> string
-     ^^^^^^^^^^^^^^^^^^ call of `qux`
+Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                                           ^^^^ number. This type is incompatible with the expected return type of
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -123,4 +113,4 @@ Error: undefined2.js:8
                 ^ undefined
 
 
-Found 22 errors
+Found 21 errors

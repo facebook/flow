@@ -85,27 +85,6 @@ Error: classes.js:38
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ React.Element. This type is incompatible with
- 39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     39: var foo: $jsx<number> = <Foo/>;
-                                  ^^^ statics of `Foo`. This type is incompatible with
-     39: var foo: $jsx<number> = <Foo/>;
-                       ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ `Foo` element
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
- 39: var foo: $jsx<number> = <Foo/>;
-                   ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ `Foo` element
- 39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
 157: declare type React$Element<+ElementType: React$ElementType> = {|
                                               ^^^^^^^^^^^^^^^^^ union: string | `React.StatelessFunctionalComponent` | statics of `React.Component`. See lib: <BUILTINS>/react.js:157
@@ -133,6 +112,25 @@ Error: classes.js:39
                      ^^^^^^ number. This type is incompatible with
   151:   | Class<React$Component<any, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:151
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ React.Element. This type is incompatible with
+ 39: var foo: $jsx<number> = <Foo/>;
+              ^^^^^^^^^^^^ React.Element
+  Property `type` is incompatible:
+     39: var foo: $jsx<number> = <Foo/>;
+                                  ^^^ statics of `Foo`. This type is incompatible with
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ `Foo` element
+159:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
+ 39: var foo: $jsx<number> = <Foo/>;
+                   ^^^^^^ number
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
@@ -223,27 +221,6 @@ Error: classes.js:57
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ React.Element. This type is incompatible with
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                         ^^^^^^^^^ statics of React component. This type is incompatible with
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                              ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ `FooLegacy` element
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                          ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ `FooLegacy` element
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
 157: declare type React$Element<+ElementType: React$ElementType> = {|
                                               ^^^^^^^^^^^^^^^^^ union: string | `React.StatelessFunctionalComponent` | statics of `React.Component`. See lib: <BUILTINS>/react.js:157
@@ -271,6 +248,25 @@ Error: classes.js:79
                             ^^^^^^ number. This type is incompatible with
   151:   | Class<React$Component<any, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:151
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ React.Element. This type is incompatible with
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                     ^^^^^^^^^^^^ React.Element
+  Property `type` is incompatible:
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                         ^^^^^^^^^ statics of React component. This type is incompatible with
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ `FooLegacy` element
+159:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                          ^^^^^^ number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;

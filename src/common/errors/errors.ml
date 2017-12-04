@@ -39,13 +39,9 @@ type info_tree =
   | InfoLeaf of info list
   | InfoNode of info list * info_tree list
 
-let info_to_message (loc, msgs) =
-  BlameM (loc, String.concat "" msgs)
-
 type error = {
   kind: error_kind;
   messages: message list;
-  op: message option;
   trace: message list;
   extra: info_tree list
 }
@@ -62,7 +58,7 @@ let info_to_messages = function
 let infos_to_messages infos =
   List.concat (List.map info_to_messages infos)
 
-let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =
+let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
   let infos = match kind, infos with
     | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
       let prefix = (Lints.string_of_kind lint_kind) ^ ": " in
@@ -72,7 +68,6 @@ let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =
   {
     kind;
     messages = infos_to_messages infos;
-    op = Option.map op_info ~f:info_to_message;
     trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages;
     extra
   }
@@ -85,14 +80,7 @@ let to_pp = function
 
 type stdin_file = (Path.t * string) option
 
-let message_of_string s =
-  CommentM s
-
 let internal_error_prefix = "Internal error (see logs): "
-
-let prepend_op_reason messages = function
-  | Some message -> message :: (message_of_string "Error:") :: messages
-  | None -> messages
 
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
@@ -222,8 +210,7 @@ let file_of_source source =
     | None -> None
 
 let loc_of_error (err: error) =
-  let { messages; op; _ } = err in
-  let messages = prepend_op_reason messages op in
+  let { messages; _ } = err in
   match messages with
   | message :: _ ->
       let loc, _ = to_pp message in
@@ -240,8 +227,7 @@ let locs_of_error =
   and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
 
   in fun (err: error) ->
-    let { messages; op; extra; _ } = err in
-    let messages = prepend_op_reason messages op in
+    let { messages; extra; _ } = err in
     let extra_locs = locs_of_extra [] extra in
     List.fold_left (fun acc message ->
       let loc, _ = to_pp message in
@@ -338,14 +324,12 @@ let compare =
     let {
       kind = k1;
       messages = ml1;
-      op = op1;
       extra = extra1;
       trace = _;
     } = err1 in
     let {
       kind = k2;
       messages = ml2;
-      op = op2;
       extra = extra2;
       trace = _;
     } = err2 in
@@ -354,8 +338,6 @@ let compare =
     if k = 0 then
       let k = kind_cmp k1 k2 in
       if k = 0 then
-        let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
-        let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
         let k = compare_lists compare_message ml1 ml2 in
         if k = 0 then compare_lists compare_info_tree extra1 extra2
         else k
@@ -658,8 +640,7 @@ module Cli_output = struct
 
   let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
       ~severity (error : error) =
-    let { kind; messages; op; trace; extra } = error in
-    let messages = prepend_op_reason messages op in
+    let { kind; messages; trace; extra } = error in
     let messages = append_trace_reasons messages trace in
     let messages = merge_comments_into_blames messages in
     let header = print_error_header ~strip_root ~kind ~severity (List.hd messages) in
@@ -803,7 +784,7 @@ module Json_output = struct
 
   let json_of_error_props
     ~strip_root ~json_of_message ~severity
-    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; op; trace; extra } =
+    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; trace; extra } =
     let open Hh_json in
     let kind_str = match kind with
       | ParseError -> "parse"
@@ -830,11 +811,6 @@ module Json_output = struct
     (* add trace if present *)
     let props = match trace with [] -> props | _ ->
       ("trace", JSON_Array (List.map json_of_message trace)) :: props
-    in
-    (* add op if present *)
-    let props = match op with None -> props | Some op ->
-      let op_loc, op_desc = to_pp op in
-      ("operation", json_of_message (BlameM (op_loc, op_desc))):: props
     in
     (* add extra if present *)
     if extra = [] then props

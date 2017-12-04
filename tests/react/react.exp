@@ -404,8 +404,6 @@ Error: default_props_undefined.js:10
 
 Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ `Foo` element
-  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React.Element. This type is incompatible with
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
@@ -421,8 +419,6 @@ Error: element_with_component_type.js:8
                                                ^^^^^^^^^^^ object type
 
 Error: element_with_component_type.js:8
-  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ `Foo` element
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React.Element. This type is incompatible with
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error

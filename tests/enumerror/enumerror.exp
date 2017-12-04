@@ -1,7 +1,5 @@
 Error: enumerror.js:10
  10: isActive({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `isActive`
- 10: isActive({state: 'PAUSE'});
                       ^^^^^^^ property `PAUSE`. Property not found in
                                    v------
   3: function isActive(ad: {state: $Keys<{
@@ -12,8 +10,6 @@ Error: enumerror.js:10
      -^ object type
 
 Error: enumerror.js:20
- 20: isActive2({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `isActive2`
  20: isActive2({state: 'PAUSE'});
                        ^^^^^^^ property `PAUSE`. Property not found in
  17: function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {

@@ -34,7 +34,6 @@ type error
 
 val mk_error:
   ?kind:error_kind ->
-  ?op_info:info ->
   ?trace_infos:info list ->
   ?extra:info_tree list ->
   info list ->

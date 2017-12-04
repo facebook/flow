@@ -4,9 +4,7 @@ Error: test.js:24
  24:     other.#p; // Error: other does not have access to private variables in here.
          ^^^^^ C
 
-Error: test.js:35
- 35:         var x = new Outer();
-                     ^^^^^^^^^^^ new `Outer`
+Error: test.js:37
  37:         x.#inner = new Outer(); // Error, #inner is not a private field of Outer
              ^^^^^^^^ assignment of property `inner`. Property not found in
  37:         x.#inner = new Outer(); // Error, #inner is not a private field of Outer

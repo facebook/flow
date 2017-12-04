@@ -1227,8 +1227,6 @@ Error: tabs.js:67
 
 Error: tabs.js:68
  68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-             ^^^^^^^^^ `NotTab` element
- 68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
              ^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
  18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
          ^^^^^^^^^^^^^^^^^ array type
@@ -1285,8 +1283,6 @@ Error: tabs.js:68
 
 Error: tabs.js:68
  68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                      ^^^^^^^^^ `NotTab` element
- 68: <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
              ^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
  18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
          ^^^^^^^^^^^^^^^^^ array type
@@ -1341,9 +1337,7 @@ Error: tabs.js:68
        18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                ^^^^^^^^^^^^^^^^^ array type
 
-Error: tabs.js:73
- 73:   <NotTab/>
-       ^^^^^^^^^ `NotTab` element
+Error: tabs.js:71
      v
  71: <TabBar>
  72:   <Tab/>
@@ -2158,8 +2152,6 @@ Error: view.js:38
 
 Error: view.js:39
  39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^ `View` element
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
             ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2210,8 +2202,6 @@ Error: view.js:39
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 Error: view.js:39
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^ `View` element
  39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
             ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
@@ -2264,8 +2254,6 @@ Error: view.js:39
 
 Error: view.js:39
  39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^ `View` element
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
             ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2316,8 +2304,6 @@ Error: view.js:39
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 Error: view.js:40
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^ `View` element
  40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
             ^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
@@ -2370,8 +2356,6 @@ Error: view.js:40
 
 Error: view.js:40
  40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^ `View` element
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
             ^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
@@ -2422,8 +2406,6 @@ Error: view.js:40
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 Error: view.js:40
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^ `View` element
  40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
             ^^^^^^^^^ array literal. Has some incompatible type argument with
  10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and

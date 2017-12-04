@@ -40,8 +40,6 @@ Error: checkPropTypes.js:8
 
 Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `checkPropTypes`
- 10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
 191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
                                   ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:191

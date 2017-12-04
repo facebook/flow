@@ -10,17 +10,13 @@ Error: constructor.js:16
  16:     this.x; // error (no super call)
          ^^^^ uninitialized this (expected super constructor call)
 
-Error: constructor.js:36
- 36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ call of `leak`
+Error: constructor.js:30
  30:   f.y; // error
          ^ property `y`. Property cannot be accessed on possibly undefined value
  30:   f.y; // error
        ^ uninitialized this (expected super constructor call)
 
-Error: constructor.js:36
- 36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ call of `leak`
+Error: constructor.js:31
  31:   f.x; // error
          ^ property `x`. Property cannot be accessed on possibly undefined value
  31:   f.x; // error
@@ -32,9 +28,7 @@ Error: constructor.js:45
  45:     super.x; // error (no super call)
          ^^^^^ uninitialized this (expected super constructor call)
 
-Error: constructor.js:69
- 69:     super(this); // error (no super call yet)
-         ^^^^^^^^^^^ call of super
+Error: constructor.js:63
  63:     leaked_this.foo()
          ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
  63:     leaked_this.foo()
