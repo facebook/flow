@@ -2479,8 +2479,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         then AnyT.at ploc
         else (
           Tvar.mk_where cx expr_reason (fun tvar ->
+            let use_op = GetProperty prop_reason in
             Flow.flow cx (
-              super, GetPropT (UnknownUse, expr_reason, Named (prop_reason, name), tvar)
+              super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
             )
           )
         )
@@ -2508,13 +2509,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } -> (
       let expr_reason = mk_reason (RPrivateProperty name) loc in
+      let prop_reason = mk_reason (RPrivateProperty name) ploc in
       match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let tobj = expression cx _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
-        else get_private_field cx expr_reason tobj name
+        else get_private_field cx expr_reason tobj (prop_reason, name)
     )
 
   | Object { Object.properties } ->
@@ -4291,7 +4293,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "Array.isArray") callee_loc in
       let fn_t = Tvar.mk_where cx reason (fun t ->
         let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
-        Flow.flow cx (obj_t, GetPropT (UnknownUse, reason, Named (prop_reason, "isArray"), t))
+        let use_op = GetProperty prop_reason in
+        Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t))
       ) in
       Type_table.set (Context.type_table cx) prop_loc fn_t;
       let bool = BoolT.at loc in
@@ -4395,10 +4398,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
 and condition cx e =
   expression ~is_cond:true cx e
 
-and get_private_field cx reason tobj name =
+and get_private_field cx reason tobj (prop_reason, name) =
   Tvar.mk_where cx reason (fun t ->
     let class_entries = Env.get_class_entries () in
-    let get_prop_u = GetPrivatePropT (UnknownUse, reason, name, class_entries, false, t) in
+    let use_op = GetProperty prop_reason in
+    let get_prop_u = GetPrivatePropT (use_op, reason, name, class_entries, false, t) in
     Flow.flow cx (tobj, get_prop_u)
   )
 
@@ -4414,7 +4418,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
     let get_prop_u =
       if is_cond
       then TestPropT (reason, Named (prop_reason, name), t)
-      else GetPropT (UnknownUse, reason, Named (prop_reason, name), t)
+      else GetPropT (GetProperty prop_reason, reason, Named (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)
   )

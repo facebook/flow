@@ -316,6 +316,7 @@ let rec locs_of_use_op acc = function
   | FunCallMissingArg _
   | FunCallParam
   | FunReturn
+  | GetProperty _
   | ReactCreateElementCall
   | TypeRefinement
   | UnknownUse
