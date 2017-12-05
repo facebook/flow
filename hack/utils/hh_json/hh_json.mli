@@ -182,3 +182,9 @@ module Access : Access
 
 val get_field : (json * Access.keytrace -> 'a Access.m) -> (string -> 'a) -> json -> 'a
 val get_field_opt : (json * Access.keytrace -> 'a Access.m) -> json -> 'a option
+
+module JsonKey : Set.OrderedType with type t = json
+
+module JSet : Set.S with type elt = json
+
+module JMap : MyMap.S with type key = json

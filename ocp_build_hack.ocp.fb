@@ -247,7 +247,10 @@ begin library "hh-utils-json"
     "hh_json.mli"
     "hh_json.ml"
   ]
-  requires += [ "tp-core" ]
+  requires += [
+    "tp-core"
+    "hh-utils-collections"
+  ]
 end
 
 begin library "hh-injector-default"

@@ -731,3 +731,50 @@ let get_field accessor on_failure json =
 let get_field_opt accessor json =
   let open Access in
   to_option (return json >>= accessor)
+
+module JsonKey = struct
+  type t = json
+
+  (* Object comparison is SENSITIVE to the order of keys.                   *)
+  (* Numbers are compared by string value, so "1" and "1.0" and "1.00" are  *)
+  (* all different; this way we don't worry about different floating point  *)
+  (* semantics between ocaml and json.                                      *)
+  let rec compare (x: t) (y: t) =
+    match x, y with
+    | JSON_Null, JSON_Null -> 0
+    | JSON_Null, _ -> -1
+    | _, JSON_Null -> 1
+    | JSON_Bool false, JSON_Bool false -> 0
+    | JSON_Bool false, JSON_Bool true -> -1
+    | JSON_Bool true, JSON_Bool false -> 1
+    | JSON_Bool true, JSON_Bool true -> 0
+    | JSON_Bool _, _ -> -1
+    | _, JSON_Bool _ -> 1
+    | JSON_Number x, JSON_Number y -> String.compare x y
+    | JSON_Number _, _ -> -1
+    | _, JSON_Number _ -> 1
+    | JSON_String x, JSON_String y -> String.compare x y
+    | JSON_String _, _ -> -1
+    | _, JSON_String _ -> 1
+    | JSON_Array (x::xs), JSON_Array (y::ys) ->
+      let r = compare x y in
+      if r <> 0 then r else compare (JSON_Array xs) (JSON_Array ys)
+    | JSON_Array [], JSON_Array [] -> 0
+    | JSON_Array [], JSON_Array _ -> -1
+    | JSON_Array _, JSON_Array [] -> 1
+    | JSON_Array _, _ -> -1
+    | _, JSON_Array _ -> 1
+    | JSON_Object ((kx,vx)::xs), JSON_Object ((ky,vy)::ys) ->
+      let r = String.compare kx ky in
+      if r <> 0 then r else
+      let r = compare vx vy in
+      if r <> 0 then r else
+      compare (JSON_Object xs) (JSON_Object ys)
+    | JSON_Object [], JSON_Object [] -> 0
+    | JSON_Object [], JSON_Object _ -> -1
+    | JSON_Object _, JSON_Object [] -> 1
+end
+
+module JSet = Set.Make (JsonKey)
+
+module JMap = MyMap.Make (JsonKey)
