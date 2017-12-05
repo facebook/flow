@@ -22,6 +22,7 @@ module type SigType = sig
   }
 
   val parse_message : json:Hh_json.json -> timestamp:float -> message
+  val message_to_short_string : message -> string
 
   type queue
   val make_queue : unit -> queue (* must call Daemon.entry_point at start of your main *)
@@ -78,6 +79,22 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
     error: Hh_json.json option; (* optional for response *)
   }
 
+  let message_to_short_string (c: message) : string =
+    let open Hh_json in
+    let disposition = match c.kind, c.result, c.error with
+      | Response, Some _, None -> "[result]"
+      | Response, None, Some _ -> "[error]"
+      | _, _, _ -> "" in
+    let method_ = match c.method_ with
+      | "" -> ""
+      | s -> Printf.sprintf "method=%s," s in
+    let id = match c.id with
+      | Some (JSON_String s) -> Printf.sprintf "id=\"%s\"" s
+      | Some (JSON_Number n) -> Printf.sprintf "id=#%s" n
+      | Some json -> Printf.sprintf "id=%s" (json_to_string json)
+      | None -> "id=[None]"
+    in
+    Printf.sprintf "{%s%s,%s%s}" (kind_to_string c.kind) disposition method_ id
 
   let parse_message ~(json: Hh_json.json) ~(timestamp: float) : message =
     let id = Hh_json_helpers.try_get_val "id" json in
@@ -419,7 +436,9 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
     let open Callback in
     let id, on_result, on_error = match (get_request_for_response response) with
       | Some (id, callback) -> (id, callback.on_result, callback.on_error)
-      | None -> failwith "response to non-existent id"
+      | None ->
+        let msg = message_to_short_string response in
+        failwith (Printf.sprintf "response to non-existent id: %s" msg)
     in
     requests_outstanding := IMap.remove id !requests_outstanding;
     if Option.is_some response.error then
