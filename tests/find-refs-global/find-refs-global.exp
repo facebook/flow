@@ -72,6 +72,18 @@ class method:
       "type":"SourceFile",
       "start":{"line":8,"column":3,"offset":79},
       "end":{"line":8,"column":5,"offset":82}
+    },
+    {
+      "source":"extendsFoo.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":3,"offset":89},
+      "end":{"line":8,"column":5,"offset":92}
+    },
+    {
+      "source":"importFooType.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":5,"offset":84},
+      "end":{"line":6,"column":7,"offset":87}
     }
   ]
 }
