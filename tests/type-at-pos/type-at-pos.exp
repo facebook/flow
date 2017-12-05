@@ -838,19 +838,34 @@ predicates.js - if (y.FOO) obj: {
   "end":5
 }
 predicates.js - if (y.FOO) prop: {
-  "type":"(unknown)",
-  "reasons":[],
+  "type":"string",
+  "reasons":[
+    {
+      "desc":"string",
+      "loc":{
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":5,"offset":119},
+        "end":{"line":9,"column":9,"offset":124}
+      },
+      "path":"predicates.js",
+      "line":9,
+      "endline":9,
+      "start":5,
+      "end":9
+    }
+  ],
   "loc":{
-    "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":119},
+    "end":{"line":9,"column":9,"offset":124}
   },
-  "path":"",
-  "line":0,
-  "endline":0,
-  "start":1,
-  "end":0
+  "path":"predicates.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":9
 }
 predicates.js - if (y.FOO == '') obj: {
   "type":"{FOO: string}",
@@ -943,19 +958,34 @@ predicates.js - if (y.FOO === '') obj: {
   "end":5
 }
 predicates.js - if (y.FOO === '') prop: {
-  "type":"(unknown)",
-  "reasons":[],
+  "type":"string",
+  "reasons":[
+    {
+      "desc":"string",
+      "loc":{
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":11,"column":5,"offset":153},
+        "end":{"line":11,"column":9,"offset":158}
+      },
+      "path":"predicates.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":9
+    }
+  ],
   "loc":{
-    "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":153},
+    "end":{"line":11,"column":9,"offset":158}
   },
-  "path":"",
-  "line":0,
-  "endline":0,
-  "start":1,
-  "end":0
+  "path":"predicates.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":9
 }
 predicates.js - if (y.FOO == null) prop: {
   "type":"string",

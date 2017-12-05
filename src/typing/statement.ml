@@ -4024,6 +4024,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
           let pred = LeftP (SentinelProp prop_name, val_t) in
           Some (name, obj_t, pred, sense)
       in
+
+      (* since we never called `expression cx expr`, we have to add to the
+         type table ourselves *)
+      Type_table.set (Context.type_table cx) expr_loc prop_t;
+
       prop_t, refinement
     | _ ->
       condition cx expr, None
@@ -4282,6 +4287,10 @@ and predicates_of_condition cx e = Ast.(Expression.(
         else get_prop ~is_cond:true cx
           expr_reason obj_t (prop_reason, prop_name)
       in
+
+      (* since we never called `expression cx e`, we have to add to the
+         type table ourselves *)
+      Type_table.set (Context.type_table cx) loc t;
 
       let out = match Refinement.key e with
       | Some name -> result t name t (ExistsP (Some loc)) true
