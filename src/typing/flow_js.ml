@@ -10161,7 +10161,7 @@ and instantiate_poly_t cx t = function
       | DefT (_, (TypeT (DefT (_, (AnyT | AnyObjT))))) ->
           t
       | _ ->
-        assert_false "unexpected args passed to instantiate_poly_t"
+        assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
 
 and instantiate_type t =
   match t with
