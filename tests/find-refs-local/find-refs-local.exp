@@ -570,3 +570,21 @@ Method call on an imported class (finds other references but not the definition 
     }
   ]
 }
+Method call within a class that has type params: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":105,"column":3,"offset":1576},
+      "end":{"line":105,"column":5,"offset":1579}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":107,"column":10,"offset":1617},
+      "end":{"line":107,"column":12,"offset":1620}
+    }
+  ]
+}

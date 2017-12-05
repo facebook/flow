@@ -198,7 +198,10 @@ end = struct
   let set_get_refs_hook potential_refs target_name =
     let hook ret _ctxt name loc ty =
       begin if name = target_name then
-        potential_refs := (ty, loc) :: !potential_refs
+        (* Replace previous bindings of `loc`. We should always use the result of the last call to
+         * the hook for a given location. For details see the comment on the generate_tests function
+         * in flow_js.ml *)
+        potential_refs := LocMap.add loc ty !potential_refs
       end;
       ret
     in
@@ -234,13 +237,14 @@ end = struct
             (string_of_ctor t))
 
   let find_refs_in_file options workers env content file_key def_loc name =
-    let potential_refs: (Type.t * Loc.t) list ref = ref [] in
+    let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
     set_get_refs_hook potential_refs name;
     let check_contents_result = Types_js.basic_check_contents ~options ~workers ~env content file_key in
     unset_hooks ();
     check_contents_result >>= fun (_, cx, _) ->
     !potential_refs |>
-      List.map begin fun (ty, ref_loc) ->
+      LocMap.bindings |>
+      List.map begin fun (ref_loc, ty) ->
         extract_def_loc cx ty name >>= fun loc ->
         match loc with
           | Some loc when loc = def_loc ->

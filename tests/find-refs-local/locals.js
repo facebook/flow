@@ -100,3 +100,10 @@ similarType.baz;
 
 externalClass.bar();
 externalClass.bar();
+
+class WithTypeParams<X, Y> {
+  bar(): void { }
+  baz(): void {
+    this.bar();
+  }
+}
