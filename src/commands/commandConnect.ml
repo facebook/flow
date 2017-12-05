@@ -71,17 +71,18 @@ let start_flow_server env =
               (Array.of_list (exe::"start"::args))
               stdin stdout stderr) in
     match Sys_utils.waitpid_non_intr [] server_pid with
-      | _, Unix.WEXITED 0 -> true
-      | _, Unix.WEXITED code when
-          code = FlowExitStatus.(error_code Lock_stolen) -> false
+      | _, Unix.WEXITED 0 ->
+        Ok ()
+      | _, Unix.WEXITED code when code = FlowExitStatus.(error_code Lock_stolen) ->
+        Error ("Lock stolen", FlowExitStatus.Lock_stolen)
       | _, status ->
         let msg = "Could not start Flow server!" in
-        FlowExitStatus.(exit ~msg (Server_start_failed status))
+        Error (msg, FlowExitStatus.Server_start_failed status)
   with exn ->
     let msg = Printf.sprintf
       "Could not start Flow server! Unexpected exception: %s"
       (Printexc.to_string exn) in
-    FlowExitStatus.(exit ~msg Unknown_error)
+    Error (msg, FlowExitStatus.Unknown_error)
 
 type retry_info = {
   retries_remaining: int;
@@ -180,21 +181,20 @@ let rec connect ~client_type env retries start_time =
 
 and handle_missing_server ~client_type env retries start_time =
   if env.autostart then begin
-    let retries =
-      if start_flow_server env
-      then begin
-        if not env.quiet then Printf.eprintf
-          "Started a new flow server: %s%!"
-          (Tty.spinner());
+    let retries = match start_flow_server env with
+      | Ok () ->
+        if not env.quiet then Printf.eprintf "Started a new flow server: %s%!" (Tty.spinner());
         retries
-      end else begin
-        if not env.quiet then Printf.eprintf
-          "Failed to start a new flow server (%d %s remaining): %s%!"
-          retries.retries_remaining
-          (if retries.retries_remaining = 1 then "retry" else "retries")
-          (Tty.spinner());
+      | Error (_, FlowExitStatus.Lock_stolen) ->
+        if not env.quiet then
+          Printf.eprintf "Failed to start a new flow server (%d %s remaining): %s%!"
+            retries.retries_remaining
+            (if retries.retries_remaining = 1 then "retry" else "retries")
+            (Tty.spinner());
         consume_retry retries
-      end in
+      | Error (msg, code) ->
+        FlowExitStatus.exit ~msg code
+    in
     connect ~client_type env retries start_time
   end else begin
     let msg = Utils_js.spf
