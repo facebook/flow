@@ -26,6 +26,7 @@ type response =
   | AutocompleteResult of (ServerProt.Response.autocomplete_response * (* request id *) int)
   | DidOpenAck
   | DidCloseAck
+  | ServerExit of FlowExitStatus.t (* only used for the subset of exists which client handles *)
 
 let string_of_response = function
 | Errors _ -> "errors"
@@ -34,3 +35,4 @@ let string_of_response = function
 | AutocompleteResult _ -> "autocompleteResult"
 | DidOpenAck -> "didOpenAck"
 | DidCloseAck -> "didCloseAck"
+| ServerExit code -> "serverExit_" ^ (FlowExitStatus.to_string code)

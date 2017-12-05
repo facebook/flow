@@ -79,6 +79,7 @@ module HumanReadable: ClientProtocol = struct
       let warn_count = Errors.ErrorSet.cardinal warnings in
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
         ^ (string_of_int warn_count) ^ " warnings")
+    | Prot.ServerExit _code -> () (* ignored here; used in lspCommand *)
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
@@ -117,6 +118,7 @@ module VeryUnstable: ClientProtocol = struct
   let handle_server_response ~strip_root = function
     | Prot.Errors {errors; warnings} ->
       print_errors ~strip_root errors warnings
+    | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
     | Prot.AutocompleteResult (result, id) -> print_autocomplete ~strip_root result id
@@ -227,6 +229,7 @@ end = struct
     let open Prot in
     match response, t.outstanding with
       | Errors _, _
+      | ServerExit _, _
       | StartRecheck, _
       | EndRecheck, _ ->
           t

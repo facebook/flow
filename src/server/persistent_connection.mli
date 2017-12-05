@@ -22,6 +22,8 @@ val update_clients:
   clients:t ->
   errors:Errors.ErrorSet.t ->
   warnings:Errors.ErrorSet.t Utils_js.FilenameMap.t -> unit
+val send_exit:
+  t -> FlowExitStatus.t -> unit
 val send_start_recheck:
   t -> unit
 val send_end_recheck:

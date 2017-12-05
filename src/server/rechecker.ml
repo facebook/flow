@@ -30,6 +30,7 @@ let process_updates genv env updates =
     Hh_logger.fatal
       "%s changed in an incompatible way. Exiting.\n%!"
       config_path;
+    Persistent_connection.send_exit env.connections FlowExitStatus.Flowconfig_changed;
     FlowExitStatus.(exit Flowconfig_changed)
   end;
 
@@ -75,6 +76,7 @@ let process_updates genv env updates =
     SSet.iter (Hh_logger.fatal "Modified package: %s") incompatible_packages;
     Hh_logger.fatal
       "Packages changed in an incompatible way. Exiting.\n%!";
+    Persistent_connection.send_exit env.connections FlowExitStatus.Server_out_of_date;
     FlowExitStatus.(exit Server_out_of_date)
   end;
 
@@ -108,6 +110,7 @@ let process_updates genv env updates =
     SSet.iter (Hh_logger.fatal "Modified lib file: %s") libs;
     Hh_logger.fatal
       "Lib files changed in an incompatible way. Exiting.\n%!";
+    Persistent_connection.send_exit env.connections FlowExitStatus.Server_out_of_date;
     FlowExitStatus.(exit Server_out_of_date)
   end;
 

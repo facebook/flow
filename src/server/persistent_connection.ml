@@ -56,6 +56,9 @@ let send_errors_if_subscribed ~client ~errors ~warnings =
   if client.subscribed
   then send_errors ~errors ~warnings client
 
+let send_single_exit code client =
+  send_message (Prot.ServerExit code) client
+
 let send_single_start_recheck client =
   send_message (Prot.StartRecheck) client
 
@@ -90,6 +93,11 @@ let update_clients ~clients ~errors ~warnings =
     "sending (%d errors) and (warnings from %d files) to %d subscribed clients (of %d total)"
     error_count warning_file_count subscribed_client_count all_client_count;
   List.iter (send_errors ~errors ~warnings) subscribed_clients
+
+let send_exit clients code =
+  clients
+    |> get_subscribed_clients
+    |> List.iter (send_single_exit code)
 
 let send_start_recheck clients =
   clients
