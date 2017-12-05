@@ -182,7 +182,7 @@ let gen_flow_files ~options env files =
       | None ->
         try
           let flow_file_cxs = List.map (fun file ->
-            let cx, _ = Merge_service.merge_strict_context ~options [file] in
+            let { Merge_service.cx; _ } = Merge_service.merge_strict_context ~options [file] in
             cx
           ) flow_files in
 

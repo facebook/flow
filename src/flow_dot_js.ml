@@ -168,11 +168,13 @@ let infer_and_merge ~root filename ast =
   let lint_severities = LintSettings.default_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
-  Merge_js.merge_component_strict
+  let cx, _other_cxs = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     [filename] reqs [] master_cx
+  in
+  cx
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
