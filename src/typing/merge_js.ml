@@ -278,7 +278,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
 
   detect_sketchy_null_checks cx;
 
-  cx
+  cx, other_cxs
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

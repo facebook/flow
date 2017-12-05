@@ -43,7 +43,7 @@ val merge_component_strict:
   (* master cx *)
   Context.t ->
   (* merged cx *)
-  Context.t
+  Context.t * Context.t list
 
 val clear_master_shared: Context.t -> Context.t -> unit
 

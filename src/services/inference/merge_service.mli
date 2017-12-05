@@ -14,10 +14,16 @@ type 'a merge_job =
   File_key.t list ->
   'a merge_results * File_key.t list
 
+type merge_strict_context_result = {
+  cx: Context.t;
+  other_cxs: Context.t list;
+  master_cx: Context.t;
+}
+
 val merge_strict_context:
   options: Options.t ->
   File_key.t list ->
-  Context.t * Context.t
+  merge_strict_context_result
 
 val merge_contents_context:
   Options.t ->

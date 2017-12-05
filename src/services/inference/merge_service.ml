@@ -16,6 +16,12 @@ type 'a merge_job =
   File_key.t list ->
   'a merge_results * File_key.t list
 
+type merge_strict_context_result = {
+  cx: Context.t;
+  other_cxs: Context.t list;
+  master_cx: Context.t;
+}
+
 (* To merge the contexts of a component with their dependencies, we call the
    functions `merge_component_strict` and `restore` defined in merge_js.ml
    with appropriate reqs prepared below.
@@ -94,7 +100,7 @@ let merge_strict_context ~options component =
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
-  let cx = Merge_js.merge_component_strict
+  let cx, other_cxs = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
@@ -102,7 +108,7 @@ let merge_strict_context ~options component =
     component file_reqs dep_cxs master_cx
   in
 
-  cx, master_cx
+  { cx; other_cxs; master_cx }
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -136,7 +142,7 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
-  let cx = Merge_js.merge_component_strict
+  let cx, _ = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> info)
@@ -163,7 +169,7 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
   *)
   let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
-    let cx, master_cx = merge_strict_context ~options component in
+    let { cx; other_cxs = _; master_cx } = merge_strict_context ~options component in
 
     let module_refs = List.rev_map Files.module_ref component in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
