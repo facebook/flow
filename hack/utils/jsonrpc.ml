@@ -1,11 +1,15 @@
-(* Wrapper over stdin/stdout for handling JSON-RPC *)
+(* Wrapper for handling JSON-RPC *)
 (* Spec: http://www.jsonrpc.org/specification *)
 (* Practical readbable guide: https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol-json-structures *)
 
 open Hh_core
 
+(* Because of the way we handle threads, we need a global counter... *)
+let thread_spawn_counter : int ref = ref 0
+
 module type SigType = sig
   type state
+  type writer = Hh_json.json -> unit
   type kind = Request | Notification | Response
   val kind_to_string : kind -> string
 
@@ -39,10 +43,10 @@ module type SigType = sig
 
   (* 'respond to_this with_that' is for replying to a JsonRPC request. It will send either *)
   (* a response or an error depending on whether 'with_that' has an error id in it.        *)
-  val respond : message -> Hh_json.json -> unit
+  val respond : writer -> message -> Hh_json.json -> unit
   (* notify/request are for initiating JsonRPC messages *)
-  val notify : string -> Hh_json.json -> unit
-  val request : on_result -> on_error -> string -> Hh_json.json -> cancellation_token
+  val notify : writer -> string -> Hh_json.json -> unit
+  val request : writer -> on_result -> on_error -> string -> Hh_json.json -> cancellation_token
 
   (* For logging purposes, you can get a copy of which JsonRPC message was last    *)
   (* sent by this module - be it a response, notification, request or cancellation *)
@@ -59,6 +63,7 @@ end
 
 module Make (State: sig type t end) : (SigType with type state = State.t) = struct
   type state = State.t
+  type writer = Hh_json.json -> unit
   type kind = Request | Notification | Response
 
   let kind_to_string (kind: kind) : string =
@@ -237,7 +242,9 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
         ()
 
   let internal_entry_point : (unit, unit, queue_message) Daemon.entry =
-    Daemon.register_entry_point "Jsonrpc" internal_run_daemon
+    incr thread_spawn_counter;
+    let spawn_id = Printf.sprintf "Jsonrpc.%i" !thread_spawn_counter in
+    Daemon.register_entry_point spawn_id internal_run_daemon
 
 
   (************************************************)
@@ -328,6 +335,7 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
   (* respond: sends either a Response or an Error message, according
      to whether the json has an error-code or not. *)
   let respond
+      (writer: writer)
       (in_response_to: message)
       (result_or_error: Hh_json.json)
     : unit =
@@ -346,11 +354,11 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
     )
     in
     last_sent_ref := Some response;
-    response |> Hh_json.json_to_string |> Http_lite.write_message stdout
+    writer response
 
 
   (* notify: sends a Notify message *)
-  let notify (method_: string) (params: Hh_json.json)
+  let notify (writer: writer) (method_: string) (params: Hh_json.json)
     : unit =
     let open Hh_json in
     let message = JSON_Object [
@@ -360,7 +368,7 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
     ]
     in
     last_sent_ref := Some message;
-    message |> Hh_json.json_to_string |> Http_lite.write_message stdout
+    writer message
 
 
   (************************************************)
@@ -384,6 +392,7 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
 
   (* request: produce a Request message; returns a method you can call to cancel it *)
   let request
+      (writer: writer)
       (on_result: on_result)
       (on_error: on_error)
       (method_: string)
@@ -411,11 +420,11 @@ module Make (State: sig type t end) : (SigType with type state = State.t) = stru
     ]
     in
     last_sent_ref := Some message;
-    message |> Hh_json.json_to_string |> Http_lite.write_message stdout;
+    writer message;
 
     let cancel () =
       last_sent_ref := Some cancel_message;
-      cancel_message |> Hh_json.json_to_string |> Http_lite.write_message stdout
+      writer cancel_message
     in
     cancel
 

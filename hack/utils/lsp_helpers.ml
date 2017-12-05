@@ -79,23 +79,23 @@ end) = struct
   (** Wrappers for some LSP methods                                      **)
   (************************************************************************)
 
-  let telemetry (level: MessageType.t) (message: string) : unit =
-    print_logMessage level message |> Jsonrpc.notify "telemetry/event"
+  let telemetry (writer: Jsonrpc.writer) (level: MessageType.t) (message: string) : unit =
+    print_logMessage level message |> Jsonrpc.notify writer "telemetry/event"
 
-  let telemetry_error = telemetry MessageType.ErrorMessage
-  let telemetry_log = telemetry MessageType.LogMessage
+  let telemetry_error (writer: Jsonrpc.writer) = telemetry writer MessageType.ErrorMessage
+  let telemetry_log (writer: Jsonrpc.writer) = telemetry writer MessageType.LogMessage
 
-  let log (level: MessageType.t) (message: string) : unit =
-    print_logMessage level message |> Jsonrpc.notify "window/logMessage"
+  let log (writer: Jsonrpc.writer) (level: MessageType.t) (message: string) : unit =
+    print_logMessage level message |> Jsonrpc.notify writer "window/logMessage"
 
-  let log_error = log MessageType.ErrorMessage
-  let log_warning = log MessageType.WarningMessage
-  let log_info = log MessageType.InfoMessage
+  let log_error (writer: Jsonrpc.writer) = log writer MessageType.ErrorMessage
+  let log_warning (writer: Jsonrpc.writer) = log writer MessageType.WarningMessage
+  let log_info (writer: Jsonrpc.writer) = log writer MessageType.InfoMessage
 
-  let dismiss_diagnostics (diagnostic_uris: SSet.t) : SSet.t =
+  let dismiss_diagnostics (writer: Jsonrpc.writer) (diagnostic_uris: SSet.t) : SSet.t =
     let dismiss_one (uri: string) : unit =
       let message = { Lsp.PublishDiagnostics.uri; diagnostics = []; } in
-      message |> print_diagnostics |> Jsonrpc.notify "textDocument/publishDiagnostics"
+      message |> print_diagnostics |> Jsonrpc.notify writer "textDocument/publishDiagnostics"
     in
     SSet.iter dismiss_one diagnostic_uris;
     SSet.empty
@@ -103,6 +103,7 @@ end) = struct
 
   (* request_showMessage: pops up a dialog *)
   let request_showMessage
+      (writer: Jsonrpc.writer)
       (on_result: Jsonrpc.on_result)
       (on_error: Jsonrpc.on_error)
       (type_: MessageType.t)
@@ -110,7 +111,7 @@ end) = struct
       (titles: string list)
     : ShowMessageRequest.t =
     let req = Lsp_fmt.print_showMessageRequest type_ message titles in
-    let cancel = Jsonrpc.request on_result on_error "window/showMessageRequest" req in
+    let cancel = Jsonrpc.request writer on_result on_error "window/showMessageRequest" req in
     ShowMessageRequest.Some { cancel; }
 
   let dismiss_showMessageRequest (dialog: ShowMessageRequest.t) : ShowMessageRequest.t =
@@ -129,44 +130,53 @@ end) = struct
   (* messages. To start a new progress notifier, put id=None and message=Some *)
   let progress_and_actionRequired_counter = ref 0
 
-  let notify_progress (id: Progress.t) (label: string option) : Progress.t =
+  let notify_progress
+      (writer: Jsonrpc.writer)
+      (id: Progress.t)
+      (label: string option)
+    : Progress.t =
     match id, label with
     | Progress.None, Some label ->
       if supports_progress () then
         let () = incr progress_and_actionRequired_counter in
         let id = !progress_and_actionRequired_counter in
-        let () = print_progress id (Some label) |> Jsonrpc.notify "window/progress" in
+        let () = print_progress id (Some label) |> Jsonrpc.notify writer "window/progress" in
         Progress.Some { id; label; }
       else
         Progress.None
     | Progress.Some { id; label; }, Some new_label when label = new_label ->
       Progress.Some { id; label; }
     | Progress.Some { id; _ }, Some label ->
-      print_progress id (Some label) |> Jsonrpc.notify "window/progress";
+      print_progress id (Some label) |> Jsonrpc.notify writer "window/progress";
       Progress.Some { id; label; }
     | Progress.Some { id; _ }, None ->
-      print_progress id None |> Jsonrpc.notify "window/progress";
+      print_progress id None |> Jsonrpc.notify writer "window/progress";
       Progress.None
     | Progress.None, None ->
       Progress.None
 
-  let notify_actionRequired (id: ActionRequired.t) (label: string option) : ActionRequired.t =
+  let notify_actionRequired
+      (writer: Jsonrpc.writer)
+      (id: ActionRequired.t)
+      (label: string option)
+    : ActionRequired.t =
     match id, label with
     | ActionRequired.None, Some label ->
       if supports_actionRequired () then
         let () = incr progress_and_actionRequired_counter in
         let id = !progress_and_actionRequired_counter in
-        let () = print_actionRequired id (Some label) |> Jsonrpc.notify "window/actionRequired" in
+        let () = print_actionRequired id (Some label)
+          |> Jsonrpc.notify writer "window/actionRequired" in
         ActionRequired.Some { id; label; }
       else
         ActionRequired.None
     | ActionRequired.Some { id; label; }, Some new_label when label = new_label ->
       ActionRequired.Some { id; label; }
     | ActionRequired.Some { id; _ }, Some label ->
-      print_actionRequired id (Some label) |> Jsonrpc.notify "window/actionRequired";
+      print_actionRequired id (Some label) |> Jsonrpc.notify writer "window/actionRequired";
       ActionRequired.Some { id; label; }
     | ActionRequired.Some { id; _ }, None ->
-      print_actionRequired id None |> Jsonrpc.notify "window/actionRequired";
+      print_actionRequired id None |> Jsonrpc.notify writer "window/actionRequired";
       ActionRequired.None
     | ActionRequired.None, None ->
       ActionRequired.None
