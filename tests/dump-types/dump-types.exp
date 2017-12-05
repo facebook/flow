@@ -2258,6 +2258,42 @@
     "end":5
   },
   {
+    "type":"string",
+    "reasons":[
+      {
+        "desc":"string",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":4,"column":5,"offset":38},
+          "end":{"line":4,"column":9,"offset":43}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":16,"offset":25},
+          "end":{"line":3,"column":20,"offset":30}
+        },
+        "path":"predicates.js",
+        "line":4,
+        "endline":4,
+        "start":5,
+        "end":9
+      }
+    ],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":5,"offset":38},
+      "end":{"line":4,"column":9,"offset":43}
+    },
+    "path":"predicates.js",
+    "line":4,
+    "endline":4,
+    "start":5,
+    "end":9
+  },
+  {
     "type":"{FOO: string}",
     "reasons":[],
     "loc":{
@@ -2337,6 +2373,42 @@
     "endline":6,
     "start":5,
     "end":5
+  },
+  {
+    "type":"string",
+    "reasons":[
+      {
+        "desc":"string",
+        "loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":6,"column":5,"offset":72},
+          "end":{"line":6,"column":9,"offset":77}
+        },
+        "def_loc":{
+          "source":"predicates.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":16,"offset":25},
+          "end":{"line":3,"column":20,"offset":30}
+        },
+        "path":"predicates.js",
+        "line":6,
+        "endline":6,
+        "start":5,
+        "end":9
+      }
+    ],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":5,"offset":72},
+      "end":{"line":6,"column":9,"offset":77}
+    },
+    "path":"predicates.js",
+    "line":6,
+    "endline":6,
+    "start":5,
+    "end":9
   },
   {
     "type":"string",
