@@ -261,3 +261,7 @@ let calc_all_dependencies =
     ) in
   fun dependency_graph files ->
     loop dependency_graph files files
+
+let calc_all_dependencies_subgraph dependency_graph files =
+  let all_dependencies = calc_all_dependencies dependency_graph files in
+  FilenameMap.filter (fun f _ -> FilenameSet.mem f all_dependencies) dependency_graph
