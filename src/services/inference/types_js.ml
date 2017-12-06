@@ -275,10 +275,27 @@ let typecheck
     let dependency_graph = with_timer ~options "CalcDepsTypecheck" profiling (fun () ->
       Dep_service.calc_dependency_graph workers parsed
     ) in
-    let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-    let infer_input = CheckedSet.add ~dependencies:all_dependencies infer_input in
+    (* So we want to prune our dependencies to only the dependencies which changed. However,
+     * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
+     * check both of them. So we need to calculate components before we can prune *)
+    let dependencies = with_timer ~options "PruneDeps" profiling (fun () ->
+      (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
+       * cycles *)
+      let all_dependencies_subgraph =
+        Dep_service.calc_all_dependencies_subgraph dependency_graph roots in
+      let partition = Sort_js.topsort all_dependencies_subgraph in
+      IMap.fold (fun _ components dependencies ->
+       List.fold_left (fun dependencies component ->
+         if List.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
+         (* If at least one member of the component is not unchanged, then keep the component *)
+         then List.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
+         (* If every element is unchanged, drop the component *)
+         else dependencies
+       ) dependencies components
+      ) partition FilenameSet.empty
+    ) in
 
-    CheckedSet.diff infer_input unchanged_checked
+    CheckedSet.add ~dependencies infer_input
   in
 
   (* Continue profiling noop Infer to compare with pre-refactor metrics *)
