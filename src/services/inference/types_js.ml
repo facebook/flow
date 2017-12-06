@@ -994,13 +994,10 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
-         * dependency. That's fine if foo.js is a focused file or a transitive dependent of a
-         * focused file. But if it's just some random other dependent then we need to filter it out.
+         * dependency. That's fine if foo.js is in the checked set. But if it's just some random
+         * other dependent then we need to filter it out.
          *)
-        let focused_or_dependents = FilenameSet.union
-          (CheckedSet.focused updated_checked_files)
-          (CheckedSet.dependents updated_checked_files) in
-        let all_dependent_files = FilenameSet.inter all_dependent_files focused_or_dependents in
+        let all_dependent_files = FilenameSet.inter all_dependent_files (CheckedSet.all updated_checked_files) in
         updated_checked_files, all_dependent_files
     )
   in
