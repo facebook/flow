@@ -1111,8 +1111,10 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and object_type_property (loc, prop) = Type.Object.Property.(
-    let key = match prop.key with
+  and object_type_property (loc, { Type.Object.Property.
+    key; value; optional; static; variance = variance_; _method;
+  }) =
+    let key = match key with
     | Expression.Object.Property.Literal lit -> literal lit
     | Expression.Object.Property.Identifier id -> identifier id
     | Expression.Object.Property.PrivateName _ ->
@@ -1120,20 +1122,20 @@ end with type t = Impl.t) = struct
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in
-    let value, kind = match prop.value with
-    | Init value -> _type value, "init"
-    | Get (loc, f) -> function_type (loc, f), "get"
-    | Set (loc, f) -> function_type (loc, f), "set"
+    let value, kind = match value with
+    | Type.Object.Property.Init value -> _type value, "init"
+    | Type.Object.Property.Get (loc, f) -> function_type (loc, f), "get"
+    | Type.Object.Property.Set (loc, f) -> function_type (loc, f), "set"
     in
     node "ObjectTypeProperty" loc [|
       "key", key;
       "value", value;
-      "optional", bool prop.optional;
-      "static", bool prop.static;
-      "variance", option variance prop.variance;
+      "method", bool _method;
+      "optional", bool optional;
+      "static", bool static;
+      "variance", option variance variance_;
       "kind", string kind;
     |]
-  )
 
   and object_type_spread_property (loc, prop) = Type.Object.SpreadProperty.(
     node "ObjectTypeSpreadProperty" loc [|
