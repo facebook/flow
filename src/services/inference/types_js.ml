@@ -530,12 +530,29 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
               options filename ast info ~ensure_checked_dependencies
           ) in
 
-          (* Filter out suppressed errors *)
-          let error_suppressions = Context.error_suppressions cx in
-          let severity_cover = Context.severity_cover cx in
           let errors = Context.errors cx in
+
+          (* Suppressions for errors in this file can come from dependencies *)
+          let suppressions =
+            let open ServerEnv in
+            let file_suppressions = Context.error_suppressions cx in
+            let { suppressions; _ } = !env.errors in
+            Error_suppressions.union_suppressions
+              (FilenameMap.add filename file_suppressions suppressions)
+          in
+
+          (* Severity cover info can come from dependencies *)
+          let severity_cover =
+            let open ServerEnv in
+            let file_severity_cover = Context.severity_cover cx in
+            let { severity_cover_set; _ } = !env.errors in
+            ExactCover.union_all
+              (FilenameMap.add filename file_severity_cover severity_cover_set)
+          in
+
+          (* Filter out suppressed errors *)
           let errors, warnings, _, _ =
-            Error_suppressions.filter_suppressed_errors error_suppressions severity_cover errors in
+            Error_suppressions.filter_suppressed_errors suppressions severity_cover errors in
 
           let warnings = if Options.should_include_warnings options
             then warnings
