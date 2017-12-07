@@ -11,7 +11,7 @@ module type Translator = sig
   val string: string -> t
   val bool: bool -> t
   val obj: (string * t) array -> t
-  val array: t array -> t
+  val array: t list -> t
   val number: float -> t
   val null: t
   val regexp: Loc.t -> string -> string -> t
@@ -35,7 +35,7 @@ end with type t = Impl.t) = struct
   open Ast
   open Impl
 
-  let array_of_list fn list = array (Array.of_list (List.map fn list))
+  let array_of_list fn list = array (List.map fn list)
   let int x = number (float x)
   let option f = function
     | Some v -> f v
@@ -63,10 +63,10 @@ end with type t = Impl.t) = struct
     |]
 
   let range location = Loc.(
-    array [|
+    array [
       int location.start.offset;
       int location._end.offset;
-    |]
+    ]
   )
 
   let node _type location props =
@@ -308,7 +308,7 @@ end with type t = Impl.t) = struct
         in
 
         node "ImportDeclaration" loc [|
-          "specifiers", array (Array.of_list specifiers);
+          "specifiers", array specifiers;
           "source", string_literal import.source;
           "importKind", string (import_kind);
         |]
@@ -637,8 +637,8 @@ end with type t = Impl.t) = struct
   and declare_class (loc, d) = Statement.DeclareClass.(
     (* TODO: extends shouldn't return an array *)
     let extends = match d.extends with
-    | Some extends -> array [| interface_extends extends |]
-    | None -> array [||]
+    | Some extends -> array [interface_extends extends]
+    | None -> array []
     in
     node "DeclareClass" loc [|
       "id", identifier d.id;
@@ -669,17 +669,17 @@ end with type t = Impl.t) = struct
     | Some (ExportSpecifiers specifiers) ->
         array_of_list export_specifier specifiers
     | Some (ExportBatchSpecifier (loc, Some name)) ->
-        array [|
+        array [
           node "ExportNamespaceSpecifier" loc [|
             "exported", identifier name
           |]
-        |]
+        ]
     | Some (ExportBatchSpecifier (_, None)) ->
         (* this should've been handled by callers, since this represents an
            ExportAllDeclaration, not a specifier. *)
-        array [||]
+        array []
     | None ->
-        array [||]
+        array []
   )
 
   and declare_type_alias (loc, { Statement.TypeAlias.
@@ -850,7 +850,7 @@ end with type t = Impl.t) = struct
       |] in
       let rev_params = params |> List.map pattern |> List.rev in
       let params = List.rev (rest::rev_params) in
-      array (Array.of_list params)
+      array params
     | _, { params; rest = None } ->
       array_of_list pattern params
   )
@@ -1105,9 +1105,9 @@ end with type t = Impl.t) = struct
     ) ([], [], []) o.properties in
     node "ObjectTypeAnnotation" loc [|
       "exact", bool o.exact;
-      "properties", array (Array.of_list (List.rev props));
-      "indexers", array (Array.of_list (List.rev ixs));
-      "callProperties", array (Array.of_list (List.rev calls));
+      "properties", array (List.rev props);
+      "indexers", array (List.rev ixs);
+      "callProperties", array (List.rev calls);
     |]
   )
 
