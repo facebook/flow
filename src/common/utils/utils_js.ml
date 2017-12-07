@@ -227,3 +227,14 @@ let try_with f =
 let debug_print_current_stack_trace () =
   let open Printexc in
   get_callstack 200 |> raw_backtrace_to_string |> Hh_logger.info "Current backtrace:\n%s"
+
+(* Pass through a result; logging if it is an Error. Includes the provided string context, which is
+ * computed lazily under the assumption that the error case is the uncommon case *)
+let log_when_error (context: string Lazy.t) (result: ('a, string) result) : ('a, string) result =
+  begin match result with
+    | Ok _ -> ()
+    | Error msg ->
+        let lazy context = context in
+        Hh_logger.error "Error (%s): %s" context msg
+  end;
+  result
