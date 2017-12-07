@@ -138,7 +138,7 @@ module Object
           argument;
         })), errs
       end else begin
-        let async = match Peek.token ~i:1 env with
+        let async = match Peek.ith_token ~i:1 env with
           | T_ASSIGN (* { async = true } (destructuring) *)
           | T_COLON (* { async: true } *)
           | T_LESS_THAN (* { async<T>() {} } *)
@@ -577,12 +577,12 @@ module Object
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
       let static =
-        Peek.token ~i:1 env <> T_LPAREN &&
-        Peek.token ~i:1 env <> T_LESS_THAN &&
+        Peek.ith_token ~i:1 env <> T_LPAREN &&
+        Peek.ith_token ~i:1 env <> T_LESS_THAN &&
         Expect.maybe env T_STATIC in
       let async =
-        Peek.token ~i:1 env <> T_LPAREN &&
-        Peek.token ~i:1 env <> T_COLON &&
+        Peek.ith_token ~i:1 env <> T_LPAREN &&
+        Peek.ith_token ~i:1 env <> T_COLON &&
         Declaration.async env in
       let generator = Declaration.generator env in
       let variance = Declaration.variance env async generator in

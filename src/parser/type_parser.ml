@@ -253,7 +253,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and function_param_list_without_parens =
     let param env =
-      match Peek.token ~i:1 env with
+      match Peek.ith_token ~i:1 env with
       | T_COLON | T_PLING ->
           let id = Parse.identifier env in
           function_param_with_id env id
@@ -319,7 +319,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           | Some _ ->
               (* Don't know if this is (number) or (number: number). The first
                * is a type, the second is a param. *)
-              match Peek.token ~i:1 env with
+              match Peek.ith_token ~i:1 env with
               | T_PLING | T_COLON ->
                 (* Ok this is definitely a parameter *)
                 ParamList (function_param_list_without_parens env [])
@@ -336,7 +336,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         (match Peek.token env with
         | T_RPAREN ->
             (* Reinterpret `(type) =>` as a ParamList *)
-            if Peek.token ~i:1 env = T_ARROW
+            if Peek.ith_token ~i:1 env = T_ARROW
             then
               let param = anonymous_function_param env t in
               ParamList (function_param_list_without_parens env [param])
@@ -351,7 +351,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     ret
 
   and function_param_or_generic_type env =
-    match Peek.token ~i:1 env with
+    match Peek.ith_token ~i:1 env with
     | T_PLING (* optional param *)
     | T_COLON ->
         let id = Parse.identifier env in
@@ -463,7 +463,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in let indexer_property env start_loc static variance =
       Expect.token env T_LBRACKET;
       let id =
-        if Peek.token ~i:1 env = T_COLON
+        if Peek.ith_token ~i:1 env = T_COLON
         then begin
           let id = identifier_name env in
           Expect.token env T_COLON;
@@ -729,7 +729,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   let annotation_and_predicate_opt env =
-    match Peek.token env, Peek.token ~i:1 env with
+    match Peek.token env, Peek.ith_token ~i:1 env with
     | T_COLON, T_CHECKS ->
       Expect.token env T_COLON;
       (None, predicate_opt env)

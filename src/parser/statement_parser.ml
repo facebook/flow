@@ -545,7 +545,7 @@ module Statement
   ) env
 
   and type_alias env =
-    if Peek.is_identifier ~i:1 env
+    if Peek.ith_is_identifier ~i:1 env
     then
       let loc, type_alias = with_loc type_alias_helper env in
       loc, Statement.TypeAlias type_alias
@@ -586,7 +586,7 @@ module Statement
   ) env
 
   and opaque_type env =
-    match Peek.token ~i:1 env with
+    match Peek.ith_token ~i:1 env with
       T_TYPE ->
         let loc, opaque_t = with_loc (opaque_type_helper ~declare:false) env in
         loc, Statement.OpaqueType opaque_t
@@ -630,7 +630,7 @@ module Statement
   and interface env =
     (* disambiguate between a value named `interface`, like `var interface = 1; interface++`,
        and an interface declaration like `interface Foo {}`.` *)
-    if Peek.is_identifier_name ~i:1 env
+    if Peek.ith_is_identifier_name ~i:1 env
     then
       let loc, iface = with_loc interface_helper env in
       loc, Statement.InterfaceDeclaration iface
@@ -833,7 +833,7 @@ module Statement
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeDeclaration;
     (* eventually, just emit a wrapper AST node *)
-    (match Peek.token ~i:1 env with
+    (match Peek.ith_token ~i:1 env with
       | T_CLASS ->
           declare_class_statement env
       | T_INTERFACE ->
@@ -976,12 +976,12 @@ module Statement
           declaration;
           exportKind = Statement.ExportValue;
         }
-    | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
+    | T_TYPE when (Peek.ith_token ~i:1 env) <> T_LCURLY ->
         (* export type ... *)
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeExport;
-        (match Peek.token ~i:1 env with
+        (match Peek.ith_token ~i:1 env with
         | T_MULT ->
           Expect.token env T_TYPE;
           let specifier_loc = Peek.loc env in
@@ -1302,7 +1302,7 @@ module Statement
       let identifier env =
         if for_type then Type.type_identifier env else Parse.identifier env
       in
-      match Peek.token ~i:1 env with
+      match Peek.ith_token ~i:1 env with
       | T_IDENTIFIER { raw = "as"; _ } ->
         let remote = identifier_name env in
         Eat.token env; (* as *)
@@ -1366,7 +1366,7 @@ module Statement
 
         (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
         | T_IDENTIFIER { raw = "as"; _ } ->
-          begin match Peek.token ~i:1 env with
+          begin match Peek.ith_token ~i:1 env with
           | T_EOF
           | T_RCURLY
           | T_COMMA ->
@@ -1508,7 +1508,7 @@ module Statement
       (* `import type [...] from "ModuleName";`
          note that if [...] is missing, we're importing a value named `type`! *)
       | T_TYPE when should_parse_types env ->
-        begin match Peek.token ~i:1 env with
+        begin match Peek.ith_token ~i:1 env with
         (* `import type, { other, names } from "ModuleName";` *)
         | T_COMMA
         (* `import type from "ModuleName";` *)

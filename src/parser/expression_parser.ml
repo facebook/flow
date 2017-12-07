@@ -876,7 +876,7 @@ module Expression
              they will be in the element list, but a trailing elision, like `[...x,]`, is not part
              of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
           let new_errs =
-            if not is_last && Peek.token ~i:1 env = T_RBRACKET then
+            if not is_last && Peek.ith_token ~i:1 env = T_RBRACKET then
               let if_patt = (loc, Parse_error.ElementAfterRestElement)::new_errs.if_patt in
               { new_errs with if_patt }
             else new_errs
@@ -943,7 +943,7 @@ module Expression
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
-      let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
+      let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
       let typeParameters = Type.type_parameter_declaration env in
       let params, returnType, predicate =
         (* Disallow all fancy features for identifier => body *)
