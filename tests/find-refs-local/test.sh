@@ -69,3 +69,5 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 96 14
 printf "Method call on an imported class (finds other references but not the definition since it's in another file): "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 102 16
 
+printf "Method call within a class that has type params: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 107 10
