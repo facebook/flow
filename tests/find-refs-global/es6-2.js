@@ -6,3 +6,5 @@ foo();
 
 const x = new Foo();
 x.foo();
+
+(x: any).foo();

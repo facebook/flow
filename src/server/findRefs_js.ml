@@ -9,6 +9,7 @@ open Utils_js
 
 module Result = Core_result
 let (>>=) = Result.(>>=)
+let (>>|) = Result.(>>|)
 
 let get_docblock file content =
   let open Parsing_service_js in
@@ -210,9 +211,17 @@ end = struct
 
   let unset_hooks () =
     Type_inference_hooks_js.reset_hooks ()
+
+  type def_loc =
+    | Found of Loc.t
+    (* This means it's a known type that we deliberately do not currently support. *)
+    | UnsupportedType
+    (* This means it's not well-typed, and could be anything *)
+    | AnyType
+
   (* Ok None indicates an expected case where no location was found, whereas an Error return indicates
    * that something went wrong. *)
-  let extract_def_loc cx ty name : (Loc.t option, string) result =
+  let extract_def_loc cx ty name : (def_loc, string) result =
     let open Flow_js.Members in
     let open Type in
     let resolved = Flow_js.resolve_type cx ty in
@@ -223,18 +232,14 @@ end = struct
           command_result >>= fun map ->
           Result.of_option ~error:"Expected a property definition" (SMap.get name map) >>= fun (loc, _) ->
           Result.of_option ~error:"Expected a location associated with the definition" loc >>= fun loc ->
-          Ok (Some loc)
+          Ok (Found loc)
       | Success _
-      | SuccessModule _ ->
-          Ok None
-      | FailureNullishType ->
-          Error "Extracting definition loc from possibly null or undefined value"
+      | SuccessModule _
+      | FailureNullishType
+      | FailureUnhandledType _ ->
+          Ok UnsupportedType
       | FailureAnyType ->
-          Error "not enough type information to find definition"
-      | FailureUnhandledType t ->
-          Error (spf
-            "find-refs on unexpected type of value %s (please file a task!)"
-            (string_of_ctor t))
+          Ok AnyType
 
   let find_refs_in_file options workers env content file_key def_loc name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
@@ -245,13 +250,15 @@ end = struct
     !potential_refs |>
       LocMap.bindings |>
       List.map begin fun (ref_loc, ty) ->
-        extract_def_loc cx ty name >>= fun loc ->
-        match loc with
-          | Some loc when loc = def_loc ->
-              Ok (Some ref_loc)
-          | _ -> Ok None
-      end |> Result.all >>= fun refs ->
-      Ok (List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] refs)
+        extract_def_loc cx ty name >>| function
+          | Found loc when loc = def_loc ->
+              Some ref_loc
+          | Found _ -> None
+          (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
+           * are references or not. For now we'll leave them out. *)
+          | UnsupportedType | AnyType -> None
+      end |> Result.all >>|
+      List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
 
   let find_refs options workers env ~content file_key loc ~global =
     let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
@@ -267,8 +274,9 @@ end = struct
         | Some (`Use (ty, name)) ->
             extract_def_loc cx ty name >>= fun loc ->
             match loc with
-              | None -> Ok None
-              | Some loc -> Ok (Some (loc, name))
+              | Found loc -> Ok (Some (loc, name))
+              | UnsupportedType
+              | AnyType -> Ok None
     in
     let get_ref_info: Loc.t -> string -> (Loc.t list, string) result = fun def_loc name ->
       find_refs_in_file options workers env content file_key def_loc name
