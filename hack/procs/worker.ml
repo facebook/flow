@@ -139,15 +139,32 @@ and 'a slave = {
  *****************************************************************************)
 
 let slave_main ic oc =
-  let start_user_time = ref 0.0 in
-  let start_system_time = ref 0.0 in
+  let start_user_time = ref 0. in
+  let start_system_time = ref 0. in
+  let start_minor_words = ref 0. in
+  let start_promoted_words = ref 0. in
+  let start_major_words = ref 0. in
+  let start_minor_collections = ref 0 in
+  let start_major_collections = ref 0 in
   let send_result data =
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
+    let { Gc.
+      minor_words = end_minor_words;
+      promoted_words = end_promoted_words;
+      major_words = end_major_words;
+      minor_collections = end_minor_collections;
+      major_collections = end_major_collections;
+      _;
+    } = Gc.quick_stat () in
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
-
+    Measure.sample "minor_words" (end_minor_words -. !start_minor_words);
+    Measure.sample "promoted_words" (end_promoted_words -. !start_promoted_words);
+    Measure.sample "major_words" (end_major_words -. !start_major_words);
+    Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
+    Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     let stats = Measure.serialize (Measure.pop_global ()) in
     let s = Marshal.to_string (data,stats) [Marshal.Closures] in
     let len = String.length s in
@@ -165,8 +182,14 @@ let slave_main ic oc =
     Measure.push_global ();
     let Request do_process = Daemon.from_channel ic in
     let tm = Unix.times () in
+    let gc = Gc.quick_stat () in
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
     start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
+    start_minor_words := gc.Gc.minor_words;
+    start_promoted_words := gc.Gc.promoted_words;
+    start_major_words := gc.Gc.major_words;
+    start_minor_collections := gc.Gc.minor_collections;
+    start_major_collections := gc.Gc.major_collections;
     do_process { send = send_result };
     exit 0
   with
