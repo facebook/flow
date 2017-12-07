@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+let error_of_parse_error source_file (loc, err) =
+  let flow_err = Flow_error.EParseError (loc, err) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+
+let error_of_file_sig_error source_file e =
+  let flow_err = File_sig.(match e with
+  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType loc
+  ) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+
 let parse_content file content =
   let parse_options = Some Parser_env.({
     (**
@@ -19,7 +29,18 @@ let parse_content file content =
     types = true;
     use_strict = false;
   }) in
-  Parser_flow.program_file ~fail:false ~parse_options content (Some file)
+  let ast, parse_errors =
+    Parser_flow.program_file ~fail:false ~parse_options content (Some file)
+  in
+  if parse_errors <> [] then
+    let converted = List.fold_left (fun acc parse_error ->
+      Errors.ErrorSet.add (error_of_parse_error file parse_error) acc
+    ) Errors.ErrorSet.empty parse_errors in
+    Error converted
+  else
+    match File_sig.program ~ast with
+    | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
+    | Ok fsig -> Ok (ast, fsig)
 
 let array_of_list f lst =
   Array.of_list (List.map f lst)
@@ -40,10 +61,6 @@ let rec js_of_json = function
   | Hh_json.JSON_Null ->
       Js.Unsafe.inject Js.null
 
-let error_of_parse_error source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (loc, err) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
-
 let load_lib_files ~master_cx ~metadata files
     save_parse_errors save_infer_errors save_suppressions save_lint_suppressions =
   (* iterate in reverse override order *)
@@ -53,9 +70,10 @@ let load_lib_files ~master_cx ~metadata files
       let lib_content = Sys_utils.cat file in
       let lib_file = File_key.LibFile file in
       match parse_content lib_file lib_content with
-      | ast, [] ->
+      | Ok (ast, file_sig) ->
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms ~lint_severities:LintSettings.default_severities
+          ~metadata ~exclude_syms ~file_sig
+          ~lint_severities:LintSettings.default_severities
           lib_file ast
         in
 
@@ -70,11 +88,8 @@ let load_lib_files ~master_cx ~metadata files
         let result = (lib_file, true) :: result in
         exclude_syms, result
 
-      | _, parse_errors ->
-        let converted = List.fold_left (fun acc parse_error ->
-          Errors.ErrorSet.add (error_of_parse_error lib_file parse_error) acc
-        ) Errors.ErrorSet.empty parse_errors in
-        save_parse_errors lib_file converted;
+      | Error parse_errors ->
+        save_parse_errors lib_file parse_errors;
         exclude_syms, ((lib_file, false) :: result)
 
     ) (SSet.empty, [])
@@ -150,7 +165,7 @@ let set_libs filenames =
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
 
-let infer_and_merge ~root filename ast =
+let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
      it relies on the JS version only supporting libs + 1 file, so every
      module you can require() must come from a lib; this skips resolving
@@ -158,7 +173,6 @@ let infer_and_merge ~root filename ast =
   Flow_js.Cache.clear();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
-  let file_sig = File_sig.program ~ast in
   let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
   let decls = SMap.fold (fun module_name locs acc ->
     let m = Modulename.String module_name in
@@ -181,16 +195,13 @@ let check_content ~filename ~content =
   let root = Path.dummy_path in
   let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
-  | ast, [] ->
-    let cx = infer_and_merge ~root filename ast in
+  | Ok (ast, file_sig) ->
+    let cx = infer_and_merge ~root filename ast file_sig in
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
       Error_suppressions.empty (Context.severity_cover cx) (Context.errors cx)
     in errors, warnings
-  | _, parse_errors ->
-    let errors = List.fold_left (fun acc parse_error ->
-      Errors.ErrorSet.add (error_of_parse_error filename parse_error) acc
-    ) Errors.ErrorSet.empty parse_errors
-    in errors, Errors.ErrorSet.empty
+  | Error parse_errors ->
+    parse_errors, Errors.ErrorSet.empty
   in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
@@ -227,8 +238,9 @@ let infer_type filename content line col =
     let filename = File_key.SourceFile filename in
     let root = Path.dummy_path in
     match parse_content filename content with
-    | ast, [] ->
-      let cx = infer_and_merge ~root filename ast in
+    | Error _ -> failwith "parse error"
+    | Ok (ast, file_sig) ->
+      let cx = infer_and_merge ~root filename ast file_sig in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -244,7 +256,6 @@ let infer_type filename content line col =
         |> List.map Type.reason_of_t
       in
       (None, Some (loc, ty, reasons))
-    | _, _ -> failwith "parse error"
 
 let types_to_json types ~strip_root =
   let open Hh_json in
@@ -275,8 +286,9 @@ let dump_types js_file js_content =
     let root = Path.dummy_path in
     let content = Js.to_string js_content in
     match parse_content filename content with
-    | ast, [] ->
-      let cx = infer_and_merge ~root filename ast in
+    | Error _ -> failwith "parse error"
+    | Ok (ast, file_sig) ->
+      let cx = infer_and_merge ~root filename ast file_sig in
       let printer = Type_printer.string_of_t in
       let types = Query_types.dump_types printer cx in
 
@@ -284,7 +296,6 @@ let dump_types js_file js_content =
       let types_json = types_to_json types ~strip_root in
 
       js_of_json types_json
-    | _, _ -> failwith "parse error"
 
 let handle_inferred_result (_, inferred, _) =
   inferred

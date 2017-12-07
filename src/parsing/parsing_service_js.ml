@@ -13,7 +13,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 type result =
-  | Parse_ok of Loc.t Ast.program
+  | Parse_ok of Loc.t Ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -24,6 +24,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -364,21 +365,28 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
     | File_key.JsonFile _ ->
-      Parse_ok (parse_json_file ~fail content file)
+      let ast = parse_json_file ~fail content file in
+      Parse_ok (ast, File_sig.empty_file_sig)
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
-      let types =
-        (* either all=true or @flow pragma exists *)
-        types_checked types_mode info ||
-        (* always parse types for .flow files -- NB: will _not_ be inferred *)
-        Docblock.isDeclarationFile info
-      in
-      (* don't bother to parse if types are disabled *)
-      if types
-      then Parse_ok (parse_source_file ~fail ~types ~use_strict content file)
-      else Parse_skip Skip_non_flow_file
-  )
+      (* either all=true or @flow pragma exists *)
+      let types_checked = types_checked types_mode info in
+      (* always parse types for .flow files -- NB: will _not_ be inferred *)
+      let types = types_checked || Docblock.isDeclarationFile info in
+      if not types
+      then Parse_skip Skip_non_flow_file
+      else
+        let ast = parse_source_file ~fail ~types ~use_strict content file in
+        (* Only calculate file sigs for files which will actually be inferred.
+         * The only files which are parsed but not inferred are .flow files with
+         * no @flow pragma. *)
+        if types_checked then
+          match File_sig.program ~ast with
+          | Ok file_sig -> Parse_ok (ast, file_sig)
+          | Error e -> Parse_fail (File_sig_error e)
+        else
+          Parse_ok (ast, File_sig.empty_file_sig))
   with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
@@ -387,9 +395,6 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let loc = Loc.({ none with source = Some file }) in
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
-
-let calc_file_sig ~ast =
-  File_sig.program ~ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -421,7 +426,7 @@ let reducer
           else info
         in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
-        | Parse_ok ast ->
+        | Parse_ok (ast, file_sig) ->
             (* Consider the file unchanged if its reparsing info is the same as
              * its old parsing info. A complication is that we don't want to
              * drop a .flow file, even if it is unchanged, since it might have
@@ -438,15 +443,6 @@ let reducer
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
-              (* Only calculate file sigs for files which will actually be
-                 inferred. The only files which are parsed (thus, Parse_ok) but
-                 not inferred are .flow files with no @flow pragma and .json
-                 files. *)
-              let file_sig =
-                if types_checked types_mode info
-                then calc_file_sig ~ast
-                else File_sig.empty_file_sig
-              in
               ParsingHeaps.add file ast info file_sig;
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }

@@ -563,9 +563,13 @@ let flow_check (code : string) : string option =
       let builtin_metadata = stub_metadata ~root ~checked:true in
       let lint_severities = LintSettings.default_severities in
       let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
+      let builtins_file_sig = match File_sig.program ~ast:builtins_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating builtins file sig"
+      in
       let builtins_cx, _ = Type_inference_js.infer_lib_file   (* The crucial bit *)
           ~metadata:builtin_metadata ~exclude_syms:SSet.empty ~lint_severities
-          File_key.Builtins builtins_ast in
+          ~file_sig:builtins_file_sig File_key.Builtins builtins_ast in
       let _ = Merge_js.merge_lib_file builtins_cx master_cx in
       let reason = Reason.builtin_reason (Reason.RCustom "module") in
       let builtin_module = Obj_type.mk master_cx reason in
@@ -583,7 +587,10 @@ let flow_check (code : string) : string option =
                           } in
       let input_ast, _ = Parser_flow.program code in
       let filename = File_key.SourceFile "/tmp/foo.js" in
-      let file_sig = File_sig.program ~ast:input_ast in
+      let file_sig = match File_sig.program ~ast:input_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating implementation file sig"
+      in
       let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)

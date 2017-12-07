@@ -62,7 +62,7 @@ class mapper = object(this)
       id this#declare_class stuff stmt (fun stuff -> loc, DeclareClass stuff)
 
     | (loc, DeclareExportDeclaration decl) ->
-      id this#declare_export_declaration decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
+      id (this#declare_export_declaration loc) decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
 
     | (loc, DeclareFunction stuff) ->
       id this#declare_function stuff stmt (fun stuff -> loc, DeclareFunction stuff)
@@ -90,10 +90,10 @@ class mapper = object(this)
       stmt
 
     | (loc, ExportDefaultDeclaration decl) ->
-      id this#export_default_declaration decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
+      id (this#export_default_declaration loc) decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
 
     | (loc, ExportNamedDeclaration decl) ->
-      id this#export_named_declaration decl stmt (fun decl -> loc, ExportNamedDeclaration decl)
+      id (this#export_named_declaration loc) decl stmt (fun decl -> loc, ExportNamedDeclaration decl)
 
     | (loc, Expression expr) ->
       id this#expression_statement expr stmt (fun expr -> loc, Expression expr)
@@ -114,7 +114,7 @@ class mapper = object(this)
       id this#if_statement if_stmt stmt (fun if_stmt -> loc, If if_stmt)
 
     | (loc, ImportDeclaration decl) ->
-      id this#import_declaration decl stmt (fun decl -> loc, ImportDeclaration decl)
+      id (this#import_declaration loc) decl stmt (fun decl -> loc, ImportDeclaration decl)
 
     | (loc, InterfaceDeclaration stuff) ->
       id this#interface_declaration stuff stmt (fun stuff -> loc, InterfaceDeclaration stuff)
@@ -331,7 +331,7 @@ class mapper = object(this)
     else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends';
            mixins = mixins' }
 
-  method declare_export_declaration (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
+  method declare_export_declaration _loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
@@ -388,13 +388,13 @@ class mapper = object(this)
   method empty () =
     ()
 
-  method export_default_declaration (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
+  method export_default_declaration _loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement.ExportDefaultDeclaration in
     match decl with
     | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
     | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)
 
-  method export_named_declaration (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
+  method export_named_declaration _loc (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
@@ -689,7 +689,7 @@ class mapper = object(this)
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     match importKind with

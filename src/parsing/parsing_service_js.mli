@@ -13,7 +13,7 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of Loc.t Ast.program
+  | Parse_ok of Loc.t Ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -24,6 +24,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -96,10 +97,6 @@ val reparse_with_defaults:
   Worker.t list option ->
   FilenameSet.t ->
   FilenameSet.t * results
-
-val calc_file_sig:
-  ast:Loc.t Ast.program ->
-  File_sig.t
 
 val has_ast: File_key.t -> bool
 

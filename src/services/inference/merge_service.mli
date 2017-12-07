@@ -30,6 +30,7 @@ val merge_contents_context:
   File_key.t ->
   Loc.t Ast.program ->
   Docblock.t ->
+  File_sig.t ->
   ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
   Context.t
 

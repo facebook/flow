@@ -24,7 +24,7 @@ let get_ast_result file content =
   let use_strict = true in
   let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
   match result with
-    | Parse_ok ast -> Ok ast
+    | Parse_ok (ast, file_sig) -> Ok (ast, file_sig)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
@@ -56,43 +56,37 @@ end = struct
     File_key.to_path dep_file_key >>= fun path ->
     let dep_fileinput = File_input.FileName path in
     File_input.content_of_file_input dep_fileinput >>= fun content ->
-    get_ast_result dep_file_key content >>= fun ast ->
-    let sig_ = File_sig.program ast in
-    let relevant_requires: require SMap.t =
-      sig_.module_sig.requires |>
-        SMap.filter begin fun from_module _ ->
-          let resolved = Module_js.find_resolved_module
-            ~audit:Expensive.warn
-            dep_file_key
-            from_module
-          in
-          match Module_js.get_file ~audit:Expensive.warn resolved with
-            | None -> false
-            | Some x -> x = file_key
-        end
-    in
-    (* The keys in relevant_requires are all just references to the module where the symbol is
-    defined, so let's get just the values since we have already filtered out irrelevant keys *)
-    let only_requires: require list =
-      SMap.bindings relevant_requires |>
-        List.map (fun (_, x) -> x)
-    in
-    let locs =
-      let get_relevant_locs require =
-        match SMap.get symbol require.named with
-          | None -> []
-          | Some local_name_to_locs ->
-              SMap.bindings local_name_to_locs |>
-                List.map (fun (_, locs) -> Nel.to_list locs) |>
-                List.concat
+    get_ast_result dep_file_key content >>| fun (_, file_sig) ->
+    let is_relevant mref =
+      let resolved = Module_js.find_resolved_module
+        ~audit:Expensive.warn
+        dep_file_key
+        mref
       in
-      List.map get_relevant_locs only_requires |> List.concat
+      match Module_js.get_file ~audit:Expensive.warn resolved with
+      | None -> false
+      | Some x -> x = file_key
     in
-    Ok locs
+    let locs = List.fold_left (fun acc require ->
+      match require with
+      | Require _
+      | ImportDynamic _
+      | Import0 _ -> acc
+      | Import { source = (_, mref); named; _ } ->
+        if not (is_relevant mref) then acc else
+        match SMap.get symbol named with
+        | None -> acc
+        | Some local_name_to_locs ->
+          SMap.fold (fun _ locs acc ->
+            List.rev_append (Nel.to_list locs) acc
+          ) local_name_to_locs acc
+    ) [] file_sig.module_sig.requires in
+    List.fast_sort Loc.compare locs
+
 
   let local_find_refs file_key ~content loc =
     let open Scope_api in
-    get_ast_result file_key content >>= fun ast ->
+    get_ast_result file_key content >>= fun (ast, _) ->
     let scope_info = Scope_builder.program ast in
     let all_uses = all_uses scope_info in
     let matching_uses = List.filter (fun use -> Loc.contains use loc) all_uses in
@@ -147,10 +141,9 @@ end = struct
       | None -> Ok None
       | Some (name, refs) ->
           if global then
-            get_ast_result file_key content >>= fun ast ->
-            let sig_ = File_sig.program ast in
+            get_ast_result file_key content >>= fun (_, file_sig) ->
             let open File_sig in
-            begin match sig_.module_sig.module_kind with
+            begin match file_sig.module_sig.module_kind with
               (* TODO support CommonJS *)
               | CommonJS _ -> Ok (Some (name, refs))
               | ES {named; _} -> begin match SMap.get name named with

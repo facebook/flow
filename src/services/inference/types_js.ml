@@ -85,6 +85,8 @@ let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fail
       Inference_utils.set_of_parse_error ~source_file:file err
     | Parsing_service_js.Docblock_errors errs ->
       Inference_utils.set_of_docblock_errors ~source_file:file errs
+    | Parsing_service_js.File_sig_error err ->
+      Inference_utils.set_of_file_sig_error ~source_file:file err
     in
     update_errset errors file errset
   ) FilenameMap.empty parse_fails in
@@ -496,7 +498,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
         parse_contents ~options ~profiling ~check_syntax filename contents in
 
       match parse_result with
-      | Parsing_service_js.Parse_ok ast ->
+      | Parsing_service_js.Parse_ok (ast, file_sig) ->
           (* override docblock info *)
           let info =
             let open Docblock in
@@ -527,7 +529,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
               ensure_checked_dependencies ~options ~profiling ~workers ~env
             in
             Merge_service.merge_contents_context
-              options filename ast info ~ensure_checked_dependencies
+              options filename ast info file_sig ~ensure_checked_dependencies
           ) in
 
           let errors = Context.errors cx in
@@ -571,6 +573,9 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
                 let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
                 Errors.ErrorSet.add err errors
               ) errors errs
+          | Parsing_service_js.File_sig_error err ->
+              let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+              Errors.ErrorSet.add err errors
           in
           None, errors, Errors.ErrorSet.empty, info
 

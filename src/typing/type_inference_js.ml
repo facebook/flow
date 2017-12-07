@@ -473,7 +473,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
+let infer_lib_file ~metadata ~exclude_syms ~lint_severities ~file_sig file ast =
   let _, statements, comments = ast in
   Flow_js.Cache.clear();
 
@@ -482,8 +482,6 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
-    let open File_sig in
-    let file_sig = program ~ast in
     add_require_tvars cx file_sig
   in
 

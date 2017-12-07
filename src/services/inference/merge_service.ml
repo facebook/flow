@@ -112,8 +112,7 @@ let merge_strict_context ~options component =
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context options file ast info ~ensure_checked_dependencies =
-  let file_sig = Parsing_service_js.calc_file_sig ~ast in
+let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
   let resolved_rs, required =
     let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r locs (resolved_rs, required) ->
