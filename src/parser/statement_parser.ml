@@ -972,10 +972,7 @@ module Statement
             Eat.semicolon env;
             Expression expr
           in
-        Statement.ExportDefaultDeclaration {
-          declaration;
-          exportKind = Statement.ExportValue;
-        }
+        Statement.ExportDefaultDeclaration declaration
     | T_TYPE when (Peek.ith_token ~i:1 env) <> T_LCURLY ->
         (* export type ... *)
         let open Statement.ExportNamedDeclaration in

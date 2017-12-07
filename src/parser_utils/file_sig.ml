@@ -278,7 +278,7 @@ class requires_calculator ~ast = object(this)
       ~named:!named ~ns:!ns ~types:!types ~typesof:!typesof ~typesof_ns:!typesof_ns;
     super#import_declaration decl
 
-  method! export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
+  method! export_default_declaration (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement in
     let open Ast.Statement.ExportDefaultDeclaration in
     let local =  match decl with
@@ -288,7 +288,7 @@ class requires_calculator ~ast = object(this)
     in
     let export = ExportDefault { local } in
     this#add_exports ExportValue [export, "default"] [];
-    super#export_default_declaration_decl  decl
+    super#export_default_declaration decl
 
   method! export_named_declaration (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in

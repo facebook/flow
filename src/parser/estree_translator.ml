@@ -275,13 +275,13 @@ end with type t = Impl.t) = struct
           |]
       )
     | loc, ExportDefaultDeclaration export -> ExportDefaultDeclaration.(
-        let declaration = match export.declaration with
+        let declaration = match export with
         | Declaration stmt -> statement stmt
         | ExportDefaultDeclaration.Expression expr -> expression expr
         in
         node "ExportDefaultDeclaration" loc [|
           "declaration", declaration;
-          "exportKind", string (export_kind export.exportKind);
+          "exportKind", string (export_kind Statement.ExportValue);
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(

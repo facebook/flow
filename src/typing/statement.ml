@@ -317,7 +317,7 @@ and statement_decl cx = Ast.Statement.(
       | Some stmt -> statement_decl cx stmt
       | None -> ()
     )
-  | _, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } -> (
+  | _, ExportDefaultDeclaration declaration -> (
       match declaration with
       | ExportDefaultDeclaration.Declaration stmt ->
         statement_decl cx (nameify_default_export_decl stmt)
@@ -1696,10 +1696,7 @@ and statement cx = Ast.Statement.(
       export_statement cx loc
         ~default:false export_info specifiers source exportKind
 
-  | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.
-      declaration;
-      exportKind;
-    }) ->
+  | (loc, ExportDefaultDeclaration declaration) ->
       let export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
           let decl = nameify_default_export_decl decl in
@@ -1739,6 +1736,9 @@ and statement cx = Ast.Statement.(
           let expr_t = expression cx expr in
           [( "<<expression>>", fst expr, "default", Some expr_t)]
       in
+
+      (* export default is always a value *)
+      let exportKind = Ast.Statement.ExportValue in
 
       export_statement cx loc ~default:true export_info None None exportKind
 

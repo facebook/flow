@@ -431,13 +431,9 @@ and Statement : sig
     }
   end
   module ExportDefaultDeclaration : sig
-    type 'M declaration =
+    type 'M t =
       | Declaration of 'M Statement.t
       | Expression of 'M Expression.t
-    type 'M t = {
-      declaration: 'M declaration;
-      exportKind: Statement.exportKind;
-    }
   end
   module DeclareExportDeclaration : sig
     type 'M declaration =
