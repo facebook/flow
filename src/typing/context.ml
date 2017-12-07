@@ -26,7 +26,6 @@ type local_metadata = {
 
 type global_metadata = {
   enable_const_params: bool;
-  enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
@@ -58,7 +57,6 @@ module Global = struct
   }
 
   let enable_const_params t = t.metadata.enable_const_params
-  let enable_unsafe_getters_and_setters t = t.metadata.enable_unsafe_getters_and_setters
   let enforce_strict_type_args t = t.metadata.enforce_strict_type_args
   let enforce_strict_call_arity t = t.metadata.enforce_strict_call_arity
   let esproposal_class_static_fields t = t.metadata.esproposal_class_static_fields
@@ -157,7 +155,6 @@ type t = {
 
 let global_metadata_of_options options = {
   enable_const_params = Options.enable_const_params options;
-  enable_unsafe_getters_and_setters = Options.enable_unsafe_getters_and_setters options;
   enforce_strict_call_arity = Options.enforce_strict_call_arity options;
   enforce_strict_type_args = Options.enforce_strict_type_args options;
   esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
@@ -249,7 +246,6 @@ let all_unresolved cx = cx.local.all_unresolved
 let annot_table cx = cx.local.annot_table
 let envs cx = cx.local.envs
 let enable_const_params cx = Global.enable_const_params cx.global
-let enable_unsafe_getters_and_setters cx = Global.enable_unsafe_getters_and_setters cx.global
 let enforce_strict_type_args cx = Global.enforce_strict_type_args cx.global
 let enforce_strict_call_arity cx = Global.enforce_strict_call_arity cx.global
 let errors cx = cx.local.errors

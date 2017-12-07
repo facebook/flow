@@ -16,6 +16,7 @@ type lint_kind =
  | UntypedTypeImport
  | UntypedImport
  | UnclearType
+ | UnsafeGettersSetters
 
 val string_of_kind: lint_kind -> string
 

@@ -2104,10 +2104,9 @@ and object_prop cx map = Ast.Expression.Object.(function
     let t = expression cx (fn_loc, Ast.Expression.Function func) in
     Properties.add_field name Neutral (Some loc) t map
 
-  (* With the enable_unsafe_getters_and_setters option set, we enable some
-   * unsafe support for getters and setters. The main unsafe bit is that we
-   * don't properly havok refinements when getter and setter methods are called.
-   *)
+  (* We enable some unsafe support for getters and setters. The main unsafe bit
+  *  is that we don't properly havok refinements when getter and setter methods
+  *  are called. *)
 
   (* unsafe getter property *)
   | Property (loc, Property.Get {
@@ -2119,15 +2118,10 @@ and object_prop cx map = Ast.Expression.Object.(function
         });
       value = (vloc, func);
     }) ->
-    if Context.enable_unsafe_getters_and_setters cx then
-      let function_type = mk_function None cx vloc func in
-      let return_t = Type.extract_getter_type function_type in
-      Properties.add_getter name (Some id_loc) return_t map
-    else begin
-      Flow.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-      map
-    end
+    Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
+    let function_type = mk_function None cx vloc func in
+    let return_t = Type.extract_getter_type function_type in
+    Properties.add_getter name (Some id_loc) return_t map
 
   (* unsafe setter property *)
   | Property (loc, Property.Set {
@@ -2139,15 +2133,10 @@ and object_prop cx map = Ast.Expression.Object.(function
         });
       value = (vloc, func);
     }) ->
-    if Context.enable_unsafe_getters_and_setters cx then
-      let function_type = mk_function None cx vloc func in
-      let param_t = Type.extract_setter_type function_type in
-      Properties.add_setter name (Some id_loc) param_t map
-    else begin
-      Flow.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-      map
-    end
+    Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
+    let function_type = mk_function None cx vloc func in
+    let param_t = Type.extract_setter_type function_type in
+    Properties.add_setter name (Some id_loc) param_t map
 
   (* literal LHS *)
   | Property (loc, Property.Init { key = Property.Literal _; _ })

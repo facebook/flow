@@ -729,7 +729,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     | { Object.Property.
         key = Ast.Expression.Object.Property.Identifier (id_loc, name);
         value = Object.Property.Get (loc, f);
-        _ } when Context.enable_unsafe_getters_and_setters cx ->
+        _ } ->
+      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let return_t = Type.extract_getter_type function_type in
       let props = Properties.add_getter name (Some id_loc) return_t props in
@@ -739,7 +740,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     | { Object.Property.
         key = Ast.Expression.Object.Property.Identifier (id_loc, name);
         value = Object.Property.Set (loc, f);
-        _ } when Context.enable_unsafe_getters_and_setters cx ->
+        _ } ->
+      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let param_t = Type.extract_setter_type function_type in
       let props = Properties.add_setter name (Some id_loc) param_t props in

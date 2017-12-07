@@ -28,7 +28,6 @@ type local_metadata = {
 }
 type global_metadata = {
   enable_const_params: bool;
-  enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
@@ -62,7 +61,6 @@ val from_cache: options:Options.t -> cacheable_t -> t
 val all_unresolved: t -> ISet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val enable_const_params: t -> bool
-val enable_unsafe_getters_and_setters: t -> bool
 val enforce_strict_type_args: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t

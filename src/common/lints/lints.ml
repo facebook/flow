@@ -16,6 +16,7 @@ type lint_kind =
   | UntypedTypeImport
   | UntypedImport
   | UnclearType
+  | UnsafeGettersSetters
 
 let string_of_sketchy_null_kind = function
   | SketchyBool -> "sketchy-null-bool"
@@ -28,6 +29,7 @@ let string_of_kind = function
   | UntypedTypeImport -> "untyped-type-import"
   | UntypedImport -> "untyped-import"
   | UnclearType -> "unclear-type"
+  | UnsafeGettersSetters -> "unsafe-getters-setters"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -43,6 +45,7 @@ let kinds_of_string = function
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
+  | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | _ -> None
 
 module LintKind = struct

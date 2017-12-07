@@ -514,10 +514,6 @@ let warn_or_ignore_class_properties cx ~static loc =
     Flow.add_output cx
       (Flow_error.EExperimentalClassProperties (loc, static))
 
-let warn_unsafe_getters_setters cx loc =
-  if not (Context.enable_unsafe_getters_and_setters cx)
-  then Flow.add_output cx (Flow_error.EUnsafeGetSet loc)
-
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
    members, a pointer to the super instance type, and a container for types of
@@ -613,7 +609,7 @@ let mk cx _loc reason self ~expr =
       warn_or_ignore_decorators cx decorators;
 
       Ast.Class.Method.(match kind with
-      | Get | Set -> warn_unsafe_getters_setters cx loc
+      | Get | Set -> Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc)
       | _ -> ());
 
       let add = match kind with
@@ -751,23 +747,18 @@ let add_interface_properties cx properties s =
 
       (* unsafe getter property *)
       | _, Property.Identifier (id_loc, name),
-          Ast.Type.Object.Property.Get (_, func)
-            when Context.enable_unsafe_getters_and_setters cx ->
+          Ast.Type.Object.Property.Get (_, func) ->
+          Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
           let fsig = Func_sig.convert cx tparams_map loc func in
           add_getter ~static name (Some id_loc) fsig x
 
       (* unsafe setter property *)
       | _, Property.Identifier (id_loc, name),
-          Ast.Type.Object.Property.Set (_, func)
-            when Context.enable_unsafe_getters_and_setters cx ->
+          Ast.Type.Object.Property.Set (_, func) ->
+          Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
           let fsig = Func_sig.convert cx tparams_map loc func in
           add_setter ~static name (Some id_loc) fsig x
 
-      | _, _, Ast.Type.Object.Property.Get _
-      | _, _, Ast.Type.Object.Property.Set _ ->
-          Flow.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-          x
       )
 
     | SpreadProperty (loc, _) ->

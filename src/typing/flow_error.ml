@@ -152,6 +152,7 @@ type error_message =
   | EUntypedTypeImport of Loc.t * string
   | EUntypedImport of Loc.t * string
   | EUnclearType of Loc.t
+  | EUnsafeGettersSetters of Loc.t
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
@@ -455,6 +456,7 @@ let locs_of_error_message = function
   | EUntypedTypeImport (loc, _) -> [loc]
   | EUntypedImport (loc, _) -> [loc]
   | EUnclearType (loc) -> [loc]
+  | EUnsafeGettersSetters (loc) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
@@ -1657,6 +1659,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error
       ~kind:(LintError Lints.UnclearType)
       [loc, ["Unclear type. Using `any`, `Object` or `Function` types is not safe!"]]
+  | EUnsafeGettersSetters loc ->
+    mk_error
+      ~kind:(LintError Lints.UnsafeGettersSetters)
+      [loc, ["Getters and Setters can have side effects and are unsafe"]]
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]

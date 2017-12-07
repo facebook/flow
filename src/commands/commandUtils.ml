@@ -678,8 +678,6 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enforce_strict_type_args = FlowConfig.enforce_strict_type_args flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-    opt_enable_unsafe_getters_and_setters =
-      FlowConfig.enable_unsafe_getters_and_setters flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
