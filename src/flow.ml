@@ -112,6 +112,8 @@ let _ =
      exit via FlowExitStatus.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
 
+  let () = Printexc.record_backtrace true in
+
   try
     Daemon.check_entry_point (); (* this call might not return *)
     FlowShell.main ()
