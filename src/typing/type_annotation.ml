@@ -124,7 +124,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let reason = mk_reason RTupleType loc in
   let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
-  | [] -> Tvar.mk cx element_reason
+  | [] -> EmptyT.why element_reason
   | [t] -> t
   | t0::t1::ts ->
     (* If a tuple should be viewed as an array, what would the element type of
