@@ -3049,8 +3049,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ObjAssignFromT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
-    | DefT (_, IntersectionT rep), ObjAssignFromT (_, _, _, _) ->
-      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+    | DefT (_, IntersectionT rep),
+      ObjAssignFromT (reason_op, proto, tout, kind) ->
+      let tvar = List.fold_left (fun tout t ->
+        let tvar = match Cache.Fix.find reason_op t with
+        | Some tvar -> tvar
+        | None ->
+          Tvar.mk_where cx reason_op (fun tvar ->
+            Cache.Fix.add reason_op t tvar;
+            rec_flow cx trace (t, ObjAssignFromT (reason_op, proto, tvar, kind))
+          )
+        in
+        rec_flow_t cx trace (tvar, tout);
+        tvar
+      ) (Tvar.mk cx reason_op) (InterRep.members rep) in
+      rec_flow_t cx trace (tvar, tout)
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in

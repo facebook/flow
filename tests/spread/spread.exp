@@ -39,5 +39,27 @@ Error: test7.js:6
   6:     ({...x}: void); // error, Object
                   ^^^^ undefined
 
+Error: test8.js:7
+  7: ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+      ^^^^^^^^ object literal. This type is incompatible with
+  7: ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+                ^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `q` is incompatible:
+     12: type B = { q: string };
+                       ^^^^^^ string. This type is incompatible with
+      7: ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+                                    ^^^^^^ number
 
-Found 6 errors
+Error: test8.js:8
+  8: ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+      ^^^^^^^^ object literal. This type is incompatible with
+  8: ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+                ^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     11: type A = { p: number };
+                       ^^^^^^ number. This type is incompatible with
+      8: ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+                         ^^^^^^ string
+
+
+Found 8 errors
