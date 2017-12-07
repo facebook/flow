@@ -12,3 +12,5 @@ x.foo();
 export function returnsFoo(): Foo {
   return new Foo();
 }
+
+x.bar();
