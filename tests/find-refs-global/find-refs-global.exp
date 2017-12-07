@@ -93,3 +93,28 @@ class method:
     }
   ]
 }
+class method, queried from a use instead of the definition:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":3,"offset":193},
+      "end":{"line":16,"column":5,"offset":196}
+    },
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":11,"offset":240},
+      "end":{"line":21,"column":13,"offset":243}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":3,"offset":165},
+      "end":{"line":16,"column":5,"offset":168}
+    }
+  ]
+}

@@ -17,3 +17,5 @@ export class Foo {
     this.foo();
   }
 }
+
+new Foo().bar();

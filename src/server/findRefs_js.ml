@@ -258,7 +258,12 @@ end = struct
            * are references or not. For now we'll leave them out. *)
           | UnsupportedType | AnyType -> None
       end |> Result.all >>|
-      List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
+      List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] >>| fun refs ->
+      if Loc.(def_loc.source = Some file_key) then
+        (* Include the definition if it is in this file *)
+        def_loc::refs
+      else
+        refs
 
   let find_refs options workers env ~content file_key loc ~global =
     let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
@@ -278,21 +283,17 @@ end = struct
               | UnsupportedType
               | AnyType -> Ok None
     in
-    let get_ref_info: Loc.t -> string -> (Loc.t list, string) result = fun def_loc name ->
-      find_refs_in_file options workers env content file_key def_loc name
-    in
     get_def_info () >>= fun def_info_opt ->
     match def_info_opt with
       | None -> Ok None
       | Some (def_loc, name) ->
-          get_ref_info def_loc name >>= fun refs ->
-          (* Include the def_loc if it is in the same file *)
-          let refs = match Loc.(def_loc.source) with
-            | Some source when source = file_key -> def_loc::refs
-            | Some _ when global -> def_loc::refs
-            | _ -> refs
-          in
           if global then
+            (* Start from the file where the symbol is defined, instead of the one where find-refs was called *)
+            Result.of_option Loc.(def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
+            File_key.to_path file_key >>= fun path ->
+            let fileinput = File_input.FileName path in
+            File_input.content_of_file_input fileinput >>= fun content ->
+            find_refs_in_file options workers env content file_key def_loc name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
             let external_refs_result =
               FilenameSet.elements all_deps |> List.map begin fun dep ->
@@ -304,6 +305,7 @@ end = struct
             external_refs_result >>= fun external_refs ->
             Ok (Some (name, List.concat (refs::external_refs)))
           else
+            find_refs_in_file options workers env content file_key def_loc name >>= fun refs ->
             Ok (Some (name, refs))
 end
 
