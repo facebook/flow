@@ -78,7 +78,7 @@ let main option_values json pretty root strip_root from path args () =
       let open Hh_json in
       let json =
         JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
-      print_endline (json_to_string ~pretty json)
+      print_json_endline ~pretty json
     ) else
       if option_values.from = "vim" || option_values.from = "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)

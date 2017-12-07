@@ -48,7 +48,7 @@ let handle_error ~json ~pretty err =
   then (
     let open Hh_json in
     let json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty json);
+    prerr_json_endline ~pretty json;
   ) else (
     prerr_endline err;
   )
@@ -202,8 +202,7 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
         "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
       ];
     ]
-    |> json_to_string ~pretty
-    |> print_endline
+    |> print_json_endline ~pretty
   else
     Utils_js.print_endlinef
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total

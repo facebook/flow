@@ -85,7 +85,7 @@ let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     let json = JSON_Object json_assoc in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   ) else (
     let range =
       if loc = Loc.none then ""
@@ -107,7 +107,7 @@ let handle_error err ~json ~pretty =
   then (
     let open Hh_json in
     let json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty json)
+    prerr_json_endline ~pretty json
   ) else (
     prerr_endline err
   )

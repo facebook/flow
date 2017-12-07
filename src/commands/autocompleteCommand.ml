@@ -85,8 +85,7 @@ let main option_values json pretty root strip_root from args () =
   then (
     results
       |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
-      |> Hh_json.json_to_string ~pretty
-      |> print_endline
+      |> Hh_json.print_json_endline ~pretty
   ) else (
     match results with
     | Error error ->

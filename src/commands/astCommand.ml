@@ -151,6 +151,6 @@ let main include_tokens pretty file_type_opt use_strict from filename () =
     with Parse_error.Error l ->
       JSON_Object ["errors", Translate.errors l]
   in
-  print_endline (json_to_string ~pretty results)
+  print_json_endline ~pretty results
 
 let command = CommandSpec.command spec main

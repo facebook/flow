@@ -40,7 +40,7 @@ let main json pretty from _root () =
       "binary", JSON_String (Sys_utils.executable_path ());
       "build_id", JSON_String Build_id.build_id_ohai;
     ] in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   end else begin
     CommandUtils.print_version ()
   end;

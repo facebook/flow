@@ -52,7 +52,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let to_json result ~pretty ~strip_root =
+let print_json result ~pretty ~strip_root =
   let open Hh_json in
   let json = match result with
     | None -> JSON_Object ["kind", JSON_String "no-symbol-found"]
@@ -63,7 +63,7 @@ let to_json result ~pretty ~strip_root =
         "locs", JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
       ]
   in
-  json_to_string ~pretty json
+  print_json_endline ~pretty json
 
 let to_string result option_values ~strip_root =
   let locs = match result with
@@ -98,10 +98,9 @@ let main option_values json pretty root strip_root from path global args () =
   match connect_and_make_request option_values root request with
   | ServerProt.Response.FIND_REFS (Ok result) ->
     (* format output *)
-    print_endline @@
-      if json || pretty
-      then to_json result ~pretty ~strip_root
-      else to_string result option_values ~strip_root
+    if json || pretty
+    then print_json result ~pretty ~strip_root
+    else print_endline (to_string result option_values ~strip_root)
   | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not find refs for %s:%d:%d\n%s"

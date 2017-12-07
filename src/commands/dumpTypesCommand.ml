@@ -63,7 +63,7 @@ let handle_response types ~json ~pretty ~strip_root =
   if json
   then (
     let types_json = types_to_json types ~strip_root in
-    print_endline (Hh_json.json_to_string ~pretty types_json)
+    Hh_json.print_json_endline ~pretty types_json
   ) else (
     let out = types
       |> List.map (fun (loc, _, str, _) ->
@@ -79,7 +79,7 @@ let handle_error err ~json ~pretty ~strip_root =
   then (
     let open Hh_json in
     let error_json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty error_json);
+    prerr_json_endline ~pretty error_json;
     (* also output an empty array on stdout, for JSON parsers *)
     handle_response [] ~json ~pretty ~strip_root
   ) else (

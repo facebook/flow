@@ -87,7 +87,7 @@ let main option_values json pretty root strip_root from modules () =
       (module_name, json) :: acc
     ) requirements_map [] in
     let json = JSON_Object (List.append json_non_flow json_imports) in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   ) else (
     let print_imports module_name =
       if (SMap.mem module_name requirements_map)

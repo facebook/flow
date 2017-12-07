@@ -462,6 +462,18 @@ let rec json_to_multiline_output oc (json:json): unit =
   | JSON_Null ->
       output_string oc "null"
 
+let output_json_endline ~pretty (oc: out_channel) (json:json) =
+  if pretty then output_string oc (json_to_multiline json)
+  else json_to_output oc json;
+  output_char oc '\n';
+  flush oc
+
+let print_json_endline ?(pretty=false) (json:json) =
+  output_json_endline ~pretty stdout json
+
+let prerr_json_endline ?(pretty=false) (json:json) =
+  output_json_endline ~pretty stderr json
+
 let json_of_string ?(strict=true) s =
   let lb = create_env strict s in
   js_value lb

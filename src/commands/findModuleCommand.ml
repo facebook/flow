@@ -60,7 +60,7 @@ let main option_values json pretty root strip_root from moduleref filename () =
   then (
     let open Hh_json in
     let json = JSON_Object (["file", JSON_String result]) in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   ) else
     Printf.printf "%s\n%!" result
 

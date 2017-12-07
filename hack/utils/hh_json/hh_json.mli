@@ -37,6 +37,9 @@ val json_truncate_string : ?max_string_length:int -> ?max_child_count:int
   -> ?allowed_total_length:int -> ?if_reformat_multiline:bool
   -> string -> string
 
+val print_json_endline : ?pretty:bool -> json -> unit
+val prerr_json_endline : ?pretty:bool -> json -> unit
+
 val get_object_exn : json -> (string * json) list
 val get_array_exn : json -> json list
 val get_string_exn : json -> string

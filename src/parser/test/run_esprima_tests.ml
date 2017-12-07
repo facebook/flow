@@ -582,7 +582,8 @@ end = struct
       let filename = (path / test_name / case_name) ^ ".tree.json" in
       let json = parse_file ?parse_options:case.options content in
       let oc = open_out filename in
-      Printf.fprintf oc "%s\n" (Hh_json.json_to_string ~pretty:true json);
+      output_string oc (Hh_json.json_to_multiline json);
+      output_char oc '\n';
       close_out oc;
     | _ -> ()
 

@@ -184,7 +184,7 @@ let print_json ~msg t =
     match !json_mode with
     | None -> ()
     | Some { pretty } ->
-      format_json ~msg t |> Hh_json.json_to_string ~pretty |> print_endline
+      format_json ~msg t |> Hh_json.print_json_endline ~pretty
   end
 
 let exit ?msg t =

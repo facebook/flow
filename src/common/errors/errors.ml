@@ -869,7 +869,8 @@ module Json_output = struct
     let open Hh_json in
     let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file
       ~suppressed_errors ~errors ~warnings () in
-    output_string out_channel (json_to_string ~pretty res);
+    if pretty then output_string out_channel (json_to_multiline res)
+    else json_to_output out_channel res;
     flush out_channel
 end
 

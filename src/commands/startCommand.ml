@@ -68,12 +68,11 @@ let main
   let on_spawn pid =
     if pretty || json then begin
       let open Hh_json in
-      let json = json_to_string ~pretty (JSON_Object [
+      print_json_endline ~pretty (JSON_Object [
         "pid", JSON_String (string_of_int pid);
         "log_file", JSON_String server_log_file;
         "monitor_log_file", JSON_String monitor_log_file;
-      ]) in
-      print_endline json
+      ])
     end else if not (Options.is_quiet options) then begin
       Printf.eprintf
         "Spawned flow server (pid=%d)\n" pid;

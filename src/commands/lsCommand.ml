@@ -237,7 +237,7 @@ let main
       else JSON_Array (
         List.map (fun f -> JSON_String (normalize_filename f)) files
       ) in
-    json_to_string ~pretty json |> print_endline
+    print_json_endline ~pretty json
   end) else begin
     let f = if reason
     then begin fun filename ->
