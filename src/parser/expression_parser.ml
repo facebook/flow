@@ -474,7 +474,7 @@ module Expression
     let env = with_no_new false env in
     let expr = match Peek.token env with
     | T_NEW when allow_new -> Cover_expr (new_expression env)
-    | T_IMPORT -> Cover_expr (import env start_loc)
+    | T_IMPORT -> Cover_expr (import env)
     | T_SUPER -> Cover_expr (super env)
     | _ when Peek.is_function env -> Cover_expr (_function env)
     | _ -> primary_cover env in
@@ -517,12 +517,13 @@ module Expression
         else error_unexpected env;
       super
 
-  and import env start_loc =
+  and import env = with_loc (fun env ->
     Expect.token env T_IMPORT;
     Expect.token env T_LPAREN;
     let arg = assignment (with_no_in false env) in
     Expect.token env T_RPAREN;
-    Expression.(Loc.btwn start_loc (fst arg), Import arg)
+    Expression.Import arg
+  ) env
 
   and call_cover env start_loc left =
     let left = member_cover env start_loc left in
