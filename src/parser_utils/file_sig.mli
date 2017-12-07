@@ -39,7 +39,7 @@ and require = {
   (* locations of every require *)
   cjs_requires: Loc.t list;
 
-  (* locations of every import (incl. export from) *)
+  (* locations of every import (excluding `export ... from`) *)
   es_imports: Loc.t list;
 
   (* map from remote name to local names of value imports

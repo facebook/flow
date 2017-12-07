@@ -364,18 +364,16 @@ let add_require_tvars =
   in
   fun cx file_sig ->
     let open File_sig in
-    SMap.iter (fun mref req ->
+    SMap.iter (fun mref locs ->
       let desc = Reason.RCustom mref in
-      List.iter (add cx desc) req.cjs_requires;
-      List.iter (add cx desc) req.es_imports;
-    ) file_sig.module_sig.requires;
+      Nel.iter (add cx desc) locs
+    ) (require_loc_map file_sig.module_sig);
     SMap.iter (fun _ (_, module_sig) ->
-      SMap.iter (fun mref req ->
+      SMap.iter (fun mref locs ->
         let m_name = Reason.internal_module_name mref in
         let desc = Reason.RCustom mref in
-        List.iter (add_decl cx m_name desc) req.cjs_requires;
-        List.iter (add_decl cx m_name desc) req.es_imports;
-      ) module_sig.requires;
+        Nel.iter (add_decl cx m_name desc) locs
+      ) (require_loc_map module_sig)
     ) file_sig.declare_modules
 
 (* build module graph *)

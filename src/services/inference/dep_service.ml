@@ -223,14 +223,14 @@ let implementation_file ~audit r = Module_js.(
 
 let file_dependencies ~audit file = Module_js.(
   let file_sig = Parsing_service_js.get_file_sig_unsafe file in
-  let requires = File_sig.(file_sig.module_sig.requires) in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
   SMap.fold (fun mref _ files ->
     let m = SMap.find_unsafe mref resolved_modules in
     match implementation_file m ~audit:Expensive.ok with
     | Some f -> FilenameSet.add f files
     | None -> files
-  ) requires FilenameSet.empty
+  ) require_loc FilenameSet.empty
 )
 
 let calc_dependency_graph workers files =

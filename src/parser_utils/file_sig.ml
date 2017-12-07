@@ -102,15 +102,49 @@ let merge_requires =
   }
 
 let require_loc_map msig =
-  SMap.fold (fun name {cjs_requires; es_imports; _} acc ->
-    let acc = List.fold_left (fun acc loc ->
-      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
-    ) acc cjs_requires in
-    let acc = List.fold_left (fun acc loc ->
-      SMap.add name (Nel.one loc) acc ~combine:Nel.rev_append
-    ) acc es_imports in
+  let acc = SMap.empty in
+  (* requires / imports *)
+  let acc = SMap.fold (fun mref {cjs_requires; es_imports; _} acc ->
+    let locs = match cjs_requires, es_imports with
+    | [], loc::locs -> loc, locs
+    | loc::locs, locs' -> loc, List.rev_append locs locs'
+    | _ -> failwith "either cjs_requires or es_imports must be non-empty"
+    in
+    SMap.add mref locs acc
+  ) msig.requires acc in
+  (* export type {...} from 'foo' *)
+  let acc = SMap.fold (fun _ type_export acc ->
+    match type_export with
+    | TypeExportNamed { source = Some (loc, mref); _ } ->
+      SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
+    | _ -> acc
+  ) msig.type_exports_named acc in
+  (* export type * from 'foo' *)
+  let acc = SMap.fold (fun mref export_star acc ->
+    match export_star with
+    | ExportStar { source_loc; _ } ->
+      SMap.add mref (Nel.one source_loc) acc ~combine:Nel.rev_append
+  ) msig.type_exports_star acc in
+  let acc = match msig.module_kind with
+  | CommonJS _ -> acc
+  | ES { named; star } ->
+    (* export {...} from 'foo' *)
+    let acc = SMap.fold (fun _ export acc ->
+      match export with
+      | ExportNamed { source = Some (loc, mref); _ }
+      | ExportNs { source = (loc, mref); _ } ->
+        SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
+      | _ -> acc
+    ) named acc in
+    (* export * from 'foo' *)
+    let acc = SMap.fold (fun mref export_star acc ->
+      match export_star with
+      | ExportStar { source_loc; _ } ->
+        SMap.add mref (Nel.one source_loc) acc ~combine:Nel.rev_append
+    ) star acc in
     acc
-  ) msig.requires SMap.empty
+  in
+  acc
 
 let add_declare_module name m loc fsig = {
   fsig with
@@ -294,9 +328,7 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration} = decl in
     let source = match source with
-    | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
-      this#add_es_import mref loc;
-      Some (loc, mref)
+    | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) -> Some (loc, mref)
     | None -> None
     in
     begin match declaration with
@@ -340,7 +372,6 @@ class requires_calculator ~ast = object(this)
     let source = match source with
     | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
       assert (not default); (* declare export default from not supported *)
-      this#add_es_import mref loc;
       Some (loc, mref)
     | _ -> None
     in

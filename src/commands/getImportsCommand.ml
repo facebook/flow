@@ -72,7 +72,7 @@ let main option_values json pretty root strip_root from modules () =
     ) non_flow [] in
     let json_imports = SMap.fold (fun module_name assoc acc ->
       let requirements = List.fold_left (fun acc (req, locs) ->
-        List.fold_left (fun acc loc ->
+        Nel.fold_left (fun acc loc ->
           JSON_Object (
             ("import", JSON_String req) ::
             ("loc", Reason.json_of_loc ~strip_root loc) ::
@@ -95,7 +95,7 @@ let main option_values json pretty root strip_root from modules () =
         let requirements = SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         List.iter (fun (req, locs) ->
-          List.iter (fun loc ->
+          Nel.iter (fun loc ->
             let loc_str = range_string_of_loc ~strip_root loc in
             Printf.printf "\t%s@%s\n" req loc_str
           ) locs
