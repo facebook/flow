@@ -14,6 +14,7 @@ module Request = struct
       bool * (* force *)
       bool (* include_warnings *)
   | COVERAGE of File_input.t * bool (* force *)
+  | CYCLE of string
   | DUMP_TYPES of File_input.t
   | FIND_MODULE of string * string
   | FIND_REFS of File_input.t * int * int * bool (* filename, line, char, global *)
@@ -37,6 +38,8 @@ module Request = struct
     Printf.sprintf "check %s" (File_input.filename_of_file_input fn)
   | COVERAGE (fn, _) ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
+  | CYCLE fn ->
+      Printf.sprintf "cycle %s" fn
   | DUMP_TYPES (fn) ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
   | FIND_MODULE (moduleref, filename) ->
@@ -119,6 +122,9 @@ module Response = struct
   (* map of files to `Ok (line, col, annotation)` or `Error msg` *)
   type suggest_response = ((int * int * string) list, string) result SMap.t
 
+  type cycle_response = (cycle_response_subgraph, string) result
+  and cycle_response_subgraph = (string * string list) list
+
   type gen_flow_files_error =
     | GenFlowFiles_TypecheckError of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
     | GenFlowFiles_UnexpectedError of string
@@ -149,6 +155,7 @@ module Response = struct
   | AUTOCOMPLETE of autocomplete_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
+  | CYCLE of cycle_response
   | DUMP_TYPES of dump_types_response
   | FIND_MODULE of find_module_response
   | FIND_REFS of find_refs_response
@@ -165,6 +172,7 @@ module Response = struct
   | AUTOCOMPLETE _ -> "autocomplete response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
+  | CYCLE _ -> "cycle reponse"
   | DUMP_TYPES _ -> "dump_types response"
   | FIND_MODULE _ -> "find_module response"
   | FIND_REFS _ -> "find_refs response"

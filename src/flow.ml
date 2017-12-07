@@ -22,6 +22,7 @@ end = struct
     CheckContentsCommand.command;
     ConfigCommands.Init.command;
     CoverageCommand.command;
+    CycleCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;
     FindRefsCommand.command;

@@ -118,6 +118,45 @@ let coverage ~options ~workers ~env ~force file_input =
     Type_info_service.coverage ~options ~workers ~env ~force file content
   end
 
+let get_cycle ~workers ~env fn =
+  (* Re-calculate SCC *)
+  let parsed = FilenameSet.elements !env.ServerEnv.files in
+  let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+  let partition = Sort_js.topsort dependency_graph in
+  let component_map = Sort_js.component_map partition in
+
+  (* Get component for target file *)
+  let leader_map =
+    FilenameMap.fold (fun file component acc ->
+      List.fold_left (fun acc file_ ->
+        FilenameMap.add file_ file acc
+      ) acc component
+    ) component_map FilenameMap.empty
+  in
+  let leader = FilenameMap.find_unsafe fn leader_map in
+  let component = FilenameMap.find_unsafe leader component_map in
+
+  (* Restrict dep graph to only in-cycle files *)
+  let subgraph = List.fold_left (fun acc f ->
+    Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
+      let subdeps = FilenameSet.filter (fun f -> List.mem f component) deps in
+      if FilenameSet.is_empty subdeps
+      then acc
+      else FilenameMap.add f subdeps acc
+    )
+  ) FilenameMap.empty component in
+
+  (* Convert from map/set to lists for serialization to client. *)
+  let subgraph = FilenameMap.fold (fun f dep_fs acc ->
+    let f = File_key.to_string f in
+    let dep_fs = FilenameSet.fold (fun dep_f acc ->
+      (File_key.to_string dep_f)::acc
+    ) dep_fs [] in
+    (f, dep_fs)::acc
+  ) subgraph [] in
+
+  Ok subgraph
+
 let suggest =
   let suggest_for_file ~options ~workers ~env result_map (file, region) =
     SMap.add file (try_with begin fun () ->
@@ -302,6 +341,12 @@ let handle_ephemeral_unsafe
   | ServerProt.Request.COVERAGE (fn, force) ->
       ServerProt.Response.COVERAGE (
         coverage ~options ~workers ~env ~force fn: ServerProt.Response.coverage_response
+      ) |> respond
+  | ServerProt.Request.CYCLE fn ->
+      let file_options = Options.file_options options in
+      let fn = Files.filename_from_string ~options:file_options fn in
+      ServerProt.Response.CYCLE (
+        get_cycle ~workers ~env fn: ServerProt.Response.cycle_response
       ) |> respond
   | ServerProt.Request.DUMP_TYPES (fn) ->
       ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env fn)
