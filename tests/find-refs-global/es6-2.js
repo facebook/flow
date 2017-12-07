@@ -8,3 +8,7 @@ const x = new Foo();
 x.foo();
 
 (x: any).foo();
+
+export function returnsFoo(): Foo {
+  return new Foo();
+}
