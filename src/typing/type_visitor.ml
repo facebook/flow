@@ -272,7 +272,12 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetElemT (_, _, e, t)
+  | SetElemT (_, _, e, tin, tout) ->
+    let acc = self#type_ cx pole_TODO acc e in
+    let acc = self#type_ cx pole_TODO acc tin in
+    let acc = self#opt (self#type_ cx pole_TODO) acc tout in
+    acc
+
   | GetElemT (_, _, e, t) ->
     let acc = self#type_ cx pole_TODO acc e in
     let acc = self#type_ cx pole_TODO acc t in
@@ -759,10 +764,14 @@ class ['a] t = object(self)
     self#type_ cx pole_TODO acc t
 
   method private elem_action cx acc = function
-  | ReadElem t
-  | WriteElem t
-    -> self#type_ cx pole_TODO acc t
-  | CallElem (_, fn) -> self#fun_call_type cx acc fn
+  | ReadElem t ->
+    self#type_ cx pole_TODO acc t
+  | WriteElem (tin, tout) ->
+    let acc = self#type_ cx pole_TODO acc tin in
+    let acc = self#opt (self#type_ cx pole_TODO) acc tout in
+    acc
+  | CallElem (_, fn) ->
+    self#fun_call_type cx acc fn
 
   method private cont cx acc = function
   | Lower (_, l) -> self#type_ cx pole_TODO acc l

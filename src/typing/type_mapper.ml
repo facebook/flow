@@ -480,11 +480,12 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
         else TestPropT (r, prop', t'')
-    | SetElemT (use_op, r, t1, t2) ->
+    | SetElemT (use_op, r, t1, t2, t3) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        if t1' == t1 && t2' == t2 then t
-        else SetElemT (use_op, r, t1', t2')
+        let t3' = OptionUtils.ident_map (self#type_ cx map_cx) t3 in
+        if t1' == t1 && t2' == t2 && t3' == t3 then t
+        else SetElemT (use_op, r, t1', t2', t3')
     | GetElemT (use_op, r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -937,10 +938,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ReadElem t''
-    | WriteElem t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else WriteElem t''
+    | WriteElem (tin, tout) ->
+        let tin' = self#type_ cx map_cx tin in
+        let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
+        if tin' == tin && tout' == tout then t
+        else WriteElem (tin', tout')
     | CallElem (r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall' == funcall then t

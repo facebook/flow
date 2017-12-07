@@ -447,7 +447,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "propType", _json_of_t json_cx t
   ]
 
-  | SetElemT (_, _, indext, elemt)
+  | SetElemT (_, _, indext, elemt, _)
   | GetElemT (_, _, indext, elemt) -> [
       "indexType", _json_of_t json_cx indext;
       "elemType", _json_of_t json_cx elemt
@@ -650,7 +650,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "baseType", _json_of_t json_cx base;
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
-      | WriteElem t -> "writeElem", _json_of_t json_cx t
+      | WriteElem (t, _) -> "writeElem", _json_of_t json_cx t
       | CallElem (_, funtype) -> "callElem", json_of_funcalltype json_cx funtype
     ]
 
@@ -2076,7 +2076,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SubstOnPredT _ -> p t
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-  | SetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (_, _, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t

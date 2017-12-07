@@ -1,0 +1,14 @@
+Error: b.js:11
+ 11: (o[A.FOO]: empty); // error: null ~> empty
+      ^^^^^^^^ null. This type is incompatible with
+ 11: (o[A.FOO]: empty); // error: null ~> empty
+                ^^^^^ empty
+
+Error: c.js:11
+ 11: (o[k]: empty); // error: null ~> empty
+      ^^^^ null. This type is incompatible with
+ 11: (o[k]: empty); // error: null ~> empty
+            ^^^^^ empty
+
+
+Found 2 errors

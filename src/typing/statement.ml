@@ -2187,13 +2187,16 @@ and prop_map_of_object cx props =
 
 and object_ cx reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
+
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
   let obj_proto = ObjProtoT reason in
+
   (* Return an object with specified sealing. *)
   let mk_object ?(proto=obj_proto) ?(sealed=false) props =
     Obj_type.mk_with_proto cx reason ~sealed ~props proto
   in
+
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
   let mk_spread from_obj to_obj =
@@ -2201,6 +2204,16 @@ and object_ cx reason ?(allow_sealed=true) props =
       Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, ObjAssign));
     )
   in
+
+  (* Add property to object, using optional tout argument to SetElemT to wait
+     for the write to happen. This defers any reads until writes have happened,
+     to avoid race conditions. *)
+  let mk_computed key value obj =
+    Tvar.mk_where cx reason (fun t ->
+      Flow.flow cx (obj, SetElemT (unknown_use, reason, key, value, Some t))
+    )
+  in
+
   (* When there's no result, return a new object with specified sealing. When
      there's result, copy a new object into it, sealing the result when
      necessary.
@@ -2238,9 +2251,7 @@ and object_ cx reason ?(allow_sealed=true) props =
         let k = expression cx k in
         let v = expression cx v in
         let obj = eval_object (map, result) in
-        Flow.flow cx (obj, SetElemT (unknown_use, reason, k, v));
-        (* TODO: vulnerable to race conditions? *)
-        let result = obj in
+        let result = mk_computed k v obj in
         sealed, SMap.empty, proto, Some result
     | Property (_, Property.Method {
         key = Property.Computed k;
@@ -2249,9 +2260,7 @@ and object_ cx reason ?(allow_sealed=true) props =
         let k = expression cx k in
         let v = expression cx (fn_loc, Ast.Expression.Function fn) in
         let obj = eval_object (map, result) in
-        Flow.flow cx (obj, SetElemT (unknown_use, reason, k, v));
-        (* TODO: vulnerable to race conditions? *)
-        let result = obj in
+        let result = mk_computed k v obj in
         sealed, SMap.empty, proto, Some result
     | Property (_, Property.Init {
         key =
@@ -3455,7 +3464,7 @@ and assignment cx loc = Ast.Expression.(function
             let a = expression cx _object in
             let i = expression cx index in
             let use_op = Op (SetProperty reason) in
-            Flow.flow cx (a, SetElemT (use_op, reason, i, t));
+            Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
 
             (* types involved in the assignment itself are computed
                in pre-havoc environment. it's the assignment itself

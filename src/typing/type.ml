@@ -338,7 +338,12 @@ module rec TypeTerm : sig
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
     | TestPropT of reason * propref * t
-    | SetElemT of use_op * reason * t * t
+    (* SetElemT has a `tout` parameter to serve as a trigger for ordering
+       operations. We only need this in one place: object literal initialization.
+       In particular, a computed property in the object initializer users SetElemT
+       to initialize the property value, but in order to avoid race conditions we
+       need to ensure that reads happen after writes. *)
+    | SetElemT of use_op * reason * t * t * t option (*tout *)
     | GetElemT of use_op * reason * t * t
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
@@ -795,9 +800,14 @@ module rec TypeTerm : sig
 
   and write_ctx = ThisInCtor | Normal
 
+  (* WriteElem has a `tout` parameter to serve as a trigger for ordering
+     operations. We only need this in one place: object literal initialization.
+     In particular, a computed property in the object initializer users SetElemT
+     to initialize the property value, but in order to avoid race conditions we
+     need to ensure that reads happen after writes. *)
   and elem_action =
     | ReadElem of t
-    | WriteElem of t
+    | WriteElem of t * t option (* tout *)
     | CallElem of reason (* call *) * funcalltype
 
   and propref =
@@ -2090,7 +2100,7 @@ and reason_of_use_t = function
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
   | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
-  | SetElemT (_,reason,_,_) -> reason
+  | SetElemT (_,reason,_,_,_) -> reason
   | SetPropT (_,reason,_,_,_) -> reason
   | SetPrivatePropT (_,reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
@@ -2251,7 +2261,7 @@ and mod_reason_of_use_t f = function
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
-  | SetElemT (use_op, reason, it, et) -> SetElemT (use_op, f reason, it, et)
+  | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
   | SetPropT (use_op, reason, n, i, t) -> SetPropT (use_op, f reason, n, i, t)
   | SetPrivatePropT (use_op, reason, n, scopes, static, t) ->
       SetPrivatePropT (use_op, f reason, n, scopes, static, t)
@@ -2289,7 +2299,7 @@ let rec mod_op_of_use_t f u =
   | SetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> SetPrivatePropT (op, r, s, c, b, t))
   | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
-  | SetElemT (op, r, t1, t2) -> util op (fun op -> SetElemT (op, r, t1, t2))
+  | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
   | ReposLowerT (r, d, u2) ->
     let u2' = mod_op_of_use_t f u2 in

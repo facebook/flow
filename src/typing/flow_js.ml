@@ -5002,8 +5002,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT)), SetElemT (use_op, reason_op, key, tin) ->
-      rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem tin))
+    | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT)), SetElemT (use_op, reason_op, key, tin, tout) ->
+      rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout)))
 
     | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT)), GetElemT (use_op, reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
@@ -5013,34 +5013,35 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
 
-    | _, ElemT (use_op, reason_op, (DefT (_, ObjT _) as o), action) ->
+    | _, ElemT (use_op, reason_op, (DefT (_, ObjT _) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, StrT (Literal (_, x))) ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
           Named (reason_prop, x)
       | _ -> Computed l
       in
-      let u = match action with
-      | ReadElem t -> GetPropT (use_op, reason_op, propref, t)
-      | WriteElem t -> SetPropT (use_op, reason_op, propref, Normal, t)
+      (match action with
+      | ReadElem t ->
+        rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
+      | WriteElem (tin, tout) ->
+        rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, Normal, tin));
+        Option.iter ~f:(fun t -> rec_flow_t cx trace (obj, t)) tout
       | CallElem (reason_call, ft) ->
-        MethodT (use_op, reason_call, reason_op, propref, ft)
-      in
-      rec_flow cx trace (o, u)
+        rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft)))
 
-    | _, ElemT (use_op, reason_op, DefT (_, (AnyObjT | AnyT)), action) ->
+    | _, ElemT (use_op, reason_op, (DefT (_, (AnyObjT | AnyT)) as obj), action) ->
       let value = AnyT.why reason_op in
-      perform_elem_action cx trace ~use_op reason_op value action
+      perform_elem_action cx trace ~use_op reason_op obj value action
 
     (* It is not safe to write to an unknown index in a tuple. However, any is
      * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
      * error when `tup[0] = 123` does not. *)
     | DefT (_, AnyT),
-      ElemT (use_op, reason_op, DefT (r, ArrT arrtype), action) ->
+      ElemT (use_op, reason_op, (DefT (r, ArrT arrtype) as arr), action) ->
       let value = elemt_of_arrtype r arrtype in
-      perform_elem_action cx trace ~use_op reason_op value action
+      perform_elem_action cx trace ~use_op reason_op arr value action
 
-    | l, ElemT (use_op, reason, DefT (reason_tup, ArrT arrtype), action) when numeric l ->
+    | l, ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action) when numeric l ->
       let value, ts, is_tuple = begin match arrtype with
       | ArrayAT(value, ts) -> value, ts, false
       | TupleAT(value, ts) -> value, Some ts, true
@@ -5081,7 +5082,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               (FlowError.ETupleUnsafeWrite reasons)
       end;
 
-      perform_elem_action cx trace ~use_op reason value action
+      perform_elem_action cx trace ~use_op reason arr value action
 
 
     | DefT (_, ArrT _), GetPropT (_, reason_op, Named (_, "constructor"), tout) ->
@@ -5236,9 +5237,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields/elements written *)
     (*****************************************)
 
-    | DefT (_, AnyFunT), SetPropT (use_op, reason_op, _, _, t)
-    | DefT (_, AnyFunT), SetElemT (use_op, reason_op, _, t) ->
-      rec_flow cx trace (t, UseT (use_op, AnyT.why reason_op))
+    | DefT (_, AnyFunT), SetPropT (use_op, reason_op, _, _, tin) ->
+      rec_flow cx trace (tin, UseT (use_op, AnyT.why reason_op));
+
+    | DefT (_, AnyFunT), SetElemT (use_op, reason_op, _, tin, tout) ->
+      rec_flow cx trace (tin, UseT (use_op, AnyT.why reason_op));
+      Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
 
     (***************************************************************)
     (* functions may be called by passing a receiver and arguments *)
@@ -5723,9 +5727,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (use_op, reason, Named (reason, "$key"), Normal, i));
       rec_flow cx trace (l, GetPropT (use_op, reason, Named (reason, "$value"), t))
 
-    | DefT (_, InstanceT _), SetElemT (use_op, reason, i, t) ->
+    | DefT (_, InstanceT _), SetElemT (use_op, reason, i, tin, tout) ->
       rec_flow cx trace (l, SetPropT (use_op, reason, Named (reason, "$key"), Normal, i));
-      rec_flow cx trace (l, SetPropT (use_op, reason, Named (reason, "$value"), Normal, t))
+      rec_flow cx trace (l, SetPropT (use_op, reason, Named (reason, "$value"), Normal, tin));
+      Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
 
     (***************************)
     (* conditional type switch *)
@@ -9967,11 +9972,13 @@ and perform_lookup_action cx trace propref p lreason ureason = function
         ))
     end
 
-and perform_elem_action cx trace ~use_op reason_op value = function
+and perform_elem_action cx trace ~use_op reason_op l value = function
   | ReadElem t ->
     let loc = loc_of_reason reason_op in
     rec_flow_t cx trace (reposition cx ~trace loc value, t)
-  | WriteElem t -> rec_flow cx trace (t, UseT (use_op, value))
+  | WriteElem (tin, tout) ->
+    rec_flow cx trace (tin, UseT (use_op, value));
+    Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
   | CallElem (reason_call, ft) ->
     rec_flow cx trace (value, CallT (use_op, reason_call, ft))
 
