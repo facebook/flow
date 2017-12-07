@@ -29,12 +29,11 @@ module StatusLoop = LwtLoop.Make (struct
   type acc = EphemeralConnection.t
 
   let main conn =
-    begin match StatusStream.get_busy_status () with
-    | None -> () (* Server isn't busy *)
-    | Some status -> EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn
-    end;
-    Lwt_unix.sleep 0.5
-    >|= (fun () -> conn)
+    StatusStream.wait_for_signficant_status ~timeout:0.5
+    >|= (fun status ->
+      EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn;
+      conn
+    )
 
   let catch _ exn =
     begin match exn with
@@ -66,6 +65,9 @@ let create_ephemeral_connection ~client_fd ~close =
 
     (* Start the ephemeral connection *)
     start ();
+
+    (* Send the current server state immediate *)
+    EphemeralConnection.write ~msg:(MonitorProt.Please_hold (StatusStream.get_status ())) conn;
 
     (* Start sending the status to the ephemeral connection *)
     Lwt.async (fun () -> StatusLoop.run ~cancel_condition:ExitSignal.signal conn);

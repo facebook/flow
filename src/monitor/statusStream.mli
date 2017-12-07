@@ -8,4 +8,5 @@
 val reset: unit -> unit Lwt.t
 val update: status:ServerStatus.status -> unit
 val call_on_free: f:(unit -> unit Lwt.t) -> unit Lwt.t
-val get_busy_status: unit -> ServerStatus.status option
+val get_status: unit -> ServerStatus.status
+val wait_for_signficant_status: timeout:float -> ServerStatus.status Lwt.t

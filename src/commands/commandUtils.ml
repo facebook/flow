@@ -846,6 +846,10 @@ let rec connect_and_make_request =
     in
 
     match response with
+    (* Let's ignore messages from the server that it is free. It's a confusing message for the
+     * user *)
+    | MonitorProt.Please_hold status when ServerStatus.is_free status ->
+      wait_for_response ~quiet ~root ic
     (* The server is busy, so we print the server's status and keep reading from the socket *)
     | MonitorProt.Please_hold status ->
       if not quiet then begin

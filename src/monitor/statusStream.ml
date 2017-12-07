@@ -13,6 +13,7 @@
  * to invoke callbacks when the server becomes free
  *)
 let (>>=) = Lwt.(>>=)
+let (>|=) = Lwt.(>|=)
 
 module Logger = FlowServerMonitorLogger
 
@@ -29,6 +30,8 @@ let mutex = Lwt_mutex.create ()
 (* A list of callbacks which will be invoked once the next time the server is free *)
 let to_call_on_free = ref []
 
+let significant_transition = Lwt_condition.create ()
+
 module UpdateLoop = LwtLoop.Make (struct
   type acc = t
 
@@ -38,14 +41,18 @@ module UpdateLoop = LwtLoop.Make (struct
     Lwt.return to_call
   ) >>= Lwt_list.iter_p (fun f -> f())
 
-  let process_update t status =
-    Logger.debug "Server status: %s" (ServerStatus.string_of_status status);
+  let process_update t new_status =
+    Logger.debug "Server status: %s" (ServerStatus.string_of_status new_status);
 
+    let old_status = t.status in
     (* We don't need a lock here, since we're the only thread processing statuses *)
-    t.status <- status;
+    t.status <- new_status;
 
-    if ServerStatus.is_free status
+    if ServerStatus.is_free new_status
     then Lwt.async invoke_all_call_on_free;
+
+    if ServerStatus.is_significant_transition old_status new_status
+    then Lwt_condition.broadcast significant_transition new_status;
 
     Lwt.return t
 
@@ -92,11 +99,15 @@ let reset () = Lwt_mutex.with_lock mutex (fun () ->
   Lwt.return_unit
 )
 
-let get_busy_status () =
-  let status = !current_status.status in
-  if ServerStatus.is_free status
-  then None
-  else Some status
+let get_status () = !current_status.status
+
+let wait_for_signficant_status ~timeout =
+  (* If there is a significant transition before the timeout, the cancel the sleep and return the
+   * new status. Otherwise, stop waiting on the condition variable and return the current status *)
+  Lwt.pick [
+    Lwt_unix.sleep timeout >|= get_status;
+    Lwt_condition.wait significant_transition;
+  ]
 
 (* Updates will show up on the connection in order. Let's push them immediately to a stream to
  * preserve that order *)

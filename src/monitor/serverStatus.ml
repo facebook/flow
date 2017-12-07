@@ -175,3 +175,31 @@ let initial_status = Starting_up
 let is_free = function
 | Free -> true
 | _ -> false
+
+(* Returns true iff the transition from old_status to new_status is "significant", which is a
+ * pretty arbitrary judgement of how interesting the new status is to a user, given that they
+ * already have seen the old status *)
+let is_significant_transition old_status new_status =
+  (* If the statuses are literally the same, then the transition is not significant *)
+  old_status <> new_status && match old_status, new_status with
+  | Typechecking (old_mode, old_tc_status), Typechecking (new_mode, new_tc_status) ->
+    (* A change in mode is always signifcant *)
+    old_mode <> new_mode || begin match old_tc_status, new_tc_status with
+    (* Making progress within parsing or merging is not significant *)
+    | Parsing _, Parsing _
+    | Merging _, Merging _ -> false
+    (* But changing typechecking status always is significant *)
+    | _, Starting_typecheck
+    | _, Parsing _
+    | _, Resolving_dependencies
+    | _, Calculating_dependencies
+    | _, Merging _
+    | _, Garbage_collecting_typecheck
+    | _, Finishing_typecheck -> true
+    end
+  (* Switching to a completely different status is always significant *)
+  | _, Starting_up
+  | _, Free
+  | _, Typechecking _
+  | _, Garbage_collecting
+  | _, Unknown -> true
