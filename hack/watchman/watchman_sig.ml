@@ -100,7 +100,7 @@ module type S = sig
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :
-      env -> Hh_json.json -> env * pushed_changes
+      env -> Hh_json.json option -> env * pushed_changes
   end
 
   module Mocking : sig

@@ -417,15 +417,11 @@ module Watchman_actual = struct
 
   let init settings = re_init settings
 
-  let no_updates_response clockspec =
-    let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
-    Hh_json.json_of_string timeout_str
-
   let poll_for_updates ?timeout env =
     let timeout = Option.value timeout ~default:0.0 in
     let ready = has_input timeout @@ fst env.socket in
     if not ready then
-      if timeout = 0.0 then no_updates_response env.clockspec
+      if timeout = 0.0 then None
       else raise Timeout
     else
       (* Use the timeout mechanism to limit maximum time to read payload (cap
@@ -440,7 +436,7 @@ module Watchman_actual = struct
           raise Read_payload_too_long
         end
       in
-      sanitize_watchman_response output
+      Some (sanitize_watchman_response output)
 
   let extract_file_names env json =
     let files = try J.get_array_val "files" json with
@@ -584,19 +580,23 @@ module Watchman_actual = struct
     let response = Changed_merge_base (mergebase, files) in
     Ok ((env, response), keytrace)
 
-  let transform_asynchronous_get_changes_response env data =
-    match make_mergebase_changed_response env data with
-    | Ok ((env, response), _) -> env, response
-    | Error _ ->
-      env.clockspec <- J.get_string_val "clock" data;
-      assert_no_fresh_instance data;
-      try env, make_state_change_response `Enter
-        (J.get_string_val "state-enter" data) data with
-      | Not_found ->
-      try env, make_state_change_response `Leave
-        (J.get_string_val "state-leave" data) data with
-      | Not_found ->
-        env, Files_changed (set_of_list @@ extract_file_names env data)
+  let transform_asynchronous_get_changes_response env data = match data with
+    | None ->
+      env, Files_changed (SSet.empty)
+    | Some data -> begin
+      match make_mergebase_changed_response env data with
+      | Ok ((env, response), _) -> env, response
+      | Error _ ->
+        env.clockspec <- J.get_string_val "clock" data;
+        assert_no_fresh_instance data;
+        try env, make_state_change_response `Enter
+          (J.get_string_val "state-enter" data) data with
+        | Not_found ->
+        try env, make_state_change_response `Leave
+          (J.get_string_val "state-leave" data) data with
+        | Not_found ->
+          env, Files_changed (set_of_list @@ extract_file_names env data)
+    end
 
   let get_changes ?deadline instance =
     let timeout = Option.map deadline ~f:(fun deadline ->
@@ -626,28 +626,33 @@ module Watchman_actual = struct
     ]
 
   let rec poll_until_sync ~deadline env acc =
-    let is_finished_flush_response json =
-      let open Hh_json.Access in
-      let synced = (return json) >>= get_array "synced" |> begin function
-        | Error _ -> false
-        | Ok (vs, _) ->
-          List.fold_left vs ~init:false ~f:(fun acc v ->
-            acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-      in
-      let not_needed = (return json) >>= get_array "no_sync_needed"
-        |> begin function
+    let is_finished_flush_response json = match json with
+      | None -> false
+      | Some json -> begin
+        let open Hh_json.Access in
+        let synced = (return json) >>= get_array "synced" |> begin function
           | Error _ -> false
           | Ok (vs, _) ->
             List.fold_left vs ~init:false ~f:(fun acc v ->
               acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-      in
-      synced || not_needed
+        in
+        let not_needed = (return json) >>= get_array "no_sync_needed"
+          |> begin function
+            | Error _ -> false
+            | Ok (vs, _) ->
+              List.fold_left vs ~init:false ~f:(fun acc v ->
+                acc || ((Hh_json.get_string_exn v) = subscription_name)) end
+        in
+        synced || not_needed
+      end
     in
     let timeout = deadline -. Unix.time () in
     if timeout < 0.0 then raise Timeout else ();
     let json = poll_for_updates ~timeout env in
     if is_finished_flush_response json then (env, acc) else
-      let env, result = transform_synchronous_get_changes_response env json in
+      let env, result = match json with
+        | None -> env, SSet.empty
+        | Some json -> transform_synchronous_get_changes_response env json in
       poll_until_sync ~deadline env (SSet.union acc result)
 
   let poll_until_sync ~deadline env =
