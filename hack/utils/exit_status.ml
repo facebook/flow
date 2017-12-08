@@ -203,5 +203,12 @@ let to_string = function
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n
-  | Unix.WSIGNALED n -> "signaled", n
+  | Unix.WSIGNALED n ->
+    (**
+     * Ocaml signal numbers are mapped from System signal numbers.
+     * They are negative.
+     * See caml_convert_signal_number byterun/signals.c in Ocaml system source code
+     * to convert from Ocaml number to System number
+     *)
+    "signaled", n
   | Unix.WSTOPPED n -> "stopped", n
