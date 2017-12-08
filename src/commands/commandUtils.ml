@@ -787,9 +787,16 @@ let get_path_of_file file =
     let path = Path.make file in
     Path.to_string path
 
-let get_file_from_filename_or_stdin path = function
+let get_file_from_filename_or_stdin ~cmd path = function
   | Some filename ->
-      File_input.FileName (expand_path filename)
+      if Sys.is_directory filename then
+        let msg = spf
+          "Provided argument %s is not a file; canceling.\
+          \nSee \"flow %s --help\" for more info"
+          filename cmd in
+        FlowExitStatus.(exit ~msg Path_is_not_a_file)
+      else
+        File_input.FileName (expand_path filename)
   | None ->
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = (match path with

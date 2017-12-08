@@ -240,6 +240,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | No_error  (* Server exited cleanly *)
       | Windows_killed_by_task_manager (* Windows task manager killed the server *)
       | Invalid_flowconfig (* Parse/version/etc error. Server will never start correctly. *)
+      | Path_is_not_a_file (* Required a file but privided path was not a file *)
       | Server_client_directory_mismatch (* This is a weird one *)
       | Flowconfig_changed (* We could survive some config changes, but it's too hard to tell *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)

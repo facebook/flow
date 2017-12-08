@@ -41,7 +41,8 @@ let spec = {
 let main option_values json pretty root error_flags strip_root verbose from
   respect_pragma all file () =
   FlowEventLogger.set_from from;
-  let file = get_file_from_filename_or_stdin file None in
+  let file = get_file_from_filename_or_stdin file
+    ~cmd:CommandSpec.(spec.name) None in
   let root = guess_root (
     match root with
     | Some root -> Some root

@@ -15,6 +15,8 @@ type t =
   | Out_of_retries
   (* Invalid .flowconfig *)
   | Invalid_flowconfig
+  (* Provided path is not a file as required *)
+  | Path_is_not_a_file
   (* Different binaries being used together *)
   | Build_id_mismatch
   (* Generic "Bad Input" kind of error *)
@@ -81,6 +83,7 @@ let error_code = function
   | Out_of_shared_memory -> 15
   | Flowconfig_changed -> 16
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
+  | Path_is_not_a_file -> 17
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -89,6 +92,7 @@ let error_code = function
   | Dfind_died -> 99
   | Dfind_unresponsive -> 100
   | Unknown_error -> 110
+
 
 (* Return an error type given an error code *)
 let error_type = function
@@ -108,6 +112,7 @@ let error_type = function
   | 14 -> Server_client_directory_mismatch
   | 15 -> Out_of_shared_memory
   | 16 -> Flowconfig_changed
+  | 17 -> Path_is_not_a_file
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -137,6 +142,7 @@ let to_string = function
   | Out_of_time -> "Out_of_time"
   | Out_of_retries -> "Out_of_retries"
   | Invalid_flowconfig -> "Invalid_flowconfig"
+  | Path_is_not_a_file -> "Path_is_not_a_file"
   | Windows_killed_by_task_manager -> "Windows_killed_by_task_manager"
   | Server_start_failed status ->
       let reason, code = unpack_process_status status in

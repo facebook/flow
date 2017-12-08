@@ -52,7 +52,7 @@ let parse_args path args =
       File_input.FileName file, line, column
   | [line; column] ->
       let line, column = parse_line_and_column line column in
-      get_file_from_filename_or_stdin path None,
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
       line,
       column
   | _ ->

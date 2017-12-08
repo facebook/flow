@@ -211,7 +211,8 @@ let main
     option_values json pretty root from color debug path respect_pragma
     all filename () =
   FlowEventLogger.set_from from;
-  let file = get_file_from_filename_or_stdin path filename in
+  let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
+    path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root

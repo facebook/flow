@@ -89,7 +89,8 @@ let handle_error err ~json ~pretty ~strip_root =
 let main option_values json pretty root strip_root from path filename () =
   FlowEventLogger.set_from from;
   let json = json || pretty in
-  let file = get_file_from_filename_or_stdin path filename in
+  let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
+    path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root

@@ -7,6 +7,7 @@ type t =
   | No_server_running
   | Out_of_retries
   | Invalid_flowconfig
+  | Path_is_not_a_file
   | Build_id_mismatch
   | Input_error
   | Lock_stolen
