@@ -59,7 +59,9 @@ let register_entry_point
       LoggingUtils.set_hh_logger_min_level options;
       Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
-      FlowEventLogger.restore_context logging_context;
+      (* This server might have been started by a monitor process which is already pretty old, so
+      * the start_time might be way out of date. *)
+      FlowEventLogger.(restore_context {logging_context with start_time = Unix.gettimeofday (); });
       (* It makes the logs easier if all server logs have the "command" column set to "server",
        * regardless of whether they were started with `flow start` or `flow server` *)
       FlowEventLogger.set_command (Some "server");
