@@ -1,3 +1,26 @@
+### 0.61.0
+
+#### New Features:
+
+* Added an `[untyped]` section to `.flowconfig`, which treats all matching files as untyped, as if they did not have `@flow`. This differs from `[ignore]` in that `[ignore]` hides matching files from the module resolver /and/ the type system. This allows you to ignore types from third-party modules that are poorly-typed, typed for a different version of Flow, typed with a `.flowconfig` with different options, etc.
+* Experimental: Global find-references for class members.
+
+#### Notable bug fixes:
+
+* Fixed an issue that caused IDE commands (autocomplete, get-def, etc.) to crash in certain cases.
+* Fixed an issue that caused IDE commands to return no results when the `this` type is nullable.
+* Fixed several bugs in lazy mode to avoid crashes and missed errors.
+
+#### Misc:
+
+* Issue an error at every location where a particular non-existent module is imported, instead of just the first one in each file.
+* For the `get-imports` command, show every location where a module is imported instead of just one per file.
+* Quite a few libdef improvements.
+
+#### Parser:
+
+* Disallow literals as prop keys in assignment destructuring.
+
 ### 0.60.1
 
 Fixed a bug introduced in 0.60.0 in which Flow would not start if its temp directory did not exist.
