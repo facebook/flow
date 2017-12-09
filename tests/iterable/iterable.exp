@@ -64,23 +64,23 @@ Error: caching_bug.js:21
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-494:   | { done: false, value: Yield };
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:494
+494:   | { done: false, +value: Yield };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:494
   Property `done` is incompatible:
      23:         return { done, value: "still going..." }; // Error string ~> void
                           ^^^^ boolean. Expected boolean literal `false`, got `true` instead
-    494:   | { done: false, value: Yield };
+    494:   | { done: false, +value: Yield };
                      ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:494
 
 Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
                     ^^^^^^^^ object literal. This type is incompatible with
-493:   | { done: true, value?: Return }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:493
+493:   | { done: true, +value?: Return }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:493
   Property `done` is incompatible:
      25:         return { done }; // Error void ~> string
                           ^^^^ boolean. Expected boolean literal `true`, got `false` instead
-    493:   | { done: true, value?: Return }
+    493:   | { done: true, +value?: Return }
                      ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:493
 
 Error: map.js:14

@@ -7060,15 +7060,16 @@ and check_polarity cx ?trace polarity = function
     -> check_polarity cx ?trace polarity t
 
   | DefT (_, ClassT t)
-    -> check_polarity cx ?trace Neutral t
+    -> check_polarity cx ?trace polarity t
 
   | DefT (_, TypeT t)
-    -> check_polarity cx ?trace Neutral t
+    -> check_polarity cx ?trace polarity t
 
-  | DefT (_, InstanceT (_, super, _, instance)) ->
+  | DefT (_, InstanceT (static, super, _, instance)) ->
+    check_polarity cx ?trace polarity static;
     check_polarity cx ?trace polarity super;
     check_polarity_propmap cx ?trace polarity instance.fields_tmap;
-    check_polarity_propmap cx ?trace polarity instance.methods_tmap
+    check_polarity_propmap cx ?trace ~skip_ctor:true polarity instance.methods_tmap
 
   | DefT (_, FunT (_, _, func)) ->
     let f = check_polarity cx ?trace (Polarity.inv polarity) in
@@ -7091,8 +7092,8 @@ and check_polarity cx ?trace polarity = function
     check_polarity_propmap cx ?trace polarity obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
-      check_polarity cx ?trace dict_polarity key;
-      check_polarity cx ?trace dict_polarity value
+      check_polarity cx ?trace Neutral key;
+      check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
     | None -> ())
 
   | InternalT (IdxWrapper (_, obj)) -> check_polarity cx ?trace polarity obj
@@ -7104,26 +7105,32 @@ and check_polarity cx ?trace polarity = function
     List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
   | DefT (_, PolyT (xs, t, _)) ->
-    List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
+    List.iter (check_polarity_typeparam cx ?trace polarity) xs;
     check_polarity cx ?trace polarity t
 
-  | ThisTypeAppT (_, _, _, None) -> ()
+  | ThisTypeAppT (_, c, _, None) ->
+    check_polarity cx ?trace Positive c
+
   | ThisTypeAppT (_, c, _, Some ts)
   | DefT (_, TypeAppT (c, ts))
     ->
+    check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
 
   | OpaqueT (_, opaquetype) ->
-      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
-      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
+    Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
+    Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
+
+  | ShapeT t ->
+    check_polarity cx ?trace polarity t
+
+  | KeysT (_, t) ->
+    check_polarity cx ?trace Positive t
 
   | ThisClassT _
   | ModuleT _
   | AnnotT _
-  | ShapeT _
-
   | MatchingPropT _
-  | KeysT _
   | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
@@ -7139,9 +7146,13 @@ and check_polarity cx ?trace polarity = function
   | MergedT _
     -> () (* TODO *)
 
-and check_polarity_propmap cx ?trace polarity id =
+and check_polarity_propmap cx ?trace ?(skip_ctor=false) polarity id =
   let pmap = Context.find_props cx id in
-  SMap.iter (fun _ -> check_polarity_prop cx ?trace polarity) pmap
+  SMap.iter (fun x p ->
+    if skip_ctor && x = "constructor"
+    then ()
+    else check_polarity_prop cx ?trace polarity p
+  ) pmap
 
 and check_polarity_prop cx ?trace polarity = function
   | Field (_, t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
@@ -7153,7 +7164,9 @@ and check_polarity_prop cx ?trace polarity = function
   | Method (_, t) -> check_polarity cx ?trace polarity t
 
 and check_polarity_typeparam cx ?trace polarity tp =
-  check_polarity cx ?trace polarity tp.bound
+  let polarity = Polarity.mult (polarity, tp.polarity) in
+  check_polarity cx ?trace polarity tp.bound;
+  Option.iter ~f:(check_polarity cx ?trace polarity) tp.default
 
 and check_polarity_typeapp cx ?trace polarity c ts =
   let reason = replace_reason (fun desc ->

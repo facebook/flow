@@ -10,11 +10,11 @@ Error: contra.js:4
 
 Error: contra.js:15
  15:   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
-              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
 Error: contra.js:19
  19:   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
-              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
 Error: contra.js:25
  25:   out_object(): { _: this } { return { _: this }; }

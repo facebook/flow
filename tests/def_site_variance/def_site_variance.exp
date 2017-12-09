@@ -53,12 +53,12 @@ Error: test.js:26
                                ^^ In. invariant position (expected `In` to occur only contravariantly)
 
 Error: test.js:28
- 28:   co_dict2: {+[k:string]: In}; // error
-                               ^^ In. covariant position (expected `In` to occur only contravariantly)
+ 28:   +co_dict2: {+[k:string]: In}; // error
+                                ^^ In. covariant position (expected `In` to occur only contravariantly)
 
 Error: test.js:29
- 29:   con_dict1: {-[k:string]: Out}; // error
-                                ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+ 29:   +con_dict1: {-[k:string]: Out}; // error
+                                 ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
 
 
 Found 12 errors
