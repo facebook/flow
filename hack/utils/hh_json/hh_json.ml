@@ -316,71 +316,88 @@ let string_of_file filename =
 
 (* Writing JSON *)
 
-(* buf_concat :
- * Designed as a substitute for String.concat that passes a buffer
- * into which intermediate strings are added, and also includes left
- * and right bracket (lb and rb) in addition to sep. They are strings,
- * despite common case of (), [],{}, or even <>, to handle missing brackets,
- * brackets with spacing and multichar brackets like OCaml's arrays ([| and |]).
- * The A conc_elt function parameter performs the operation of transforming
- * the list element to a string and adding it to the buffer, the simplest
- * example would be fun x -> Buffer.add_string (to_string x)
- *)
-let buf_concat ~buf ~lb ~rb ~sep ~concat_elt l =
-  Buffer.add_string buf lb;
-  (match l with
-   | [] -> ()
-   | elt :: elts ->
-       concat_elt buf elt;
-       List.iter elts begin fun e ->
-         Buffer.add_string buf sep; concat_elt buf e
-       end);
-  Buffer.add_string buf rb
+module type Output_stream_intf = sig
+  type t
+  val add_char: t -> char -> unit
+  val add_string: t -> string -> unit
+end
 
-let add_char buf c = Buffer.add_char buf c
-let add_string buf s = Buffer.add_string buf s
+module Buffer_stream : Output_stream_intf with type t = Buffer.t = struct
+  type t = Buffer.t
+  let add_char b c = Buffer.add_char b c
+  let add_string b s = Buffer.add_string b s
+end
 
-let escape s =
-  let b = Buffer.create ((String.length s) + 2) in
-  Buffer.add_char b '"';
-  s |> String.iter begin fun c ->
-    let code = Char.code c in
-    match c, code with
-      | '\\', _ -> Buffer.add_string b "\\\\"
-      | '"', _ ->  Buffer.add_string b "\\\""
-      | '\n', _ -> Buffer.add_string b "\\n"
-      | '\r', _ -> Buffer.add_string b "\\r"
-      | '\t', _ -> Buffer.add_string b "\\t"
-      | _, _ when code <= 0x1f ->
-        Printf.sprintf "\\u%04x" code
-        |> Buffer.add_string b
-      | _ -> Buffer.add_char b c
-  end;
-  Buffer.add_char b '"';
-  Buffer.contents b
+module Channel_stream : Output_stream_intf with type t = Pervasives.out_channel = struct
+  type t = Pervasives.out_channel
+  let add_char b c = Pervasives.output_char b c
+  let add_string b s = Pervasives.output_string b s
+end
 
-let rec add_json_to_buffer (buf:Buffer.t) (json:json): unit =
-  match json with
-  | JSON_Object l ->
-      buf_concat ~buf ~lb:"{" ~rb:"}" ~sep:"," ~concat_elt:add_assoc_to_buffer l
-  | JSON_Array l ->
-      buf_concat ~buf ~lb:"[" ~rb:"]" ~sep:"," ~concat_elt:add_json_to_buffer l
-  | JSON_String s -> add_string buf (escape s)
-  | JSON_Number n -> add_string buf n
-  | JSON_Bool b -> if b then add_string buf "true" else add_string buf "false"
-  | JSON_Null -> add_string buf "null"
+module Make_streamer (Out : Output_stream_intf) = struct
+  (* Designed as a substitute for String.concat that passes a buffer
+   * into which intermediate strings are added, and also includes left
+   * and right bracket (lb and rb) in addition to sep. They are strings,
+   * despite common case of (), [],{}, or even <>, to handle missing brackets,
+   * brackets with spacing and multichar brackets like OCaml's arrays
+   * ([| and |]). The conc_elt function parameter performs the operation of
+   * transforming the list element to a string and adding it to the buffer, the
+   * simplest example would be fun x -> Buffer.add_string (to_string x)
+   *)
+  let concat ~lb ~rb ~sep ~concat_elt buf l =
+    Out.add_string buf lb;
+    (match l with
+     | [] -> ()
+     | elt :: elts ->
+         concat_elt buf elt;
+         List.iter elts begin fun e ->
+           Out.add_string buf sep; concat_elt buf e
+         end);
+    Out.add_string buf rb
 
-and add_assoc_to_buffer (buf:Buffer.t) (k,v) =
-  add_string buf (escape k);
-  add_char buf ':';
-  add_json_to_buffer buf v
+  let escape b s =
+    Out.add_char b '"';
+    s |> String.iter begin fun c ->
+      let code = Char.code c in
+      match c, code with
+        | '\\', _ -> Out.add_string b "\\\\"
+        | '"', _ ->  Out.add_string b "\\\""
+        | '\n', _ -> Out.add_string b "\\n"
+        | '\r', _ -> Out.add_string b "\\r"
+        | '\t', _ -> Out.add_string b "\\t"
+        | _, _ when code <= 0x1f ->
+          Printf.sprintf "\\u%04x" code
+          |> Out.add_string b
+        | _ -> Out.add_char b c
+    end;
+    Out.add_char b '"'
+
+  let rec add_json (buf:Out.t) (json:json): unit =
+    match json with
+    | JSON_Object l ->
+        concat ~lb:"{" ~rb:"}" ~sep:"," ~concat_elt:add_assoc buf l
+    | JSON_Array l ->
+        concat ~lb:"[" ~rb:"]" ~sep:"," ~concat_elt:add_json buf l
+    | JSON_String s -> escape buf s
+    | JSON_Number n -> Out.add_string buf n
+    | JSON_Bool b -> Out.add_string buf (if b then "true" else "false")
+    | JSON_Null -> Out.add_string buf "null"
+
+  and add_assoc (buf:Out.t) (k,v) =
+    escape buf k;
+    Out.add_char buf ':';
+    add_json buf v
+end
+
+module Out_buffer = Make_streamer (Buffer_stream)
+module Out_channel = Make_streamer (Channel_stream)
 
 let rec json_to_string ?(pretty=false) (json:json): string =
   if pretty
   then json_to_multiline json
   else
     let buf = Buffer.create 1024 in (* need a better estimate! *)
-    add_json_to_buffer buf json;
+    Out_buffer.add_json buf json;
     Buffer.contents buf
 
 and json_to_multiline json =
@@ -404,57 +421,22 @@ and json_to_multiline json =
   in
   loop "" json
 
-
-let rec output_list oc ?(sep=",") elems output_elem: unit =
-  match elems with
-  | [] -> ()
-  | [elem] -> output_elem oc elem
-  | elem :: other_elems ->
-      output_elem oc elem;
-      output_string oc sep;
-      output_list oc other_elems output_elem
-
-let rec json_to_output oc (json:json): unit =
-  match json with
-  | JSON_Object l ->
-      output_string oc "{";
-      output_list oc l json_assoc_to_output;
-      output_string oc "}";
-  | JSON_Array l ->
-      output_string oc "[";
-      output_list oc l json_to_output;
-      output_string oc "]";
-  | JSON_String s ->
-      output_string oc (escape s)
-  | JSON_Number n ->
-      output_string oc n
-  | JSON_Bool b ->
-      output_string oc (if b then "true" else "false")
-  | JSON_Null ->
-      output_string oc "null"
-
-and json_assoc_to_output oc (k,v) : unit =
-  output_string oc (escape k);
-  output_string oc ":";
-  json_to_output oc v
+let json_to_output oc (json:json): unit =
+  Out_channel.add_json oc json
 
 let rec json_to_multiline_output oc (json:json): unit =
   let json_assoc_to_output oc (k,v) : unit =
-    output_string oc (escape k);
+    Out_channel.escape oc k;
     output_string oc ":";
     json_to_multiline_output oc v
   in
   match json with
   | JSON_Object l ->
-      output_string oc "{";
-      output_list oc ~sep:",\n" l json_assoc_to_output;
-      output_string oc "}";
+      Out_channel.concat ~lb:"{" ~rb:"}" ~sep:",\n" ~concat_elt:json_assoc_to_output oc l
   | JSON_Array l ->
-      output_string oc "[";
-      output_list oc ~sep:",\n" l json_to_multiline_output;
-      output_string oc "]";
+      Out_channel.concat ~lb:"[" ~rb:"]" ~sep:",\n" ~concat_elt:json_to_multiline_output oc l
   | JSON_String s ->
-      output_string oc (escape s)
+      Out_channel.escape oc s
   | JSON_Number n ->
       output_string oc n
   | JSON_Bool b ->
