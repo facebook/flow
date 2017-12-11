@@ -14,7 +14,7 @@ module Hh_json_translator : (
 
   let string x = JSON_String x
   let bool x = JSON_Bool x
-  let obj props = JSON_Object (Array.to_list props)
+  let obj props = JSON_Object props
   let array arr = JSON_Array arr
   let number x = JSON_Number (Dtoa.ecma_string_of_float x)
   let null = JSON_Null
