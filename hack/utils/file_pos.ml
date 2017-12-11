@@ -15,10 +15,9 @@ type t = {
 }
 
 let pp fmt pos = begin
-  Format.pp_print_string fmt "L";
   Format.pp_print_int fmt pos.pos_lnum;
   Format.pp_print_string fmt ":";
-  Format.pp_print_int fmt pos.pos_cnum;
+  Format.pp_print_int fmt (pos.pos_cnum - pos.pos_bol + 1);
 end
 
 let compare = Pervasives.compare
