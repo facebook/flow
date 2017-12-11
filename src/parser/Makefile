@@ -9,7 +9,7 @@ JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml -
 JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
 JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
 
-OCB = ocamlbuild -use-ocamlfind -I src/third-party/wtf8
+OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
 	hack/utils/sys/files.o\

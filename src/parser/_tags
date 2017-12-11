@@ -1,2 +1,2 @@
-true: package(sedlex)
+true: package(sedlex), package(wtf8)
 <lexer.ml>: warn(-39)
