@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocamlfind ocp-build js_of_ocaml.3.0 sedlex.1.99.4 lwt.3.1.0"
+OPAM_DEPENDS="ocamlfind ocp-build dtoa.0.3.1 js_of_ocaml.3.0 lwt.3.1.0 sedlex.1.99.4 wtf8.1.0.1"
 
 TMP=${TMPDIR:-/tmp}
 
