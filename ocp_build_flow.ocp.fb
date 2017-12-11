@@ -253,6 +253,7 @@ begin library "flow-parser-utils"
   files = begin fb-glob "src/parser_utils"
   end
   requires = [
+    "dtoa"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
