@@ -94,6 +94,9 @@ class ['a] t :
     method resolve_spread :
       Context.t ->
       'a -> Type.resolve_spread_type -> Type.resolve_spread_type
+    method resolved_prop :
+      Context.t ->
+      'a -> Type.Object.prop -> Type.Object.prop
     method resolved :
       Context.t ->
       'a -> Type.Object.resolved -> Type.Object.resolved

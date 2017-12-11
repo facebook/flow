@@ -1185,9 +1185,14 @@ class ['a] t = object(self)
         if tlist' == tlist && resolvednelist' == resolvednelist then t
         else List (tlist', resolvednelist', join)
 
+  method resolved_prop cx map_cx ((t, own) as prop) =
+    let t' = self#type_ cx map_cx t in
+    if t' == t then prop
+    else (t', own)
+
   method resolved cx map_cx t =
     let t' = Nel.ident_map (fun ((r, props, dict, flags) as slice) ->
-      let props' = SMap.ident_map (fun (x, b) -> (self#type_ cx map_cx x, b)) props in
+      let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
       if props' == props && dict' == dict then slice
       else (r, props', dict', flags)) t in
