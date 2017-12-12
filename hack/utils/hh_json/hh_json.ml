@@ -320,18 +320,21 @@ module type Output_stream_intf = sig
   type t
   val add_char: t -> char -> unit
   val add_string: t -> string -> unit
+  val add_substring: t -> string -> int -> int -> unit
 end
 
 module Buffer_stream : Output_stream_intf with type t = Buffer.t = struct
   type t = Buffer.t
   let add_char b c = Buffer.add_char b c
   let add_string b s = Buffer.add_string b s
+  let add_substring b s ofs len = Buffer.add_substring b s ofs len
 end
 
 module Channel_stream : Output_stream_intf with type t = Pervasives.out_channel = struct
   type t = Pervasives.out_channel
   let add_char b c = Pervasives.output_char b c
   let add_string b s = Pervasives.output_string b s
+  let add_substring b s ofs len = Pervasives.output_substring b s ofs len
 end
 
 module Make_streamer (Out : Output_stream_intf) = struct
@@ -357,19 +360,25 @@ module Make_streamer (Out : Output_stream_intf) = struct
 
   let escape b s =
     Out.add_char b '"';
-    s |> String.iter begin fun c ->
-      let code = Char.code c in
-      match c, code with
-        | '\\', _ -> Out.add_string b "\\\\"
-        | '"', _ ->  Out.add_string b "\\\""
-        | '\n', _ -> Out.add_string b "\\n"
-        | '\r', _ -> Out.add_string b "\\r"
-        | '\t', _ -> Out.add_string b "\\t"
-        | _, _ when code <= 0x1f ->
-          Printf.sprintf "\\u%04x" code
-          |> Out.add_string b
-        | _ -> Out.add_char b c
-    end;
+    let pos = ref 0 in
+    let add_escaped i chr =
+      Out.add_substring b s !pos (i - !pos);
+      Out.add_string b chr;
+      pos := i + 1
+    in
+    for i = 0 to String.length s - 1 do
+      match s.[i] with
+      | '\\' -> add_escaped i "\\\\"
+      | '"' ->  add_escaped i "\\\""
+      | '\n' -> add_escaped i "\\n"
+      | '\r' -> add_escaped i "\\r"
+      | '\t' -> add_escaped i "\\t"
+      | '\x00'..'\x1f' as c ->
+        let code = Char.code c in
+        add_escaped i (Printf.sprintf "\\u%04x" code)
+      | _ -> ()
+    done;
+    Out.add_substring b s !pos (String.length s - !pos);
     Out.add_char b '"'
 
   let rec add_json (buf:Out.t) (json:json): unit =
