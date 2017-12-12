@@ -1,3 +1,11 @@
+Error: test.js:2
+  2: var b: CovArrayVerbose<number,*> = [];
+                                        ^^ empty array literal
+  4: y[0] = ""; // error
+            ^^ string. This type is incompatible with the bound on type parameter `Y`:
+  2: var b: CovArrayVerbose<number,*> = [];
+                            ^^^^^^ number
+
 Error: test.js:3
   3: var y: CovArrayVerbose<mixed,*> = b;
                                        ^ CovArrayVerbose. Has some incompatible type argument with
@@ -8,12 +16,6 @@ Error: test.js:3
                                 ^^^^^^ number. This type is incompatible with
       3: var y: CovArrayVerbose<mixed,*> = b;
                                 ^^^^^ mixed
-
-Error: test.js:4
-  4: y[0] = ""; // error
-            ^^ string. This type is incompatible with
-  4: y[0] = ""; // error
-     ^^^^ number
 
 Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }

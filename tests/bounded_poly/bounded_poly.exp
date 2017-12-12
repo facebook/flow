@@ -18,12 +18,6 @@ Error: test.js:13
 
 Error: test.js:22
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
-              ^^^^^^ string. This type is incompatible with
-  7: class C<T: number> {
-                ^^^^^^ number
-
-Error: test.js:22
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
                         ^^^^^ C. Has some incompatible type argument with
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
             ^^^^^^^^^ C
@@ -33,6 +27,22 @@ Error: test.js:22
       7: class C<T: number> {
                     ^^^^^^ number
 
+Error: test.js:22
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
+                        ^^^^^ new `C`
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
+              ^^^^^^ string. This type is incompatible with the bound on type parameter `T`:
+  7: class C<T: number> {
+                ^^^^^^ number
+
+Error: test.js:23
+ 23: var q: number = c.qux(0);
+                     ^^^^^^^^ call of method `qux`
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
+              ^^^^^^ string. This type is incompatible with the bound on type parameter `T`:
+  7: class C<T: number> {
+                ^^^^^^ number
+
 Error: test.js:23
  23: var q: number = c.qux(0);
                      ^^^^^^^^ string. This type is incompatible with
@@ -41,9 +51,9 @@ Error: test.js:23
 
 Error: test.js:23
  23: var q: number = c.qux(0);
-                           ^ number. This type is incompatible with the expected param type of
+                           ^ number. This type is incompatible with the bound on type parameter `U`:
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
               ^^^^^^ string
 
 
-Found 7 errors
+Found 8 errors

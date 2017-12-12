@@ -135,8 +135,8 @@ Error: jsx.js:34
   Error:
    34: (<ExpectsProps />); // Error - missing prop
         ^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
-   21:   Props: Object,
-                ^^^^^^ object type
+   33: declare function ExpectsProps(props: { name: string }, children: any): string;
+                                            ^^^^^^^^^^^^^^^^ object type
 
 Error: jsx.js:35
  35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
@@ -145,9 +145,9 @@ Error: jsx.js:35
                                                    ^^^^^^ number
 
 Error: jsx.js:38
- 38: (<ExpectsChildrenTuple />); // Error - mising child
+ 38: (<ExpectsChildrenTuple />); // Error - missing child
       ^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
- 38: (<ExpectsChildrenTuple />); // Error - mising child
+ 38: (<ExpectsChildrenTuple />); // Error - missing child
       ^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
                            v
@@ -158,7 +158,7 @@ Error: jsx.js:38
    15: ): Elem;
        ------^ function type
   Error:
-   38: (<ExpectsChildrenTuple />); // Error - mising child
+   38: (<ExpectsChildrenTuple />); // Error - missing child
         ^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of JSX desugared to `JSX(...)`. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 1 elements of
    37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ tuple type
@@ -171,7 +171,7 @@ Error: jsx.js:38
    27: ): Elem;
        ------^ function type
   Error:
-   38: (<ExpectsChildrenTuple />); // Error - mising child
+   38: (<ExpectsChildrenTuple />); // Error - missing child
         ^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
    21:   Props: Object,
                 ^^^^^^ object type

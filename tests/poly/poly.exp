@@ -49,6 +49,22 @@ Error: error.js:20
  20: (newVal4: string); // The error should point here.
                ^^^^^^ string
 
+Error: implicit_bounded_instantiation.js:15
+ 15: var a: C<*> = new C();
+                   ^^^^^^^ new `C`
+ 19: a.meth(42); // Error: number ~> Middle
+            ^^ number. This type is incompatible with the bound on type parameter `T`:
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
+
+Error: implicit_bounded_instantiation.js:15
+ 15: var a: C<*> = new C();
+                   ^^^^^^^ new `C`
+ 20: a.meth(new Base()); // Error: Base ~> Middle
+            ^^^^^^^^^^ Base. This type is incompatible with the bound on type parameter `T`:
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
+
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
             ^^ number. This type is incompatible with the expected param type of
@@ -133,4 +149,4 @@ Error: test.js:7
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
 
-Found 14 errors
+Found 16 errors

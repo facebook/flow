@@ -310,6 +310,7 @@ module rec TypeTerm : sig
     | PropertyCompatibility of { prop: string option; lower: reason; upper: reason }
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
     | TypeArgCompatibility of string * reason * reason
+    | TypeParamBound of { name: string }
     | UnifyFlip
 
   and use_op =
@@ -2469,6 +2470,7 @@ let string_of_frame_use_op = function
 | PropertyCompatibility _ -> "PropertyCompatibility"
 | TupleElementCompatibility _ -> "TupleElementCompatibility"
 | TypeArgCompatibility _ -> "TypeArgCompatibility"
+| TypeParamBound _ -> "TypeParamBound"
 | UnifyFlip -> "UnifyFlip"
 
 let string_of_use_op = function

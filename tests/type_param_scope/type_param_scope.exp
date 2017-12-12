@@ -18,7 +18,7 @@ Error: default_params.js:10
 
 Error: method_shadow.js:42
  42: g.m(true); // err, bool ~> number|string
-         ^^^^ boolean. This type is incompatible with the expected param type of
+         ^^^^ boolean. This type is incompatible with the bound on type parameter `T`:
  40: declare var g: G<number|string>;
                       ^^^^^^^^^^^^^ union: number | string
   Member 1:

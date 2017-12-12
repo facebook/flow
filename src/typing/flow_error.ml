@@ -453,6 +453,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | TupleElementCompatibility c ->
       TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
     | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
+    | TypeParamBound _
     | FunMissingArg _
     | ImplicitTypeParam _
     | UnifyFlip
@@ -528,6 +529,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
     in
     let msg = "Has some incompatible type argument with" in
     unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
+  | Frame (TypeParamBound { name }, use_op) ->
+    let msg = spf "This type is incompatible with the bound on type parameter `%s`:" name in
+    unwrap_use_ops (reasons, extra, msg) use_op
   | Op FunReturnStatement when not force ->
     let msg = "This type is incompatible with the expected return type of" in
     extra, typecheck_msgs msg reasons

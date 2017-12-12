@@ -7233,7 +7233,10 @@ and instantiate_poly_with_targs
       | _, t::ts ->
           t, ts in
       let t_ = cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t in
-      rec_flow_t cx trace (t_, subst cx ~use_op map typeparam.bound);
+      let frame = Frame (TypeParamBound {
+        name = typeparam.name;
+      }, use_op) in
+      rec_flow_t cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
       SMap.add typeparam.name t_ map, ts
     )
     (SMap.empty, ts)
