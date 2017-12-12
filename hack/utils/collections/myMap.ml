@@ -42,6 +42,9 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let choose x =
     try Some (choose x) with Not_found -> None
 
+  let max_binding x =
+    try Some (max_binding x) with Not_found -> None
+
   let from_keys keys ~f =
     List.fold_left begin fun acc key ->
       add key (f key) acc
