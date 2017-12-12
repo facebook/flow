@@ -1006,7 +1006,7 @@ module ResolvableTypeJob = struct
     | EvalT _
     | InternalT (ChoiceKitT (_, _))
     | TypeDestructorTriggerT _
-    | ModuleT (_, _)
+    | ModuleT (_, _, _)
     | InternalT (ExtendsT _)
       ->
       acc
@@ -1237,6 +1237,12 @@ let expect_proper_def t =
 
 let expect_proper_def_use t =
   lift_to_use expect_proper_def t
+
+let check_nonstrict_import cx trace imported_is_strict reason =
+  if (Context.is_strict cx) && (not imported_is_strict) then
+    let loc = Reason.loc_of_reason reason in
+    let message = FlowError.ENonstrictImport loc in
+    add_output cx ~trace message
 
 let print_if_verbose_lazy cx trace
     ?(delim = "")
@@ -1802,7 +1808,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        that are not @flow, so the rules have to deal with `any`. *)
 
     (* util that grows a module by adding named exports from a given map *)
-    | (ModuleT(_, exports), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
+    | (ModuleT(_, exports, _), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
       tmap |> SMap.iter (fun name t ->
         if skip_dupes && Context.has_export cx exports.exports_tmap name
         then ()
@@ -1813,7 +1819,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** Copy the named exports from a source module into a target module. Used
         to implement `export * from 'SomeModule'`, with the current module as
         the target and the imported module as the source. *)
-    | (ModuleT(_, source_exports),
+    | (ModuleT(_, source_exports, _),
        CopyNamedExportsT(reason, target_module_t, t_out)) ->
       let source_tmap = Context.find_exports cx source_exports.exports_tmap in
       rec_flow cx trace (
@@ -1825,7 +1831,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * Copy only the type exports from a source module into a target module.
      * Used to implement `export type * from ...`.
      *)
-    | ModuleT(_, source_exports),
+    | ModuleT(_, source_exports, _),
       CopyTypeExportsT(reason, target_module_t, t_out) ->
       let source_exports = Context.find_exports cx source_exports.exports_tmap in
       let target_module_t =
@@ -1873,14 +1879,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
     | DefT (_, ObjT {props_tmap; proto_t; _;}),
       CJSExtractNamedExportsT(
-        reason, (module_t_reason, exporttypes), t_out
+        reason, (module_t_reason, exporttypes, is_strict), t_out
       ) ->
 
       (* Copy props from the prototype *)
       let module_t = Tvar.mk_where cx reason (fun t ->
         rec_flow cx trace (
           proto_t,
-          CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes), t)
+          CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes, is_strict), t)
         )
       ) in
 
@@ -1898,10 +1904,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
     | DefT (_, InstanceT(_, _, _, {fields_tmap; methods_tmap; _;})),
       CJSExtractNamedExportsT(
-        reason, (module_t_reason, exporttypes), t_out
+        reason, (module_t_reason, exporttypes, is_strict), t_out
       ) ->
 
-      let module_t = ModuleT (module_t_reason, exporttypes) in
+      let module_t = ModuleT (module_t_reason, exporttypes, is_strict) in
 
       let extract_named_exports id =
         Context.find_props cx id
@@ -1931,10 +1937,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * import
      *)
     | DefT (_, (AnyT | AnyObjT)),
-      CJSExtractNamedExportsT(_, (module_t_reason, exporttypes), t_out) ->
+      CJSExtractNamedExportsT(_, (module_t_reason, exporttypes, is_strict), t_out) ->
       let module_t = ModuleT (
         module_t_reason,
-        { exporttypes with has_every_named_export = true; }
+        { exporttypes with has_every_named_export = true; },
+        is_strict
       ) in
       rec_flow_t cx trace (module_t, t_out)
 
@@ -1942,8 +1949,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way.
      *)
-    | (_, CJSExtractNamedExportsT(_, (module_t_reason, exporttypes), t_out)) ->
-      let module_t = ModuleT (module_t_reason, exporttypes) in
+    | (_, CJSExtractNamedExportsT(_, (module_t_reason, exporttypes, is_strict), t_out)) ->
+      let module_t = ModuleT (module_t_reason, exporttypes, is_strict) in
       rec_flow_t cx trace (module_t, t_out)
 
     (**************************************************************************)
@@ -1966,7 +1973,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************************************)
 
     (* require('SomeModule') *)
-    | (ModuleT(_, exports), CJSRequireT(reason, t)) ->
+    | (ModuleT(_, exports, is_strict), CJSRequireT(reason, t)) ->
+      check_nonstrict_import cx trace is_strict reason;
       let cjs_exports = (
         match exports.cjs_export with
         | Some t ->
@@ -1985,7 +1993,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (cjs_exports, t)
 
     (* import * as X from 'SomeModule'; *)
-    | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
+    | (ModuleT(_, exports, is_strict), ImportModuleNsT(reason, t)) ->
+      check_nonstrict_import cx trace is_strict reason;
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
       (* TODO this Field should probably have a location *)
       let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
@@ -2011,8 +2020,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | ModuleT(module_reason, exports),
+    | ModuleT(module_reason, exports, is_strict),
       ImportDefaultT(reason, import_kind, (local_name, module_name), t) ->
+      check_nonstrict_import cx trace is_strict reason;
       let export_t = match exports.cjs_export with
         | Some t -> t
         | None ->
@@ -2057,7 +2067,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (import_t, t)
 
     (* import {X} from 'SomeModule'; *)
-    | ModuleT(_, exports), ImportNamedT(reason, import_kind, export_name, t) ->
+    | ModuleT(_, exports, is_strict),
+      ImportNamedT(reason, import_kind, export_name, t) ->
+        check_nonstrict_import cx trace is_strict reason;
         (**
          * When importing from a CommonJS module, we shadow any potential named
          * exports called "default" with a pointer to the raw `module.exports`
@@ -11444,7 +11456,7 @@ end = struct
           | None -> acc
         ) (find_props cx flds) SMap.empty in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-    | SuccessModule (ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;})) ->
+    | SuccessModule (ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}, _)) ->
         let named_exports = Context.find_exports cx exports_tmap in
         (* Stub out the identifier locations. It would be nice to get actual locations in here at some point *)
         let named_exports = SMap.map (fun t -> None, t) named_exports in
@@ -11659,7 +11671,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, SingletonBoolT _) ->
     ()
 
-  | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }) ->
+  | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }, _) ->
     Context.find_exports cx exports_tmap
       |> SMap.iter (fun _ -> recurse ~infer:true);
     begin match cjs_export with

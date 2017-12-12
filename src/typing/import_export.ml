@@ -18,7 +18,8 @@ let mk_module_t cx reason = ModuleT(
     exports_tmap = Context.make_export_map cx SMap.empty;
     cjs_export = None;
     has_every_named_export = false;
-  }
+  },
+  Context.is_strict cx
 )
 
 (**
@@ -39,7 +40,11 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
   Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (
       export_t,
-      CJSExtractNamedExportsT(reason, (reason_exports_module, exporttypes), t)
+      CJSExtractNamedExportsT(
+        reason,
+        (reason_exports_module, exporttypes, (Context.is_strict cx)),
+        t
+      )
     )
   )
 

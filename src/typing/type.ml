@@ -162,7 +162,7 @@ module rec TypeTerm : sig
     | OpaqueT of reason * opaquetype
 
     (* Stores exports (and potentially other metadata) for a module *)
-    | ModuleT of reason * exporttypes
+    | ModuleT of reason * exporttypes * bool (* is_strict *)
 
     (** Here's to the crazy ones. The misfits. The rebels. The troublemakers.
         The round pegs in the square holes. **)
@@ -493,7 +493,7 @@ module rec TypeTerm : sig
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
-        * (* local ModuleT *) (reason * exporttypes)
+        * (* local ModuleT *) (reason * exporttypes * bool (* is_strict *))
         * (* 't_out' to receive the resolved ModuleT *) t_out
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
@@ -2014,7 +2014,7 @@ let rec reason_of_t = function
   | FunProtoCallT reason -> reason
   | InternalT (IdxWrapper (reason, _)) -> reason
   | KeysT (reason, _) -> reason
-  | ModuleT (reason, _) -> reason
+  | ModuleT (reason, _, _) -> reason
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
@@ -2159,7 +2159,7 @@ let rec mod_reason_of_t f = function
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
   | InternalT (IdxWrapper (reason, t)) -> InternalT (IdxWrapper (f reason, t))
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | ModuleT (reason, exports) -> ModuleT (f reason, exports)
+  | ModuleT (reason, exports, is_strict) -> ModuleT (f reason, exports, is_strict)
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)

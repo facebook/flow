@@ -98,10 +98,10 @@ class ['a] t = object(self)
             opaque_type_args == opaquetype.opaque_type_args
           then t
           else OpaqueT (r, {opaquetype with underlying_t; super_t; opaque_type_args})
-      | ModuleT (r, exporttypes) ->
+      | ModuleT (r, exporttypes, is_strict) ->
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
-          else ModuleT (r, exporttypes')
+          else ModuleT (r, exporttypes', is_strict)
       | InternalT (ExtendsT (r, t1, t2)) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
@@ -711,11 +711,11 @@ class ['a] t = object(self)
         if t'' == t' then t
         else ImportTypeofT (r, s, t'')
     | AssertImportIsValueT _ -> t
-    | CJSExtractNamedExportsT (r1, (r2, exports), t') ->
+    | CJSExtractNamedExportsT (r1, (r2, exports, is_strict), t') ->
         let exports' = self#export_types cx map_cx exports in
         let t'' = self#type_ cx map_cx t' in
         if exports' == exports && t'' == t' then t
-        else CJSExtractNamedExportsT (r1, (r2, exports'), t'')
+        else CJSExtractNamedExportsT (r1, (r2, exports', is_strict), t'')
     | CopyNamedExportsT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

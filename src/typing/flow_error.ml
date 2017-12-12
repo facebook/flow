@@ -151,6 +151,7 @@ type error_message =
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
   | EUntypedImport of Loc.t * string
+  | ENonstrictImport of Loc.t
   | EUnclearType of Loc.t
   | EUnsafeGettersSetters of Loc.t
   | EUnusedSuppression of Loc.t
@@ -1458,6 +1459,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
         "Importing from an untyped module makes it `any` and is not safe! "^^
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
+
+  | ENonstrictImport loc ->
+    mk_error
+      ~kind:(LintError Lints.NonstrictImport)
+      [loc, ["Dependencies of a strict module must also be strict!"]]
+
   | EUnclearType loc ->
     mk_error
       ~kind:(LintError Lints.UnclearType)

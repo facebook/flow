@@ -286,7 +286,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "supertype", st
   ]
 
-  | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
+  | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}, is_strict) ->
     let tmap = Context.find_exports json_cx.cx exports_tmap in
     let cjs_export = match cjs_export with
     | Some(t) -> _json_of_t json_cx t
@@ -296,6 +296,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "namedExports", json_of_tmap json_cx tmap;
       "cjsExport", cjs_export;
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
+      "isStrict", JSON_Bool is_strict;
     ]
 
   | InternalT (ExtendsT (_, t1, t2)) -> [
@@ -685,8 +686,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | AssertRestParamT _ -> []
 
-  | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes), t_out) -> [
-      "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes));
+  | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out) -> [
+      "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes, is_strict));
       "t_out", _json_of_t json_cx t_out;
     ]
   | CopyNamedExportsT (_, target_module_t, t_out) -> [
@@ -2661,6 +2662,8 @@ let dump_flow_error =
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUntypedImport (loc, module_name) ->
       spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
+    | ENonstrictImport loc ->
+      spf "ENonstrictImport (%s)" (string_of_loc loc)
     | EUnclearType loc ->
       spf "EUnclearType (%s)" (string_of_loc loc)
     | EUnsafeGettersSetters loc ->

@@ -84,7 +84,7 @@ class ['a] t = object(self)
     let acc = self#opt (self#type_ cx pole) acc super_t in
     acc
 
-  | ModuleT (_, exporttypes) ->
+  | ModuleT (_, exporttypes, _) ->
     self#export_types cx pole acc exporttypes
 
   | InternalT (ExtendsT (_, t1, t2)) ->
@@ -419,7 +419,7 @@ class ['a] t = object(self)
 
   | AssertImportIsValueT _ -> acc
 
-  | CJSExtractNamedExportsT (_, (_, ts), t) ->
+  | CJSExtractNamedExportsT (_, (_, ts, _), t) ->
     let acc = self#export_types cx pole_TODO acc ts in
     let acc = self#type_ cx pole_TODO acc t in
     acc

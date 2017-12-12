@@ -130,7 +130,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
        * TODO: Specialized `import` hooks so that get-defs on named
        *       imports point to their actual remote def location.
        *)
-      | ModuleT(_, {cjs_export; _; }) ->
+      | ModuleT(_, {cjs_export; _; }, _) ->
           (* If we have a location for the cjs export, go there. Otherwise
            * fall back to just the top of the file *)
           let loc = match cjs_export with

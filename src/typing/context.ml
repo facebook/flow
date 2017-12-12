@@ -279,6 +279,7 @@ let imported_ts cx = cx.local.imported_ts
 let is_checked cx = cx.local.metadata.checked
 let is_verbose cx = cx.local.metadata.verbose <> None
 let is_weak cx = cx.local.metadata.weak
+let is_strict cx = cx.local.metadata.strict
 let severity_cover cx = cx.local.severity_cover
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind

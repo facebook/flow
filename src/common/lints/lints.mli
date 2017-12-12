@@ -15,6 +15,7 @@ type lint_kind =
  | SketchyNull of sketchy_null_kind
  | UntypedTypeImport
  | UntypedImport
+ | NonstrictImport
  | UnclearType
  | UnsafeGettersSetters
 

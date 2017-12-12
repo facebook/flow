@@ -459,7 +459,7 @@ let rec normalize_type_impl cx ids t = match t with
   | OpenPredT (_, t, _, _) ->
       normalize_type_impl cx ids t
 
-  | ModuleT (_, exporttypes) ->
+  | ModuleT (_, exporttypes, is_strict) ->
     let reason = locationless_reason (RCustom "module") in
     let exports_tmap =
       Context.find_exports cx exporttypes.exports_tmap
@@ -469,7 +469,7 @@ let rec normalize_type_impl cx ids t = match t with
     let cjs_export = match exporttypes.cjs_export with
       | None -> None
       | Some t -> Some (normalize_type_impl cx ids t) in
-    ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
+    ModuleT (reason, { exporttypes with exports_tmap; cjs_export; }, is_strict)
 
   | NullProtoT _ -> NullProtoT (locationless_reason RNull)
 

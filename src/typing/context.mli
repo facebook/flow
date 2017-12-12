@@ -85,6 +85,7 @@ val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
+val is_strict: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
