@@ -2131,7 +2131,22 @@
   },
   {
     "type":"(obj: IdxObject, pathCallback: (demaybifiedObj: $IdxWrapper<IdxObject>) => IdxResult) => ?IdxResult",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"function type",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":19,"column":18,"offset":467},
+          "end":{"line":19,"column":33,"offset":483}
+        },
+        "path":"test.js",
+        "line":19,
+        "endline":19,
+        "start":18,
+        "end":33
+      }
+    ],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -2146,7 +2161,22 @@
   },
   {
     "type":"{a?: {b: ?{c: null | {d: number}}}}",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"object type",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":20,"column":18,"offset":502},
+          "end":{"line":20,"column":52,"offset":537}
+        },
+        "path":"test.js",
+        "line":20,
+        "endline":20,
+        "start":18,
+        "end":52
+      }
+    ],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",

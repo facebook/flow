@@ -222,12 +222,9 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 
-  | (loc, DeclareVariable { DeclareVariable.
-      id = (_, name);
-      typeAnnotation;
-    }) ->
+  | (loc, DeclareVariable { DeclareVariable.id = (_, name); _ }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
-      let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
+      let t = Tvar.mk cx r in
       Type_table.set (Context.type_table cx) loc t;
       Env.bind_declare_var cx name t loc
 
@@ -1478,8 +1475,13 @@ and statement cx = Ast.Statement.(
         Env.init_fun cx name fn_type loc
       | None -> ())
 
-  | (_, DeclareVariable _) ->
-      ()
+  | (loc, DeclareVariable { DeclareVariable.
+      id = (_, name);
+      typeAnnotation;
+    }) ->
+      let r = mk_reason (RCustom (spf "declare %s" name)) loc in
+      let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
+      Env.unify_declared_type cx name t;
 
   | (loc, DeclareFunction { DeclareFunction.
       id;

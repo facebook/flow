@@ -8,7 +8,7 @@ Error: import_declare_type.js:26
  26: ({toz:3} : Foo); // error : {toz : number} ~> string
       ^^^^^^^ object literal. This type is incompatible with
  26: ({toz:3} : Foo); // error : {toz : number} ~> string
-                ^^^ Foo
+                ^^^ string
 
 Error: import_declare_type.js:28
  28: (3 : Bar); // error : number ~> A
