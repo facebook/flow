@@ -877,7 +877,7 @@ module ResolvableTypeJob = struct
   type t =
   | Binding of Type.tvar
   | OpenResolved
-  | OpenUnresolved of int option * Constraint.ident
+  | OpenUnresolved of int option * reason * Constraint.ident
 
   (* log_unresolved is a mode that determines whether to log unresolved tvars:
      it is None when resolving annotations, and Some speculation_id when
@@ -911,7 +911,7 @@ module ResolvableTypeJob = struct
            them during speculative matching typically do not cause side effects
            across branches, and help make progress. *)
         then acc
-        else IMap.add id (OpenUnresolved (log_unresolved, id)) acc
+        else IMap.add id (OpenUnresolved (log_unresolved, r, id)) acc
       end
 
     | AnnotT (tvar, _) ->
@@ -7624,12 +7624,12 @@ and bindings_of_jobs cx trace jobs =
   IMap.fold ResolvableTypeJob.(fun id job bindings -> match job with
   | OpenResolved -> bindings
   | Binding tvar -> (id, tvar)::bindings
-  | OpenUnresolved (log_unresolved, id) ->
+  | OpenUnresolved (log_unresolved, reason, id) ->
     begin match log_unresolved with
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id id
     | None ->
-      resolve_id cx trace ~use_op:unknown_use id Locationless.AnyT.t
+      resolve_id cx trace ~use_op:unknown_use id (AnyT.make reason)
     end;
     bindings
   ) jobs []
