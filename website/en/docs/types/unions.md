@@ -54,7 +54,7 @@ type Fish = Numbers | Colors;
 
 When calling our function that accepts a union type we must pass in ***one of
 those types***. But inside of our function we are required to handle ***all of
-the possible types****.
+the possible types***.
 
 Let's rewrite our function to handle each type individually.
 
