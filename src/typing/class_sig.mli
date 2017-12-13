@@ -9,7 +9,6 @@ type super =
   | Interface of {
       extends: Type.t list;
       callable: bool;
-      static_callable: bool;
     }
   | Class of {
       extends: extends;

@@ -5718,9 +5718,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (static, ReposLowerT (reason, false, u))
 
-    (**********************************************)
-    (* classes as functions, functions as classes *)
-    (**********************************************)
+    (************************)
+    (* classes as functions *)
+    (************************)
 
     (* When a class value flows to a function annotation or call site, check for
        the presence of a $call property in the former (as a static) compatible
@@ -5729,21 +5729,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let propref = Named (reason, "$call") in
       rec_flow cx trace (l,
         GetPropT (use_op, reason, propref, tvar_with_constraint ~trace cx u))
-
-    (* For a function type to be used as a class type, the following must hold:
-       - the class's instance type must be a subtype of the function's prototype
-       property type and 'this' type
-       - the function's statics should be included in the class's statics
-       (typically a function's statics are under-specified, so we don't
-       enforce equality)
-       - the class's static $call property type must be a subtype of the
-       function type. *)
-    | DefT (reason, FunT (static, prototype, funtype)),
-      UseT (use_op, (DefT (_, ClassT instance) as class_t)) ->
-      rec_flow cx trace (instance, UseT (use_op, prototype));
-      rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (class_t, GetPropT (use_op, reason, Named (reason, "$call"), l))
 
     (************)
     (* indexing *)

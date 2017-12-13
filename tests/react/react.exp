@@ -585,12 +585,7 @@ Error: hoc.js:36
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   138:   | Class<React$Component<Props, any>>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
-    Callable property is incompatible:
-       36: myHOC(function Empty(props: {foo: string}) {}); // Error
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
-      138:   | Class<React$Component<Props, any>>;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.

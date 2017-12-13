@@ -42,7 +42,6 @@ type super =
   | Interface of {
       extends: Type.t list;
       callable: bool;
-      static_callable: bool;
     }
   | Class of {
       extends: extends;
@@ -67,7 +66,7 @@ let empty id reason tparams tparams_map super =
     let open Type in
     let super_reason = replace_reason (fun d -> RSuperOf d) reason in
     match super with
-    | Interface {extends; callable; static_callable} ->
+    | Interface {extends; callable} ->
       let super, ssuper = match extends with
       | [] ->
         ObjProtoT super_reason, ObjProtoT super_reason
@@ -87,18 +86,6 @@ let empty id reason tparams tparams_map super =
           let rep = InterRep.make super (FunProtoT super_reason) [] in
           DefT (super_reason, IntersectionT rep)
         else super
-      in
-      (* This case exists to support the constructor_annots case (see
-         tests/constructor_annots), which allows users to case a function F to a
-         class-like type described by an interface with a static callable
-         property with (F: Class<I>). We should remove this feature and make
-         static callable properties on interfaces an error. *)
-      let ssuper =
-        if static_callable
-        then
-          let rep = InterRep.make ssuper (FunProtoT super_reason) [] in
-          DefT (super_reason, IntersectionT rep)
-        else ssuper
       in
       true, super, ssuper, []
     | Class {extends; mixins; implements} ->
@@ -785,11 +772,7 @@ let of_interface cx reason { Ast.Statement.Interface.
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      let static_callable = List.exists Ast.Type.Object.(function
-        | CallProperty (_, { CallProperty.static; _ }) -> static
-        | _ -> false
-      ) properties in
-      Interface { extends; callable; static_callable }
+      Interface { extends; callable }
     in
     empty id reason tparams tparams_map super
   in
