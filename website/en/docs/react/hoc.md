@@ -67,7 +67,7 @@ import * as React from 'react';
 
 function mapProps<PropsInput: {}, PropsOutput: {}>(
   // TODO
-): (React.ComponentType<PropsInput>) => React.ComponentType<PropsOutput> {
+): (React.ComponentType<PropsOutput>) => React.ComponentType<PropsInput> {
   return Component => {
     // implementation...
   };
@@ -88,7 +88,7 @@ import * as React from 'react';
 
 function mapProps<PropsInput: {}, PropsOutput: {}>(
   mapperFn: (PropsInput) => PropsOutput,
-): (React.ComponentType<PropsInput>) => React.ComponentType<PropsOutput> {
+): (React.ComponentType<PropsOutput>) => React.ComponentType<PropsInput> {
   return Component => {
     // implementation...
   };
