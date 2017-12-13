@@ -1016,7 +1016,7 @@ end with type t = Impl.t) = struct
     | Plus -> string "plus"
     | Minus -> string "minus"
     ) in
-    node "Variance" loc [| "kind", kind |]
+    node "Variance" loc [ "kind", kind ]
 
   and _type (loc, t) = Type.(
     match t with
