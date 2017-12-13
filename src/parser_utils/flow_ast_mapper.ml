@@ -122,6 +122,9 @@ class mapper = object(this)
     | (loc, Labeled label) ->
       id this#labeled_statement label stmt (fun label -> loc, Labeled label)
 
+    | (loc, OpaqueType otype) ->
+      id this#opaque_type otype stmt (fun otype -> loc, OpaqueType otype)
+
     | (loc, Return ret) ->
       id this#return ret stmt (fun ret -> loc, Return ret)
 
@@ -147,9 +150,7 @@ class mapper = object(this)
       id this#type_alias stuff stmt (fun stuff -> loc, TypeAlias stuff)
 
     (* TODO: Flow specific stuff *)
-    (* TODO(T22777134): Implement this when the mapper supports OpaqueType. *)
     | (_loc, DeclareOpaqueType _) -> stmt
-    | (_loc, OpaqueType _) -> stmt
 
   method comment (c: Loc.t Ast.Comment.t) = c
 
@@ -919,6 +920,26 @@ class mapper = object(this)
 
   method object_key_identifier (ident: Loc.t Ast.Identifier.t) =
     this#identifier ident
+
+  method opaque_type (otype: Loc.t Ast.Statement.OpaqueType.t) =
+    let open Ast.Statement.OpaqueType in
+    let { id; typeParameters; impltype; supertype } = otype in
+    let id' = this#identifier id in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let impltype' = map_opt this#type_ impltype in
+    let supertype' = map_opt this#type_ supertype  in
+    if id == id' &&
+       impltype == impltype' &&
+       typeParameters == typeParameters' &&
+       impltype == impltype' &&
+       supertype == supertype'
+    then otype
+    else {
+      id = id';
+      typeParameters = typeParameters';
+      impltype = impltype';
+      supertype = supertype'
+    }
 
   method function_param_pattern (expr: Loc.t Ast.Pattern.t) =
     this#binding_pattern expr
