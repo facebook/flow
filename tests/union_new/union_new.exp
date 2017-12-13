@@ -363,6 +363,12 @@ Error: test33.js:8
   8: (bar(): string); // error: number ~> string
              ^^^^^^ string
 
+Error: test34.js:10
+ 10:     (x.foo: empty); // error: string ~> empty
+          ^^^^^ string. This type is incompatible with
+ 10:     (x.foo: empty); // error: string ~> empty
+                 ^^^^^ empty
+
 Error: test5.js:14
  14: fun(a1);
          ^^ function. Could not decide which case to select
@@ -404,4 +410,4 @@ Error: test9.js:12
                   ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 25 errors
+Found 26 errors

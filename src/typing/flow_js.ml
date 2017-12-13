@@ -1000,6 +1000,12 @@ module ResolvableTypeJob = struct
     | BoundT _ ->
       acc
 
+    | EvalT (_, TypeDestructorT _, id) ->
+      (match IMap.get id (Context.evaluated cx) with
+      | Some (OpenT ((_, id) as tvar)) ->
+        IMap.add id (Binding tvar) acc
+      | _ -> acc)
+
     (* TODO: The following kinds of types are not walked out of laziness. It's
        not immediately clear what we'd gain (or lose) by walking them. *)
 
