@@ -492,29 +492,45 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
+    in let error_if_unexpected_static env ~allow_static = function
+      | Some loc when not allow_static ->
+        error_at env (loc, Error.UnexpectedStatic)
+      | _ -> ()
+
     in let rec properties ~allow_static ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
-      let static = allow_static && Expect.maybe env T_STATIC in
+      let static, static_loc = match Peek.token env with
+      | T_STATIC ->
+        Eat.token env;
+        true, Some start_loc
+      | _ -> false, None
+      in
       let variance = variance env in
       match Peek.token env with
       | T_EOF ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_RCURLYBAR when exact ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_RCURLY when not exact ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_LBRACKET ->
+        error_if_unexpected_static env ~allow_static static_loc;
         let indexer = indexer_property env start_loc static variance in
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (indexer::acc)
       | T_LESS_THAN
       | T_LPAREN ->
+        error_if_unexpected_static env ~allow_static static_loc;
         error_unsupported_variance env variance;
         let call_prop = call_property env start_loc static in
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
       | T_ELLIPSIS when allow_spread ->
+        error_if_unexpected_static env ~allow_static static_loc;
         error_unsupported_variance env variance;
         Eat.token env;
         let (arg_loc, _) as argument = _type env in
@@ -526,7 +542,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties ~allow_static ~allow_spread ~exact env (property::acc)
       | token ->
         let property = match static, variance, token with
-        | true, None, T_COLON ->
+        | true, None, (T_PLING | T_COLON) ->
             let key = Expression.Object.Property.Identifier (
               start_loc,
               "static"
@@ -541,6 +557,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
               property env start_loc static variance key
             end
         | _ ->
+            error_if_unexpected_static env ~allow_static static_loc;
             let object_key env =
               Eat.push_lex_mode env Lex_mode.NORMAL;
               let result = Parse.object_key env in

@@ -18,6 +18,7 @@ type t =
   | UnexpectedSuperCall
   | UnexpectedEOS
   | UnexpectedVariance
+  | UnexpectedStatic
   | UnexpectedTypeAlias
   | UnexpectedOpaqueTypeAlias
   | UnexpectedTypeAnnotation
@@ -130,6 +131,7 @@ module PP =
       | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
+      | UnexpectedStatic -> "Unexpected static modifier"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"

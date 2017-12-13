@@ -1,2 +1,3 @@
 // OK: static is a valid identifier name
-interface I { static: number }
+interface A { static: number }
+interface B { static?: number }

@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":30}},
-  "range":[41,71],
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":31}},
+  "range":[41,103],
   "body":[
     {
       "type":"InterfaceDeclaration",
@@ -11,7 +11,7 @@
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":11}},
         "range":[51,52],
-        "name":"I",
+        "name":"A",
         "typeAnnotation":null,
         "optional":false
       },
@@ -41,6 +41,54 @@
             },
             "method":false,
             "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[]
+      },
+      "extends":[]
+    },
+    {
+      "type":"InterfaceDeclaration",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":31}},
+      "range":[72,103],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":11}},
+        "range":[82,83],
+        "name":"B",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "body":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":31}},
+        "range":[84,103],
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":29}},
+            "range":[86,101],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":20}},
+              "range":[86,92],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"NumberTypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":29}},
+              "range":[95,101]
+            },
+            "method":false,
+            "optional":true,
             "static":false,
             "variance":null,
             "kind":"init"
