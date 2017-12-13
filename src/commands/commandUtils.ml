@@ -380,7 +380,7 @@ let file_options =
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ (List.map Path.make extras)
+    | _ -> config_libs @ (List.map (Files.make_path_absolute root) extras)
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped flowconfig ->
     let default_lib_dir =
@@ -395,6 +395,7 @@ let file_options =
       root
       (FlowConfig.untyped flowconfig)
       untyped in
+    let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
       |> List.rev_append (FlowConfig.includes flowconfig)
@@ -404,7 +405,7 @@ let file_options =
       ignores;
       untyped;
       includes;
-      lib_paths = lib_paths ~root flowconfig libs;
+      lib_paths;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
