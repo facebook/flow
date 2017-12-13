@@ -5855,7 +5855,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ((reason_prop, strict_reason), reason, Some x, use_op)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
-      let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
+      let p = find_or_intro_shadow_prop cx trace reason_op x (Nel.rev rev_proto_ids) in
       perform_lookup_action cx trace propref p reason reason_op action
 
     | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
@@ -5878,12 +5878,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           p
         | None ->
           (* Create prop and link shadow props along the proto chain. *)
-          let reason_prop = locationless_reason (RShadowProperty x) in
+          let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
           let t = Tvar.mk cx reason_prop in
           (match proto_ids with
           | [] -> ()
           | id::ids ->
-            let p_proto = find_or_intro_shadow_prop cx trace x (id, ids) in
+            let p_proto = find_or_intro_shadow_prop cx trace reason_op x (id, ids) in
             let t_proto = Property.assert_field p_proto in
             rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
           (* Add prop *)
@@ -8222,9 +8222,9 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin =
         add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
           (reason_op, reason_prop));
 
-and find_or_intro_shadow_prop cx trace x =
+and find_or_intro_shadow_prop cx trace reason_op x =
   let intro_shadow_prop id =
-    let reason_prop = locationless_reason (RShadowProperty x) in
+    let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
     let t = Tvar.mk cx reason_prop in
     let p = Field (None, t, Neutral) in
     Context.set_prop cx id (internal_name x) p;
