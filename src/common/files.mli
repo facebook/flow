@@ -60,7 +60,7 @@ val absolute_path: Str.regexp
 
 val project_root_token: Str.regexp
 
-val watched_paths: root:Path.t -> options -> Path.t list
+val watched_paths: options -> Path.t list
 
 (* given a root, make a filter for file names *)
 val wanted:

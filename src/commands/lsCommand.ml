@@ -84,10 +84,10 @@ let explain ~root ~options ~libs raw_file =
     then ConfigFile
     else if Files.is_ignored options file
     then ExplicitlyIgnored
-    else if Files.is_included options file
-    then ExplicitlyIncluded
     else if String_utils.string_starts_with file root_str
     then ImplicitlyIncluded
+    else if Files.is_included options file
+    then ExplicitlyIncluded
     else ImplicitlyIgnored
   in (raw_file, result)
 

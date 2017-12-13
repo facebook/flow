@@ -78,8 +78,7 @@ let init ~focus_targets genv =
   env
 
 let get_watch_paths options =
-  let root = Options.root options in
-  Files.watched_paths ~root (Options.file_options options)
+  Files.watched_paths (Options.file_options options)
 
 let sleep_and_check () =
   MonitorRPC.read ~timeout:1.0
@@ -164,6 +163,7 @@ let init_dfind options =
   let log_fd = Daemon.fd_of_path log_file in
   let fds = (in_fd, log_fd, log_fd) in
   let watch_paths = get_watch_paths options in
+  Hh_logger.info "Watching paths: \n%s" (String.concat "\n" (List.map (fun p -> spf "\t%s" (Path.to_string p)) watch_paths));
   DfindLib.init fds ("flow_server_events", watch_paths)
 
 

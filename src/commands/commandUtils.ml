@@ -352,11 +352,23 @@ let file_options =
       (s, reg)
     ) patterns
   in
-  let includes_of_arg root paths =
+  let includes_of_arg ~root ~lib_paths paths =
+    (* Explicitly included paths are always added to the path_matcher *)
+    let path_matcher = List.fold_left (fun acc path ->
+      Path_matcher.add acc (Files.make_path_absolute root path)
+    ) Path_matcher.empty paths in
+    (* Implicitly included paths are added only if they're not already being watched *)
+    let path_len path = path |> Path.to_string |> String.length in
+    let implicitly_included_paths_sorted =
+      List.sort (fun a b -> (path_len a) - (path_len b)) (root::lib_paths) (* Shortest path first *)
+    in
     List.fold_left (fun acc path ->
-      let path = Files.make_path_absolute root path in
-      Path_matcher.add acc path
-    ) Path_matcher.empty paths
+      (* If this include is already covered by an explicit include or a shorter implicit include,
+       * then skip it *)
+      if Path_matcher.matches acc (Path.to_string path)
+      then acc
+      else Path_matcher.add acc path
+    ) path_matcher implicitly_included_paths_sorted
   in
   let lib_paths ~root flowconfig extras =
     let flowtyped_path = Files.get_flowtyped_path root in
@@ -399,7 +411,7 @@ let file_options =
     let includes =
       includes
       |> List.rev_append (FlowConfig.includes flowconfig)
-      |> includes_of_arg root in
+      |> includes_of_arg ~root ~lib_paths in
     { Files.
       default_lib_dir;
       ignores;

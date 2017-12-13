@@ -308,9 +308,8 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
-let watched_paths ~root options =
-  let others = Path_matcher.stems options.includes in
-  root::others
+let watched_paths options =
+  Path_matcher.stems options.includes
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
@@ -326,7 +325,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> watched_paths ~root options
+  | None -> watched_paths options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in

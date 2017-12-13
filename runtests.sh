@@ -264,6 +264,9 @@ runtest() {
         abs_diff_file="$OUT_PARENT_DIR/$name.diff"
         return_status=$RUNTEST_SUCCESS
 
+        export FLOW_LOG_FILE="$abs_log_file"
+        export FLOW_MONITOR_LOG_FILE="$abs_monitor_log_file"
+
         # run the tests from inside $OUT_DIR
         pushd "$OUT_DIR" >/dev/null
 
