@@ -3369,7 +3369,17 @@ module.exports = {
     ],
     'Invalid Declare Statements': [
       'declare class A { "static" foo(): number }',
-      'declare class A { static : number }',
+      {
+        content: 'declare class A { static : number }',
+        explanation: 'Fields named `static` are fine',
+        expected_differences: {
+          'root.errors': {
+            type: 'Flow found no error',
+            expected: 'Line 1: Use of future reserved word in strict mode',
+            actual: undefined,
+          },
+        }
+      },
       'declare function foo();',
     ],
     'Declare Module': [

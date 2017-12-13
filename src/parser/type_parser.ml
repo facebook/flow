@@ -527,7 +527,6 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | token ->
         let property = match static, variance, token with
         | true, None, T_COLON ->
-            strict_error_at env (start_loc, Error.StrictReservedWord);
             let key = Expression.Object.Property.Identifier (
               start_loc,
               "static"
