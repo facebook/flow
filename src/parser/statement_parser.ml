@@ -613,7 +613,7 @@ module Statement
         Expect.token env T_EXTENDS;
         supers env []
       end else [] in
-      let body = Type._object ~allow_static:true env in
+      let body = Type._object ~allow_static:false env in
       Statement.Interface.({
         id;
         typeParameters;
