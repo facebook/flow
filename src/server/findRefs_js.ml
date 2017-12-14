@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open ServerEnv
 
 module Result = Core_result
 let (>>=) = Result.(>>=)
@@ -163,8 +164,7 @@ end
 
 module PropertyRefs: sig
   val find_refs:
-    Options.t ->
-    Worker.t list option ->
+    ServerEnv.genv ->
     ServerEnv.env ref ->
     content: string ->
     File_key.t ->
@@ -258,7 +258,8 @@ end = struct
       else
         refs
 
-  let find_refs options workers env ~content file_key loc ~global =
+  let find_refs genv env ~content file_key loc ~global =
+    let options, workers = genv.options, genv.workers in
     let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
     let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
       let props_access_info = ref None in
@@ -284,6 +285,11 @@ end = struct
             (* Start from the file where the symbol is defined, instead of the one where find-refs was called *)
             Result.of_option Loc.(def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
             File_key.to_path file_key >>= fun path ->
+            env := begin
+              Nel.one path
+              |> Lazy_mode_utils.focus_and_check genv !env
+              |> fst
+            end;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput >>= fun content ->
             find_refs_in_file options workers env content file_key def_loc name >>= fun refs ->
@@ -308,7 +314,8 @@ let sort_find_refs_result = function
       Ok (Some (name, locs))
   | x -> x
 
-let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
+let find_refs ~genv ~env ~file_input ~line ~col ~global =
+  let options, workers = genv.options, genv.workers in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
@@ -316,6 +323,6 @@ let find_refs ~options ~workers ~env ~file_input ~line ~col ~global =
   let unsorted =
     VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
       | Some _ as result -> Ok result
-      | None -> PropertyRefs.find_refs options workers env content file_key loc global
+      | None -> PropertyRefs.find_refs genv env content file_key loc global
   in
   sort_find_refs_result unsorted

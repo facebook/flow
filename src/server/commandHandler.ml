@@ -250,8 +250,8 @@ let gen_flow_files ~options env files =
   in
   result
 
-let find_refs ~options ~workers ~env (file_input, line, col, global) =
-  FindRefs_js.find_refs ~options ~workers ~env ~file_input ~line ~col ~global
+let find_refs ~genv ~env (file_input, line, col, global) =
+  FindRefs_js.find_refs ~genv ~env ~file_input ~line ~col ~global
 
 let get_def ~options ~workers ~env command_context (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
@@ -358,7 +358,7 @@ let handle_ephemeral_unsafe
   | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
       ServerProt.Response.FIND_REFS (
         find_refs
-          ~options ~workers ~env (fn, line, char, global): ServerProt.Response.find_refs_response
+          ~genv ~env (fn, line, char, global): ServerProt.Response.find_refs_response
       ) |> respond
   | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
       respond ServerProt.Response.FORCE_RECHECK;

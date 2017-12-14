@@ -6,8 +6,7 @@
  *)
 
 val find_refs:
-  options: Options.t ->
-  workers: Worker.t list option ->
+  genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
   file_input: File_input.t ->
   line: int ->
