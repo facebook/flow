@@ -300,9 +300,6 @@ let typecheck
     CheckedSet.add ~dependencies infer_input
   in
 
-  (* Continue profiling noop Infer to compare with pre-refactor metrics *)
-  let () = with_timer ~options "Infer" profiling (fun () -> ()) in
-
   let send_errors_over_connection =
     match persistent_connections with
     | None -> fun _ -> ()
