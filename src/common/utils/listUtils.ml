@@ -87,7 +87,7 @@ let copy_n n v =
     | i -> loop (v :: acc) (i - 1)
   in loop [] n
 
-(** unique list items, in order of first appearance *)
+(** unique list items, in order of first appearance (requires sorted list) *)
 let rec uniq = function
 | [] -> []
 | [x] -> [x]
@@ -110,16 +110,14 @@ let ident_map f lst =
   if changed then List.rev rev_lst else lst
 
 let rec combine3 = function
-    ([], [], []) -> []
+  | ([], [], []) -> []
   | (a1::l1, a2::l2, a3::l3) -> (a1, a2, a3) :: combine3 (l1, l2, l3)
   | (_, _, _) -> invalid_arg "List.combine3"
 
-let split3 list =
-  let rec _split l1 l2 l3 = function
-    | [] -> (List.rev l1, List.rev l2, List.rev l3)
-    | (x,y,z)::t -> _split (x::l1) (y::l2) (z::l3) t
-  in
-  _split [] [] [] list
+let rec split3 = function
+  | [] -> ([], [], [])
+  | (x,y,z)::l ->
+      let (rx, ry,rz) = split3 l in (x::rx, y::ry, z::rz)
 
 let zipi xs ys =
   List.combine xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
@@ -137,13 +135,10 @@ let range = range_with (fun x -> x)
 
 let repeat n a = range_with (fun _ -> a) 0 n
 
-let cat_maybes xs =
-  let rec go acc = function
-    | [] -> acc
-    | (Some y) :: ys -> go (y::acc) ys
-    | None :: ys -> go acc ys
-  in
-  List.rev (go [] xs)
+let rec cat_maybes = function
+  | [] -> []
+  | (Some y) :: ys -> y :: cat_maybes ys
+  | None :: ys -> cat_maybes ys
 
 let filter_map f xs =
   xs |> List.map f |> cat_maybes
