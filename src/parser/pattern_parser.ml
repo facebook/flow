@@ -217,21 +217,26 @@ module Pattern
         | None -> None
       end
 
-    and properties env acc =
+    and properties env ~seen_rest acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
         (match property env with
-        | Some prop ->
+        | Some (Pattern.Object.Property (loc, _) | Pattern.Object.RestProperty (loc, _) as prop) ->
+          if seen_rest
+          then error_at env (loc, Parse_error.PropertyAfterRestProperty);
+          let seen_rest = seen_rest || (match prop with
+          | Pattern.Object.RestProperty _ -> true
+          | _ -> false) in
           if Peek.token env <> T_RCURLY
           then Expect.token env T_COMMA;
-          properties env (prop::acc)
-        | None -> properties env acc)
+          properties env ~seen_rest (prop::acc)
+        | None -> properties env ~seen_rest acc)
     in
     with_loc (fun env ->
       Expect.token env T_LCURLY;
-      let properties = properties env [] in
+      let properties = properties env ~seen_rest:false [] in
       Expect.token env T_RCURLY;
       let typeAnnotation =
         if Peek.token env = T_COLON then Some (Type.annotation env)

@@ -797,15 +797,15 @@ Error: type_generic.js:1
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `B`
 
 Error: type_generic.js:2
-  2:   const {...o, p} = a;
-              ^^^^ o. Expected object instead of
-  2:   const {...o, p} = a;
+  2:   const {p, ...o} = a;
+              ^ property `p`. Property cannot be accessed on
+  2:   const {p, ...o} = a;
                          ^ A
 
 Error: type_generic.js:2
-  2:   const {...o, p} = a;
-                    ^ property `p`. Property cannot be accessed on
-  2:   const {...o, p} = a;
+  2:   const {p, ...o} = a;
+                 ^^^^ o. Expected object instead of
+  2:   const {p, ...o} = a;
                          ^ A
 
 Error: type_generic.js:7
