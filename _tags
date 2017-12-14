@@ -7,3 +7,4 @@ true: package(dtoa), package(wtf8)
 <src/parser/*.ml*>: warn(-39)
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
+<packages>: -traverse

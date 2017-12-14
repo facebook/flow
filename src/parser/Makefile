@@ -44,6 +44,13 @@ build-parser:
 	cd $(TOP); \
 	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
 
+.PHONY: lib/libflowparser.a
+lib/libflowparser.a:
+	@mkdir -p lib
+	cp "$(shell ocamlc -where)"/libasmrun.a "$@"
+	cd $(TOP) && $(OCB) -no-links $(REL_DIR)/libflowparser.native.o
+	ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"
+
 js:
 	cd $(TOP); \
 	$(OCB) -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
