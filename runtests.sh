@@ -300,6 +300,7 @@ runtest() {
         stderr_dest="$abs_err_file"
         ignore_stderr=true
         cwd=""
+        start_args=""
         if [ -e ".testconfig" ]
         then
             # all
@@ -323,6 +324,12 @@ runtest() {
             then
                 cmd=""
                 shell="$config_shell"
+            fi
+            # start_args
+            config_start_args="$(awk '$1=="start_args:"{$1="";print}' .testconfig)"
+            if [ "$config_start_args" != "" ]
+            then
+                start_args="$config_start_args"
             fi
             # cmd
             config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
@@ -360,6 +367,7 @@ runtest() {
               $all $flowlib --wait \
               --log-file "$abs_log_file" \
               --monitor-log-file "$abs_monitor_log_file" \
+              $start_args \
               > /dev/null 2>&1
             code=$?
             if [ $code -ne 0 ]; then
