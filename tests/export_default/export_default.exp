@@ -7,8 +7,8 @@ Error: test.js:3
 Error: test.js:3
   3: N.x = M(N.x);
              ^^^ number. This type is incompatible with the expected param type of
-  2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See lib: lib/lib.js:2
+  2:     declare module.exports: (x: string) => string;
+                                     ^^^^^^ string. See lib: lib/lib.js:2
 
 Error: test.js:5
   5: N.y = P(N.y);
@@ -19,8 +19,8 @@ Error: test.js:5
 Error: test.js:5
   5: N.y = P(N.y);
              ^^^ number. This type is incompatible with the expected param type of
-  2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See lib: lib/lib.js:2
+  2:     declare module.exports: (x: string) => string;
+                                     ^^^^^^ string. See lib: lib/lib.js:2
 
 Error: test.js:7
   7: N.z = Q(N.z);
@@ -31,8 +31,8 @@ Error: test.js:7
 Error: test.js:7
   7: N.z = Q(N.z);
              ^^^ number. This type is incompatible with the expected param type of
-  2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See lib: lib/lib.js:2
+  2:     declare module.exports: (x: string) => string;
+                                     ^^^^^^ string. See lib: lib/lib.js:2
 
 
 Found 6 errors
