@@ -570,10 +570,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           let key = Expression.Object.Property.Identifier k in
           let p = property env start_loc (static<>None) variance key in
           next env (p::acc)
-        | None ->
-          error_unexpected env;
-          Eat.token env;
-          skip env
+        | None -> skip env
         end
       | T_ELLIPSIS ->
         error_unsupported_variance env variance;
@@ -585,11 +582,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             argument;
           })) in
           next env (p::acc)
-        ) else (
-          error_unexpected env;
-          Eat.token env;
-          skip env
-        )
+        ) else skip env
       | _ ->
         let static = static <> None in
         let object_key env =
@@ -631,6 +624,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
               next env (p::acc)
             | _ ->
               error_unexpected env;
+              (* The unexpected token may exit `skip` without recursion and
+                 without error, so don't eat it. *)
               skip env
             end
         end
