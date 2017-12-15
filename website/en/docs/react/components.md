@@ -81,7 +81,7 @@ the `Props` type we defined.
 > either style, but importing as a namespace gives you access to React's
 > [utility types](../types).
 
-`React.Component<Props, State>` is a [generic type][] the takes two type
+`React.Component<Props, State>` is a [generic type][] that takes two type
 arguments. Props and state. The second type argument, `State`, is optional. By
 default it is undefined so you can see in the example above we did not include
 `State`. We will learn more about state in the next section...
