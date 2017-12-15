@@ -602,8 +602,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
               next env (p::acc)
             | T_COLON
             | T_PLING ->
-               let p = property env start_loc static variance key in
-               next env (p::acc)
+              let p = property env start_loc static variance key in
+              next env (p::acc)
             | _ ->
               error_unsupported_variance env variance;
               let is_getter = name = "get" in
