@@ -1,4 +1,4 @@
-libtest.js:2
+Error: libtest.js:2
   2: const dino : Dinosaur = "Stegosaurus"
                              ^^^^^^^^^^^^^ string. This type is incompatible with
   2: const dino : Dinosaur = "Stegosaurus"

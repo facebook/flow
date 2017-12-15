@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 open Reordered_argument_collections
 open Utils
 open String_utils
@@ -17,13 +17,17 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  | Tmp
+
 
 let root = ref None
 let hhi = ref None
+let tmp = ref None
 
 let path_ref_of_prefix = function
   | Root -> root
   | Hhi -> hhi
+  | Tmp -> tmp
   | Dummy -> ref (Some "")
 
 let path_of_prefix x =
@@ -32,6 +36,7 @@ let path_of_prefix x =
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
+  | Tmp -> "tmp"
   | Dummy -> ""
 
 let set_path_prefix prefix v =
@@ -46,39 +51,35 @@ let set_path_prefix prefix v =
   | Dummy -> raise (Failure "Dummy is always represented by an empty string")
   | _ -> path_ref_of_prefix prefix := Some v
 
-(** The underlying storage type of the  *)
-module type Storage_type = sig
-  type t
-  val from: string -> t
-  val to_string: t -> string
-end
-
-module Make_with_underlying_data(Representation: Storage_type) = struct
-
-type t = prefix * Representation.t
+type relative_path = prefix * string
+type t = relative_path
 
 let prefix (p : t) = fst p
 
-let suffix (p : t) = Representation.to_string (snd p)
+let suffix (p : t) = snd p
 
-let default = (Dummy, Representation.from "")
+let default = (Dummy, "")
 
 module S = struct
-  type path = t
-  type t = path
+  type t = relative_path
 
   let compare = Pervasives.compare
 
   (* We could have simply used Marshal.to_string here, but this does slightly
    * better on space usage. *)
-  let to_string (p, rest) = string_of_prefix p ^ "|" ^
-    (Representation.to_string rest)
+  let to_string (p, rest) = string_of_prefix p ^ "|" ^ rest
 end
+
+let to_absolute (p, rest) = path_of_prefix p ^ rest
+
+let to_tmp (_, rest) = (Tmp, rest)
+
+let to_root (_, rest) = (Root, rest)
+
+let pp fmt rp = Format.pp_print_string fmt (S.to_string rp)
 
 module Set = Reordered_argument_set(Set.Make(S))
 module Map = Reordered_argument_map(MyMap.Make(S))
-
-let to_absolute (p, rest) = path_of_prefix p ^ (Representation.to_string rest)
 
 let create prefix s =
   let prefix_s = path_of_prefix prefix in
@@ -88,20 +89,22 @@ let create prefix s =
     Printf.eprintf "%s is not a prefix of %s" prefix_s s;
     assert_false_log_backtrace None;
   end;
-  prefix, Representation.from (
-    String.sub s prefix_len (String.length s - prefix_len))
+  prefix, String.sub s prefix_len (String.length s - prefix_len)
 
-let concat prefix s = prefix, Representation.from s
+(* Strips the root and relativizes the file if possible, otherwise returns
+  original string *)
+let strip_root_if_possible s =
+  let prefix_s = path_of_prefix Root in
+  let prefix_len = String.length prefix_s in
+  if not (string_starts_with s prefix_s)
+  then s else
+  String.sub s prefix_len (String.length s - prefix_len)
 
-let join prefix xs =
-  concat prefix @@ List.fold_left xs ~init:"" ~f:Filename.concat
+
+let from_root (s : string) : t = Root, s
 
 let relativize_set prefix m =
   SSet.fold m ~init:Set.empty ~f:(fun k a -> Set.add a (create prefix k))
 
 let set_of_list xs =
   List.fold_left xs ~f:Set.add ~init:Set.empty
-
-end
-
-include Make_with_underlying_data(Heap_string)

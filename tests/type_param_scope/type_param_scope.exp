@@ -1,26 +1,24 @@
-class.js:4
+Error: class.js:4
   4:     this.b(a); // error: A ~> incompatible instance of T
                 ^ A. This type is incompatible with the expected param type of
   1: class C<T> {
            ^ some incompatible instantiation of `T`
 
-default_params.js:6
+Error: default_params.js:6
   6:     h(c); // err, T ~> U
            ^ T. This type is incompatible with the expected param type of
   3:     function h(d:U = b) {}
                       ^ some incompatible instantiation of `U`
 
-default_params.js:10
+Error: default_params.js:10
  10:   g(0,0); // error: number ~> T
            ^ number. This type is incompatible with the expected param type of
   2:   function g<U>(b:U, c:T = a) {
                             ^ some incompatible instantiation of `T`
 
-method_shadow.js:42
+Error: method_shadow.js:42
  42: g.m(true); // err, bool ~> number|string
-     ^^^^^^^^^ call of method `m`
- 42: g.m(true); // err, bool ~> number|string
-         ^^^^ boolean. This type is incompatible with
+         ^^^^ boolean. This type is incompatible with the bound on type parameter `T`:
  40: declare var g: G<number|string>;
                       ^^^^^^^^^^^^^ union: number | string
   Member 1:
@@ -40,15 +38,18 @@ method_shadow.js:42
    40: declare var g: G<number|string>;
                                ^^^^^^ string
 
-method_shadow.js:43
+Error: method_shadow.js:43
  43: (g.m(""): G<number>); // err, string ~> number
-          ^^ string. This type is incompatible with
+      ^^^^^^^ G. Has some incompatible type argument with
  43: (g.m(""): G<number>); // err, string ~> number
-                 ^^^^^^ number
+               ^^^^^^^^^ G
+  Type argument `T` is incompatible:
+     43: (g.m(""): G<number>); // err, string ~> number
+              ^^ string. This type is incompatible with
+     43: (g.m(""): G<number>); // err, string ~> number
+                     ^^^^^^ number
 
-method_shadow.js:51
- 51:         this.x = x; // err, m's T != H's T
-             ^^^^^^ assignment of property `x`
+Error: method_shadow.js:51
  51:         this.x = x; // err, m's T != H's T
                       ^ T. This type is incompatible with
  51:         this.x = x; // err, m's T != H's T

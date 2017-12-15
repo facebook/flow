@@ -1,0 +1,96 @@
+Error: intersection.js:9
+  9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+            ^^^^^^^^^^^^^^^ intersection. This type is incompatible with
+  9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Member 1:
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+              ^^^^^^ object type
+  Error:
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+              ^^^^^^ object type. This type is incompatible with
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                  ^^^^^^ object type
+  Member 2:
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                       ^^^^^^ object type
+  Error:
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                       ^^^^^^ object type. This type is incompatible with
+    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                           ^^^^^^ object type
+
+Error: intersection.js:12
+ 12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+            ^^^^^^ object type. This type is incompatible with
+ 12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+     12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+                ^^^^^^ object type
+
+Error: intersection.js:14
+ 14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+            ^^^^^^ object type. This type is incompatible with
+ 14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+     14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+                ^^^^^^ object type
+
+Error: lower.js:21
+ 21: (y.age: number); // Error -- could be void
+        ^^^ property `age`. Property not found in
+ 21: (y.age: number); // Error -- could be void
+      ^ Person
+
+Error: lower.js:22
+ 22: (y.name: number); // Error -- should be string
+      ^^^^^^ string. This type is incompatible with
+ 22: (y.name: number); // Error -- should be string
+              ^^^^^^ number
+
+Error: lower.js:23
+ 23: y.bla; // Error -- key not found.
+       ^^^ property `bla`. Property not found in
+ 23: y.bla; // Error -- key not found.
+     ^ Person
+
+Error: undefined.js:8
+  8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+            ^^^^^^ object type. This type is incompatible with
+  8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+      8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+      8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                ^^^^^^ object type
+
+Error: undefined.js:10
+ 10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+            ^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                    ^^^^ undefined. This type is incompatible with
+     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                            ^ A
+
+
+Found 8 errors

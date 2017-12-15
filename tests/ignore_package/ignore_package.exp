@@ -1,4 +1,4 @@
-foo.js:8
+Error: foo.js:8
   8: var _ = require('underscore');
                      ^^^^^^^^^^^^ underscore. Required module not found
 

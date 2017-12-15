@@ -9,6 +9,7 @@ export default class Test {
   name: ?string;
   steps: StepList;
   tags: Array<string>;
+  lazyMode: 'ide' | 'fs' | null = null;
 
   constructor(name: string, steps: StepList) {
     this.name = name;
@@ -23,6 +24,11 @@ export default class Test {
 
   flowConfig(filename: string): this {
     this.flowConfigFilename = filename;
+    return this;
+  }
+
+  lazy(mode: 'ide' | 'fs'): this {
+    this.lazyMode = mode;
     return this;
   }
 }

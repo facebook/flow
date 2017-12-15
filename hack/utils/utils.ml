@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 let () = Random.self_init ()
 let debug = ref false
@@ -160,6 +160,13 @@ let fold_fun_list acc fl =
   List.fold_left fl ~f:(|>) ~init:acc
 
 let compose f g x = f (g x)
+
+module With_complete_flag = struct
+  type 'a t = {
+    is_complete : bool;
+    value : 'a;
+  }
+end
 
 let try_finally ~f ~(finally: unit -> unit) =
   let res = try f () with e -> finally (); raise e in

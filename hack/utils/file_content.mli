@@ -10,14 +10,16 @@
 
 open Ide_api_types
 
-val edit_file : string -> text_edit list -> (string, string) Result.t
+val edit_file : string -> text_edit list -> (string, string) result
 
 val edit_file_unsafe : string -> text_edit list -> string
 
 (* NOTE: If you need two offsets, use `get_offsets` below instead. *)
 val get_offset : string -> position -> int
 
-val get_offsets :
-  string -> position * position -> int * int
+(* May raise Invalid_argument "out of bounds" if out of bounds *)
+val get_offsets : string -> position * position -> int * int
 
 val offset_to_position : string -> int -> position
+
+val get_char : string -> int -> char

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 begin library "ROOTPROJECT"
@@ -26,15 +23,17 @@ begin library "flow-commands"
     "flow-commands-config"
     "flow-common"
     "flow-common-errors"
+    "flow-common-lints"
     "flow-common-utils"
-    "flow-dts"
     "flow-flowlib"
+    "flow-monitor"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
     "flow-stubs"
     "flow-server"
     "flow-server-env"
+    "flow-server-protocol"
     "flow-server-utils"
     "flow-services-autocomplete"
     "flow-services-inference"
@@ -56,6 +55,7 @@ begin library "flow-commands-config"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
     "hh-utils"
     "hh-utils-collections"
@@ -67,6 +67,7 @@ begin library "flow-common"
   files = begin fb-glob "src/common"
   end
   requires = [
+    "flow-common-lints"
     "flow-common-utils"
     "flow-stubs"
     "flow-parser"
@@ -92,11 +93,48 @@ begin library "flow-common-errors"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-profiling"
+    "flow-common-span"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
+  ]
+end
+
+begin library "flow-common-lints"
+  sort = true
+  files = begin fb-glob "src/common/lints"
+  end
+  requires = [
+    "flow-common-span"
+    "flow-common-utils"
+    "flow-parser"
+    "hh-utils-collections"
+    "tp-core"
+  ]
+end
+
+begin library "flow-common-tarjan"
+  sort = true
+  files = begin fb-glob "src/common/tarjan"
+  end
+  requires = [
+    "hh-utils-collections"
+  ]
+end
+
+begin library "flow-common-span"
+  sort = true
+  files = begin fb-glob "src/common/span"
+  end
+  requires = [
+    "flow-common-utils"
+    "flow-parser"
+    "hh-utils-collections"
   ]
 end
 
@@ -123,26 +161,30 @@ begin library "flow-common-utils"
   ]
 end
 
-begin library "flow-dts"
-  sort = true
-  files = begin fb-glob "src/dts"
+xx_libc_flags = [
+  "-I"; "src/third-party/lz4";
+]
+begin library "flow-common-xx"
+  files = begin fb-glob "src/common/xx"
+    excludes = [ "xx_stubs.c" ]
   end
+  files += [
+    "src/common/xx/xx_stubs.c" (ccopt = xx_libc_flags)
+  ]
   requires = [
-    "flow-common-utils"
-    "flow-parser"
-    "hh-utils"
-    "hh-utils-collections"
+    "lz4"
   ]
 end
 
 begin library "flow-scripts-utils"
   dirname = "scripts"
   files = [
-    "utils"
+    "script_utils"
   ]
   requires = [
     "unix"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin program "flow-ppx-gen-flowlib"
@@ -154,6 +196,7 @@ begin program "flow-ppx-gen-flowlib"
   files = [
     "ppx_gen_flowlibs.ml"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "flow-flowlib"
@@ -172,7 +215,7 @@ begin library "flow-flowlib"
     "flow-ppx-gen-flowlib:asm"
   ]
   comp = [
-    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/"
+    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/ prelude/"
   ]
 end
 
@@ -188,11 +231,20 @@ begin library "flow-parser"
   files += [
     "src/parser/lexer.ml" (comp += [
       "-w" "-31-39"
-      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex --as-ppx"
     ])
   ]
   requires = [
     "sedlex"
+    "wtf8"
+  ]
+end
+
+begin library "flow-parser-test-utils"
+  sort = true
+  dirname = "src/parser/test"
+  files = [
+    "file_utils.ml"
   ]
 end
 
@@ -201,10 +253,13 @@ begin library "flow-parser-utils"
   files = begin fb-glob "src/parser_utils"
   end
   requires = [
+    "dtoa"
     "flow-common-utils"
     "flow-parser"
+    "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -223,6 +278,89 @@ begin library "flow-parsing"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+  ]
+end
+
+begin library "flow-monitor"
+  sort = true
+  files = begin fb-glob "src/monitor"
+    excludes = [
+      "serverStatus.mli"
+      "serverStatus.ml"
+      "serverToMonitor.mli"
+      "serverToMonitor.ml"
+    ]
+  end
+  requires = [
+    "flow-common"
+    "flow-monitor-connections"
+    "flow-monitor-logger"
+    "flow-monitor-server-status"
+    "flow-monitor-utils"
+    "flow-server"
+    "flow-server-protocol"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-logger"
+  sort = true
+  files = begin fb-glob "src/monitor/logger"
+  end
+  requires = [
+    "lwt"
+    "lwt.log"
+    "lwt.unix"
+    "tp-core"
+  ]
+end
+
+begin library "flow-monitor-connections"
+  sort = true
+  files = begin fb-glob "src/monitor/connections"
+  end
+  requires = [
+    "flow-monitor-logger"
+    "flow-monitor-utils"
+    "flow-server-protocol"
+    "hh-marshal-tools-lwt"
+    "lwt"
+    "lwt.unix"
+  ]
+end
+
+begin library "flow-monitor-utils"
+  sort = true
+  files = begin fb-glob "src/monitor/utils"
+  end
+  requires = [
+    "lwt"
+  ]
+end
+
+begin library "flow-monitor-server-status"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "serverStatus.mli"
+    "serverStatus.ml"
+  ]
+  requires = [
+    "flow-common-utils"
+  ]
+end
+
+begin library "flow-monitor-rpc"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "monitorRPC.mli"
+    "monitorRPC.ml"
+  ]
+  requires = [
+    "hh-utils-sys"
+    "flow-server-protocol"
   ]
 end
 
@@ -246,9 +384,28 @@ begin library "flow-shmem"
   requires = [
     "flow-server-files"
     "flow-common"
+    "flow-monitor-rpc"
     "hh-heap"
     "hh-utils-sys"
     "hh-utils-collections"
+  ]
+end
+
+begin library "flow-server-protocol"
+  sort = true
+  files = begin fb-glob "src/server/protocol"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-errors"
+    "flow-common-utils"
+    "flow-monitor-server-status"
+    "flow-parser"
+    "flow-server-utils"
+    "flow-typing"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-sys"
   ]
 end
 
@@ -256,10 +413,10 @@ begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
     excludes = [
+      "checkedSet.mli"
+      "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
-      "serverUtils.ml"
-      "serverProt.ml"
       "persistent_connection.ml"
       "server_files_js.ml"
       "server_files_js.mli"
@@ -268,6 +425,7 @@ begin library "flow-server"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-shmem"
     "flow-stubs"
@@ -284,10 +442,10 @@ begin library "flow-server"
     "hh-dfind"
     "hh-procs"
     "hh-socket"
-    "tp-core"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -296,14 +454,19 @@ begin library "flow-server-env"
   dirname = "src/server"
   files = [
     "serverEnv.ml"
+    "checkedSet.mli"
+    "checkedSet.ml"
   ]
   requires = [
     "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
+    "flow-parser"
+    "flow-server-protocol"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+    "tp-core"
   ]
 end
 
@@ -312,7 +475,6 @@ begin library "flow-server-utils"
   dirname = "src/server"
   files = [
     "file_input.ml"
-    "serverUtils.ml"
   ]
   requires = [
     "hh-utils-sys"
@@ -324,11 +486,12 @@ begin library "flow-persistent-connection"
   dirname = "src/server"
   files = [
     "persistent_connection.ml"
-    "serverProt.ml"
   ]
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
+    "flow-server-protocol"
     "flow-server-utils"
     "flow-services-autocomplete"
     "hh-utils"
@@ -342,9 +505,10 @@ begin library "flow-services-autocomplete"
   requires = [
     "flow-common"
     "flow-common-utils"
-    "flow-stubs"
     "flow-parser"
     "flow-parsing"
+    "flow-server-protocol"
+    "flow-stubs"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
@@ -378,7 +542,10 @@ begin library "flow-services-inference"
   requires = [
     "flow-common"
     "flow-common-audit"
+    "flow-common-errors"
+    "flow-common-lints"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-stubs"
     "flow-parser"
     "flow-parser-utils"
@@ -392,6 +559,7 @@ begin library "flow-services-inference"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -411,6 +579,7 @@ begin library "flow-services-port"
   end
   requires = [
     "flow-common"
+    "flow-common-span"
     "flow-common-utils"
     "flow-parser"
     "flow-parsing"
@@ -440,7 +609,10 @@ begin library "flow-typing"
   requires = [
     "flow-common"
     "flow-common-errors"
+    "flow-common-lints"
+    "flow-common-tarjan"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-parser"
     "flow-parser-utils"
     "tp-core"
@@ -467,6 +639,7 @@ begin program "flow-parser-hardcoded-test"
   requires = [
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-test-utils"
     "flow-parser-utils"
   ]
   tests = [ "hardcoded_tests" ]

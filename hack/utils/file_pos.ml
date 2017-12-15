@@ -14,6 +14,12 @@ type t = {
   pos_cnum : int;
 }
 
+let pp fmt pos = begin
+  Format.pp_print_int fmt pos.pos_lnum;
+  Format.pp_print_string fmt ":";
+  Format.pp_print_int fmt (pos.pos_cnum - pos.pos_bol + 1);
+end
+
 let compare = Pervasives.compare
 
 let dummy = {
@@ -43,6 +49,9 @@ let of_lexing_pos lp = {
   pos_bol = lp.Lexing.pos_bol;
   pos_cnum = lp.Lexing.pos_cnum;
 }
+
+let of_lnum_bol_cnum ~pos_lnum ~pos_bol ~pos_cnum =
+  { pos_lnum; pos_bol; pos_cnum }
 
 (* accessors *)
 

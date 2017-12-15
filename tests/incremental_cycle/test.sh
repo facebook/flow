@@ -1,15 +1,17 @@
+#!/bin/bash
+. ../assert.sh
 FLOW=$1
 mkdir tmp
-cp *.js tmp/
-$FLOW status .
+cp ./*.js tmp/
+assert_errors "$FLOW" status .
 cp tmp1/*.js ./
-$FLOW force-recheck *.js # overapproximation
-$FLOW status .
+assert_ok "$FLOW" force-recheck ./*.js # overapproximation
+assert_errors "$FLOW" status .
 cp tmp2/*.js ./
-$FLOW force-recheck *.js # overapproximation
-$FLOW status .
+assert_ok "$FLOW" force-recheck ./*.js # overapproximation
+assert_errors "$FLOW" status .
 cp tmp3/*.js ./
-$FLOW force-recheck *.js # overapproximation
-$FLOW status .
+assert_ok "$FLOW" force-recheck ./*.js # overapproximation
+assert_errors "$FLOW" status .
 mv tmp/*.js ./
 rmdir tmp

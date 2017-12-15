@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -31,9 +31,11 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('Initialized instance fields require annotation within init values', [
     addCode('export class Foo { a = (p) => 42; }')
       .newErrors(
-        `test.js:3\n` +
-        `  3: export class Foo { a = (p) => 42; }\n` +
-        `                             ^ parameter \`p\`. Missing annotation`,
+        `
+          test.js:3
+            3: export class Foo { a = (p) => 42; }
+                                       ^ p. Missing annotation
+        `,
       ),
     addCode('export class Bar { a = (p: number) => 42; }')
       .noNewErrors()

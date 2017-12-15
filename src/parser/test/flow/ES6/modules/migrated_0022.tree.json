@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":47}},
-  "range":[0,47],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":48}},
+  "range":[0,48],
   "body":[
     {
       "type":"ExportNamedDeclaration",
@@ -41,17 +41,17 @@
     },
     {
       "type":"ExportNamedDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":47}},
-      "range":[21,47],
+      "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":48}},
+      "range":[21,48],
       "declaration":{
         "type":"VariableDeclaration",
-        "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":47}},
-        "range":[28,47],
+        "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":48}},
+        "range":[28,48],
         "declarations":[
           {
             "type":"VariableDeclarator",
-            "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":47}},
-            "range":[32,47],
+            "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":48}},
+            "range":[32,48],
             "id":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":35}},

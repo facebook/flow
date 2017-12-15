@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module JsTranslator : sig
@@ -18,8 +15,8 @@ end = struct
 
   let string x = Js.Unsafe.inject (Js.string x)
   let bool x = Js.Unsafe.inject (Js.bool x)
-  let obj props = Js.Unsafe.inject (Js.Unsafe.obj props)
-  let array arr = Js.Unsafe.inject (Js.array arr)
+  let obj props = Js.Unsafe.inject (Js.Unsafe.obj (Array.of_list props))
+  let array arr = Js.Unsafe.inject (Js.array (Array.of_list arr))
   let number x = Js.Unsafe.inject (Js.number_of_float x)
   let null = Js.Unsafe.inject Js.null
   let regexp loc pattern flags =

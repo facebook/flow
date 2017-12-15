@@ -1,10 +1,64 @@
-issue-1462-i.js:21
+Error: issue-1462-i.js:21
  21:   print(val.foo);  // <--- foo could be an array
              ^^^^^^^ array type. This type is incompatible with the expected param type of
  16: function print(x: number) {
                        ^^^^^^ number
 
-test1.js:39
+Error: issue-824.js:21
+ 21:     return this.foo(p);
+                         ^ intersection type. This type is incompatible with the expected param type of
+ 10:   static foo(p: K): bool {
+                     ^ union: `B` | `C`
+  Member 1:
+    3: type K = B | C;
+                ^ B
+  Error:
+   21:     return this.foo(p);
+                           ^ intersection. This type is incompatible with
+    3: type K = B | C;
+                ^ B
+    Member 1:
+     13:   static bar(p: I & K): bool {
+                         ^ I
+    Error:
+     13:   static bar(p: I & K): bool {
+                         ^ I. This type is incompatible with
+      3: type K = B | C;
+                  ^ B
+    Member 2:
+     13:   static bar(p: I & K): bool {
+                             ^ K
+    Error:
+     13:   static bar(p: I & K): bool {
+                             ^ C. This type is incompatible with
+      3: type K = B | C;
+                  ^ B
+  Member 2:
+    3: type K = B | C;
+                    ^ C
+  Error:
+   21:     return this.foo(p);
+                           ^ intersection. This type is incompatible with
+    3: type K = B | C;
+                    ^ C
+    Member 1:
+     13:   static bar(p: I & K): bool {
+                         ^ I
+    Error:
+     13:   static bar(p: I & K): bool {
+                         ^ I. This type is incompatible with
+      3: type K = B | C;
+                      ^ C
+    Member 2:
+     13:   static bar(p: I & K): bool {
+                             ^ K
+    Error:
+     13:   static bar(p: I & K): bool {
+                             ^ B. This type is incompatible with
+      3: type K = B | C;
+                      ^ C
+
+Error: test1.js:39
  39: const fun_result = fun(() => "");
                             ^^^^^^^^ function. Could not decide which case to select
  35: function fun(a: A3 | A4) {
@@ -19,7 +73,7 @@ test1.js:39
    39: const fun_result = fun(() => "");
                                     ^^ return
 
-test1.js:57
+Error: test1.js:57
  57: inst([new B6]);
           ^^^^^^^^ array literal. Could not decide which case to select
  53: function inst(a: A5 | A6) { }
@@ -34,7 +88,7 @@ test1.js:57
    57: inst([new B6]);
             ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
-test10.js:38
+Error: test10.js:38
  38: check_fun((x) => x);
                ^^^^^^^^ function. Could not decide which case to select
  35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
@@ -49,9 +103,9 @@ test10.js:38
    38: check_fun((x) => x);
                         ^ return
    38: check_fun((x) => x);
-                  ^ parameter `x`
+                  ^ x
 
-test10.js:50
+Error: test10.js:50
  50: check_obj({ x: id("") });
                ^^^^^^^^^^^^^ object literal. Could not decide which case to select
  44: function check_obj(_: { x: number } | { x: string }) { }
@@ -64,9 +118,9 @@ test10.js:50
                                              ^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    50: check_obj({ x: id("") });
-                      ^^^^^^ function call
+                      ^^^^^^ call of `id`
 
-test10.js:59
+Error: test10.js:59
  59: check_arr([""]);
                ^^^^ array literal. Could not decide which case to select
  56: function check_arr(_: number[] | string[]) { }
@@ -81,7 +135,7 @@ test10.js:59
    59: check_arr([""]);
                  ^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
-test10.js:62
+Error: test10.js:62
  62: check_arr([id("")]);
                ^^^^^^^^ array literal. Could not decide which case to select
  56: function check_arr(_: number[] | string[]) { }
@@ -96,51 +150,71 @@ test10.js:62
    62: check_arr([id("")]);
                  ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
-test11.js:12
+Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
-            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
+                           ^^^^ union: `Nil` | `Cons`
   Member 1:
    16: type List = Nil | Cons;
                    ^^^ Nil
   Error:
    12: length({ kind: "cons" }); // missing `next`
-                      ^^^^^^ string. Expected string literal `nil`, got `cons` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
+              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                   ^^^ Nil
+    Property `kind` is incompatible:
+       12: length({ kind: "cons" }); // missing `next`
+                          ^^^^^^ string. Expected string literal `nil`, got `cons` instead
+       17: type Nil = { kind: "nil" };
+                              ^^^^^ string literal `nil`
   Member 2:
    16: type List = Nil | Cons;
                          ^^^^ Cons
   Error:
-   16: type List = Nil | Cons;
-                         ^^^^ property `next`. Property not found in
    12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ object literal
+              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                         ^^^^ Cons
+    Property `next` is incompatible:
+       16: type List = Nil | Cons;
+                             ^^^^ property `next`. Property not found in
+       12: length({ kind: "cons" }); // missing `next`
+                  ^^^^^^^^^^^^^^^^ object literal
 
-test11.js:14
+Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
-            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
+                           ^^^^ union: `Nil` | `Cons`
   Member 1:
    16: type List = Nil | Cons;
                    ^^^ Nil
   Error:
    14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
+              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                   ^^^ Nil
+    Property `kind` is incompatible:
+       14: length({ kind: "empty" }); // `kind` not found
+                          ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
+       17: type Nil = { kind: "nil" };
+                              ^^^^^ string literal `nil`
   Member 2:
    16: type List = Nil | Cons;
                          ^^^^ Cons
   Error:
    14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
-   18: type Cons = { kind: "cons", next: List };
-                           ^^^^^^ string literal `cons`
+              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                         ^^^^ Cons
+    Property `kind` is incompatible:
+       14: length({ kind: "empty" }); // `kind` not found
+                          ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
+       18: type Cons = { kind: "cons", next: List };
+                               ^^^^^^ string literal `cons`
 
-test14.js:12
+Error: test14.js:12
  12:   union({ x: c.get() });
              ^^^^^^^^^^^^^^ object literal. Could not decide which case to select
   9: function union(o: { x: string } | { x: number }) { }
@@ -155,11 +229,11 @@ test14.js:12
    12:   union({ x: c.get() });
                     ^^^^^^^ call of method `get`
 
-test16.js:11
+Error: test16.js:11
  11: foo(() => qux());
          ^^^^^^^^^^^ function. Could not decide which case to select
  10: function foo(x: Foo) { }
-                     ^^^ union type
+                     ^^^ Foo
   Case 1 may work:
     6: type Foo = T | (() => bool);
                   ^ T
@@ -170,11 +244,11 @@ test16.js:11
    11: foo(() => qux());
                  ^^^^^ return
 
-test16.js:14
+Error: test16.js:14
  14: bar(() => qux());
          ^^^^^^^^^^^ function. Could not decide which case to select
  13: function bar(x: Bar) { }
-                     ^^^ union type
+                     ^^^ Bar
   Case 2 may work:
     8: type Bar = number | (() => string) | (() => bool);
                             ^^^^^^^^^^^^ function type
@@ -185,33 +259,27 @@ test16.js:14
    14: bar(() => qux());
                  ^^^^^ return
 
-test17.js:7
+Error: test17.js:7
   7: ([].concat([0,1])[1]: string)
-                 ^ number. This type is incompatible with
-  7: ([].concat([0,1])[1]: string)
-                           ^^^^^^ string
-
-test17.js:7
-  7: ([].concat([0,1])[1]: string)
-                   ^ number. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
   7: ([].concat([0,1])[1]: string)
                            ^^^^^^ string
 
-test20.js:14
+Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
                               ^^^ string. The operand of an arithmetic operation must be a number.
 
-test20.js:14
+Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
                                         ^^^^^^ property `length`. Property not found in
  14: [""].reduce((acc,str) => acc * str.length);
                                     ^^^ Number
 
-test21.js:11
+Error: test21.js:11
  11: ({ type: bar(), x: str() }: T);
       ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. Could not decide which case to select
  11: ({ type: bar(), x: str() }: T);
-                                 ^ union type
+                                 ^ T
   Case 1 may work:
     6:   | { type: "FOO", x: number }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -220,11 +288,11 @@ test21.js:11
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    11: ({ type: bar(), x: str() }: T);
-                ^^^^^ function call
+                ^^^^^ call of `bar`
    11: ({ type: bar(), x: str() }: T);
-                          ^^^^^ function call
+                          ^^^^^ call of `str`
 
-test22.js:20
+Error: test22.js:20
  20:   else return x.result;
                    ^^^^^^^^ property `result`. Property cannot be accessed on any member of intersection type
  20:   else return x.result;
@@ -250,9 +318,9 @@ test22.js:20
    20:   else return x.result;
                        ^^^^^^ property `result`. Property not found in
    14: } & Empty;
-           ^^^^^ object type
+           ^^^^^ Empty
 
-test26.js:20
+Error: test26.js:20
  20: new Record().set('foo', "42");
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
  20: new Record().set('foo', "42");
@@ -274,7 +342,7 @@ test26.js:20
    17:   set(x: 'bar', y: string): void;
                 ^^^^^ string literal `bar`
 
-test33.js:7
+Error: test33.js:7
   7: foo(bar); // error: ambiguous speculation
          ^^^ function. Could not decide which case to select
   5: function foo(cb: (() => string) | (() => number)) {}
@@ -289,13 +357,19 @@ test33.js:7
     6: function bar() { return 0 }
                      ^ return
 
-test33.js:8
+Error: test33.js:8
   8: (bar(): string); // error: number ~> string
       ^^^^^ number. This type is incompatible with
   8: (bar(): string); // error: number ~> string
              ^^^^^^ string
 
-test5.js:14
+Error: test34.js:10
+ 10:     (x.foo: empty); // error: string ~> empty
+          ^^^^^ string. This type is incompatible with
+ 10:     (x.foo: empty); // error: string ~> empty
+                 ^^^^^ empty
+
+Error: test5.js:14
  14: fun(a1);
          ^^ function. Could not decide which case to select
  11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
@@ -310,9 +384,9 @@ test5.js:14
    13: function a1(x) { return x; }
                      ^ return
    13: function a1(x) { return x; }
-                   ^ parameter `x`
+                   ^ x
 
-test5.js:25
+Error: test5.js:25
  25: arr(a2);
          ^^ empty array literal. Could not decide which case to select
  22: function arr(a: number[] | string[]) { }
@@ -327,13 +401,13 @@ test5.js:25
    24: var a2 = [];
                 ^^ unknown element type of empty array
 
-test9.js:12
+Error: test9.js:12
  12:   return x * x;
-              ^ null. The operand of an arithmetic operation must be a number.
+              ^ null or undefined. The operand of an arithmetic operation must be a number.
 
-test9.js:12
+Error: test9.js:12
  12:   return x * x;
-                  ^ null. The operand of an arithmetic operation must be a number.
+                  ^ null or undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 25 errors
+Found 26 errors

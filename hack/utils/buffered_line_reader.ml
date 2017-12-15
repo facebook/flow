@@ -8,7 +8,7 @@
  *
 *)
 
-open Core
+open Hh_core
 
 (** Our Unix systems only allow reading 64KB chunks at a time.
  * Trying to read more than 64KB results in only 64KB being read. *)
@@ -129,6 +129,14 @@ let get_next_bytes r size =
     end
 
 let has_buffered_content r = !(r.unconsumed_buffer) <> None
+
+
+let is_readable r =
+  if has_buffered_content r then
+    true
+  else
+    let readable, _, _ = Unix.select [r.fd] [] [] 0.0 in
+    readable <> []
 
 let create fd = {
   fd = fd;

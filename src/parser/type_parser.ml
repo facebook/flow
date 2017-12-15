@@ -1,36 +1,35 @@
-(*
+(**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Token
 open Parser_env
 open Ast
+open Parser_common
 module Error = Parse_error
 
 module type TYPE = sig
-  val _type : env -> Ast.Type.t
-  val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
-  val type_parameter_declaration_with_defaults : env -> Ast.Type.ParameterDeclaration.t option
-  val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
-  val generic : env -> Loc.t * Ast.Type.Generic.t
-  val _object : allow_static:bool -> env -> Loc.t * Type.Object.t
-  val function_param_list : env -> Type.Function.Param.t list * Type.Function.RestParam.t option
-  val annotation : env -> Ast.Type.annotation
-  val annotation_opt : env -> Ast.Type.annotation option
-  val predicate_opt : env -> Ast.Type.Predicate.t option
-  val annotation_and_predicate_opt : env -> Ast.Type.annotation option * Ast.Type.Predicate.t option
+  val _type : env -> Loc.t Ast.Type.t
+  val type_identifier : env -> Loc.t * string
+  val type_parameter_declaration : env -> Loc.t Ast.Type.ParameterDeclaration.t option
+  val type_parameter_declaration_with_defaults : env -> Loc.t Ast.Type.ParameterDeclaration.t option
+  val type_parameter_instantiation : env -> Loc.t Ast.Type.ParameterInstantiation.t option
+  val generic : env -> Loc.t * Loc.t Ast.Type.Generic.t
+  val _object : allow_static:bool -> env -> Loc.t * Loc.t Type.Object.t
+  val function_param_list : env -> Loc.t Type.Function.Params.t
+  val annotation : env -> Loc.t Ast.Type.annotation
+  val annotation_opt : env -> Loc.t Ast.Type.annotation option
+  val predicate_opt : env -> Loc.t Ast.Type.Predicate.t option
+  val annotation_and_predicate_opt : env -> Loc.t Ast.Type.annotation option * Loc.t Ast.Type.Predicate.t option
 end
 
 module Type (Parse: Parser_common.PARSER) : TYPE = struct
   type param_list_or_type =
-    | ParamList of (Type.Function.Param.t list * Type.Function.RestParam.t option)
-    | Type of Type.t
+    | ParamList of Loc.t Type.Function.Params.t'
+    | Type of Loc.t Type.t
 
   let rec _type env = union env
 
@@ -119,7 +118,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_ARROW when not (no_anon_function_type env)->
       let start_loc, typeParameters, params =
         let param = anonymous_function_param env param in
-        fst param, None, ([param], None)
+        fst param, None, (fst param, { Ast.Type.Function.Params.
+          params = [param];
+          rest = None;
+        })
       in
       function_with_params env start_loc typeParameters params
     | _ -> param
@@ -167,33 +169,29 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let t = primary env in
         Loc.btwn start_loc (fst t), Type.Typeof t
     | T_LBRACKET -> tuple env
-    | T_IDENTIFIER ->
+    | T_IDENTIFIER _
+    | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         let loc, g = generic env in
         loc, Type.Generic g
     | T_STRING (loc, value, raw, octal)  ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         loc, Type.StringLiteral {
-          Type.StringLiteral.value;
+          Ast.StringLiteral.value;
           raw;
         }
-    | T_NUMBER_SINGLETON_TYPE (number_type, value) ->
-        let raw = Peek.value env in
-        Expect.token env (T_NUMBER_SINGLETON_TYPE (number_type, value));
-        if number_type = LEGACY_OCTAL
+    | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+        Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
+        if kind = LEGACY_OCTAL
         then strict_error env Error.StrictOctalLiteral;
         loc, Type.NumberLiteral {
-          Type.NumberLiteral.value;
+          Ast.NumberLiteral.value;
           raw;
         }
     | (T_TRUE | T_FALSE) as token ->
-        let raw = Peek.value env in
         Expect.token env token;
         let value = token = T_TRUE in
-        loc, Type.BooleanLiteral {
-          Type.BooleanLiteral.value;
-          raw;
-        }
+        loc, Type.BooleanLiteral value
     | token ->
         match primitive token with
         | Some t ->
@@ -204,14 +202,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             loc, Type.Any
 
   and primitive = function
-    | T_ANY_TYPE     -> Some Type.Any
-    | T_MIXED_TYPE   -> Some Type.Mixed
-    | T_EMPTY_TYPE   -> Some Type.Empty
-    | T_BOOLEAN_TYPE -> Some Type.Boolean
-    | T_NUMBER_TYPE  -> Some Type.Number
-    | T_STRING_TYPE  -> Some Type.String
-    | T_VOID_TYPE    -> Some Type.Void
-    | T_NULL         -> Some Type.Null
+    | T_ANY_TYPE -> Some Type.Any
+    | T_MIXED_TYPE -> Some Type.Mixed
+    | T_EMPTY_TYPE -> Some Type.Empty
+    | T_BOOLEAN_TYPE _ -> Some Type.Boolean
+    | T_NUMBER_TYPE -> Some Type.Number
+    | T_STRING_TYPE -> Some Type.String
+    | T_VOID_TYPE -> Some Type.Void
+    | T_NULL -> Some Type.Null
     | _ -> None
 
   and tuple =
@@ -255,10 +253,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and function_param_list_without_parens =
     let param env =
-      match Peek.token ~i:1 env with
+      match Peek.ith_token ~i:1 env with
       | T_COLON | T_PLING ->
-          let name, _ = Parse.identifier_or_reserved_keyword env in
-          function_param_with_id env name
+          let id = Parse.identifier env in
+          function_param_with_id env id
       | _ ->
           let typeAnnotation = _type env in
           anonymous_function_param env typeAnnotation
@@ -280,7 +278,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           end else
             None
         in
-        List.rev acc, rest
+        { Ast.Type.Function.Params.params = List.rev acc; rest; }
       | _ ->
         let acc = (param env)::acc in
         if Peek.token env <> T_RPAREN
@@ -290,10 +288,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in fun env -> param_list env
 
   and function_param_list env =
-    Expect.token env T_LPAREN;
-    let ret = function_param_list_without_parens env [] in
-    Expect.token env T_RPAREN;
-    ret
+    with_loc (fun env ->
+      Expect.token env T_LPAREN;
+      let ret = function_param_list_without_parens env [] in
+      Expect.token env T_RPAREN;
+      ret
+    ) env
 
   and param_list_or_type env =
     Expect.token env T_LPAREN;
@@ -306,8 +306,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           ParamList (function_param_list_without_parens env [])
       | T_RPAREN ->
           (* () or is definitely a param list *)
-          ParamList ([], None)
-      | T_IDENTIFIER ->
+          ParamList ({ Ast.Type.Function.Params.params = []; rest = None })
+      | T_IDENTIFIER _
+      | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
           (* This could be a function parameter or a generic type *)
           function_param_or_generic_type env
       | token ->
@@ -318,7 +319,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           | Some _ ->
               (* Don't know if this is (number) or (number: number). The first
                * is a type, the second is a param. *)
-              match Peek.token ~i:1 env with
+              match Peek.ith_token ~i:1 env with
               | T_PLING | T_COLON ->
                 (* Ok this is definitely a parameter *)
                 ParamList (function_param_list_without_parens env [])
@@ -335,7 +336,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         (match Peek.token env with
         | T_RPAREN ->
             (* Reinterpret `(type) =>` as a ParamList *)
-            if Peek.token ~i:1 env = T_ARROW
+            if Peek.ith_token ~i:1 env = T_ARROW
             then
               let param = anonymous_function_param env t in
               ParamList (function_param_list_without_parens env [param])
@@ -350,14 +351,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     ret
 
   and function_param_or_generic_type env =
-    let id = Parse.identifier env in
-    match Peek.token env with
+    match Peek.ith_token ~i:1 env with
     | T_PLING (* optional param *)
     | T_COLON ->
+        let id = Parse.identifier env in
         let param = function_param_with_id env id in
         ignore (Expect.maybe env T_COMMA);
         ParamList (function_param_list_without_parens env [param])
     | _ ->
+        let id = type_identifier env in
         Type (
           generic_type_with_identifier env id
           |> postfix_with env
@@ -368,9 +370,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and function_or_group env =
     let start_loc = Peek.loc env in
-    match param_list_or_type env with
-    | ParamList params -> function_with_params env start_loc None params
-    | Type _type -> _type
+    match with_loc param_list_or_type env with
+    | loc, ParamList params -> function_with_params env start_loc None (loc, params)
+    | _, Type _type -> _type
 
   and _function env =
     let start_loc = Peek.loc env in
@@ -378,7 +380,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     let params = function_param_list env in
     function_with_params env start_loc typeParameters params
 
-  and function_with_params env start_loc typeParameters params =
+  and function_with_params env start_loc typeParameters (params: Loc.t Ast.Type.Function.Params.t) =
     Expect.token env T_ARROW;
     let returnType = _type env in
     let end_loc = fst returnType in
@@ -441,11 +443,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let (key_loc, key) = key in
       let (_, { Type.Function.params; _ }) = value in
       begin match is_getter, params with
-      | true, ([], None) -> ()
-      | false, (_, Some _rest) ->
+      | true, (_, { Type.Function.Params.params = []; rest = None }) -> ()
+      | false, (_, { Type.Function.Params.rest = Some _; _ }) ->
           (* rest params don't make sense on a setter *)
           error_at env (key_loc, Error.SetterArity)
-      | false, ([_], _) -> ()
+      | false, (_, { Type.Function.Params.params = [_]; _ }) -> ()
       | true, _ -> error_at env (key_loc, Error.GetterArity)
       | false, _ -> error_at env (key_loc, Error.SetterArity)
       end;
@@ -461,9 +463,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in let indexer_property env start_loc static variance =
       Expect.token env T_LBRACKET;
       let id =
-        if Peek.token ~i:1 env = T_COLON
+        if Peek.ith_token ~i:1 env = T_COLON
         then begin
-          let id, _ = Parse.identifier_or_reserved_keyword env in
+          let id = identifier_name env in
           Expect.token env T_COLON;
           Some id
         end else None in
@@ -490,29 +492,45 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
+    in let error_if_unexpected_static env ~allow_static = function
+      | Some loc when not allow_static ->
+        error_at env (loc, Error.UnexpectedStatic)
+      | _ -> ()
+
     in let rec properties ~allow_static ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
-      let static = allow_static && Expect.maybe env T_STATIC in
+      let static, static_loc = match Peek.token env with
+      | T_STATIC ->
+        Eat.token env;
+        true, Some start_loc
+      | _ -> false, None
+      in
       let variance = variance env in
       match Peek.token env with
       | T_EOF ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_RCURLYBAR when exact ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_RCURLY when not exact ->
+        error_if_unexpected_static env ~allow_static static_loc;
         List.rev acc
       | T_LBRACKET ->
+        error_if_unexpected_static env ~allow_static static_loc;
         let indexer = indexer_property env start_loc static variance in
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (indexer::acc)
       | T_LESS_THAN
       | T_LPAREN ->
+        error_if_unexpected_static env ~allow_static static_loc;
         error_unsupported_variance env variance;
         let call_prop = call_property env start_loc static in
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
       | T_ELLIPSIS when allow_spread ->
+        error_if_unexpected_static env ~allow_static static_loc;
         error_unsupported_variance env variance;
         Eat.token env;
         let (arg_loc, _) as argument = _type env in
@@ -524,8 +542,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties ~allow_static ~allow_spread ~exact env (property::acc)
       | token ->
         let property = match static, variance, token with
-        | true, None, T_COLON ->
-            strict_error_at env (start_loc, Error.StrictReservedWord);
+        | true, None, (T_PLING | T_COLON) ->
             let key = Expression.Object.Property.Identifier (
               start_loc,
               "static"
@@ -540,6 +557,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
               property env start_loc static variance key
             end
         | _ ->
+            error_if_unexpected_static env ~allow_static static_loc;
             let object_key env =
               Eat.push_lex_mode env Lex_mode.NORMAL;
               let result = Parse.object_key env in
@@ -589,14 +607,21 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties;
       })
 
+  and type_identifier env =
+    let loc, name = identifier_name env in
+    if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
+    loc, name
+
+  and bounded_type env = with_loc (fun env ->
+    let name = type_identifier env in
+    let bound = if Peek.token env = T_COLON then Some (annotation env) else None in
+    name, bound
+  ) env
+
   and type_parameter_declaration =
     let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
       let variance = variance env in
-      let loc, {
-        Pattern.Identifier.name = (_, name);
-        typeAnnotation = bound;
-        _;
-      } = Parse.identifier_with_type env Error.StrictParamName in
+      let loc, (name, bound) = bounded_type env in
       let default, require_default = match allow_default, Peek.token env with
       | false, _ -> None, false
       | true, T_ASSIGN ->
@@ -661,14 +686,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           }))
         end else None
 
-  and generic env = raw_generic_with_identifier env (Parse.identifier env)
+  and generic env = raw_generic_with_identifier env (type_identifier env)
 
   and raw_generic_with_identifier =
     let rec identifier env (q_loc, qualification) =
       if Peek.token env = T_PERIOD
       then begin
         Expect.token env T_PERIOD;
-        let id = Parse.identifier env in
+        let id = type_identifier env in
         let loc = Loc.btwn q_loc (fst id) in
         let qualification = Type.Generic.Identifier.(Qualified (loc, {
           qualification;
@@ -720,7 +745,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   let annotation_and_predicate_opt env =
-    match Peek.token env, Peek.token ~i:1 env with
+    match Peek.token env, Peek.ith_token ~i:1 env with
     | T_COLON, T_CHECKS ->
       Expect.token env T_COLON;
       (None, predicate_opt env)
@@ -738,6 +763,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     ret
 
   let _type = wrap _type
+  let type_identifier = wrap type_identifier
   let type_parameter_declaration_with_defaults =
     wrap (type_parameter_declaration ~allow_default:true)
   let type_parameter_declaration =

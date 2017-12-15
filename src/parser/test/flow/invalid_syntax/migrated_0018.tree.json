@@ -23,14 +23,14 @@
   "body":[
     {
       "type":"ExportAllDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
-      "range":[0,21],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":16}},
+      "range":[0,16],
       "source":{
         "type":"Literal",
         "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":21}},
         "range":[17,21],
-        "value":"blah",
-        "raw":"blah"
+        "value":"",
+        "raw":""
       },
       "exportKind":"type"
     },

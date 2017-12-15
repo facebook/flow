@@ -1,11 +1,11 @@
 ======Start off with the .js files but without the .flow file======
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ AImplementation. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestImplementation. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -13,13 +13,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -27,13 +27,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ AImplementation. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestImplementation. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -44,13 +44,13 @@ Found 2 errors
 
 
 ======Start off with the .js files and the .flow file======
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -58,13 +58,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ AImplementation. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestImplementation. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -72,13 +72,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -89,13 +89,13 @@ Found 2 errors
 
 
 ======Start off without the .js files and with the .flow file======
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -103,13 +103,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -117,13 +117,13 @@ index.js:7
 
 
 Found 2 errors
-index.js:4
+Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ ADefinition. This type is incompatible with
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                ^^^^^^^ boolean
 
-index.js:7
+Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ TestDefinition. This type is incompatible with
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean

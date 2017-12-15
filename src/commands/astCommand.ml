@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -31,6 +28,8 @@ let spec = {
         ~doc:"Pretty-print JSON output"
     |> flag "--type" (enum ["js"; "json"])
         ~doc:"Type of input file (js or json)"
+    |> flag "--strict" no_arg
+        ~doc:"Parse in strict mode"
     |> CommandUtils.from_flag
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
@@ -59,7 +58,6 @@ let token_to_json token_result =
     token_loc=loc;
     token;
     token_context;
-    token_value;
   } = token_result in
 
   JSON_Object [
@@ -87,13 +85,13 @@ let token_to_json token_result =
       int_ loc.start.offset;
       int_ loc._end.offset;
     ]);
-    ("value", JSON_String token_value);
+    ("value", JSON_String (Token.value_of_token token));
   ]
 
-let main include_tokens pretty file_type_opt from filename () =
+let main include_tokens pretty file_type_opt use_strict from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
-  let content = File_input.content_of_file_input file in
+  let content = File_input.content_of_file_input_unsafe file in
 
   let file_type =
     match file_type_opt with
@@ -128,7 +126,7 @@ let main include_tokens pretty file_type_opt from filename () =
         esproposal_decorators = true;
         esproposal_export_star_as = true;
         types = true;
-        use_strict = false;
+        use_strict;
       }) in
 
       let (translated_ast, errors) =
@@ -153,6 +151,6 @@ let main include_tokens pretty file_type_opt from filename () =
     with Parse_error.Error l ->
       JSON_Object ["errors", Translate.errors l]
   in
-  print_endline (json_to_string ~pretty results)
+  print_json_endline ~pretty results
 
 let command = CommandSpec.command spec main

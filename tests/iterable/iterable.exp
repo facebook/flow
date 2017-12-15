@@ -1,50 +1,150 @@
-array.js:7
+Error: array.js:7
   7: (["hi"]: Iterable<number>); // Error string ~> number
-       ^^^^ string. This type is incompatible with
+      ^^^^^^ array literal. This type is incompatible with
   7: (["hi"]: Iterable<number>); // Error string ~> number
-                       ^^^^^^ number
+              ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+              7: (["hi"]: Iterable<number>); // Error string ~> number
+                   ^^^^ string. This type is incompatible with
+              7: (["hi"]: Iterable<number>); // Error string ~> number
+                                   ^^^^^^ number
 
-array.js:8
+Error: array.js:8
   8: (["hi", 1]: Iterable<string>); // Error number ~> string
-             ^ number. This type is incompatible with
+      ^^^^^^^^^ array literal. This type is incompatible with
   8: (["hi", 1]: Iterable<string>); // Error number ~> string
-                          ^^^^^^ string
+                 ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+              8: (["hi", 1]: Iterable<string>); // Error number ~> string
+                         ^ number. This type is incompatible with
+              8: (["hi", 1]: Iterable<string>); // Error number ~> string
+                                      ^^^^^^ string
 
-caching_bug.js:21
+Error: caching_bug.js:21
  21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                               ^^^^^^ number. This type is incompatible with
+                                                                                   ^ array type. This type is incompatible with the expected return type of
  21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                  ^^^^^^ string
+                                                         ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    197:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        197:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+             21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                           ^^^^^^ number. This type is incompatible with
+             21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                                              ^^^^^^ string
 
-iterator_result.js:23
+Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
-                      ^^^^ boolean. Expected boolean literal `false`, got `true` instead
-548:   | { done: false, value: Yield };
-                 ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:548
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+494:   | { done: false, +value: Yield };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:494
+  Property `done` is incompatible:
+     23:         return { done, value: "still going..." }; // Error string ~> void
+                          ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+    494:   | { done: false, +value: Yield };
+                     ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:494
 
-iterator_result.js:25
+Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
-                      ^^^^ boolean. Expected boolean literal `true`, got `false` instead
-547:   | { done: true, value?: Return }
-                 ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:547
+                    ^^^^^^^^ object literal. This type is incompatible with
+493:   | { done: true, +value?: Return }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:493
+  Property `done` is incompatible:
+     25:         return { done }; // Error void ~> string
+                          ^^^^ boolean. Expected boolean literal `true`, got `false` instead
+    493:   | { done: true, +value?: Return }
+                     ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:493
 
-map.js:13
+Error: map.js:14
+ 14:   return map;
+              ^^^ Map. This type is incompatible with the expected return type of
  13: function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                           ^^^^^^ string. This type is incompatible with
-595:     @@iterator(): Iterator<[K, V]>;
-                                ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:595
+                                                  ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    541:     @@iterator(): Iterator<[K, V]>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:541
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        541:     @@iterator(): Iterator<[K, V]>;
+                               ^^^^^^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:541
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+            541:     @@iterator(): Iterator<[K, V]>;
+                                            ^^^^^^ tuple type. This type is incompatible with. See lib: <BUILTINS>/core.js:541
+             13: function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                                       ^^^^^^ string
 
-set.js:13
+Error: set.js:14
+ 14:   return set;
+              ^^^ Set. This type is incompatible with the expected return type of
  13: function setTest4(set: Set<string>): Iterable<number> {
-                                ^^^^^^ string. This type is incompatible with
- 13: function setTest4(set: Set<string>): Iterable<number> {
-                                                   ^^^^^^ number
+                                          ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    566:     @@iterator(): Iterator<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:566
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        566:     @@iterator(): Iterator<T>;
+                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:566
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+             13: function setTest4(set: Set<string>): Iterable<number> {
+                                            ^^^^^^ string. This type is incompatible with
+             13: function setTest4(set: Set<string>): Iterable<number> {
+                                                               ^^^^^^ number
 
-string.js:5
+Error: string.js:5
   5: ("hi": Iterable<number>); // Error - string is a Iterable<string>
-                     ^^^^^^ number. This type is incompatible with
-276:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. See lib: <BUILTINS>/core.js:276
+      ^^^^ string. This type is incompatible with
+  5: ("hi": Iterable<number>); // Error - string is a Iterable<string>
+            ^^^^^^^^^^^^^^^^ $Iterable
+  Property `@@iterator` is incompatible:
+    288:     @@iterator(): Iterator<string>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:288
+    503:     @@iterator(): $Iterator<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
+      The return is incompatible:
+        288:     @@iterator(): Iterator<string>;
+                               ^^^^^^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:288
+        503:     @@iterator(): $Iterator<Yield,Return,Next>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
+          Type argument `Yield` is incompatible:
+            288:     @@iterator(): Iterator<string>;
+                                            ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:288
+              5: ("hi": Iterable<number>); // Error - string is a Iterable<string>
+                                 ^^^^^^ number
 
 
 Found 8 errors

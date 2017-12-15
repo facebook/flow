@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -32,9 +32,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:22
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                            ^^^^^^ number. This type is incompatible with
+                                                                                ^^^ read-only array type. This type is incompatible with the expected return type of
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                     ^^^^^^ string
+                                                      ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+            Type argument \`T\` is incompatible:
+               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                ^^^^^^ number. This type is incompatible with
+               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                                         ^^^^^^ string
         `,
       ),
 
@@ -89,19 +94,17 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:5
-            5:         tup.forEach((value, index, readOnlyRef) => {
-                       ^ call of method \`forEach\`
-            4:       function foo(tup: [1,2], arr: Array<number>): void {
-                                          ^ number literal \`2\`. Expected number literal \`1\`, got \`2\` instead
-            7:           (readOnlyRef[0]: 1);
-                                          ^ number literal \`1\`
-
           test.js:6
             6:           readOnlyRef.push(123);
                                      ^^^^ property \`push\`. Property not found in
             6:           readOnlyRef.push(123);
                          ^^^^^^^^^^^ $ReadOnlyArray
+
+          test.js:7
+            7:           (readOnlyRef[0]: 1);
+                          ^^^^^^^^^^^^^^ number literal \`2\`. Expected number literal \`1\`, got \`2\` instead
+            7:           (readOnlyRef[0]: 1);
+                                          ^ number literal \`1\`
         `,
       ),
   ]),
@@ -158,7 +161,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index 2 of
+                                                       ^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 2 of
             3: function foo(x: [1,2]): number { return x[2]; }
                                                        ^ tuple type
 
@@ -175,7 +178,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index -1 of
+                                                       ^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index -1 of
             5: function foo(x: [1,2]): number { return x[-1]; }
                                                        ^ tuple type
 
@@ -193,7 +196,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ access of computed property/element. Out of bound access. This tuple has 1 elements and you tried to access index 2 of
+                                                     ^^^^ computed property. Out of bound access. This tuple has 1 elements and you tried to access index 2 of
             3: function foo(x: [1]): string { return x[2]; }
                                                      ^ tuple type
 
@@ -211,7 +214,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1], y: number): string { return x[y]; }
-                                ^ number literal \`1\`. This type is incompatible with the expected return type of
+                                                                ^^^^ number literal \`1\`. This type is incompatible with the expected return type of
             3: function foo(x: [1], y: number): string { return x[y]; }
                                                 ^^^^^^ string
         `,
@@ -276,12 +279,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       (rest: [3,40]);
     `).newErrors(
         `
-          test.js:4
-            4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                       ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
-            8:       (rest: [3,40]);
-                               ^^ number literal \`40\`
-
           test.js:6
             6:       (a: 10);
                       ^ number literal \`1\`. Expected number literal \`10\`, got \`1\` instead
@@ -296,9 +293,25 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (rest: [3,40]);
-                               ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
-            4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                       ^ number literal \`4\`
+                      ^^^^ rest. Has some incompatible tuple element with
+            8:       (rest: [3,40]);
+                            ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                           ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
+                8:       (rest: [3,40]);
+                                   ^^ number literal \`40\`
+
+          test.js:8
+            8:       (rest: [3,40]);
+                      ^^^^ rest. Has some incompatible tuple element with
+            8:       (rest: [3,40]);
+                            ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                8:       (rest: [3,40]);
+                                   ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
+                4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                           ^ number literal \`4\`
         `,
       ),
   ]),
@@ -311,15 +324,25 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return arr;
-                              ^^^ string. This type is incompatible with
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                        ^ number literal \`1\`
+                                                                                       ^^^^^^ tuple type
+            The first tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                            ^ number literal \`1\`
 
           test.js:5
             5:         return arr;
-                              ^^^ string. This type is incompatible with
+                              ^^^ array type. This type is incompatible with the expected return type of
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                           ^ number literal \`2\`
+                                                                                       ^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                               ^ number literal \`2\`
         `,
       ),
   ]),
@@ -330,17 +353,27 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                        ^^^^^^ number
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The first tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                            ^^^^^^ number. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-          test.js:4
+          test.js:5
+            5:         return arr;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                ^^^^^^ number
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+            The second tuple element is incompatible:
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                    ^^^^^^ number. This type is incompatible with
+                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
         `,
       ),
    ]),
@@ -351,17 +384,27 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return tup;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(tup: [1, 2]): [number, number] {
-                                                 ^^^^^^ number. Expected number literal \`1\`
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                        ^ number literal \`1\`
+                                                ^^^^^^^^^^^^^^^^ tuple type
+            The first tuple element is incompatible:
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                                     ^^^^^^ number. Expected number literal \`1\`
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                            ^ number literal \`1\`
 
-          test.js:4
+          test.js:5
+            5:         return tup;
+                              ^^^ tuple type. This type is incompatible with the expected return type of
             4:       function foo(tup: [1, 2]): [number, number] {
-                                                         ^^^^^^ number. Expected number literal \`2\`
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                           ^ number literal \`2\`
+                                                ^^^^^^^^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                                             ^^^^^^ number. Expected number literal \`2\`
+                4:       function foo(tup: [1, 2]): [number, number] {
+                                               ^ number literal \`2\`
         `,
       ),
   ]),
@@ -384,7 +427,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:           return tup[3];
-                                ^^^^^^ access of computed property/element. Out of bound access. This tuple has 2 elements and you tried to access index 3 of
+                                ^^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 3 of
             6:           return tup[3];
                                 ^^^ tuple type
 

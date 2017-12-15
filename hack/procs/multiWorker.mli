@@ -14,6 +14,7 @@
 type 'a nextlist = 'a list Bucket.next
 
 val next :
+  ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
   ?max_size: int ->
   Worker.t list option ->
   'a list ->

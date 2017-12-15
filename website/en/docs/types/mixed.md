@@ -16,10 +16,10 @@ function square(n: number) {
 
 **A group of different possible types:**
 
-Here the input value could be either a `string`, a `number`, or a `boolean`.
+Here the input value could be either a `string` or a `number`.
 
 ```js
-function stringifyBasicValue(value: string | number | boolean) {
+function stringifyBasicValue(value: string | number) {
   return '' + value;
 }
 ```

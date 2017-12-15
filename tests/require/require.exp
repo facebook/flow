@@ -1,34 +1,34 @@
-require.js:9
+Error: require.js:9
   9: takesAString(A.numberValue);
                   ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
   4: function takesAString(str: string): void {}
                                 ^^^^^^ string
 
-require.js:14
+Error: require.js:14
  14: takesAString(B.numberValue);
                   ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
   4: function takesAString(str: string): void {}
                                 ^^^^^^ string
 
-require.js:17
+Error: require.js:17
  17: require("C");
              ^^^ C. Required module not found
 
-require.js:20
+Error: require.js:20
  20: require("./D");
              ^^^^^ ./D. Required module not found
 
-require.js:25
+Error: require.js:25
  25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
        ^^^^^^^^^^^ property `stringValue`. Property not found in
  25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
      ^ object literal
 
-require.js:30
+Error: require.js:30
  30: require(a); // Error: Param must be string literal
      ^^^^^^^^^^ The parameter passed to require() must be a literal string.
 
-require.js:32
+Error: require.js:32
  32: require(`${'./E'}`); // error: but only if they have no expressions
      ^^^^^^^^^^^^^^^^^^^ The parameter passed to require() must be a literal string.
 

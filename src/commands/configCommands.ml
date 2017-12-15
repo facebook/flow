@@ -8,9 +8,11 @@ module Init = struct
         Initializes a directory to be used as a flow root directory\n\n\
         e.g. %s init /path/to/root\n\
         or %s init\n\
-        or %s init --options \"optionA=123;optionB=456\"\n\n\
+        or %s init --options \"optionA=123;optionB=456\"\n\
+        or %s init --lints \"lintA=on,lintB=off\"\n\n\
         If the root is not specified it is assumed to be the current working directory\n\n\
         This command will create and initialize /path/to/root/.flowconfig\n"
+        CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name
@@ -38,8 +40,10 @@ module Init = struct
     | Some str -> Str.split (Str.regexp ";") str
     in
     let ignores = flowconfig_flags.CommandUtils.ignores in
+    let untyped = flowconfig_flags.CommandUtils.untyped in
     let includes = flowconfig_flags.CommandUtils.includes in
     let libs = flowconfig_flags.CommandUtils.libs in
+    let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
 
     let file = Server_files_js.config_file root in
     if Sys.file_exists file
@@ -48,7 +52,7 @@ module Init = struct
       FlowExitStatus.(exit ~msg Invalid_flowconfig)
     end;
 
-    let config = FlowConfig.init ~ignores ~includes ~libs ~options in
+    let config = FlowConfig.init ~ignores ~untyped ~includes ~libs ~options ~lints in
 
     let out = Sys_utils.open_out_no_fail file in
     FlowConfig.write config out;

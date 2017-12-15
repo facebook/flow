@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This module defines a general notion of trace, which is used in modules
@@ -60,9 +57,11 @@ end
 
 type reason_desc =
   | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RNullOrVoid
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
+  | RMatchingProp of string * reason_desc
   | RObject
   | RObjectLit
   | RObjectType
@@ -78,13 +77,17 @@ type reason_desc =
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall
+  | RFunctionCall of reason_desc
+  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
   | RJSXText
+  | RUnaryOperator of string * reason_desc
+  | RBinaryOperator of string * reason_desc * reason_desc
+  | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
   | RUnknownString
@@ -107,10 +110,13 @@ type reason_desc =
   | RAnd
   | RConditional
   | RPrototype
+  | RObjectPrototype
+  | RFunctionPrototype
   | RDestructuring
+  | RDefaultValue
   | RConstructor
   | RDefaultConstructor
-  | RConstructorCall
+  | RConstructorCall of reason_desc
   | RReturn
   | RRegExp
   | RSuper
@@ -121,26 +127,31 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeParam of string * reason_desc
+  | RTypeAlias of string * reason_desc
+  | ROpaqueType of string
+  | RTypeParam of string * reason_desc * Loc.t
+  | RMethod of string option
   | RMethodCall of string option
-  | RParameter of string
-  | RRestParameter of string
+  | RParameter of string option
+  | RRestParameter of string option
   | RIdentifier of string
   | RIdentifierAssignment of string
-  | RPropertyAssignment of string
+  | RPropertyAssignment of string option
   | RProperty of string option
+  | RPrivateProperty of string
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
+  | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
+  | RUntypedModule of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RClassType of reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -157,20 +168,25 @@ type reason_desc =
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc
   | RPredicateCallNeg of reason_desc
+  | RRefined of reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
 
+  | RReactProps
   | RReactElement of string option
   | RReactClass
   | RReactComponent
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string
   | RReactPropTypes
+  | RReactChildren
+  | RReactChildrenOrType of reason_desc
+  | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactSFC
 
 and reason_desc_function =
   | RAsync
@@ -233,7 +249,7 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
-let string_of_source ?(strip_root=None) = Loc.(function
+let string_of_source ?(strip_root=None) = File_key.(function
   | Builtins -> "(builtins)"
   | LibFile file ->
     begin match strip_root with
@@ -273,7 +289,7 @@ let string_of_loc_pos loc = Loc.(
 let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
-  | Some Builtins -> ""
+  | Some File_key.Builtins -> ""
   | Some file ->
     spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
@@ -286,11 +302,11 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
       | None -> JSON_Null
     );
     "type", (match loc.source with
-    | Some LibFile _ -> JSON_String "LibFile"
-    | Some SourceFile _ -> JSON_String "SourceFile"
-    | Some JsonFile _ -> JSON_String "JsonFile"
-    | Some ResourceFile _ -> JSON_String "ResourceFile"
-    | Some Builtins -> JSON_String "Builtins"
+    | Some File_key.LibFile _ -> JSON_String "LibFile"
+    | Some File_key.SourceFile _ -> JSON_String "SourceFile"
+    | Some File_key.JsonFile _ -> JSON_String "JsonFile"
+    | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
+    | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
@@ -348,6 +364,12 @@ let function_desc_prefix = function
   | RAsyncGenerator -> "async generator "
   | RNormal -> ""
 
+let prettify_react_util s =
+  let length = String.length s in
+  if length < 6 then s
+  else if ((String.sub s 0 6) = "React$") then ("React." ^ (String.sub s 6 (length - 6)))
+  else s
+
 let rec string_of_desc = function
   | RNumber -> "number"
   | RString -> "string"
@@ -357,9 +379,12 @@ let rec string_of_desc = function
   | RAny -> "any"
   | RVoid -> "undefined"
   | RNull -> "null"
+  | RNullOrVoid -> "null or undefined"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
+  | RMatchingProp (k, v) ->
+    spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
@@ -375,7 +400,8 @@ let rec string_of_desc = function
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
-  | RFunctionCall -> "function call"
+  | RFunctionCall d -> spf "call of %s" (string_of_desc d)
+  | RFunctionCallType -> "`$Call`"
   | RFunctionUnusedArgument -> "unused function argument"
   | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
   | RJSXIdentifier (raw_jsx, name) ->
@@ -386,6 +412,12 @@ let rec string_of_desc = function
     | None -> "JSX element")
   | RJSXElementProps x -> spf "props of JSX element `%s`" x
   | RJSXText -> spf "JSX text"
+  | RUnaryOperator (operator, value) ->
+    spf "%s %s" operator (string_of_desc value)
+  | RBinaryOperator (operator, left, right) ->
+    spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
+  | RLogical (operator, left, right) ->
+    spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RAnyObject -> "any object"
   | RAnyFunction -> "any function"
   | RUnknownString -> "some string with unknown value"
@@ -409,51 +441,71 @@ let rec string_of_desc = function
   | RAnd -> "and"
   | RConditional -> "conditional"
   | RPrototype -> "prototype"
+  | RObjectPrototype -> "object prototype"
+  | RFunctionPrototype -> "function prototype"
   | RDestructuring -> "destructuring"
+  | RDefaultValue -> "default value"
   | RConstructor -> "constructor"
   | RDefaultConstructor -> "default constructor"
-  | RConstructorCall -> "constructor call"
+  | RConstructorCall (RPolyType (RStatics d)) -> string_of_desc d
+  | RConstructorCall (RStatics d) -> string_of_desc d
+  | RConstructorCall d -> spf "new %s" (string_of_desc d)
   | RReturn -> "return"
   | RRegExp -> "regexp"
-  | RSuper -> "`super` pseudo-expression"
+  | RSuper -> "super"
   | RNoSuper -> "empty super object"
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
   | RTupleMap -> "tuple map"
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
-  | RType x -> spf "type `%s`" x
-  | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
-  | RIdentifier x -> spf "identifier `%s`" x
+  | RType x -> spf "`%s`" (prettify_react_util x)
+  | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
+  | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
+  | RTypeParam (x, _, _) -> spf "`%s`" x
+  | RMethod (Some x) -> spf "method `%s`" x
+  | RMethod None -> "computed method"
+  | RIdentifier x -> spf "`%s`" (prettify_react_util x)
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
   | RMethodCall (Some x) -> spf "call of method `%s`" x
   | RMethodCall None -> "call of computed property"
-  | RParameter x -> spf "parameter `%s`" x
-  | RRestParameter x -> spf "rest parameter `%s`" x
+  | RParameter (Some x) -> spf "`%s`" x
+  | RParameter None -> "parameter"
+  | RRestParameter (Some x) -> spf "rest parameter `%s`" x
+  | RRestParameter None -> "rest parameter"
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
-  | RPropertyAssignment x -> spf "assignment of property `%s`" x
+  | RPrivateProperty x -> spf "property `#%s`" x
+  | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
+  | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
-  | RPropertyIsAString x -> spf "property `%s` is a string" x
+  | RPropertyIsAString x -> spf "string `%s`" x
   | RMissingProperty (Some x) -> spf "property `%s` does not exist" x
   | RMissingProperty None -> "computed property does not exist"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" x
   | RUnknownProperty None -> "computed property of unknown type"
+  | RUndefinedProperty x -> spf "undefined property `%s`" x
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
   | RMissingAbstract d ->
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
+  | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RCustom x -> x
-  | RPolyType d -> spf "polymorphic type: %s" (string_of_desc d)
-  | RClassType d -> spf "class type: %s" (string_of_desc d)
-  | RExactType d -> spf "exact type: %s" (string_of_desc d)
+  | RPolyType (RStatics d) -> string_of_desc d
+  | RPolyType d -> string_of_desc d
+  | RExactType d -> string_of_desc d
   | ROptional d -> spf "optional %s" (string_of_desc d)
-  | RMaybe d -> spf "?%s" (string_of_desc d)
+  | RMaybe d ->
+    let rec loop = function
+    | RMaybe d -> loop d
+    | d -> d
+    in
+    spf "nullable %s" (string_of_desc (loop d))
   | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
-  | RTypeApp d -> spf "type application of %s" (string_of_desc d)
+  | RTypeApp d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
@@ -465,23 +517,30 @@ let rec string_of_desc = function
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d ->
     spf "negation of predicate call to %s" (string_of_desc d)
+  | RRefined d -> spf "refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "some incompatible instantiation of `%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
-  | RCommonJSExports x -> spf "CommonJS exports of %S" x
+  | RCommonJSExports x -> spf "CommonJS exports of `%s`" x
 
+  | RReactProps -> "props"
   | RReactElement x ->
     (match x with
-    | Some x -> spf "React element `%s`" x
+    | Some x -> spf "`%s` element" x
     | None -> "React element")
   | RReactClass -> "React class"
   | RReactComponent -> "React component"
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactElementProps x -> spf "props of React element `%s`" x
   | RReactPropTypes -> "propTypes of React component"
+  | RReactChildren -> "children array"
+  | RReactChildrenOrType desc ->
+    spf "children array or %s" (string_of_desc desc)
+  | RReactChildrenOrUndefinedOrType desc ->
+    spf "children array or %s" (string_of_desc desc)
+  | RReactSFC -> "React stateless functional component"
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in
@@ -510,8 +569,10 @@ let dump_reason ?(strip_root=None) r =
     | None -> ""
     end
 
-let desc_of_reason r =
-  r.desc
+let desc_of_reason ?(unwrap_alias=true) r =
+  match r.desc with
+  | RTypeAlias (_, desc) when unwrap_alias -> desc
+  | desc -> desc
 
 let internal_name name =
   spf ".%s" name
@@ -554,9 +615,11 @@ let is_instantiable_reason r =
 
    Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
 *)
-let is_constant_property_reason r =
+let is_constant_reason r =
   match desc_of_reason r with
+  | RIdentifier x
   | RProperty (Some x)
+  | RPrivateProperty x
   | RPropertyOf (x,_)
   | RPropertyIsAString x ->
     let len = String.length x in
@@ -572,6 +635,14 @@ let is_typemap_reason r =
   | RObjectMapi -> true
   | _ -> false
 
+let is_calltype_reason r =
+  match desc_of_reason r with
+  | RTupleMap
+  | RObjectMap
+  | RObjectMapi
+  | RFunctionCallType -> true
+  | _ -> false
+
 let is_derivable_reason r =
   r.derivable
 
@@ -579,19 +650,20 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason desc =
-  mk_reason desc Loc.({ none with source = Some Builtins })
+  mk_reason desc { Loc.none with Loc.source = Some File_key.Builtins }
   |> derivable_reason
 
 let is_builtin_reason r =
-  Loc.(r.loc.source = Some Builtins)
+  Loc.(r.loc.source = Some File_key.Builtins)
 
 let is_lib_reason r =
+  (* TODO: use File_key.is_lib_file *)
   Loc.(match r.loc.source with
-  | Some LibFile _ -> true
-  | Some Builtins -> true
-  | Some SourceFile _ -> false
-  | Some JsonFile _ -> false
-  | Some ResourceFile _ -> false
+  | Some File_key.LibFile _ -> true
+  | Some File_key.Builtins -> true
+  | Some File_key.SourceFile _ -> false
+  | Some File_key.JsonFile _ -> false
+  | Some File_key.ResourceFile _ -> false
   | None -> false)
 
 let is_blamable_reason r =
@@ -604,10 +676,11 @@ let reasons_overlap r1 r2 =
 
 (* returns reason with new description and position of original *)
 let replace_reason f r =
-  mk_reason (f (desc_of_reason r)) (loc_of_reason r)
+  mk_reason (f (desc_of_reason ~unwrap_alias:false r)) (loc_of_reason r)
 
-let replace_reason_const desc r =
-  mk_reason desc (loc_of_reason r)
+let replace_reason_const ?(keep_def_loc=false) desc r =
+  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
+  mk_reason_with_test_id r.test_id desc (loc_of_reason r) def_loc_opt
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
@@ -615,7 +688,7 @@ let repos_reason loc reason =
     let def_loc = def_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
-  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc def_loc_opt
+  mk_reason_with_test_id reason.test_id (desc_of_reason ~unwrap_alias:false reason) loc def_loc_opt
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

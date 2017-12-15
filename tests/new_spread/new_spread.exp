@@ -1,4 +1,36 @@
-type.js:13
+Error: cross_module/app.js:5
+  5: const app = fn((o: {a: number, b: number}) => {});
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  The first parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
+      5: const app = fn((o: {a: number, b: number}) => {});
+                            ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          6: app({a: 'foo', b: 2});
+                     ^^^^^ string. This type is incompatible with
+          5: const app = fn((o: {a: number, b: number}) => {});
+                                    ^^^^^^ number
+
+Error: cross_module/app.js:8
+  8: export default fn((o: {a: number, b: number}) => {});
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  The first parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
+      8: export default fn((o: {a: number, b: number}) => {});
+                               ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          5: app({a: 'foo', b: 2});
+                     ^^^^^ string. This type is incompatible with. See: cross_module/use.js:5
+          8: export default fn((o: {a: number, b: number}) => {});
+                                       ^^^^^^ number
+
+Error: type.js:13
  13: (o1: {p:T}); // error: o1.p is optional
       ^^ object type. This type is incompatible with
  13: (o1: {p:T}); // error: o1.p is optional
@@ -9,7 +41,7 @@ type.js:13
      13: (o1: {p:T}); // error: o1.p is optional
                  ^ T
 
-type.js:16
+Error: type.js:16
  16: ({p:y}: O1); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  16: ({p:y}: O1); // error: y ~> T
@@ -20,7 +52,7 @@ type.js:16
      10: type O1 = {...{p:T}};
                           ^ T
 
-type.js:23
+Error: type.js:23
  23: (o2: {p:T}); // error: o2.p is optional
       ^^ object type. This type is incompatible with
  23: (o2: {p:T}); // error: o2.p is optional
@@ -31,7 +63,7 @@ type.js:23
      23: (o2: {p:T}); // error: o2.p is optional
                  ^ T
 
-type.js:26
+Error: type.js:26
  26: ({p:y}: O2); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  26: ({p:y}: O2); // error: y ~> T
@@ -42,19 +74,30 @@ type.js:26
      20: type O2 = {...{p?:T}};
                            ^ T
 
-type.js:30
+Error: type.js:30
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-               ^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^ O3
 
-type.js:37
- 37: ({}: O4); // error: property `p` not found
-          ^^ property `p`. Property not found in
- 37: ({}: O4); // error: property `p` not found
-      ^^ object literal
+Error: type.js:36
+ 36: (o4: {|p:T|}); // error: not exact
+      ^^ object type. Inexact type is incompatible with exact type
+ 36: (o4: {|p:T|}); // error: not exact
+          ^^^^^^^ object type
 
-type.js:39
+Error: type.js:37
+ 37: ({}: O4); // error: property `p` not found
+      ^^ object literal. This type is incompatible with
+ 37: ({}: O4); // error: property `p` not found
+          ^^ object type
+  Property `p` is incompatible:
+     37: ({}: O4); // error: property `p` not found
+              ^^ property `p`. Property not found in
+     37: ({}: O4); // error: property `p` not found
+          ^^ object literal
+
+Error: type.js:39
  39: ({p:y}: O4); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  39: ({p:y}: O4); // error: y ~> T
@@ -65,13 +108,18 @@ type.js:39
      33: type O4 = {...{|p:T|}};
                            ^ T
 
-type.js:47
+Error: type.js:47
  47: (nil: O5); // error: property `p` not found
-           ^^ property `p`. Property not found in
-  7: declare var nil: {||};
-                      ^^^^ object type
+      ^^^ object type. This type is incompatible with
+ 47: (nil: O5); // error: property `p` not found
+           ^^ object type
+  Property `p` is incompatible:
+     47: (nil: O5); // error: property `p` not found
+               ^^ property `p`. Property not found in
+     47: (nil: O5); // error: property `p` not found
+          ^^^ object type
 
-type.js:49
+Error: type.js:49
  49: ({p:y}: O5); // error: y ~> T
       ^^^^^ object literal. This type is incompatible with
  49: ({p:y}: O5); // error: y ~> T
@@ -82,54 +130,86 @@ type.js:49
      43: type O5 = {|...{|p:T|}|};
                             ^ T
 
-type.js:50
+Error: type.js:50
  50: ({p:x,q:y}: O5); // error: additional property `q` found
-      ^^^^^^^^^ property `q`. Property not found in
+      ^^^^^^^^^ object literal. This type is incompatible with
  50: ({p:x,q:y}: O5); // error: additional property `q` found
                  ^^ object type
+  Property `q` is incompatible:
+     50: ({p:x,q:y}: O5); // error: additional property `q` found
+          ^^^^^^^^^ property `q`. Property not found in
+     50: ({p:x,q:y}: O5); // error: additional property `q` found
+                     ^^ object type
 
-type.js:56
+Error: type.js:56
  56: ({}: O6); // error: property `p` not found
-          ^^ property `p`. Property not found in
+      ^^ object literal. This type is incompatible with
  56: ({}: O6); // error: property `p` not found
-      ^^ object literal
+          ^^ O6
+  Property `p` is incompatible:
+     56: ({}: O6); // error: property `p` not found
+              ^^ property `p`. Property not found in
+     56: ({}: O6); // error: property `p` not found
+          ^^ object literal
 
-type.js:57
+Error: type.js:57
  57: ({p:x}: O6); // error: x ~> U
       ^^^^^ object literal. This type is incompatible with
  57: ({p:x}: O6); // error: x ~> U
-             ^^ object type
+             ^^ O6
   Property `p` is incompatible:
      57: ({p:x}: O6); // error: x ~> U
              ^ T. This type is incompatible with
      53: type O6 = {...{p:T},...{|p:U|}};
                                     ^ U
 
-type.js:62
+Error: type.js:62
  62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
  62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-               ^^^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^^^ O7
 
-type.js:68
+Error: type.js:68
  68: (o8.p: T); // error: U ~> T
       ^^^^ U. This type is incompatible with
  68: (o8.p: T); // error: U ~> T
             ^ T
 
-type.js:69
+Error: type.js:69
  69: (o8.p: U); // error: T ~> U
       ^^^^ T. This type is incompatible with
  69: (o8.p: U); // error: T ~> U
             ^ U
 
-type.js:75
+Error: type.js:75
  75: (o9.p: T); // error: o9.p is optional
       ^^^^ undefined. This type is incompatible with
  75: (o9.p: T); // error: o9.p is optional
             ^ T
 
-type_contra.js:6
+Error: type.js:101
+101: (o14: {p:T}); // error: `p` is optional
+      ^^^ object type. This type is incompatible with
+101: (o14: {p:T}); // error: `p` is optional
+           ^^^^^ object type
+  Property `p` is incompatible:
+     99: type O14 = {...{...{|p:T|}}};
+                                ^ undefined. This type is incompatible with
+    101: (o14: {p:T}); // error: `p` is optional
+                  ^ T
+
+Error: type.js:105
+105: ({p:y}: O14); // error: U ~> T
+      ^^^^^ object literal. This type is incompatible with
+105: ({p:y}: O14); // error: U ~> T
+             ^^^ object type
+  Property `p` is incompatible:
+    105: ({p:y}: O14); // error: U ~> T
+             ^ U. This type is incompatible with
+     99: type O14 = {...{...{|p:T|}}};
+                                ^ T
+
+Error: type_contra.js:6
   6: (o1: {p?:T}); // error: unknown ~> T
       ^^ object type. This type is incompatible with
   6: (o1: {p?:T}); // error: unknown ~> T
@@ -140,31 +220,54 @@ type_contra.js:6
       6: (o1: {p?:T}); // error: unknown ~> T
                   ^ T
 
-type_contra.js:7
+Error: type_contra.js:7
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
       ^^^^ property `p` of unknown type. This type is incompatible with
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
             ^ T
 
-type_contra.js:7
+Error: type_contra.js:7
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
       ^^^^ undefined. This type is incompatible with
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
             ^ T
 
-type_contra.js:9
-  9: type O2 = {...{-[string]:T}};
-                   ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
+Error: type_contra.js:12
  12: (o2: {[string]:T}); // error: unknown ~> T
-                    ^ T
+      ^^ object type. This type is incompatible with
+ 12: (o2: {[string]:T}); // error: unknown ~> T
+          ^^^^^^^^^^^^ object type
+  Indexable signature is incompatible:
+      9: type O2 = {...{-[string]:T}};
+                       ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
+     12: (o2: {[string]:T}); // error: unknown ~> T
+                        ^ T
 
-type_contra.js:13
+Error: type_contra.js:13
  13: (o2.p: T); // errors: unknown ~> T
       ^^^^ computed property of unknown type. This type is incompatible with
  13: (o2.p: T); // errors: unknown ~> T
             ^ T
 
-type_generic.js:3
+Error: type_empty.js:5
+  5: (42: O); // Error: number ~> empty
+      ^^ number. This type is incompatible with
+  5: (42: O); // Error: number ~> empty
+          ^ empty
+
+Error: type_empty.js:9
+  9:   (x: number); // Error: mixed ~> number,
+        ^ object type. This type is incompatible with
+  9:   (x: number); // Error: mixed ~> number,
+           ^^^^^^ number
+
+Error: type_empty.js:14
+ 14:   fn({}); // Error: object ~> empty
+          ^^ object literal. This type is incompatible with the expected param type of
+ 13: function fn2<T>(fn: ({...T}) => void) {
+                          ^^^^^^ some incompatible instantiation of `T`
+
+Error: type_generic.js:3
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
       ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
@@ -175,7 +278,7 @@ type_generic.js:3
       3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                                     ^^^^^ empty
 
-type_generic.js:3
+Error: type_generic.js:3
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
       ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
@@ -186,7 +289,7 @@ type_generic.js:3
       3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                                              ^^^^^ empty
 
-type_intersection.js:15
+Error: type_intersection.js:15
  15: ({p: new A}: O2); // error: A ~> B
       ^^^^^^^^^^ object literal. This type is incompatible with
  15: ({p: new A}: O2); // error: A ~> B
@@ -197,5 +300,193 @@ type_intersection.js:15
      11: type O2 = {...{p:A}&{p:B}};
                                 ^ B
 
+Error: type_mixed.js:5
+  5: (o1.someProp: empty); // Error: mixed ~> empty
+      ^^^^^^^^^^^ mixed. This type is incompatible with
+  5: (o1.someProp: empty); // Error: mixed ~> empty
+                   ^^^^^ empty
 
-Found 24 errors
+Error: type_mixed.js:9
+  9: (o2.someProp: empty); // Error: mixed ~> empty
+      ^^^^^^^^^^^ mixed. This type is incompatible with
+  9: (o2.someProp: empty); // Error: mixed ~> empty
+                   ^^^^^ empty
+
+Error: type_mixed.js:13
+ 13: (o3.a: empty); // Error: number ~> empty
+      ^^^^ number. This type is incompatible with
+ 13: (o3.a: empty); // Error: number ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ mixed. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ number. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ undefined. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:15
+ 15: (o3.c: empty); // Error: mixed ~> empty
+      ^^^^ mixed. This type is incompatible with
+ 15: (o3.c: empty); // Error: mixed ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:18
+ 18:   (obj.someProp: empty); // Error: mixed ~> empty
+        ^^^^^^^^^^^^ O. This type is incompatible with
+ 18:   (obj.someProp: empty); // Error: mixed ~> empty
+                      ^^^^^ empty
+
+Error: type_string.js:1
+  1: type O1 = {..."foo"}; // error
+               ^^^^^^^^^^ O1. Cannot spread properties from
+  1: type O1 = {..."foo"}; // error
+                   ^^^^^ string literal `foo`
+
+Error: type_void.js:12
+ 12: (o1: {||}); // error
+      ^^ O1. Inexact type is incompatible with exact type
+ 12: (o1: {||}); // error
+          ^^^^ object type
+
+Error: type_void.js:13
+ 13: (o1: {p:T}); // error
+      ^^ O1. This type is incompatible with
+ 13: (o1: {p:T}); // error
+          ^^^^^ object type
+  Property `p` is incompatible:
+     13: (o1: {p:T}); // error
+              ^^^^^ property `p`. Property not found in
+     13: (o1: {p:T}); // error
+          ^^ O1
+
+Error: type_void.js:21
+ 21: (o2: {p:T}); // error
+      ^^ O2. This type is incompatible with
+ 21: (o2: {p:T}); // error
+          ^^^^^ object type
+  Property `p` is incompatible:
+     21: (o2: {p:T}); // error
+              ^^^^^ property `p`. Property not found in
+     21: (o2: {p:T}); // error
+          ^^ O2
+
+Error: type_void.js:22
+ 22: ({}: O2); // error
+      ^^ object literal. Inexact type is incompatible with exact type
+ 22: ({}: O2); // error
+          ^^ O2
+
+Error: type_void.js:23
+ 23: ({p:x}: O2); // error
+      ^^^^^ object literal. This type is incompatible with
+ 23: ({p:x}: O2); // error
+             ^^ O2
+  Property `p` is incompatible:
+     23: ({p:x}: O2); // error
+          ^^^^^ property `p`. Property not found in
+     23: ({p:x}: O2); // error
+                 ^^ O2
+
+Error: type_void.js:28
+ 28: (o3: {||}); // error
+      ^^ O3. Inexact type is incompatible with exact type
+ 28: (o3: {||}); // error
+          ^^^^ object type
+
+Error: type_void.js:29
+ 29: (o3: {p:T}); // error
+      ^^ O3. This type is incompatible with
+ 29: (o3: {p:T}); // error
+          ^^^^^ object type
+  Property `p` is incompatible:
+     29: (o3: {p:T}); // error
+              ^^^^^ property `p`. Property not found in
+     29: (o3: {p:T}); // error
+          ^^ O3
+
+Error: type_void.js:37
+ 37: (o4: {p:T}); // error
+      ^^ O4. This type is incompatible with
+ 37: (o4: {p:T}); // error
+          ^^^^^ object type
+  Property `p` is incompatible:
+     37: (o4: {p:T}); // error
+              ^^^^^ property `p`. Property not found in
+     37: (o4: {p:T}); // error
+          ^^ O4
+
+Error: type_void.js:38
+ 38: ({}: O4); // error
+      ^^ object literal. Inexact type is incompatible with exact type
+ 38: ({}: O4); // error
+          ^^ O4
+
+Error: type_void.js:39
+ 39: ({p:x}: O4); // error
+      ^^^^^ object literal. This type is incompatible with
+ 39: ({p:x}: O4); // error
+             ^^ O4
+  Property `p` is incompatible:
+     39: ({p:x}: O4); // error
+          ^^^^^ property `p`. Property not found in
+     39: ({p:x}: O4); // error
+                 ^^ O4
+
+Error: type_void.js:44
+ 44: (o5: {p:T}); // error: o5.p is optional
+      ^^ O5. This type is incompatible with
+ 44: (o5: {p:T}); // error: o5.p is optional
+          ^^^^^ object type
+  Property `p` is incompatible:
+     41: type O5 = {...void, ...{p:T}};
+                                   ^ undefined. This type is incompatible with
+     44: (o5: {p:T}); // error: o5.p is optional
+                 ^ T
+
+Error: type_void.js:47
+ 47: ({p:y}: O5); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 47: ({p:y}: O5); // error: y ~> T
+             ^^ O5
+  Property `p` is incompatible:
+     47: ({p:y}: O5); // error: y ~> T
+             ^ U. This type is incompatible with
+     41: type O5 = {...void, ...{p:T}};
+                                   ^ T
+
+Error: type_void.js:53
+ 53: (o6: {p:T}); // error: o6.p is optional
+      ^^ O6. This type is incompatible with
+ 53: (o6: {p:T}); // error: o6.p is optional
+          ^^^^^ object type
+  Property `p` is incompatible:
+     50: type O6 = {...{p:T}, ...void};
+                          ^ undefined. This type is incompatible with
+     53: (o6: {p:T}); // error: o6.p is optional
+                 ^ T
+
+Error: type_void.js:56
+ 56: ({p:y}: O6); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 56: ({p:y}: O6); // error: y ~> T
+             ^^ O6
+  Property `p` is incompatible:
+     56: ({p:y}: O6); // error: y ~> T
+             ^ U. This type is incompatible with
+     50: type O6 = {...{p:T}, ...void};
+                          ^ T
+
+
+Found 55 errors

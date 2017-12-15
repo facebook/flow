@@ -1,14 +1,13 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
+
+type 'a merge_result = (File_key.t * 'a) list
 
 (* Custom bucketing scheme for dynamically growing and shrinking workloads when
    merging files.
@@ -64,8 +63,8 @@ let rec take n =
       x::(take (n-1))
 
 type element =
-| Skip of filename
-| Component of filename list
+| Skip of File_key.t
+| Component of File_key.t list
 
 let component (f, diff) =
   if diff then Component (FilenameMap.find_unsafe f !components)
@@ -77,6 +76,10 @@ let component (f, diff) =
 let make dependency_graph leader_map component_map recheck_leader_map =
   components := component_map;
   to_recheck := recheck_leader_map;
+
+  let total_number_of_files =
+    FilenameMap.fold (fun _ files acc -> List.length files + acc) component_map 0 in
+  let files_merged_so_far = ref 0 in
 
   let leader f = FilenameMap.find_unsafe f leader_map in
   let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
@@ -119,9 +122,17 @@ let make dependency_graph leader_map component_map recheck_leader_map =
       in
       let n = min bucket_size jobs in
       let result = take n |> List.map component in
-      if result <> [] then
+      if result <> [] then begin
+        let length = List.fold_left (fun acc element -> match element with
+          | Skip _ -> acc
+          | Component files -> List.length files + acc) 0 result in
+        MonitorRPC.status_update ServerStatus.(Merging_progress {
+          finished = !files_merged_so_far;
+          total = Some total_number_of_files;
+        });
+        files_merged_so_far := !files_merged_so_far + length;
         MultiWorker.Job result
-      else
+      end else
         MultiWorker.Done
 
 (* We know when files are done by having jobs return the files they processed,
@@ -144,17 +155,7 @@ let join result_callback =
     ) leader_fs_diffs
   in
   fun (merged, unchanged) (merged_acc, unchanged_acc) ->
-    let () =
-      let errors =
-        lazy (
-          List.fold_left
-            (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
-            Errors.ErrorSet.empty
-            merged
-        )
-      in
-      result_callback errors
-    in
+    let () = result_callback (lazy merged) in
     let changed = List.rev (List.fold_left (fun acc (f, _) ->
       if not (List.mem f unchanged) then f::acc else acc
     ) [] merged) in

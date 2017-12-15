@@ -1,22 +1,31 @@
-test.js:4
-  4:   bar: "", // error: string ~/~ number
-            ^^ string. This type is incompatible with
+Error: test.js:2
+                                     v
   2: var o1: {[key: Key1]: number} = {
-                           ^^^^^^ number
+  3:   foo: 0,
+  4:   bar: "", // error: string ~/~ number
+  5: };
+     ^ object literal. This type is incompatible with
+  2: var o1: {[key: Key1]: number} = {
+             ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+      4:   bar: "", // error: string ~/~ number
+                ^^ string. This type is incompatible with
+      2: var o1: {[key: Key1]: number} = {
+                               ^^^^^^ number
 
-test.js:7
+Error: test.js:7
   7: o1.qux; // error: qux not found
-     ^^^^^^ property `qux` is a string. This type is incompatible with
+     ^^^^^^ string `qux`. This type is incompatible with
   2: var o1: {[key: Key1]: number} = {
                     ^^^^ string enum
 
-test.js:14
+Error: test.js:14
  14: o2.qux; // error: qux not found
      ^^^^^^ property `qux`. Property not found in
  12: var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
-                    ^^^^ object type
+                    ^^^^ R
 
-test.js:20
+Error: test.js:20
  20:   x: { foo: number, qux: boolean }; // error: qux not found
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `qux`. Property not found in
  17:   x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's

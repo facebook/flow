@@ -46,23 +46,38 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`1\`
+          test.js:8
             8:       (foo: [0, 1, 2]);
-                               ^ number literal \`1\`
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`1\`
+                8:       (foo: [0, 1, 2]);
+                                   ^ number literal \`1\`
 
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`
+          test.js:8
             8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`2\`
+                8:       (foo: [0, 1, 2]);
+                                      ^ number literal \`2\`
 
-          test.js:6
-            6:         foo = [...foo, x];
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+          test.js:8
             8:       (foo: [0, 1, 2]);
-                                  ^ number literal \`2\`
+                      ^^^ array literal. Has some incompatible tuple element with
+            8:       (foo: [0, 1, 2]);
+                           ^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:         foo = [...foo, x];
+                                          ^ number. Expected number literal \`2\`, got \`1\` instead
+                8:       (foo: [0, 1, 2]);
+                                      ^ number literal \`2\`
 
           test.js:8
             8:       (foo: [0, 1, 2]);
@@ -109,15 +124,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:6
-            6:         return foo([...arr, 1]);
-                                           ^ number. Expected number literal \`2\`, got \`1\` instead
+          test.js:15
            15:       (ret[5]: 2);
-                              ^ number literal \`2\`
-
-          test.js:8
-            8:       const ret = foo([1]);
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
            15:       (ret[5]: 2);
                               ^ number literal \`2\`
         `,
@@ -149,9 +158,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:8
-            8:       const ret = foo([1]);
-                                      ^ number. Expected number literal \`2\`, got \`1\` instead
+          test.js:15
+           15:       (ret[5]: 2);
+                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
            15:       (ret[5]: 2);
                               ^ number literal \`2\`
         `,
@@ -165,23 +174,38 @@ export default suite(({addFile, addFiles, addCode}) => [
       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
     `).newErrors(
         `
-          test.js:4
-            4:       var a = [2];
-                              ^ number. Expected number literal \`20\`, got \`2\` instead
+          test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                               ^^ number literal \`20\`
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
+            6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The second tuple element is incompatible:
+                4:       var a = [2];
+                                  ^ number. Expected number literal \`20\`, got \`2\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                   ^^ number literal \`20\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                         ^ number. Expected number literal \`30\`, got \`3\` instead
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                  ^^ number literal \`30\`
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The sixth tuple element is incompatible:
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                                      ^ number. Expected number literal \`60\`, got \`6\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                             ^^ number literal \`60\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                                  ^ number. Expected number literal \`60\`, got \`6\` instead
+                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                         ^^ number literal \`60\`
+                            ^^^^^^^^^^^^^^^^ tuple type
+            The third tuple element is incompatible:
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                             ^ number. Expected number literal \`30\`, got \`3\` instead
+                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                      ^^ number literal \`30\`
         `,
       )
   ]),
@@ -204,9 +228,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(ret1[0]: 2);')
       .newErrors(
         `
-          test.js:8
-            8:       const ret2 = foo([3]);
-                                       ^ number. Expected number literal \`2\`, got \`3\` instead
+          test.js:11
+           11: (ret1[0]: 2);
+                ^^^^^^^ number. Expected number literal \`2\`, got \`3\` instead
            11: (ret1[0]: 2);
                          ^ number literal \`2\`
         `,
@@ -215,9 +239,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(ret2[0]: 3);')
       .newErrors(
         `
-          test.js:7
-            7:       const ret1 = foo([2]);
-                                       ^ number. Expected number literal \`3\`, got \`2\` instead
+          test.js:13
+           13: (ret2[0]: 3);
+                ^^^^^^^ number. Expected number literal \`3\`, got \`2\` instead
            13: (ret2[0]: 3);
                          ^ number literal \`3\`
         `,
@@ -260,9 +284,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: const arr: Array<number> = [..."hello"];
-                                ^^^^^^ number. This type is incompatible with
-          276:     @@iterator(): Iterator<string>;
-                                          ^^^^^^ string. See lib: [LIB] core.js:276
+                                          ^^^^^^^^^^^^ array literal. Has some incompatible type argument with
+            3: const arr: Array<number> = [..."hello"];
+                          ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+              288:     @@iterator(): Iterator<string>;
+                                              ^^^^^^ string. This type is incompatible with. See lib: [LIB] core.js:288
+                3: const arr: Array<number> = [..."hello"];
+                                    ^^^^^^ number
         `,
       )
       .because('String is an Iterable<string>'),
@@ -275,11 +304,16 @@ export default suite(({addFile, addFiles, addCode}) => [
       const arr: Array<number> = [...foo()];
     `).newErrors(
         `
-          test.js:4
-            4:       function *foo(): Generator<string, void, void> {
-                                                ^^^^^^ string. This type is incompatible with
+          test.js:7
             7:       const arr: Array<number> = [...foo()];
-                                      ^^^^^^ number
+                                                ^^^^^^^^^^ array literal. Has some incompatible type argument with
+            7:       const arr: Array<number> = [...foo()];
+                                ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+                4:       function *foo(): Generator<string, void, void> {
+                                                    ^^^^^^ string. This type is incompatible with
+                7:       const arr: Array<number> = [...foo()];
+                                          ^^^^^^ number
         `,
       )
       .because('Generators are iterables too!'),
@@ -291,11 +325,16 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return [...iter];
+                              ^^^^^^^^^ array literal. This type is incompatible with the expected return type of
             4:       function test(iter: Iterable<string>): Array<number> {
-                                                  ^^^^^^ string. This type is incompatible with
-            4:       function test(iter: Iterable<string>): Array<number> {
-                                                                  ^^^^^^ number
+                                                            ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+                4:       function test(iter: Iterable<string>): Array<number> {
+                                                      ^^^^^^ string. This type is incompatible with
+                4:       function test(iter: Iterable<string>): Array<number> {
+                                                                      ^^^^^^ number
         `,
       )
       .because('Spec says you can spread iterables')

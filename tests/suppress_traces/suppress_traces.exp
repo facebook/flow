@@ -1,8 +1,4 @@
-traces.js:8
-  8: // $FlowFixMe - Error unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
-
-traces.js:15
+Error: traces.js:15
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ number. This type is incompatible with
  15: var a: string = foo('hi'); // error number ~> string
@@ -12,46 +8,57 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 2)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of `foo`] (from path 2)
  15: var a: string = foo('hi'); // error number ~> string
-         ^ ~> UseT(UnknownUse, OpenT) [var `a`]
+         ^ ~> UseT(AssignVar, OpenT) [`a`]
 * path 2:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [return] (from path 3)
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of `foo`] (from path 6)
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> ReposLowerT [function call]
+                     ^^^^^^^^^ ~> ReposLowerT [call of `foo`]
 * path 3:
  12:   return bar();
               ^^^^^ NumT [number]
  12:   return bar();
-              ^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 4)
+              ^^^^^ ~> UseT(UnknownUse, OpenT) [call of `bar`] (from path 4)
  11: function foo(x: string) {
-                            ^ ~> UseT(FunReturn, OpenT) [return]
+                            ^ ~> UseT(FunReturnStatement, OpenT) [return]
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> ReposLowerT [return] (from path 6)
 * path 4:
  12:   return bar();
               ^^^ FunT [function]
  12:   return bar();
-              ^^^ ~> UseT(UnknownUse, OpenT) [function] (from path 5)
+              ^^^ ~> UseT(AssignVar, OpenT) [function] (from path 5)
  12:   return bar();
-              ^^^^^ ~> CallT [function call]
+              ^^^ OpenT [`bar`]
+ 12:   return bar();
+              ^^^^^ ~> CallT [call of `bar`]
 * path 5:
   9: function bar(): number { return 5; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
+     ^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
   9: function bar(): number { return 5; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function]
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(AssignVar, OpenT) [function]
  12:   return bar();
               ^^^ ~> ReposLowerT [function]
 * path 6:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^ FunT [function]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> CallT [function call]
+                     ^^^^^^^^^ ~> CallT [call of `foo`] (from path 7)
+* path 7:
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^ OpenT [`foo`]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> CallT [call of `foo`]
+
+Warning: traces.js:8
+  8: // $FlowFixMe - Error unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 
-Found 2 errors
+Found 1 error and 1 warning

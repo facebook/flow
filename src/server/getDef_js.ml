@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -14,7 +11,7 @@ type getdef_type =
 | Gdloc of Loc.t
 | Gdval of Type.t
 | Gdmem of (string * Type.t)
-| Gdrequire of string * Loc.t
+| Gdrequire of (Loc.t * string) * Loc.t
 
 let id state name =
   let env = Env.all_entries () in
@@ -61,17 +58,17 @@ let getdef_call (state, loc1) _cx name loc2 this_t =
     state := Some (Gdmem (name, this_t))
   )
 
-let getdef_require (state, user_requested_loc) _cx name require_loc =
+let getdef_require (state, user_requested_loc) _cx source require_loc =
   if (Reason.in_range user_requested_loc require_loc)
   then (
-    state := Some (Gdrequire (name, require_loc))
+    state := Some (Gdrequire (source, require_loc))
   )
 
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
 let getdef_get_result profiling client_logging_context ~options cx state =
-  match !state with
+  Ok begin match !state with
   | Some Gdloc loc -> loc
   | Some Gdval v ->
     (* Use `possible_types_of_type` instead of `resolve_type` because we're
@@ -88,7 +85,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       let result_str, t = Flow_js.Members.(match member_result with
         | Success _ -> "SUCCESS", this
         | SuccessModule _ -> "SUCCESS", this
-        | FailureMaybeType -> "FAILURE_NULLABLE", this
+        | FailureNullishType -> "FAILURE_NULLABLE", this
         | FailureAnyType -> "FAILURE_NO_COVERAGE", this
         | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 
@@ -107,20 +104,22 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       | Error _ -> Loc.none
       | Ok result_map ->
         begin match SMap.get name result_map with
-        | Some t -> Type.loc_of_t t
+        | Some (loc, t) ->
+            begin match loc with
+              | None -> Type.loc_of_t t
+              | Some x -> x
+            end
         | None -> Loc.none
         end
       end
-  | Some Gdrequire (name, require_loc) ->
-      let module_t = Flow_js.resolve_type cx (
-        SMap.find_unsafe name (Context.module_map cx)
-      ) in
+  | Some Gdrequire ((source_loc, name), require_loc) ->
+      let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_js.get_file Expensive.warn (
           Module_js.imported_module ~options
             ~node_modules_containers:!Files.node_modules_containers
-            (Context.file cx) require_loc name
+            (Context.file cx) (Nel.one require_loc) name
         ) in
         (match filename with
         | Some file -> Loc.({none with source = Some file;})
@@ -131,7 +130,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
        * TODO: Specialized `import` hooks so that get-defs on named
        *       imports point to their actual remote def location.
        *)
-      | ModuleT(_, {cjs_export; _; }) ->
+      | ModuleT(_, {cjs_export; _; }, _) ->
           (* If we have a location for the cjs export, go there. Otherwise
            * fall back to just the top of the file *)
           let loc = match cjs_export with
@@ -151,6 +150,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         )
       )
   | None -> Loc.none
+  end
 
 let getdef_set_hooks pos =
   let state = ref None in

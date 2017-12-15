@@ -1,0 +1,170 @@
+Error: test.js:24
+ 24:     other.#p; // Error: other does not have access to private variables in here.
+         ^^^^^^^^ property `#p`. Property not found in
+ 24:     other.#p; // Error: other does not have access to private variables in here.
+         ^^^^^ C
+
+Error: test.js:37
+ 37:         x.#inner = new Outer(); // Error, #inner is not a private field of Outer
+             ^^^^^^^^ assignment of property `inner`. Property not found in
+ 37:         x.#inner = new Outer(); // Error, #inner is not a private field of Outer
+             ^ Outer
+
+Error: test.js:49
+ 49:         (this.#p : number); // Error, #p is a string not a number
+              ^^^^^^^ string. This type is incompatible with
+ 49:         (this.#p : number); // Error, #p is a string not a number
+                        ^^^^^^ number
+
+Error: test.js:51
+ 51:         this.#p = 3; // Error, #p is a string not a number
+                       ^ number. This type is incompatible with
+ 51:         this.#p = 3; // Error, #p is a string not a number
+             ^^^^^^^ string
+
+Error: test.js:53
+ 53:         (x.#p : string) // Error, here #p is a number not a string
+              ^^^^ number. This type is incompatible with
+ 53:         (x.#p : string) // Error, here #p is a number not a string
+                     ^^^^^^ string
+
+Error: test.js:65
+ 65:       (this.#p : number); // Error #p is null or undefined
+            ^^^^^^^ null or undefined. This type is incompatible with
+ 65:       (this.#p : number); // Error #p is null or undefined
+                      ^^^^^^ number
+
+Error: test.js:75
+ 75:     a.#p = 3; // Error, #p not on number
+         ^^^^ assignment of property `p`. Property cannot be assigned on
+ 75:     a.#p = 3; // Error, #p not on number
+         ^ number
+
+Error: test.js:77
+ 77:     b.#p; // Error, #p not on b.
+         ^^^^ property `#p`. Property cannot be accessed on
+ 77:     b.#p; // Error, #p not on b.
+         ^ object type
+
+Error: test.js:93
+ 93:    IncompatibleGetAndSet.#q; // Error, not visible here
+        ^^^^^^^^^^^^^^^^^^^^^^^^ property `#q`. Property not found in
+ 93:    IncompatibleGetAndSet.#q; // Error, not visible here
+        ^^^^^^^^^^^^^^^^^^^^^ IncompatibleGetAndSet
+
+Error: test.js:95
+ 95:    this.#p = 3; // Error, no #p on instance
+        ^^^^^^^ assignment of property `p`. Property not found in
+ 95:    this.#p = 3; // Error, no #p on instance
+        ^^^^ Static
+
+Error: test.js:96
+ 96:    this.#q; // Error, no #q on instance
+        ^^^^^^^ property `#q`. Property not found in
+ 96:    this.#q; // Error, no #q on instance
+        ^^^^ Static
+
+Error: test.js:97
+ 97:    Static.#r; // Error, no #r on class
+        ^^^^^^^^^ property `#r`. Property not found in
+ 97:    Static.#r; // Error, no #r on class
+        ^^^^^^ Static
+
+Error: test.js:98
+ 98:    Static.#r = Static.#q; // Error, no #r on class
+        ^^^^^^^^^ assignment of property `r`. Property not found in
+ 98:    Static.#r = Static.#q; // Error, no #r on class
+        ^^^^^^ Static
+
+Error: test.js:107
+107:   #s: string = 0; // Error, number ~> string
+                    ^ number. This type is incompatible with
+107:   #s: string = 0; // Error, number ~> string
+           ^^^^^^ string
+
+Error: test.js:112
+112:   static #ss: string = 0; // Error, number ~> string
+                            ^ number. This type is incompatible with
+112:   static #ss: string = 0; // Error, number ~> string
+                   ^^^^^^ string
+
+Error: test.js:118
+118:     return this.#t; // Error, string ~> number
+                ^^^^^^^ string. This type is incompatible with the expected return type of
+117:   test2(): number {
+                ^^^^^^ number
+
+Error: test.js:124
+124:     return Annotations.#st; // Error, string ~> number
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
+123:   test4(): number {
+                ^^^^^^ number
+
+Error: test.js:130
+130:     return this.#r; // Error, number ~> string
+                ^^^^^^^ number. This type is incompatible with the expected return type of
+129:   test6(): string {
+                ^^^^^^ string
+
+Error: test.js:139
+139:     return Annotations.#sr; // Error, number ~> string
+                ^^^^^^^^^^^^^^^ number. This type is incompatible with the expected return type of
+138:   test8(): string {
+                ^^^^^^ string
+
+Error: test.js:155
+155:      (this.p: 3); // Error, this.#p doesn't refine this.p
+           ^^^^^^ number. Expected number literal `3`
+155:      (this.p: 3); // Error, this.#p doesn't refine this.p
+                   ^ number literal `3`
+
+Error: test.js:159
+159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
+           ^^^^^^^ number literal `3`. Expected number literal `4`, got `3` instead
+159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
+                    ^ number literal `4`
+
+Error: test.js:162
+162:      (this.p: 3); // Error, this.#p doesnt refine this.p
+           ^^^^^^ number. Expected number literal `3`, got `4` instead
+162:      (this.p: 3); // Error, this.#p doesnt refine this.p
+                   ^ number literal `3`
+
+Error: test.js:165
+165:    (this.#p: 3); // Error, Havoc happens as normal
+         ^^^^^^^ number. Expected number literal `3`
+165:    (this.#p: 3); // Error, Havoc happens as normal
+                  ^ number literal `3`
+
+Error: test.js:169
+169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
+           ^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`
+169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
+                                ^ number literal `3`
+
+Error: test.js:173
+173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
+           ^^^^^^^^^^^^^^^^^^^^ number literal `3`. Expected number literal `4`, got `3` instead
+173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
+                                 ^ number literal `4`
+
+Error: test.js:176
+176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
+           ^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`, got `4` instead
+176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
+                                ^ number literal `3`
+
+Error: test.js:179
+179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
+         ^^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`
+179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
+                               ^ number literal `3`
+
+Error: test.js:185
+185:      (this.#p: 3); // Error, other.#p does havoc this.#p
+           ^^^^^^^ number. Expected number literal `3`
+185:      (this.#p: 3); // Error, other.#p does havoc this.#p
+                    ^ number literal `3`
+
+
+Found 28 errors

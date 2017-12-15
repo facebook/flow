@@ -1,70 +1,58 @@
-lex.js:11
+Error: lex.js:11
  11:   (b : string); // error: number ~> string
         ^ number. This type is incompatible with
  11:   (b : string); // error: number ~> string
             ^^^^^^ string
 
-lex.js:26
+Error: lex.js:26
  26:   (b : string); // error: number ~> string
         ^ number. This type is incompatible with
  26:   (b : string); // error: number ~> string
             ^^^^^^ string
 
-lex.js:37
+Error: lex.js:37
  37:   (b : string); // error: number ~> string
         ^ number. This type is incompatible with
  37:   (b : string); // error: number ~> string
             ^^^^^^ string
 
-lex.js:48
+Error: lex.js:48
  48:   (b : number); // error: string ~> number
         ^ string. This type is incompatible with
  48:   (b : number); // error: string ~> number
             ^^^^^^ number
 
-lex.js:59
+Error: lex.js:59
  59:   (b : string); // error: number ~> string
         ^ number. This type is incompatible with
  59:   (b : string); // error: number ~> string
             ^^^^^^ string
 
-locals.js:1
-  1: var x:string = 0;
-           ^^^^^^ string. This type is incompatible with
-  2: var x:number = 1;
-           ^^^^^^ number
-
-locals.js:1
+Error: locals.js:1
   1: var x:string = 0;
                     ^ number. This type is incompatible with
   1: var x:string = 0;
            ^^^^^^ string
 
-locals.js:2
+Error: locals.js:2
   2: var x:number = 1;
            ^^^^^^ number. This type is incompatible with
   1: var x:string = 0;
            ^^^^^^ string
 
-locals.js:2
+Error: locals.js:2
   2: var x:number = 1;
                     ^ number. This type is incompatible with
   1: var x:string = 0;
            ^^^^^^ string
 
-locals.js:10
- 10:         var x: number | string = 1337;
-                    ^^^^^^ number. This type is incompatible with
+Error: locals.js:12
  12:         var x: bool = true;
-                    ^^^^ boolean
-
-locals.js:10
+                    ^^^^ boolean. This type is incompatible with
  10:         var x: number | string = 1337;
-                             ^^^^^^ string. This type is incompatible with
- 12:         var x: bool = true;
-                    ^^^^ boolean
+                    ^^^^^^ number
 
-locals.js:12
+Error: locals.js:12
  12:         var x: bool = true;
                     ^^^^ boolean. This type is incompatible with
  10:         var x: number | string = 1337;
@@ -86,7 +74,13 @@ locals.js:12
    10:         var x: number | string = 1337;
                                ^^^^^^ string
 
-locals.js:12
+Error: locals.js:12
+ 12:         var x: bool = true;
+                    ^^^^ boolean. This type is incompatible with
+ 10:         var x: number | string = 1337;
+                             ^^^^^^ string
+
+Error: locals.js:12
  12:         var x: bool = true;
                            ^^^^ boolean. This type is incompatible with
  10:         var x: number | string = 1337;
@@ -108,23 +102,23 @@ locals.js:12
    10:         var x: number | string = 1337;
                                ^^^^^^ string
 
-locals.js:14
+Error: locals.js:14
  14:     foo(x);
              ^ number. This type is incompatible with the expected param type of
   6: function foo(p: bool) {}
                      ^^^^ boolean
 
-locals.js:14
+Error: locals.js:14
  14:     foo(x);
              ^ string. This type is incompatible with the expected param type of
   6: function foo(p: bool) {}
                      ^^^^ boolean
 
-locals.js:22
+Error: locals.js:22
  22:   return x;
               ^ string. This type is incompatible with the expected return type of
  17: function foo0(b: bool): number {
                              ^^^^^^ number
 
 
-Found 16 errors
+Found 15 errors

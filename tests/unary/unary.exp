@@ -1,74 +1,74 @@
-unary.js:8
+Error: unary.js:8
   8:   return -y; // error, we don't allow coercion here
-              ^^ unary minus operator. Expected number instead of
+              ^^ y. Expected number instead of
   8:   return -y; // error, we don't allow coercion here
                ^ string
 
-unary.js:12
+Error: unary.js:12
  12:   return ~y;  // error, we don't allow coercion here
                ^ string. This type is incompatible with
  12:   return ~y;  // error, we don't allow coercion here
               ^^ number
 
-unary.js:19
+Error: unary.js:19
  19: (-1: void); // error, number ~> void
       ^^ number. This type is incompatible with
  19: (-1: void); // error, number ~> void
           ^^^^ undefined
 
-update.js:12
+Error: update.js:12
  12:     y++; // error, we don't allow coercion here
          ^ string. The operand of an arithmetic operation must be a number.
 
-update.js:12
+Error: update.js:12
  12:     y++; // error, we don't allow coercion here
          ^^^ number. This type is incompatible with
  11:   function(y: string) {
                    ^^^^^^ string
 
-update.js:14
+Error: update.js:14
  14:     y++; // error, but you still can't write a number to a string
          ^^^ number. This type is incompatible with
  11:   function(y: string) {
                    ^^^^^^ string
 
-update.js:18
+Error: update.js:18
  18:     y--; // error, we don't allow coercion here
          ^ string. The operand of an arithmetic operation must be a number.
 
-update.js:18
+Error: update.js:18
  18:     y--; // error, we don't allow coercion here
          ^^^ number. This type is incompatible with
  17:   function(y: string) {
                    ^^^^^^ string
 
-update.js:22
+Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
          ^^^ number. This type is incompatible with
  21:   function(y: string) {
                    ^^^^^^ string
 
-update.js:22
+Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
            ^ string. The operand of an arithmetic operation must be a number.
 
-update.js:26
+Error: update.js:26
  26:     --y; // error, we don't allow coercion here
          ^^^ number. This type is incompatible with
  25:   function(y: string) {
                    ^^^^^^ string
 
-update.js:26
+Error: update.js:26
  26:     --y; // error, we don't allow coercion here
            ^ string. The operand of an arithmetic operation must be a number.
 
-update.js:31
+Error: update.js:31
  31:     y++; // error, can't update const
          ^ y. const cannot be reassigned
  30:     const y = 123;
                ^ const y
 
-update.js:32
+Error: update.js:32
  32:     y--; // error, can't update const
          ^ y. const cannot be reassigned
  30:     const y = 123;

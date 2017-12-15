@@ -1,0 +1,18 @@
+Error: test.js:5
+  5: <div />;
+     ^^^^^^^ React key. Could not resolve name
+
+Error: test.js:5
+  5: <div />;
+     ^^^^^^^ React ref. Could not resolve name
+
+Error: test.js:5
+  5: <div />;
+     ^^^^^^^ React.Element. Could not resolve name
+
+Error: test.js:5
+  5: <div />;
+      ^^^ div. Could not resolve name
+
+
+Found 4 errors

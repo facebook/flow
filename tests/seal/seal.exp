@@ -1,4 +1,4 @@
-obj_annot.js:4
+Error: obj_annot.js:4
   4:     return param.id;
                       ^^ property `id`. Property not found in
   4:     return param.id;

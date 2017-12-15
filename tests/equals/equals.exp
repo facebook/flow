@@ -1,10 +1,10 @@
-equals.js:7
+Error: equals.js:7
   7: (1 == ""); // error
       ^ number. This type cannot be compared to
   7: (1 == ""); // error
            ^^ string
 
-equals.js:8
+Error: equals.js:8
   8: ("" == 1); // error
       ^^ string. This type cannot be compared to
   8: ("" == 1); // error

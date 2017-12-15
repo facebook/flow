@@ -1,4 +1,6 @@
-dir/a.js:2
+
+Should resolve to dir/node_modules/b.js which is number
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ number. This type is incompatible with
   2: (require('b'): boolean);
@@ -6,7 +8,9 @@ dir/a.js:2
 
 
 Found 1 error
-dir/a.js:2
+
+Should resolve to node_modules/b.js which is a string
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ string. This type is incompatible with
   2: (require('b'): boolean);
@@ -14,7 +18,9 @@ dir/a.js:2
 
 
 Found 1 error
-dir/a.js:2
+
+Should resolve to dir/node_modules/b.js which is number
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ number. This type is incompatible with
   2: (require('b'): boolean);

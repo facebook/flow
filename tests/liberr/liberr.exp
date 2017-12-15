@@ -1,18 +1,13 @@
-Library parse error:
-libs/parse_error.js:8
-  8:   methodB: () => any
-       ^^^^^^^ Unexpected identifier
-
 Library type error:
 libs/type_error.js:2
   2: declare function foo(x: number): Array;
                                       ^^^^^ Incorrect number of type parameters (expected 1)
 
-a.js:5
+Error: a.js:5
   5: var x: string = 0;
                      ^ number. This type is incompatible with
   5: var x: string = 0;
             ^^^^^^ string
 
 
-Found 3 errors
+Found 2 errors

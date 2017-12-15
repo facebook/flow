@@ -7,7 +7,7 @@ Expect no errors.
 No errors!
 
 Touch @flow file, expect error.
-a.js:4
+Error: a.js:4
   4: (0: string);
       ^ number. This type is incompatible with
   4: (0: string);
@@ -20,7 +20,7 @@ Make file @noflow, expect error to go away.
 No errors!
 
 Revert file, expect error again.
-a.js:4
+Error: a.js:4
   4: (0: string);
       ^ number. This type is incompatible with
   4: (0: string);

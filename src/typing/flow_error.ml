@@ -1,61 +1,78 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Type
 open Utils_js
 open Reason
 
-(** we keep a stack of reasons representing the operations
-    taking place when flows are performed. the top op reason
-    is used in messages for errors that take place during its
-    residence.
-  *)
-module Ops : sig
-  val clear : unit -> reason list
-  val push : reason -> unit
-  val pop : unit -> unit
-  val peek : unit -> reason option
-  val get : unit -> reason list
-  val set : reason list -> unit
-end = struct
-  let ops = ref []
-  let clear () = let orig = !ops in ops := []; orig
-  let push r = ops := r :: !ops
-  let pop () = ops := List.tl !ops
-  let peek () = match !ops with r :: _ -> Some r | [] -> None
-  let get () = !ops
-  let set _ops = ops := _ops
-end
+type invalid_char_set =
+  | DuplicateChar of Char.t
+  | InvalidChar of Char.t
+
+module InvalidCharSetSet = Set.Make(struct
+  type t = invalid_char_set
+  let compare = Pervasives.compare
+end)
 
 type error_message =
-  | EIncompatible of Type.t * Type.use_t
-  | EIncompatibleProp of Type.t * Type.use_t * reason
+  | EIncompatible of {
+      lower: reason * lower_kind option;
+      upper: reason * upper_kind;
+      extras: (Reason.t * error_message) list;
+    }
+  | EIncompatibleDefs of {
+      reason_lower: reason;
+      reason_upper: reason;
+      extras: (Reason.t * error_message) list;
+    }
+  | EIncompatibleProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: lower_kind option;
+      use_op: use_op option;
+    }
+  | EIncompatibleGetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: lower_kind option;
+    }
+  | EIncompatibleSetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: lower_kind option;
+    }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
-  | EImportTypeofNamespace of reason * string * string
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string
   | ENoNamedExport of reason * string * string option
-  | EMissingTypeArgs of reason * Type.typeparam list
+  | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
-  | EMutationNotAllowed of (reason * reason)
-  | EExpectedStringLit of (reason * reason) * string * string Type.literal
-  | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
-  | EExpectedBooleanLit of (reason * reason) * bool * bool option
+  | EMutationNotAllowed of { reason: reason; reason_op: reason }
+  | EExpectedStringLit of (reason * reason) * string * string Type.literal * use_op
+  | EExpectedNumberLit of
+      (reason * reason) *
+      Type.number_literal *
+      Type.number_literal Type.literal *
+      use_op
+  | EExpectedBooleanLit of (reason * reason) * bool * bool option * use_op
   | EPropNotFound of (reason * reason) * use_op
-  | EPropAccess of (reason * reason) * string option * Type.property * Type.rw
-  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
-  | EPolarityMismatch of Type.typeparam * Type.polarity
-  | EStrictLookupFailed of (reason * reason) * reason * string option
+  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
+  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
+  | EPolarityMismatch of {
+      reason: reason;
+      name: string;
+      expected_polarity: Type.polarity;
+      actual_polarity: Type.polarity;
+    }
+  | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
+  | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
   | EFunReturn of (reason * reason)
@@ -64,13 +81,18 @@ type error_message =
   | EAdditionMixed of reason
   | ECoercion of (reason * reason)
   | EComparison of (reason * reason)
-  | ETupleArityMismatch of (reason * reason) * int * int
+  | ETupleArityMismatch of (reason * reason) * int * int * use_op
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | ESpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
+  | EUnionSpeculationFailed of {
+      use_op: use_op;
+      reason: reason;
+      reason_op: reason;
+      branches: (reason * error_message) list
+    }
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
-  | EIncompatibleWithExact of (reason * reason)
+  | EIncompatibleWithExact of (reason * reason) * use_op
   | EUnsupportedExact of (reason * reason)
   | EIdxArity of reason
   | EIdxUse1 of reason
@@ -83,6 +105,8 @@ type error_message =
   | ETooFewTypeArgs of reason * reason * int
   | EPropertyTypeAnnot of Loc.t
   | EExportsAnnot of Loc.t
+  | ECharSetAnnot of Loc.t
+  | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason }
   | EUnsupportedKeyInObjectType of Loc.t
   | EPredAnnot of Loc.t
   | ERefineAnnot of Loc.t
@@ -102,6 +126,7 @@ type error_message =
   | EExperimentalExportStarAs of Loc.t
   | EIndeterminateModuleType of Loc.t
   | EUnreachable of Loc.t
+  | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
   | EInvalidTypeof of Loc.t * string
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
@@ -112,17 +137,32 @@ type error_message =
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
-  | EReactKit of (reason * reason) * React.tool
-  | EFunctionCallExtraArg of (reason * reason * int)
+  | EReactKit of (reason * reason) * React.tool * use_op
+  | EReactElementFunArity of reason * string * int
+  | EFunctionCallExtraArg of reason * reason * int * use_op
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
       module_name: string;
-      provider: Loc.filename;
-      conflict: Loc.filename
+      provider: File_key.t;
+      conflict: File_key.t
     }
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error
+  (* The string is either the name of a module or "the module that exports `_`". *)
+  | EUntypedTypeImport of Loc.t * string
+  | EUntypedImport of Loc.t * string
+  | ENonstrictImport of Loc.t
+  | EUnclearType of Loc.t
+  | EUnsafeGettersSetters of Loc.t
   | EUnusedSuppression of Loc.t
+  | ELintSetting of LintSettings.lint_parse_error
+  | ESketchyNullLint of {
+      kind: Lints.sketchy_null_kind;
+      loc: Loc.t;
+      null_loc: Loc.t;
+      falsy_loc: Loc.t;
+    }
+  | EInvalidPrototype of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -161,6 +201,7 @@ and internal_error =
   | InterfaceTypeSpread
   | InferJobException of exn
   | MergeJobException of exn
+  | UnexpectedUnresolved of int
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -172,7 +213,6 @@ and unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
-  | ClassExtendsMultiple
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | RequireLazyDynamicArgument
@@ -189,99 +229,127 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
 
-(* decide reason order based on UB's flavor and blamability *)
-let ordered_reasons l u =
-  let rl = reason_of_t l in
-  let ru = reason_of_use_t u in
-  if is_use u || (is_blamable_reason ru && not (is_blamable_reason rl))
-  then ru, rl
-  else rl, ru
+and lower_kind =
+  | Possibly_null
+  | Possibly_void
+  | Possibly_null_or_void
+  | Incompatible_intersection
 
-let rec error_of_msg ~trace_reasons ~op ~source_file =
+and upper_kind =
+  | IncompatibleGetPropT
+  | IncompatibleSetPropT
+  | IncompatibleMethodT
+  | IncompatibleCallT
+  | IncompatibleConstructorT
+  | IncompatibleGetElemT
+  | IncompatibleSetElemT
+  | IncompatibleCallElemT
+  | IncompatibleElemTRead
+  | IncompatibleElemTWrite
+  | IncompatibleElemTCall
+  | IncompatibleObjAssignFromTSpread
+  | IncompatibleObjAssignFromT
+  | IncompatibleObjRestT
+  | IncompatibleObjSealT
+  | IncompatibleArrRestT of use_op
+  | IncompatibleSuperT
+  | IncompatibleMixinT
+  | IncompatibleSpecializeT
+  | IncompatibleThisSpecializeT
+  | IncompatibleVarianceCheckT
+  | IncompatibleGetKeysT
+  | IncompatibleHasOwnPropT
+  | IncompatibleGetValuesT
+  | IncompatibleUnaryMinusT
+  | IncompatibleMapTypeTTuple
+  | IncompatibleMapTypeTObject
+  | IncompatibleTypeAppVarianceCheckT
+  | IncompatibleUnclassified of string
+
+let desc_of_reason = Reason.desc_of_reason ~unwrap_alias:false
+
+(* Decide reason order based on UB's flavor and blamability.
+   If the order is unchanged, maintain reference equality. *)
+let ordered_reasons ((rl, ru) as reasons) =
+  if (is_blamable_reason ru && not (is_blamable_reason rl))
+  then ru, rl
+  else reasons
+
+let is_useless_op op_reason error_reason =
+  match desc_of_reason op_reason with
+  | RMethodCall _ -> reasons_overlap op_reason error_reason
+  | _ -> false
+
+let rec error_of_msg ~trace_reasons ~source_file =
   let open Errors in
 
   let mk_info reason extras =
-    loc_of_reason reason, string_of_desc (desc_of_reason reason) :: extras
+    let desc = string_of_desc (desc_of_reason reason) in
+    (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
+     * we want to unwrap the primes and just show A. This looks better in infos.
+     * However, when an identifier wrapped with primes is inside some other text
+     * then we want to keep the primes since they help with readability. *)
+    let desc = if (
+      (String.length desc > 2) &&
+      ((String.get desc 0) = '`') &&
+      ((String.get desc ((String.length desc) - 1)) = '`') &&
+      not (String.contains desc ' ')
+    ) then (
+      String.sub desc 1 ((String.length desc) - 2)
+    ) else desc in
+    loc_of_reason reason, desc :: extras
   in
 
   let info_of_reason r = mk_info r [] in
 
   let trace_infos = List.map info_of_reason trace_reasons in
 
-  (* only on use-types - guard calls with is_use t *)
-  let err_operation = function
-    | UseT (_, t) ->
-      failwith (spf "err_operation called on def type %s" (string_of_ctor t))
+  let special_suffix = function
+    | Some Possibly_null -> " possibly null value"
+    | Some Possibly_void -> " possibly undefined value"
+    | Some Possibly_null_or_void -> " possibly null or undefined value"
+    | Some Incompatible_intersection -> " any member of intersection type"
+    | None -> ""
+  in
 
-    | GetPropT _ -> "Property cannot be accessed on"
-    | SetPropT _ -> "Property cannot be assigned on"
-    | MethodT _ -> "Method cannot be called on"
-    | CallT _ -> "Function cannot be called on"
-    | ConstructorT _ -> "Constructor cannot be called on"
-    | GetElemT _ -> "Computed property/element cannot be accessed on"
-    | SetElemT _ -> "Computed property/element cannot be assigned on"
-    | CallElemT _ -> "Computed property/element cannot be called on"
-    | ElemT (_, _, ReadElem _) -> "Element cannot be accessed with"
-    | ElemT (_, _, WriteElem _) -> "Element cannot be assigned with"
-    | ElemT (_, _, CallElem _) -> "Element cannot be called with"
-    | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) ->
-      "Expected array instead of"
-    | ObjAssignToT _
-    | ObjAssignFromT _ -> "Expected object instead of"
-    | ObjRestT _ -> "Expected object instead of"
-    | ObjSealT _ -> "Expected object instead of"
-    | ArrRestT _ -> "Expected array instead of"
-    | SuperT _ -> "Cannot inherit"
-    | MixinT _ -> "Expected class instead of"
-    | SpecializeT _ -> "Expected polymorphic type instead of"
-    | ThisSpecializeT _ -> "Expected class instead of"
-    | VarianceCheckT _ -> "Expected polymorphic type instead of"
-    | LookupT _ -> "Property not found in"
-    | GetKeysT _ -> "Expected object instead of"
-    | HasOwnPropT _ -> "Property not found in"
-    | UnaryMinusT _ -> "Expected number instead of"
-    | MapTypeT (_, kind, _, _) ->
-      (match kind with
-      | TupleMap -> "Expected Iterable instead of"
-      | ObjectMap
-      | ObjectMapi -> "Expected object instead of")
-    | CallLatentPredT _ -> "Expected predicated function instead of"
-    | ResolveSpreadT (_, {rrt_resolve_to; _}) ->
-      begin match rrt_resolve_to with
-      | ResolveSpreadsToTuple _
-      | ResolveSpreadsToArray _
-      | ResolveSpreadsToArrayLiteral _
-        -> "Expected spread element to be an iterable instead of"
-      | ResolveSpreadsToMultiflowCallFull _
-      | ResolveSpreadsToMultiflowSubtypeFull _
-      | ResolveSpreadsToMultiflowPartial _
-      | ResolveSpreadsToCallT _
-        -> "Expected spread argument to be an iterable instead of"
-      end
-    | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
-    | ObjSpreadT _ -> "Cannot spread properties from"
+  (* only on use-types - guard calls with is_use t *)
+  let err_msg_use special u =
+    let msg = match u with
+    | IncompatibleGetPropT -> "Property cannot be accessed on"
+    | IncompatibleSetPropT -> "Property cannot be assigned on"
+    | IncompatibleMethodT -> "Method cannot be called on"
+    | IncompatibleCallT -> "Function cannot be called on"
+    | IncompatibleConstructorT -> "Constructor cannot be called on"
+    | IncompatibleGetElemT -> "Computed property/element cannot be accessed on"
+    | IncompatibleSetElemT -> "Computed property/element cannot be assigned on"
+    | IncompatibleCallElemT -> "Computed property/element cannot be called on"
+    | IncompatibleElemTRead -> "Element cannot be accessed with"
+    | IncompatibleElemTWrite -> "Element cannot be assigned with"
+    | IncompatibleElemTCall -> "Element cannot be called with"
+    | IncompatibleObjAssignFromTSpread -> "Expected array instead of"
+    | IncompatibleObjAssignFromT -> "Expected object instead of"
+    | IncompatibleObjRestT -> "Expected object instead of"
+    | IncompatibleObjSealT -> "Expected object instead of"
+    | IncompatibleArrRestT _ -> "Expected array instead of"
+    | IncompatibleSuperT -> "Cannot inherit"
+    | IncompatibleMixinT -> "Expected class instead of"
+    | IncompatibleSpecializeT -> "Expected polymorphic type instead of"
+    | IncompatibleThisSpecializeT -> "Expected class instead of"
+    | IncompatibleVarianceCheckT -> "Expected polymorphic type instead of"
+    | IncompatibleGetKeysT -> "Expected object instead of"
+    | IncompatibleHasOwnPropT -> "Property not found in"
+    | IncompatibleGetValuesT -> "Expected object instead of"
+    | IncompatibleUnaryMinusT -> "Expected number instead of"
+    | IncompatibleMapTypeTTuple -> "Expected Iterable instead of"
+    | IncompatibleMapTypeTObject -> "Expected object instead of"
+    | IncompatibleTypeAppVarianceCheckT -> "Expected polymorphic type instead of"
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
        to throw on a use type, so mark the error instead *)
-    | t ->
-      spf "Type is incompatible with (unclassified use type: %s)"
-        (string_of_use_ctor t)
-  in
-
-  let err_value = function
-    | DefT (_, NullT) -> " possibly null value"
-    | DefT (_, VoidT) -> " possibly undefined value"
-    | DefT (_, MaybeT _) -> " possibly null or undefined value"
-    | DefT (_, IntersectionT _)
-    | DefT (_, MixedT Empty_intersection) -> " any member of intersection type"
-    | _ -> ""
-  in
-
-  let err_msg l u =
-    if is_use u
-    then spf "%s%s" (err_operation u) (err_value l)
-    else "This type is incompatible with"
-  in
+    | IncompatibleUnclassified ctor ->
+      spf "Type is incompatible with (unclassified use type: %s)" ctor
+    in
+    spf "%s%s" msg (special_suffix special) in
 
   let msg_export export_name =
     if export_name = "default"
@@ -289,11 +357,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     else spf "`%s`" export_name
   in
 
-  let poly_minimum_arity xs = List.(
-    xs |> filter (fun typeparam -> typeparam.default = None) |> length
-  ) in
-
-  let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
+  let typecheck_error_with_core_infos ?kind ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
     let core_infos = List.map (fun (r, msgs) -> mk_info r msgs) core_msgs in
 
@@ -304,101 +368,302 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
        Additionally, we never suppress ops when this happens, because that is
        our last chance at relevant context. *)
-    let lib_infos, suppress_op = if List.for_all is_lib_reason core_reasons then
+    let lib_infos = if List.for_all is_lib_reason core_reasons then
         let loc = Loc.({ none with source = Some source_file }) in
-        [loc, ["inconsistent use of library definitions"]], false
-      else [], suppress_op
-    in
-    (* NOTE: We include the operation's reason in the error message, unless it
-       overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
-    let op_info = if suppress_op then None else
-      match op, core_reasons with
-      | Some r, r1::_ ->
-        if r = r1 then None
-        else if List.for_all (reasons_overlap r) core_reasons then None
-        else Some (info_of_reason r)
-      | _ -> None
+        [loc, ["inconsistent use of library definitions"]]
+      else []
     in
     (* main info is core info with optional lib line prepended, and optional
        extra info appended. ops/trace info is held separately in error *)
     let msg_infos = lib_infos @ core_infos in
-    mk_error ?op_info ~trace_infos ?extra msg_infos
+    mk_error ?kind ~trace_infos ?extra msg_infos
   in
 
-  let typecheck_error msg ?suppress_op ?extra (r1, r2) =
+  let typecheck_msgs msg (r1, r2) = [r1, [msg]; r2, []] in
+
+  let typecheck_error msg ?kind ?extra reasons =
     (* make core info from reasons, message, and optional extra infos *)
-    let core_msgs = [
-      r1, [msg];
-      r2, [];
-    ] in
-    typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
+    let core_msgs = typecheck_msgs msg reasons in
+    typecheck_error_with_core_infos ?kind ?extra core_msgs
   in
 
-  let prop_polarity_error reasons x p1 p2 =
+  let prop_polarity_error_msg x reasons p1 p2 =
     let prop_name = match x with
     | Some x -> spf "property `%s`" x
     | None -> "computed property"
     in
-    let msg = spf "%s %s incompatible with %s use in"
-      (String.capitalize_ascii (Polarity.string p1))
-      prop_name
-      (Polarity.string p2)
+    let reasons' = ordered_reasons reasons in
+    let msg =
+      if reasons' == reasons then
+        spf "%s %s incompatible with %s use in"
+          (String.capitalize_ascii (Polarity.string p1))
+          prop_name
+          (Polarity.string p2)
+      else
+        spf "Incompatible with %s %s"
+          (Polarity.string p1)
+          prop_name
     in
-    typecheck_error msg reasons
+    reasons', msg
   in
 
-  let extra_info_of_use_op l_reason u_reason nested_extra msg wrapper_msg =
-    let infos = [
-      mk_info l_reason [msg];
-      mk_info u_reason []
-    ] in
-    [
-      InfoNode (
-        [Loc.none, [wrapper_msg]],
-        [
-          if nested_extra = []
-          then InfoLeaf infos
-          else InfoNode (infos, nested_extra)
-        ]
-      )
-    ]
+  let extra_info_of_use_op (rl, ru) extra msg wrapper_msg =
+    let infos = [mk_info rl [msg]; mk_info ru []] in
+    [InfoNode (
+      [Loc.none, [wrapper_msg]],
+      [if extra = []
+       then InfoLeaf infos
+       else InfoNode (infos, extra)]
+    )]
   in
 
-  let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
-  | PropertyCompatibility
-      (prop_name, lower_obj_reason, upper_obj_reason, use_op) ->
-    let extra = extra_info_of_use_op
-      l_reason u_reason nested_extra msg
-      (spf "Property `%s` is incompatible:" prop_name)
+  let speculation_extras branches =
+    List.mapi (fun i (r, msg) ->
+      let err = error_of_msg ~trace_reasons:[] ~source_file msg in
+      let header_infos = [
+        Loc.none, [spf "Member %d:" (i + 1)];
+        info_of_reason r;
+        Loc.none, ["Error:"];
+      ] in
+      let error_infos = infos_of_error err in
+      let error_extra = extra_of_error err in
+      let info_list = header_infos @ error_infos in
+      let info_tree = match error_extra with
+        | [] -> Errors.InfoLeaf (info_list)
+        | _ -> Errors.InfoNode (info_list, error_extra)
+      in
+      info_tree
+    ) branches
+  in
+
+  (* Unification produces two errors. One for both sides. For example,
+   * {p: number} ~> {p: string} errors on both number ~> string and
+   * string ~> number. Showing both errors to our user is often redundant.
+   * So we use this utility to flip the string ~> number case and produce an
+   * error identical to one we've produced before. These two errors will be
+   * deduped in our ErrorSet. *)
+  let dedupe_by_flip =
+    (* Flip the lower/upper reasons of a frame_use_op. *)
+    let flip_frame = function
+    | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
+    | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
+    | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
+    | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
+    | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
+    | TupleElementCompatibility c ->
+      TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
+    | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
+    | TypeParamBound _
+    | FunMissingArg _
+    | ImplicitTypeParam _
+    | UnifyFlip
+      as use_op -> use_op
+    in
+    (* Loop over through the use_op chain. *)
+    let rec loop = function
+    (* Roots don't flip. *)
+    | Op _ as use_op -> (false, use_op)
+    (* Start flipping if we are on the reverse side of unification. *)
+    | Frame (UnifyFlip, use_op) ->
+      let (flip, use_op) = loop use_op in
+      (not flip, use_op)
+    (* If we are in flip mode then flip our frame. *)
+    | Frame (frame, use_op) ->
+      let (flip, use_op) = loop use_op in
+      if flip
+        then (true, Frame (flip_frame frame, use_op))
+        else (false, Frame (frame, use_op))
+    in
+    fun (lower, upper) use_op ->
+      let (flip, use_op) = loop use_op in
+      if flip
+        then ((upper, lower), use_op)
+        else ((lower, upper), use_op)
+  in
+
+  (* NB: Some use_ops, like FunReturn, completely replace the `msg` argument.
+     Sometimes we call unwrap_use_ops from an error variant that has some
+     interesting information in `msg`, like EIncompatibleWithExact. In those
+     cases, it's more valuable to preserve the input msg than to replace it.
+
+     To support those cases, callers can pass a `force` argument. A better
+     alternative would be to somehow combine the messages, so an exact error
+     with a function param would say something like "inexact argument
+     incompatible with exact parameter."
+
+     Note that `force` is not recursive, as the input message is consumed by
+     `extra_info_of_use_op` and will appear in the output. *)
+  let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
+  | Frame (PropertyCompatibility {prop=x; lower=rl'; upper=ru'; _}, use_op) ->
+    let extra =
+      let prop =
+        match x with
+        | Some "$call" -> "Callable property"
+        | None | Some "$key" | Some "$value" -> "Indexable signature"
+        | Some x -> spf "Property `%s`" x
+      in
+      extra_info_of_use_op reasons extra msg
+        (spf "%s is incompatible:" prop)
+    in
+    let obj_reasons = ordered_reasons (rl', ru') in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops (obj_reasons, extra, msg) use_op
+  | Frame (IndexerKeyCompatibility {lower=rl'; upper=ru'}, use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "Indexer key is incompatible:"
+    in
+    let obj_reasons = ordered_reasons (rl', ru') in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops (obj_reasons, extra, msg) use_op
+  | Frame (TupleElementCompatibility {n; lower; upper}, use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "The %s tuple element is incompatible:" (Utils_js.ordinal n))
+    in
+    let msg = "Has some incompatible tuple element with" in
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
+  | Frame (TypeArgCompatibility (x, reason_op, reason_tapp), use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "Type argument `%s` is incompatible:" x)
+    in
+    let msg = "Has some incompatible type argument with" in
+    unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
+  | Frame (TypeParamBound { name }, use_op) ->
+    let msg = spf "This type is incompatible with the bound on type parameter `%s`:" name in
+    unwrap_use_ops (reasons, extra, msg) use_op
+  | Op FunReturnStatement when not force ->
+    let msg = "This type is incompatible with the expected return type of" in
+    extra, typecheck_msgs msg reasons
+  | Op FunImplicitReturn when not force ->
+    let lreason, ureason = reasons in
+    let msg = spf "This type is incompatible with an implicitly-returned %s"
+      (string_of_desc (desc_of_reason lreason))
+    in
+    extra, [ureason, [msg]]
+  | Frame (FunParam {lower; _}, Op (FunCall _ | FunCallMethod _)) ->
+    let reasons, msg =
+      if not force then
+        let reasons' = ordered_reasons reasons in
+        let msg =
+          if reasons' == reasons
+          then "This type is incompatible with the expected param type of"
+          else "This type is incompatible with an argument type of"
+        in
+        reasons', msg
+      else
+        reasons, msg
+    in
+    (* Always prefer the location from our use_op. use_ops should never have the
+     * wrong primary location. *)
+    let msgs = if Loc.contains (loc_of_reason lower) (loc_of_reason (fst reasons))
+      then typecheck_msgs msg reasons
+      else (lower, [])::(typecheck_msgs msg reasons)
+    in
+    extra, msgs
+  | Frame (FunParam {n; _}, Frame (FunCompatibility {lower; upper}, use_op)) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "The %s parameter is incompatible:" (Utils_js.ordinal n))
     in
     let msg = "This type is incompatible with" in
-    unwrap_use_ops ((lower_obj_reason, upper_obj_reason), extra, msg) use_op
-  | FunReturn ->
-    let msg =
-      "This type is incompatible with the expected return type of" in
-    (l_reason, u_reason), nested_extra, msg
-  | FunCallParam ->
-    let r1, r2, msg = if is_lib_reason l_reason then
-      u_reason, l_reason, "This type is incompatible with an argument type of"
-    else
-      l_reason, u_reason,
-        "This type is incompatible with the expected param type of"
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
+  | Frame (FunReturn _, Frame (FunCompatibility {lower; upper}, use_op)) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "The return is incompatible:"
     in
-    (r1, r2), nested_extra, msg
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
+  | Frame (FunMissingArg (op, def), use_op) ->
+    let msg = "Too few arguments passed to" in
+    unwrap_use_ops ~force:true ((op, def), [], msg) use_op
+  | Op (ReactCreateElementCall _) ->
+    extra, typecheck_msgs msg reasons
+  | Op (ReactGetIntrinsic {literal}) ->
+    let msg = "Is not a valid React JSX intrinsic" in
+    extra, [literal, [msg]]
+  | Op (SetProperty reason_op) ->
+    let rl, ru = reasons in
+    let ru = replace_reason_const (desc_of_reason ru) reason_op in
+    extra, typecheck_msgs msg (rl, ru)
+  | Op (ClassExtendsCheck _) ->
+    let msg = if not force
+      then "Cannot extend"
+      else msg
+    in
+    extra, typecheck_msgs msg reasons
+  | Op (ClassImplementsCheck _) ->
+    let msg = if not force
+      then "Cannot implement"
+      else msg
+    in
+    extra, typecheck_msgs msg reasons
+  (* Passthrough some frame use_ops that don't participate in the
+   * error message. *)
+  | Frame (FunCompatibility _, use_op)
+  | Frame (ImplicitTypeParam _, use_op)
+  | Frame (UnifyFlip, use_op)
+    -> unwrap_use_ops ~force (reasons, extra, msg) use_op
+  (* Some use_ops always have the definitive location for an error message.
+   * When we have one of these use_ops, make sure that its location is always
+   * the primary location. *)
+  | Op (AssignVar {init=op; _})
+  | Op (Cast {lower=op; _})
+  | Op (FunCall {op; _})
+  | Op (FunCallMethod {op; _})
+    ->
+    let rl, ru = reasons in
+    if Loc.contains (loc_of_reason op) (loc_of_reason rl) then (
+      extra, typecheck_msgs msg reasons
+    ) else (
+      extra, [op, []; rl, [msg]; ru, []]
+    )
   | _ ->
-    (l_reason, u_reason), nested_extra, msg
+    extra, typecheck_msgs msg reasons
   in
 
   function
-  | EIncompatible (l, u) ->
-      typecheck_error (err_msg l u) (ordered_reasons l u)
+  | EIncompatible {
+      lower = (reason_lower, lower_kind);
+      upper = (reason_upper, upper_kind);
+      extras;
+    } ->
+      (match upper_kind with
+      | IncompatibleArrRestT use_op
+        ->
+        let extra = speculation_extras extras in
+        let extra, msgs =
+          let msg = err_msg_use lower_kind upper_kind in
+          unwrap_use_ops ((reason_upper, reason_lower), extra, msg) use_op in
+        typecheck_error_with_core_infos ~extra msgs
+      | _ ->
+        let extra = speculation_extras extras in
+        typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
+      )
 
-  | EIncompatibleProp (l, u, reason_prop) ->
-      (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or
-         other non-object-ish things), then use `reason_prop`, which
-         represents the reason for the prop itself, not the lookup action. *)
-      let reasons = reason_prop, reason_of_t l in
-      typecheck_error (err_msg l u) reasons
+  | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
+      let reasons = ordered_reasons (reason_lower, reason_upper) in
+      let extra = speculation_extras extras in
+      typecheck_error ~extra "This type is incompatible with" reasons
+
+  | EIncompatibleProp { reason_prop; reason_obj; special; use_op } ->
+      let reasons = (reason_prop, reason_obj) in
+      let msg = spf "Property not found in%s" (special_suffix special) in
+      begin match use_op with
+      | Some use_op ->
+        let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+        typecheck_error_with_core_infos ~extra msgs
+      | None ->
+        typecheck_error msg reasons
+      end
+
+  | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
+
+  | EIncompatibleSetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be assigned on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
@@ -425,13 +690,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
          `import type`."
         export_name]]
 
-  | EImportTypeofNamespace (r, local_name, module_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "This is invalid syntax. Maybe you meant: `import type \
-         %s from %S`?"
-        local_name
-        module_name]]
-
   | ENoDefaultExport (r, module_name, suggestion) ->
       let msg = "This module has no default export." in
       let msg = match suggestion with
@@ -456,14 +714,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       mk_error ~trace_infos [mk_info r [msg]]
 
-  | EMissingTypeArgs (r, params) ->
-      let min = poly_minimum_arity params in
-      let max = List.length params in
-      let arity, args = if min = max
-        then spf "%d" max, if max = 1 then "argument" else "arguments"
-        else spf "%d-%d" min max, "arguments"
+  | EMissingTypeArgs { reason; min_arity; max_arity } ->
+      let arity, args = if min_arity = max_arity
+        then spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
+        else spf "%d-%d" min_arity max_arity, "arguments"
       in
-      mk_error ~trace_infos [mk_info r [spf
+      mk_error ~trace_infos [mk_info reason [spf
         "Application of polymorphic type needs \
          <list of %s %s>. (Can use `*` for inferrable ones)"
         arity args]]
@@ -474,10 +730,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
          (did you forget 'typeof'?)"
         reasons
 
-  | EMutationNotAllowed reasons ->
-      typecheck_error "Mutation not allowed on" reasons
+  | EMutationNotAllowed { reason; reason_op } ->
+      typecheck_error "Mutation not allowed on" (reason_op, reason)
 
-  | EExpectedStringLit (reasons, expected, actual) ->
+  | EExpectedStringLit (reasons, expected, actual, use_op) ->
       let msg = match actual with
       | Literal (None, actual) ->
           spf "Expected string literal `%s`, got `%s` instead"
@@ -491,9 +747,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      typecheck_error msg reasons
+      let extra, msgs =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
 
-  | EExpectedNumberLit (reasons, (expected, _), actual) ->
+  | EExpectedNumberLit (reasons, (expected, _), actual, use_op) ->
       let msg = match actual with
       | Literal (None, (actual, _)) ->
           spf "Expected number literal `%.16g`, got `%.16g` instead"
@@ -507,38 +765,44 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      typecheck_error msg reasons
+      let extra, msgs =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
 
-  | EExpectedBooleanLit (reasons, expected, actual) ->
+  | EExpectedBooleanLit (reasons, expected, actual, use_op) ->
       let msg = match actual with
       | Some actual ->
           spf "Expected boolean literal `%b`, got `%b` instead"
             expected actual
       | None -> spf "Expected boolean literal `%b`" expected
       in
-      typecheck_error msg reasons
+      let extra, msgs =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
 
   | EPropNotFound (reasons, use_op) ->
-      let reasons, extra, msg =
+      let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
+      let extra, msgs =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
-      typecheck_error ~extra msg reasons
+      typecheck_error_with_core_infos ~extra msgs
 
-  | EPropAccess (reasons, x, prop, rw) ->
-      prop_polarity_error reasons x
-        (Property.polarity prop)
-        (Polarity.of_rw rw)
+  | EPropAccess (reasons, x, polarity, rw) ->
+      let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
+      typecheck_error msg reasons
 
-  | EPropPolarityMismatch (reasons, x, (p1, p2)) ->
-      prop_polarity_error reasons x p1 p2
+  | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
+      let reasons, msg = prop_polarity_error_msg x reasons p1 p2 in
+      let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
 
-  | EPolarityMismatch (tp, p) ->
-      mk_error ~trace_infos [mk_info tp.reason [spf
+  | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+      mk_error ~trace_infos [mk_info reason [spf
         "%s position (expected `%s` to occur only %sly)"
-        (Polarity.string p)
-        tp.name
-        (Polarity.string tp.polarity)]]
+        (Polarity.string actual_polarity)
+        name
+        (Polarity.string expected_polarity)]]
 
-  | EStrictLookupFailed (reasons, lreason, x) ->
+  | EStrictLookupFailed (reasons, lreason, x, use_op) ->
     (* if we're looking something up on the global/builtin object, then tweak
        the error to say that `x` doesn't exist. We can tell this is the
        global object because that should be the only object created with
@@ -556,7 +820,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | Some "$key" | Some "$value" -> "Indexable signature not found in"
       | _ -> "Property not found in"
       in
-      typecheck_error msg reasons
+      begin match use_op with
+      | Some use_op ->
+        let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
+        let extra, msgs =
+          unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+        typecheck_error_with_core_infos ~extra msgs
+      | None ->
+        typecheck_error msg reasons
+      end
+
+  | EPrivateLookupFailed reasons ->
+      typecheck_error "Property not found in" reasons
 
   | EFunCallParam (lreason, ureason) ->
       (* Special case: if the lower bound is from a libdef, then flip
@@ -580,19 +855,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         lreason, ureason,
           "This type is incompatible with the expected param type of"
       in
-      (* Ops telling us that we're in the middle of a function call are
-         redundant when we already know that an arg didn't match a param. *)
-      let suppress_op = match op with
-      | Some r ->
-        begin match desc_of_reason r with
-        | RFunctionCall
-        | RConstructorCall
-        | RMethodCall _ -> true
-        | _ -> false
-        end
-      | None -> false
-      in
-      typecheck_error ~suppress_op msg (r1, r2)
+      typecheck_error msg (r1, r2)
 
   | EFunCallThis (lreason, ureason, reason_call) ->
       let msg = "This function call's `this` type is incompatible with" in
@@ -626,13 +889,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EComparison reasons ->
       typecheck_error "This type cannot be compared to" reasons
 
-  | ETupleArityMismatch (reasons, l1, l2) ->
+  | ETupleArityMismatch (reasons, l1, l2, use_op) ->
       let msg = spf
         "Tuple arity mismatch. This tuple has %d elements and cannot flow to \
         the %d elements of"
         l1
         l2 in
-      typecheck_error msg reasons
+      let extra, msgs =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op
+      in
+      typecheck_error_with_core_infos ~extra msgs
 
   | ENonLitArrayToTuple reasons ->
       let msg =
@@ -653,26 +919,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | ESpeculationFailed (l, u, branches) ->
-      let reasons = ordered_reasons l u in
-      let msg = err_msg l u in
-      let extra = List.mapi (fun i (r, msg) ->
-        let err = error_of_msg ~trace_reasons:[] ~op ~source_file msg in
-        let header_infos = [
-          Loc.none, [spf "Member %d:" (i + 1)];
-          info_of_reason r;
-          Loc.none, ["Error:"];
-        ] in
-        let error_infos = infos_of_error err in
-        let error_extra = extra_of_error err in
-        let info_list = header_infos @ error_infos in
-        let info_tree = match error_extra with
-          | [] -> Errors.InfoLeaf (info_list)
-          | _ -> Errors.InfoNode (info_list, error_extra)
-        in
-        info_tree
-      ) branches in
-      typecheck_error msg ~extra reasons
+  | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
+      let extra, msgs =
+        let reasons = ordered_reasons (reason, reason_op) in
+        let extra = speculation_extras branches in
+        let msg = "This type is incompatible with" in
+        unwrap_use_ops (reasons, extra, msg) use_op
+      in
+      typecheck_error_with_core_infos ~extra msgs
 
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->
       let infos = List.map info_of_reason case_rs in
@@ -701,8 +955,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         (info_of_reason r)
       ]
 
-  | EIncompatibleWithExact reasons ->
-      typecheck_error "Inexact type is incompatible with exact type" reasons
+  | EIncompatibleWithExact (reasons, use_op) ->
+      let msg = "Inexact type is incompatible with exact type" in
+      let extra, msgs =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op
+      in
+      typecheck_error_with_core_infos ~extra msgs
 
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons
@@ -772,6 +1030,27 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EExportsAnnot loc ->
       mk_error ~trace_infos [loc, ["$Exports requires a string literal"]]
 
+  | ECharSetAnnot loc ->
+      mk_error ~trace_infos [loc, ["$CharSet requires a string literal"]]
+
+  | EInvalidCharSet {
+      invalid = (invalid_reason, invalid_chars);
+      valid = valid_reason;
+    } ->
+      let def_loc = def_loc_of_reason invalid_reason in
+      let extra =
+        InvalidCharSetSet.fold (fun c acc ->
+          match c with
+          | InvalidChar c -> InfoLeaf [def_loc, [spf "`%c` is not a member of the set" c]]::acc
+          | DuplicateChar c -> InfoLeaf [def_loc, [spf "`%c` is duplicated" c]]::acc
+        ) invalid_chars []
+        |> List.rev
+      in
+      mk_error ~trace_infos ~extra [
+        mk_info invalid_reason ["This type is incompatible with"];
+        mk_info valid_reason [];
+      ]
+
   | EUnsupportedKeyInObjectType loc ->
       mk_error ~trace_infos [loc, ["Unsupported key in object type"]]
 
@@ -827,7 +1106,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | PropRefComputedOpen ->
           "unexpected open computed property element type"
       | PropRefComputedLiteral ->
-          "unexpected literal computed proprety element type"
+          "unexpected literal computed property element type"
       | ShadowReadComputed ->
           "unexpected shadow read on computed property"
       | ShadowWriteComputed ->
@@ -840,6 +1119,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           "infer_job exception: "^(Utils_js.fmt_exc exc)
       | MergeJobException exc ->
           "merge_job exception: "^(Utils_js.fmt_exc exc)
+      | UnexpectedUnresolved id ->
+          spf "unexpected unresolved tvar: %d" id
       in
       mk_error ~trace_infos ~kind:InternalError [loc, [
         spf "Internal error: %s" msg
@@ -863,8 +1144,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "literal properties not yet supported"
         | ClassPropertyComputed ->
             "computed property keys not supported"
-        | ClassExtendsMultiple ->
-            "A class cannot extend multiple classes!"
         | ReactCreateClassPropertyNonInit ->
             "unsupported property specification in createClass"
         | RequireDynamicArgument ->
@@ -943,7 +1222,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ]
 
   | ERecursionLimit reasons ->
-      typecheck_error "*** Recursion limit exceeded ***" reasons
+      typecheck_error ~kind:RecursionLimitError "*** Recursion limit exceeded ***" reasons
 
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
       let msg = spf
@@ -1009,6 +1288,25 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EUnreachable loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
 
+  | EInvalidObjectKit { tool; reason; reason_op; use_op } ->
+      let open Object in
+      let msg = match tool with
+        | ReadOnly -> "Cannot create an object with read-only properties from"
+        | Spread _ -> "Cannot spread properties from"
+        | Rest (_, state) ->
+          let open Object.Rest in
+          (match state with
+            | One _ -> "Cannot remove properties from"
+            | Done _ -> "Cannot remove properties with")
+        | ReactConfig state ->
+          let open Object.ReactConfig in
+          (match state with
+            | Config _ -> "Cannot compare React props with"
+            | Defaults _ -> "Cannot use React default props from")
+      in
+      let extra, msgs = unwrap_use_ops ((reason_op, reason), [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
+
   | EInvalidTypeof (loc, typename) ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         spf "string literal `%s`" typename;
@@ -1049,16 +1347,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
-      let reasons, extra, msg =
+      let ((l_reason, u_reason), use_op) =
+        dedupe_by_flip (l_reason, u_reason) use_op in
+      let extra, msgs =
         let msg = "This type is incompatible with" in
         unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in
-      typecheck_error ~extra ~suppress_op:true msg reasons
+      typecheck_error_with_core_infos ~extra msgs
 
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
         "Argument to implements clause must be an interface"]]
 
-  | EReactKit (reasons, tool) ->
+  | EReactKit (reasons, tool, use_op) ->
       let open React in
       let expected_prop_type = "Expected a React PropType instead of" in
       let resolve_object prop = function
@@ -1094,27 +1394,27 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ) in
       let msg = match tool with
       | SimplifyPropType (tool, _) -> simplify_prop_type tool
-      | CreateElement _ -> "Expected React component instead of"
+      | GetProps _ -> "Expected React component instead of"
+      | GetRef _ -> "Expected React component instead of"
       | CreateClass (tool, _, _) -> create_class tool
+      | CreateElement _ -> "Expected React component instead of"
       in
-      typecheck_error msg reasons
+      let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
 
-  | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
-    let core_msgs = [
-      unused_reason, [];
-    ] in
-    let expects = match param_count with
-    | 0 -> "expects no arguments"
-    | 1 -> "expects no more than 1 argument"
-    | n -> spf "expects no more than %d arguments" n in
-    let extra = [
-      InfoLeaf [loc_of_reason def_reason, [spf
-        "%s %s"
-        (string_of_desc (desc_of_reason def_reason))
-        expects
-      ]];
-    ] in
-    typecheck_error_with_core_infos ~extra core_msgs
+  | EReactElementFunArity (reason, fn, n) ->
+      mk_error ~trace_infos [mk_info reason [
+        "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
+      ]]
+
+  | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+    let msg = match param_count with
+    | 0 -> "No arguments are expected by"
+    | 1 -> "No more than 1 argument is expected by"
+    | n -> spf "No more than %d arguments are expected by" n
+    in
+    let extra, msgs = unwrap_use_ops ((unused_reason, def_reason), [], msg) use_op in
+    typecheck_error_with_core_infos ~extra msgs
 
   | EUnsupportedSetProto reason ->
       mk_error ~trace_infos [mk_info reason [
@@ -1148,5 +1448,73 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     in
     mk_error ~kind:ParseError [loc, [msg]]
 
+  | EUntypedTypeImport (loc, module_name) ->
+    mk_error
+      ~kind:(LintError Lints.UntypedTypeImport)
+      [loc, [spf (
+        "Importing a type from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
+      ) module_name]]
+
+  | EUntypedImport (loc, module_name) ->
+    mk_error
+      ~kind:(LintError Lints.UntypedImport)
+      [loc, [spf (
+        "Importing from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
+      ) module_name]]
+
+  | ENonstrictImport loc ->
+    mk_error
+      ~kind:(LintError Lints.NonstrictImport)
+      [loc, ["Dependencies of a strict module must also be strict!"]]
+
+  | EUnclearType loc ->
+    mk_error
+      ~kind:(LintError Lints.UnclearType)
+      [loc, ["Unclear type. Using `any`, `Object` or `Function` types is not safe!"]]
+  | EUnsafeGettersSetters loc ->
+    mk_error
+      ~kind:(LintError Lints.UnsafeGettersSetters)
+      [loc, ["Getters and Setters can have side effects and are unsafe"]]
+
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
+
+  | ELintSetting (loc, kind) ->
+    let msg = match kind with
+    | LintSettings.Redundant_argument ->
+      "Redundant argument. This argument doesn't change any lint settings."
+    | LintSettings.Overwritten_argument ->
+      "Redundant argument. "
+        ^ "The values set by this argument are overwritten later in this comment."
+    | LintSettings.Naked_comment ->
+      "Malformed lint rule. At least one argument is required."
+    | LintSettings.Nonexistent_rule ->
+      "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?"
+    | LintSettings.Invalid_setting ->
+      "Invalid setting. Valid settings are error, warn, and off."
+    | LintSettings.Malformed_argument ->
+      "Malformed lint rule. Properly formed rules contain a single ':' character. " ^
+        "Perhaps you have a missing/extra ','?"
+    in
+    mk_error ~kind: ParseError [loc, [msg]]
+
+  | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+    let type_str, value_str = match kind with
+    | Lints.SketchyBool -> "boolean", "Potentially false"
+    | Lints.SketchyNumber -> "number", "Potentially 0"
+    | Lints.SketchyString -> "string", "Potentially \"\""
+    | Lints.SketchyMixed -> "mixed", "Mixed"
+    in
+    mk_error
+      ~kind:(LintError (Lints.SketchyNull kind))
+      [loc, [(spf "Sketchy null check on %s value." type_str)
+        ^ " Perhaps you meant to check for null instead of for existence?"]]
+      ~extra:[InfoLeaf [
+        null_loc, ["Potentially null/undefined value."];
+        falsy_loc, [spf "%s value." value_str]
+      ]]
+  | EInvalidPrototype reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Invalid prototype. Expected an object or null."]]

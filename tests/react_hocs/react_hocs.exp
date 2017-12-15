@@ -1,0 +1,80 @@
+Error: Bad.js:14
+       v---------------------------------------------
+ 14:   mapProps(({ buz }) => ({ // Error: Missing foo
+ 15:     buz: (buz * 2).toString(), // Error: string ~> number
+ 16:   })),
+       --^ ComponentType. This type is incompatible with the expected param type of
+  9: ): (React.ComponentType<OutputProps>) => React.ComponentType<InputProps> {
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ComponentType. See: hocs.js:9
+  Type argument `P` is incompatible:
+     11: const Bad = (props: Props) => null;
+                             ^^^^^ Props. This type is incompatible with
+                                 v-
+     15: ): (React.ComponentType<{|
+     16:   ...Props,
+     17:   ...ExtraProps,
+     18: |}>) => React.ComponentType<Props> {
+         -^ object type. See: hocs.js:15
+      Property `bar` is incompatible:
+          8:   bar: number,
+                    ^^^^^^ number. This type is incompatible with
+         18:     bar: buz,
+                      ^^^ string
+
+Error: Bad.js:14
+       v---------------------------------------------
+ 14:   mapProps(({ buz }) => ({ // Error: Missing foo
+ 15:     buz: (buz * 2).toString(), // Error: string ~> number
+ 16:   })),
+       --^ ComponentType. This type is incompatible with the expected param type of
+  9: ): (React.ComponentType<OutputProps>) => React.ComponentType<InputProps> {
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ComponentType. See: hocs.js:9
+  Type argument `P` is incompatible:
+                                 v-
+     15: ): (React.ComponentType<{|
+     16:   ...Props,
+     17:   ...ExtraProps,
+     18: |}>) => React.ComponentType<Props> {
+         -^ object type. This type is incompatible with. See: hocs.js:15
+     11: const Bad = (props: Props) => null;
+                             ^^^^^ Props
+      Property `foo` is incompatible:
+         11: const Bad = (props: Props) => null;
+                                 ^^^^^ property `foo`. Property not found in
+                                     v-
+         15: ): (React.ComponentType<{|
+         16:   ...Props,
+         17:   ...ExtraProps,
+         18: |}>) => React.ComponentType<Props> {
+             -^ object type. See: hocs.js:15
+
+Error: Good.js:15
+ 15:   mapProps(({ foo, buz, qux }) => ({
+                   ^^^ property `foo`. Property not found in
+  9: <Good buz={2} qux={3} />; // Error: Missing foo
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:9
+
+Error: Good.js:15
+ 15:   mapProps(({ foo, buz, qux }) => ({
+                        ^^^ property `buz`. Property not found in
+  8: <Good foo={1} qux={3} />; // Error: Missing buz
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:8
+
+Error: Good.js:15
+ 15:   mapProps(({ foo, buz, qux }) => ({
+                             ^^^ property `qux`. Property not found in
+  7: <Good foo={1} buz={2} />; // Error: Missing qux
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:7
+
+Error: Good.js:17
+ 17:     buz: buz * 2,
+              ^^^ string. The operand of an arithmetic operation must be a number.
+
+Error: Good.js:18
+ 18:     qux,
+         ^^^ string. This type is incompatible with
+  9:   qux: number,
+            ^^^^^^ number
+
+
+Found 7 errors

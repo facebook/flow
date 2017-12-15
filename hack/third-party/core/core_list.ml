@@ -191,7 +191,7 @@ let iter t ~f = List.iter t ~f
 (** For the container interface. *)
 let fold t ~init ~f = List.fold_left t ~f ~init
 let fold_left = fold
-let to_array = Caml.Array.of_list
+let to_array = Hack_caml.Array.of_list
 let to_list t = t
 
 (** Tail recursive versions of standard [List] module *)

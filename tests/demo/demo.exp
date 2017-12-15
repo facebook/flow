@@ -1,16 +1,16 @@
-1/f.js:3
+Error: 1/f.js:3
   3: function f(x) { return 42/x; }
                                ^ null. The operand of an arithmetic operation must be a number.
 
-2/A.js:5
+Error: 2/A.js:5
   5:   constructor(x) { this.x = x; }
-                   ^ parameter `x`. Missing annotation
+                   ^ x. Missing annotation
 
-2/A.js:9
+Error: 2/A.js:9
   9:   onLoad(callback) {
-              ^^^^^^^^ parameter `callback`. Missing annotation
+              ^^^^^^^^ callback. Missing annotation
 
-2/A.js:10
+Error: 2/A.js:10
  10:     return callback(this.getX());
                          ^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  14: function callback(x: string) { return x.length; }

@@ -12,11 +12,12 @@ JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
 OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
-	hack/utils/files.o\
-	hack/utils/nproc.o\
-	hack/utils/realpath.o\
-	hack/utils/sysinfo.o\
-	hack/utils/priorities.o
+	hack/utils/sys/files.o\
+	hack/utils/sys/nproc.o\
+	hack/utils/sys/realpath.o\
+	hack/utils/sys/sysinfo.o\
+	hack/utils/sys/processor_info.o\
+	hack/utils/sys/priorities.o
 
 RUNNER_DEPS=\
 	hack/heap\
@@ -25,6 +26,7 @@ RUNNER_DEPS=\
 	hack/utils/collections\
 	hack/utils/disk\
 	hack/utils/hh_json\
+	hack/utils/sys\
 	hack/third-party/core\
 	src/common/utils\
 	src/parser\
@@ -41,6 +43,13 @@ clean:
 build-parser:
 	cd $(TOP); \
 	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
+
+.PHONY: lib/libflowparser.a
+lib/libflowparser.a:
+	@mkdir -p lib
+	cp "$(shell ocamlc -where)"/libasmrun.a "$@"
+	cd $(TOP) && $(OCB) -no-links $(REL_DIR)/libflowparser.native.o
+	ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"
 
 js:
 	cd $(TOP); \
@@ -121,12 +130,13 @@ npm-publish:
 	mv README-backup.md README.md
 
 ocamlfind-install:
-	$(OCB) parser_flow.cma parser_flow.cmxa
-	ocamlfind install flow_parser META \
-		_build/parser_flow.a \
-		_build/parser_flow.cma \
-		_build/parser_flow.cmxa \
-		_build/*.cmi
+	cd $(TOP); \
+	$(OCB) $(REL_DIR)/parser_flow.cma $(REL_DIR)/parser_flow.cmxa; \
+	ocamlfind install flow_parser $(REL_DIR)/META \
+		_build/$(REL_DIR)/parser_flow.a \
+		_build/$(REL_DIR)/parser_flow.cma \
+		_build/$(REL_DIR)/parser_flow.cmxa \
+		_build/$(REL_DIR)/*.cmi
 
 lexer.native: lexer.ml
 	$(OCB) $@

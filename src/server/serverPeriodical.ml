@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -88,9 +85,9 @@ let exit_if_unused() =
 (*****************************************************************************)
 (* The registered jobs *)
 (*****************************************************************************)
-let init options =
+let init () =
   let jobs = [
-    Periodical.always   , (fun () -> SharedMem_js.collect options `aggressive);
+    Periodical.always   , (fun () -> SharedMem_js.collect `aggressive);
     Periodical.one_day  , exit_if_unused;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

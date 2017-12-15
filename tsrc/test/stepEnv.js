@@ -1,13 +1,16 @@
 /* @flow */
 
 import type {FlowResult} from '../flowResult';
+import type {IDEMessage} from './ide';
 
 export interface StepEnvWriteable {
   reportStdout(output: string): void;
   reportStderr(output: string): void;
   reportExitCode(code: number): void;
+  setIDEMessages(messages: Array<IDEMessage>): void;
+  setIDEStderr(stderr: string): void;
   setNewErrors(errors: FlowResult): void;
-  setServerPid(pid: ?number): void;
+  setServerRunning(running: boolean): void;
   triggerFlowCheck(): void;
 }
 
@@ -15,9 +18,11 @@ export interface StepEnvReadable {
   getStdout(): string;
   getStderr(): string;
   getExitCodes(): Array<number>;
+  getIDEMessages(): Array<IDEMessage>;
+  getIDEStderr(): string;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
-  getServerPid(): ?number;
+  getServerRunning(): boolean;
   shouldRunFlow(): boolean;
 }
 
@@ -28,8 +33,10 @@ export function newEnv(
   let stderr = [];
   let exitCodes = [];
   let newErrors = oldErrors;
-  let serverPid = undefined;
+  let serverRunning = false;
   let shouldRunFlow = false;
+  let ideMessages = [];
+  let ideStderr = "";
 
   const envWrite = {
     reportStdout(output) {
@@ -44,12 +51,20 @@ export function newEnv(
       exitCodes.push(code);
     },
 
+    setIDEMessages(messages) {
+      ideMessages = messages;
+    },
+
+    setIDEStderr(stderr) {
+      ideStderr = stderr;
+    },
+
     setNewErrors(errors) {
       newErrors = errors;
     },
 
-    setServerPid(pid) {
-      serverPid = pid;
+    setServerRunning(running) {
+      serverRunning = running;
     },
 
     triggerFlowCheck() {
@@ -70,6 +85,14 @@ export function newEnv(
       return exitCodes.slice();
     },
 
+    getIDEMessages() {
+      return ideMessages;
+    },
+
+    getIDEStderr() {
+      return ideStderr;
+    },
+
     getOldErrors() {
       return oldErrors;
     },
@@ -78,8 +101,8 @@ export function newEnv(
       return newErrors;
     },
 
-    getServerPid() {
-      return serverPid;
+    getServerRunning() {
+      return serverRunning;
     },
 
     shouldRunFlow() {

@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -78,6 +78,14 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ string. This type is incompatible with
             5: (png: number)
                      ^^^^^^ number
+
+
+
+
+
+
+
+
         `,
       ),
   ]),

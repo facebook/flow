@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from '../../tsrc/test/Tester';
@@ -155,9 +155,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: var o: {p: string} = Object.create(proto);
-                      ^^^^^^^^^^^ property \`p\`. Property not found in
+                                    ^^^^^^^^^^^^^^^^^^^^ Object.create. This type is incompatible with
             7: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Object.create
+                      ^^^^^^^^^^^ object type
+            Property \`p\` is incompatible:
+                7: var o: {p: string} = Object.create(proto);
+                          ^^^^^^^^^^^ property \`p\`. Property not found in
+                7: var o: {p: string} = Object.create(proto);
+                                        ^^^^^^^^^^^^^^^^^^^^ Object.create
         `,
       ),
 
@@ -167,8 +172,8 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:9
             9: proto.p = 0;
                          ^ number. This type is incompatible with
-            7: var o: {p: string} = Object.create(proto);
-                          ^^^^^^ string
+            9: proto.p = 0;
+               ^^^^^^^ string
         `,
       ),
   ]),

@@ -1,0 +1,49 @@
+Error: a.js:13
+ 13: a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
+       ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
+ 13: a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
+     ^^^^^^ assignment of property `prop`
+
+Error: a.js:20
+ 20:     this.prop = prop;         // ERROR: we should not be assigning a string here
+                     ^^^^ string. This type is incompatible with
+ 20:     this.prop = prop;         // ERROR: we should not be assigning a string here
+         ^^^^^^^^^ number
+
+Error: a.js:21
+ 21:     this.m = () => {};        // ERORR: cannot assign method
+              ^ property `m`. Covariant property `m` incompatible with contravariant use in
+ 21:     this.m = () => {};        // ERORR: cannot assign method
+         ^^^^^^ assignment of property `m`
+
+Error: a.js:47
+ 47:       this.prop = prop;       // ERROR: the initilized object can only be
+                ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
+ 47:       this.prop = prop;       // ERROR: the initilized object can only be
+           ^^^^^^^^^ assignment of property `prop`
+
+Error: a.js:61
+ 61:     this.prop = 1;            // ERROR
+              ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
+ 61:     this.prop = 1;            // ERROR
+         ^^^^^^^^^ assignment of property `prop`
+
+Error: a.js:70
+ 70:     this.prop = "";           // ERROR
+                     ^^ string. This type is incompatible with
+ 70:     this.prop = "";           // ERROR
+         ^^^^^^^^^ number
+
+Error: a.js:74
+ 74: class G extends F {
+           ^ G. Cannot extend
+ 74: class G extends F {
+                     ^ F
+  Property `prop` is incompatible:
+     74: class G extends F {
+               ^ G. Contravariant property `prop` incompatible with covariant use in
+     65: class F extends A {
+                         ^ A
+
+
+Found 7 errors

@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -15,13 +15,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": T);')
-      .newErrors(`
-        test.js:9
-          9: ("str": T);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": T);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": T);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": T);
+                       ^ T
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -32,13 +34,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": U);')
-      .newErrors(`
-        test.js:9
-          9: ("str": U);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": U);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": U);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": U);
+                       ^ T
+        `,
+      ),
   ]),
 
   test('Unaliased typeof import', [
@@ -49,13 +53,15 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": C);')
-      .newErrors(`
-        test.js:9
-          9: ("str": C);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": C);
-               ^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": C);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": C);
+                       ^ statics of \`C\`
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -66,12 +72,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": CPrime);')
-      .newErrors(`
-        test.js:9
-          9: ("str": CPrime);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": CPrime);
-                     ^^^^^^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": CPrime);
+                ^^^^^ string. This type is incompatible with
+            9: ("str": CPrime);
+                       ^^^^^^ statics of \`C\`
+        `,
+      ),
   ]),
 ]);

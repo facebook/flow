@@ -1,4 +1,5 @@
 sudo: false
+dist: trusty
 
 env:
   global:
@@ -31,6 +32,7 @@ addons:
       key_url: 'https://dl.yarnpkg.com/debian/pubkey.gpg'
     packages:
     - libelf-dev
+    - libgmp-dev # for opam's conf-gmp
     - aspcud
     - yarn
 
@@ -118,3 +120,5 @@ notifications:
       # chat.freenode.net#flowtype
       secure: "OLvGXInHGV66u17k4JPZJTXZyrlqCeAVjVQ+oZuqV5JQo6lep/GtcU6uwmjJOgY/yQR7FPvBG92ru4ef/6CIkIwbCq3Zt/ftfei8rNFO0FlymdC7YXjB8hqN8zs6FIVyxzkjOyg8mX1tRulGwxOLB4yeua9t91RiCkjHtvXeixw="
     on_success: change
+
+  webhooks: https://code.facebook.com/travis/webhook/

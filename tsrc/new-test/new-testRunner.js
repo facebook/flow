@@ -3,7 +3,7 @@
 import {join, relative, resolve} from 'path';
 import {format} from 'util';
 
-import {exec, exists, mkdirp, readFile, unlink, writeFile} from '../async';
+import {exec, exists, mkdirp, readFile, unlink, writeFile} from '../utils/async';
 import {getTestsDir, defaultFlowConfigName} from '../constants';
 
 import type {Args} from './new-testCommand';
@@ -31,7 +31,7 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
     join(dest, 'test.js'),
 `/*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 

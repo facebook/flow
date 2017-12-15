@@ -1,9 +1,9 @@
-#!/bin/sh
-
+#!/bin/bash
+. ../assert.sh
 FLOW="$1"
 
 printf "from emacs:\n"
-"$FLOW" status --strip-root --from emacs
+assert_errors "$FLOW" status --strip-root --from emacs
 
 printf "from vim:\n"
-"$FLOW" status --strip-root --from vim
+assert_errors "$FLOW" status --strip-root --from vim

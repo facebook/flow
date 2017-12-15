@@ -1,22 +1,22 @@
-generics.js:4
+Error: generics.js:4
   4: function foo<X>(x: X): X { r = x; return x; }
                                     ^ X. This type is incompatible with
   3: var r: number = 0;
             ^^^^^^ number
 
-import_class.js:3
+Error: import_class.js:3
   3: var c = new C("");
                    ^^ string. This type is incompatible with the expected param type of
   3:     constructor(x: number) { this.x = x; }
                         ^^^^^^ number. See: export_class.js:3
 
-objects.js:5
+Error: objects.js:5
   5: var x: string = c.foo();
                      ^^^^^^^ number. This type is incompatible with
   5: var x: string = c.foo();
             ^^^^^^ string
 
-objects.js:13
+Error: objects.js:13
  13: var y: number = o2.bar();
                      ^^^^^^^^ string. This type is incompatible with
  13: var y: number = o2.bar();

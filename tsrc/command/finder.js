@@ -3,7 +3,7 @@
 import {format} from 'util';
 import {basename, join, relative, resolve} from 'path';
 
-import {glob} from './../async';
+import {glob} from '../utils/async';
 
 type Command = {
   name: string,

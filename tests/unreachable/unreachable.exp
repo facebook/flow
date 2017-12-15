@@ -1,33 +1,33 @@
-typecheck.js:4
+Error: typecheck.js:4
   4:   return bar();
               ^^^^^ number. This type is incompatible with the expected return type of
   3: function test1(): string {
                        ^^^^^^ string
 
-typecheck.js:21
+Error: typecheck.js:21
  21:     var y: string = n;    // error, n is number (EmptyT would work)
                          ^ number. This type is incompatible with
  21:     var y: string = n;    // error, n is number (EmptyT would work)
                 ^^^^^^ string
 
-unreachable.js:5
+Error: unreachable.js:5
   5:   return bar(x) + baz(y);
-                       ^^^^^^ function call. Function cannot be called on possibly undefined value
+                       ^^^^^^ call of `baz`. Function cannot be called on possibly undefined value
   5:   return bar(x) + baz(y);
                        ^^^ uninitialized variable
 
-unreachable.js:13
+Error: unreachable.js:13
                  v---------------
  13:   var baz = function (why) {
  14:     return y + why;
  15:   };
        ^ unreachable code
 
-unreachable.js:22
+Error: unreachable.js:22
  22:       u = 5,
                ^ unreachable code
 
-unreachable.js:24
+Error: unreachable.js:24
  24:       w = 7;
                ^ unreachable code
 

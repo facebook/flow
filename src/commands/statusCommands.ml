@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandInfo
@@ -40,10 +37,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -80,10 +77,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -102,44 +99,51 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   let rec check_status (args:args) server_flags =
     let name = "flow" in
 
-    let ic, oc = connect server_flags args.root in
-    send_command oc (ServerProt.STATUS args.root);
-    let response = wait_for_response ic in
+    let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
+    let request = ServerProt.Request.STATUS (args.root, include_warnings) in
+    let response = match connect_and_make_request server_flags args.root request with
+    | ServerProt.Response.STATUS response -> response
+    | response -> failwith_bad_response ~request ~response
+    in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
       ~out_channel:stdout ~strip_root ~pretty:args.pretty
       ~suppressed_errors:([])
     in
     match response with
-    | ServerProt.DIRECTORY_MISMATCH d ->
+    | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf
         ("%s is running on a different directory.\n" ^^
          "server_root: %s, client_root: %s")
         name
-        (Path.to_string d.ServerProt.server)
-        (Path.to_string d.ServerProt.client)
+        (Path.to_string d.ServerProt.Response.server)
+        (Path.to_string d.ServerProt.Response.client)
       in
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
-    | ServerProt.ERRORS errors ->
+    | ServerProt.Response.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
       begin if args.output_json then
-        print_json errors
+        print_json ~errors ~warnings ()
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.Vim_emacs_output.print_errors ~strip_root stdout errors
+        Errors.Vim_emacs_output.print_errors ~strip_root
+          stdout ~errors ~warnings ()
       else
         Errors.Cli_output.print_errors
           ~strip_root
           ~flags:error_flags
           ~out_channel:stdout
-          errors
+          ~errors
+          ~warnings
+          ()
       end;
-      FlowExitStatus.(exit Type_error)
-    | ServerProt.NO_ERRORS ->
-      if args.output_json
-      then print_json Errors.ErrorSet.empty
+      let open FlowExitStatus in
+      if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
+    | ServerProt.Response.NO_ERRORS ->
+      if args.output_json then
+        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
-    | ServerProt.NOT_COVERED ->
+    | ServerProt.Response.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
@@ -154,7 +158,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
-  let main server_flags json pretty error_flags strip_root version root () =
+  let main server_flags json pretty error_flags strip_root from version root () =
+    FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";

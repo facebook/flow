@@ -1,24 +1,24 @@
 
 Initial status:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -26,19 +26,19 @@ current provider. See: dupe1.js:0
 Found 4 errors
 
 Delete c.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -46,13 +46,13 @@ current provider. See: dupe1.js:0
 Found 3 errors
 
 Delete b.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -60,19 +60,19 @@ current provider. See: dupe1.js:0
 Found 2 errors
 
 Restore b.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -80,25 +80,25 @@ current provider. See: dupe1.js:0
 Found 3 errors
 
 Restore c.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -106,25 +106,25 @@ current provider. See: dupe1.js:0
 Found 4 errors
 
 Delete d.json:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -132,29 +132,29 @@ current provider. See: dupe1.js:0
 Found 4 errors
 
 Delete unchecked.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
-requires_unchecked.js:5
+Error: requires_unchecked.js:5
   5: var unchecked = require('Unchecked');
                              ^^^^^^^^^^^ Unchecked. Required module not found
 
@@ -162,25 +162,25 @@ requires_unchecked.js:5
 Found 5 errors
 
 Restore unchecked.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 
@@ -188,19 +188,19 @@ current provider. See: dupe1.js:0
 Found 4 errors
 
 Delete dupe2.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
@@ -210,25 +210,25 @@ c.js:3
 Found 3 errors
 
 Restore dupe2.js:
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
             ^^^^^^ string
 
-dupe2.js:0
+Error: dupe2.js:0
 Dupe. Duplicate module provider
 current provider. See: dupe1.js:0
 

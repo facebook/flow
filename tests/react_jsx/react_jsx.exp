@@ -1,0 +1,2620 @@
+Error: test.js:24
+ 24: <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 22: class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+                                                      ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     24: <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     22: class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+                                                          ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+
+Error: test.js:36
+ 36: <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 34: const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
+                                           ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     36: <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     34: const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
+                                               ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+
+Error: test.js:44
+ 44: <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 42: const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
+                                                      ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+  Property `foo` is incompatible:
+     44: <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+     42: const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
+                                                          ^^^^^^^^^^^^^^^^^^^^^ Props_NoProps
+
+Error: test.js:71
+ 71: <Legacy_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `boolean1` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `boolean1`. Property not found in
+     71: <Legacy_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:71
+ 71: <Legacy_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `boolean2` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `boolean2`. Property not found in
+     71: <Legacy_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:71
+ 71: <Legacy_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `number` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `number`. Property not found in
+     71: <Legacy_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:71
+ 71: <Legacy_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `string1` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `string1`. Property not found in
+     71: <Legacy_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:71
+ 71: <Legacy_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `string2` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `string2`. Property not found in
+     71: <Legacy_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:89
+     v------------------------------------------------------------
+ 89: <Legacy_ManyProps // Error: All props have an incorrect type.
+ 90:   string1={null}
+ 91:   string2={null}
+...:
+ 95: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `boolean1` is incompatible:
+     92:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     66:     boolean1: React.PropTypes.bool.isRequired,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean
+
+Error: test.js:89
+     v------------------------------------------------------------
+ 89: <Legacy_ManyProps // Error: All props have an incorrect type.
+ 90:   string1={null}
+ 91:   string2={null}
+...:
+ 95: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `boolean2` is incompatible:
+     93:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     67:     boolean2: React.PropTypes.bool.isRequired,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean
+
+Error: test.js:89
+     v------------------------------------------------------------
+ 89: <Legacy_ManyProps // Error: All props have an incorrect type.
+ 90:   string1={null}
+ 91:   string2={null}
+...:
+ 95: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `number` is incompatible:
+     94:   number={null}
+                   ^^^^ null. This type is incompatible with
+     68:     number: React.PropTypes.number.isRequired,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: test.js:89
+     v------------------------------------------------------------
+ 89: <Legacy_ManyProps // Error: All props have an incorrect type.
+ 90:   string1={null}
+ 91:   string2={null}
+...:
+ 95: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `string1` is incompatible:
+     90:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     64:     string1: React.PropTypes.string.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+
+Error: test.js:89
+     v------------------------------------------------------------
+ 89: <Legacy_ManyProps // Error: All props have an incorrect type.
+ 90:   string1={null}
+ 91:   string2={null}
+...:
+ 95: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `string2` is incompatible:
+     91:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     65:     string2: React.PropTypes.string.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+
+Error: test.js:108
+     v--------------------------------------------
+108: <Legacy_ManyProps // Error: Missing `number`.
+109:   {...{string1: 'foo', string2: 'bar'}}
+110:   {...{boolean1: true, boolean2: false}}
+111: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `number` is incompatible:
+                      v
+     63:   propTypes: {
+     64:     string1: React.PropTypes.string.isRequired,
+     65:     string2: React.PropTypes.string.isRequired,
+    ...:
+     69:   },
+           ^ property `number`. Property not found in
+         v--------------------------------------------
+    108: <Legacy_ManyProps // Error: Missing `number`.
+    109:   {...{string1: 'foo', string2: 'bar'}}
+    110:   {...{boolean1: true, boolean2: false}}
+    111: />;
+         -^ props
+
+Error: test.js:119
+     v--------------------------------------------------------------------------
+119: <Legacy_ManyProps // OK: `number` is overwritten at the end of the element.
+120:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+121:   boolean1
+...:
+124: />;
+     -^ props. This type is incompatible with
+                  v
+ 63:   propTypes: {
+ 64:     string1: React.PropTypes.string.isRequired,
+ 65:     string2: React.PropTypes.string.isRequired,
+...:
+ 69:   },
+       ^ propTypes of React component
+  Property `number` is incompatible:
+    120:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     68:     number: React.PropTypes.number.isRequired,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: test.js:129
+129:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+128:   number={42}
+               ^^ number
+
+Error: test.js:133
+133: <Class_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    133: <Class_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:133
+133: <Class_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    133: <Class_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:133
+133: <Class_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+    133: <Class_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:133
+133: <Class_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    133: <Class_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:133
+133: <Class_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    133: <Class_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:151
+     v-----------------------------------------------------------
+151: <Class_ManyProps // Error: All props have an incorrect type.
+152:   string1={null}
+153:   string2={null}
+...:
+157: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    154:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:151
+     v-----------------------------------------------------------
+151: <Class_ManyProps // Error: All props have an incorrect type.
+152:   string1={null}
+153:   string2={null}
+...:
+157: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    155:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:151
+     v-----------------------------------------------------------
+151: <Class_ManyProps // Error: All props have an incorrect type.
+152:   string1={null}
+153:   string2={null}
+...:
+157: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    156:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:151
+     v-----------------------------------------------------------
+151: <Class_ManyProps // Error: All props have an incorrect type.
+152:   string1={null}
+153:   string2={null}
+...:
+157: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    152:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:151
+     v-----------------------------------------------------------
+151: <Class_ManyProps // Error: All props have an incorrect type.
+152:   string1={null}
+153:   string2={null}
+...:
+157: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    153:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:170
+     v-------------------------------------------
+170: <Class_ManyProps // Error: Missing `number`.
+171:   {...{string1: 'foo', string2: 'bar'}}
+172:   {...{boolean1: true, boolean2: false}}
+173: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v-------------------------------------------
+    170: <Class_ManyProps // Error: Missing `number`.
+    171:   {...{string1: 'foo', string2: 'bar'}}
+    172:   {...{boolean1: true, boolean2: false}}
+    173: />;
+         -^ props
+
+Error: test.js:181
+     v-------------------------------------------------------------------------
+181: <Class_ManyProps // OK: `number` is overwritten at the end of the element.
+182:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+183:   boolean1
+...:
+186: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    182:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:191
+191:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+190:   number={42}
+               ^^ number
+
+Error: test.js:195
+195: <ClassExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    195: <ClassExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:195
+195: <ClassExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    195: <ClassExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:195
+195: <ClassExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `number`. Property not found in
+    195: <ClassExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:195
+195: <ClassExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    195: <ClassExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:195
+195: <ClassExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    195: <ClassExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:203
+     v-----------------------------------------------------------
+203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+204:   string1="foo"
+205:   string2={'bar'}
+...:
+212: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `a`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:203
+     v-----------------------------------------------------------
+203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+204:   string1="foo"
+205:   string2={'bar'}
+...:
+212: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `b`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:203
+     v-----------------------------------------------------------
+203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+204:   string1="foo"
+205:   string2={'bar'}
+...:
+212: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v-----------------------------------------------------------
+    203: <ClassExact_ManyProps // Error: Extra props are not allowed.
+    204:   string1="foo"
+    205:   string2={'bar'}
+    ...:
+    212: />;
+         -^ property `c`. Property not found in
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:213
+     v----------------------------------------------------------------
+213: <ClassExact_ManyProps // Error: All props have an incorrect type.
+214:   string1={null}
+215:   string2={null}
+...:
+219: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    216:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:213
+     v----------------------------------------------------------------
+213: <ClassExact_ManyProps // Error: All props have an incorrect type.
+214:   string1={null}
+215:   string2={null}
+...:
+219: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    217:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:213
+     v----------------------------------------------------------------
+213: <ClassExact_ManyProps // Error: All props have an incorrect type.
+214:   string1={null}
+215:   string2={null}
+...:
+219: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    218:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:213
+     v----------------------------------------------------------------
+213: <ClassExact_ManyProps // Error: All props have an incorrect type.
+214:   string1={null}
+215:   string2={null}
+...:
+219: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    214:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:213
+     v----------------------------------------------------------------
+213: <ClassExact_ManyProps // Error: All props have an incorrect type.
+214:   string1={null}
+215:   string2={null}
+...:
+219: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    215:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:220
+     v-------------------------------------------------------------------------
+220: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
+221:   string1="foo"
+222:   string2={'bar'}
+...:
+226: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:227
+     v-------------------------------------------------------------------------
+227: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
+228:   {...{string1: 'foo', string2: 'bar'}}
+229:   {...{boolean1: true, boolean2: false}}
+230:   {...{number: 42}}
+231: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:232
+     v------------------------------------------------
+232: <ClassExact_ManyProps // Error: Missing `number`.
+233:   {...{string1: 'foo', string2: 'bar'}}
+234:   {...{boolean1: true, boolean2: false}}
+235: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:232
+     v------------------------------------------------
+232: <ClassExact_ManyProps // Error: Missing `number`.
+233:   {...{string1: 'foo', string2: 'bar'}}
+234:   {...{boolean1: true, boolean2: false}}
+235: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                               ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                                   ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v------------------------------------------------
+    232: <ClassExact_ManyProps // Error: Missing `number`.
+    233:   {...{string1: 'foo', string2: 'bar'}}
+    234:   {...{boolean1: true, boolean2: false}}
+    235: />;
+         -^ props
+
+Error: test.js:236
+     v---------------------------------------------------------------------------
+236: <ClassExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+237:   string1="foo"
+238:   string2={'bar'}
+...:
+242: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:243
+     v-----------------------------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
+244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+245:   boolean1
+...:
+248: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:243
+     v-----------------------------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
+244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+245:   boolean1
+...:
+248: />;
+     -^ props. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                               ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:249
+     v------------------------------------------------------------------------------
+249: <ClassExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+250:   boolean1
+251:   boolean2={false}
+...:
+254: />;
+     -^ props. Inexact type is incompatible with exact type
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:253
+253:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+252:   number={42}
+               ^^ number
+
+Error: test.js:257
+257: <ClassPure_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    257: <ClassPure_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:257
+257: <ClassPure_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    257: <ClassPure_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:257
+257: <ClassPure_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `number`. Property not found in
+    257: <ClassPure_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:257
+257: <ClassPure_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    257: <ClassPure_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:257
+257: <ClassPure_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    257: <ClassPure_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:275
+     v---------------------------------------------------------------
+275: <ClassPure_ManyProps // Error: All props have an incorrect type.
+276:   string1={null}
+277:   string2={null}
+...:
+281: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    278:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:275
+     v---------------------------------------------------------------
+275: <ClassPure_ManyProps // Error: All props have an incorrect type.
+276:   string1={null}
+277:   string2={null}
+...:
+281: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    279:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:275
+     v---------------------------------------------------------------
+275: <ClassPure_ManyProps // Error: All props have an incorrect type.
+276:   string1={null}
+277:   string2={null}
+...:
+281: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    280:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:275
+     v---------------------------------------------------------------
+275: <ClassPure_ManyProps // Error: All props have an incorrect type.
+276:   string1={null}
+277:   string2={null}
+...:
+281: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    276:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:275
+     v---------------------------------------------------------------
+275: <ClassPure_ManyProps // Error: All props have an incorrect type.
+276:   string1={null}
+277:   string2={null}
+...:
+281: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    277:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:294
+     v-----------------------------------------------
+294: <ClassPure_ManyProps // Error: Missing `number`.
+295:   {...{string1: 'foo', string2: 'bar'}}
+296:   {...{boolean1: true, boolean2: false}}
+297: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                               ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v-----------------------------------------------
+    294: <ClassPure_ManyProps // Error: Missing `number`.
+    295:   {...{string1: 'foo', string2: 'bar'}}
+    296:   {...{boolean1: true, boolean2: false}}
+    297: />;
+         -^ props
+
+Error: test.js:305
+     v-----------------------------------------------------------------------------
+305: <ClassPure_ManyProps // OK: `number` is overwritten at the end of the element.
+306:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+307:   boolean1
+...:
+310: />;
+     -^ props. This type is incompatible with
+256: class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+                                                           ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    306:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:315
+315:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+314:   number={42}
+               ^^ number
+
+Error: test.js:319
+319: <Function_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    319: <Function_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:319
+319: <Function_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    319: <Function_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:319
+319: <Function_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `number`. Property not found in
+    319: <Function_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:319
+319: <Function_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    319: <Function_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:319
+319: <Function_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    319: <Function_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:337
+     v--------------------------------------------------------------
+337: <Function_ManyProps // Error: All props have an incorrect type.
+338:   string1={null}
+339:   string2={null}
+...:
+343: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    340:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:337
+     v--------------------------------------------------------------
+337: <Function_ManyProps // Error: All props have an incorrect type.
+338:   string1={null}
+339:   string2={null}
+...:
+343: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    341:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:337
+     v--------------------------------------------------------------
+337: <Function_ManyProps // Error: All props have an incorrect type.
+338:   string1={null}
+339:   string2={null}
+...:
+343: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    342:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:337
+     v--------------------------------------------------------------
+337: <Function_ManyProps // Error: All props have an incorrect type.
+338:   string1={null}
+339:   string2={null}
+...:
+343: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    338:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:337
+     v--------------------------------------------------------------
+337: <Function_ManyProps // Error: All props have an incorrect type.
+338:   string1={null}
+339:   string2={null}
+...:
+343: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    339:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:356
+     v----------------------------------------------
+356: <Function_ManyProps // Error: Missing `number`.
+357:   {...{string1: 'foo', string2: 'bar'}}
+358:   {...{boolean1: true, boolean2: false}}
+359: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                            ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v----------------------------------------------
+    356: <Function_ManyProps // Error: Missing `number`.
+    357:   {...{string1: 'foo', string2: 'bar'}}
+    358:   {...{boolean1: true, boolean2: false}}
+    359: />;
+         -^ props
+
+Error: test.js:367
+     v----------------------------------------------------------------------------
+367: <Function_ManyProps // OK: `number` is overwritten at the end of the element.
+368:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+369:   boolean1
+...:
+372: />;
+     -^ props. This type is incompatible with
+318: const Function_ManyProps = (props: Props_ManyProps) => any;
+                                        ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    368:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:377
+377:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+376:   number={42}
+               ^^ number
+
+Error: test.js:381
+381: <FunctionExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    381: <FunctionExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:381
+381: <FunctionExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    381: <FunctionExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:381
+381: <FunctionExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ property `number`. Property not found in
+    381: <FunctionExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:381
+381: <FunctionExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    381: <FunctionExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:381
+381: <FunctionExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    381: <FunctionExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:389
+     v-------------------------------------------------------
+389: <FunctionExact_ManyProps // OK: Other props are allowed.
+390:   string1="foo"
+391:   string2={'bar'}
+...:
+398: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `a`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:389
+     v-------------------------------------------------------
+389: <FunctionExact_ManyProps // OK: Other props are allowed.
+390:   string1="foo"
+391:   string2={'bar'}
+...:
+398: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `b`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:389
+     v-------------------------------------------------------
+389: <FunctionExact_ManyProps // OK: Other props are allowed.
+390:   string1="foo"
+391:   string2={'bar'}
+...:
+398: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v-------------------------------------------------------
+    389: <FunctionExact_ManyProps // OK: Other props are allowed.
+    390:   string1="foo"
+    391:   string2={'bar'}
+    ...:
+    398: />;
+         -^ property `c`. Property not found in
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:399
+     v-------------------------------------------------------------------
+399: <FunctionExact_ManyProps // Error: All props have an incorrect type.
+400:   string1={null}
+401:   string2={null}
+...:
+405: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    402:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:399
+     v-------------------------------------------------------------------
+399: <FunctionExact_ManyProps // Error: All props have an incorrect type.
+400:   string1={null}
+401:   string2={null}
+...:
+405: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    403:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:399
+     v-------------------------------------------------------------------
+399: <FunctionExact_ManyProps // Error: All props have an incorrect type.
+400:   string1={null}
+401:   string2={null}
+...:
+405: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    404:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:399
+     v-------------------------------------------------------------------
+399: <FunctionExact_ManyProps // Error: All props have an incorrect type.
+400:   string1={null}
+401:   string2={null}
+...:
+405: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    400:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:399
+     v-------------------------------------------------------------------
+399: <FunctionExact_ManyProps // Error: All props have an incorrect type.
+400:   string1={null}
+401:   string2={null}
+...:
+405: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    401:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:406
+     v----------------------------------------------------------------------------
+406: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
+407:   string1="foo"
+408:   string2={'bar'}
+...:
+412: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:413
+     v----------------------------------------------------------------------------
+413: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
+414:   {...{string1: 'foo', string2: 'bar'}}
+415:   {...{boolean1: true, boolean2: false}}
+416:   {...{number: 42}}
+417: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:418
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
+419:   {...{string1: 'foo', string2: 'bar'}}
+420:   {...{boolean1: true, boolean2: false}}
+421: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:418
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
+419:   {...{string1: 'foo', string2: 'bar'}}
+420:   {...{boolean1: true, boolean2: false}}
+421: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                    ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                        ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v--------------------------------------------------------------------------
+    418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
+    419:   {...{string1: 'foo', string2: 'bar'}}
+    420:   {...{boolean1: true, boolean2: false}}
+    421: />;
+         -^ props
+
+Error: test.js:422
+     v------------------------------------------------------------------------------
+422: <FunctionExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+423:   string1="foo"
+424:   string2={'bar'}
+...:
+428: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:429
+     v------------------------------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+431:   boolean1
+...:
+434: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:429
+     v------------------------------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+431:   boolean1
+...:
+434: />;
+     -^ props. This type is incompatible with
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                    ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:435
+     v---------------------------------------------------------------------------------
+435: <FunctionExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+436:   boolean1
+437:   boolean2={false}
+...:
+440: />;
+     -^ props. Inexact type is incompatible with exact type
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:439
+439:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+438:   number={42}
+               ^^ number
+
+Error: test.js:443
+443: <Abstract_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    443: <Abstract_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:443
+443: <Abstract_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    443: <Abstract_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:443
+443: <Abstract_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+    443: <Abstract_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:443
+443: <Abstract_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    443: <Abstract_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:443
+443: <Abstract_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    443: <Abstract_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:461
+     v--------------------------------------------------------------
+461: <Abstract_ManyProps // Error: All props have an incorrect type.
+462:   string1={null}
+463:   string2={null}
+...:
+467: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    464:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:461
+     v--------------------------------------------------------------
+461: <Abstract_ManyProps // Error: All props have an incorrect type.
+462:   string1={null}
+463:   string2={null}
+...:
+467: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    465:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:461
+     v--------------------------------------------------------------
+461: <Abstract_ManyProps // Error: All props have an incorrect type.
+462:   string1={null}
+463:   string2={null}
+...:
+467: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    466:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:461
+     v--------------------------------------------------------------
+461: <Abstract_ManyProps // Error: All props have an incorrect type.
+462:   string1={null}
+463:   string2={null}
+...:
+467: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    462:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:461
+     v--------------------------------------------------------------
+461: <Abstract_ManyProps // Error: All props have an incorrect type.
+462:   string1={null}
+463:   string2={null}
+...:
+467: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    463:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:480
+     v----------------------------------------------
+480: <Abstract_ManyProps // Error: Missing `number`.
+481:   {...{string1: 'foo', string2: 'bar'}}
+482:   {...{boolean1: true, boolean2: false}}
+483: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v----------------------------------------------
+    480: <Abstract_ManyProps // Error: Missing `number`.
+    481:   {...{string1: 'foo', string2: 'bar'}}
+    482:   {...{boolean1: true, boolean2: false}}
+    483: />;
+         -^ props
+
+Error: test.js:491
+     v----------------------------------------------------------------------------
+491: <Abstract_ManyProps // OK: `number` is overwritten at the end of the element.
+492:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+493:   boolean1
+...:
+496: />;
+     -^ props. This type is incompatible with
+442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    492:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:501
+501:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+500:   number={42}
+               ^^ number
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `number`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:514
+     v--------------------------------------------------------------
+514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+515:   string1="foo"
+516:   string2={'bar'}
+...:
+523: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `a` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `a`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:514
+     v--------------------------------------------------------------
+514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+515:   string1="foo"
+516:   string2={'bar'}
+...:
+523: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `b` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `b`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:514
+     v--------------------------------------------------------------
+514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+515:   string1="foo"
+516:   string2={'bar'}
+...:
+523: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `c` is incompatible:
+         v--------------------------------------------------------------
+    514: <AbstractExact_ManyProps // Error: Other props are not allowed.
+    515:   string1="foo"
+    516:   string2={'bar'}
+    ...:
+    523: />;
+         -^ property `c`. Property not found in
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:524
+     v-------------------------------------------------------------------
+524: <AbstractExact_ManyProps // Error: All props have an incorrect type.
+525:   string1={null}
+526:   string2={null}
+...:
+530: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    527:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:524
+     v-------------------------------------------------------------------
+524: <AbstractExact_ManyProps // Error: All props have an incorrect type.
+525:   string1={null}
+526:   string2={null}
+...:
+530: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    528:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:524
+     v-------------------------------------------------------------------
+524: <AbstractExact_ManyProps // Error: All props have an incorrect type.
+525:   string1={null}
+526:   string2={null}
+...:
+530: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    529:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:524
+     v-------------------------------------------------------------------
+524: <AbstractExact_ManyProps // Error: All props have an incorrect type.
+525:   string1={null}
+526:   string2={null}
+...:
+530: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    525:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:524
+     v-------------------------------------------------------------------
+524: <AbstractExact_ManyProps // Error: All props have an incorrect type.
+525:   string1={null}
+526:   string2={null}
+...:
+530: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    526:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:531
+     v----------------------------------------------------------------------------
+531: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
+532:   string1="foo"
+533:   string2={'bar'}
+...:
+537: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:538
+     v----------------------------------------------------------------------------
+538: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
+539:   {...{string1: 'foo', string2: 'bar'}}
+540:   {...{boolean1: true, boolean2: false}}
+541:   {...{number: 42}}
+542: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:543
+     v---------------------------------------------------
+543: <AbstractExact_ManyProps // Error: Missing `number`.
+544:   {...{string1: 'foo', string2: 'bar'}}
+545:   {...{boolean1: true, boolean2: false}}
+546: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:543
+     v---------------------------------------------------
+543: <AbstractExact_ManyProps // Error: Missing `number`.
+544:   {...{string1: 'foo', string2: 'bar'}}
+545:   {...{boolean1: true, boolean2: false}}
+546: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                               ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                                   ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v---------------------------------------------------
+    543: <AbstractExact_ManyProps // Error: Missing `number`.
+    544:   {...{string1: 'foo', string2: 'bar'}}
+    545:   {...{boolean1: true, boolean2: false}}
+    546: />;
+         -^ props
+
+Error: test.js:547
+     v------------------------------------------------------------------------------
+547: <AbstractExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+548:   string1="foo"
+549:   string2={'bar'}
+...:
+553: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:554
+     v------------------------------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+556:   boolean1
+...:
+559: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:554
+     v------------------------------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+556:   boolean1
+...:
+559: />;
+     -^ props. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                               ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:560
+     v---------------------------------------------------------------------------------
+560: <AbstractExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+561:   boolean1
+562:   boolean2={false}
+...:
+565: />;
+     -^ props. Inexact type is incompatible with exact type
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Props_ManyProps
+
+Error: test.js:564
+564:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+563:   number={42}
+               ^^ number
+
+Error: test.js:568
+568: <Member_ManyProps.prop />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    568: <Member_ManyProps.prop />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:568
+568: <Member_ManyProps.prop />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    568: <Member_ManyProps.prop />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:568
+568: <Member_ManyProps.prop />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+    568: <Member_ManyProps.prop />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:568
+568: <Member_ManyProps.prop />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    568: <Member_ManyProps.prop />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:568
+568: <Member_ManyProps.prop />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    568: <Member_ManyProps.prop />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:586
+     v-----------------------------------------------------------------
+586: <Member_ManyProps.prop // Error: All props have an incorrect type.
+587:   string1={null}
+588:   string2={null}
+...:
+592: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean1` is incompatible:
+    589:   boolean1={null}
+                     ^^^^ null. This type is incompatible with
+     57:   boolean1: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:586
+     v-----------------------------------------------------------------
+586: <Member_ManyProps.prop // Error: All props have an incorrect type.
+587:   string1={null}
+588:   string2={null}
+...:
+592: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `boolean2` is incompatible:
+    590:   boolean2={null}
+                     ^^^^ null. This type is incompatible with
+     58:   boolean2: boolean,
+                     ^^^^^^^ boolean
+
+Error: test.js:586
+     v-----------------------------------------------------------------
+586: <Member_ManyProps.prop // Error: All props have an incorrect type.
+587:   string1={null}
+588:   string2={null}
+...:
+592: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    591:   number={null}
+                   ^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:586
+     v-----------------------------------------------------------------
+586: <Member_ManyProps.prop // Error: All props have an incorrect type.
+587:   string1={null}
+588:   string2={null}
+...:
+592: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string1` is incompatible:
+    587:   string1={null}
+                    ^^^^ null. This type is incompatible with
+     55:   string1: string,
+                    ^^^^^^ string
+
+Error: test.js:586
+     v-----------------------------------------------------------------
+586: <Member_ManyProps.prop // Error: All props have an incorrect type.
+587:   string1={null}
+588:   string2={null}
+...:
+592: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `string2` is incompatible:
+    588:   string2={null}
+                    ^^^^ null. This type is incompatible with
+     56:   string2: string,
+                    ^^^^^^ string
+
+Error: test.js:605
+     v-------------------------------------------------
+605: <Member_ManyProps.prop // Error: Missing `number`.
+606:   {...{string1: 'foo', string2: 'bar'}}
+607:   {...{boolean1: true, boolean2: false}}
+608: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                       ^^^^^^^^^^^^^^^ property `number`. Property not found in
+         v-------------------------------------------------
+    605: <Member_ManyProps.prop // Error: Missing `number`.
+    606:   {...{string1: 'foo', string2: 'bar'}}
+    607:   {...{boolean1: true, boolean2: false}}
+    608: />;
+         -^ props
+
+Error: test.js:616
+     v-------------------------------------------------------------------------------
+616: <Member_ManyProps.prop // OK: `number` is overwritten at the end of the element.
+617:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+618:   boolean1
+...:
+621: />;
+     -^ props. This type is incompatible with
+132: class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                   ^^^^^^^^^^^^^^^ Props_ManyProps
+  Property `number` is incompatible:
+    617:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null or undefined. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:626
+626:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                          ^^^^^^^ null or undefined. This type is incompatible with
+625:   number={42}
+               ^^ number
+
+Error: test.js:641
+641: <Legacy_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+636:   propTypes: {
+637:     foo: React.PropTypes.number.isRequired,
+638:     bar: React.PropTypes.number,
+639:   },
+       ^ propTypes of React component
+  Property `foo` is incompatible:
+                      v
+    636:   propTypes: {
+    637:     foo: React.PropTypes.number.isRequired,
+    638:     bar: React.PropTypes.number,
+    639:   },
+           ^ property `foo`. Property not found in
+    641: <Legacy_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:643
+643: <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+                  v
+636:   propTypes: {
+637:     foo: React.PropTypes.number.isRequired,
+638:     bar: React.PropTypes.number,
+639:   },
+       ^ propTypes of React component
+  Property `foo` is incompatible:
+    643: <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
+                                    ^^^^^^^^^ undefined. This type is incompatible with
+    637:     foo: React.PropTypes.number.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: test.js:648
+     v----------------------------------------------------
+648: <Legacy_OptionalProps // Error: `foo` has a bad type.
+649:   foo="nope"
+650:   bar={2}
+651: />;
+     -^ props. This type is incompatible with
+                  v
+636:   propTypes: {
+637:     foo: React.PropTypes.number.isRequired,
+638:     bar: React.PropTypes.number,
+639:   },
+       ^ propTypes of React component
+  Property `foo` is incompatible:
+    649:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    637:     foo: React.PropTypes.number.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: test.js:652
+     v----------------------------------------------------
+652: <Legacy_OptionalProps // Error: `bar` has a bad type.
+653:   foo={4}
+654:   bar="nope"
+655: />;
+     -^ props. This type is incompatible with
+                  v
+636:   propTypes: {
+637:     foo: React.PropTypes.number.isRequired,
+638:     bar: React.PropTypes.number,
+639:   },
+       ^ propTypes of React component
+  Property `bar` is incompatible:
+    654:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    638:     bar: React.PropTypes.number,
+                  ^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: test.js:658
+658: <Class_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                           ^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    658: <Class_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:665
+     v---------------------------------------------------
+665: <Class_OptionalProps // Error: `foo` has a bad type.
+666:   foo="nope"
+667:   bar={2}
+668: />;
+     -^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    666:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:669
+     v---------------------------------------------------
+669: <Class_OptionalProps // Error: `bar` has a bad type.
+670:   foo={4}
+671:   bar="nope"
+672: />;
+     -^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    671:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:676
+676: <ClassExact_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+675:   extends React.Component<$Exact<Props_OptionalProps>> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    675:   extends React.Component<$Exact<Props_OptionalProps>> {}
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    676: <ClassExact_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:683
+     v--------------------------------------------------------
+683: <ClassExact_OptionalProps // Error: `foo` has a bad type.
+684:   foo="nope"
+685:   bar={2}
+686: />;
+     -^ props. This type is incompatible with
+675:   extends React.Component<$Exact<Props_OptionalProps>> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    684:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:687
+     v--------------------------------------------------------
+687: <ClassExact_OptionalProps // Error: `bar` has a bad type.
+688:   foo={4}
+689:   bar="nope"
+690: />;
+     -^ props. This type is incompatible with
+675:   extends React.Component<$Exact<Props_OptionalProps>> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    689:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:694
+694: <ClassPure_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+693:   extends React.PureComponent<Props_OptionalProps> {}
+                                   ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    693:   extends React.PureComponent<Props_OptionalProps> {}
+                                       ^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    694: <ClassPure_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:701
+     v-------------------------------------------------------
+701: <ClassPure_OptionalProps // Error: `foo` has a bad type.
+702:   foo="nope"
+703:   bar={2}
+704: />;
+     -^ props. This type is incompatible with
+693:   extends React.PureComponent<Props_OptionalProps> {}
+                                   ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    702:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:705
+     v-------------------------------------------------------
+705: <ClassPure_OptionalProps // Error: `bar` has a bad type.
+706:   foo={4}
+707:   bar="nope"
+708: />;
+     -^ props. This type is incompatible with
+693:   extends React.PureComponent<Props_OptionalProps> {}
+                                   ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    707:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:711
+711: <Function_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+710: const Function_OptionalProps = (props: Props_OptionalProps) => any;
+                                            ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    710: const Function_OptionalProps = (props: Props_OptionalProps) => any;
+                                                ^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    711: <Function_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:718
+     v------------------------------------------------------
+718: <Function_OptionalProps // Error: `foo` has a bad type.
+719:   foo="nope"
+720:   bar={2}
+721: />;
+     -^ props. This type is incompatible with
+710: const Function_OptionalProps = (props: Props_OptionalProps) => any;
+                                            ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    719:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:722
+     v------------------------------------------------------
+722: <Function_OptionalProps // Error: `bar` has a bad type.
+723:   foo={4}
+724:   bar="nope"
+725: />;
+     -^ props. This type is incompatible with
+710: const Function_OptionalProps = (props: Props_OptionalProps) => any;
+                                            ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    724:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:728
+728: <FunctionExact_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    728: <FunctionExact_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:735
+     v-----------------------------------------------------------
+735: <FunctionExact_OptionalProps // Error: `foo` has a bad type.
+736:   foo="nope"
+737:   bar={2}
+738: />;
+     -^ props. This type is incompatible with
+727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    736:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:739
+     v-----------------------------------------------------------
+739: <FunctionExact_OptionalProps // Error: `bar` has a bad type.
+740:   foo={4}
+741:   bar="nope"
+742: />;
+     -^ props. This type is incompatible with
+727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    741:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:745
+745: <Abstract_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+                                                           ^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    745: <Abstract_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:752
+     v------------------------------------------------------
+752: <Abstract_OptionalProps // Error: `foo` has a bad type.
+753:   foo="nope"
+754:   bar={2}
+755: />;
+     -^ props. This type is incompatible with
+744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    753:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:756
+     v------------------------------------------------------
+756: <Abstract_OptionalProps // Error: `bar` has a bad type.
+757:   foo={4}
+758:   bar="nope"
+759: />;
+     -^ props. This type is incompatible with
+744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    758:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:763
+763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:770
+     v-----------------------------------------------------------
+770: <AbstractExact_OptionalProps // Error: `foo` has a bad type.
+771:   foo="nope"
+772:   bar={2}
+773: />;
+     -^ props. This type is incompatible with
+762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    771:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:774
+     v-----------------------------------------------------------
+774: <AbstractExact_OptionalProps // Error: `bar` has a bad type.
+775:   foo={4}
+776:   bar="nope"
+777: />;
+     -^ props. This type is incompatible with
+762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    776:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:780
+780: <Member_OptionalProps.prop />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                           ^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    780: <Member_OptionalProps.prop />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: test.js:787
+     v---------------------------------------------------------
+787: <Member_OptionalProps.prop // Error: `foo` has a bad type.
+788:   foo="nope"
+789:   bar={2}
+790: />;
+     -^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `foo` is incompatible:
+    788:   foo="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                           ^^^^^^ number
+
+Error: test.js:791
+     v---------------------------------------------------------
+791: <Member_OptionalProps.prop // Error: `bar` has a bad type.
+792:   foo={4}
+793:   bar="nope"
+794: />;
+     -^ props. This type is incompatible with
+657: class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+                                                       ^^^^^^^^^^^^^^^^^^^ Props_OptionalProps
+  Property `bar` is incompatible:
+    793:   bar="nope"
+               ^^^^^^ string. This type is incompatible with
+    633: type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                         ^^^^^^ number
+
+Error: test.js:821
+     v------------------------------------------------------------------------
+821: <Legacy_DefaultProps // Error: It is missing a required non-default prop.
+822:   foo={1}
+823: />;
+     -^ props. This type is incompatible with
+                  v
+806:   propTypes: {
+807:     foo: React.PropTypes.number.isRequired,
+808:     bar: React.PropTypes.number.isRequired,
+809:   },
+       ^ propTypes of React component
+  Property `bar` is incompatible:
+                      v
+    806:   propTypes: {
+    807:     foo: React.PropTypes.number.isRequired,
+    808:     bar: React.PropTypes.number.isRequired,
+    809:   },
+           ^ property `bar`. Property not found in
+         v------------------------------------------------------------------------
+    821: <Legacy_DefaultProps // Error: It is missing a required non-default prop.
+    822:   foo={1}
+    823: />;
+         -^ props
+
+Error: test.js:837
+     v-----------------------------------------------------------------------
+837: <Class_DefaultProps // Error: It is missing a required non-default prop.
+838:   foo={1}
+839: />;
+     -^ props. This type is incompatible with
+825: class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                      ^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    825: class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                          ^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v-----------------------------------------------------------------------
+    837: <Class_DefaultProps // Error: It is missing a required non-default prop.
+    838:   foo={1}
+    839: />;
+         -^ props
+
+Error: test.js:854
+     v----------------------------------------------------------------------------
+854: <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
+855:   foo={1}
+856: />;
+     -^ props. This type is incompatible with
+842:   extends React.Component<$Exact<Props_DefaultProps>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    842:   extends React.Component<$Exact<Props_DefaultProps>> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v----------------------------------------------------------------------------
+    854: <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
+    855:   foo={1}
+    856: />;
+         -^ props
+
+Error: test.js:870
+     v---------------------------------------------------------------------------
+870: <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
+871:   foo={1}
+872: />;
+     -^ props. This type is incompatible with
+858: class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
+                                                              ^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    858: class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
+                                                                  ^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v---------------------------------------------------------------------------
+    870: <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
+    871:   foo={1}
+    872: />;
+         -^ props
+
+Error: test.js:887
+     v--------------------------------------------------------------------------
+887: <Function_DefaultProps // Error: It is missing a required non-default prop.
+888:   foo={1}
+889: />;
+     -^ props. This type is incompatible with
+874: function Function_DefaultProps(props: Props_DefaultProps) {
+                                           ^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    874: function Function_DefaultProps(props: Props_DefaultProps) {
+                                               ^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v--------------------------------------------------------------------------
+    887: <Function_DefaultProps // Error: It is missing a required non-default prop.
+    888:   foo={1}
+    889: />;
+         -^ props
+
+Error: test.js:904
+     v-------------------------------------------------------------------------------
+904: <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+905:   foo={1}
+906: />;
+     -^ props. This type is incompatible with
+891: function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    891: function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v-------------------------------------------------------------------------------
+    904: <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+    905:   foo={1}
+    906: />;
+         -^ props
+
+Error: test.js:916
+     v-----------------------------------------------------------------------------
+916: <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+917:   foo={1}
+918: />;
+     -^ props. This type is incompatible with
+825: class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                      ^^^^^^^^^^^^^^^^^^ Props_DefaultProps
+  Property `bar` is incompatible:
+    825: class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                          ^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+         v-----------------------------------------------------------------------------
+    916: <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+    917:   foo={1}
+    918: />;
+         -^ props
+
+
+Found 182 errors

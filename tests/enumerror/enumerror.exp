@@ -1,6 +1,4 @@
-enumerror.js:10
- 10: isActive({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+Error: enumerror.js:10
  10: isActive({state: 'PAUSE'});
                       ^^^^^^^ property `PAUSE`. Property not found in
                                    v------
@@ -11,9 +9,7 @@ enumerror.js:10
   7: }>}): boolean {
      -^ object type
 
-enumerror.js:20
- 20: isActive2({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+Error: enumerror.js:20
  20: isActive2({state: 'PAUSE'});
                        ^^^^^^^ property `PAUSE`. Property not found in
  17: function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {

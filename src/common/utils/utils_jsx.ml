@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (*
@@ -101,7 +98,7 @@ let trim_jsx_text =
       let start_column = String.index (List.nth lines first_line) first_char in
       let end_column = String.rindex (List.nth lines last_line) last_char + 1 in
 
-      (* If we're on the first line, then we need to see on whic column the line
+      (* If we're on the first line, then we need to see on which column the line
          starts *)
       let start_column =
         if first_line = 0

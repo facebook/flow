@@ -1,6 +1,6 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -48,7 +48,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-                                      ^^^ A spread argument is unsupported here
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
+            3: const arr = [1,2,3];
+                            ^ number
+
+          test.js:7
+            7: React.createElement(...arr, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                              ^ props. Cannot compare React props with
+            3: const arr = [1,2,3];
+                              ^ number
         `,
       ),
     addCode('React.createElement(({}: any), ...arr)')
@@ -56,7 +66,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: React.createElement(({}: any), ...arr)
-                                                 ^^^ A spread argument is unsupported here
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                            ^ props. Cannot compare React props with
+            3: const arr = [1,2,3];
+                            ^ number
         `,
       ),
     addCode('React.createElement(...arr, ...arr)')
@@ -64,11 +78,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-                                      ^^^ A spread argument is unsupported here
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
+            3: const arr = [1,2,3];
+                            ^ number
 
           test.js:11
            11: React.createElement(...arr, ...arr)
-                                              ^^^ A spread argument is unsupported here
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`
+            3: const arr = [1,2,3];
+                              ^ props. Cannot compare React props with
+            3: const arr = [1,2,3];
+                              ^ number
         `,
       ),
   ]),

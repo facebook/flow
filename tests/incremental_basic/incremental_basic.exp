@@ -1,16 +1,16 @@
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
             ^^^^^^ string
 
-b.js:3
+Error: b.js:3
   3: var b: number = a;
                      ^ string. This type is incompatible with
   3: var b: number = a;
             ^^^^^^ number
 
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
@@ -18,7 +18,7 @@ c.js:3
 
 
 Found 3 errors
-a.js:2
+Error: a.js:2
   2: var a: string = 0;
                      ^ number. This type is incompatible with
   2: var a: string = 0;
@@ -26,7 +26,7 @@ a.js:2
 
 
 Found 1 error
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;
@@ -34,7 +34,7 @@ c.js:3
 
 
 Found 1 error
-c.js:3
+Error: c.js:3
   3: var c: string = b;
                      ^ number. This type is incompatible with
   3: var c: string = b;

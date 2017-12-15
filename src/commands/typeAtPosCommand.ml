@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -28,15 +25,13 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> verbose_flags
+    |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
-    |> flag "--raw" no_arg
-        ~doc:"Output raw represenation of type (implies --json)"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
   )
 }
@@ -57,7 +52,7 @@ let parse_args path args =
       File_input.FileName file, line, column
   | [line; column] ->
       let line, column = parse_line_and_column line column in
-      get_file_from_filename_or_stdin path None,
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
       line,
       column
   | _ ->
@@ -66,7 +61,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
+let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
@@ -89,12 +84,8 @@ let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
         ("loc", json_of_loc ~strip_root loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
-    let json_assoc = match raw_t with
-      | None -> json_assoc
-      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
-    in
     let json = JSON_Object json_assoc in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   ) else (
     let range =
       if loc = Loc.none then ""
@@ -116,13 +107,14 @@ let handle_error err ~json ~pretty =
   then (
     let open Hh_json in
     let json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty json)
+    prerr_json_endline ~pretty json
   ) else (
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root verbose path include_raw args () =
-  let json = json || pretty || include_raw in
+let main option_values json pretty root strip_root verbose from path args () =
+  FlowEventLogger.set_from from;
+  let json = json || pretty in
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with
@@ -134,11 +126,10 @@ let main option_values root json pretty strip_root verbose path include_raw args
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let ic, oc = connect option_values root in
-  send_command oc
-    (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
-  match (Timeout.input_value ic : ServerProt.infer_type_response) with
-  | Error err -> handle_error err ~json ~pretty
-  | Ok resp -> handle_response resp ~json ~pretty ~strip_root
+  let request = ServerProt.Request.INFER_TYPE (file, line, column, verbose) in
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
+  | ServerProt.Response.INFER_TYPE (Ok resp) -> handle_response resp ~json ~pretty ~strip_root
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

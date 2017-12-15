@@ -1,0 +1,1 @@
+var existingError: number = true;

@@ -10,8 +10,8 @@
       "default":false,
       "declaration":{
         "type":"DeclareFunction",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":36}},
-        "range":[0,36],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":36}},
+        "range":[15,36],
         "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":35}},

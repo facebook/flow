@@ -10,6 +10,8 @@
 
 type t
 
+val pp : Format.formatter -> t -> unit
+
 (* compatible with Pervasives.compare *)
 val compare : t -> t -> int
 
@@ -23,6 +25,8 @@ val is_dummy : t -> bool
 val beg_of_file : t
 
 val of_line_column_offset : line:int -> column:int -> offset:int -> t
+
+val of_lnum_bol_cnum : pos_lnum:int -> pos_bol:int -> pos_cnum:int -> t
 
 val of_lexing_pos : Lexing.position -> t
 

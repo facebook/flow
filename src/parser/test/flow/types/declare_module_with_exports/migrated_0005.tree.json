@@ -26,8 +26,8 @@
             "default":false,
             "declaration":{
               "type":"DeclareClass",
-              "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":75}},
-              "range":[23,75],
+              "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":75}},
+              "range":[38,75],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":47}},
@@ -88,6 +88,7 @@
                       "rest":null,
                       "typeParameters":null
                     },
+                    "method":true,
                     "optional":false,
                     "static":false,
                     "variance":null,

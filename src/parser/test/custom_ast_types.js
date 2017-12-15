@@ -3,12 +3,17 @@ var defaults = require("ast-types/lib/shared").defaults;
 var def = types.Type.def;
 var or = types.Type.or;
 
+def("Variance")
+  .bases("Node")
+  .build("kind")
+  .field("kind", or("plus", "minus"));
+
 def("TypeParameter")
   .bases("Type")
   .build("name", "variance", "bound", "default")
   .field("name", String)
   .field("variance",
-    or("plus", "minus", null),
+    or(def("Variance"), null),
     defaults["null"])
   .field("bound",
     or(def("TypeAnnotation"), null),
@@ -29,7 +34,7 @@ def("DeclareExportDeclaration")
     def("DeclareClass"),
     def("Type"), // Implies default type
     def("TypeAlias"), // Implies named type
-    def("OpaqueType"), // Implies named opaque type
+    def("DeclareOpaqueType"), // Implies named opaque type
     def("InterfaceDeclaration"),
     null
   ))
@@ -41,14 +46,24 @@ def("DeclareExportAllDeclaration")
 
 def("OpaqueType")
   .bases("Declaration")
-  .build("id", "typeParameters", "right")
+  .build("id", "typeParameters", "impltype", "supertype")
   .field("id", def("Identifier"))
   .field("typeParameters", or(def("TypeParameterDeclaration"), null))
-  .field("right", def("Type"));
+  .field("impltype", def("Type"))
+  .field("supertype", or(def("Type"), null));
 
 def("DeclareOpaqueType")
-  .bases("TypeAlias")
-  .build("id", "typeParameters", "right");
+  .bases("OpaqueType")
+  .build("id", "typeParameters", "impltype", "supertype")
+  .field("impltype", or(def("Type"), null));
+
+def("PrivateName")
+  .bases("Expression")
+  .field("name", def("Identifier"))
+
+def("ClassPrivateProperty")
+  .bases("ClassProperty")
+  .field("key", def("Identifier"))
 
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless

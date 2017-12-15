@@ -1,0 +1,32 @@
+Error: test2.js:4
+  4:     return x; // Error: number ~> ID
+                ^ number. This type is incompatible with the expected return type of
+  3: export function hide(x: number) : ID {
+                                       ^^ ID
+
+Error: test2.js:8
+  8:     return show(x); // Error: number ~> ID
+                ^^^^^^^ number. This type is incompatible with the expected return type of
+  7: function bad(x: ID) : ID {
+                           ^^ ID
+
+Error: test2.js:12
+ 12:     return opaquify(x); // Error: ID ~> number
+                ^^^^^^^^^^^ ID. This type is incompatible with the expected return type of
+ 11: function bad2(x: number): number {
+                               ^^^^^^ number
+
+Error: test3.js:5
+  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                  ^ number. This type is incompatible with
+  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                     ^^^^^^^^ num
+
+Error: test3.js:5
+  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                                        ^ number. This type is incompatible with the expected return type of
+  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                      ^^^^^^^^ num
+
+
+Found 5 errors

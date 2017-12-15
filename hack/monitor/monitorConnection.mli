@@ -10,10 +10,12 @@
 
 val server_exists : string -> bool
 
-val connect_once: ServerMonitorUtils.monitor_config ->
+val connect_once:
+  timeout:int ->
+  ServerMonitorUtils.monitor_config ->
   MonitorRpc.handoff_options ->
-  (Timeout.in_channel * out_channel, ServerMonitorUtils.connection_error) Result.t
+  (Timeout.in_channel * out_channel, ServerMonitorUtils.connection_error) result
 
 val connect_and_shut_down: ServerMonitorUtils.monitor_config ->
   (ServerMonitorUtils.shutdown_result, ServerMonitorUtils.connection_error)
-  Result.t
+  result

@@ -27,6 +27,8 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let equal x y = compare x y = 0
 
   let keys m = fold (fun k _ acc -> k :: acc) m []
+  let ordered_keys m = List.map fst (bindings m)
+
   let values m = fold (fun _ v acc -> v :: acc) m []
   let elements m = fold (fun k v acc -> (k,v)::acc) m []
 
@@ -40,7 +42,10 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let choose x =
     try Some (choose x) with Not_found -> None
 
-  let from_keys keys f =
+  let max_binding x =
+    try Some (max_binding x) with Not_found -> None
+
+  let from_keys keys ~f =
     List.fold_left begin fun acc key ->
       add key (f key) acc
     end empty keys
@@ -53,4 +58,18 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
       | None -> add key new_value map
       | Some old_value -> add key (combine old_value new_value) map
     end
+
+  let ident_map f map =
+    let map_, changed = fold (fun key item (map_, changed) ->
+      let item_ = f item in
+      add key item_ map_, changed || item_ != item
+    ) map (empty, false) in
+    if changed then map_ else map
+
+  let ident_map_key ?combine f map =
+    let map_, changed = fold (fun key item (map_, changed) ->
+      let new_key = f key in
+      add ?combine new_key item map_, changed || new_key != key
+    ) map (empty, false) in
+    if changed then map_ else map
 end

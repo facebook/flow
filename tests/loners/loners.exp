@@ -1,4 +1,4 @@
-loners.js:2
+Error: loners.js:2
   2: var z = o.z;
                ^ property `z`. Property not found in
   2: var z = o.z;

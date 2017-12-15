@@ -1,12 +1,11 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+open Severity
 
 type error_kind =
   | ParseError
@@ -14,6 +13,8 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
+  | RecursionLimitError
+  | LintError of Lints.lint_kind
 
 let string_of_kind = function
 | ParseError -> "ParseError"
@@ -21,6 +22,8 @@ let string_of_kind = function
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
 | DuplicateProviderError -> "DuplicateProviderError"
+| RecursionLimitError -> "RecursionLimitError"
+| LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
 (* internal rep for core info *)
 type message =
@@ -36,13 +39,9 @@ type info_tree =
   | InfoLeaf of info list
   | InfoNode of info list * info_tree list
 
-let info_to_message (loc, msgs) =
-  BlameM (loc, String.concat "" msgs)
-
 type error = {
   kind: error_kind;
   messages: message list;
-  op: message option;
   trace: message list;
   extra: info_tree list
 }
@@ -59,13 +58,19 @@ let info_to_messages = function
 let infos_to_messages infos =
   List.concat (List.map info_to_messages infos)
 
-let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =  {
-  kind;
-  messages = infos_to_messages infos;
-  op = Utils_js.opt_map info_to_message op_info;
-  trace = Utils_js.opt_map_default infos_to_messages [] trace_infos;
-  extra
-}
+let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
+  let infos = match kind, infos with
+    | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
+      let prefix = (Lints.string_of_kind lint_kind) ^ ": " in
+      (head_loc, (prefix ^ head_str)::head_tail)::tail
+    | _ -> infos
+  in
+  {
+    kind;
+    messages = infos_to_messages infos;
+    trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages;
+    extra
+  }
 
 (*******************************)
 
@@ -75,14 +80,7 @@ let to_pp = function
 
 type stdin_file = (Path.t * string) option
 
-let message_of_string s =
-  CommentM s
-
 let internal_error_prefix = "Internal error (see logs): "
-
-let prepend_op_reason messages = function
-  | Some message -> message :: (message_of_string "Error:") :: messages
-  | None -> messages
 
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
@@ -94,7 +92,10 @@ let append_trace_reasons message_list trace_reasons =
 let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
 let source_fragment_style text = (Tty.Normal Tty.Default, text)
+let error_heading_style text = (Tty.Bold Tty.Red, text)
+let warning_heading_style text = (Tty.Bold Tty.Yellow, text)
 let error_fragment_style text = (Tty.Normal Tty.Red, text)
+let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
 let line_number_style text = (Tty.Bold Tty.Default, text)
 let comment_style text = (Tty.Bold Tty.Default, text)
 let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
@@ -127,13 +128,13 @@ let relative_lib_path ~strip_root filename =
       Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
   | None -> relative_path ~strip_root filename
 
-let highlight_error_in_line line c0 c1 =
+let highlight_error_in_line ~severity_style line c0 c1 =
   let prefix = String.sub line 0 c0 in
   let fragment = String.sub line c0 (c1 - c0) in
   let suffix = String.sub line c1 ((String.length line) - c1) in
   [
     source_fragment_style prefix;
-    error_fragment_style fragment;
+    severity_style fragment;
     source_fragment_style suffix;
   ]
 
@@ -193,7 +194,7 @@ let read_lines_in_file loc filename stdin_file =
 
 let file_of_source source =
   match source with
-    | Some Loc.LibFile filename ->
+    | Some File_key.LibFile filename ->
         let filename =
           if is_short_lib filename
           then begin
@@ -201,16 +202,15 @@ let file_of_source source =
             String.sub filename prefix_len (String.length filename - prefix_len)
           end else filename in
         Some filename
-    | Some Loc.SourceFile filename
-    | Some Loc.JsonFile filename
-    | Some Loc.ResourceFile filename ->
+    | Some File_key.SourceFile filename
+    | Some File_key.JsonFile filename
+    | Some File_key.ResourceFile filename ->
         Some filename
-    | Some Loc.Builtins -> None
+    | Some File_key.Builtins -> None
     | None -> None
 
 let loc_of_error (err: error) =
-  let { messages; op; _ } = err in
-  let messages = prepend_op_reason messages op in
+  let { messages; _ } = err in
   match messages with
   | message :: _ ->
       let loc, _ = to_pp message in
@@ -227,8 +227,7 @@ let locs_of_error =
   and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
 
   in fun (err: error) ->
-    let { messages; op; extra; _ } = err in
-    let messages = prepend_op_reason messages op in
+    let { messages; extra; _ } = err in
     let extra_locs = locs_of_extra [] extra in
     List.fold_left (fun acc message ->
       let loc, _ = to_pp message in
@@ -252,6 +251,8 @@ let file_of_error err =
   let loc = loc_of_error err in
   file_of_source loc.Loc.source
 
+let kind_of_error err = err.kind
+
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc = Loc.(
@@ -271,13 +272,16 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 let compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
-       errors. then both infer warnings and errors at the same priority. *)
+       errors, then recursion limit errors. then both infer warnings and errors
+       at the same priority. then lint errors *)
     let order_of_kind = function
     | InternalError -> 1
     | DuplicateProviderError -> 2
     | ParseError -> 3
-    | InferError -> 4
-    | InferWarning -> 4
+    | RecursionLimitError -> 4
+    | InferError -> 5
+    | InferWarning -> 5
+    | LintError _ -> 6
     in
     fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
   in
@@ -320,14 +324,12 @@ let compare =
     let {
       kind = k1;
       messages = ml1;
-      op = op1;
       extra = extra1;
       trace = _;
     } = err1 in
     let {
       kind = k2;
       messages = ml2;
-      op = op2;
       extra = extra2;
       trace = _;
     } = err2 in
@@ -336,8 +338,6 @@ let compare =
     if k = 0 then
       let k = kind_cmp k1 k2 in
       if k = 0 then
-        let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
-        let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
         let k = compare_lists compare_message ml1 ml2 in
         if k = 0 then compare_lists compare_info_tree extra1 extra2
         else k
@@ -357,22 +357,30 @@ module ErrorSet = Set.Make(Error)
 module Cli_output = struct
   type error_flags = {
     color: Tty.color_mode;
+    include_warnings: bool;
     one_line: bool;
     show_all_errors: bool;
   }
 
   let default_error_flags = {
     color = Tty.Color_Auto;
+    include_warnings = false;
     one_line = false;
     show_all_errors = false;
   }
 
-  let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
+  let print_file_at_location ~strip_root ~severity stdin_file main_file loc s = Loc.(
     let l0 = loc.start.line in
     let l1 = loc._end.line in
     let c0 = loc.start.column in
     let c1 = loc._end.column in
     let filename = file_of_source loc.source in
+    let severity_style = match severity with
+      | Err -> error_fragment_style
+      | Warn -> warning_fragment_style
+      | Off ->
+        Utils_js.assert_false "CLI output is only called with warnings and errors."
+    in
 
     let see_another_file ~is_lib filename =
       if filename = main_file
@@ -400,13 +408,13 @@ module Cli_output = struct
       ]
     | None, _ ->
         let original_filename, is_lib = match filename, loc.source with
-        | Some filename, Some Loc.LibFile _
-        | None, Some Loc.LibFile filename -> filename,true
+        | Some filename, Some File_key.LibFile _
+        | None, Some File_key.LibFile filename -> filename,true
         | Some filename, _
-        | None, Some Loc.SourceFile filename
-        | None, Some Loc.JsonFile filename
-        | None, Some Loc.ResourceFile filename -> filename, false
-        | None, Some Loc.Builtins
+        | None, Some File_key.SourceFile filename
+        | None, Some File_key.JsonFile filename
+        | None, Some File_key.ResourceFile filename -> filename, false
+        | None, Some File_key.Builtins
         | None, None ->
           failwith "Should only have lib and source files at this point" in
         [comment_style s] @
@@ -414,23 +422,24 @@ module Cli_output = struct
         [default_style "\n"];
     | Some code_lines, Some filename ->
         let is_lib = match loc.source with
-        | Some Loc.LibFile _ -> true
+        | Some File_key.LibFile _ -> true
         | _ -> false in
         begin match code_lines with
         | code_line, [] ->
           (* Here we have a single line of context *)
           let line_number_text = Printf.sprintf "%3d: " l0 in
           let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
-            then highlight_error_in_line code_line c0 c1
+            then highlight_error_in_line ~severity_style code_line c0 c1
             else [source_fragment_style code_line]
           in
           let padding =
             let line_num = String.make (String.length line_number_text) ' ' in
             let spaces =
-              if String.length code_line <= c0 then ""
-              else
-                let prefix = String.sub code_line 0 c0 in
-                Str.global_replace (Str.regexp "[^\t ]") " " prefix
+              let prefix = if String.length code_line <= c0
+                then code_line
+                else String.sub code_line 0 c0
+              in
+              Str.global_replace (Str.regexp "[^\t ]") " " prefix
             in
             line_num ^ spaces
           in
@@ -464,10 +473,10 @@ module Cli_output = struct
                 let highlighted_line =
                   (* First line *)
                   if line_num = l0
-                  then highlight_error_in_line line c0 (String.length line)
+                  then highlight_error_in_line ~severity_style line c0 (String.length line)
                   (* Last line *)
                   else if line_num = l1
-                  then highlight_error_in_line line 0 c1
+                  then highlight_error_in_line ~severity_style line 0 c1
                   (* middle lines *)
                   else [error_fragment_style line] in
                 line_num + 1, (line_number_text :: highlighted_line)::acc
@@ -525,13 +534,13 @@ module Cli_output = struct
         end
   )
 
-  let print_message_nice ~strip_root stdin_file main_file message =
+  let print_message_nice ~strip_root ~severity stdin_file main_file message =
     let loc, s = to_pp message in
-    print_file_at_location ~strip_root stdin_file main_file loc s
+    print_file_at_location ~strip_root ~severity stdin_file main_file loc s
 
   let print_extra_info =
     let nonterm_newline = Str.regexp "\n\\(.\\)" in
-    let rec f ~strip_root stdin_file main_file indent tree =
+    let rec f ~strip_root ~severity stdin_file main_file indent tree =
       let infos, kids = match tree with
         | InfoLeaf infos -> infos, []
         | InfoNode (infos, kids) -> infos, kids
@@ -539,7 +548,7 @@ module Cli_output = struct
       let lines = List.map (fun (loc, strs) ->
         let msg = String.concat ". " strs in
         let lines =
-          print_file_at_location ~strip_root stdin_file main_file loc msg in
+          print_file_at_location ~strip_root ~severity stdin_file main_file loc msg in
         match lines with
         | [] -> []
         | (style, str) :: lines ->
@@ -552,32 +561,47 @@ module Cli_output = struct
           )
       ) infos in
       lines @ List.concat (
-        List.map (f ~strip_root stdin_file main_file ("  " ^ indent)) kids
+        List.map (f ~strip_root ~severity stdin_file main_file ("  " ^ indent)) kids
       )
-    in fun ~strip_root stdin_file main_file tree ->
-      List.concat (f ~strip_root stdin_file main_file "  " tree)
+    in fun ~strip_root ~severity stdin_file main_file tree ->
+      List.concat (f ~strip_root ~severity stdin_file main_file "  " tree)
 
-  let print_error_header ~strip_root ~kind message =
+  let print_error_header ~strip_root ~kind ~severity message =
     let loc, _ = to_pp message in
     let prefix, relfilename = match loc.Loc.source with
-      | Some Loc.LibFile filename ->
+      | Some File_key.LibFile filename ->
         let header = match kind with
         | ParseError -> "Library parse error:"
         | InferError -> "Library type error:"
-        (* TODO: we don't publicly distinguish warnings vs errors right now *)
+        (* "InferWarning"s should still really be treated as errors. *)
         | InferWarning -> "Library type error:"
         | InternalError -> internal_error_prefix
         (* TODO: is this possible? What happens when there are two `declare
            module`s with the same name? *)
         | DuplicateProviderError -> "Library duplicate provider error:"
+        | RecursionLimitError -> "Library recursion limit error:"
+        | LintError lint_kind ->
+          let lint_string = Lints.string_of_kind lint_kind in
+          Printf.sprintf "Library lint %s (%s):"
+            (output_string_of_severity severity) lint_string
         in
         [comment_file_style (header^"\n")],
         relative_lib_path ~strip_root filename
-      | Some Loc.SourceFile filename
-      | Some Loc.JsonFile filename
-      | Some Loc.ResourceFile filename ->
-          [], relative_path ~strip_root filename
-      | Some Loc.Builtins -> [], "[No file]"
+      | Some File_key.SourceFile filename
+      | Some File_key.JsonFile filename
+      | Some File_key.ResourceFile filename ->
+        let heading_style = match severity with
+          | Err -> error_heading_style
+          | Warn -> warning_heading_style
+          | Off ->
+            Utils_js.assert_false "CLI output is only called with warnings and errors."
+        in
+        let severity_str = severity
+          |> output_string_of_severity
+          |> String.capitalize_ascii
+        in
+        [heading_style (severity_str ^ ":"); default_style " "], relative_path ~strip_root filename
+      | Some File_key.Builtins -> [], "[No file]"
       | None -> [], "[No file]"
     in
     let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
@@ -615,20 +639,19 @@ module Cli_output = struct
     (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
   let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
-    (error : error) =
-    let { kind; messages; op; trace; extra } = error in
-    let messages = prepend_op_reason messages op in
+      ~severity (error : error) =
+    let { kind; messages; trace; extra } = error in
     let messages = append_trace_reasons messages trace in
     let messages = merge_comments_into_blames messages in
-    let header = print_error_header ~strip_root ~kind (List.hd messages) in
+    let header = print_error_header ~strip_root ~kind ~severity (List.hd messages) in
     let main_file = match file_of_error error with
       | Some filename -> filename
       | None -> "[No file]" in
     let formatted_messages = List.concat (List.map (
-      print_message_nice ~strip_root stdin_file main_file
+      print_message_nice ~strip_root ~severity stdin_file main_file
     ) messages) in
     let formatted_extra = List.concat (List.map (
-      print_extra_info ~strip_root stdin_file main_file
+      print_extra_info ~strip_root ~severity stdin_file main_file
     ) extra) in
     let to_print = header @ formatted_messages @ formatted_extra in
     let to_print = if one_line then List.map remove_newlines to_print
@@ -641,35 +664,66 @@ module Cli_output = struct
       ~strip_root
       ~one_line
       ~color
+      ~severity
       (error : error) =
     let to_print =
-      get_pretty_printed_error ~stdin_file ~strip_root ~one_line error in
+      get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~severity error in
     Tty.cprint ~out_channel ~color_mode:color to_print
 
-  let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root errors =
-    let error_or_errors n = if n != 1 then "errors" else "error" in
-    let truncate = not (flags.show_all_errors) in
-    let one_line = flags.one_line in
-    let color = flags.color in
-    let print_error_if_not_truncated e curr =
-      if not(truncate) || curr < 50 then print_error_color
-        ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
+  let print_errors =
+    let render_counts =
+      let error_or_errors n = if n != 1 then "errors" else "error" in
+      let warning_or_warnings n = if n != 1 then "warnings" else "warning" in
 
-      curr + 1
+      fun ~err_count ~warn_count sep ->
+        (* If there are 0 errors and 0 warnings, just render "0 errors" *)
+        if warn_count = 0 then
+          Printf.sprintf "%d%s%s"
+            err_count sep (error_or_errors err_count)
+        else if err_count = 0 then
+          Printf.sprintf "%d%s%s"
+            warn_count sep (warning_or_warnings warn_count)
+        else (* err_count > 0 and warn_count > 0 *)
+          Printf.sprintf "%d%s%s and %d%s%s"
+            err_count sep (error_or_errors err_count)
+            warn_count sep (warning_or_warnings warn_count)
     in
-    let total = ErrorSet.fold print_error_if_not_truncated errors 0 in
-    if total > 0 then print_newline ();
-    if truncate && total > 50 then (
-      Printf.fprintf
-        out_channel
-        "... %d more %s (only 50 out of %d errors displayed)\n"
-        (total - 50) (error_or_errors (total - 50)) total;
-      Printf.fprintf
-        out_channel
-        "To see all errors, re-run Flow with --show-all-errors\n";
-      flush out_channel
-    ) else
-      Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
+
+    fun ~out_channel ~flags ?(stdin_file=None)
+      ~strip_root ~errors ~warnings () ->
+      let truncate = not (flags.show_all_errors) in
+      let one_line = flags.one_line in
+      let color = flags.color in
+      let print_error_if_not_truncated severity e curr =
+        begin if not(truncate) || curr < 50 then
+          print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
+        end;
+
+        curr + 1
+      in
+      let err_count = ErrorSet.fold (print_error_if_not_truncated Err) errors 0 in
+      let total_count = ErrorSet.fold
+        (print_error_if_not_truncated Warn) warnings err_count
+      in
+      let warn_count = total_count - err_count in
+      if total_count > 0 then print_newline ();
+      if truncate && total_count > 50 then (
+        let remaining_errs, remaining_warns = if err_count - 50 < 0
+          then 0, warn_count - (50 - err_count)
+          else err_count - 50, warn_count
+        in
+        Printf.fprintf
+          out_channel
+          "... %s (only 50 out of %s displayed)\n"
+          (render_counts ~err_count:remaining_errs ~warn_count:remaining_warns " more ")
+          (render_counts ~err_count ~warn_count " ");
+        Printf.fprintf
+          out_channel
+          "To see all errors, re-run Flow with --show-all-errors\n";
+        flush out_channel
+      ) else
+        Printf.fprintf out_channel "Found %s\n"
+          (render_counts ~err_count ~warn_count " ")
 end
 
 (* JSON output *)
@@ -691,9 +745,6 @@ module Json_output = struct
     | Some loc ->
       ("loc", Reason.json_of_loc ~strip_root loc) ::
       deprecated_json_props_of_loc ~strip_root loc
-
-  let json_of_message ~strip_root message =
-    Hh_json.JSON_Object (json_of_message_props ~strip_root message)
 
   let json_of_message_with_context ~strip_root ~stdin_file message =
     let open Hh_json in
@@ -732,16 +783,20 @@ module Json_output = struct
     )
 
   let json_of_error_props
-    ~strip_root ~json_of_message
-    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; op; trace; extra } =
+    ~strip_root ~json_of_message ~severity
+    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; trace; extra } =
     let open Hh_json in
-    let kind_str, severity_str = match kind with
-      | ParseError -> "parse", "error"
-      | InferError -> "infer", "error"
-      | InferWarning -> "infer", "warning"
-      | InternalError -> "internal", "error"
-      | DuplicateProviderError -> "duplicate provider", "error"
+    let kind_str = match kind with
+      | ParseError -> "parse"
+      | InferError -> "infer"
+      (* "InferWarning"s should still really be treated as errors. (The name is outdated.) *)
+      | InferWarning -> "infer"
+      | InternalError -> "internal"
+      | DuplicateProviderError -> "duplicate provider"
+      | RecursionLimitError -> "recursion limit exceeded"
+      | LintError _ -> "lint"
     in
+    let severity_str = output_string_of_severity severity in
     let suppressions = suppression_locs
     |> Loc.LocSet.elements
     |> List.map (fun loc ->
@@ -757,50 +812,44 @@ module Json_output = struct
     let props = match trace with [] -> props | _ ->
       ("trace", JSON_Array (List.map json_of_message trace)) :: props
     in
-    (* add op if present *)
-    let props = match op with None -> props | Some op ->
-      let op_loc, op_desc = to_pp op in
-      ("operation", json_of_message (BlameM (op_loc, op_desc))):: props
-    in
     (* add extra if present *)
     if extra = [] then props
     else
       let extra = List.map (json_of_info_tree ~json_of_message) extra in
       ("extra", JSON_Array extra) :: props
 
-  let json_of_error ~strip_root error =
-    let json_of_message = json_of_message ~strip_root in
-    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message  error)
-
   let json_of_error_with_context
-    ~strip_root ~stdin_file (error, suppression_locs) =
+    ~strip_root ~stdin_file ~severity (error, suppression_locs) =
     let json_of_message =
       json_of_message_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message ~suppression_locs error)
-
-  let json_of_errors ~strip_root errors =
-    let f = json_of_error ~strip_root in
-    Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
+    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message
+      ~severity ~suppression_locs error)
 
   let json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors errors =
+    ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
-      |> List.map (fun errs -> errs, Loc.LocSet.empty) in
+      |> List.map (fun err -> err, Loc.LocSet.empty) in
+    let warnings = warnings
+      |> ErrorSet.elements
+      |> List.map (fun warn -> warn, Loc.LocSet.empty)
+    in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (
-      List.map f errors @
-      List.map f suppressed_errors
+      List.map (f ~severity:Err) errors @
+      List.map (f ~severity:Warn) warnings @
+      (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
+      List.map (f ~severity:Err) suppressed_errors
     )
 
-  let full_status_json_of_errors
-    ~strip_root ~suppressed_errors ?(profiling=None) ?(stdin_file=None) errors =
+  let full_status_json_of_errors ~strip_root ~suppressed_errors
+    ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String Flow_version.version;
       "errors", json_of_errors_with_context
-        ~strip_root ~stdin_file ~suppressed_errors errors;
+        ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings ();
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -814,11 +863,14 @@ module Json_output = struct
       ~strip_root
       ~suppressed_errors
       ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
-      el =
+      ~errors
+      ~warnings
+      () =
     let open Hh_json in
-    let res = full_status_json_of_errors
-      ~strip_root ~profiling ~stdin_file ~suppressed_errors el in
-    output_string out_channel (json_to_string ~pretty res);
+    let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+      ~suppressed_errors ~errors ~warnings () in
+    if pretty then output_string out_channel (json_to_multiline res)
+    else json_to_output out_channel res;
     flush out_channel
 end
 
@@ -827,7 +879,7 @@ module Vim_emacs_output = struct
   let string_of_loc ~strip_root loc = Loc.(
     match loc.source with
     | None
-    | Some Builtins -> ""
+    | Some File_key.Builtins -> ""
     | Some file ->
       let file = Reason.string_of_source ~strip_root file in
       let line = loc.start.line in
@@ -844,30 +896,36 @@ module Vim_emacs_output = struct
 
   let print_errors =
     let endline s = if s = "" then "" else s ^ "\n" in
-    let to_pp_string ~strip_root message =
+    let to_pp_string ~strip_root prefix message =
       let loc, msg = to_pp message in
       let loc_str = string_of_loc ~strip_root loc in
-      Printf.sprintf "%s%s" (endline loc_str) (endline msg)
+      Printf.sprintf "%s%s%s" (endline loc_str) prefix (endline msg)
     in
-    let to_string ~strip_root (error : error) : string =
+    let to_string ~strip_root prefix (error : error) : string =
       let {messages; trace; _} = error in
       let messages = append_trace_reasons messages trace in
       let buf = Buffer.create 50 in
       (match messages with
       | [] -> assert false
       | message1 :: rest_of_error ->
-          Buffer.add_string buf (to_pp_string ~strip_root message1);
+          Buffer.add_string buf (to_pp_string ~strip_root prefix message1);
           List.iter begin fun message ->
-            Buffer.add_string buf (to_pp_string ~strip_root message)
+            Buffer.add_string buf (to_pp_string ~strip_root "" message)
           end rest_of_error
       );
       Buffer.contents buf
     in
-    fun ~strip_root oc el ->
-      let sl = ErrorSet.fold (fun err acc ->
-        (to_string ~strip_root err)::acc
-      ) el [] in
-      let sl = ListUtils.uniq (List.sort String.compare sl) in
+    fun ~strip_root oc ~errors ~warnings () ->
+      let sl = []
+        |> ErrorSet.fold (fun err acc ->
+            (to_string ~strip_root "Error: " err)::acc
+          ) (errors)
+        |> ErrorSet.fold (fun warn acc ->
+            (to_string ~strip_root "Warning: " warn)::acc
+          ) (warnings)
+        |> List.sort String.compare
+        |> ListUtils.uniq
+      in
       List.iter begin fun s ->
         output_string oc s;
         output_string oc "\n";

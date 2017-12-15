@@ -1,65 +1,39 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
 (****************** shared context heap *********************)
 
-(* map from file names to contexts *)
-(* NOTE: Entries are cached for performance, since contexts are read a lot more
-   than they are written. But this means that proper care must be taken when
-   reading contexts: in particular, context graphs have mutable bounds, so they
-   must be copied, otherwise bad things will happen. (The cost of copying
-   context graphs is presumably a lot less than deserializing contexts, so the
-   optimization makes sense. *)
-module ContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = Context.cacheable_t
-  let prefix = Prefix.make()
-  let description = "Context"
-end)
-
-let add_context = Expensive.wrap (fun file cx -> ContextHeap.add file (Context.to_cache cx))
-let find_unsafe_context = Expensive.wrap (fun ~options file ->
-  Context.from_cache ~options (ContextHeap.find_unsafe file)
-)
-
-let add ~audit cx =
-  let cx_file = Context.file cx in
-  add_context ~audit cx_file cx
-
-let remove_batch files =
-  ContextHeap.remove_batch files
-
-module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
   type t = Context.cacheable_t
   let prefix = Prefix.make()
   let description = "SigContext"
 end)
 
 let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
-let find_unsafe_sig_context = Expensive.wrap (fun ~options file ->
-  Context.from_cache ~options (SigContextHeap.find_unsafe file)
-)
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
   add_sig_context ~audit cx_file cx
 
-module SigHashHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = SigHash.t
+let find_sig ~options file =
+  match SigContextHeap.get file with
+  | Some cx -> Context.from_cache ~options cx
+  | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
+
+module SigHashHeap = SharedMem_js.WithCache (File_key) (struct
+  type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
 end)
 
-module LeaderHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = filename
+module LeaderHeap = SharedMem_js.WithCache (File_key) (struct
+  type t = File_key.t
   let prefix = Prefix.make()
   let description = "Leader"
 end)
@@ -67,23 +41,22 @@ end)
 let find_leader file =
   match LeaderHeap.get file with
   | Some leader -> leader
-  | None -> raise (Key_not_found ("LeaderHeap", (string_of_filename file)))
+  | None -> raise (Key_not_found ("LeaderHeap", (File_key.to_string file)))
 
 (* While merging, we must keep LeaderHeap, SigContextHeap, and SigHashHeap in
    sync, sometimes creating new entries and sometimes reusing old entries. *)
 
 (* Add a sig only if it has not changed meaningfully, and return the result of
    that check. *)
-let add_merge_on_diff ~audit component_cxs md5 =
-  let component_files = List.map (Context.file) component_cxs in
-  let leader_f, leader_cx = List.hd component_files, List.hd component_cxs in
+let add_merge_on_diff ~audit leader_cx component_files xx =
+  let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
-    | Some md5_old -> Loc.check_suffix leader_f Files.flow_ext || md5 <> md5_old
+    | Some xx_old -> File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
     | None -> true in
   if diff then begin
     List.iter (fun f -> LeaderHeap.add f leader_f) component_files;
     add_sig_context ~audit leader_f leader_cx;
-    SigHashHeap.add leader_f md5;
+    SigHashHeap.add leader_f xx;
   end;
   diff
 
@@ -101,60 +74,3 @@ let revive_merge_batch files =
   LeaderHeap.revive_batch files;
   SigContextHeap.revive_batch files;
   SigHashHeap.revive_batch files
-
-(* We already cache contexts in the shared memory for performance, but context
-   graphs need to be copied because they have mutable bounds. We maintain an
-   additional cache of local copies. Mutating bounds in local copies of context
-   graphs is not only OK, but we rely on it during merging, so it is both safe
-   and necessary to cache the local copies. As a side effect, this probably
-   helps performance too by avoiding redundant copying. *)
-class context_cache = object(self)
-  val cached_infer_contexts = Hashtbl.create 0
-
-  (* find a context in the cache *)
-  method find file =
-    try Some (Hashtbl.find cached_infer_contexts file)
-    with _ -> None
-
-  (* read a context from shared memory, copy its graph, and cache the context *)
-  method read ~audit ~options file =
-    let orig_cx =
-      try find_unsafe_context ~audit ~options file
-      with Not_found ->
-        raise (Key_not_found ("ContextHeap", (string_of_filename file)))
-    in
-    let cx = Context.copy_of_context orig_cx in
-    Hashtbl.add cached_infer_contexts file cx;
-    cx
-
-  method read_safe ~audit ~options file =
-    try Some (self#read ~audit ~options file)
-    with Key_not_found _ -> None
-end
-
-(* Similar to above, but for "signature contexts." The only differences are that
-   the underlying heap is SigContextHeap instead of ContextHeap, and that `read`
-   returns both the original and the copied version of a context. *)
-class sig_context_cache = object(self)
-  val cached_merge_contexts = Hashtbl.create 0
-
-  (* find a context in the cache *)
-  method find file =
-    try Some (Hashtbl.find cached_merge_contexts file)
-    with _ -> None
-
-  (* read a context from shared memory, copy its graph, and cache the context *)
-  method read ~audit ~options file =
-    let orig_cx =
-      try find_unsafe_sig_context ~audit ~options file
-      with Not_found ->
-        raise (Key_not_found ("SigContextHeap", (string_of_filename file)))
-    in
-    let cx = Context.copy_of_context orig_cx in
-    Hashtbl.add cached_merge_contexts file cx;
-    orig_cx, cx
-
-  method read_safe ~audit ~options file =
-    try Some (self#read ~audit ~options file)
-    with Key_not_found _ -> None
-end

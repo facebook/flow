@@ -27,9 +27,9 @@
     {% if page.codemirror or layout.codemirror %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css" integrity="sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=" crossorigin="anonymous"/>
     {% endif %}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.3/require.min.js"></script>
+    <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
     <script type="text/javascript">
-      require.config({
+      requirejs.config({
         baseUrl: '/assets',
         waitSeconds: 30,
         shim: {
@@ -78,12 +78,12 @@
         return tether;
       });
 
-      require([
+      requirejs([
         'bootstrap',
         {% if page.search or layout.search %}'{% asset_name "search" %}',{% endif %}
       ]);
       {% if page.editor or layout.editor %}
-      require(['{% asset_name "editor" %}'], function(Editor) {
+      requirejs(['{% asset_name "editor" %}'], function(Editor) {
         Editor.init();
       });
       {% endif %}

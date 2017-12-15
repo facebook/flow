@@ -1,14 +1,14 @@
-issue-198.js:9
+Error: issue-198.js:9
   9:         return str.toFixed();
                         ^^^^^^^ property `toFixed`. Property not found in
   9:         return str.toFixed();
                     ^^^ String
 
-issue-324.js:8
+Error: issue-324.js:8
   8: foostr = barstr;
               ^^^^^^ Bar. This type is incompatible with
   5: var foostr: Foo | string = new Foo();
-                 ^^^^^^^^^^^^ union: Foo | string
+                 ^^^^^^^^^^^^ union: `Foo` | string
   Member 1:
     5: var foostr: Foo | string = new Foo();
                    ^^^ Foo
@@ -26,11 +26,11 @@ issue-324.js:8
     5: var foostr: Foo | string = new Foo();
                          ^^^^^^ string
 
-union.js:2
+Error: union.js:2
   2: bar(0);
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
   1: function bar(x: Document | string): void { }
-                     ^^^^^^^^^^^^^^^^^ union: Document | string
+                     ^^^^^^^^^^^^^^^^^ union: `Document` | string
   Member 1:
     1: function bar(x: Document | string): void { }
                        ^^^^^^^^ Document
@@ -48,29 +48,23 @@ union.js:2
     1: function bar(x: Document | string): void { }
                                   ^^^^^^ string
 
-union.js:8
+Error: union.js:8
   8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
                  ^^^^^^^ D. This type is incompatible with
   8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
              ^ C
 
-union.js:9
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ C. This type is incompatible with
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ D
-
-union.js:9
+Error: union.js:9
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ D. This type is incompatible with
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ C
 
-yuge.js:23
+Error: yuge.js:23
  23:     ("": ErrorCode);  // also, error pos omits this line completely
           ^^ string. This type is incompatible with
  23:     ("": ErrorCode);  // also, error pos omits this line completely
               ^^^^^^^^^ number enum
 
 
-Found 7 errors
+Found 6 errors

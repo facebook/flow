@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+
+[lints]
+
+[strict]
+nonstrict-import
+untyped-type-import
+untyped-import

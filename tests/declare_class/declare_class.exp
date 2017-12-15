@@ -1,32 +1,40 @@
 Library type error:
 lib/test.js:0
 inconsistent use of library definitions
-  8:   foo(): string;
-              ^^^^^^ string. This type is incompatible with
-  2:   foo(): number;
-              ^^^^^^ number
+  7: declare class D extends _module.C {
+                   ^ D. Cannot extend
+  7: declare class D extends _module.C {
+                             ^^^^^^^^^ _C
+  Property `foo` is incompatible:
+      8:   foo(): string;
+           ^^^^^^^^^^^^^ function type. This type is incompatible with
+      2:   foo(): number;
+           ^^^^^^^^^^^^^ function type
+      The return is incompatible:
+          8:   foo(): string;
+                      ^^^^^^ string. This type is incompatible with
+          2:   foo(): number;
+                      ^^^^^^ number
 
-declare_class.js:8
-  8: C.x = "";
-     ^^^ assignment of property `x`
+Error: declare_class.js:8
   8: C.x = "";
            ^^ string. This type is incompatible with
   8: C.x = "";
      ^^^ number
 
-declare_class.js:9
+Error: declare_class.js:9
   9: C.foo("");
            ^^ string. This type is incompatible with the expected param type of
   3:     static foo(x: number): void;
                        ^^^^^^ number
 
-declare_class.js:12
+Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
       ^^^^^^ string. This type is incompatible with
  12: (C.name: number); // error, it's a string
               ^^^^^^ number
 
-declare_class.js:15
+Error: declare_class.js:15
  15: new D(123); // error, number ~> string
            ^^^ number. This type is incompatible with the expected param type of
   5:     constructor(x: string): void;

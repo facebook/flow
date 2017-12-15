@@ -1,0 +1,152 @@
+Error: test.js:6
+  6: obj.p = 42; // Should error!
+     ^^^ Obj. Covariant property `p` incompatible with contravariant use in
+  6: obj.p = 42; // Should error!
+     ^^^^^ assignment of property `p`
+
+Error: test.js:14
+ 14: multiKeyObj.p = 42; // Should error!
+     ^^^^^^^^^^^ MultiKeyObj. Covariant property `p` incompatible with contravariant use in
+ 14: multiKeyObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:15
+ 15: multiKeyObj.q = 42; // Should error!
+     ^^^^^^^^^^^ MultiKeyObj. Covariant property `q` incompatible with contravariant use in
+ 15: multiKeyObj.q = 42; // Should error!
+     ^^^^^^^^^^^^^ assignment of property `q`
+
+Error: test.js:22
+ 22:   unionObj.p = 42; // Should error!
+       ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 22:   unionObj.p = 42; // Should error!
+       ^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:24
+ 24:   (unionObj.q: number); // Should error!
+                 ^ property `q`. Property not found in
+ 24:   (unionObj.q: number); // Should error!
+        ^^^^^^^^ object type
+
+Error: test.js:26
+ 26:   unionObj.p = 42; // Should error!
+       ^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 26:   unionObj.p = 42; // Should error!
+       ^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:27
+ 27:   unionObj.q = 42; // Should error!
+       ^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
+ 27:   unionObj.q = 42; // Should error!
+       ^^^^^^^^^^ assignment of property `q`
+
+Error: test.js:36
+ 36:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^ SpreadUnionObj. Covariant property `p` incompatible with contravariant use in
+ 36:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:37
+ 37:   spreadUnionObj.z = 42; // Should error!
+       ^^^^^^^^^^^^^^ SpreadUnionObj. Covariant property `z` incompatible with contravariant use in
+ 37:   spreadUnionObj.z = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `z`
+
+Error: test.js:40
+ 40:   (spreadUnionObj.q: number); // Should error!
+                       ^ property `q`. Property not found in
+ 40:   (spreadUnionObj.q: number); // Should error!
+        ^^^^^^^^^^^^^^ SpreadUnionObj
+
+Error: test.js:42
+ 42:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^ SpreadUnionObj. Covariant property `p` incompatible with contravariant use in
+ 42:   spreadUnionObj.p = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:43
+ 43:   spreadUnionObj.q = 42; // Should error!
+       ^^^^^^^^^^^^^^ SpreadUnionObj. Covariant property `q` incompatible with contravariant use in
+ 43:   spreadUnionObj.q = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `q`
+
+Error: test.js:44
+ 44:   spreadUnionObj.z = 42; // Should error!
+       ^^^^^^^^^^^^^^ SpreadUnionObj. Covariant property `z` incompatible with contravariant use in
+ 44:   spreadUnionObj.z = 42; // Should error!
+       ^^^^^^^^^^^^^^^^ assignment of property `z`
+
+Error: test.js:52
+ 52: intersectionObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 52: intersectionObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:53
+ 53: intersectionObj.q = 42; // Should error!
+     ^^^^^^^^^^^^^^^ object type. Covariant property `q` incompatible with contravariant use in
+ 53: intersectionObj.q = 42; // Should error!
+     ^^^^^^^^^^^^^^^^^ assignment of property `q`
+
+Error: test.js:59
+ 59: indexerKeyObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^ IndexerKeyObj. Covariant property `p` incompatible with contravariant use in
+ 59: indexerKeyObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:60
+ 60: indexerKeyObj.x = true; // Should error!
+     ^^^^^^^^^^^^^ IndexerKeyObj. Covariant property `x` incompatible with contravariant use in
+ 60: indexerKeyObj.x = true; // Should error!
+     ^^^^^^^^^^^^^^^ assignment of property `x`
+
+Error: test.js:66
+ 66: exactObj.p = 42; // Should error!
+     ^^^^^^^^ ExactObj. Covariant property `p` incompatible with contravariant use in
+ 66: exactObj.p = 42; // Should error!
+     ^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:71
+ 71: spreadObj.p = 42; // Should error!
+     ^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 71: spreadObj.p = 42; // Should error!
+     ^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:76
+ 76: spreadExactObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^ object type. Covariant property `p` incompatible with contravariant use in
+ 76: spreadExactObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:81
+ 81: objWithMethod.p = 42; // Should error!
+     ^^^^^^^^^^^^^ ObjWithMethod. Covariant property `p` incompatible with contravariant use in
+ 81: objWithMethod.p = 42; // Should error!
+     ^^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:82
+ 82: objWithMethod.fn = () => true; // Should error!
+     ^^^^^^^^^^^^^ ObjWithMethod. Covariant property `fn` incompatible with contravariant use in
+ 82: objWithMethod.fn = () => true; // Should error!
+     ^^^^^^^^^^^^^^^^ assignment of property `fn`
+
+Error: test.js:90
+ 90: instance.p = 42; // Should error!
+     ^^^^^^^^ A. Covariant property `p` incompatible with contravariant use in
+ 90: instance.p = 42; // Should error!
+     ^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:95
+ 95: writeOnlyObj.p = 42; // Should error!
+     ^^^^^^^^^^^^ WriteOnlyObj. Covariant property `p` incompatible with contravariant use in
+ 95: writeOnlyObj.p = 42; // Should error!
+     ^^^^^^^^^^^^^^ assignment of property `p`
+
+Error: test.js:99
+ 99: type readOnlyNum = $ReadOnly<number>;
+                        ^^^^^^^^^^^^^^^^^ readOnlyNum. Cannot create an object with read-only properties from
+ 99: type readOnlyNum = $ReadOnly<number>;
+                                  ^^^^^^ number
+
+
+Found 25 errors

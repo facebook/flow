@@ -1,4 +1,4 @@
-no_at_flow.js:3
+Error: no_at_flow.js:3
   3: x.length;
        ^^^^^^ property `length`. Property cannot be accessed on possibly undefined value
   3: x.length;

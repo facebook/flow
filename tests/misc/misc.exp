@@ -1,76 +1,74 @@
-A.js:13
+Error: A.js:13
  13: A.x = A.y;
            ^^^ string. This type is incompatible with
-  6: var A = {x:true, ...{}};
-                ^^^^ boolean
+ 13: A.x = A.y;
+     ^^^ boolean
 
-A.js:14
+Error: A.js:14
  14: f(A.x); // A.x is now a string, by def assign
        ^^^ string. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean
 
-C.js:9
+Error: C.js:9
   9:   f(o.b);
            ^ property `b`. Property not found in
   9:   f(o.b);
          ^ new object
 
-C.js:10
+Error: C.js:10
  10:   f(o.s);
          ^^^ number. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean. See: A.js:9
 
-D.js:6
+Error: D.js:6
   6: function g():string { return this.i; }
                                   ^^^^^^ boolean. This type is incompatible with the expected return type of
   6: function g():string { return this.i; }
                   ^^^^^^ string
 
-D.js:12
+Error: D.js:12
  12: f(i);
        ^ string. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean. See: A.js:9
 
-E.js:8
+Error: E.js:8
   8: o.fn(false);
           ^^^^^ boolean. This type is incompatible with the expected param type of
   4: function h(x:number) { }
                   ^^^^^^ number
 
-F.js:1
+Error: F.js:1
   1: function fn2(x) { return x.length * 4; }
                               ^^^^^^^^ string. The operand of an arithmetic operation must be a number.
 
-F.js:5
+Error: F.js:5
   5:   return x.length;
               ^^^^^^^^ number. This type is incompatible with the expected return type of
   4: function foo(x: Array<number>): string {
                                      ^^^^^^ string
 
-G.js:2
+Error: G.js:2
   2: a.length = 123;
                 ^^^ number. This type is incompatible with
-  1: var a = { length: "duck" };
-                       ^^^^^^ string
+  2: a.length = 123;
+     ^^^^^^^^ string
 
-G.js:3
+Error: G.js:3
   3: a.length();
      ^^^^^^^^^^ call of method `length`. Function cannot be called on
   3: a.length();
      ^^^^^^^^^^ number
 
-G.js:6
-  6: b.length = "duck";
-     ^^^^^^^^ assignment of property `length`
+Error: G.js:6
   6: b.length = "duck";
                 ^^^^^^ string. This type is incompatible with
-224:     length: number;
-                 ^^^^^^ number. See lib: <BUILTINS>/core.js:224
+  6: b.length = "duck";
+     ^^^^^^^^ number
 
-G.js:7
+Error: G.js:7
   7: b.length();
      ^^^^^^^^^^ call of method `length`. Function cannot be called on
   7: b.length();

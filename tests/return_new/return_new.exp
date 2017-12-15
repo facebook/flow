@@ -1,34 +1,39 @@
-test.js:2
+Error: test.js:2
   2: var foo: number = new Foo(); // error (returns object literal above)
                        ^^^^^^^^^ object literal. This type is incompatible with
   2: var foo: number = new Foo(); // error (returns object literal above)
               ^^^^^^ number
 
-test.js:5
+Error: test.js:5
   5: var bar: number = new Bar(); // error (returns new object)
                        ^^^^^^^^^ new object. This type is incompatible with
   5: var bar: number = new Bar(); // error (returns new object)
               ^^^^^^ number
 
-test.js:8
+Error: test.js:8
   8: var qux: number = new Qux(); // error (returns new object)
                        ^^^^^^^^^ new object. This type is incompatible with
   8: var qux: number = new Qux(); // error (returns new object)
               ^^^^^^ number
 
-test.js:23
+Error: test.js:23
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-                       ^^^^^^^^^^^ property `x`. Property not found in
+      ^^^^^^^^^^^^^^^ new object. This type is incompatible with
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-          ^^^^^^^^^ new object
+                       ^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+                           ^^^^^^^^^^^ property `x`. Property not found in
+     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+          ^^^^^^^^^^^^^^^ new object
 
-test2.js:7
+Error: test2.js:7
   7: d.x = ""; // error, string ~/~ number (but property x is found)
            ^^ string. This type is incompatible with
-  2:   constructor(): { x: number }; // OK
-                           ^^^^^^ number
+  7: d.x = ""; // error, string ~/~ number (but property x is found)
+     ^^^ number
 
-test2.js:9
+Error: test2.js:9
   9: (new D: D); // error, new D is an object, D not in proto chain
       ^^^^^ object type. This type is incompatible with
   9: (new D: D); // error, new D is an object, D not in proto chain

@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)
@@ -365,18 +365,27 @@ end = struct
 
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
-  external hh_add    : Key.md5 -> Value.t -> int = "hh_add"
+  external hh_add    : Key.md5 -> Value.t -> int * int = "hh_add"
   external hh_mem         : Key.md5 -> bool            = "hh_mem"
   external hh_get_size    : Key.md5 -> int             = "hh_get_size"
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
   external hh_remove      : Key.md5 -> unit            = "hh_remove"
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 
-  let log_serialize n =
-    let sharedheap = float n in
+  let log_serialize compressed original =
+    let compressed = float compressed in
+    let original = float original in
+    let saved = original -. compressed in
+    let ratio = compressed /. original in
     Measure.sample (Value.description
-      ^ " (bytes serialized into shared heap)") sharedheap;
-    Measure.sample ("ALL bytes serialized into shared heap") sharedheap
+      ^ " (bytes serialized into shared heap)") compressed;
+    Measure.sample ("ALL bytes serialized into shared heap") compressed;
+    Measure.sample (Value.description
+      ^ " (bytes saved in shared heap due to compression)") saved;
+    Measure.sample ("ALL bytes saved in shared heap due to compression") saved;
+    Measure.sample (Value.description
+      ^ " (shared heap compression ratio)") ratio;
+    Measure.sample ("ALL bytes shared heap compression ratio") ratio
 
   let log_deserialize l r =
     let sharedheap = float l in
@@ -502,9 +511,9 @@ end = struct
     let add stack_opt key value =
       match stack_opt with
       | None ->
-        let size = hh_add key value in
-        if hh_log_level() > 0 && size > 0
-        then log_serialize size
+        let compressed_size, original_size = hh_add key value in
+        if hh_log_level() > 0 && compressed_size > 0
+        then log_serialize compressed_size original_size
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove

@@ -1,95 +1,153 @@
-A.js:8
+Error: A.js:8
   8:   return f();
               ^^^ string. This type is incompatible with the expected return type of
   7: function b(f: { (): string }): number {
                                     ^^^^^^ number
 
-A.js:13
+Error: A.js:13
  13:   return f("hello");
                 ^^^^^^^ string. This type is incompatible with the expected param type of
  12: function c(f: { (x: number): number }): number {
                          ^^^^^^ number
 
-A.js:18
+Error: A.js:18
  18:   return f();
-              ^^^ function call
- 18:   return f();
-              ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+              ^^^ call of `f`. Too few arguments passed to
  17: function d(f: { (x: number): number }): number {
-                         ^^^^^^ number
+                     ^^^^^^^^^^^^^^^^^^^ function type
 
-A.js:23
+Error: A.js:23
  23:   return f();
-              ^^^ function call. Callable signature not found in
+              ^^^ call of `f`. Callable signature not found in
  23:   return f();
               ^ object type
 
-A.js:29
+Error: A.js:29
  29:   return x();
-              ^^^ function call. Callable signature not found in
+              ^^^ call of `x`. Callable signature not found in
  29:   return x();
               ^ object literal
 
-B.js:5
+Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of function. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                                                ^^^^^^ string. This type is incompatible with
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                               ^^^^^^ number
+                  ^^^^^^^^^^^^^^^^^^^ function type
+      The return is incompatible:
+          5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                                                    ^^^^^^ string. This type is incompatible with
+          5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                   ^^^^^^ number
 
-B.js:8
+Error: B.js:8
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                  ^^^^^^ string. This type is incompatible with the expected param type of
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                                   ^^^^^^ number
+            ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Callable property is incompatible:
+      8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+      8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                  ^^^^^^^^^^^^^^^^^^^ function type
+      The first parameter is incompatible:
+          8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                          ^^^^^^ string. This type is incompatible with
+          8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                                           ^^^^^^ number
 
-B.js:11
+Error: B.js:11
  11: var d: { (): string } = function (x: number): string { return "hi"; };
-              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
  11: var d: { (): string } = function (x: number): string { return "hi"; };
-                                          ^^^^^^ number
+            ^^^^^^^^^^^^^^ object type
+  Callable property is incompatible:
+     11: var d: { (): string } = function (x: number): string { return "hi"; };
+                  ^^^^^^^^^^ function type. Too few arguments passed to
+     11: var d: { (): string } = function (x: number): string { return "hi"; };
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
-C.js:7
+Error: C.js:8
+  8:   return x;
+              ^ object type. This type is incompatible with the expected return type of
   7: function b(x: { (z: number): string }): (z: number) => number {
-                                  ^^^^^^ string. This type is incompatible with the expected return type of
-  7: function b(x: { (z: number): string }): (z: number) => number {
-                                                            ^^^^^^ number
+                                             ^^^^^^^^^^^^^^^^^^^^^ function type
+  Callable property is incompatible:
+      7: function b(x: { (z: number): string }): (z: number) => number {
+                         ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+      7: function b(x: { (z: number): string }): (z: number) => number {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ function type
+      The return is incompatible:
+          7: function b(x: { (z: number): string }): (z: number) => number {
+                                          ^^^^^^ string. This type is incompatible with
+          7: function b(x: { (z: number): string }): (z: number) => number {
+                                                                    ^^^^^^ number
 
-C.js:12
+Error: C.js:13
+ 13:   return x;
+              ^ object type. This type is incompatible with the expected return type of
  12: function c(x: { (z: number): string }): (z: string) => string {
-                                                 ^^^^^^ string. This type is incompatible with the expected param type of
- 12: function c(x: { (z: number): string }): (z: string) => string {
-                         ^^^^^^ number
+                                             ^^^^^^^^^^^^^^^^^^^^^ function type
+  Callable property is incompatible:
+     12: function c(x: { (z: number): string }): (z: string) => string {
+                         ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+     12: function c(x: { (z: number): string }): (z: string) => string {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ function type
+      The first parameter is incompatible:
+         12: function c(x: { (z: number): string }): (z: string) => string {
+                                                         ^^^^^^ string. This type is incompatible with
+         12: function c(x: { (z: number): string }): (z: string) => string {
+                                 ^^^^^^ number
 
-C.js:17
+Error: C.js:18
+ 18:   return x;
+              ^ object type. This type is incompatible with the expected return type of
  17: function d(x: { (z: number): string }): () => string {
-                                             ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 17: function d(x: { (z: number): string }): () => string {
-                         ^^^^^^ number
+                                             ^^^^^^^^^^^^ function type
+  Callable property is incompatible:
+     17: function d(x: { (z: number): string }): () => string {
+                                                 ^^^^^^^^^^^^ function type. Too few arguments passed to
+     17: function d(x: { (z: number): string }): () => string {
+                         ^^^^^^^^^^^^^^^^^^^ function type
 
-C.js:22
- 22: function e(x: {}): () => string {
-                        ^^^^^^^^^^^^ function type. Callable signature not found in
+Error: C.js:23
  23:   return x;
-              ^ object type
+              ^ object type. This type is incompatible with the expected return type of
+ 22: function e(x: {}): () => string {
+                        ^^^^^^^^^^^^ function type
+  Callable property is incompatible:
+     22: function e(x: {}): () => string {
+                            ^^^^^^^^^^^^ function type. Callable signature not found in
+     23:   return x;
+                  ^ object type
 
-C.js:32
- 32: function g(x: {}): Function {
-                        ^^^^^^^^ function type. Callable signature not found in
+Error: C.js:33
  33:   return x; // error
-              ^ object type
+              ^ object type. This type is incompatible with the expected return type of
+ 32: function g(x: {}): Function {
+                        ^^^^^^^^ function type
+  Callable property is incompatible:
+     32: function g(x: {}): Function {
+                            ^^^^^^^^ function type. Callable signature not found in
+     33:   return x; // error
+                  ^ object type
 
-D.js:11
- 11: var c: { (): string; (x: number): string } =
-              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+Error: D.js:12
  12:   function (x: number): string { return "hi"; };
-                    ^^^^^^ number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+ 11: var c: { (): string; (x: number): string } =
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Callable property is incompatible:
+     11: var c: { (): string; (x: number): string } =
+                  ^^^^^^^^^^ function type. Too few arguments passed to
+     12:   function (x: number): string { return "hi"; };
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
-D.js:20
+Error: D.js:20
  20: function e(x: { (): string; (x: number): string }): () => number {
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection. This type is incompatible with
  20: function e(x: { (): string; (x: number): string }): () => number {
@@ -98,41 +156,82 @@ D.js:20
    20: function e(x: { (): string; (x: number): string }): () => number {
                        ^^^^^^^^^^ function type
   Error:
+   21:   return x;
+                ^ object type. This type is incompatible with the expected return type of
    20: function e(x: { (): string; (x: number): string }): () => number {
-                           ^^^^^^ string. This type is incompatible with the expected return type of
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                                                 ^^^^^^ number
+                                                           ^^^^^^^^^^^^ function type
+    Callable property is incompatible:
+       20: function e(x: { (): string; (x: number): string }): () => number {
+                           ^^^^^^^^^^ function type. This type is incompatible with
+       20: function e(x: { (): string; (x: number): string }): () => number {
+                                                               ^^^^^^^^^^^^ function type
+        The return is incompatible:
+           20: function e(x: { (): string; (x: number): string }): () => number {
+                                   ^^^^^^ string. This type is incompatible with
+           20: function e(x: { (): string; (x: number): string }): () => number {
+                                                                         ^^^^^^ number
   Member 2:
    20: function e(x: { (): string; (x: number): string }): () => number {
                                    ^^^^^^^^^^^^^^^^^^^ function type
   Error:
+   21:   return x;
+                ^ object type. This type is incompatible with the expected return type of
    20: function e(x: { (): string; (x: number): string }): () => number {
-                                                           ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                       ^^^^^^ number
+                                                           ^^^^^^^^^^^^ function type
+    Callable property is incompatible:
+       20: function e(x: { (): string; (x: number): string }): () => number {
+                                                               ^^^^^^^^^^^^ function type. Too few arguments passed to
+       20: function e(x: { (): string; (x: number): string }): () => number {
+                                       ^^^^^^^^^^^^^^^^^^^ function type
 
-E.js:2
+Error: E.js:2
   2: var a : { someProp: number } = function () {};
-             ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
+                                    ^^^^^^^^^^^^^^ function. This type is incompatible with
   2: var a : { someProp: number } = function () {};
-                                    ^^^^^^^^^^^^^^ function
+             ^^^^^^^^^^^^^^^^^^^^ object type
+  Property `someProp` is incompatible:
+      2: var a : { someProp: number } = function () {};
+                 ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
+      2: var a : { someProp: number } = function () {};
+                                        ^^^^^^^^^^^^^^ function
 
-F.js:6
+Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"
-                                      ^^^^^^^^^^^ statics of function. This type is incompatible with
+                                      ^^^^^^^^^^^ function. This type is incompatible with
   6: var b: { (x: number): number } = (x) => "hi"
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       6: var b: { (x: number): number } = (x) => "hi"
-                                                 ^^^^ string. This type is incompatible with
+                                          ^^^^^^^^^^^ function. This type is incompatible with
       6: var b: { (x: number): number } = (x) => "hi"
-                               ^^^^^^ number
+                  ^^^^^^^^^^^^^^^^^^^ function type
+      The return is incompatible:
+          6: var b: { (x: number): number } = (x) => "hi"
+                                                     ^^^^ string. This type is incompatible with
+          6: var b: { (x: number): number } = (x) => "hi"
+                                   ^^^^^^ number
 
-F.js:9
+Error: F.js:9
   9: var c: { (x: string): string } = (x) => x.toFixed()
                                                ^^^^^^^ property `toFixed`. Property not found in
   9: var c: { (x: string): string } = (x) => x.toFixed()
                                              ^ String
 
+Error: use_ops.js:4
+  4: (a: B); // error HERE and preserve use ops
+      ^ A. This type is incompatible with
+  4: (a: B); // error HERE and preserve use ops
+         ^ B
+  Property `p` is incompatible:
+      1: type A = { p: {} }
+                       ^^ object type. This type is incompatible with
+      2: type B = { +p: () => void }
+                        ^^^^^^^^^^ function type
+      Callable property is incompatible:
+          2: type B = { +p: () => void }
+                            ^^^^^^^^^^ function type. Callable signature not found in
+          1: type A = { p: {} }
+                           ^^ object type
 
-Found 18 errors
+
+Found 19 errors

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -24,8 +21,8 @@ end = struct
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
     ConfigCommands.Init.command;
-    ConvertCommand.command;
     CoverageCommand.command;
+    CycleCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;
     FindRefsCommand.command;
@@ -80,22 +77,29 @@ end = struct
     FlowEventLogger.set_command (Some command_string);
     FlowEventLogger.init_flow_command ~version:Flow_version.version;
 
-    let args =
-      try CommandSpec.args_of_argv command argv
-      with CommandSpec.Failed_to_parse msg ->
-        let msg = Utils_js.spf
-          "%s: %s\n%s"
-          (Filename.basename Sys.executable_name)
-          msg
-          (CommandSpec.string_of_usage command)
-        in
-        FlowExitStatus.(exit ~msg Commandline_usage_error)
-    in
-
-    try CommandSpec.run command args
-    with CommandSpec.Show_help ->
+    try
+      let args = CommandSpec.args_of_argv command argv in
+      CommandSpec.run command args
+    with
+    | CommandSpec.Show_help ->
       print_endline (CommandSpec.string_of_usage command);
       FlowExitStatus.(exit No_error)
+    | CommandSpec.Failed_to_parse (arg_name, msg) ->
+      begin try
+        let json_arg = List.find (fun s ->
+          String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json")
+          argv in
+        let pretty = String_utils.string_starts_with json_arg "--pretty" in
+        FlowExitStatus.set_json_mode ~pretty
+      with Not_found -> () end;
+      let msg = Utils_js.spf
+        "%s: %s %s\n%s"
+        (Filename.basename Sys.executable_name)
+        arg_name
+        msg
+        (CommandSpec.string_of_usage command)
+      in
+      FlowExitStatus.(exit ~msg Commandline_usage_error)
 end
 
 let _ =
@@ -108,6 +112,8 @@ let _ =
      normally would cause a SIGPIPE instead throws an EPIPE exception. We handle exceptions and
      exit via FlowExitStatus.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
+
+  let () = Printexc.record_backtrace true in
 
   try
     Daemon.check_entry_point (); (* this call might not return *)

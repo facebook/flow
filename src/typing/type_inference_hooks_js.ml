@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 let id_nop _ _ _ = false
@@ -23,6 +20,10 @@ let import_nop _ _ _ = ()
 let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
+
+let method_decl_nop _ _ _ = ()
+
+let prop_decl_nop _ _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
@@ -83,12 +84,12 @@ type hook_state_t = {
 
   require_hook:
      (Context.t ->
-      string -> Loc.t ->
+      (Loc.t * string) -> Loc.t ->
       unit);
 
   import_hook:
       (Context.t ->
-       string -> Loc.t ->
+       (Loc.t * string) -> Loc.t ->
        unit);
 
   jsx_hook:
@@ -101,6 +102,16 @@ type hook_state_t = {
        Loc.t ->
        Loc.t ->
        unit);
+
+  method_decl_hook:
+     (Context.t ->
+      string -> Loc.t ->
+      unit);
+
+  prop_decl_hook:
+     (Context.t ->
+      string -> Loc.t ->
+      unit);
 }
 
 let nop_hook_state = {
@@ -112,6 +123,8 @@ let nop_hook_state = {
   import_hook = import_nop;
   jsx_hook = jsx_nop;
   ref_hook = ref_nop;
+  method_decl_hook = method_decl_nop;
+  prop_decl_hook = prop_decl_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -140,6 +153,12 @@ let set_jsx_hook hook =
 let set_ref_hook hook =
   hook_state := { !hook_state with ref_hook = hook }
 
+let set_method_decl_hook hook =
+  hook_state := { !hook_state with method_decl_hook = hook }
+
+let set_prop_decl_hook hook =
+  hook_state := { !hook_state with prop_decl_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -166,3 +185,9 @@ let dispatch_jsx_hook cx name loc this_t =
 
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
+
+let dispatch_method_decl_hook cx name loc =
+  !hook_state.method_decl_hook cx name loc
+
+let dispatch_prop_decl_hook cx name loc =
+  !hook_state.prop_decl_hook cx name loc

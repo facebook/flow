@@ -1,22 +1,22 @@
-test2.js:10
+Error: test2.js:10
  10: check(B, new A);
               ^^^^^ A. This type is incompatible with the expected param type of
   4: declare function check<X>(cls: $Type<X>, inst: X): void;
                                     ^^^^^^^^ B
 
-test2.js:12
+Error: test2.js:12
  12: check(C, new A);
               ^^^^^ A. This type is incompatible with the expected param type of
   4: declare function check<X>(cls: $Type<X>, inst: X): void;
                                     ^^^^^^^^ C
 
-test2.js:13
+Error: test2.js:13
  13: check(C, new B);
               ^^^^^ B. This type is incompatible with the expected param type of
   4: declare function check<X>(cls: $Type<X>, inst: X): void;
                                     ^^^^^^^^ C
 
-test2.js:14
+Error: test2.js:14
  14: check(B, new C);
               ^^^^^ C. This type is incompatible with the expected param type of
   4: declare function check<X>(cls: $Type<X>, inst: X): void;

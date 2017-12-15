@@ -1,34 +1,34 @@
-forof.js:7
+Error: forof.js:7
   7:     (x: string); // Error - number ~> string
           ^ number. This type is incompatible with
   7:     (x: string); // Error - number ~> string
              ^^^^^^ string
 
-forof.js:13
+Error: forof.js:13
  13:     (x: string); // Error - number ~> string
           ^ number. This type is incompatible with
  13:     (x: string); // Error - number ~> string
              ^^^^^^ string
 
-forof.js:25
+Error: forof.js:25
  25:     (x: number); // Error - string ~> number
           ^ string. This type is incompatible with
  25:     (x: number); // Error - string ~> number
              ^^^^^^ number
 
-forof.js:32
+Error: forof.js:32
  32:     (elem: number); // Error - tuple ~> number
           ^^^^ tuple type. This type is incompatible with
  32:     (elem: number); // Error - tuple ~> number
                 ^^^^^^ number
 
-forof.js:39
+Error: forof.js:39
  39:     (elem: number); // Error - tuple ~> number
           ^^^^ tuple type. This type is incompatible with
  39:     (elem: number); // Error - tuple ~> number
                 ^^^^^^ number
 
-forof.js:45
+Error: forof.js:45
  45:     (x: number); // Error - string ~> number
           ^ string. This type is incompatible with
  45:     (x: number); // Error - string ~> number

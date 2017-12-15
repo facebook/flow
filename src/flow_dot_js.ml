@@ -1,12 +1,19 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+let error_of_parse_error source_file (loc, err) =
+  let flow_err = Flow_error.EParseError (loc, err) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+
+let error_of_file_sig_error source_file e =
+  let flow_err = File_sig.(match e with
+  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType loc
+  ) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let parse_content file content =
   let parse_options = Some Parser_env.({
@@ -22,12 +29,18 @@ let parse_content file content =
     types = true;
     use_strict = false;
   }) in
-  Parser_flow.program_file ~fail:false ~parse_options content (Some file)
-
-let calc_requires ast =
-  let mapper = new Require.mapper ~default_jsx:true in
-  let _ = mapper#program ast in
-  mapper#requires
+  let ast, parse_errors =
+    Parser_flow.program_file ~fail:false ~parse_options content (Some file)
+  in
+  if parse_errors <> [] then
+    let converted = List.fold_left (fun acc parse_error ->
+      Errors.ErrorSet.add (error_of_parse_error file parse_error) acc
+    ) Errors.ErrorSet.empty parse_errors in
+    Error converted
+  else
+    match File_sig.program ~ast with
+    | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
+    | Ok fsig -> Ok (ast, fsig)
 
 let array_of_list f lst =
   Array.of_list (List.map f lst)
@@ -48,61 +61,62 @@ let rec js_of_json = function
   | Hh_json.JSON_Null ->
       Js.Unsafe.inject Js.null
 
-let error_of_parse_error source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (loc, err) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
-
 let load_lib_files ~master_cx ~metadata files
-    save_parse_errors save_infer_errors save_suppressions =
+    save_parse_errors save_infer_errors save_suppressions save_lint_suppressions =
   (* iterate in reverse override order *)
   let _, result = List.rev files |> List.fold_left (
 
     fun (exclude_syms, result) file ->
       let lib_content = Sys_utils.cat file in
-      let lib_file = Loc.LibFile file in
+      let lib_file = File_key.LibFile file in
       match parse_content lib_file lib_content with
-      | ast, [] ->
-
+      | Ok (ast, file_sig) ->
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms
+          ~metadata ~exclude_syms ~file_sig
+          ~lint_severities:LintSettings.default_severities
           lib_file ast
         in
 
-        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
         save_infer_errors lib_file errs;
         save_suppressions lib_file suppressions;
+        save_lint_suppressions lib_file lint_suppressions;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
-        let exclude_syms = SSet.union exclude_syms (Utils_js.set_of_list syms) in
+        let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
         let result = (lib_file, true) :: result in
         exclude_syms, result
 
-      | _, parse_errors ->
-        let converted = List.fold_left (fun acc parse_error ->
-          Errors.ErrorSet.add (error_of_parse_error lib_file parse_error) acc
-        ) Errors.ErrorSet.empty parse_errors in
-        save_parse_errors lib_file converted;
+      | Error parse_errors ->
+        save_parse_errors lib_file parse_errors;
         exclude_syms, ((lib_file, false) :: result)
 
     ) (SSet.empty, [])
 
   in result
 
+let stub_docblock = { Docblock.
+  flow = None;
+  preventMunge = None;
+  providesModule = None;
+  isDeclarationFile = false;
+  jsx = None;
+}
+
 let stub_metadata ~root ~checked = { Context.
   local_metadata = { Context.
     checked;
     munge_underscores = false;
-    output_graphml = false;
     verbose = None;
     weak = false;
     jsx = None;
+    strict = false;
   };
   global_metadata = { Context.
     enable_const_params = false;
-    enable_unsafe_getters_and_setters = true;
     enforce_strict_type_args = true;
-    enforce_strict_call_arity = false;
+    enforce_strict_call_arity = true;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_ENABLE;
@@ -126,7 +140,7 @@ let get_master_cx =
     | None ->
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
-        Loc.Builtins
+        File_key.Builtins
         Files.lib_module_ref in
       master_cx := Some (root, cx);
       cx
@@ -135,55 +149,62 @@ let set_libs filenames =
   let root = Path.dummy_path in
   let master_cx = get_master_cx root in
   let metadata = stub_metadata ~root ~checked:true in
-  let _ = load_lib_files
+  let _: (File_key.t * bool) list = load_lib_files
     ~master_cx
     ~metadata
     filenames
     (fun _file _errs -> ())
     (fun _file _errs -> ())
-    (fun _file _sups -> ()) in
+    (fun _file _sups -> ())
+    (fun _file _lint -> ()) in
 
   Flow_js.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Flow_js.mk_object master_cx reason in
+  let builtin_module = Obj_type.mk master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context [master_cx]
+  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
+
+let infer_and_merge ~root filename ast file_sig =
+  (* this is a VERY pared-down version of Merge_service.merge_strict_context.
+     it relies on the JS version only supporting libs + 1 file, so every
+     module you can require() must come from a lib; this skips resolving
+     module names and just adds them all to the `decls` list. *)
+  Flow_js.Cache.clear();
+  let metadata = stub_metadata ~root ~checked:true in
+  let master_cx = get_master_cx root in
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let decls = SMap.fold (fun module_name locs acc ->
+    let m = Modulename.String module_name in
+    (module_name, locs, m, filename) :: acc
+  ) require_loc_map [] in
+  let reqs = Merge_js.Reqs.({ empty with decls }) in
+  let lint_severities = LintSettings.default_severities in
+  let strict_mode = StrictModeSettings.empty in
+  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+  let cx, _other_cxs = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_docblock_unsafe:(fun _ -> stub_docblock)
+    [filename] reqs [] master_cx
+  in
+  cx
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
-  let filename = Loc.SourceFile filename in
-  let errors = match parse_content filename content with
-  | ast, [] ->
-    (* defaults *)
-    let metadata = stub_metadata ~root ~checked:true in
-
-    Flow_js.Cache.clear();
-
-    let require_loc_map = calc_requires ast in
-    let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
-
-    (* this is a VERY pared-down version of Merge_service.merge_strict_context.
-       it relies on the JS version only supporting libs + 1 file, so every
-       module you can require() must come from a lib; this skips resolving
-       module names and just adds them all to the `decls` list. *)
-    let decls = SMap.fold (fun module_name loc acc ->
-      (module_name, loc, Modulename.String module_name, cx) :: acc
-    ) require_loc_map [] in
-
-    let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict [cx] [] [] [] decls master_cx;
-
-    Context.errors cx
-  | _, parse_errors ->
-    List.fold_left (fun acc parse_error ->
-      Errors.ErrorSet.add (error_of_parse_error filename parse_error) acc
-    ) Errors.ErrorSet.empty parse_errors
+  let filename = File_key.SourceFile filename in
+  let errors, warnings = match parse_content filename content with
+  | Ok (ast, file_sig) ->
+    let cx = infer_and_merge ~root filename ast file_sig in
+    let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
+      Error_suppressions.empty (Context.severity_cover cx) (Context.errors cx)
+    in errors, warnings
+  | Error parse_errors ->
+    parse_errors, Errors.ErrorSet.empty
   in
   let strip_root = Some root in
-  errors
-  |> Errors.Json_output.json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors:[]
+  Errors.Json_output.json_of_errors_with_context
+    ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()
   |> js_of_json
 
 let check filename =
@@ -213,62 +234,69 @@ let mk_loc file line col =
   }
 
 let infer_type filename content line col =
-    let filename = Loc.SourceFile filename in
+    let filename = File_key.SourceFile filename in
     let root = Path.dummy_path in
     match parse_content filename content with
-    | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+    | Error _ -> failwith "parse error"
+    | Ok (ast, file_sig) ->
+      let cx = infer_and_merge ~root filename ast file_sig in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
         | FailureUnparseable (loc, _, possible_ts) -> loc, None, possible_ts
         | Success (loc, gt, possible_ts) -> loc, Some gt, possible_ts
       ) in
-      let ty, raw_type = match ground_t with
-        | None -> None, None
-        | Some t ->
-            let ty = Some (Type_printer.string_of_t cx t) in
-            let raw_type = Some (Debug_js.jstr_of_t ~depth:10 cx t)
-            in
-            ty, raw_type
+      let ty = match ground_t with
+        | None -> None
+        | Some t -> Some (Type_printer.string_of_t cx t)
       in
       let reasons =
         possible_ts
         |> List.map Type.reason_of_t
       in
-      (None, Some (loc, ty, raw_type, reasons))
-    | _, _ -> failwith "parse error"
+      (None, Some (loc, ty, reasons))
+
+let types_to_json types ~strip_root =
+  let open Hh_json in
+  let open Reason in
+  let types_json = types |> List.map (fun (loc, _ctor, str, reasons) ->
+    let json_assoc = (
+      ("type", JSON_String str) ::
+      ("reasons", JSON_Array (List.map (fun r ->
+        let r_loc = loc_of_reason r in
+        let r_def_loc = def_loc_of_reason r in
+        JSON_Object (
+          ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
+          ("loc", json_of_loc ~strip_root r_loc) ::
+          ((if r_def_loc = r_loc then [] else [
+            "def_loc", json_of_loc ~strip_root r_def_loc
+          ]) @ (Errors.deprecated_json_props_of_loc ~strip_root r_loc))
+        )
+      ) reasons)) ::
+      ("loc", json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
+    ) in
+    JSON_Object json_assoc
+  ) in
+  JSON_Array types_json
 
 let dump_types js_file js_content =
-    let filename = Loc.SourceFile (Js.to_string js_file) in
+    let filename = File_key.SourceFile (Js.to_string js_file) in
     let root = Path.dummy_path in
     let content = Js.to_string js_content in
     match parse_content filename content with
-    | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+    | Error _ -> failwith "parse error"
+    | Ok (ast, file_sig) ->
+      let cx = infer_and_merge ~root filename ast file_sig in
       let printer = Type_printer.string_of_t in
-      let raw_printer _ _ = None in
-      let types = Query_types.dump_types printer raw_printer cx in
+      let types = Query_types.dump_types printer cx in
 
       let strip_root = None in
-      let types_json = DumpTypesCommand.types_to_json types ~strip_root in
+      let types_json = types_to_json types ~strip_root in
 
       js_of_json types_json
-    | _, _ -> failwith "parse error"
 
-let handle_inferred_result (_, inferred, _, _) =
+let handle_inferred_result (_, inferred, _) =
   inferred
 
 let type_at_pos js_file js_content js_line js_col =
@@ -282,15 +310,16 @@ let type_at_pos js_file js_content js_line js_col =
   | (_, _) ->  failwith "Error"
 
 let exports =
-  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
+  if (Js.Unsafe.js_expr "typeof exports !== 'undefined'")
   then Js.Unsafe.js_expr "exports"
   else begin
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;
     exports
   end
+
 let () = Js.Unsafe.set exports "registerFile" (
-  Js.wrap_callback (fun name content -> Sys_js.register_file ~name ~content)
+  Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content)
 )
 let () = Js.Unsafe.set exports
   "setLibs" (Js.wrap_callback set_libs_js)

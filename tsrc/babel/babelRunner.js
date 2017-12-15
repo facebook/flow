@@ -1,6 +1,6 @@
 /* @flow */
 
-import {mkdirp, ncp, rimraf, writeFile} from '../async';
+import {mkdirp, ncp, rimraf, writeFile} from '../utils/async';
 import {defaultTestsDirName, getTestsDir} from '../constants';
 
 import {
@@ -12,7 +12,7 @@ import {basename, dirname, extname, join, resolve} from 'path';
 
 import type {Args} from './babelCommand';
 import type {ReadStream, WriteStream} from 'fs';
-import type {NCPFile} from '../async';
+import type {NCPFile} from '../utils/async';
 
 const babelOptions = require('../../package.json').babel;
 babelOptions.sourceMaps = 'inline';

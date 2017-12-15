@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocamlfind ocp-build js_of_ocaml.2.8.1 sedlex.1.99.3"
+OPAM_DEPENDS="ocamlfind ocp-build dtoa.0.3.1 js_of_ocaml.3.0 lwt.3.1.0 sedlex.1.99.4 wtf8.1.0.1"
 
 TMP=${TMPDIR:-/tmp}
 
@@ -64,6 +64,8 @@ opam config env # print for the logs
 eval "$(opam config env)"
 echo "Installed packages:"
 ocamlfind list
+
+unset PREFIX
 
 printf "travis_fold:end:opam_installer\n"
 

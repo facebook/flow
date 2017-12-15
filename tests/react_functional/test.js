@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 function F(props: { foo: string }) {}
 <F />; // error: missing `foo`
@@ -11,3 +11,7 @@ function G(props: { foo: string|numner }) {}
 
 var Z = 0;
 <Z />; // error, expected React component
+
+// Ensure StatelessFunctionalComponent type is usable
+const H: React.StatelessFunctionalComponent<{foo: string}> = (props) => {};
+<H foo=""/>; // ok

@@ -1,59 +1,50 @@
-pred.js:16
- 16:     || options.readableObjectMode
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property cannot be accessed on any member of intersection type
- 16:     || options.readableObjectMode
-            ^^^^^^^ intersection
-  Member 1:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ ReadableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 2:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ WritableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 3:
-                                                                                  v
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-    9:   allowHalfOpen? : boolean,
-   10:   readableObjectMode? : boolean,
-   11:   writableObjectMode? : boolean
-   12: };
-       ^ object type
-  Error:
-   17:     || options.writableObjectMode; // error, undefined ~> boolean
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of
-   14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
-                                                                 ^^^^^^^ boolean
+Error: pred.js:17
+ 17:     || options.writableObjectMode; // error, undefined ~> boolean
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of
+ 14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
+                                                               ^^^^^^^ boolean
 
-test_obj.js:29
+Error: proper_blaming.js:9
+  9: x.nope; // error here
+       ^^^^ property `nope`. Property cannot be accessed on possibly null value
+  9: x.nope; // error here
+     ^ null
+
+Error: test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
  29: var e: E = c; // error
-            ^ object type
+            ^ E
   Member 1:
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
+   29: var e: E = c; // error
+                  ^ c
+   29: var e: E = c; // error
+              ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                 ^^^^^^ number. See lib: lib/lib.js:33
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
+    Indexable signature is incompatible:
+       33: type C = { [key: string]: number } & { [key: string]: number };
+                                     ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
+       28: type E = { [key: string]: string };
+                                     ^^^^^^ string
   Member 2:
    33: type C = { [key: string]: number } & { [key: string]: number };
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
+   29: var e: E = c; // error
+                  ^ c
+   29: var e: E = c; // error
+              ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                                             ^^^^^^ number. See lib: lib/lib.js:33
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
+    Indexable signature is incompatible:
+       33: type C = { [key: string]: number } & { [key: string]: number };
+                                                                 ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
+       28: type E = { [key: string]: string };
+                                     ^^^^^^ string
 
 
-Found 2 errors
+Found 3 errors

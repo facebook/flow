@@ -1,34 +1,34 @@
-proto.js:3
+Error: proto.js:3
   3: var x:number = o.x;
                     ^^^ string. This type is incompatible with
   3: var x:number = o.x;
            ^^^^^^ number
 
-proto.js:7
+Error: proto.js:7
   7: var y:number = o.m();
                     ^^^^^ boolean. This type is incompatible with
   7: var y:number = o.m();
            ^^^^^^ number
 
-proto.js:7
+Error: proto.js:7
   7: var y:number = o.m();
                     ^^^^^ string. This type is incompatible with
   7: var y:number = o.m();
            ^^^^^^ number
 
-sealed.js:3
+Error: sealed.js:3
   3: o.z = 0;
        ^ property `z`. Property not found in
   3: o.z = 0;
      ^ object type
 
-sealed.js:8
+Error: sealed.js:8
   8: a.x = 123;
        ^ property `x`. Property not found in
   8: a.x = 123;
      ^ new object
 
-sealed.js:9
+Error: sealed.js:9
   9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
        ^ property `y`. Property not found in
   9: a.y = 'abc'; // error, needs to be declared in Bar's constructor

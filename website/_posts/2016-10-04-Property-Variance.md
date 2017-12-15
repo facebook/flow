@@ -16,7 +16,7 @@ types:
 
 ### What is Variance?
 
-Defining the subtype relationship between types is a core resposibility of Flow
+Defining the subtype relationship between types is a core responsibility of Flow
 as a type system. These relationships are determined either directly for
 simple types or, for complex types, defined in terms of their parts.
 
@@ -62,7 +62,7 @@ whose return type is a subtype of `?number`.
 
 ```js
 function g(x: ?string): number {
-  return x ? x.length || 0;
+  return x ? x.length : 0;
 }
 f(g);
 ```

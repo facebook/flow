@@ -1,44 +1,44 @@
-foo/bar/nested_test.js:10
+Error: foo/bar/nested_test.js:10
  10: var unreachable = require('annotation');
                                ^^^^^^^^^^^^ annotation. Required module not found
 
-foo/bar/nested_test.js:12
+Error: foo/bar/nested_test.js:12
  12: (docblock.fun(): string);
       ^^^^^^^^^^^^^^ number. This type is incompatible with
  12: (docblock.fun(): string);
                       ^^^^^^ string
 
-foo/bar/nested_test.js:13
+Error: foo/bar/nested_test.js:13
  13: (min.fun(): string);
       ^^^^^^^^^ number. This type is incompatible with
  13: (min.fun(): string);
                  ^^^^^^ string
 
-foo/bar/nested_test.js:14
+Error: foo/bar/nested_test.js:14
  14: (corge.fun(): string);
       ^^^^^^^^^^^ number. This type is incompatible with
  14: (corge.fun(): string);
                    ^^^^^^ string
 
-foo/bar/nested_test.js:15
+Error: foo/bar/nested_test.js:15
  15: (SomeOtherModule.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  15: (SomeOtherModule.fun(): string);
                              ^^^^^^ string
 
-test.js:4
+Error: test.js:4
   4: (Implicit.fun(): string);
       ^^^^^^^^^^^^^^ number. This type is incompatible with
   4: (Implicit.fun(): string);
                       ^^^^^^ string
 
-test.js:7
+Error: test.js:7
   7: (ExplicitSameName.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
   7: (ExplicitSameName.fun(): string);
                               ^^^^^^ string
 
-test.js:10
+Error: test.js:10
  10: (ExplicitDifferentName.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  10: (ExplicitDifferentName.fun(): string);

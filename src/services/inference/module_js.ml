@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This module is the entry point of the typechecker. It sets up subtyping
@@ -18,20 +15,9 @@
 
 open Utils_js
 
-module FlowError = Flow_error
-
-module NameSet = Set.Make(Modulename)
-module NameMap = MyMap.Make(Modulename)
-
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
-(** TODO [perf] Make resolved_requires tighter.
-    (1) required and resolved_modules have a lot of redundancy; required is the
-    value set of resolved_modules.
-
-    (2) require_loc, too? Indexed by required.
-
-    Also, for info:
+(** TODO [perf] Make resolved_requires tighter. For info:
     (1) checked? We know that requires and phantom dependents for unchecked
     files are empty.
 
@@ -39,8 +25,6 @@ module NameMap = MyMap.Make(Modulename)
     that's probably guessable.
 **)
 type resolved_requires = {
-  required: NameSet.t; (* required module names *)
-  require_loc: Loc.t SMap.t; (* statement locations *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
                                             to module names they resolve to *)
   phantom_dependents: SSet.t; (* set of paths that were looked up but not found
@@ -50,7 +34,7 @@ type resolved_requires = {
 }
 
 type info = {
-  _module: Modulename.t; (* module name *)
+  module_name: Modulename.t;
   checked: bool; (* in flow? *)
   parsed: bool; (* if false, it's a tracking record only *)
 }
@@ -58,16 +42,11 @@ type info = {
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 type error =
-  | ModuleDuplicateProviderError of duplicate_provider_error
-
-and duplicate_provider_error = {
-  module_name: string;
-  provider: Loc.filename;
-  conflict: Loc.filename;
-}
-
-let relevant_package_keys = ["name"; "main"]
-let is_relevant_key key = List.mem key relevant_package_keys
+  | ModuleDuplicateProviderError of {
+    module_name: string;
+    provider: File_key.t;
+    conflict: File_key.t;
+  }
 
 let choose_provider_and_warn_about_duplicates =
   let warn_duplicate_providers m current modules errmap =
@@ -140,8 +119,8 @@ let module_name_candidates ~options name =
 (****************** shared dependency map *********************)
 
 (* map from module name to filename *)
-module NameHeap = SharedMem_js.WithCache (Modulename) (struct
-  type t = filename
+module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
+  type t = File_key.t
   let prefix = Prefix.make()
   let description = "Name"
 end)
@@ -150,7 +129,7 @@ let get_file = Expensive.wrap NameHeap.get
 let add_file = Expensive.wrap NameHeap.add
 
 (* map from filename to resolved requires *)
-module ResolvedRequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
   type t = resolved_requires
   let prefix = Prefix.make()
   let description = "ResolvedRequires"
@@ -162,7 +141,7 @@ let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
 (* map from filename to module name *)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
-module InfoHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module InfoHeap = SharedMem_js.WithCache (File_key) (struct
   type t = info
   let prefix = Prefix.make()
   let description = "Info"
@@ -175,7 +154,7 @@ let add_info = Expensive.wrap InfoHeap.add
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
-    type t = Ast.Expression.t SMap.t
+    type t = Package_json.t
     let prefix = Prefix.make()
     let description = "Package"
   end)
@@ -187,84 +166,27 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     let description = "ReversePackage"
   end)
 
-let get_key key tokens = Ast.(
-  match SMap.get key tokens with
-  | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
-      Some name
-  | _ -> None
-)
+let add_package filename ast =
+  match Package_json.parse ast with
+  | Ok package ->
+    PackageHeap.add filename package;
+    begin match Package_json.name package with
+    | Some name ->
+      ReversePackageHeap.add name (Filename.dirname filename)
+    | None -> ()
+    end
+  | Error parse_err ->
+    assert_false (spf "%s: %s" filename parse_err)
 
-let trim_quotes str =
-  let len = String.length str in
-  assert (len >= 2);
-  assert (String.get str 0 = '"');
-  assert (String.get str (len - 1) = '"');
-  String.sub str 1 (len - 2)
-
-let tokens_equal map1 map2 =
-  if SMap.cardinal map1 <> SMap.cardinal map2 then
-    false
-  else
-    let f key _ is_equal =
-      let map1_val = get_key key map1 in
-      let map2_val = get_key key map2 in
-      is_equal && map1_val = map2_val
-    in
-    SMap.fold f map1 true
-
-let get_package_keys filename ast =
-  let open Ast in
-  let open Expression.Object in
-  let statement = match ast with
-  | (_, [statement], _) -> statement
-  | _ -> assert_false (spf "Expected %s to have a single statement." filename)
-  in
-  let obj = match statement with
-  | _, Statement.Expression { Statement.Expression.
-     expression = _, Expression.Assignment { Expression.Assignment.
-       operator = Expression.Assignment.Assign;
-       left = _;
-       right = obj;
-     };
-     directive = _;
-   } -> obj
-  | _ -> assert_false (spf "Expected %s to be an assignment" filename)
-  in
-  let properties = match obj with
-  | (_, Expression.Object {properties}) -> properties
-  | _ -> assert_false (spf "Expected %s to have an object literal" filename)
-  in
-  let extract_property map = function
-    | Property(_, {
-        Property.key = Property.Literal(_, {Literal.raw; _;});
-        value = Property.Init value;
-        _;
-      }) ->
-        let key = trim_quotes raw in
-        if is_relevant_key key then
-          SMap.add key value map
-        else
-          map
-    | _ -> SMap.empty
-  in
-  List.fold_left extract_property SMap.empty properties
-
-let add_package package ast =
-  let tokens = get_package_keys package ast in
-  PackageHeap.add package tokens;
-  match get_key "name" tokens with
-  | Some name ->
-    ReversePackageHeap.add name (Filename.dirname package)
-  | None -> ()
-
-let package_incompatible package ast =
-  let new_tokens = get_package_keys package ast in
-  let old_tokens_opt = PackageHeap.get package in
-  match old_tokens_opt with
-  | None -> true
-  | Some old_tokens ->
-    let result = not (tokens_equal old_tokens new_tokens) in
-    result
+let package_incompatible filename ast =
+  match Package_json.parse ast with
+  | Ok new_package ->
+    begin match PackageHeap.get filename with
+    | None -> true
+    | Some old_package -> old_package <> new_package
+    end
+  | Error parse_err ->
+    assert_false (spf "%s: %s" filename parse_err)
 
 type resolution_acc = {
   mutable paths: SSet.t;
@@ -275,7 +197,7 @@ type resolution_acc = {
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module: Options.t -> filename -> Docblock.t -> Modulename.t
+  val exported_module: Options.t -> File_key.t -> Docblock.t -> Modulename.t
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -283,7 +205,7 @@ module type MODULE_SYSTEM = sig
   val imported_module:
     options: Options.t ->
     SSet.t ->
-    filename -> Loc.t ->
+    File_key.t -> Loc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
     string -> Modulename.t
 
@@ -296,7 +218,7 @@ module type MODULE_SYSTEM = sig
     (* map from files to error sets (accumulator) *)
     error list FilenameMap.t ->
     (* file, error map (accumulator) *)
-    (filename * error list FilenameMap.t)
+    (File_key.t * error list FilenameMap.t)
 
 end
 
@@ -345,7 +267,7 @@ and file_exists path =
     | None ->
         let files =
           if dir_exists dir
-          then set_of_list (Array.to_list (Sys.readdir dir))
+          then SSet.of_list (Array.to_list (Sys.readdir dir))
           else SSet.empty in
         files_in_dir := SMap.add dir files !files_in_dir;
         files
@@ -403,29 +325,29 @@ module Node = struct
       lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~root ~file_options loc resolution_acc package file_exts =
-    let package = resolve_symlinks package in
-    if not (file_exists package) || (Files.is_ignored file_options package)
+  let parse_main ~root ~file_options loc resolution_acc package_filename file_exts =
+    let package_filename = resolve_symlinks package_filename in
+    if not (file_exists package_filename) || (Files.is_ignored file_options package_filename)
     then None
     else
-      let tokens = match PackageHeap.get package with
-      | Some tokens -> tokens
+      let package = match PackageHeap.get package_filename with
+      | Some package -> package
       | None ->
         let msg =
-          let is_included = Files.is_included file_options package in
+          let is_included = Files.is_included file_options package_filename in
           let project_root_str = Path.to_string root in
           let is_contained_in_root =
-            Files.is_prefix project_root_str package
+            Files.is_prefix project_root_str package_filename
           in
           let package_relative_to_root =
             spf "<<PROJECT_ROOT>>%s%s"
               (Filename.dir_sep)
-              (Files.relative_path project_root_str package)
+              (Files.relative_path project_root_str package_filename)
           in
           if is_included || is_contained_in_root then (
-            FlowError.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
+            Flow_error.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
           ) else (
-            FlowError.EModuleOutsideRoot (loc, package_relative_to_root)
+            Flow_error.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
         begin match resolution_acc with
@@ -433,10 +355,10 @@ module Node = struct
           resolution_acc.errors <- msg :: resolution_acc.errors
         | None -> ()
         end;
-        SMap.empty
+        Package_json.empty
       in
-      let dir = Filename.dirname package in
-      match get_key "main" tokens with
+      let dir = Filename.dirname package_filename in
+      match Package_json.main package with
       | None -> None
       | Some file ->
         let path = Files.normalize_path dir file in
@@ -448,7 +370,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options loc ?resolution_acc root_path rel_path =
+  let resolve_relative ~options (loc, _) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path
@@ -496,7 +418,7 @@ module Node = struct
     || Str.string_match Files.parent_dir_name r 0
 
   let resolve_import ~options node_modules_containers f loc ?resolution_acc import_str =
-    let file = string_of_filename f in
+    let file = File_key.to_string f in
     let dir = Filename.dirname file in
     if explicitly_relative import_str || absolute import_str
     then resolve_relative ~options loc ?resolution_acc dir import_str
@@ -533,21 +455,21 @@ end
 
 module Haste: MODULE_SYSTEM = struct
   let short_module_name_of = function
-    | Loc.Builtins -> assert false
-    | Loc.LibFile file
-    | Loc.SourceFile file
-    | Loc.JsonFile file
-    | Loc.ResourceFile file ->
+    | File_key.Builtins -> assert false
+    | File_key.LibFile file
+    | File_key.SourceFile file
+    | File_key.JsonFile file
+    | File_key.ResourceFile file ->
         Filename.basename file |> Filename.chop_extension
 
   let is_mock =
     let mock_path = Str.regexp ".*/__mocks__/.*" in
     function
-    | Loc.Builtins -> false
-    | Loc.LibFile file
-    | Loc.SourceFile file
-    | Loc.JsonFile file
-    | Loc.ResourceFile file ->
+    | File_key.Builtins -> false
+    | File_key.LibFile file
+    | File_key.SourceFile file
+    | File_key.JsonFile file
+    | File_key.ResourceFile file ->
         Str.string_match mock_path file 0
 
   let expand_project_root_token options str =
@@ -560,10 +482,10 @@ module Haste: MODULE_SYSTEM = struct
 
   let is_haste_file options file =
     let matched_haste_paths_whitelist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (string_of_filename file) 0)
+      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
       (Options.haste_paths_whitelist options) in
     let matched_haste_paths_blacklist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (string_of_filename file) 0)
+      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
       (Options.haste_paths_blacklist options) in
     (matched_haste_paths_whitelist file) && not (matched_haste_paths_blacklist file)
 
@@ -573,7 +495,7 @@ module Haste: MODULE_SYSTEM = struct
     in
     List.fold_left
       reduce_name
-      (string_of_filename file)
+      (File_key.to_string file)
       (Options.haste_name_reducers options)
 
   let rec exported_module options file info =
@@ -607,13 +529,13 @@ module Haste: MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
-        ReversePackageHeap.get package_name |> opt_map (fun package ->
+        ReversePackageHeap.get package_name |> Option.map ~f:(fun package ->
           Files.construct_path package rest
         )
 
   (* similar to Node resolution, with possible special cases *)
   let resolve_import ~options node_modules_containers f loc ?resolution_acc r =
-    let file = string_of_filename f in
+    let file = File_key.to_string f in
     lazy_seq [
       lazy (Node.resolve_import ~options node_modules_containers f loc ?resolution_acc r);
       lazy (match expanded_name r with
@@ -692,16 +614,17 @@ let imported_module ~options ~node_modules_containers file loc ?resolution_acc r
   let module M = (val (get_module_system options)) in
   M.imported_module ~options node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options node_modules_containers f require_loc =
+let imported_modules ~options node_modules_containers file require_loc =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      resolution_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
   let resolution_acc = { paths = SSet.empty; errors = [] } in
-  let set, map = SMap.fold (fun r loc (set, map) ->
-    let resolved_r = imported_module ~options ~node_modules_containers f loc ~resolution_acc r in
-    NameSet.add resolved_r set, SMap.add r resolved_r map
-  ) require_loc (NameSet.empty, SMap.empty) in
-  set, map, resolution_acc
+  let resolved_modules = SMap.fold (fun mref loc acc ->
+    let m = imported_module file loc mref
+      ~options ~node_modules_containers ~resolution_acc in
+    SMap.add mref m acc
+  ) require_loc  SMap.empty in
+  resolved_modules, resolution_acc
 
 let choose_provider ~options m files errmap =
   let module M = (val (get_module_system options)) in
@@ -724,7 +647,7 @@ let get_resolved_requires_unsafe ~audit f =
   match get_resolved_requires ~audit f with
   | Some resolved_requires -> resolved_requires
   | None -> failwith
-      (spf "resolved requires not found for file %s" (string_of_filename f))
+      (spf "resolved requires not found for file %s" (File_key.to_string f))
 
 (* Look up cached resolved module. *)
 let find_resolved_module ~audit file r =
@@ -735,7 +658,7 @@ let get_info_unsafe ~audit f =
   match get_info ~audit f with
   | Some info -> info
   | None -> failwith
-      (spf "module info not found for file %s" (string_of_filename f))
+      (spf "module info not found for file %s" (File_key.to_string f))
 
 let checked_file ~audit f =
   let info = f |> get_info_unsafe ~audit in
@@ -745,28 +668,22 @@ let checked_file ~audit f =
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
 let resolved_requires_of ~options node_modules_containers f require_loc =
-  let required, resolved_modules, { paths; errors } =
+  let resolved_modules, { paths; errors } =
     imported_modules ~options node_modules_containers f require_loc in
-  let require_loc = SMap.fold
-    (fun r loc require_loc ->
-      let resolved_r = SMap.find_unsafe r resolved_modules in
-      SMap.add (Modulename.to_string resolved_r) loc require_loc)
-    require_loc SMap.empty in
   errors, {
-    required;
-    require_loc;
     resolved_modules;
     phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file require_loc =
+let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
+  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
   add_resolved_requires ~audit file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
-    ~trace_reasons:[] ~op:(Flow_error.Ops.peek ())
-    ~source_file:file msg) acc) Errors.ErrorSet.empty errors
+      ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -805,7 +722,7 @@ let remove_provider f m =
   let provs = try FilenameSet.remove f (Hashtbl.find all_providers m)
     with Not_found -> failwith (spf
       "can't remove provider %s of %S, not found in all_providers"
-      (string_of_filename f) (Modulename.to_string m))
+      (File_key.to_string f) (Modulename.to_string m))
   in
   Hashtbl.replace all_providers m provs
 
@@ -881,7 +798,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
         if debug then prerr_endlinef
           "no remaining providers: %S"
           (Modulename.to_string m);
-        (NameSet.add m rem), prov, rep, errmap, (NameSet.add m diff)
+        (Modulename.Set.add m rem), prov, rep, errmap, (Modulename.Set.add m diff)
     | ps ->
       (* incremental: install empty error sets here for provider candidates.
          this will have the effect of resetting downstream errors for these
@@ -908,9 +825,11 @@ let commit_modules workers ~options new_or_changed dirty_modules =
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
             (Modulename.to_string m)
-            (string_of_filename p);
-          rem, prov, rep, errmap,
-            (if FilenameSet.mem p new_or_changed then NameSet.add m diff else diff)
+            (File_key.to_string p);
+          let diff = if FilenameSet.mem p new_or_changed
+            then Modulename.Set.add m diff
+            else diff in
+          rem, prov, rep, errmap, diff
         end else begin
           (* When can this happen? Say m pointed to f before, a different file
              f' that provides m changed (so m is not in old_modules), and
@@ -918,9 +837,11 @@ let commit_modules workers ~options new_or_changed dirty_modules =
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
             (Modulename.to_string m)
-            (string_of_filename p)
-            (string_of_filename f);
-          (NameSet.add m rem), p::prov, (m, p)::rep, errmap, (NameSet.add m diff)
+            (File_key.to_string p)
+            (File_key.to_string f);
+          let rem = Modulename.Set.add m rem in
+          let diff = Modulename.Set.add m diff in
+          rem, p::prov, (m, p)::rep, errmap, diff
         end
       | None ->
           (* When can this happen? Either m pointed to a file that used to
@@ -929,14 +850,15 @@ let commit_modules workers ~options new_or_changed dirty_modules =
           if debug then prerr_endlinef
             "initial provider %S -> %s"
             (Modulename.to_string m)
-            (string_of_filename p);
-          rem, p::prov, (m,p)::rep, errmap, (NameSet.add m diff)
-  ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) dirty_modules in
+            (File_key.to_string p);
+          let diff = Modulename.Set.add m diff in
+          rem, p::prov, (m,p)::rep, errmap, diff
+  ) (Modulename.Set.empty, [], [], FilenameMap.empty, Modulename.Set.empty) dirty_modules in
 
   (* update NameHeap *)
-  if not (NameSet.is_empty remove) then begin
+  if not (Modulename.Set.is_empty remove) then begin
     NameHeap.remove_batch remove;
-    SharedMem_js.collect options `gentle;
+    SharedMem_js.collect `gentle;
   end;
 
   MultiWorker.call
@@ -956,16 +878,16 @@ let commit_modules workers ~options new_or_changed dirty_modules =
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
 
-let get_files ~audit filename _module =
-  (_module, get_file ~audit _module)::
+let get_files ~audit filename module_name =
+  (module_name, get_file ~audit module_name)::
     let f_module = eponymous_module filename in
-    if f_module = _module then []
+    if f_module = module_name then []
     else [f_module, get_file ~audit f_module]
 
-let get_files_unsafe ~audit filename _module =
-  (_module, get_file_unsafe ~audit _module)::
+let get_files_unsafe ~audit filename module_name =
+  (module_name, get_file_unsafe ~audit module_name)::
     let f_module = eponymous_module filename in
-    if f_module = _module then []
+    if f_module = module_name then []
     else [f_module, get_file_unsafe ~audit f_module]
 
 (* Clear module mappings for given files, if they exist.
@@ -996,10 +918,10 @@ let calc_old_modules ~options old_file_module_assoc =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
-    List.fold_left (fun old_modules (_module, provider) ->
-      remove_provider file _module;
+    List.fold_left (fun old_modules (module_name, provider) ->
+      remove_provider file module_name;
       if provider = file
-      then (_module, Some provider)::old_modules
+      then (module_name, Some provider)::old_modules
       else old_modules
     ) old_modules module_provider_assoc
   ) [] old_file_module_assoc in
@@ -1017,9 +939,9 @@ let clear_files workers ~options new_or_changed_or_deleted =
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
-        let { _module; _ } = info in
+        let { module_name; _ } = info in
         (file,
-         get_files_unsafe ~audit:Expensive.ok file _module) :: acc
+         get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
       | None -> acc
     ))
     ~neutral: []
@@ -1029,7 +951,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
   ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
   calc_old_modules ~options old_file_module_assoc
 
@@ -1038,18 +960,18 @@ let clear_files workers ~options new_or_changed_or_deleted =
    is complete. *)
 let add_parsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
+  let module_name = exported_module ~options file docblock in
   let checked =
     force_check ||
     Docblock.is_flow docblock
   in
   let info = {
-    _module;
+    module_name;
     checked;
     parsed = true;
   } in
   add_info ~audit file info;
-  _module
+  module_name
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -1060,27 +982,27 @@ let add_parsed_info ~audit ~options file docblock =
  *)
 let add_unparsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
+  let module_name = exported_module ~options file docblock in
   let checked =
     force_check ||
-    Loc.source_is_lib_file file ||
+    File_key.is_lib_file file ||
     Docblock.is_flow docblock ||
     Docblock.isDeclarationFile docblock
   in
   let info = {
-    _module;
+    module_name;
     checked;
     parsed = false;
   } in
   add_info ~audit file info;
-  _module
+  module_name
 
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
   let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
-    List.fold_left (fun new_modules (_module, opt_provider) ->
-      add_provider file _module;
-      (_module, opt_provider)::new_modules
+    List.fold_left (fun new_modules (module_, opt_provider) ->
+      add_provider file module_;
+      (module_, opt_provider)::new_modules
     ) new_modules module_opt_provider_assoc
   ) [] file_module_assoc in
 

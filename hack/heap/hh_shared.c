@@ -148,7 +148,7 @@
  * with the MAP_ANONYMOUS flag. The memfd_create() system call first
  * appeared in Linux 3.17.
  ****************************************************************************/
-#if !defined __APPLE__ && !defined _WIN32
+#ifdef __linux__
   // Linux version for the architecture must support syscall memfd_create
   #ifndef SYS_memfd_create
     #if defined(__x86_64__)
@@ -174,6 +174,11 @@
   static int memfd_create(const char *name, unsigned int flags) {
     return syscall(SYS_memfd_create, name, flags);
   }
+#endif
+
+#ifndef MAP_NORESERVE
+  // This flag was unimplemented in FreeBSD and then later removed
+  #define MAP_NORESERVE 0
 #endif
 
 // The following 'typedef' won't be required anymore
@@ -1492,7 +1497,11 @@ static char* hh_alloc(hh_header_t header) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
+static char* hh_store_ocaml(
+  value data,
+  /*out*/size_t *alloc_size,
+  /*out*/size_t *orig_size
+) {
   char* value;
   size_t size;
   storage_kind kind;
@@ -1545,6 +1554,7 @@ static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
   if (header.kind == KIND_SERIALIZED) free(value);
 
   *alloc_size = header.size;
+  *orig_size = size;
   return addr;
 }
 
@@ -1568,6 +1578,9 @@ static uint64_t get_hash(value key) {
  */
 /*****************************************************************************/
 static value write_at(unsigned int slot, value data) {
+  CAMLparam1(data);
+  CAMLlocal1(result);
+  result = caml_alloc_tuple(2);
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
      __sync_bool_compare_and_swap(
@@ -1577,10 +1590,15 @@ static value write_at(unsigned int slot, value data) {
      )
   ) {
     size_t alloc_size;
-    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size);
-    return Val_long(alloc_size);
+    size_t orig_size;
+    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
+    Field(result, 0) = Val_long(alloc_size);
+    Field(result, 1) = Val_long(orig_size);
+  } else {
+    Field(result, 0) = Min_long;
+    Field(result, 1) = Min_long;
   }
-  return Min_long;
+  CAMLreturn(result);
 }
 
 static void raise_hash_table_full() {

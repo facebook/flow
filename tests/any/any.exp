@@ -1,42 +1,42 @@
-any.js:8
+Error: any.js:8
   8: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
   8: var y:string = bar(0);
            ^^^^^^ string
 
-flowfixme.js:14
+Error: flowfixme.js:14
  14: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
-                               ^^^^^^^ identifier `nnumber`. Could not resolve name
+                               ^^^^^^^ nnumber. Could not resolve name
 
-flowfixme.js:17
+Error: flowfixme.js:17
  17: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
  17: var y:string = bar(0);
            ^^^^^^ string
 
-flowissue.js:14
+Error: flowissue.js:14
  14: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
-                               ^^^^^^^ identifier `nnumber`. Could not resolve name
+                               ^^^^^^^ nnumber. Could not resolve name
 
-flowissue.js:17
+Error: flowissue.js:17
  17: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
  17: var y:string = bar(0);
            ^^^^^^ string
 
-propagate.js:10
+Error: propagate.js:10
  10:   return c.bar(0, y); // should be able to select first case and error
               ^^^^^^^^^^^ number. This type is incompatible with the expected return type of
   8: function foo(c: C, x: any): string {
                                  ^^^^^^ string
 
-propagate.js:16
+Error: propagate.js:16
  16:     (x: boolean);
           ^ mixed. This type is incompatible with
  16:     (x: boolean);
              ^^^^^^^ boolean
 
-propagate.js:23
+Error: propagate.js:23
  23:     (x: boolean);
           ^ mixed. This type is incompatible with
  23:     (x: boolean);

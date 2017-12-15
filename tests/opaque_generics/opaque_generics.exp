@@ -1,0 +1,167 @@
+Error: importtest-polarity.js:10
+ 10:     return x;
+                ^ Covariant. This type is incompatible with the expected return type of
+  9: function test2(x: Covariant<number | string>) : Covariant<number> { // Error number | string ~> number
+                                                     ^^^^^^^^^^^^^^^^^ Covariant
+  Type argument `T` is incompatible:
+      9: function test2(x: Covariant<number | string>) : Covariant<number> { // Error number | string ~> number
+                                              ^^^^^^ string. This type is incompatible with
+      9: function test2(x: Covariant<number | string>) : Covariant<number> { // Error number | string ~> number
+                                                                   ^^^^^^ number
+
+Error: importtest-polarity.js:18
+ 18:     return x;
+                ^ Contravariant. This type is incompatible with the expected return type of
+ 17: function test4(x: Contravariant<number>) : Contravariant<number | string> { // Error: number | string ~> number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Contravariant
+  Type argument `T` is incompatible:
+     17: function test4(x: Contravariant<number>) : Contravariant<number | string> { // Error: number | string ~> number
+                                                                           ^^^^^^ string. This type is incompatible with
+     17: function test4(x: Contravariant<number>) : Contravariant<number | string> { // Error: number | string ~> number
+                                         ^^^^^^ number
+
+Error: importtest-polarity.js:26
+ 26:     return x;
+                ^ Invariant. This type is incompatible with the expected return type of
+ 25: function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ Invariant
+  Type argument `T` is incompatible:
+     25: function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
+                                     ^^^^^^ number. This type is incompatible with
+     25: function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
+                                                                   ^^^^^^ string
+
+Error: importtest-polarity.js:30
+ 30:     return x;
+                ^ Invariant. This type is incompatible with the expected return type of
+ 29: function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
+                                                     ^^^^^^^^^^^^^^^^^ Invariant
+  Type argument `T` is incompatible:
+     29: function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
+                                              ^^^^^^ string. This type is incompatible with
+     29: function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
+                                                                   ^^^^^^ number
+
+Error: importtest-polarity.js:39
+ 39:     return x;
+                ^ All. This type is incompatible with the expected return type of
+ 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ All
+  Type argument `S` is incompatible:
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                               ^^^^^^ number. This type is incompatible with
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                         ^^^^^^ string
+
+Error: importtest-polarity.js:39
+ 39:     return x;
+                ^ All. This type is incompatible with the expected return type of
+ 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ All
+  Type argument `T` is incompatible:
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                ^^^^^^ string. This type is incompatible with
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                 ^^^^^^ number
+
+Error: importtest-polarity.js:39
+ 39:     return x;
+                ^ All. This type is incompatible with the expected return type of
+ 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ All
+  Type argument `U` is incompatible:
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                           ^^^^ null. This type is incompatible with
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                        ^^^^^^^^^^^^^^^ union: number | string
+      Member 1:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                          ^^^^^^ number
+      Error:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                             ^^^^ null. This type is incompatible with
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                          ^^^^^^ number
+      Member 2:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                   ^^^^^^ string
+      Error:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                             ^^^^ null. This type is incompatible with
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                   ^^^^^^ string
+
+Error: importtest.js:7
+  7:     return x;
+                ^ Box. This type is incompatible with the expected return type of
+  6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                       ^^^^^^^^^^^ Box
+  Type argument `T` is incompatible:
+      6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                ^^^^^^ string. This type is incompatible with
+      6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                               ^^^^^^ number
+
+Error: importtest.js:15
+ 15:     return x;
+                ^ Container. This type is incompatible with the expected return type of
+ 14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                             ^^^^^^^^^^^^^^^^^ Container
+  Type argument `T` is incompatible:
+     14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                      ^^^^^^ string. This type is incompatible with
+     14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                                           ^^^^^^ number
+
+Error: importtest.js:23
+ 23:     return x;
+                ^ Container. This type is incompatible with the expected return type of
+ 22: function test5(x : Container<string>) : Box<string> { // Error: Container ~> Box
+                                             ^^^^^^^^^^^ Box
+
+Error: importtest.js:27
+ 27:     return x;
+                ^ Box. This type is incompatible with the expected return type of
+ 26: function test6(x : Box<string>) : Container<string> { // Error: Box ~> Container
+                                       ^^^^^^^^^^^^^^^^^ Container
+
+Error: test-polarity.js:12
+ 12: opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type
+                                ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: test-polarity.js:13
+ 13: opaque type Bad2<+T> = Bar<T>; // Error: Bar expects contravariant type
+                                ^ T. contravariant position (expected `T` to occur only covariantly)
+
+Error: test-polarity.js:14
+ 14: opaque type Bad3<-T> = Baz<T>; // Error: Baz expects invariant type
+                                ^ T. invariant position (expected `T` to occur only contravariantly)
+
+Error: test-polarity.js:15
+ 15: opaque type Bad4<+T> = Baz<T>; // Error: Baz expects invariant type
+                                ^ T. invariant position (expected `T` to occur only covariantly)
+
+Error: test.js:7
+  7:     return x;
+                ^ Box. This type is incompatible with the expected return type of
+  6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                       ^^^^^^^^^^^ Box
+  Type argument `T` is incompatible:
+      6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                ^^^^^^ string. This type is incompatible with
+      6: function test1(x : Box<string>) : Box<number> { // Error: string ~> number
+                                               ^^^^^^ number
+
+Error: test.js:15
+ 15:     return x;
+                ^ Container. This type is incompatible with the expected return type of
+ 14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                             ^^^^^^^^^^^^^^^^^ Container
+  Type argument `T` is incompatible:
+     14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                      ^^^^^^ string. This type is incompatible with
+     14: function test3(x : Container<string>) : Container<number> { // Error: string ~> number
+                                                           ^^^^^^ number
+
+
+Found 17 errors

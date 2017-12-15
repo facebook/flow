@@ -29,6 +29,17 @@ let none = {
   pos_end = File_pos.dummy ;
 }
 
+let pp fmt pos =
+  if pos = none then
+    Format.pp_print_string fmt "[Pos.none]"
+  else begin
+    Format.pp_print_string fmt "[";
+    File_pos.pp fmt pos.pos_start;
+    Format.pp_print_string fmt "-";
+    File_pos.pp fmt pos.pos_end;
+    Format.pp_print_string fmt "]";
+  end
+
 let filename p = p.pos_file
 
 (* This returns a closed interval that's incorrect for multi-line spans. *)
@@ -173,6 +184,13 @@ let make_from_file_pos ~pos_file ~pos_start ~pos_end =
 
 let set_file pos_file pos =
   { pos with pos_file }
+
+let print_verbose_absolute p =
+  let a, b, c = File_pos.line_beg_offset p.pos_start in
+  let d, e, f = File_pos.line_beg_offset p.pos_end in
+  Printf.sprintf "Pos('%s', <%d,%d,%d>, <%d,%d,%d>)" p.pos_file a b c d e f
+
+let print_verbose_relative p = print_verbose_absolute (to_absolute p)
 
 module Map = MyMap.Make (struct
   type path = t

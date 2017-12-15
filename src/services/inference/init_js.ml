@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This module sets up the definitions for JavaScript globals. Eventually, this
@@ -29,7 +26,7 @@ let parse_lib_file options file =
   (* lib files are always "use strict" *)
   let use_strict = true in
   try
-    let lib_file = Loc.LibFile file in
+    let lib_file = File_key.LibFile file in
     let filename_set = FilenameSet.singleton lib_file in
     let next = Parsing.next_of_filename_set (* workers *) None filename_set in
     let results =
@@ -41,7 +38,9 @@ let parse_lib_file options file =
         next
     in
     if not (FilenameSet.is_empty results.Parsing.parse_ok) then
-      Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
+      let ast = Parsing.get_ast_unsafe lib_file in
+      let file_sig = Parsing.get_file_sig_unsafe lib_file in
+      Parsing.Parse_ok (ast, file_sig)
     else if List.length results.Parsing.parse_fails > 0 then
       let _, _, parse_fails = List.hd results.Parsing.parse_fails in
       Parsing.Parse_fail parse_fails
@@ -72,9 +71,10 @@ let load_lib_files ~master_cx ~options files =
 
     fun (exclude_syms, results) file ->
 
-      let lib_file = Loc.LibFile file in
+      let lib_file = File_key.LibFile file in
+      let lint_severities = options.Options.opt_lint_severities in
       match parse_lib_file options file with
-      | Parsing.Parse_ok ast ->
+      | Parsing.Parse_ok (ast, file_sig) ->
 
         let metadata =
           let open Context in
@@ -84,11 +84,11 @@ let load_lib_files ~master_cx ~options files =
         in
 
         let cx, syms = Infer.infer_lib_file
-          ~metadata ~exclude_syms
+          ~metadata ~exclude_syms ~lint_severities ~file_sig
           lib_file ast
         in
 
-        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        let errs, suppressions, severity_cover = Merge_js.merge_lib_file cx master_cx in
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -96,8 +96,8 @@ let load_lib_files ~master_cx ~options files =
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
-        let exclude_syms = SSet.union exclude_syms (set_of_list syms) in
-        let result = (lib_file, true, errs, suppressions) in
+        let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
+        let result = (lib_file, true, errs, suppressions, severity_cover) in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_fail fail ->
@@ -106,8 +106,11 @@ let load_lib_files ~master_cx ~options files =
           Inference_utils.set_of_parse_error ~source_file:lib_file error
         | Parsing.Docblock_errors errs ->
           Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
+        | Parsing.File_sig_error error ->
+          Inference_utils.set_of_file_sig_error ~source_file:lib_file error
         in
-        let result = lib_file, false, errors, Error_suppressions.empty in
+        let result = lib_file, false, errors, Error_suppressions.empty,
+          ExactCover.file_cover lib_file lint_severities in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
@@ -115,7 +118,8 @@ let load_lib_files ~master_cx ~options files =
         (* should never happen *)
         let errs = Errors.ErrorSet.empty in
         let suppressions = Error_suppressions.empty in
-        let result = lib_file, false, errs, suppressions in
+        let severity_cover = ExactCover.file_cover lib_file lint_severities in
+        let result = lib_file, false, errs, suppressions, severity_cover in
         exclude_syms, (result :: results)
 
     ) (SSet.empty, [])
@@ -135,16 +139,16 @@ let init ~options lib_files =
       let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
       { metadata with local_metadata }
     in
-    Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref
+    Flow.fresh_context metadata File_key.Builtins Files.lib_module_ref
   in
 
   let result = load_lib_files ~master_cx ~options lib_files in
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Flow.mk_object master_cx reason in
+  let builtin_module = Obj_type.mk master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context [master_cx] |> ignore;
+  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
   (* store master signature context to heap *)
   Context_cache.add_sig ~audit:Expensive.ok master_cx;

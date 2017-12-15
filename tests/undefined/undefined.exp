@@ -1,50 +1,44 @@
-undefined.js:3
+Error: undefined.js:3
   3:     x.foo();
          ^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
   3:     x.foo();
          ^ uninitialized variable
 
-undefined2.js:7
+Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ string. This type is incompatible with
   7:     (name: boolean); // error, string or void
                 ^^^^^^^ boolean
 
-undefined2.js:7
+Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ undefined. This type is incompatible with
   7:     (name: boolean); // error, string or void
                 ^^^^^^^ boolean
 
-undefined2.js:10
- 10:       undefined,
-           ^^^^^^^^^ undefined. This type is incompatible with
+Error: undefined2.js:13
+ 13:     (bar[x]: boolean); // error, string or void
+          ^^^^^^ string. This type is incompatible with
  13:     (bar[x]: boolean); // error, string or void
                   ^^^^^^^ boolean
 
-undefined2.js:11
- 11:       'bar',
-           ^^^^^ string. This type is incompatible with
+Error: undefined2.js:13
+ 13:     (bar[x]: boolean); // error, string or void
+          ^^^^^^ undefined. This type is incompatible with
  13:     (bar[x]: boolean); // error, string or void
                   ^^^^^^^ boolean
 
-undefined2.js:22
+Error: undefined2.js:22
  22:       x[0]; // should error, could be void
-           ^^^^ access of computed property/element. Indexable signature not found in
+           ^^^^ computed property. Indexable signature not found in
  22:       x[0]; // should error, could be void
            ^ Number
 
-undefined2.js:26
- 26:       undefined,
-           ^^^^^^^^^ string. This type is incompatible with
+Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only
-                  ^^^^^^^ boolean
-
-undefined2.js:27
- 27:       'bar',
-           ^^^^^ string. This type is incompatible with
+          ^^^^^^ string. This type is incompatible with
  29:     (bar[x]: boolean); // error, string only
                   ^^^^^^^ boolean
 
 
-Found 8 errors
+Found 7 errors

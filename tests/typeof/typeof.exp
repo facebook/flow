@@ -1,32 +1,66 @@
-typeof.js:43
+Error: maybe.js:9
+  9: ('foo': typeof x); // error: string ~> number
+      ^^^^^ string. This type is incompatible with
+  9: ('foo': typeof x); // error: string ~> number
+             ^^^^^^^^ number
+
+Error: optional.js:9
+  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+      ^^^^ null. This type is incompatible with
+  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+            ^^^^^^^^ number
+
+Error: typeof.js:43
  43: var b: MyClass1 = MyClass1;
-                       ^^^^^^^^ class type: MyClass1. This type is incompatible with
+                       ^^^^^^^^ statics of `MyClass1`. This type is incompatible with
  43: var b: MyClass1 = MyClass1;
             ^^^^^^^^ MyClass1
 
-typeof.js:53
+Error: typeof.js:53
  53: var c: typeof MyClass2 = new MyClass2();
                               ^^^^^^^^^^^^^^ MyClass2. This type is incompatible with
  53: var c: typeof MyClass2 = new MyClass2();
-            ^^^^^^^^^^^^^^^ class type: MyClass2
+            ^^^^^^^^^^^^^^^ statics of `MyClass2`
 
-typeof.js:61
+Error: typeof.js:61
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number
                               ^^^^^^ string. This type is incompatible with
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number
             ^^^^^^^^^^^^^^^ number
 
-typeof.js:73
+Error: typeof.js:73
  73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
                    ^^^^^^^^^^^ numberAlias. type referenced from value position
  67: type numberAlias = number;
           ^^^^^^^^^^^ type numberAlias
 
-typeof.js:82
+Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                       ^^^ object literal. Ineligible value used in/as type annotation (did you forget 'typeof'?)
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                       ^^^ Map
 
+Error: union.js:9
+  9: (null: typeof x); // error: null ~> number|string
+      ^^^^ null. This type is incompatible with
+  9: (null: typeof x); // error: null ~> number|string
+            ^^^^^^^^ union: `A` | `B`
+  Member 1:
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ A
+  Error:
+    9: (null: typeof x); // error: null ~> number|string
+        ^^^^ null. This type is incompatible with the expected param type of
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ number
+  Member 2:
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ B
+  Error:
+    9: (null: typeof x); // error: null ~> number|string
+        ^^^^ null. This type is incompatible with the expected param type of
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ string
 
-Found 5 errors
+
+Found 8 errors

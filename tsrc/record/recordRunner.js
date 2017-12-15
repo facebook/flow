@@ -4,7 +4,7 @@ import colors from 'colors/safe';
 import {isAbsolute, join} from 'path';
 import {format} from 'util';
 
-import {readFile, writeFile} from './../async';
+import {readFile, writeFile} from '../utils/async';
 import Builder from '../test/builder';
 import {findTestsByName, findTestsByRun} from '../test/findTests';
 import parser from 'flow-parser';

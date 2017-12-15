@@ -1,0 +1,50 @@
+Error: fun.js:3
+  3: type ArgPos<+T> = T => void; // Error: +T in negative position
+                       ^ T. contravariant position (expected `T` to occur only covariantly)
+
+Error: fun.js:4
+  4: type FlipArgNeg<-T> = (T => void) => void; // Error: -T in positive position
+                            ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: fun.js:7
+  7: type RetNeg<-T> = () => T; // Error: -T in positive position
+                             ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: fun.js:10
+ 10: type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
+                                  ^ T. contravariant position (expected `T` to occur only covariantly)
+
+Error: obj.js:2
+  2: type FieldNeg<-T> = {x: T}; // Error: -T in neutral position
+                             ^ T. invariant position (expected `T` to occur only contravariantly)
+
+Error: obj.js:3
+  3: type FieldPos<+T> = {x: T}; // Error: +T in neutral position
+                             ^ T. invariant position (expected `T` to occur only covariantly)
+
+Error: obj.js:5
+  5: type PosFieldNeg<-T> = {+p: T}; // Error: -T in positive position
+                                 ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: obj.js:8
+  8: type FlipPosFieldPos<+T> = ({+x: T}) => void; // Error: +T in negative position
+                                      ^ T. contravariant position (expected `T` to occur only covariantly)
+
+Error: obj.js:11
+ 11: type NegFieldPos<+T> = {-p: T}; // Error: +T in negative position
+                                 ^ T. contravariant position (expected `T` to occur only covariantly)
+
+Error: obj.js:12
+ 12: type FlipNegFieldNeg<-T> = ({-x: T}) => void; // Error: -T in positive position
+                                      ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: obj.js:15
+ 15: type GetNeg<-T> = {get p(): T}; // Error: -T in positive position
+                                 ^ T. covariant position (expected `T` to occur only contravariantly)
+
+Error: obj.js:19
+ 19: type SetPos<+T> = {set p(x:T): void}; // Error: +T in negative position
+                                ^ T. contravariant position (expected `T` to occur only covariantly)
+
+
+Found 12 errors

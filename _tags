@@ -1,8 +1,10 @@
-<**/*.ml*>: ocaml, warn_A, warn(-4-6-29-35-44-48-50), warn_error_A
+true: package(dtoa), package(wtf8)
+<**/*.ml*>: ocaml, warn_A, warn(-4-6-29-35-44-48-50), warn_error_A, unsafe_string
 <hack/heap/*.ml*>: warn(-27-34)
 <hack/third-party/core/result.ml>: warn(-41)
 <hack/utils/*.ml*>: warn(-3-27)
-<src/flowlib/flowlib.ml>: ppx(scripts/ppx_gen_flowlibs.native lib/)
+<src/flowlib/flowlib.ml>: ppx(scripts/ppx_gen_flowlibs.native lib/ prelude/)
 <src/parser/*.ml*>: warn(-39)
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
+<packages>: -traverse

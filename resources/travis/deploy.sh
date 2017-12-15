@@ -19,7 +19,7 @@ export PATH="${TRAVIS_BUILD_DIR}/resources/travis/node_modules/.bin:$PATH"
 
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
 source "$HOME/.rvm/scripts/rvm"
-rvm use 2.2 --install --binary
+rvm use 2.3.4 --install --binary
 gem install --no-rdoc --no-ri bundler
 printf "travis_fold:end:installing_ruby\n"
 
@@ -34,10 +34,10 @@ mkdir -p "website/static/$GEN_DIR"
 cp "bin/flow.js" "website/static/${GEN_DIR}/flow.js"
 cp -r "lib" "website/static/${GEN_DIR}/flowlib"
 echo "version" > "website/_data/flow_dot_js_versions.csv"
-git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \
+git ls-remote --tags 2>/dev/null | awk '{print $2}' | cut -d/ -f3 | \
   grep -e '^v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$' | \
   sort -s -t. -k 1,1nr -k 2,2nr -k 3,3nr | \
-  head -n 5 >> "website/_data/flow_dot_js_versions.csv"
+  grep -B1000000 '^v0\.37\.0$' >> "website/_data/flow_dot_js_versions.csv"
 (cd website && env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
   JEKYLL_ENV=production \

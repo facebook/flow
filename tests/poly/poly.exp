@@ -1,46 +1,152 @@
-annot.js:10
- 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                          ^^^^^^^^^^^ property `x`. Property not found in
- 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                        ^^ object type
+Error: annot.js:3
+  3: class B extends A { } // OK, same as above
+                     ^ A. Too few type arguments. Expected at least 1
+  1: class A<X> { }
+             ^ See type parameters of definition here
 
-implicit_bounded_instantiation.js:19
+Error: annot.js:10
+ 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                        ^^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
+  9: function bar(): A<*> { // error, * can't be {} and {x: string} at the same time
+                     ^^^^ A
+  Type argument `X` is incompatible:
+     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                              ^^^^^^^^^^^ object type. This type is incompatible with
+     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                            ^^ object type
+      Property `x` is incompatible:
+         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                                  ^^^^^^^^^^^ property `x`. Property not found in
+         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                ^^ object type
+
+Error: error.js:8
+  8: newFn1('string'); // The error should point here.
+            ^^^^^^^^ string. This type is incompatible with the expected param type of
+  7: const newFn1 = fn1((x: number) => {});
+                            ^^^^^^ number
+
+Error: error.js:12
+ 12: newFn2((x: string) => {}); // The error should point here.
+            ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+ 10: declare function fn2<T>(x: T): ((T) => void) => void;
+                                     ^^^^^^^^^^^ function type
+  The first parameter is incompatible:
+     11: const newFn2 = fn2(42);
+                            ^^ number. This type is incompatible with
+     12: newFn2((x: string) => {}); // The error should point here.
+                    ^^^^^^ string
+
+Error: error.js:15
+ 15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+         ^^ number. This type is incompatible with the expected param type of
+ 15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+                 ^^^^^^ string
+
+Error: error.js:20
+ 20: (newVal4: string); // The error should point here.
+      ^^^^^^^ number. This type is incompatible with
+ 20: (newVal4: string); // The error should point here.
+               ^^^^^^ string
+
+Error: implicit_bounded_instantiation.js:15
+ 15: var a: C<*> = new C();
+                   ^^^^^^^ new `C`
  19: a.meth(42); // Error: number ~> Middle
-     ^^^^^^^^^^ call of method `meth`
- 19: a.meth(42); // Error: number ~> Middle
-            ^^ number. This type is incompatible with
+            ^^ number. This type is incompatible with the bound on type parameter `T`:
   7: class C<T: Middle> {
                 ^^^^^^ Middle
 
-implicit_bounded_instantiation.js:20
+Error: implicit_bounded_instantiation.js:15
+ 15: var a: C<*> = new C();
+                   ^^^^^^^ new `C`
  20: a.meth(new Base()); // Error: Base ~> Middle
-            ^^^^^^^^^^ Base. This type is incompatible with
+            ^^^^^^^^^^ Base. This type is incompatible with the bound on type parameter `T`:
   7: class C<T: Middle> {
                 ^^^^^^ Middle
 
-poly.js:17
+Error: implicit_bounded_instantiation.js:19
+ 19: a.meth(42); // Error: number ~> Middle
+            ^^ number. This type is incompatible with the expected param type of
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
+
+Error: implicit_bounded_instantiation.js:20
+ 20: a.meth(new Base()); // Error: Base ~> Middle
+            ^^^^^^^^^^ Base. This type is incompatible with the expected param type of
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
+
+Error: phantom.js:7
+  7: (a: B); // Error
+      ^ A. Has some incompatible type argument with
+  7: (a: B); // Error
+         ^ B
+  Type argument `Phantom` is incompatible:
+      3: type A = T<number>;
+                    ^^^^^^ number. This type is incompatible with
+      4: type B = T<string>;
+                    ^^^^^^ string
+
+Error: phantom.js:15
+ 15: (c: D); // Error
+      ^ C. Has some incompatible type argument with
+ 15: (c: D); // Error
+         ^ D
+  Type argument `Phantom` is incompatible:
+     11: type C = T<number>;
+                    ^^^^^^ number. This type is incompatible with
+     12: type D = T<string>;
+                    ^^^^^^ string
+
+Error: poly.js:17
  17: var x:string = foo.x;
                     ^^^^^ number. This type is incompatible with
  17: var x:string = foo.x;
            ^^^^^^ string
 
-poly.js:18
+Error: poly.js:18
  18: var z:Foo<number> = Q.bar(foo,"");
-                                   ^^ string. This type is incompatible with
+                         ^^^^^^^^^^^^^ Foo. Has some incompatible type argument with
  18: var z:Foo<number> = Q.bar(foo,"");
-               ^^^^^^ number
+           ^^^^^^^^^^^ Foo
+  Type argument `T` is incompatible:
+     18: var z:Foo<number> = Q.bar(foo,"");
+                                       ^^ string. This type is incompatible with
+     18: var z:Foo<number> = Q.bar(foo,"");
+                   ^^^^^^ number
 
-test.js:2
-  2:   foo<X>(x: X): X { return x; }
-           ^ X. This type is incompatible with the expected param type of
-  8:   foo(x: number): number { return x; } // error (specialization, see below)
-              ^^^^^^ number
+Error: test.js:7
+  7: class D extends C {
+           ^ D. Cannot extend
+  7: class D extends C {
+                     ^ C
+  Property `foo` is incompatible:
+      8:   foo(x: number): number { return x; } // error (specialization, see below)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+      2:   foo<X>(x: X): X { return x; }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+      The first parameter is incompatible:
+          2:   foo<X>(x: X): X { return x; }
+                   ^ X. This type is incompatible with
+          8:   foo(x: number): number { return x; } // error (specialization, see below)
+                      ^^^^^^ number
 
-test.js:8
-  8:   foo(x: number): number { return x; } // error (specialization, see below)
-                       ^^^^^^ number. This type is incompatible with
-  8:   foo(x: number): number { return x; } // error (specialization, see below)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
+Error: test.js:7
+  7: class D extends C {
+           ^ D. Cannot extend
+  7: class D extends C {
+                     ^ C
+  Property `foo` is incompatible:
+      8:   foo(x: number): number { return x; } // error (specialization, see below)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+      2:   foo<X>(x: X): X { return x; }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+      The return is incompatible:
+          8:   foo(x: number): number { return x; } // error (specialization, see below)
+                               ^^^^^^ number. This type is incompatible with
+          8:   foo(x: number): number { return x; } // error (specialization, see below)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
 
-Found 7 errors
+Found 16 errors

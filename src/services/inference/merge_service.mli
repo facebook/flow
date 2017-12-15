@@ -1,32 +1,57 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
+type 'a merge_results = (File_key.t * ('a, exn) result) list
+type 'a merge_job =
+  options:Options.t ->
+  'a merge_results * File_key.t list ->
+  File_key.t list ->
+  'a merge_results * File_key.t list
+
+type merge_strict_context_result = {
+  cx: Context.t;
+  other_cxs: Context.t list;
+  master_cx: Context.t;
+}
+
 val merge_strict_context:
   options: Options.t ->
-  Context_cache.context_cache ->
-  Context.t list ->
-  Context.t
+  File_key.t list ->
+  merge_strict_context_result
+
 val merge_contents_context:
-  options: Options.t ->
-  Context_cache.context_cache ->
-  Context.t ->
-  Loc.t SMap.t ->
-  ensure_checked_dependencies: (Module_js.NameSet.t -> unit) ->
-  unit
-val merge_strict:
-  intermediate_result_callback: (Errors.ErrorSet.t Lazy.t -> unit) ->
+  Options.t ->
+  File_key.t ->
+  Loc.t Ast.program ->
+  Docblock.t ->
+  File_sig.t ->
+  ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
+  Context.t
+
+val merge_runner:
+  job: 'a merge_job ->
+  intermediate_result_callback: ('a merge_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  (filename list) FilenameMap.t ->
+  (File_key.t list) FilenameMap.t ->
   bool FilenameMap.t ->
-  (filename * Errors.ErrorSet.t) list
+  'a merge_results
+
+val merge_strict:
+  intermediate_result_callback:
+    ((Errors.ErrorSet.t *
+      Error_suppressions.t *
+      ExactCover.lint_severity_cover) merge_results Lazy.t -> unit) ->
+  options: Options.t ->
+  workers: Worker.t list option ->
+  FilenameSet.t FilenameMap.t ->
+  (File_key.t list) FilenameMap.t ->
+  bool FilenameMap.t ->
+  (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover) merge_results

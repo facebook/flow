@@ -1,0 +1,56 @@
+Error: class.js:11
+ 11: (any: React$ElementRef<Class<Foo>>).yep2; // Error
+                                         ^^^^ property `yep2`. Property not found in
+ 11: (any: React$ElementRef<Class<Foo>>).yep2; // Error
+                                  ^^^ Foo
+
+Error: class.js:12
+ 12: (any: React$ElementRef<Class<Foo>>).nope; // Error
+                                         ^^^^ property `nope`. Property not found in
+ 12: (any: React$ElementRef<Class<Foo>>).nope; // Error
+                                  ^^^ Foo
+
+Error: class.js:13
+ 13: (any: React$ElementRef<Class<Bar>>).yep1; // Error
+                                         ^^^^ property `yep1`. Property not found in
+ 13: (any: React$ElementRef<Class<Bar>>).yep1; // Error
+                                  ^^^ Bar
+
+Error: class.js:15
+ 15: (any: React$ElementRef<Class<Bar>>).nope; // Error
+                                         ^^^^ property `nope`. Property not found in
+ 15: (any: React$ElementRef<Class<Bar>>).nope; // Error
+                                  ^^^ Bar
+
+Error: function.js:7
+  7: (any: React$ElementRef<typeof Foo>).nope; // Error
+                                         ^^^^ property `nope`. Property cannot be accessed on possibly undefined value
+  7: (any: React$ElementRef<typeof Foo>).nope; // Error
+                            ^^^^^^^^^^ undefined
+
+Error: intrinsic.js:6
+  6: (any: React$ElementRef<'foo'>).yep2; // Error
+                                    ^^^^ property `yep2`. Property not found in
+  4:     instance: {yep1: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
+
+Error: intrinsic.js:7
+  7: (any: React$ElementRef<'foo'>).nope; // Error
+                                    ^^^^ property `nope`. Property not found in
+  4:     instance: {yep1: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
+
+Error: intrinsic.js:8
+  8: (any: React$ElementRef<'bar'>).yep1; // Error
+                                    ^^^^ property `yep1`. Property not found in
+  8:     instance: {yep2: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:8
+
+Error: intrinsic.js:10
+ 10: (any: React$ElementRef<'bar'>).nope; // Error
+                                    ^^^^ property `nope`. Property not found in
+  8:     instance: {yep2: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:8
+
+
+Found 9 errors
