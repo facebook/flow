@@ -509,21 +509,18 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         | t -> t
       in
       let variance = variance env in
-      let next env acc =
+      let next env p =
         begin match Peek.token env with
-        | T_COMMA
-        | T_SEMICOLON ->
-          Eat.token env
-        | T_RCURLYBAR
-        | T_RCURLY ->
-          ()
+        | T_COMMA | T_SEMICOLON -> Eat.token env
+        | T_RCURLYBAR | T_RCURLY -> ()
         | _ -> error_unexpected env
         end;
-        properties ~allow_static ~allow_spread ~exact env acc
+        properties ~allow_static ~allow_spread ~exact env (p::acc)
       in
       let rec skip ?(depth=0) env =
         match Peek.token env with
         | T_EOF ->
+          error_unexpected env;
           List.rev acc
         | T_RCURLYBAR | T_RCURLY when depth = 0 ->
           List.rev acc
@@ -555,33 +552,29 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         end;
         List.rev acc
       | T_LBRACKET ->
-        let indexer = indexer_property env start_loc (static<>None) variance in
-        next env (indexer::acc)
+        next env (indexer_property env start_loc (static<>None) variance)
       | T_LESS_THAN
       | T_LPAREN ->
         error_unsupported_variance env variance;
-        let call_prop = call_property env start_loc (static<>None) in
-        next env (call_prop::acc)
+        next env (call_property env start_loc (static<>None))
       | T_PLING
       | T_COLON ->
         begin match key with
         | Some k ->
           let key = Expression.Object.Property.Identifier k in
-          let p = property env start_loc (static<>None) variance key in
-          next env (p::acc)
+          next env (property env start_loc (static<>None) variance key)
         | None -> skip env
         end
       | T_ELLIPSIS ->
         error_unsupported_variance env variance;
-        if allow_spread then (
+        if allow_spread then begin
           Eat.token env;
           let (arg_loc, _) as argument = _type env in
           let loc = Loc.btwn start_loc arg_loc in
-          let p = Type.Object.(SpreadProperty (loc, { SpreadProperty.
+          next env Type.Object.(SpreadProperty (loc, { SpreadProperty.
             argument;
-          })) in
-          next env (p::acc)
-        ) else skip env
+          }))
+        end else skip env
       | _ ->
         let static = static <> None in
         let object_key env =
@@ -597,20 +590,17 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             | T_LESS_THAN
             | T_LPAREN ->
               error_unsupported_variance env variance;
-              let p = method_property env start_loc static key in
-              next env (p::acc)
+              next env (method_property env start_loc static key)
             | T_COLON
             | T_PLING ->
-              let p = property env start_loc static variance key in
-              next env (p::acc)
+              next env (property env start_loc static variance key)
             | _ ->
               error_unsupported_variance env variance;
-              let is_getter = name = "get" in
               begin match object_key env with
               | _, Expression.Object.Property.Identifier (_, "") -> skip env
               | key ->
-                let p = getter_or_setter ~is_getter env start_loc static key in
-                next env (p::acc)
+                let is_getter = name = "get" in
+                next env (getter_or_setter ~is_getter env start_loc static key)
               end
             end
         | _, Expression.Object.Property.Identifier (_, "") -> skip env
@@ -619,12 +609,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             | T_LESS_THAN
             | T_LPAREN ->
               error_unsupported_variance env variance;
-              let p = method_property env start_loc static key in
-              next env (p::acc)
+              next env (method_property env start_loc static key)
             | T_COLON
             | T_PLING ->
-              let p = property env start_loc static variance key in
-              next env (p::acc)
+              next env (property env start_loc static variance key)
             | _ ->
               error_unexpected env;
               (* The unexpected token may exit `skip` without recursion and
