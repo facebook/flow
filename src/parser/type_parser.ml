@@ -605,12 +605,16 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
                let p = property env start_loc static variance key in
                next env (p::acc)
             | _ ->
-              let key = object_key env in
-              let is_getter = name = "get" in
               error_unsupported_variance env variance;
-              let p = getter_or_setter ~is_getter env start_loc static key in
-              next env (p::acc)
+              let is_getter = name = "get" in
+              begin match object_key env with
+              | _, Expression.Object.Property.Identifier (_, "") -> skip env
+              | key ->
+                let p = getter_or_setter ~is_getter env start_loc static key in
+                next env (p::acc)
+              end
             end
+        | _, Expression.Object.Property.Identifier (_, "") -> skip env
         | _, key ->
             begin match Peek.token env with
             | T_LESS_THAN
