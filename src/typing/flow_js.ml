@@ -7029,6 +7029,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     CallT (use_op, reason, call)
   | TypeMap tmap -> MapTypeT (reason, tmap, tout)
   | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps tout)
+  | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig tout)
   | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef tout)
   )
 
@@ -10803,38 +10804,90 @@ and object_kit =
         (* If the object we are using to subtract has an optional property, non-own
          * property, or is inexact then we should add this prop to our result, but
          * make it optional as we cannot know for certain whether or not at runtime
-         * the property would be subtracted. *)
-        | _, Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
-        | Sound, Some (t1, _), Some (t2, false), _
-        | Sound, Some (t1, _), Some (t2, _), false ->
+         * the property would be subtracted.
+         *
+         * Sound subtraction also considers exactness and owness to determine
+         * optionality. If p2 is maybe-own then sometimes it may not be
+         * subtracted and so is optional. If props2 is not exact then we may
+         * optionally have some undocumented prop. *)
+        | (Sound | IgnoreExactAndOwn),
+          Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
+        | Sound,
+          Some (t1, _), Some (t2, false), _
+        | Sound,
+          Some (t1, _), Some (t2, _), false ->
           rec_flow cx trace (t1, UseT (use_op, optional t2));
           Some (Field (None, optional t1, Neutral))
+
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
-         * source object. *)
-        | _, None, Some (t2, _), _ ->
+         * source object.
+         *
+         * If we are using ReactConfigMerge then make the property optional
+         * instead of removing it entirely. *)
+        | (Sound | IgnoreExactAndOwn | ReactConfigMerge),
+          None, Some (t2, _), _ ->
           let reason = replace_reason_const (RUndefinedProperty k) r1 in
           rec_flow cx trace (VoidT.make reason, UseT (use_op, t2));
           None
-        | _, Some (t1, _), Some (t2, _), _ ->
+        | (Sound | IgnoreExactAndOwn),
+          Some (t1, _), Some (t2, _), _ ->
           rec_flow cx trace (t1, UseT (use_op, t2));
           None
+
         (* If we have some property in our first object and none in our second
          * object, but our second object is inexact then we want to make our
          * property optional and flow that type to mixed. *)
-        | Sound, Some (t1, _), None, false ->
+        | Sound,
+          Some (t1, _), None, false ->
           rec_flow cx trace (t1, UseT (use_op, MixedT.make r2));
           Some (Field (None, optional t1, Neutral))
+
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
-        | _, None, None, _ -> None
+        | (Sound | IgnoreExactAndOwn | ReactConfigMerge),
+          None, None, _
+            -> None
+
         (* If our first object has a prop and our second object does not have that
          * prop then we will copy over that prop. If the first object's prop is
          * non-own then sometimes we may not copy it over so we mark it
          * as optional. *)
         | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Neutral))
-        | _, Some (t, true), None, _ -> Some (Field (None, t, Neutral))
+        | ReactConfigMerge, Some (t, _), None, _ -> Some (Field (None, t, Positive))
+        | Sound, Some (t, true), None, _ -> Some (Field (None, t, Neutral))
         | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Neutral))
+
+        (* React config merging is special. We are trying to solve for C
+         * in the equation (where ... represents spread instead of rest):
+         *
+         *     {...DP, ...C} = P
+         *
+         * Where DP and P are known. Consider this case:
+         *
+         *     {...{p?}, ...C} = {p}
+         *
+         * The solution for C here is {p} instead of {p?} since
+         * {...{p?}, ...{p?}} is {p?} instead of {p}. This is inconsistent with
+         * the behavior of other object rest merge modes implemented in this
+         * pattern match. *)
+        | ReactConfigMerge,
+          Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _ ->
+          rec_flow_t cx trace (t1, optional t2);
+          Some (Field (None, t1, Positive))
+        (* Using our same equation. Consider this case:
+         *
+         *     {...{p}, ...C} = {p}
+         *
+         * The solution for C here is {p?}. An empty object, {}, is not a valid
+         * solution unless that empty object is exact. Even for exact objects,
+         * {|p?|} is the best solution since it accepts more valid
+         * programs then {||}. *)
+        | ReactConfigMerge,
+          Some (t1, _), Some (t2, _), _ ->
+          rec_flow_t cx trace (t1, t2);
+          Some (Field (None, optional t1, Positive))
+
       ) props1 props2 in
       let dict = match dict1, dict2 with
         | None, None -> None

@@ -217,6 +217,7 @@ class ['a] t = object(self)
   | ValuesType
   | ReadOnlyType
   | ReactElementPropsType
+  | ReactElementConfigType
   | ReactElementRefType
     -> acc
   | ElementType t -> self#type_ cx pole_TODO acc t
@@ -442,7 +443,7 @@ class ['a] t = object(self)
     acc
 
   | ReactKitT (_, _, tool) -> (match tool with
-    | React.GetProps t | React.GetRef t
+    | React.GetProps t | React.GetConfig t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
     | React.CreateElement (_, t1, (ts, t2), t3) ->
       let acc = self#type_ cx pole_TODO acc t1 in

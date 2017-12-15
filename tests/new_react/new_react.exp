@@ -98,7 +98,7 @@ Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ `Foo` element
 159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number
 
@@ -236,7 +236,7 @@ Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ `FooLegacy` element
 159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number
 

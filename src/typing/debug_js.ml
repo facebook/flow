@@ -1116,7 +1116,8 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     JSON_Object [
       "mergeMode", JSON_String (match merge_mode with
         | Sound -> "Sound"
-        | IgnoreExactAndOwn -> "IgnoreExactAndOwn");
+        | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
+        | ReactConfigMerge -> "ReactConfigMerge");
       "restType", _json_of_t json_cx t;
     ]
   | ValuesType -> JSON_Object [
@@ -1128,6 +1129,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | TypeMap tmap -> json_of_type_map json_cx tmap
   | ReactElementPropsType -> JSON_Object [
       "reactElementProps", JSON_Bool true
+    ]
+  | ReactElementConfigType -> JSON_Object [
+      "reactElementConfig", JSON_Bool true
     ]
   | ReactElementRefType -> JSON_Object [
       "reactElementRef", JSON_Bool true
@@ -1573,6 +1577,7 @@ and dump_t_ (depth, tvars) cx t =
   | TypeMap (ObjectMap _) -> "object map"
   | TypeMap (ObjectMapi _) -> "object mapi"
   | ReactElementPropsType -> "React element props"
+  | ReactElementConfigType -> "React element config"
   | ReactElementRefType -> "React element instance"
   in
 
@@ -1861,6 +1866,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | None -> "")
           (kid tout)) t
     | GetProps tout -> spf "GetProps (%s)" (kid tout)
+    | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
     | GetRef tout -> spf "GetRef (%s)" (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
@@ -1925,7 +1931,8 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "Rest ({merge_mode=%s}, %s)"
         (match merge_mode with
           | Sound -> "Sound"
-          | IgnoreExactAndOwn -> "IgnoreExactAndOwn")
+          | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
+          | ReactConfigMerge -> "ReactConfigMerge")
         (match state with
           | One t -> spf "One (%s)" (kid t)
           | Done o -> spf "Done (%s)" (resolved o))
@@ -2259,6 +2266,7 @@ let string_of_destructor = function
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
   | ReactElementPropsType -> "ReactElementProps"
+  | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
 
 let string_of_default = Default.fold

@@ -12,11 +12,11 @@ Error: api.js:11
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-227:       fn: (child: $NonMaybeType<T>, index: number) => U,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
+228:       fn: (child: $NonMaybeType<T>, index: number) => U,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:228
   The first parameter is incompatible:
-    227:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:227
+    228:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:228
      11: na(Children.map(a, (x: string) => (x: string))); // Error
                                 ^^^^^^ string
 
@@ -34,8 +34,8 @@ Error: api.js:12
 Error: api.js:14
  14: Children.forEach(a, (x: number) => {}); // Error
                       ^ ChildrenArray. This type is incompatible with the expected param type of
-231:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:231
+232:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
   Type argument `T` is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ null or undefined. This type is incompatible with
@@ -45,8 +45,8 @@ Error: api.js:14
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                       ^ ChildrenArray. This type is incompatible with the expected param type of
-231:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:231
+232:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
   Type argument `T` is incompatible:
       5: const a: ChildrenArray<?number> = [
                                 ^^^^^^^ null or undefined. This type is incompatible with
@@ -56,8 +56,8 @@ Error: api.js:16
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                       ^ ChildrenArray. This type is incompatible with the expected param type of
-231:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:231
+232:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
   Type argument `T` is incompatible:
       5: const a: ChildrenArray<?number> = [
                                  ^^^^^^ number. This type is incompatible with

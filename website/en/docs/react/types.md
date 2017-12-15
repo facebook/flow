@@ -18,6 +18,7 @@ Table of contents:
 - [`React.Key`](#toc-react-key)
 - [`React.Ref<typeof Component>`](#toc-react-ref)
 - [`React.ElementProps<typeof Component>`](#toc-react-elementprops)
+- [`React.ElementConfig<typeof Component>`](#toc-react-elementconfig)
 - [`React.ElementRef<typeof Component>`](#toc-react-elementref)
 
 These types are all exported as named type exports from the `react` module. If
@@ -288,6 +289,35 @@ type Ref<C> =
 Gets the props for a React element type. `Type` could be a React class
 component, a stateless functional component, or a JSX intrinsic string. This
 type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
+
+Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+type *of* a React component so you need to use `typeof` as in
+`React.ElementProps<typeof MyComponent>`.
+
+## `React.ElementConfig<typeof Component>` <a class="toc" id="toc-react-elementconfig" href="#toc-react-elementconfig"></a>
+
+Like `React.ElementProps<typeof Component>` this utility gets the type of a
+component's props but *without* the `defaultProps`!
+
+For example,
+
+```js
+import * as React from 'react';
+
+class MyComponent extends React.Component<{foo: number}> {
+  static defaultProps = {foo: 42};
+
+  render() {
+    return this.props.foo;
+  }
+}
+
+// `React.ElementProps<>` requires `foo` even though it is a `defaultProp`.
+({foo: 42}: React.ElementProps<typeof MyComponent>);
+
+// `React.ElementConfig<>` does not require `foo` since it is a `defaultProp`.
+({}: React.ElementConfig<typeof MyComponent>);
+```
 
 Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
 type *of* a React component so you need to use `typeof` as in

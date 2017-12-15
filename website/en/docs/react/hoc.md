@@ -139,37 +139,42 @@ function injectProp<Props: {}>(
 ```
 
 This [generic function type](../../types/generics/) will take a React component
-and return a React component with the exact same type for props. To add a
-prop we will use [an intersection](../../types/intersections/):
+and return a React component with the exact same type for props. To remove a
+prop from the returned component we will use
+[`$Diff`](../../types/utilities/#toc-diff).
 
 ```js
 import * as React from 'react';
 
 function injectProp<Props: {}>(
-  Component: React.ComponentType<{ foo: number } & Props>,
-): React.ComponentType<Props> {
+  Component: React.ComponentType<Props>,
+): React.ComponentType<$Diff<Props, { foo: number | void }>> {
   // implementation...
 }
 ```
 
-Let's look at the type for our input component. In other words the type for
-`MyInputComponent` in `injectProp(MyInputComponent)`.
+Let's look at the type for our output component. In other words the type for
+`MyOutputComponent` in `const MyOutputComponent = injectProp(MyInputComponent)`.
 
 ```js
-React.ComponentType<{ foo: number } & Props>
+React.ComponentType<$Diff<Props, { foo: number | void }>
 ```
 
 The type of props for this component is:
 
 ```js
-{ foo: number } & Props
+$Diff<Props, { foo: number | void }>
 ```
 
-This uses [an intersection](../../types/intersections/) to say that the type for
+This uses [`$Diff`](../../types/utilities/#toc-diff) to say that the type for
 props is everything in `Props` (which is the props type for our output
 component) *except* for `foo` which has a type of `number`.
 
-> **Note:** The intersection order is important here!
+> **Note:** If `foo` does not exist in `Props` you will get an error!
+> `$Diff<{}, { foo: number }>` will be an error. To work around this use a union
+> with `void`, see: `$Diff<{}, { foo: number | void }>`. An optional prop will
+> not completely remove `foo`. `$Diff<{ foo: number }, { foo?: number }>`
+> is `{ foo?: number }` instead of `{}`.
 
 With this we can now use `injectProp()` to inject `foo`.
 
@@ -177,8 +182,8 @@ With this we can now use `injectProp()` to inject `foo`.
 import * as React from 'react';
 
 function injectProp<Props: {}>(
-  Component: React.ComponentType<{ foo: number } & Props>,
-): React.ComponentType<Props> {
+  Component: React.ComponentType<Props>,
+): React.ComponentType<$Diff<Props, { foo: number | void }>> {
   return function WrapperComponent(props: Props) {
     return <Component {...props} foo={42} />;
   };
@@ -199,3 +204,22 @@ const MyEnhancedComponent = injectProp(MyComponent);
 > **Note:** Remember that the generic type, `Props`, needs the bound `{}`. As in
 > `Props: {}`. Otherwise you would not be able to spread `Props` in
 > `<Component {...props} foo={42} />`.
+
+## Supporting `defaultProps` With `React.ElementConfig<>` <a class="toc" id="toc-supporting-defaultprops-with-react-elementconfig" href="#toc-supporting-defaultprops-with-react-elementconfig"></a>
+
+The higher-order-components we've typed so far will all make `defaultProps`
+required. To preserve the optionality of `defaultProps` you can use
+[`React.ElementConfig<typeof Component>`](../types/#toc-react-elementconfig).
+Your enhancer function will need a generic type for your component. Like this:
+
+```js
+function myHOC<Props, Component: React.ComponentType<Props>>(
+  WrappedComponent: Component
+): React.ComponentType<React.ElementConfig<Component>> {
+  return props => <WrappedComponent {...props} />;
+}
+```
+
+Notice here how we used `React.ComponentType<React.ElementConfig<Component>>`
+as the output component type instead of `React.ComponentType<Props>` as we've
+seen in previous examples.

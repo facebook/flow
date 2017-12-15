@@ -929,6 +929,7 @@ module rec TypeTerm : sig
   | CallType of t list
   | TypeMap of type_map
   | ReactElementPropsType
+  | ReactElementConfigType
   | ReactElementRefType
 
   and type_map =
@@ -1607,6 +1608,7 @@ and Object : sig
     type merge_mode =
       | Sound
       | IgnoreExactAndOwn
+      | ReactConfigMerge
   end
 
   module ReactConfig : sig
@@ -1712,6 +1714,7 @@ and React : sig
   type tool =
   | CreateElement of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
   | GetProps of TypeTerm.t_out
+  | GetConfig of TypeTerm.t_out
   | GetRef of TypeTerm.t_out
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out

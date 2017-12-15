@@ -955,6 +955,138 @@ Error: hoc4.js:28
      12:   a: number,
               ^^^^^^ number
 
+Error: hoc5.js:21
+ 21: <MyComponent1 />; // Error
+     ^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+     21: <MyComponent1 />; // Error
+         ^^^^^^^^^^^^^^^^ props
+
+Error: hoc5.js:23
+ 23: <MyComponent1 bar="nope" />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     23: <MyComponent1 bar="nope" />; // Error
+                           ^^^^^^ string. This type is incompatible with
+     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                                       ^^^^^^ number
+
+Error: hoc5.js:25
+ 25: <MyComponent1 bar={42} foo={100} />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     25: <MyComponent1 bar={42} foo={100} />; // Error
+                                     ^^^ number. This type is incompatible with
+     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                          ^^^^^^ string
+
+Error: hoc5.js:28
+ 28: <MyComponent2 />; // Error
+     ^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+     28: <MyComponent2 />; // Error
+         ^^^^^^^^^^^^^^^^ props
+
+Error: hoc5.js:30
+ 30: <MyComponent2 bar="nope" />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     30: <MyComponent2 bar="nope" />; // Error
+                           ^^^^^^ string. This type is incompatible with
+     18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                                         ^^^^^^ number
+
+Error: hoc5.js:32
+ 32: <MyComponent2 bar={42} foo={100} />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     32: <MyComponent2 bar={42} foo={100} />; // Error
+                                     ^^^ number. This type is incompatible with
+     18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                            ^^^^^^ string
+
+Error: hoc5.js:38
+ 38: <MyEnhancedComponent1 />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     10: ): React.ComponentType<React.ElementConfig<Component>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+     38: <MyEnhancedComponent1 />; // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: hoc5.js:40
+ 40: <MyEnhancedComponent1 bar="nope" />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     40: <MyEnhancedComponent1 bar="nope" />; // Error
+                                   ^^^^^^ string. This type is incompatible with
+     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                                       ^^^^^^ number
+
+Error: hoc5.js:42
+ 42: <MyEnhancedComponent1 bar={42} foo={100} />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     42: <MyEnhancedComponent1 bar={42} foo={100} />; // Error
+                                             ^^^ number. This type is incompatible with
+     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                          ^^^^^^ string
+
+Error: hoc5.js:45
+ 45: <MyEnhancedComponent2 />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     10: ): React.ComponentType<React.ElementConfig<Component>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+     45: <MyEnhancedComponent2 />; // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+
+Error: hoc5.js:47
+ 47: <MyEnhancedComponent2 bar="nope" />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     47: <MyEnhancedComponent2 bar="nope" />; // Error
+                                   ^^^^^^ string. This type is incompatible with
+     18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                                         ^^^^^^ number
+
+Error: hoc5.js:49
+ 49: <MyEnhancedComponent2 bar={42} foo={100} />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
+ 10: ): React.ComponentType<React.ElementConfig<Component>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     49: <MyEnhancedComponent2 bar={42} foo={100} />; // Error
+                                             ^^^ number. This type is incompatible with
+     18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                            ^^^^^^ string
+
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
                      ^^^^^^^^^^^^^^^^^^^^^ React.Component. This type is incompatible with
@@ -1160,8 +1292,8 @@ Error: proptype_custom_validator.js:10
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with the expected return type of
-267:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:267
+268:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:268
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -1653,8 +1785,8 @@ Error: proptypes_builtins.js:7
   The first parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:275
+    276:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:276
 
 Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
@@ -1662,8 +1794,8 @@ Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
                                 ^^^^^ NoFun
   The return is incompatible:
-    275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:275
+    276:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:276
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1673,8 +1805,8 @@ Error: proptypes_builtins.js:11
  11: (React.PropTypes.instanceOf : NoFun);
                                    ^^^^^ NoFun
   The return is incompatible:
-    277:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:277
+    278:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:278
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1686,8 +1818,8 @@ Error: proptypes_builtins.js:15
   The first parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    279:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:279
+    280:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                         ^^^^^^^^^^^^^^^^^^^ ReactPropsCheckType. See lib: <BUILTINS>/react.js:280
 
 Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
@@ -1695,8 +1827,8 @@ Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
                                  ^^^^^ NoFun
   The return is incompatible:
-    279:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:279
+    280:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:280
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1708,8 +1840,8 @@ Error: proptypes_builtins.js:19
   The first parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    281:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                            ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:281
+    282:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                            ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:282
 
 Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
@@ -1717,8 +1849,8 @@ Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
                               ^^^^^ NoFun
   The return is incompatible:
-    281:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:281
+    282:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:282
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1730,8 +1862,8 @@ Error: proptypes_builtins.js:23
   The first parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    283:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:283
+    284:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:284
 
 Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
@@ -1739,8 +1871,8 @@ Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
                                   ^^^^^ NoFun
   The return is incompatible:
-    284:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:284
+    285:     ReactPropsChainableTypeChecker;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:285
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1752,8 +1884,8 @@ Error: proptypes_builtins.js:27
   The first parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    286:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:286
+    287:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:287
 
 Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
@@ -1761,8 +1893,8 @@ Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
                               ^^^^^ NoFun
   The return is incompatible:
-    287:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:287
+    288:     ReactPropsChainableTypeChecker;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:288
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -1965,4 +2097,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 161 errors
+Found 173 errors

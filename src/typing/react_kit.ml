@@ -235,6 +235,40 @@ let run cx trace ~use_op reason_op l u
     | _ -> err_incompatible (reason_of_t component)
   in
 
+  (* Get a type for the default props of a component. If a component has no
+   * default props then either the type will be Some void or we will
+   * return None. *)
+  let get_defaults () =
+    let component = l in
+    match component with
+    | DefT (_, ClassT _)
+    | DefT (_, FunT _) ->
+      Some (Tvar.mk_where cx reason_op (fun tvar ->
+        let name = "defaultProps" in
+        let reason_missing =
+          replace_reason_const (RMissingProperty (Some name)) reason_op in
+        let reason_prop =
+          replace_reason_const (RProperty (Some name)) reason_op in
+        (* NOTE: This is intentionally unsound. Function statics are modeled
+         * as an unsealed object and so a `GetPropT` would perform a shadow
+         * lookup since a write to an unsealed property may happen at any
+         * time. If we were to perform a shadow lookup for `defaultProps` and
+         * `defaultProps` was never written then our lookup would stall and
+         * therefore so would our props analysis. So instead we make the
+         * stateful assumption that `defaultProps` was already written to
+         * the component statics which may not always be true. *)
+        let strict = NonstrictReturning (Some
+          (DefT (reason_missing, VoidT), tvar)) in
+        let propref = Named (reason_prop, name) in
+        let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
+        (* Lookup the `defaultProps` property. *)
+        rec_flow cx trace (component,
+          LookupT (reason_op, strict, [], propref, action))
+      ))
+    (* Everything else will not have default props we should diff out. *)
+    | _ -> None
+  in
+
   let coerce_children_args (children, children_spread) =
     match children, children_spread with
     (* If we have no children and no variable spread argument then React will
@@ -361,34 +395,7 @@ let run cx trace ~use_op reason_op l u
     in
     (* For class components and function components we want to lookup the
      * static default props property so that we may add it to our config input. *)
-    let defaults = match component with
-      | DefT (_, ClassT _)
-      | DefT (_, FunT _) ->
-        Some (Tvar.mk_where cx reason_op (fun tvar ->
-          let name = "defaultProps" in
-          let reason_missing =
-            replace_reason_const (RMissingProperty (Some name)) reason_op in
-          let reason_prop =
-            replace_reason_const (RProperty (Some name)) reason_op in
-          (* NOTE: This is intentionally unsound. Function statics are modeled
-           * as an unsealed object and so a `GetPropT` would perform a shadow
-           * lookup since a write to an unsealed property may happen at any
-           * time. If we were to perform a shadow lookup for `defaultProps` and
-           * `defaultProps` was never written then our lookup would stall and
-           * therefore so would our props analysis. So instead we make the
-           * stateful assumption that `defaultProps` was already written to
-           * the component statics which may not always be true. *)
-          let strict = NonstrictReturning (Some
-            (DefT (reason_missing, VoidT), tvar)) in
-          let propref = Named (reason_prop, name) in
-          let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
-          (* Lookup the `defaultProps` property. *)
-          rec_flow cx trace (component,
-            LookupT (reason_op, strict, [], propref, action))
-        ))
-      (* Everything else will not have default props we should diff out. *)
-      | _ -> None
-    in
+    let defaults = get_defaults () in
     (* Use object spread to add children to config (if we have children)
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
@@ -410,6 +417,39 @@ let run cx trace ~use_op reason_op l u
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout
     )
+  in
+
+  (* Creates the type that we expect for a React config by diffing out default
+   * props with ObjKitT(Rest). The config does not include types for `key`
+   * or `ref`.
+   *
+   * There is some duplication between the logic used here to get a config type
+   * and ObjKitT(ReactConfig). In create_element, we want to produce a props
+   * object from the config object and the defaultProps object. This way we can
+   * add a lower bound to components who have a type variable for props. e.g.
+   *
+   *     const MyComponent = props => null;
+   *     <MyComponent foo={42} />;
+   *
+   * Here, MyComponent has no annotation for props so Flow must infer a type.
+   * However, get_config must produce a valid type from only the component type.
+   *
+   * This approach may stall if props never gets a lower bound. Using the result
+   * of get_config as an upper bound won't give props a lower bound. However,
+   * the places in which this approach stalls are the same places as other type
+   * destructor annotations. Like object spread, $Diff, and $Rest. *)
+  let get_config tout =
+    let props = Tvar.mk_where cx reason_op props_to_tout in
+    let defaults = get_defaults () in
+    match defaults with
+    | None -> rec_flow cx trace (props, UseT (use_op, tout))
+    | Some defaults ->
+      let open Object in
+      let open Object.Rest in
+      let tool = Resolve Next in
+      let state = One defaults in
+      rec_flow cx trace (props,
+        ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge, state), tout))
   in
 
   let get_instance tout =
@@ -1048,6 +1088,7 @@ let run cx trace ~use_op reason_op l u
   | CreateElement (shape, config, children, tout) ->
     create_element shape config children tout
   | GetProps tout -> props_to_tout tout
+  | GetConfig tout -> get_config tout
   | GetRef tout -> get_instance tout
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
   | CreateClass (tool, knot, tout) -> create_class knot tout tool

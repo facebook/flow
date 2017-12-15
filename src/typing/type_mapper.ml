@@ -352,6 +352,7 @@ class ['a] t = object(self)
           if tmap' == tmap then t
           else TypeMap tmap'
       | ReactElementPropsType
+      | ReactElementConfigType
       | ReactElementRefType
         -> t
 
@@ -992,6 +993,10 @@ class ['a] t = object(self)
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
       else GetProps tout'
+    | GetConfig tout ->
+      let tout' = self#type_ cx map_cx tout in
+      if tout' == tout then t
+      else GetConfig tout'
     | GetRef tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t

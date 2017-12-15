@@ -500,14 +500,21 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (unknown_use, mk_reason (RCustom "React element props") loc,
+        (unknown_use, mk_reason (RIdentifier "React$ElementProps") loc,
           ReactElementPropsType), mk_id ())
+    )
+  | "React$ElementConfig" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (t, TypeDestructorT
+        (unknown_use, mk_reason (RIdentifier "React$ElementConfig") loc,
+          ReactElementConfigType), mk_id ())
     )
   | "React$ElementRef" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (unknown_use, mk_reason (RCustom "React element instance") loc,
+        (unknown_use, mk_reason (RIdentifier "React$ElementRef") loc,
           ReactElementRefType), mk_id ())
     )
   | "$Facebookism$Merge" ->
