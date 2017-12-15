@@ -524,9 +524,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let rec skip ?(depth=0) env =
         match Peek.token env with
         | T_EOF ->
-          properties ~allow_static ~allow_spread ~exact env acc
+          List.rev acc
         | T_RCURLYBAR | T_RCURLY when depth = 0 ->
-          properties ~allow_static ~allow_spread ~exact env acc
+          List.rev acc
         | T_COMMA | T_SEMICOLON when depth = 0 ->
           Eat.token env;
           properties ~allow_static ~allow_spread ~exact env acc
