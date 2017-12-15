@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/facebook/flow/issues"
   },
-  "homepage": "https://github.com/facebook/flow/edit/master/packages/flow-upgrade#readme",
+  "homepage": "https://github.com/facebook/flow/tree/master/packages/flow-upgrade#readme",
   "jest": {
     "rootDir": "src",
     "testMatch": [
