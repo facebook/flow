@@ -1,6 +1,6 @@
 {
   "name": "flow-upgrade",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A utility for upgrading your codebase to the latest version of Flow.",
   "engines": {
     "node": ">=6"
@@ -15,6 +15,14 @@
     "prepublish": "npm run build",
     "postpublish": "node ./scripts/postpublish.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/flow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/flow/issues"
+  },
+  "homepage": "https://github.com/facebook/flow/tree/master/packages/flow-upgrade#readme",
   "jest": {
     "rootDir": "src",
     "testMatch": [
