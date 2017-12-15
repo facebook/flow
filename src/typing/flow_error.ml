@@ -201,7 +201,6 @@ and internal_error =
   | InterfaceTypeSpread
   | InferJobException of exn
   | MergeJobException of exn
-  | UnexpectedUnresolved of int
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -1119,8 +1118,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
           "infer_job exception: "^(Utils_js.fmt_exc exc)
       | MergeJobException exc ->
           "merge_job exception: "^(Utils_js.fmt_exc exc)
-      | UnexpectedUnresolved id ->
-          spf "unexpected unresolved tvar: %d" id
       in
       mk_error ~trace_infos ~kind:InternalError [loc, [
         spf "Internal error: %s" msg

@@ -2295,7 +2295,6 @@ let dump_flow_error =
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
   | InferJobException _ -> "InferJobException"
   | MergeJobException _ -> "MergeJobException"
-  | UnexpectedUnresolved _ -> "UnexpectedUnresolved"
   in
   let dump_upper_kind = function
   | IncompatibleGetPropT -> "IncompatibleGetPropT"

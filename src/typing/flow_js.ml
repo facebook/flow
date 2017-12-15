@@ -1513,10 +1513,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Resolved t ->
         let eval = EvalT (t, d, mk_id ()) in
         rec_flow_t cx trace (eval, tout)
+      (* Sometimes we may have 0->1 types that are not resolved in annotations.
+       * e.g. polymorphic types, existential types, or a type returned by $Call.
+       * Eventually, it would be nice for all annotations to actually,
+       * recursively, be 0->1. Then we would want to error here.
+       *
+       * Until then, use an OpenT with EvalT. This will miss the special cases
+       * in EvalT for resolved types like UnionT unfortunately. *)
       | Unresolved _ ->
-        add_output cx ~trace FlowError.(EInternal
-          (loc_of_reason r, UnexpectedUnresolved id));
-        rec_flow_t cx trace (AnyT.why r, tout))
+        let t = OpenT (r, id) in
+        let eval = EvalT (t, d, mk_id ()) in
+        rec_flow_t cx trace (eval, tout)
+      )
 
     (* Intersection types need a preprocessing step before they can be checked;
        this step brings it closer to parity with the checking of union types,
@@ -6962,6 +6970,13 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
   let k = tvar_with_constraint cx ~trace
     (choice_kit_use reason (EvalDestructor (id, destructor, tout))) in
   resolve_bindings_init cx trace reason [(id, tvar)] k
+(* Specialize TypeAppTs before evaluating them so that we can handle special
+   cases. Like the union case below. mk_typeapp_instance will return an AnnotT
+   which will be fully resolved using the AnnotT case above. *)
+| DefT (reason_tapp, TypeAppT (c, ts)) ->
+  let destructor = TypeDestructorT (use_op, reason, d) in
+  let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op:reason ~reason_tapp c ts in
+  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.

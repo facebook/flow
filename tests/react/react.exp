@@ -427,22 +427,6 @@ Error: element_with_component_type.js:8
       ^^^^^^^^^^^^^ React.Element. This type is incompatible with
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
-  Property `props` is incompatible:
-      5: class Foo extends React.Component<{a: number}> {}
-                                           ^^^^^^^^^^^ object type. This type is incompatible with
-    159:   +props: React$ElementProps<ElementType>,
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:159
-      Property `b` is incompatible:
-        159:   +props: React$ElementProps<ElementType>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in. See lib: <BUILTINS>/react.js:159
-          5: class Foo extends React.Component<{a: number}> {}
-                                               ^^^^^^^^^^^ object type
-
-Error: element_with_component_type.js:8
-  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ React.Element. This type is incompatible with
-  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
   Property `type` is incompatible:
       8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
            ^^^ statics of `Foo`. This type is incompatible with
@@ -1981,4 +1965,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 162 errors
+Found 161 errors
