@@ -524,21 +524,20 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let rec skip ?(depth=0) env =
         match Peek.token env with
         | T_EOF ->
-          error_unexpected env;
+          properties ~allow_static ~allow_spread ~exact env acc
+        | T_RCURLYBAR | T_RCURLY when depth = 0 ->
+          properties ~allow_static ~allow_spread ~exact env acc
+        | T_COMMA | T_SEMICOLON when depth = 0 ->
+          Eat.token env;
           properties ~allow_static ~allow_spread ~exact env acc
         | T_LCURLYBAR | T_LCURLY ->
           error_unexpected env;
           Eat.token env;
           skip ~depth:(depth+1) env
-        | T_RCURLYBAR | T_RCURLY when depth = 0 ->
-          properties ~allow_static ~allow_spread ~exact env acc
         | T_RCURLYBAR | T_RCURLY ->
           error_unexpected env;
           Eat.token env;
           skip ~depth:(depth-1) env
-        | T_COMMA | T_SEMICOLON when depth = 0 ->
-          Eat.token env;
-          properties ~allow_static ~allow_spread ~exact env acc
         | _ ->
           error_unexpected env;
           Eat.token env;
