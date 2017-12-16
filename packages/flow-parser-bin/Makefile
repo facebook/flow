@@ -3,15 +3,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-OCAML_HEADERS=\
-	include/caml/alloc.h \
-	include/caml/callback.h \
-	include/caml/config.h \
-	include/caml/memory.h \
-	include/caml/misc.h \
-	include/caml/mlvalues.h
-
 OCAML_PATH=$(shell ocamlc -where)
+OCAML_HEADERS=\
+	$(sort $(patsubst $(OCAML_PATH)/%,include/%, \
+		$(filter $(OCAML_PATH)/%,$(shell \
+			$(CC) -I $(OCAML_PATH) -MM -MT deps ../../src/parser/libflowparser.h \
+	))))
+
+all: deps
 
 .PHONY: lib/libflowparser.a
 lib/libflowparser.a:
@@ -27,9 +26,9 @@ $(OCAML_HEADERS): include/%: $(OCAML_PATH)/%
 	@mkdir -p "$(dir $@)"
 	cp "$<" "$@"
 
-.PHONY: deps
 deps: lib/libflowparser.a include/flowparser/libflowparser.h $(OCAML_HEADERS)
 
-.PHONY: clean
 clean:
 	rm -rf include/ lib/
+
+.PHONY: all deps clean
