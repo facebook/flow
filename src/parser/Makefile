@@ -38,7 +38,8 @@ clean:
 	$(OCB) -clean; \
 	cd $(TOP); \
 	$(OCB) -clean; \
-	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files
+	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files; \
+	rm -rf $(REL_DIR)/lib
 
 build-parser:
 	cd $(TOP); \
@@ -47,8 +48,9 @@ build-parser:
 .PHONY: lib/libflowparser.a
 lib/libflowparser.a:
 	@mkdir -p lib
-	cp "$(shell ocamlc -where)"/libasmrun.a "$@"
-	cd $(TOP) && $(OCB) -no-links $(REL_DIR)/libflowparser.native.o
+	cp "$(shell ocamlc -where)"/libasmrun_pic.a "$@"
+	cd $(TOP) && $(OCB) -no-links -tag "runtime_variant(_pic)" \
+		$(REL_DIR)/libflowparser.native.o
 	ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"
 
 js:
