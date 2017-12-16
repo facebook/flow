@@ -855,7 +855,7 @@ class ssa_builder = object(this)
       )
     )
 
-  method! call (expr: Loc.t Ast.Expression.Call.t) =
+  method! call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
     let { callee; arguments } = expr in
     ignore @@ this#expression callee;

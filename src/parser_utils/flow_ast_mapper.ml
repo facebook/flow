@@ -163,14 +163,14 @@ class mapper = object(this)
     | loc, ArrowFunction x -> id this#arrow_function x expr (fun x -> loc, ArrowFunction x)
     | loc, Assignment x -> id this#assignment x expr (fun x -> loc, Assignment x)
     | loc, Binary x -> id this#binary x expr (fun x -> loc, Binary x)
-    | loc, Call x -> id this#call x expr (fun x -> loc, Call x)
+    | loc, Call x -> id (this#call loc) x expr (fun x -> loc, Call x)
     | loc, Class x -> id this#class_ x expr (fun x -> loc, Class x)
     | loc, Comprehension x -> id this#comprehension x expr (fun x -> loc, Comprehension x)
     | loc, Conditional x -> id this#conditional x expr (fun x -> loc, Conditional x)
     | loc, Function x -> id this#function_ x expr (fun x -> loc, Function x)
     | loc, Generator x -> id this#generator x expr (fun x -> loc, Generator x)
     | loc, Identifier x -> id this#identifier x expr (fun x -> loc, Identifier x)
-    | loc, Import x -> id this#import x expr (fun x -> loc, Import x)
+    | loc, Import x -> id (this#import loc) x expr (fun x -> loc, Import x)
     | loc, JSXElement x -> id this#jsx_element x expr (fun x -> loc, JSXElement x)
     | loc, JSXFragment x -> id this#jsx_fragment x expr (fun x -> loc, JSXFragment x)
     | loc, Literal x -> id this#literal x expr (fun x -> loc, Literal x)
@@ -225,7 +225,7 @@ class mapper = object(this)
     let label' = map_opt this#label_identifier label in
     if label == label' then break else { label = label' }
 
-  method call (expr: Loc.t Ast.Expression.Call.t) =
+  method call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
     let { callee; arguments } = expr in
     let callee' = this#expression callee in
@@ -673,7 +673,7 @@ class mapper = object(this)
 
   method private_name (expr: Loc.t Ast.PrivateName.t) = expr
 
-  method import (expr: Loc.t Ast.Expression.t) = expr
+  method import _loc (expr: Loc.t Ast.Expression.t) = expr
 
   method if_consequent_statement ~has_else (stmt: Loc.t Ast.Statement.t) =
     ignore has_else;

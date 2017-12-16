@@ -37,10 +37,10 @@ and module_sig = {
  *)
 and require =
   (* require('foo') *)
-  | Require of ident
+  | Require of { source: ident; require_loc: Loc.t }
 
   (* import('foo').then(...) *)
-  | ImportDynamic of ident
+  | ImportDynamic of { source: ident; import_loc: Loc.t }
 
   (* import declaration without specifiers
    *

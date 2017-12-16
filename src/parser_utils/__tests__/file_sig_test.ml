@@ -62,8 +62,9 @@ let tests = "require" >::: [
     let source = "const Foo = require('foo')" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Require (loc, "foo")] ->
-      assert_substring_equal ~ctxt "'foo'" source loc
+    | [Require {source = (source_loc, "foo"); require_loc}] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "require('foo')" source require_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -71,8 +72,9 @@ let tests = "require" >::: [
     let source = "const Foo = require(`foo`)" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Require (loc, "foo")] ->
-      assert_substring_equal ~ctxt "`foo`" source loc
+    | [Require {source = (source_loc, "foo"); require_loc}] ->
+      assert_substring_equal ~ctxt "`foo`" source source_loc;
+      assert_substring_equal ~ctxt "require(`foo`)" source require_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -80,8 +82,9 @@ let tests = "require" >::: [
     let source = "import('foo')" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [ImportDynamic (loc, "foo")] ->
-      assert_substring_equal ~ctxt "'foo'" source loc
+    | [ImportDynamic {source = (source_loc, "foo"); import_loc}] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "import('foo')" source import_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -89,8 +92,9 @@ let tests = "require" >::: [
     let source = "import(`foo`)" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [ImportDynamic (loc, "foo")] ->
-      assert_substring_equal ~ctxt "`foo`" source loc
+    | [ImportDynamic {source = (source_loc, "foo"); import_loc}] ->
+      assert_substring_equal ~ctxt "`foo`" source source_loc;
+      assert_substring_equal ~ctxt "import(`foo`)" source import_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 

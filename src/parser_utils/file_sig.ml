@@ -20,8 +20,8 @@ and module_sig = {
 }
 
 and require =
-  | Require of ident
-  | ImportDynamic of ident
+  | Require of { source: ident; require_loc: Loc.t }
+  | ImportDynamic of { source: ident; import_loc: Loc.t }
   | Import0 of ident
   | Import of {
     source: ident;
@@ -87,8 +87,8 @@ let require_loc_map msig =
   (* requires *)
   let acc = List.fold_left (fun acc require ->
     match require with
-    | Require (loc, mref)
-    | ImportDynamic (loc, mref)
+    | Require { source = (loc, mref); _ }
+    | ImportDynamic { source = (loc, mref); _ }
     | Import0 (loc, mref)
     | Import { source = (loc, mref); _ } ->
       SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
@@ -214,7 +214,7 @@ class requires_calculator ~ast = object(this)
   method private clobber_cjs_exports loc =
     this#update_module_sig (clobber_cjs_exports loc)
 
-  method! call (expr: Loc.t Ast.Expression.Call.t) =
+  method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
     let { Call.callee; arguments } = expr in
     begin match callee, arguments with
@@ -227,21 +227,29 @@ class requires_calculator ~ast = object(this)
         }
       ))]) ->
       if not (Scope_api.is_local_use scope_info loc)
-      then this#add_require (Require (source_loc, name))
+      then
+        this#add_require (Require {
+          source = (source_loc, name);
+          require_loc = call_loc;
+        })
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
           if not (Scope_api.is_local_use scope_info loc)
-          then this#add_require (Require (source_loc, name))
+          then
+            this#add_require (Require {
+              source = (source_loc, name);
+              require_loc = call_loc;
+            })
         | _ -> () in
       List.iter element elements
     | _ -> ()
     end;
-    super#call expr
+    super#call call_loc expr
 
-  method! import (expr: Loc.t Ast.Expression.t) =
+  method! import import_loc (expr: Loc.t Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
     | loc, (
@@ -252,7 +260,10 @@ class requires_calculator ~ast = object(this)
           }]; _
         }
       ) ->
-      this#add_require (ImportDynamic (loc, name))
+      this#add_require (ImportDynamic {
+        source = (loc, name);
+        import_loc;
+      })
     | _ -> ()
     end;
     super#expression expr
