@@ -391,6 +391,13 @@ class mapper = object(this)
 
   method export_default_declaration _loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement.ExportDefaultDeclaration in
+    let { default; declaration } = decl in
+    let declaration' = this#export_default_declaration_decl declaration in
+    if declaration' = declaration then decl
+    else { default; declaration = declaration' }
+
+  method export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
+    let open Ast.Statement.ExportDefaultDeclaration in
     match decl with
     | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
     | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)

@@ -299,7 +299,7 @@ and statement_decl cx = Ast.Statement.(
         | Some (Interface (loc, i)) ->
             statement_decl cx (loc, InterfaceDeclaration i)
         | None ->
-            if not default
+            if Option.is_none default
             then ()
             else failwith (
               "Parser Error: declare export default must always have an " ^
@@ -314,7 +314,7 @@ and statement_decl cx = Ast.Statement.(
       | Some stmt -> statement_decl cx stmt
       | None -> ()
     )
-  | _, ExportDefaultDeclaration declaration -> (
+  | _, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } -> (
       match declaration with
       | ExportDefaultDeclaration.Declaration stmt ->
         statement_decl cx (nameify_default_export_decl stmt)
@@ -1696,9 +1696,9 @@ and statement cx = Ast.Statement.(
       | None -> [] in
 
       export_statement cx loc
-        ~default:false export_info specifiers source exportKind
+        ~default:None export_info specifiers source exportKind
 
-  | (loc, ExportDefaultDeclaration declaration) ->
+  | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration }) ->
       let export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
           let decl = nameify_default_export_decl decl in
@@ -1742,7 +1742,7 @@ and statement cx = Ast.Statement.(
       (* export default is always a value *)
       let exportKind = Ast.Statement.ExportValue in
 
-      export_statement cx loc ~default:true export_info None None exportKind
+      export_statement cx loc ~default:(Some default) export_info None None exportKind
 
   | (import_loc, ImportDeclaration import_decl) ->
     Context.add_import_stmt cx import_decl;
@@ -1894,7 +1894,7 @@ and export_statement cx loc
   ) in
 
   let export_reason_start = spf "%s%s" export_kind_start (
-    if default then " default" else ""
+    if (Option.is_some default) then " default" else ""
   ) in
 
   let export_from_local (export_reason, loc, local_name, local_tvar) = (
@@ -1917,7 +1917,7 @@ and export_statement cx loc
     (if lookup_mode != ForType then
       set_module_kind cx loc Context.ESModule);
 
-    let local_name = if default then "default" else local_name in
+    let local_name = if (Option.is_some default) then "default" else local_name in
     set_module_t cx reason (fun t ->
       Flow.flow cx (
         module_t_of_cx cx,

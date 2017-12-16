@@ -955,7 +955,9 @@ module Statement
     | T_DEFAULT ->
         (* export default ... *)
         let open Statement.ExportDefaultDeclaration in
-        Expect.token env T_DEFAULT;
+        let default, () = with_loc (fun env ->
+          Expect.token env T_DEFAULT
+        ) env in
         record_export env (Loc.btwn start_loc (Peek.loc env), "default");
         let declaration = match Peek.token env with
         | T_FUNCTION ->
@@ -972,7 +974,10 @@ module Statement
             Eat.semicolon env;
             Expression expr
           in
-        Statement.ExportDefaultDeclaration declaration
+        Statement.ExportDefaultDeclaration {
+          default;
+          declaration;
+        }
     | T_TYPE when (Peek.ith_token ~i:1 env) <> T_LCURLY ->
         (* export type ... *)
         let open Statement.ExportNamedDeclaration in
@@ -1138,7 +1143,9 @@ module Statement
     Statement.DeclareExportDeclaration.(match Peek.token env with
     | T_DEFAULT ->
         (* declare export default ... *)
-        Expect.token env T_DEFAULT;
+        let default, () = with_loc (fun env ->
+          Expect.token env T_DEFAULT
+        ) env in
         let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export default function foo (...): ...  *)
@@ -1155,7 +1162,7 @@ module Statement
             Some (DefaultType type_)
           in
         Statement.DeclareExportDeclaration {
-          default = true;
+          default = Some default;
           declaration;
           specifiers = None;
           source = None;
@@ -1186,7 +1193,7 @@ module Statement
             Some (Variable var)
         | _ -> assert false in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration;
           specifiers = None;
           source = None;
@@ -1214,7 +1221,7 @@ module Statement
         let source = export_source env in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = None;
           specifiers;
           source = Some source;
@@ -1223,7 +1230,7 @@ module Statement
         (* declare export type = ... *)
         let alias = with_loc type_alias_helper env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (NamedType alias);
           specifiers = None;
           source = None;
@@ -1232,7 +1239,7 @@ module Statement
         (* declare export opaque type = ... *)
         let opaque = with_loc (opaque_type_helper ~declare:true) env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (NamedOpaqueType opaque);
           specifiers = None;
           source = None;
@@ -1241,7 +1248,7 @@ module Statement
         (* declare export interface ... *)
         let iface = with_loc interface_helper env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (Interface iface);
           specifiers = None;
           source = None;
@@ -1265,7 +1272,7 @@ module Statement
         in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = None;
           specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers);
           source;

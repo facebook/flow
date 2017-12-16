@@ -98,6 +98,8 @@ and module_kind =
 
 and export =
   | ExportDefault of {
+    (* location of the `default` keyword *)
+    default_loc: Loc.t;
     (* may have local name, e.g., `export default function foo {}` *)
     local: ident option;
   }

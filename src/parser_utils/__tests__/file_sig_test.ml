@@ -329,7 +329,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = None } -> () (* pass *)
+      | ExportDefault { default_loc; local = None } ->
+        assert_substring_equal ~ctxt "default" source default_loc
       | _ -> assert_failure "Unexpected export"
     )
   end;
@@ -340,7 +341,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = None } -> () (* pass *)
+      | ExportDefault { default_loc; local = None } ->
+        assert_substring_equal ~ctxt "default" source default_loc
       | _ -> assert_failure "Unexpected export"
     )
   end;
@@ -351,7 +353,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = Some (loc, "foo") } ->
+      | ExportDefault { default_loc; local = Some (loc, "foo") } ->
+        assert_substring_equal ~ctxt "default" source default_loc;
         assert_substring_equal ~ctxt "foo" source loc
       | _ -> assert_failure "Unexpected export"
     )
@@ -363,7 +366,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = Some (loc, "C") } ->
+      | ExportDefault { default_loc; local = Some (loc, "C") } ->
+        assert_substring_equal ~ctxt "default" source default_loc;
         assert_substring_equal ~ctxt "C" source loc
       | _ -> assert_failure "Unexpected export"
     )
@@ -484,7 +488,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = None } -> () (* pass *)
+      | ExportDefault { default_loc; local = None } ->
+        assert_substring_equal ~ctxt "default" source default_loc
       | _ -> assert_failure "Unexpected export"
     )
   end;
@@ -495,7 +500,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = Some (loc, "foo") } ->
+      | ExportDefault { default_loc; local = Some (loc, "foo") } ->
+        assert_substring_equal ~ctxt "default" source default_loc;
         assert_substring_equal ~ctxt "foo" source loc;
       | _ -> assert_failure "Unexpected export"
     )
@@ -508,7 +514,8 @@ let tests = "require" >::: [
       assert_equal ~ctxt 1 (SMap.cardinal named);
       let export = assert_singleton_smap ~ctxt "default" named in
       match export with
-      | ExportDefault { local = Some (loc, "C") } ->
+      | ExportDefault { default_loc; local = Some (loc, "C") } ->
+        assert_substring_equal ~ctxt "default" source default_loc;
         assert_substring_equal ~ctxt "C" source loc
       | _ -> assert_failure "Unexpected export"
     )
@@ -634,7 +641,8 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       match SMap.find_unsafe "default" named with
-      | ExportDefault { local = None } -> () (* pass *)
+      | ExportDefault { default_loc; local = None } ->
+        assert_substring_equal ~ctxt "default" source default_loc
       | _ -> assert_failure "Unexpected export"
     )
   end;
@@ -646,11 +654,11 @@ let tests = "require" >::: [
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
-      let loc = match SMap.find_unsafe "default" named with
-      | ExportDefault { local = Some (loc, "bar") } -> loc
+      match SMap.find_unsafe "default" named with
+      | ExportDefault { default_loc; local = Some (loc, "bar") } ->
+        assert_substring_equal ~ctxt "default" source default_loc;
+        assert_substring_equal ~ctxt "bar" source loc
       | _ -> assert_failure "Unexpected export"
-      in
-      assert_substring_equal ~ctxt "bar" source loc
     )
   end;
 

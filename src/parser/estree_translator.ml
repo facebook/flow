@@ -252,7 +252,10 @@ end with type t = Impl.t) = struct
           | None -> null
           in
           node "DeclareExportDeclaration" loc [
-            "default", bool export.default;
+            "default", bool (
+              match export.default with
+              | Some _ -> true
+              | None -> false);
             "declaration", declaration;
             "specifiers", export_specifiers export.specifiers;
             "source", option string_literal export.source;
@@ -278,7 +281,7 @@ end with type t = Impl.t) = struct
           ]
       )
     | loc, ExportDefaultDeclaration export -> ExportDefaultDeclaration.(
-        let declaration = match export with
+        let declaration = match export.declaration with
         | Declaration stmt -> statement stmt
         | ExportDefaultDeclaration.Expression expr -> expression expr
         in

@@ -431,9 +431,13 @@ and Statement : sig
     }
   end
   module ExportDefaultDeclaration : sig
-    type 'M t =
+    type 'M declaration =
       | Declaration of 'M Statement.t
       | Expression of 'M Expression.t
+    type 'M t = {
+      default: 'M;
+      declaration: 'M declaration;
+    }
   end
   module DeclareExportDeclaration : sig
     type 'M declaration =
@@ -455,7 +459,7 @@ and Statement : sig
       | Interface of ('M * 'M Interface.t)
 
     type 'M t = {
-      default: bool;
+      default: 'M option;
       declaration: 'M declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
       source: ('M * StringLiteral.t) option;

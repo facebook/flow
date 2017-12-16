@@ -42,7 +42,7 @@ and module_kind =
   }
 
 and export =
-  | ExportDefault of { local: ident option }
+  | ExportDefault of { default_loc: Loc.t; local: ident option }
   | ExportNamed of {
     loc: Loc.t;
     local: ident option;
@@ -328,12 +328,13 @@ class requires_calculator ~ast = object(this)
   method! export_default_declaration stmt_loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement in
     let open Ast.Statement.ExportDefaultDeclaration in
-    let local =  match decl with
+    let { default = default_loc; declaration } = decl in
+    let local =  match declaration with
     | Declaration (_, FunctionDeclaration { Ast.Function.id; _ }) -> id
     | Declaration (_, ClassDeclaration { Ast.Class.id; _ }) -> id
     | _ -> None
     in
-    let export = ExportDefault { local } in
+    let export = ExportDefault { default_loc; local } in
     this#add_exports stmt_loc ExportValue [export, "default"] [];
     super#export_default_declaration stmt_loc decl
 
@@ -384,7 +385,7 @@ class requires_calculator ~ast = object(this)
     let { default; source; specifiers; declaration } = decl in
     let source = match source with
     | Some (loc, { Ast.StringLiteral.value = mref; raw = _ }) ->
-      assert (not default); (* declare export default from not supported *)
+      assert (Option.is_none default); (* declare export default from not supported *)
       Some (loc, mref)
     | _ -> None
     in
@@ -398,25 +399,31 @@ class requires_calculator ~ast = object(this)
       | Function (_, { DeclareFunction.id; _ })
       | Class (_, { DeclareClass.id; _ }) ->
         let name, export =
-          if default
-          then "default", ExportDefault { local = Some id }
-          else snd id, ExportNamed { loc = fst id; local = None; source }
+          match default with
+          | Some default_loc ->
+            "default", ExportDefault { default_loc; local = Some id }
+          | None ->
+            snd id, ExportNamed { loc = fst id; local = None; source }
         in
         this#add_exports stmt_loc ExportValue [export, name] []
       | DefaultType _ ->
-        let export = ExportDefault { local = None } in
+        let default_loc = match default with
+        | Some loc -> loc
+        | None -> failwith "declare export default must have a default loc"
+        in
+        let export = ExportDefault { default_loc; local = None } in
         this#add_exports stmt_loc ExportValue [export, "default"] []
       | NamedType (_, { TypeAlias.id; _ })
       | NamedOpaqueType (_, { OpaqueType.id; _ })
       | Interface (_, { Interface.id; _ }) ->
-        assert (not default);
+        assert (Option.is_none default);
         let export = ExportNamed { loc = fst id; local = None; source } in
         this#add_exports stmt_loc ExportType [export, snd id] []
     end;
     begin match specifiers with
     | None -> () (* assert declaration <> None *)
     | Some specifiers ->
-      assert (not default);
+      assert (Option.is_none default);
       (* declare export type unsupported *)
       let exportKind = Ast.Statement.ExportValue in
       this#export_specifiers stmt_loc exportKind source specifiers
