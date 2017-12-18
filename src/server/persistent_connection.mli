@@ -20,8 +20,8 @@ val remove_client: t -> Prot.client_id -> t
 (* Send updates to all clients that are subscribed *)
 val update_clients:
   clients:t ->
-  errors:Errors.ErrorSet.t ->
-  warnings:Errors.ErrorSet.t Utils_js.FilenameMap.t -> unit
+  calc_errors_and_warnings:(unit -> Errors.ErrorSet.t * Errors.ErrorSet.t Utils_js.FilenameMap.t) ->
+  unit
 val send_exit:
   t -> FlowExitStatus.t -> unit
 val send_start_recheck:

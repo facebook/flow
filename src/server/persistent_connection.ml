@@ -83,16 +83,20 @@ let remove_client clients client_id =
 
 let get_subscribed_clients = List.filter (fun c -> c.subscribed)
 
-let update_clients ~clients ~errors ~warnings =
-  let error_count = Errors.ErrorSet.cardinal errors in
-  let warning_file_count = Utils_js.FilenameMap.cardinal warnings in
+let update_clients ~clients ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
   let subscribed_client_count = List.length subscribed_clients in
   let all_client_count = List.length clients in
-  Hh_logger.info
-    "sending (%d errors) and (warnings from %d files) to %d subscribed clients (of %d total)"
-    error_count warning_file_count subscribed_client_count all_client_count;
-  List.iter (send_errors ~errors ~warnings) subscribed_clients
+  if subscribed_clients <> []
+  then begin
+    let errors, warnings = calc_errors_and_warnings () in
+    let error_count = Errors.ErrorSet.cardinal errors in
+    let warning_file_count = Utils_js.FilenameMap.cardinal warnings in
+    Hh_logger.info
+      "sending (%d errors) and (warnings from %d files) to %d subscribed clients (of %d total)"
+      error_count warning_file_count subscribed_client_count all_client_count;
+    List.iter (send_errors ~errors ~warnings) subscribed_clients
+  end
 
 let send_exit clients code =
   clients

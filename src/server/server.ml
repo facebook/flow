@@ -71,7 +71,6 @@ let init ~focus_targets genv =
       collated_errors = ref None;
       connections = Persistent_connection.empty;
     } in
-    env.collated_errors := Some (ErrorCollator.regenerate env);
     env
   end in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;

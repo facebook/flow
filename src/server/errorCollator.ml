@@ -61,6 +61,7 @@ let regenerate =
     (errors, warnings, suppressed_errors, suppressions)
   in
   fun env ->
+    MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
     let {
       ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set;
     } = env.ServerEnv.errors in

@@ -352,8 +352,10 @@ let typecheck
         curr_suppressions := suppressions;
         curr_severity_cover := severity_cover;
 
-        if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
-          Persistent_connection.update_clients ~clients ~errors:new_errors ~warnings:new_warnings
+        if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
+        then Persistent_connection.update_clients
+          ~clients
+          ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       )
   in
 
@@ -767,8 +769,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
       if Errors.ErrorSet.cardinal error_set > 0
-      then Persistent_connection.update_clients ~clients:env.ServerEnv.connections
-        ~errors:error_set ~warnings:FilenameMap.empty
+      then Persistent_connection.update_clients
+        ~clients:env.ServerEnv.connections
+        ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
     { errors with ServerEnv.local_errors }
@@ -1073,6 +1076,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   in
 
   (* NOTE: unused fields are left in their initial empty state *)
+  env.ServerEnv.collated_errors := None;
   ({ env with ServerEnv.
     files = parsed;
     checked_files = checked;

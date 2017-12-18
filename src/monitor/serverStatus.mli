@@ -21,6 +21,7 @@ type event =
 | Recheck_start
 | Handling_request_start
 | GC_start
+| Collating_errors_start
 
 type status
 

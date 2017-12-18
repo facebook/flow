@@ -138,14 +138,14 @@ let recheck genv env ?(force_focus=false) updates =
     let workers = genv.ServerEnv.workers in
 
     let env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
-    (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
-     * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
-     * run it before we release the recheck lock *)
-    env.collated_errors := Some (ErrorCollator.regenerate env);
+
+    Persistent_connection.send_end_recheck env.connections;
+    let calc_errors_and_warnings () =
+      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      errors, warnings
+    in
+    Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
 
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-    Persistent_connection.send_end_recheck env.connections;
-    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-    Persistent_connection.update_clients ~clients:env.connections ~errors ~warnings;
     env
   end

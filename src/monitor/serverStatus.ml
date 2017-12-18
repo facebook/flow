@@ -28,6 +28,7 @@ type event =
 | Recheck_start (* The server is starting to recheck *)
 | Handling_request_start (* The server is starting to handle a request *)
 | GC_start (* The server is starting to GC *)
+| Collating_errors_start (* The server is collating the errors *)
 
 type typecheck_status =
 | Starting_typecheck (* A typecheck's initial state *)
@@ -36,6 +37,7 @@ type typecheck_status =
 | Calculating_dependencies
 | Merging of progress
 | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
+| Collating_errors (* We sometimes collate errors during typecheck *)
 | Finishing_typecheck (* Typecheck is done but we haven't reach a free state yet *)
 
 type typecheck_mode =
@@ -65,6 +67,7 @@ type emoji =
 | Smiling_face_with_mouth_open
 | Taco
 | Wastebasket
+| File_cabinet
 
 let string_of_emoji = function
 | Bicyclist -> "\xF0\x9F\x9A\xB4"
@@ -75,6 +78,7 @@ let string_of_emoji = function
 | Smiling_face_with_mouth_open -> "\xF0\x9F\x98\x83"
 | Taco -> "\xF0\x9F\x8C\xAE"
 | Wastebasket -> "\xF0\x9F\x97\x91"
+| File_cabinet -> "\xF0\x9F\x97\x84"
 
 type pad_emoji =
 | Before
@@ -102,6 +106,7 @@ let string_of_event = function
 | Recheck_start -> "Recheck_start"
 | Handling_request_start -> "Handling_request_start"
 | GC_start -> "GC_start"
+| Collating_errors_start -> "Collating_errors_start"
 
 let string_of_typecheck_status ~use_emoji = function
 | Starting_typecheck ->
@@ -116,6 +121,8 @@ let string_of_typecheck_status ~use_emoji = function
   spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
 | Garbage_collecting_typecheck ->
   spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
+| Collating_errors ->
+  spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
 | Finishing_typecheck ->
   spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
@@ -155,6 +162,7 @@ let update ~event ~status =
       Typechecking (mode, Calculating_dependencies)
   | Merging_progress progress, Typechecking (mode, _) -> Typechecking (mode, Merging progress)
   | GC_start, Typechecking (mode, _) -> Typechecking (mode, Garbage_collecting_typecheck)
+  | Collating_errors_start, Typechecking (mode, _) -> Typechecking (mode, Collating_errors)
   | Finishing_up, Typechecking (mode, _) -> Typechecking (mode, Finishing_typecheck)
 
   | GC_start, _ -> Garbage_collecting
@@ -195,6 +203,7 @@ let is_significant_transition old_status new_status =
     | _, Calculating_dependencies
     | _, Merging _
     | _, Garbage_collecting_typecheck
+    | _, Collating_errors
     | _, Finishing_typecheck -> true
     end
   (* Switching to a completely different status is always significant *)
