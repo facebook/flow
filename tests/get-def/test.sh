@@ -80,3 +80,12 @@ printf "member of a nonexistent imported type with type parameters = "
 assert_ok "$FLOW" get-def imports.js 16 4 --strip-root --pretty 2>&1
 printf "member of a type alias for \`any\` with type parameters = "
 assert_ok "$FLOW" get-def imports.js 22 4 --strip-root --pretty 2>&1
+
+printf "member of an object type alias = "
+assert_ok "$FLOW" get-def objects.js 5 4 --strip-root --pretty
+printf "member of an unannotated object type = "
+assert_ok "$FLOW" get-def objects.js 8 4 --strip-root --pretty
+printf "shadow prop created on write = "
+assert_ok "$FLOW" get-def objects.js 12 4 --strip-root --pretty
+printf "shadow prop created on read = "
+assert_ok "$FLOW" get-def objects.js 14 4 --strip-root --pretty

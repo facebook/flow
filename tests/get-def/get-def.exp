@@ -18,3 +18,7 @@ members of maybe types = {"path":"class.js","line":5,"endline":5,"start":3,"end"
 members of unions with null/void = {"path":"class.js","line":5,"endline":5,"start":3,"end":5}
 member of a nonexistent imported type with type parameters = {"path":"","line":0,"endline":0,"start":1,"end":0}
 member of a type alias for `any` with type parameters = {"path":"","line":0,"endline":0,"start":1,"end":0}
+member of an object type alias = {"path":"objects.js","line":3,"endline":3,"start":13,"end":15}
+member of an unannotated object type = {"path":"objects.js","line":7,"endline":7,"start":12,"end":14}
+shadow prop created on write = {"path":"objects.js","line":11,"endline":11,"start":3,"end":5}
+shadow prop created on read = {"path":"objects.js","line":13,"endline":13,"start":3,"end":5}
