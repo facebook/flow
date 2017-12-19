@@ -25,7 +25,7 @@ let get_ast_result file content =
   let use_strict = true in
   let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
   match result with
-    | Parse_ok (ast, file_sig) -> Ok (ast, file_sig)
+    | Parse_ok (ast, file_sig) -> Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
@@ -57,7 +57,7 @@ end = struct
     File_key.to_path dep_file_key >>= fun path ->
     let dep_fileinput = File_input.FileName path in
     File_input.content_of_file_input dep_fileinput >>= fun content ->
-    get_ast_result dep_file_key content >>| fun (_, file_sig) ->
+    get_ast_result dep_file_key content >>| fun (_, file_sig, _) ->
     let is_relevant mref =
       let resolved = Module_js.find_resolved_module
         ~audit:Expensive.warn
@@ -87,7 +87,7 @@ end = struct
 
   let local_find_refs file_key ~content loc =
     let open Scope_api in
-    get_ast_result file_key content >>= fun (ast, _) ->
+    get_ast_result file_key content >>= fun (ast, _, _) ->
     let scope_info = Scope_builder.program ast in
     let all_uses = all_uses scope_info in
     let matching_uses = List.filter (fun use -> Loc.contains use loc) all_uses in
@@ -142,7 +142,7 @@ end = struct
       | None -> Ok None
       | Some (name, refs) ->
           if global then
-            get_ast_result file_key content >>= fun (_, file_sig) ->
+            get_ast_result file_key content >>= fun (_, file_sig, _) ->
             let open File_sig in
             begin match file_sig.module_sig.module_kind with
               (* TODO support CommonJS *)
@@ -234,12 +234,16 @@ end = struct
       | FailureAnyType ->
           Ok AnyType
 
-  let find_refs_in_file options workers env content file_key def_loc name =
+  let find_refs_in_file options content file_key def_loc name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
     set_get_refs_hook potential_refs name;
-    let check_contents_result = Types_js.basic_check_contents ~options ~workers ~env content file_key in
+    let cx_result =
+      get_ast_result file_key content >>| fun (ast, file_sig, info) ->
+      let ensure_checked = fun _ -> () in
+      Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+    in
     unset_hooks ();
-    check_contents_result >>= fun (_, cx, _) ->
+    cx_result >>= fun cx ->
     !potential_refs |>
       LocMap.bindings |>
       List.map begin fun (ref_loc, ty) ->
@@ -260,13 +264,19 @@ end = struct
 
   let find_refs genv env ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
-    let check_contents () = Types_js.basic_check_contents ~options ~workers ~env content file_key in
     let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
       let props_access_info = ref None in
       set_def_loc_hook props_access_info loc;
-      let check_contents_result = check_contents () in
+      let cx_result =
+        get_ast_result file_key content >>| fun (ast, file_sig, info) ->
+        let _, result = Profiling_js.with_profiling ~should_print_summary:false begin fun profiling ->
+          let ensure_checked = Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
+          Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+        end in
+        result
+      in
       unset_hooks ();
-      check_contents_result >>= fun (_, cx, _) ->
+      cx_result >>= fun cx ->
       match !props_access_info with
         | None -> Ok None
         | Some (`Def (loc, name)) -> Ok (Some (loc, name))
@@ -292,19 +302,19 @@ end = struct
             end;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput >>= fun content ->
-            find_refs_in_file options workers env content file_key def_loc name >>= fun refs ->
+            find_refs_in_file options content file_key def_loc name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
             let external_refs_result =
               FilenameSet.elements all_deps |> List.map begin fun dep ->
                 File_key.to_path dep >>= fun path ->
                 File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
-                find_refs_in_file options workers env content dep def_loc name
+                find_refs_in_file options content dep def_loc name
               end |> Result.all
             in
             external_refs_result >>= fun external_refs ->
             Ok (Some (name, List.concat (refs::external_refs)))
           else
-            find_refs_in_file options workers env content file_key def_loc name >>= fun refs ->
+            find_refs_in_file options content file_key def_loc name >>= fun refs ->
             Ok (Some (name, refs))
 end
 

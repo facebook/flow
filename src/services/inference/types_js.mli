@@ -59,3 +59,11 @@ val typecheck_contents:
   File_key.t ->           (* fake file-/module name *)
   Errors.ErrorSet.t *     (* errors *)
   Errors.ErrorSet.t       (* warnings *)
+
+val ensure_checked_dependencies:
+  options: Options.t ->
+  profiling: Profiling_js.running ->
+  workers: Worker.t list option ->
+  env: ServerEnv.env ref ->
+  Modulename.Set.t ->
+  unit
