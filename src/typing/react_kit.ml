@@ -14,6 +14,7 @@ let run cx trace ~use_op reason_op l u
   ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
+  ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
@@ -833,6 +834,12 @@ let run cx trace ~use_op reason_op l u
         mod_reason_of_t (replace_reason_const RReactPropTypes) props_t
       in
 
+      let props =
+        SMap.empty
+        |> SMap.add "props" (Field (None, props_t, Neutral))
+        |> SMap.add "state" (Field (None, knot.state_t, Neutral))
+      in
+
       (* Some spec fields are used to create the instance type, but are not
          present on the resulting prototype or statics. Other spec fields should
          become static props. Everything else should be on the prototype. *)
@@ -889,7 +896,7 @@ let run cx trace ~use_op reason_op l u
             EvalT (t, TypeDestructorT (use_op, reason_op, destructor), id)
           ) v in
           SMap.add k bound_v props, static_props
-      ) spec_props (SMap.empty, SMap.empty) in
+      ) spec_props (props, SMap.empty) in
 
       let static_props = static_props
         |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
@@ -899,8 +906,8 @@ let run cx trace ~use_op reason_op l u
 
       let super =
         let reason = replace_reason (fun x -> RSuperOf x) reason_component in
-        get_builtin_typeapp cx reason
-          "LegacyReactComponent" [props_t; knot.state_t]
+        let c = get_builtin cx "LegacyReactComponent" reason in
+        this_typeapp c knot.this (Some [props_t; knot.state_t])
       in
 
       let static =

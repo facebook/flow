@@ -10429,6 +10429,7 @@ and react_kit cx trace ~use_op reason_op l u =
     ~reposition
     ~rec_flow
     ~rec_flow_t
+    ~get_builtin
     ~get_builtin_type
     ~get_builtin_typeapp
     ~mk_instance
