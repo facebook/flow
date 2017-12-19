@@ -328,13 +328,16 @@ module rec TypeTerm : sig
     (* operations on runtime values, such as functions, objects, and arrays *)
     | BindT of use_op * reason * funcalltype * bool (* pass-through *)
     | CallT of use_op * reason * funcalltype
-    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype
-    | SetPropT of use_op * reason * propref * write_ctx * t
+    (* The last position is an optional type that probes into the type of the
+       method called. This will be primarily used for type-table bookkeeping. *)
+    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype * t option
+    (* Similar to the last element of the MethodT *)
+    | SetPropT of use_op * reason * propref * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
-    | SetPrivatePropT of use_op * reason * string * class_binding list * bool * t
+    | SetPrivatePropT of use_op * reason * string * class_binding list * bool * t * t option
     | GetPropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
@@ -797,7 +800,9 @@ module rec TypeTerm : sig
   | SuperProp of use_op * Property.t
   | MatchProp of t
 
-  and rw = Read | Write of write_ctx
+  and rw =
+  | Read
+  | Write of write_ctx * t option (* original type of field *)
 
   and write_ctx = ThisInCtor | Normal
 
@@ -1174,7 +1179,7 @@ end = struct
 
   let access = function
     | Read -> read_t
-    | Write ctx -> write_t ~ctx
+    | Write (ctx, _) -> write_t ~ctx
 
   let iter_t f = function
     | Field (_, t, _)
@@ -1837,7 +1842,7 @@ end = struct
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
     | MapTypeT (reason, _, _) -> reason
-    | MethodT (_,reason,_,_,_) -> reason
+    | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
     | NotT (reason, _) -> reason
     | ObjAssignToT (reason, _, _, _) -> reason
@@ -1856,8 +1861,8 @@ end = struct
     | ResolveSpreadT (_, reason, _) -> reason
     | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
     | SetElemT (_,reason,_,_,_) -> reason
-    | SetPropT (_,reason,_,_,_) -> reason
-    | SetPrivatePropT (_,reason,_,_,_,_) -> reason
+    | SetPropT (_,reason,_,_,_,_) -> reason
+    | SetPrivatePropT (_,reason,_,_,_,_,_) -> reason
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,reason,_,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
@@ -1993,8 +1998,8 @@ end = struct
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
     | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
-    | MethodT (use_op, reason_call, reason_lookup, name, ft) ->
-        MethodT (use_op, f reason_call, reason_lookup, name, ft)
+    | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
+        MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
     | MixinT (reason, inst) -> MixinT (f reason, inst)
     | NotT (reason, t) -> NotT (f reason, t)
     | ObjAssignToT (reason, t, t2, kind) ->
@@ -2016,9 +2021,9 @@ end = struct
     | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
       SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
     | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
-    | SetPropT (use_op, reason, n, i, t) -> SetPropT (use_op, f reason, n, i, t)
-    | SetPrivatePropT (use_op, reason, n, scopes, static, t) ->
-        SetPrivatePropT (use_op, f reason, n, scopes, static, t)
+    | SetPropT (use_op, reason, n, i, t, tp) -> SetPropT (use_op, f reason, n, i, t, tp)
+    | SetPrivatePropT (use_op, reason, n, scopes, static, t, tp) ->
+        SetPrivatePropT (use_op, f reason, n, scopes, static, t, tp)
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
     | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
         SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
@@ -2048,9 +2053,9 @@ end = struct
     | UseT (op, t) -> util op (fun op -> UseT (op, t))
     | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
     | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
-    | MethodT (op, r1, r2, p, f) -> util op (fun op -> MethodT (op, r1, r2, p, f))
-    | SetPropT (op, r, p, w, t) -> util op (fun op -> SetPropT (op, r, p, w, t))
-    | SetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> SetPrivatePropT (op, r, s, c, b, t))
+    | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
+    | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
+    | SetPrivatePropT (op, r, s, c, b, t, tp) -> util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
     | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
     | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
     | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
@@ -2293,6 +2298,7 @@ let any_propagating_use_t = function
   | ResolveSpreadT _
   | SentinelPropTestT _
   | SetElemT _
+  | SetPropT _
   | SpecializeT _
   | TestPropT _
   | ThisSpecializeT _
@@ -2318,7 +2324,6 @@ let any_propagating_use_t = function
   | EqT _
   | HasOwnPropT _
   | ImplementsT _
-  | SetPropT _
   | SetPrivatePropT _
   | SetProtoT _
   | SuperT _

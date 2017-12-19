@@ -451,21 +451,24 @@ class ['a] t = object(self)
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall == funcall' then t
         else CallT (op, r, funcall')
-    | MethodT (op, r1, r2, prop, funcall) ->
+    | MethodT (op, r1, r2, prop, funcall, prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let funcall' = self#fun_call_type cx map_cx funcall in
-        if prop' == prop && funcall' == funcall then t
-        else MethodT (op, r1, r2, prop', funcall')
-    | SetPropT (use_op, r, prop, i, t') ->
+        let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+        if prop' == prop && funcall' == funcall && prop_t' == prop_t then t
+        else MethodT (op, r1, r2, prop', funcall', prop_t')
+    | SetPropT (use_op, r, prop, i, t', prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
-        if prop' == prop && t'' == t' then t
-        else SetPropT (use_op, r, prop', i, t'')
-    | SetPrivatePropT (use_op, r, prop, scopes, static, t') ->
+        let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+        if prop' == prop && t'' == t' && prop_t' == prop_t then t
+        else SetPropT (use_op, r, prop', i, t'', prop_t')
+    | SetPrivatePropT (use_op, r, prop, scopes, static, t', prop_t) ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
-        if t'' == t' && scopes' == scopes then t
-        else SetPrivatePropT (use_op, r, prop, scopes', static, t'')
+        let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+        if t'' == t' && scopes' == scopes && prop_t' == prop_t then t
+        else SetPrivatePropT (use_op, r, prop, scopes', static, t'', prop_t')
     | GetPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -918,8 +921,9 @@ class ['a] t = object(self)
     | RWProp (use_op, t1, t2, rw) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        if t1' == t1 && t2' == t2 then t
-        else RWProp (use_op, t1', t2', rw)
+        let rw' = self#read_write cx map_cx rw in
+        if t1' == t1 && t2' == t2 && rw' == rw then t
+        else RWProp (use_op, t1', t2', rw')
     | LookupProp (use, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
@@ -932,6 +936,14 @@ class ['a] t = object(self)
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
       else MatchProp t'
+
+  method private read_write cx map_cx rw =
+    match rw with
+    | Read -> rw
+    | Write (wr_ctx, prop_t) ->
+      let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+      if prop_t' == prop_t then rw
+      else Write (wr_ctx, prop_t')
 
   method elem_action cx map_cx t =
     match t with

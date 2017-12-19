@@ -255,19 +255,30 @@ class ['a] t = object(self)
   | CallT (_, _, fn) ->
     self#fun_call_type cx acc fn
 
-  | MethodT (_, _, _, p, fn) ->
+  | MethodT (_, _, _, p, fn, prop_t) ->
     let acc = self#propref cx acc p in
     let acc = self#fun_call_type cx acc fn in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
     acc
 
-  | SetPropT (_, _, p, _, t)
+  | SetPropT (_, _, p, _, t, prop_t) ->
+    let acc = self#propref cx acc p in
+    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+    acc
+
   | GetPropT (_, _, p, t)
   | TestPropT (_, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetPrivatePropT (_, _, _, scopes, _, t)
+  | SetPrivatePropT (_, _, _, scopes, _, t, prop_t) ->
+    let acc = List.fold_left (self#class_binding cx) acc scopes in
+    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+    acc
+
   | GetPrivatePropT (_, _, _, scopes, _, t) ->
     let acc = List.fold_left (self#class_binding cx) acc scopes in
     let acc = self#type_ cx pole_TODO acc t in
@@ -754,15 +765,20 @@ class ['a] t = object(self)
     Nel.fold_left (self#props cx pole_TODO) acc props
 
   method private lookup_action cx acc = function
-  | RWProp (_, t1, t2, _) ->
+  | RWProp (_, t1, t2, rw) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
+    let acc = self#read_write cx acc rw in
     acc
   | LookupProp (_, prop)
   | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
   | MatchProp t ->
     self#type_ cx pole_TODO acc t
+
+  method private read_write cx acc = function
+  | Read -> acc
+  | Write (_, prop_t) -> self#opt (self#type_ cx pole_TODO) acc prop_t
 
   method private elem_action cx acc = function
   | ReadElem t ->

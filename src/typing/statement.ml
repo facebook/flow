@@ -2694,9 +2694,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           fn=mk_reason (RMethod (Some name)) callee_loc;
           prop=reason_prop;
         }) in
+        let prop_t = Tvar.mk cx reason_prop in
         Flow.flow cx (
           super,
-          MethodT (use_op, reason, reason_lookup, Named (reason_prop, name), funtype)
+          MethodT (use_op, reason, reason_lookup, Named (reason_prop, name),
+            funtype, Some prop_t)
         )
       )
 
@@ -2747,7 +2749,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           op=reason;
           fn=mk_reason RSuper ploc;
         }) in
-        Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype)))
+        Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
@@ -3125,7 +3127,8 @@ and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
           fn=mk_reason (RMethod (Some name)) (Loc.btwn expr_loc prop_loc);
           prop=reason_prop;
         })) in
-        Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app))
+        let prop_t = Tvar.mk cx reason_prop in
+        Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app, Some prop_t))
       )
   )
 
@@ -3401,7 +3404,10 @@ and assignment cx loc = Ast.Expression.(function
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
             let use_op = Op (SetProperty reason) in
-            Flow.flow cx (super, SetPropT (use_op, reason, Named (prop_reason, name), Normal, t))
+            let prop_t = Tvar.mk cx prop_reason in
+            Flow.flow cx (super, SetPropT (
+              use_op, reason, Named (prop_reason, name), Normal, t, Some prop_t
+            ))
 
         (* _object.#name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
@@ -3418,7 +3424,11 @@ and assignment cx loc = Ast.Expression.(function
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
               let use_op = Op (SetProperty reason) in
-              Flow.flow cx (o, SetPrivatePropT (use_op, reason, name, class_entries, false, t));
+              let prop_reason = mk_reason (RProperty (Some name)) ploc in
+              let prop_t = Tvar.mk cx prop_reason in
+              Flow.flow cx (o, SetPrivatePropT (
+                use_op, reason, name, class_entries, false, t, Some prop_t
+              ));
               post_assignment_havoc ~private_:true name expr lhs_loc t
             )
 
@@ -3441,7 +3451,10 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               let use_op = Op (SetProperty reason) in
-              Flow.flow cx (o, SetPropT (use_op, reason, Named (prop_reason, name), wr_ctx, t));
+              let prop_t = Tvar.mk cx prop_reason in
+              Flow.flow cx (o, SetPropT (
+                use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
+              ));
               post_assignment_havoc ~private_:false name expr lhs_loc t
             )
 
@@ -3830,7 +3843,8 @@ and jsx_desugar cx name component_t props attributes children locs =
           mk_methodcalltype
             react
             ([Arg component_t; Arg props] @ List.map (fun c -> Arg c) children)
-            tvar
+            tvar,
+          None
         ))
       )
   | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
@@ -4555,7 +4569,10 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let tvar = Tvar.mk cx reason in
     let prop_reason = mk_reason (RProperty (Some x)) ploc in
     Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
-    Flow.flow cx (o, SetPropT (unknown_use, reason, Named (prop_reason, x), Normal, tvar));
+    let prop_t = Tvar.mk cx prop_reason in
+    Flow.flow cx (o, SetPropT (
+      unknown_use, reason, Named (prop_reason, x), Normal, tvar, Some prop_t
+    ));
     o
 
   | ("defineProperties", [ Expression e;
@@ -4576,7 +4593,9 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         ) reason in
         let tvar = Tvar.mk cx reason in
         Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
-        Flow.flow cx (o, SetPropT (unknown_use, reason, Named (reason, x), Normal, tvar));
+        Flow.flow cx (o, SetPropT (
+          unknown_use, reason, Named (reason, x), Normal, tvar, None
+        ));
     );
     o
 

@@ -420,7 +420,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funcalltype json_cx funtype
     ]
 
-  | MethodT (_, _, _, propref, funtype) -> [
+  | MethodT (_, _, _, propref, funtype, _) -> [
       "propRef", json_of_propref json_cx propref;
       "funType", json_of_funcalltype json_cx funtype
     ]
@@ -436,13 +436,13 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "useDesc", JSON_Bool use_desc;
     ]
 
-  | SetPropT (_, _, name, _, t)
+  | SetPropT (_, _, name, _, t, _)
   | GetPropT (_, _, name, t)
   | TestPropT (_, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
-  | SetPrivatePropT (_, _, name, _, _, t)
+  | SetPrivatePropT (_, _, name, _, _, t, _)
   | GetPrivatePropT (_, _, name, _, _, t) -> [
       "propRef", JSON_String name;
       "propType", _json_of_t json_cx t
@@ -2033,7 +2033,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_action action)) t
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
-  | MethodT (_, _, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+  | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignToT (_, arg1, arg2, _) -> p t
@@ -2085,10 +2085,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, _, prop, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPropT (_, _, prop, _, ptype, _) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
-  | SetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPrivatePropT (_, _, prop, _, _, ptype, _) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
