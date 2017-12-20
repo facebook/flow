@@ -454,26 +454,26 @@ Method declaration: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":86,"column":12,"offset":1310},
-      "end":{"line":86,"column":14,"offset":1313}
+      "start":{"line":80,"column":12,"offset":1219},
+      "end":{"line":80,"column":14,"offset":1222}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":87,"column":12,"offset":1328},
-      "end":{"line":87,"column":14,"offset":1331}
+      "start":{"line":81,"column":12,"offset":1237},
+      "end":{"line":81,"column":14,"offset":1240}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":91,"column":10,"offset":1377},
-      "end":{"line":91,"column":12,"offset":1380}
+      "start":{"line":85,"column":10,"offset":1286},
+      "end":{"line":85,"column":12,"offset":1289}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":92,"column":10,"offset":1393},
-      "end":{"line":92,"column":12,"offset":1396}
+      "start":{"line":86,"column":10,"offset":1302},
+      "end":{"line":86,"column":12,"offset":1305}
     }
   ]
 }
@@ -490,26 +490,26 @@ Property declaration: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":88,"column":12,"offset":1346},
-      "end":{"line":88,"column":14,"offset":1349}
+      "start":{"line":82,"column":12,"offset":1255},
+      "end":{"line":82,"column":14,"offset":1258}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":89,"column":12,"offset":1362},
-      "end":{"line":89,"column":14,"offset":1365}
+      "start":{"line":83,"column":12,"offset":1271},
+      "end":{"line":83,"column":14,"offset":1274}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":93,"column":10,"offset":1409},
-      "end":{"line":93,"column":12,"offset":1412}
+      "start":{"line":87,"column":10,"offset":1318},
+      "end":{"line":87,"column":12,"offset":1321}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":94,"column":10,"offset":1423},
-      "end":{"line":94,"column":12,"offset":1426}
+      "start":{"line":88,"column":10,"offset":1332},
+      "end":{"line":88,"column":12,"offset":1335}
     }
   ]
 }
@@ -526,32 +526,29 @@ Method call (finds definition and other references): {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":86,"column":12,"offset":1310},
-      "end":{"line":86,"column":14,"offset":1313}
+      "start":{"line":80,"column":12,"offset":1219},
+      "end":{"line":80,"column":14,"offset":1222}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":87,"column":12,"offset":1328},
-      "end":{"line":87,"column":14,"offset":1331}
+      "start":{"line":81,"column":12,"offset":1237},
+      "end":{"line":81,"column":14,"offset":1240}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":91,"column":10,"offset":1377},
-      "end":{"line":91,"column":12,"offset":1380}
+      "start":{"line":85,"column":10,"offset":1286},
+      "end":{"line":85,"column":12,"offset":1289}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":92,"column":10,"offset":1393},
-      "end":{"line":92,"column":12,"offset":1396}
+      "start":{"line":86,"column":10,"offset":1302},
+      "end":{"line":86,"column":12,"offset":1305}
     }
   ]
 }
-Method declaration in an object type alias: {"kind":"no-symbol-found"}
-Property declaration in an object type alias: {"kind":"no-symbol-found"}
-Method call on an object type alias: {"kind":"no-symbol-found"}
 Method call on an imported class (finds other references but not the definition since it's in another file): {
   "kind":"symbol-found",
   "name":"bar",
@@ -559,14 +556,14 @@ Method call on an imported class (finds other references but not the definition 
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":101,"column":15,"offset":1516},
-      "end":{"line":101,"column":17,"offset":1519}
+      "start":{"line":90,"column":15,"offset":1352},
+      "end":{"line":90,"column":17,"offset":1355}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":102,"column":15,"offset":1537},
-      "end":{"line":102,"column":17,"offset":1540}
+      "start":{"line":91,"column":15,"offset":1373},
+      "end":{"line":91,"column":17,"offset":1376}
     }
   ]
 }
@@ -577,14 +574,17 @@ Method call within a class that has type params: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":105,"column":3,"offset":1576},
-      "end":{"line":105,"column":5,"offset":1579}
+      "start":{"line":94,"column":3,"offset":1412},
+      "end":{"line":94,"column":5,"offset":1415}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":107,"column":10,"offset":1617},
-      "end":{"line":107,"column":12,"offset":1620}
+      "start":{"line":96,"column":10,"offset":1453},
+      "end":{"line":96,"column":12,"offset":1456}
     }
   ]
 }
+Method declaration in an object type alias: {"kind":"no-symbol-found"}
+Property declaration in an object type alias: {"kind":"no-symbol-found"}
+Method call on an object type alias: {"kind":"no-symbol-found"}

@@ -73,14 +73,8 @@ class SuperClass {
 
 class SubClass extends SuperClass {}
 
-type SimilarType = {
-  bar(): void,
-  baz: string,
-};
-
 const superClass = new SuperClass();
 const subClass = new SubClass();
-const similarType: SimilarType = f;
 const externalClass = new ExternalClass();
 
 superClass.bar();
@@ -92,11 +86,6 @@ subClass.bar();
 subClass.bar();
 subClass.baz;
 subClass.baz;
-
-similarType.bar();
-similarType.bar();
-similarType.baz;
-similarType.baz;
 
 externalClass.bar();
 externalClass.bar();
