@@ -1557,7 +1557,9 @@ and statement cx = Ast.Statement.(
       let legacy_exports = Scope.get_entry "exports" module_scope in
       let cjs_exports = match clobbered, legacy_exports with
       | Some loc, _ -> get_module_exports cx loc
-      | None, Some (Value {specific; _}) -> specific
+      | None, Some (Value {specific; value_declare_loc; _}) ->
+        Flow.add_output cx (Flow_error.EDeprecatedDeclareExports value_declare_loc);
+        specific
       | None, _ ->
         let props = SMap.fold (fun x entry acc ->
           match entry with

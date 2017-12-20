@@ -61,7 +61,10 @@ let map f settings =
 
 let default_severities = {
   default_value = Off;
-  explicit_values = LintMap.empty
+  explicit_values = (
+    LintMap.empty
+    |> LintMap.add DeprecatedDeclareExports (Err, None)
+  );
 }
 
 let is_enabled lint_kind settings =

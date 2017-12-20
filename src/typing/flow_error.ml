@@ -163,6 +163,7 @@ type error_message =
       falsy_loc: Loc.t;
     }
   | EInvalidPrototype of reason
+  | EDeprecatedDeclareExports of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -1475,6 +1476,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error
       ~kind:(LintError Lints.UnsafeGettersSetters)
       [loc, ["Getters and Setters can have side effects and are unsafe"]]
+
+  | EDeprecatedDeclareExports loc ->
+    mk_error
+      ~kind:(LintError Lints.DeprecatedDeclareExports)
+      [loc, ["Deprecated syntax. Use `declare module.exports` instead."]]
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
