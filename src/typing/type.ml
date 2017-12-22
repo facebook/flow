@@ -308,7 +308,12 @@ module rec TypeTerm : sig
     | FunReturn of { lower: reason; upper: reason }
     | ImplicitTypeParam of Loc.t
     | IndexerKeyCompatibility of { lower: reason; upper: reason }
-    | PropertyCompatibility of { prop: string option; lower: reason; upper: reason }
+    | PropertyCompatibility of {
+        prop: string option;
+        lower: reason;
+        upper: reason;
+        is_sentinel: bool;
+      }
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
     | TypeArgCompatibility of string * reason * reason
     | TypeParamBound of { name: string }

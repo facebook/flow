@@ -375,6 +375,62 @@ Error: intersection-function.js:84
      82: declare function m(x: W<string>): void;
                                  ^^^^^^ string
 
+Error: sentinel.js:11
+ 11: ({type: 'A', p: 'foo'}: X);
+      ^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  7:   | {type: 'A', p: number}
+         ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     11: ({type: 'A', p: 'foo'}: X);
+                         ^^^^^ string. This type is incompatible with
+      7:   | {type: 'A', p: number}
+                            ^^^^^^ number
+
+Error: sentinel.js:12
+ 12: ({type: 'D'}: X);
+      ^^^^^^^^^^^ object literal. This type is incompatible with
+ 12: ({type: 'D'}: X);
+                   ^ union: object type(s)
+  Member 1:
+    7:   | {type: 'A', p: number}
+           ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Error:
+   12: ({type: 'D'}: X);
+        ^^^^^^^^^^^ object literal. This type is incompatible with
+    7:   | {type: 'A', p: number}
+           ^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `type` is incompatible:
+       12: ({type: 'D'}: X);
+                   ^^^ string. Expected string literal `A`, got `D` instead
+        7:   | {type: 'A', p: number}
+                      ^^^ string literal `A`
+  Member 2:
+    8:   | {type: 'B', p: string}
+           ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Error:
+   12: ({type: 'D'}: X);
+        ^^^^^^^^^^^ object literal. This type is incompatible with
+    8:   | {type: 'B', p: string}
+           ^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `type` is incompatible:
+       12: ({type: 'D'}: X);
+                   ^^^ string. Expected string literal `B`, got `D` instead
+        8:   | {type: 'B', p: string}
+                      ^^^ string literal `B`
+  Member 3:
+    9:   | {type: 'C', p: boolean};
+           ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Error:
+   12: ({type: 'D'}: X);
+        ^^^^^^^^^^^ object literal. This type is incompatible with
+    9:   | {type: 'C', p: boolean};
+           ^^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `type` is incompatible:
+       12: ({type: 'D'}: X);
+                   ^^^ string. Expected string literal `C`, got `D` instead
+        9:   | {type: 'C', p: boolean};
+                      ^^^ string literal `C`
+
 Error: union.js:18
  18: (true: A);
       ^^^^ boolean. This type is incompatible with
@@ -724,4 +780,4 @@ Error: union.js:56
                     ^^^^^^ string
 
 
-Found 52 errors
+Found 54 errors

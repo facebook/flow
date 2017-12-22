@@ -154,12 +154,12 @@ Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
             ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  16: type List = Nil | Cons;
-                 ^^^ Nil
-  Property `kind` is incompatible:
+                       ^^^^ Cons
+  Property `next` is incompatible:
+     16: type List = Nil | Cons;
+                           ^^^^ property `next`. Property not found in
      12: length({ kind: "cons" }); // missing `next`
-                        ^^^^^^ string. Expected string literal `nil`, got `cons` instead
-     17: type Nil = { kind: "nil" };
-                            ^^^^^ string literal `nil`
+                ^^^^^^^^^^^^^^^^ object literal
 
 Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
