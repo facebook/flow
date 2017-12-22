@@ -46,26 +46,10 @@ Error: FormData.js:21
  21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
+    319: type FormDataEntryValue = string | File
+                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
      21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                         ^^^^^^ number. This type is incompatible with
-    326:     getAll(name: string): Array<FormDataEntryValue>;
-                                         ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:326
-      Member 1:
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Error:
-       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                           ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Member 2:
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
-      Error:
-       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                           ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                         ^^^^^^ number
 
 Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
@@ -73,26 +57,10 @@ Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:
+    319: type FormDataEntryValue = string | File
+                                            ^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
      22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                  ^^^^ Blob. This type is incompatible with
-    326:     getAll(name: string): Array<FormDataEntryValue>;
-                                         ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:326
-      Member 1:
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Error:
-       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                    ^^^^ Blob. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Member 2:
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
-      Error:
-       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                    ^^^^ Blob. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                  ^^^^ Blob
 
 Error: FormData.js:23
  23: a.getAll(23); // incorrect
@@ -105,14 +73,6 @@ Error: FormData.js:27
      ^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
  27: a.set('foo', {}); // incorrect
      ^^^^^ intersection
-  Member 1:
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   27: a.set('foo', {}); // incorrect
-                    ^^ object literal. This type is incompatible with the expected param type of
-  328:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -165,14 +125,6 @@ Error: FormData.js:29
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
  29: a.set('foo', 'bar', 'baz'); // incorrect
      ^^^^^ intersection
-  Member 1:
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   29: a.set('foo', 'bar', 'baz'); // incorrect
-                           ^^^^^ unused function argument. No more than 2 arguments are expected by
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -195,14 +147,6 @@ Error: FormData.js:32
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
  32: a.set('bar', new File([], 'q'), 2) // incorrect
      ^^^^^ intersection
-  Member 1:
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   32: a.set('bar', new File([], 'q'), 2) // incorrect
-                                       ^ unused function argument. No more than 2 arguments are expected by
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
   Member 2:
   329:     set(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
@@ -222,47 +166,15 @@ Error: FormData.js:32
 
 Error: FormData.js:35
  35: a.set('bar', new Blob, 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 35: a.set('bar', new Blob, 2) // incorrect
-     ^^^^^ intersection
-  Member 1:
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                              ^ unused function argument. No more than 2 arguments are expected by
-  328:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Member 2:
-  329:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                              ^ number. This type is incompatible with the expected param type of
-  329:     set(name: string, value: Blob, filename?: string): void;
-                                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:329
-  Member 3:
-  330:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:330
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                    ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  330:     set(name: string, value: File, filename?: string): void;
-                                    ^^^^ File. See lib: <BUILTINS>/bom.js:330
+                            ^ number. This type is incompatible with the expected param type of
+329:     set(name: string, value: Blob, filename?: string): void;
+                                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:329
 
 Error: FormData.js:39
  39: a.append('foo', {}); // incorrect
      ^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
  39: a.append('foo', {}); // incorrect
      ^^^^^^^^ intersection
-  Member 1:
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
-  Error:
-   39: a.append('foo', {}); // incorrect
-                       ^^ object literal. This type is incompatible with the expected param type of
-  332:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333
@@ -315,14 +227,6 @@ Error: FormData.js:41
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
  41: a.append('foo', 'bar', 'baz'); // incorrect
      ^^^^^^^^ intersection
-  Member 1:
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
-  Error:
-   41: a.append('foo', 'bar', 'baz'); // incorrect
-                              ^^^^^ unused function argument. No more than 2 arguments are expected by
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333
@@ -345,14 +249,6 @@ Error: FormData.js:45
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
  45: a.append('bar', new File([], 'q'), 2) // incorrect
      ^^^^^^^^ intersection
-  Member 1:
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
-  Error:
-   45: a.append('bar', new File([], 'q'), 2) // incorrect
-                                          ^ unused function argument. No more than 2 arguments are expected by
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
   Member 2:
   333:     append(name: string, value: Blob, filename?: string): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333
@@ -372,33 +268,9 @@ Error: FormData.js:45
 
 Error: FormData.js:48
  48: a.append('bar', new Blob, 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 48: a.append('bar', new Blob, 2) // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                                 ^ unused function argument. No more than 2 arguments are expected by
-  332:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:332
-  Member 2:
-  333:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:333
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                                 ^ number. This type is incompatible with the expected param type of
-  333:     append(name: string, value: Blob, filename?: string): void;
-                                                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:333
-  Member 3:
-  334:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:334
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                       ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  334:     append(name: string, value: File, filename?: string): void;
-                                       ^^^^ File. See lib: <BUILTINS>/bom.js:334
+                               ^ number. This type is incompatible with the expected param type of
+333:     append(name: string, value: Blob, filename?: string): void;
+                                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:333
 
 Error: FormData.js:52
  52: a.delete(3); // incorrect
@@ -418,26 +290,10 @@ Error: FormData.js:64
  64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
   The second tuple element is incompatible:
+    319: type FormDataEntryValue = string | File
+                                            ^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
      64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                   ^^^^ Blob. This type is incompatible with
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-      Member 1:
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Error:
-       64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                     ^^^^ Blob. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Member 2:
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
-      Error:
-       64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                     ^^^^ Blob. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
+                                                   ^^^^ Blob
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -491,6 +347,17 @@ Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                       ^^^^^^^^^^^^^^^^ tuple type
   The second tuple element is incompatible:
+    319: type FormDataEntryValue = string | File
+                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
+     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
+
+Error: FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
     340:     entries(): Iterator<[string, FormDataEntryValue]>;
                                           ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
      66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -506,33 +373,6 @@ Error: FormData.js:66
                                           ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
      66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                    ^^^^^^ number
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number. This type is incompatible with
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-      Member 1:
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Error:
-       66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Member 2:
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
-      Error:
-       66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -569,6 +409,17 @@ Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                       ^^^^^^^^^^^^^^^^ tuple type
   The second tuple element is incompatible:
+    319: type FormDataEntryValue = string | File
+                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
+     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                   ^^^^^^ number
+
+Error: FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                      ^^^^^^^^^^^^^^^^ tuple type
+  The second tuple element is incompatible:
     340:     entries(): Iterator<[string, FormDataEntryValue]>;
                                           ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
      67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -584,33 +435,6 @@ Error: FormData.js:67
                                           ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
      67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                    ^^^^^^ number
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number. This type is incompatible with
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ union: string | `File`. See lib: <BUILTINS>/bom.js:340
-      Member 1:
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Error:
-       67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:319
-      Member 2:
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
-      Error:
-       67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-      319: type FormDataEntryValue = string | File
-                                              ^^^^ File. See lib: <BUILTINS>/bom.js:319
 
 Error: MutationObserver.js:10
  10: new MutationObserver(); // incorrect

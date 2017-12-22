@@ -42,23 +42,7 @@ Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with the expected param type of
 301:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | `RegExp`. See lib: <BUILTINS>/core.js:301
-  Member 1:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:301
-  Error:
-    7: var x1: number = "".match(0)[0];
-                                 ^ number. This type is incompatible with
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:301
-  Member 2:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:301
-  Error:
-    7: var x1: number = "".match(0)[0];
-                                 ^ number. This type is incompatible with
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:301
+                       ^^^^^^ string. See lib: <BUILTINS>/core.js:301
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
@@ -148,77 +132,31 @@ Error: overload.js:32
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-             ^ intersection. This type is incompatible with
+             ^ intersection type
+   30: declare var x: { a: boolean; } & { b: string };
+                      ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
    16:     bar(x: { a: number }): number;
                   ^^^^^^^^^^^^^ object type
-    Member 1:
-     30: declare var x: { a: boolean; } & { b: string };
-                        ^^^^^^^^^^^^^^^ object type
-    Error:
-     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-               ^ intersection type
-     30: declare var x: { a: boolean; } & { b: string };
-                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-     16:     bar(x: { a: number }): number;
-                    ^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         30: declare var x: { a: boolean; } & { b: string };
-                                 ^^^^^^^ boolean. This type is incompatible with
-         16:     bar(x: { a: number }): number;
-                             ^^^^^^ number
-    Member 2:
-     30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type
-    Error:
-     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-               ^ intersection type
-     30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-     16:     bar(x: { a: number }): number;
-                    ^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         16:     bar(x: { a: number }): number;
-                        ^^^^^^^^^^^^^ property `a`. Property not found in
-         30: declare var x: { a: boolean; } & { b: string };
-                                              ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       30: declare var x: { a: boolean; } & { b: string };
+                               ^^^^^^^ boolean. This type is incompatible with
+       16:     bar(x: { a: number }): number;
+                           ^^^^^^ number
   Member 2:
    17:     bar(x: { a: string }): string;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-             ^ intersection. This type is incompatible with
+             ^ intersection type
+   30: declare var x: { a: boolean; } & { b: string };
+                      ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
    17:     bar(x: { a: string }): string;
                   ^^^^^^^^^^^^^ object type
-    Member 1:
-     30: declare var x: { a: boolean; } & { b: string };
-                        ^^^^^^^^^^^^^^^ object type
-    Error:
-     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-               ^ intersection type
-     30: declare var x: { a: boolean; } & { b: string };
-                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-     17:     bar(x: { a: string }): string;
-                    ^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         30: declare var x: { a: boolean; } & { b: string };
-                                 ^^^^^^^ boolean. This type is incompatible with
-         17:     bar(x: { a: string }): string;
-                             ^^^^^^ string
-    Member 2:
-     30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type
-    Error:
-     32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-               ^ intersection type
-     30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-     17:     bar(x: { a: string }): string;
-                    ^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         17:     bar(x: { a: string }): string;
-                        ^^^^^^^^^^^^^ property `a`. Property not found in
-         30: declare var x: { a: boolean; } & { b: string };
-                                              ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       30: declare var x: { a: boolean; } & { b: string };
+                               ^^^^^^^ boolean. This type is incompatible with
+       17:     bar(x: { a: string }): string;
+                           ^^^^^^ string
 
 Error: test2.js:7
   7: (foo.bar('hmmm'): number); // error

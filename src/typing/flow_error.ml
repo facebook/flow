@@ -25,12 +25,12 @@ type error_message =
   | EIncompatible of {
       lower: reason * lower_kind option;
       upper: reason * upper_kind;
-      extras: (Reason.t * error_message) list;
+      extras: (int * Reason.t * error_message) list;
     }
   | EIncompatibleDefs of {
       reason_lower: reason;
       reason_upper: reason;
-      extras: (Reason.t * error_message) list;
+      extras: (int * Reason.t * error_message) list;
     }
   | EIncompatibleProp of {
       reason_prop: reason;
@@ -76,7 +76,7 @@ type error_message =
     }
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason)
-  | EFunCallParam of (reason * reason)
+  | EFunCallParam of reason * reason * int
   | EFunCallThis of reason * reason * reason
   | EFunReturn of (reason * reason)
   | EFunImplicitReturn of (reason * reason)
@@ -92,7 +92,7 @@ type error_message =
       use_op: use_op;
       reason: reason;
       reason_op: reason;
-      branches: (reason * error_message) list
+      branches: (int * reason * error_message) list
     }
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
   | EIncompatibleWithExact of (reason * reason) * use_op
@@ -271,6 +271,257 @@ and upper_kind =
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
+(* A utility function for getting and updating the use_op in error messages. *)
+let util_use_op_of_msg nope util = function
+| EIncompatibleProp {use_op; reason_prop; reason_obj; special} ->
+  Option.value_map use_op ~default:nope ~f:(fun use_op ->
+    util use_op (fun use_op ->
+      EIncompatibleProp {use_op=Some use_op; reason_prop; reason_obj; special}))
+| EExpectedStringLit (rs, u, l, op) -> util op (fun op -> EExpectedStringLit (rs, u, l, op))
+| EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
+| EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
+| EPropNotFound (rs, op) -> util op (fun op -> EPropNotFound (rs, op))
+| EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
+| EStrictLookupFailed (rs, r, p, Some op) ->
+  util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
+| ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
+| EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
+  util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
+| EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
+| EInvalidObjectKit {tool; reason; reason_op; use_op} ->
+  util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
+| EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
+| EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
+| EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
+| EIncompatible {lower=_; upper=_; extras=_}
+| EIncompatibleDefs {reason_lower=_; reason_upper=_; extras=_}
+| EIncompatibleGetProp {reason_prop=_; reason_obj=_; special=_}
+| EIncompatibleSetProp {reason_prop=_; reason_obj=_; special=_}
+| EDebugPrint (_, _)
+| EImportValueAsType (_, _)
+| EImportTypeAsTypeof (_, _)
+| EImportTypeAsValue (_, _)
+| ENoDefaultExport (_, _, _)
+| EOnlyDefaultExport (_, _)
+| ENoNamedExport (_, _, _)
+| EMissingTypeArgs {reason=_; min_arity=_; max_arity=_}
+| EValueUsedAsType (_, _)
+| EMutationNotAllowed {reason=_; reason_op=_}
+| EPropAccess (_, _, _, _)
+| EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
+| EStrictLookupFailed (_, _, _, None)
+| EPrivateLookupFailed (_, _)
+| EFunCallParam (_, _, _)
+| EFunCallThis (_, _, _)
+| EFunReturn (_, _)
+| EFunImplicitReturn (_, _)
+| EAddition (_, _)
+| EAdditionMixed (_)
+| ECoercion (_, _)
+| EComparison (_, _)
+| ENonLitArrayToTuple (_, _)
+| ETupleOutOfBounds (_, _, _)
+| ETupleUnsafeWrite (_, _)
+| ESpeculationAmbiguous (_, _, _, _)
+| EUnsupportedExact (_, _)
+| EIdxArity (_)
+| EIdxUse1 (_)
+| EIdxUse2 (_)
+| EUnexpectedThisType (_)
+| EInvalidRestParam (_)
+| ETypeParamArity (_, _)
+| ETypeParamMinArity (_, _)
+| ETooManyTypeArgs (_, _, _)
+| ETooFewTypeArgs (_, _, _)
+| EPropertyTypeAnnot (_)
+| EExportsAnnot (_)
+| ECharSetAnnot (_)
+| EInvalidCharSet {invalid=_; valid=_}
+| EUnsupportedKeyInObjectType (_)
+| EPredAnnot (_)
+| ERefineAnnot (_)
+| EUnexpectedTypeof (_)
+| ECustom (_, _)
+| EInternal (_, _)
+| EUnsupportedSyntax (_, _)
+| EIllegalName (_)
+| EUseArrayLiteral (_)
+| EMissingAnnotation (_)
+| EBindingError (_, _, _, _)
+| ERecursionLimit (_, _)
+| EModuleOutsideRoot (_, _)
+| EExperimentalDecorators (_)
+| EExperimentalClassProperties (_, _)
+| EUnsafeGetSet (_)
+| EExperimentalExportStarAs (_)
+| EIndeterminateModuleType (_)
+| EUnreachable (_)
+| EInvalidTypeof (_, _)
+| EBinaryInLHS (_)
+| EBinaryInRHS (_)
+| EArithmeticOperand (_)
+| EForInRHS (_)
+| EObjectComputedPropertyAccess (_, _)
+| EObjectComputedPropertyAssign (_, _)
+| EInvalidLHSInAssignment (_)
+| EUnsupportedImplements (_)
+| EReactElementFunArity (_, _, _)
+| EUnsupportedSetProto (_)
+| EDuplicateModuleProvider {module_name=_; provider=_; conflict=_}
+| EParseError (_, _)
+| EDocblockError (_, _)
+| EUntypedTypeImport (_, _)
+| EUntypedImport (_, _)
+| ENonstrictImport (_)
+| EUnclearType (_)
+| EUnsafeGettersSetters (_)
+| EUnusedSuppression (_)
+| ELintSetting (_)
+| ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
+| EInvalidPrototype (_)
+| EDeprecatedDeclareExports (_)
+  -> nope
+
+(* Rank scores for signals of different strength on an x^2 scale so that greater
+ * signals dominate lesser signals. *)
+let reason_score = 100
+let frame_score = reason_score * 2
+let type_arg_frame_score = frame_score * 2
+let tuple_element_frame_score = type_arg_frame_score * 2
+
+(* Gets the score of a use_op. Used in score_of_msg. See the comment on
+ * score_of_msg to learn more about scores.
+ *
+ * Calculated by taking the count of all the frames. *)
+let score_of_use_op =
+  fold_use_op
+    (fun _ -> 0)
+    (fun acc frame -> acc + (match frame with
+      (* See our comment above EFunCallParam in score_of_msg for why we do this.
+       * In short, n gives us some information into how much successful type
+       * checking Flow was able to do before erroring.
+       *
+       * FunRestParam is FunParam, but at the end. So give it a larger score
+       * then FunParam after adding n. *)
+      | FunParam {n; _} -> frame_score + n
+      | FunRestParam _ -> frame_score + frame_score - 1
+      (* FunCompatibility is generally followed by another use_op. So let's not
+       * count FunCompatibility. *)
+      | FunCompatibility _ -> 0
+      (* FunMissingArg means the error is *less* likely to be correct. *)
+      | FunMissingArg _ -> 0
+      (* Higher signal then PropertyCompatibility, for example. *)
+      | TypeArgCompatibility _ -> type_arg_frame_score
+      (* Higher signal then TypeArgCompatibility. *)
+      | TupleElementCompatibility _ -> tuple_element_frame_score
+      | _ -> frame_score))
+
+(* Gets the score of an error message. The score is an approximation of how
+ * close the user was to getting their code right. A higher score means the user
+ * was closer then a lower score. A score of 0 means we have no signal about
+ * how close the user was. For example, consider the following two flows:
+ *
+ *     number ~> {p: string}
+ *
+ *     {p: number} ~> {p: string}
+ *
+ * Clearly, the user was closer to being correct with the second flow. So this
+ * function should assign the number ~> string error a higher score then the
+ * number ~> object error.
+ *
+ * Now consider:
+ *
+ *     number ~> string
+ *
+ *     number ~> {p: string}
+ *
+ * This time we kept the lower bound the same and changed the upper bound. The
+ * first flow is this time is closer to the user's intent then the second flow.
+ * So we give the number ~> string message a higher score then the
+ * number ~> object message.
+ *
+ * This scoring mechanism is useful for union and intersection error messages
+ * where we want to approximate which branch the user meant to target with
+ * their code. Branches with higher scores have a higher liklihood of being
+ * the branch the user was targeting. *)
+let score_of_msg msg =
+  (* Start by getting the score based off the use_op of our error message. If
+   * the message does not have a use_op then we return 0. This score
+   * contribution declares that greater complexity in the use is more likely to
+   * cause a match. *)
+  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op op) msg in
+  (* Special cases for messages which increment the score. *)
+  let score = score + match msg with
+  (* If a property doesn't exist, we still use a PropertyCompatibility use_op.
+   * This PropertyCompatibility when counted in our score is dishonest since
+   * a missing prop does not increase the likelihood that the user was close to
+   * the right types. *)
+  | EIncompatibleProp {use_op=Some (Frame (PropertyCompatibility _, _)); _}
+  | EPropNotFound (_, Frame (PropertyCompatibility _, _))
+  | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _)))
+    -> -frame_score
+  (* In Flow_js we catch FunParam(FunCall) use_ops and turn them into
+   * EFunCallParam. Re-create the score we add for FunParams here. Later params
+   * that error get a higher score. Useful for basically only overloaded
+   * function error messages.
+   *
+   * The signal that this gives us is that we successfully type checked n params
+   * in the call before erroring. If there was no error, Flow may have gone to
+   * successfully check another m params. However, we will never know that. n is
+   * our best approximation. It rewards errors near the end of a call and
+   * punishes (slightly) errors near the beginning of a call.
+   *
+   * This, however, turns out to be consistent with code style in modern
+   * JavaScript. As an unspoken convention, more complex arguments usually go
+   * last. For overloaded functions, the switching generally happens on the
+   * first argument. The "tag". This gives us confidence that n on EFunCallParam
+   * is a good heuristic for the score. *)
+  | EFunCallParam (_, _, n)
+    -> frame_score + n
+  | _
+    -> 0
+  in
+  (* If we have two incompatible types and both incompatible types are scalar or
+   * both types are arrays then increment our score. This is based on the belief
+   * that the solutions with the lowest possible complexity are closest to each
+   * other. e.g. number ~> string. If one type is a scalar or array and the
+   * other type is not then we decrement our score. *)
+  let score = score + (
+    let reasons = match msg with
+    | EIncompatibleDefs {reason_lower=rl; reason_upper=ru; extras=[]}
+    | EIncompatibleWithUseOp (rl, ru, _)
+    | EAddition (rl, ru)
+    | ECoercion (rl, ru)
+    | EFunCallParam (rl, ru, _)
+    | EFunCallThis (rl, ru, _)
+    | EFunImplicitReturn (rl, ru)
+    | EFunReturn (rl, ru)
+    | EIncompatibleWithExact ((rl, ru), _)
+      -> Some (rl, ru)
+    | _
+      -> None
+    in
+    match reasons with
+    | Some ((rl, ru)) ->
+      if is_scalar_reason rl && is_scalar_reason ru then reason_score else
+      if is_scalar_reason rl || is_scalar_reason ru then 0 else
+      if is_array_reason rl && is_array_reason ru then reason_score else
+      if is_array_reason rl || is_array_reason ru then 0 else
+      reason_score
+    | None ->
+      reason_score
+  ) in
+  score
+
+(* When we are type checking in speculation, we use a root UnknownUse use_op
+ * even if when speculation started there was a reasonable root use_op. Once
+ * we finish speculation and pick a single error then we want to swap out our
+ * true root use_op chain with the UnknownUse used during speculation. This
+ * function does that. *)
+let add_use_op_to_msg use_op msg =
+  util_use_op_of_msg msg (fun use_op' mk_msg ->
+    mk_msg (replace_unknown_root_use_op use_op use_op')) msg
+
 (* Decide reason order based on UB's flavor and blamability.
    If the order is unchanged, maintain reference equality. *)
 let ordered_reasons ((rl, ru) as reasons) =
@@ -421,7 +672,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   in
 
   let speculation_extras branches =
-    List.mapi (fun i (r, msg) ->
+    List.map (fun (i, r, msg) ->
       let err = error_of_msg ~trace_reasons:[] ~source_file msg in
       let header_infos = [
         Loc.none, [spf "Member %d:" (i + 1)];
@@ -838,7 +1089,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EPrivateLookupFailed reasons ->
       typecheck_error "Property not found in" reasons
 
-  | EFunCallParam (lreason, ureason) ->
+  | EFunCallParam (lreason, ureason, _) ->
       (* Special case: if the lower bound is from a libdef, then flip
          the message and the reasons, so we point at something in user code.
 

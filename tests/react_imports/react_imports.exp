@@ -9,46 +9,6 @@ Error: commonjs-pascal.js:6
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-  Member 1:
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Member 2:
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Member 5:
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
@@ -101,46 +61,6 @@ Error: commonjs.js:6
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-  Member 1:
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Member 2:
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Member 5:
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
@@ -193,46 +113,6 @@ Error: es-default-pascal.js:6
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error: Not in default export.
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-  Member 1:
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Error:
-    6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal. This type is incompatible with
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Member 2:
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Error:
-    6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal. This type is incompatible with
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Error:
-    6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal. This type is incompatible with
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Error:
-    6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal. This type is incompatible with
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Member 5:
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
-  Error:
-    6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal. This type is incompatible with
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
@@ -324,46 +204,6 @@ Error: es-namespace-pascal.js:6
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-  Member 1:
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Member 2:
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Member 5:
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
@@ -416,46 +256,6 @@ Error: es-namespace.js:6
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-  Member 1:
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   13:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:13
-  Member 2:
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   14:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   15:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   16:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:16
-  Member 5:
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
-  Error:
-    6: ({}: React.Node); // Error
-        ^^ object literal. This type is incompatible with
-   17:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:17
   Member 6:
    18:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18

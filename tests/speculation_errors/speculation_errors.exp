@@ -1,0 +1,727 @@
+Error: intersection-function.js:19
+ 19: a(true);
+     ^^^^^^^ call of `a`. Function cannot be called on any member of intersection type
+ 19: a(true);
+     ^ intersection
+  Member 1:
+   17: declare function a(x: number): void;
+                         ^^^^^^^^^^^^^^^^^ function type
+  Error:
+   19: a(true);
+         ^^^^ boolean. This type is incompatible with the expected param type of
+   17: declare function a(x: number): void;
+                             ^^^^^^ number
+  Member 2:
+   18: declare function a(x: string): void;
+                         ^^^^^^^^^^^^^^^^^ function type
+  Error:
+   19: a(true);
+         ^^^^ boolean. This type is incompatible with the expected param type of
+   18: declare function a(x: string): void;
+                             ^^^^^^ string
+
+Error: intersection-function.js:23
+ 23: b(42);
+       ^^ number. This type is incompatible with the expected param type of
+ 21: declare function b(x: string): void;
+                           ^^^^^^ string
+
+Error: intersection-function.js:24
+ 24: b({p: 42});
+       ^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 22: declare function b(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     24: b({p: 42});
+               ^^ number. This type is incompatible with
+     22: declare function b(x: {p: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:30
+ 30: c(42);
+     ^^^^^ call of `c`. Function cannot be called on any member of intersection type
+ 30: c(42);
+     ^ intersection
+  Member 1:
+   26: declare function c(x: string): void;
+                         ^^^^^^^^^^^^^^^^^ function type
+  Error:
+   30: c(42);
+         ^^ number. This type is incompatible with the expected param type of
+   26: declare function c(x: string): void;
+                             ^^^^^^ string
+  Member 3:
+   28: declare function c(x: boolean): void;
+                         ^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   30: c(42);
+         ^^ number. This type is incompatible with the expected param type of
+   28: declare function c(x: boolean): void;
+                             ^^^^^^^ boolean
+
+Error: intersection-function.js:31
+ 31: c({a: {b: 42}});
+     ^^^^^^^^^^^^^^^ call of `c`. Function cannot be called on any member of intersection type
+ 31: c({a: {b: 42}});
+     ^ intersection
+  Member 2:
+   27: declare function c(x: {a: {b: string}}): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   31: c({a: {b: 42}});
+         ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+   27: declare function c(x: {a: {b: string}}): void;
+                             ^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       31: c({a: {b: 42}});
+                 ^^^^^^^ object literal. This type is incompatible with
+       27: declare function c(x: {a: {b: string}}): void;
+                                     ^^^^^^^^^^^ object type
+        Property `b` is incompatible:
+           31: c({a: {b: 42}});
+                         ^^ number. This type is incompatible with
+           27: declare function c(x: {a: {b: string}}): void;
+                                             ^^^^^^ string
+  Member 4:
+   29: declare function c(x: {a: {b: boolean}}): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   31: c({a: {b: 42}});
+         ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+   29: declare function c(x: {a: {b: boolean}}): void;
+                             ^^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       31: c({a: {b: 42}});
+                 ^^^^^^^ object literal. This type is incompatible with
+       29: declare function c(x: {a: {b: boolean}}): void;
+                                     ^^^^^^^^^^^^ object type
+        Property `b` is incompatible:
+           31: c({a: {b: 42}});
+                         ^^ number. This type is incompatible with
+           29: declare function c(x: {a: {b: boolean}}): void;
+                                             ^^^^^^^ boolean
+
+Error: intersection-function.js:36
+ 36: d(42);
+       ^^ number. This type is incompatible with the expected param type of
+ 33: declare function d(x: string): void;
+                           ^^^^^^ string
+
+Error: intersection-function.js:37
+ 37: d({a: 42});
+       ^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 34: declare function d(x: {a: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     37: d({a: 42});
+               ^^ number. This type is incompatible with
+     34: declare function d(x: {a: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:38
+ 38: d({a: {b: 42}});
+       ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 35: declare function d(x: {a: {b: string}}): void;
+                           ^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     38: d({a: {b: 42}});
+               ^^^^^^^ object literal. This type is incompatible with
+     35: declare function d(x: {a: {b: string}}): void;
+                                   ^^^^^^^^^^^ object type
+      Property `b` is incompatible:
+         38: d({a: {b: 42}});
+                       ^^ number. This type is incompatible with
+         35: declare function d(x: {a: {b: string}}): void;
+                                           ^^^^^^ string
+
+Error: intersection-function.js:42
+ 42: e(42);
+     ^^^^^ call of `e`. Function cannot be called on any member of intersection type
+ 42: e(42);
+     ^ intersection
+  Member 1:
+   40: declare function e(x: X): void;
+                         ^^^^^^^^^^^^ function type
+  Error:
+   42: e(42);
+         ^^ number. This type is incompatible with the expected param type of
+   40: declare function e(x: X): void;
+                             ^ X
+  Member 2:
+   41: declare function e(x: {p: string}): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   42: e(42);
+         ^^ number. This type is incompatible with the expected param type of
+   41: declare function e(x: {p: string}): void;
+                             ^^^^^^^^^^^ object type
+
+Error: intersection-function.js:44
+ 44: e(new Y());
+       ^^^^^^^ Y. This type is incompatible with the expected param type of
+ 41: declare function e(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     10:   p: number;
+              ^^^^^^ number. This type is incompatible with
+     41: declare function e(x: {p: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:45
+ 45: e(new Z());
+     ^^^^^^^^^^ call of `e`. Function cannot be called on any member of intersection type
+ 45: e(new Z());
+     ^ intersection
+  Member 1:
+   40: declare function e(x: X): void;
+                         ^^^^^^^^^^^^ function type
+  Error:
+   45: e(new Z());
+         ^^^^^^^ Z. This type is incompatible with the expected param type of
+   40: declare function e(x: X): void;
+                             ^ X
+  Member 2:
+   41: declare function e(x: {p: string}): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   45: e(new Z());
+         ^^^^^^^ Z. This type is incompatible with the expected param type of
+   41: declare function e(x: {p: string}): void;
+                             ^^^^^^^^^^^ object type
+    Property `p` is incompatible:
+       41: declare function e(x: {p: string}): void;
+                                 ^^^^^^^^^^^ property `p`. Property not found in
+       45: e(new Z());
+             ^^^^^^^ Z
+
+Error: intersection-function.js:46
+ 46: e({p: true});
+       ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 41: declare function e(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     46: e({p: true});
+               ^^^^ boolean. This type is incompatible with
+     41: declare function e(x: {p: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:51
+ 51: f(42);
+     ^^^^^ call of `f`. Function cannot be called on any member of intersection type
+ 51: f(42);
+     ^ intersection
+  Member 1:
+   48: declare function f(x: {p: string}): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   51: f(42);
+         ^^ number. This type is incompatible with the expected param type of
+   48: declare function f(x: {p: string}): void;
+                             ^^^^^^^^^^^ object type
+  Member 2:
+   49: declare function f(x: $ReadOnlyArray<string>): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   51: f(42);
+         ^^ number. This type is incompatible with the expected param type of
+   49: declare function f(x: $ReadOnlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Member 3:
+   50: declare function f(x: [string, string]): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   51: f(42);
+         ^^ number. This type is incompatible with the expected param type of
+   50: declare function f(x: [string, string]): void;
+                             ^^^^^^^^^^^^^^^^ tuple type
+
+Error: intersection-function.js:52
+ 52: f({p: 42});
+       ^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 48: declare function f(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     52: f({p: 42});
+               ^^ number. This type is incompatible with
+     48: declare function f(x: {p: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:53
+ 53: f({});
+       ^^ object literal. This type is incompatible with the expected param type of
+ 48: declare function f(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     48: declare function f(x: {p: string}): void;
+                               ^^^^^^^^^^^ property `p`. Property not found in
+     53: f({});
+           ^^ object literal
+
+Error: intersection-function.js:54
+ 54: f(new Y());
+       ^^^^^^^ Y. This type is incompatible with the expected param type of
+ 48: declare function f(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     10:   p: number;
+              ^^^^^^ number. This type is incompatible with
+     48: declare function f(x: {p: string}): void;
+                                   ^^^^^^ string
+
+Error: intersection-function.js:55
+ 55: f(new Z());
+       ^^^^^^^ Z. This type is incompatible with the expected param type of
+ 48: declare function f(x: {p: string}): void;
+                           ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     48: declare function f(x: {p: string}): void;
+                               ^^^^^^^^^^^ property `p`. Property not found in
+     55: f(new Z());
+           ^^^^^^^ Z
+
+Error: intersection-function.js:56
+ 56: f(([1]: [number]));
+             ^^^^^^^^ tuple type. This type is incompatible with the expected param type of
+ 49: declare function f(x: $ReadOnlyArray<string>): void;
+                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     56: f(([1]: [number]));
+                  ^^^^^^ number. This type is incompatible with
+     49: declare function f(x: $ReadOnlyArray<string>): void;
+                                              ^^^^^^ string
+
+Error: intersection-function.js:57
+ 57: f(([1, 2]: [number, number]));
+                ^^^^^^^^^^^^^^^^ tuple type. This type is incompatible with the expected param type of
+ 50: declare function f(x: [string, string]): void;
+                           ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+     57: f(([1, 2]: [number, number]));
+                     ^^^^^^ number. This type is incompatible with
+     50: declare function f(x: [string, string]): void;
+                                ^^^^^^ string
+
+Error: intersection-function.js:58
+ 58: f(([1, 2, 3]: [number, number, number]));
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ tuple type. This type is incompatible with the expected param type of
+ 49: declare function f(x: $ReadOnlyArray<string>): void;
+                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     58: f(([1, 2, 3]: [number, number, number]));
+                        ^^^^^^ number. This type is incompatible with
+     49: declare function f(x: $ReadOnlyArray<string>): void;
+                                              ^^^^^^ string
+
+Error: intersection-function.js:59
+ 59: f(((null: any): Array<number> & {p: number}));
+                     ^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
+ 49: declare function f(x: $ReadOnlyArray<string>): void;
+                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     59: f(((null: any): Array<number> & {p: number}));
+                               ^^^^^^ number. This type is incompatible with
+     49: declare function f(x: $ReadOnlyArray<string>): void;
+                                              ^^^^^^ string
+
+Error: intersection-function.js:63
+ 63: g(42);
+       ^^ number. This type is incompatible with the expected param type of
+ 61: declare function g(x: string): void;
+                           ^^^^^^ string
+
+Error: intersection-function.js:64
+ 64: g({});
+       ^^ object literal. This type is incompatible with the expected param type of
+ 62: declare function g(x: Z): void;
+                           ^ Z
+
+Error: intersection-function.js:68
+ 68: h(1, 2, 3);
+          ^ number. This type is incompatible with the expected param type of
+ 67: declare function h(a: number, b: {}, c: string): void;
+                                      ^^ object type
+
+Error: intersection-function.js:72
+ 72: i(new Y(), 42);
+                ^^ number. This type is incompatible with the expected param type of
+ 70: declare function i(a: Y, b: string): void;
+                                 ^^^^^^ string
+
+Error: intersection-function.js:76
+ 76: j(1, 2);
+          ^ number. This type is incompatible with the expected param type of
+ 74: declare function j(a: number, b: string): void;
+                                      ^^^^^^ string
+
+Error: intersection-function.js:80
+ 80: k(1, {p: 2});
+          ^^^^^^ object literal. This type is incompatible with the expected param type of
+ 78: declare function k(a: number, b: {p: string}): void;
+                                      ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     80: k(1, {p: 2});
+                  ^ number. This type is incompatible with
+     78: declare function k(a: number, b: {p: string}): void;
+                                              ^^^^^^ string
+
+Error: intersection-function.js:84
+ 84: m((new W(): W<number>));
+                 ^^^^^^^^^ W. This type is incompatible with the expected param type of
+ 82: declare function m(x: W<string>): void;
+                           ^^^^^^^^^ W
+  Type argument `T` is incompatible:
+     84: m((new W(): W<number>));
+                       ^^^^^^ number. This type is incompatible with
+     82: declare function m(x: W<string>): void;
+                                 ^^^^^^ string
+
+Error: union.js:18
+ 18: (true: A);
+      ^^^^ boolean. This type is incompatible with
+ 18: (true: A);
+            ^ union: number | string
+  Member 1:
+   17: type A = number | string;
+                ^^^^^^ number
+  Error:
+   18: (true: A);
+        ^^^^ boolean. This type is incompatible with
+   17: type A = number | string;
+                ^^^^^^ number
+  Member 2:
+   17: type A = number | string;
+                         ^^^^^^ string
+  Error:
+   18: (true: A);
+        ^^^^ boolean. This type is incompatible with
+   17: type A = number | string;
+                         ^^^^^^ string
+
+Error: union.js:21
+ 21: (42: B);
+      ^^ number. This type is incompatible with
+ 20: type B = string | {p: string};
+              ^^^^^^ string
+
+Error: union.js:22
+ 22: ({p: 42}: B);
+      ^^^^^^^ object literal. This type is incompatible with
+ 20: type B = string | {p: string};
+                       ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     22: ({p: 42}: B);
+              ^^ number. This type is incompatible with
+     20: type B = string | {p: string};
+                               ^^^^^^ string
+
+Error: union.js:25
+ 25: (42: C);
+      ^^ number. This type is incompatible with
+ 25: (42: C);
+          ^ union: string | object type | boolean | object type
+  Member 1:
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                ^^^^^^ string
+  Error:
+   25: (42: C);
+        ^^ number. This type is incompatible with
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                ^^^^^^ string
+  Member 3:
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                            ^^^^^^^ boolean
+  Error:
+   25: (42: C);
+        ^^ number. This type is incompatible with
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                            ^^^^^^^ boolean
+
+Error: union.js:26
+ 26: ({a: {b: 42}}: C);
+      ^^^^^^^^^^^^ object literal. This type is incompatible with
+ 26: ({a: {b: 42}}: C);
+                    ^ union: string | object type | boolean | object type
+  Member 2:
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                         ^^^^^^^^^^^^^^^^ object type
+  Error:
+   26: ({a: {b: 42}}: C);
+        ^^^^^^^^^^^^ object literal. This type is incompatible with
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                         ^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       26: ({a: {b: 42}}: C);
+                ^^^^^^^ object literal. This type is incompatible with
+       24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                 ^^^^^^^^^^^ object type
+        Property `b` is incompatible:
+           26: ({a: {b: 42}}: C);
+                        ^^ number. This type is incompatible with
+           24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                         ^^^^^^ string
+  Member 4:
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                                      ^^^^^^^^^^^^^^^^^ object type
+  Error:
+   26: ({a: {b: 42}}: C);
+        ^^^^^^^^^^^^ object literal. This type is incompatible with
+   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                                      ^^^^^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       26: ({a: {b: 42}}: C);
+                ^^^^^^^ object literal. This type is incompatible with
+       24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                                              ^^^^^^^^^^^^ object type
+        Property `b` is incompatible:
+           26: ({a: {b: 42}}: C);
+                        ^^ number. This type is incompatible with
+           24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                                                      ^^^^^^^ boolean
+
+Error: union.js:29
+ 29: (42: D);
+      ^^ number. This type is incompatible with
+ 28: type D = string | {a: string} | {a: {b: string}};
+              ^^^^^^ string
+
+Error: union.js:30
+ 30: ({a: 42}: D);
+      ^^^^^^^ object literal. This type is incompatible with
+ 28: type D = string | {a: string} | {a: {b: string}};
+                       ^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     30: ({a: 42}: D);
+              ^^ number. This type is incompatible with
+     28: type D = string | {a: string} | {a: {b: string}};
+                               ^^^^^^ string
+
+Error: union.js:31
+ 31: ({a: {b: 42}}: D);
+      ^^^^^^^^^^^^ object literal. This type is incompatible with
+ 28: type D = string | {a: string} | {a: {b: string}};
+                                     ^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     31: ({a: {b: 42}}: D);
+              ^^^^^^^ object literal. This type is incompatible with
+     28: type D = string | {a: string} | {a: {b: string}};
+                                             ^^^^^^^^^^^ object type
+      Property `b` is incompatible:
+         31: ({a: {b: 42}}: D);
+                      ^^ number. This type is incompatible with
+         28: type D = string | {a: string} | {a: {b: string}};
+                                                     ^^^^^^ string
+
+Error: union.js:34
+ 34: (42: E);
+      ^^ number. This type is incompatible with
+ 34: (42: E);
+          ^ union: `X` | object type
+  Member 1:
+   33: type E = X | {p: string};
+                ^ X
+  Error:
+   34: (42: E);
+        ^^ number. This type is incompatible with
+   33: type E = X | {p: string};
+                ^ X
+  Member 2:
+   33: type E = X | {p: string};
+                    ^^^^^^^^^^^ object type
+  Error:
+   34: (42: E);
+        ^^ number. This type is incompatible with
+   33: type E = X | {p: string};
+                    ^^^^^^^^^^^ object type
+
+Error: union.js:36
+ 36: (new Y(): E);
+      ^^^^^^^ Y. This type is incompatible with
+ 33: type E = X | {p: string};
+                  ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     10:   p: number;
+              ^^^^^^ number. This type is incompatible with
+     33: type E = X | {p: string};
+                          ^^^^^^ string
+
+Error: union.js:37
+ 37: (new Z(): E);
+      ^^^^^^^ Z. This type is incompatible with
+ 37: (new Z(): E);
+               ^ union: `X` | object type
+  Member 1:
+   33: type E = X | {p: string};
+                ^ X
+  Error:
+   37: (new Z(): E);
+        ^^^^^^^ Z. This type is incompatible with
+   33: type E = X | {p: string};
+                ^ X
+  Member 2:
+   33: type E = X | {p: string};
+                    ^^^^^^^^^^^ object type
+  Error:
+   37: (new Z(): E);
+        ^^^^^^^ Z. This type is incompatible with
+   33: type E = X | {p: string};
+                    ^^^^^^^^^^^ object type
+    Property `p` is incompatible:
+       33: type E = X | {p: string};
+                        ^^^^^^^^^^^ property `p`. Property not found in
+       37: (new Z(): E);
+            ^^^^^^^ Z
+
+Error: union.js:38
+ 38: ({p: true}: E);
+      ^^^^^^^^^ object literal. This type is incompatible with
+ 33: type E = X | {p: string};
+                  ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     38: ({p: true}: E);
+              ^^^^ boolean. This type is incompatible with
+     33: type E = X | {p: string};
+                          ^^^^^^ string
+
+Error: union.js:41
+ 41: (42: F);
+      ^^ number. This type is incompatible with
+ 41: (42: F);
+          ^ union: object type | read-only array type | tuple type
+  Member 1:
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^ object type
+  Error:
+   41: (42: F);
+        ^^ number. This type is incompatible with
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^ object type
+  Member 2:
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                              ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Error:
+   41: (42: F);
+        ^^ number. This type is incompatible with
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                              ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Member 3:
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                                       ^^^^^^^^^^^^^^^^ tuple type
+  Error:
+   41: (42: F);
+        ^^ number. This type is incompatible with
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                                       ^^^^^^^^^^^^^^^^ tuple type
+
+Error: union.js:42
+ 42: ({p: 42}: F);
+      ^^^^^^^ object literal. This type is incompatible with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+              ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     42: ({p: 42}: F);
+              ^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                      ^^^^^^ string
+
+Error: union.js:43
+ 43: ({}: F);
+      ^^ object literal. This type is incompatible with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+              ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                  ^^^^^^^^^^^ property `p`. Property not found in
+     43: ({}: F);
+          ^^ object literal
+
+Error: union.js:44
+ 44: (new Y(): F);
+      ^^^^^^^ Y. This type is incompatible with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+              ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     10:   p: number;
+              ^^^^^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                      ^^^^^^ string
+
+Error: union.js:45
+ 45: (new Z(): F);
+      ^^^^^^^ Z. This type is incompatible with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+              ^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                  ^^^^^^^^^^^ property `p`. Property not found in
+     45: (new Z(): F);
+          ^^^^^^^ Z
+
+Error: union.js:46
+ 46: (([1]: [number]): F);
+            ^^^^^^^^ tuple type. Has some incompatible type argument with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     46: (([1]: [number]): F);
+                 ^^^^^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                               ^^^^^^ string
+
+Error: union.js:47
+ 47: (([1, 2]: [number, number]): F);
+               ^^^^^^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                                     ^^^^^^^^^^^^^^^^ tuple type
+  The first tuple element is incompatible:
+     47: (([1, 2]: [number, number]): F);
+                    ^^^^^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                                          ^^^^^^ string
+
+Error: union.js:48
+ 48: (([1, 2, 3]: [number, number, number]): F);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ tuple type. Has some incompatible type argument with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     48: (([1, 2, 3]: [number, number, number]): F);
+                       ^^^^^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                               ^^^^^^ string
+
+Error: union.js:49
+ 49: (((null: any): Array<number> & {p: number}): F);
+                    ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
+  Type argument `T` is incompatible:
+     49: (((null: any): Array<number> & {p: number}): F);
+                              ^^^^^^ number. This type is incompatible with
+     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                               ^^^^^^ string
+
+Error: union.js:52
+ 52: (42: G);
+      ^^ number. This type is incompatible with
+ 51: type G = string | Z;
+              ^^^^^^ string
+
+Error: union.js:53
+ 53: ({}: G);
+      ^^ object literal. This type is incompatible with
+ 51: type G = string | Z;
+                       ^ Z
+
+Error: union.js:56
+ 56: ((new W(): W<number>): M);
+                ^^^^^^^^^ W. Has some incompatible type argument with
+ 55: type M = W<string> | {p: string};
+              ^^^^^^^^^ W
+  Type argument `T` is incompatible:
+     56: ((new W(): W<number>): M);
+                      ^^^^^^ number. This type is incompatible with
+     55: type M = W<string> | {p: string};
+                    ^^^^^^ string
+
+
+Found 52 errors

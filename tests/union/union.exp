@@ -8,45 +8,13 @@ Error: issue-324.js:8
   8: foostr = barstr;
               ^^^^^^ Bar. This type is incompatible with
   5: var foostr: Foo | string = new Foo();
-                 ^^^^^^^^^^^^ union: `Foo` | string
-  Member 1:
-    5: var foostr: Foo | string = new Foo();
-                   ^^^ Foo
-  Error:
-    8: foostr = barstr;
-                ^^^^^^ Bar. This type is incompatible with
-    5: var foostr: Foo | string = new Foo();
-                   ^^^ Foo
-  Member 2:
-    5: var foostr: Foo | string = new Foo();
-                         ^^^^^^ string
-  Error:
-    8: foostr = barstr;
-                ^^^^^^ Bar. This type is incompatible with
-    5: var foostr: Foo | string = new Foo();
-                         ^^^^^^ string
+                 ^^^ Foo
 
 Error: union.js:2
   2: bar(0);
          ^ number. This type is incompatible with the expected param type of
   1: function bar(x: Document | string): void { }
-                     ^^^^^^^^^^^^^^^^^ union: `Document` | string
-  Member 1:
-    1: function bar(x: Document | string): void { }
-                       ^^^^^^^^ Document
-  Error:
-    2: bar(0);
-           ^ number. This type is incompatible with
-    1: function bar(x: Document | string): void { }
-                       ^^^^^^^^ Document
-  Member 2:
-    1: function bar(x: Document | string): void { }
-                                  ^^^^^^ string
-  Error:
-    2: bar(0);
-           ^ number. This type is incompatible with
-    1: function bar(x: Document | string): void { }
-                                  ^^^^^^ string
+                                ^^^^^^ string
 
 Error: union.js:8
   8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C

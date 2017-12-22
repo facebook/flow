@@ -42,25 +42,9 @@ Error: typeof.js:82
 
 Error: union.js:9
   9: (null: typeof x); // error: null ~> number|string
-      ^^^^ null. This type is incompatible with
+      ^^^^ null. This type is incompatible with the expected param type of
   9: (null: typeof x); // error: null ~> number|string
-            ^^^^^^^^ union: `A` | `B`
-  Member 1:
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ A
-  Error:
-    9: (null: typeof x); // error: null ~> number|string
-        ^^^^ null. This type is incompatible with the expected param type of
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ number
-  Member 2:
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ B
-  Error:
-    9: (null: typeof x); // error: null ~> number|string
-        ^^^^ null. This type is incompatible with the expected param type of
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ string
+            ^^^^^^^^ string
 
 
 Found 8 errors

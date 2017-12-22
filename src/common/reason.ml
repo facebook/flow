@@ -846,3 +846,147 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RReactChildrenOrUndefinedOrType _
 | RReactSFC
   -> false
+
+(* Is this the reason of an array type? This depends on Flow's custom handling
+ * of arrays. *)
+let is_array_reason r = match desc_of_reason ~unwrap:true r with
+| RArray
+| RArrayLit
+| REmptyArrayLit
+| RArrayType
+| RROArrayType
+| RTupleType
+| RRestArray _
+| RArrayPatternRestProp
+  -> true
+| RNumber
+| RString
+| RBoolean
+| RMixed
+| REmpty
+| RAny
+| RVoid
+| RNull
+| RNullOrVoid
+| RStringLit _
+| RNumberLit _
+| RBooleanLit _
+| RMatchingProp _
+| RObject
+| RObjectLit
+| RObjectType
+| RObjectClassName
+| RTupleElement
+| RTupleOutOfBoundsAccess
+| RFunction _
+| RFunctionType
+| RFunctionBody
+| RFunctionCall _
+| RFunctionCallType
+| RFunctionUnusedArgument
+| RJSXFunctionCall _
+| RJSXIdentifier _
+| RJSXElementProps _
+| RJSXElement _
+| RJSXText
+| RUnaryOperator _
+| RBinaryOperator _
+| RLogical _
+| RAnyObject
+| RAnyFunction
+| RUnknownString
+| RStringEnum
+| RNumberEnum
+| RGetterSetterProperty
+| RThis
+| RThisType
+| RExistential
+| RTooFewArgs
+| RTooFewArgsExpectedRest
+| RUninitializedThis
+| RConstructorReturn
+| RNewObject
+| RUnion
+| RUnionType
+| RIntersection
+| RIntersectionType
+| RKeySet
+| RAnd
+| RConditional
+| RPrototype
+| RObjectPrototype
+| RFunctionPrototype
+| RDestructuring
+| RDefaultValue
+| RConstructor
+| RDefaultConstructor
+| RConstructorCall _
+| RReturn
+| RRegExp
+| RSuper
+| RNoSuper
+| RDummyPrototype
+| RDummyThis
+| RTupleMap
+| RObjectMap
+| RObjectMapi
+| RType _
+| RTypeAlias _
+| ROpaqueType _
+| RTypeParam _
+| RMethod _
+| RMethodCall _
+| RParameter _
+| RRestParameter _
+| RIdentifier _
+| RIdentifierAssignment _
+| RPropertyAssignment _
+| RProperty _
+| RPrivateProperty _
+| RShadowProperty _
+| RPropertyOf _
+| RPropertyIsAString _
+| RMissingProperty _
+| RUnknownProperty _
+| RUndefinedProperty _
+| RSomeProperty
+| RNameProperty _
+| RMissingAbstract _
+| RFieldInitializer _
+| RUntypedModule _
+| RCustom _
+| RPolyType _
+| RPolyTest _
+| RExactType _
+| ROptional _
+| RMaybe _
+| RAbstract _
+| RTypeApp _
+| RThisTypeApp _
+| RExtends _
+| RStatics _
+| RSuperOf _
+| RFrozen _
+| RBound _
+| RVarianceCheck _
+| RPredicateOf _
+| RPredicateCall _
+| RPredicateCallNeg _
+| RRefined _
+| RIncompatibleInstantiation _
+| RSpreadOf _
+| RObjectPatternRestProp
+| RCommonJSExports _
+| RReactProps
+| RReactElement _
+| RReactClass
+| RReactComponent
+| RReactStatics
+| RReactDefaultProps
+| RReactState
+| RReactPropTypes
+| RReactChildren
+| RReactChildrenOrType _
+| RReactChildrenOrUndefinedOrType _
+| RReactSFC
+  -> false

@@ -6148,9 +6148,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Op Coercion, u) ->
       add_output cx ~trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
-    | _, UseT (Frame (FunParam _, Op (FunCall _ | FunCallMethod _)), u) ->
+    | _, UseT (Frame (FunParam {n; _}, Op (FunCall _ | FunCallMethod _)), u) ->
       add_output cx ~trace
-        (FlowError.EFunCallParam (reason_of_t l, reason_of_t u))
+        (FlowError.EFunCallParam (reason_of_t l, reason_of_t u, n))
 
     | _, UseT (Op (FunCallThis reason_call), u) ->
       add_output cx ~trace
@@ -7971,35 +7971,51 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     (* everything failed; make a really detailed error message listing out the
        error found for each alternative *)
     let ts = choices_of_spec spec in
-    let msgs = List.rev msgs in
     assert (List.length ts = List.length msgs);
-    let branches = List.mapi (fun i t ->
-      let reason = reason_of_t t in
-      let msg = List.nth msgs i in
-      reason, msg
-    ) ts in
+    (* Instead of spewing out all possible branches, we only show the messages
+     * with the highest "score." If there are multiple messages with the same
+     * score then we show all messages with an equivalent score while throwing
+     * away messages with a lower score. *)
+    let (_, _, branches) = List.fold_left (fun (i, high_score, branches) msg ->
+      let reason = reason_of_t (List.nth ts i) in
+      let score = Flow_error.score_of_msg msg in
+      if score > high_score then
+        (i - 1, score, [(i, reason, msg)])
+      else if score = high_score then
+        (i - 1, high_score, (i, reason, msg)::branches)
+      else
+        (i - 1, high_score, branches)
+    ) (List.length msgs - 1, min_int, []) msgs in
+    (* Add the error. *)
     begin match spec with
       | UnionCases (use_op, l, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
-        add_output cx ~trace (FlowError.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
+        add_output cx ~trace (
+          match branches with
+          | (_, _, msg)::[] -> Flow_error.add_use_op_to_msg use_op msg
+          | _ -> Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches }
+        )
 
       | IntersectionCases (ls, upper) ->
         let err =
-          let reason_lower = mk_intersection_reason r ls in
-          match upper with
-          | UseT (_, t) ->
-            FlowError.EIncompatibleDefs {
-              reason_lower;
-              reason_upper = reason_of_t t;
-              extras = branches;
-            }
+          match branches with
+          | (_, _, msg)::[] -> msg
           | _ ->
-            FlowError.EIncompatible {
-              lower = (reason_lower, Some FlowError.Incompatible_intersection);
-              upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
-              extras = branches;
-            }
+            let reason_lower = mk_intersection_reason r ls in
+            match upper with
+            | UseT (_, t) ->
+              Flow_error.EIncompatibleDefs {
+                reason_lower;
+                reason_upper = reason_of_t t;
+                extras = branches;
+              }
+            | _ ->
+              Flow_error.EIncompatible {
+                lower = (reason_lower, Some Flow_error.Incompatible_intersection);
+                upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
+                extras = branches;
+              }
         in
         add_output cx ~trace err
     end

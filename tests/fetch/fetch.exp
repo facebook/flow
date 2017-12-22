@@ -255,14 +255,6 @@ Error: request.js:8
                                       ^^ object literal. This type is incompatible with
   926: type RequestInfo = Request | URL | string;
                                     ^^^ URL. See lib: <BUILTINS>/bom.js:926
-  Member 3:
-  926: type RequestInfo = Request | URL | string;
-                                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:926
-  Error:
-    8: const f: Request = new Request({}) // incorrect
-                                      ^^ object literal. This type is incompatible with
-  926: type RequestInfo = Request | URL | string;
-                                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:926
 
 Error: request.js:24
  24: h.text().then((t: Buffer) => t); // incorrect
@@ -392,19 +384,6 @@ Error: response.js:30
      ^ object literal. This type is incompatible with the expected param type of
 951:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
                               ^^^^^^^^ union: string | `URLSearchParams` | `FormData` | `Blob` | `ArrayBuffer` | `$ArrayBufferView`. See lib: <BUILTINS>/bom.js:951
-  Member 1:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:924
   Member 2:
   924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                 ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:924

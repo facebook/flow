@@ -153,34 +153,13 @@ Error: test10.js:62
 Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
             ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: function length(list: List) {
-                           ^^^^ union: `Nil` | `Cons`
-  Member 1:
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-  Error:
-   12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-    Property `kind` is incompatible:
-       12: length({ kind: "cons" }); // missing `next`
-                          ^^^^^^ string. Expected string literal `nil`, got `cons` instead
-       17: type Nil = { kind: "nil" };
-                              ^^^^^ string literal `nil`
-  Member 2:
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-  Error:
-   12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-    Property `next` is incompatible:
-       16: type List = Nil | Cons;
-                             ^^^^ property `next`. Property not found in
-       12: length({ kind: "cons" }); // missing `next`
-                  ^^^^^^^^^^^^^^^^ object literal
+ 16: type List = Nil | Cons;
+                 ^^^ Nil
+  Property `kind` is incompatible:
+     12: length({ kind: "cons" }); // missing `next`
+                        ^^^^^^ string. Expected string literal `nil`, got `cons` instead
+     17: type Nil = { kind: "nil" };
+                            ^^^^^ string literal `nil`
 
 Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
@@ -322,25 +301,9 @@ Error: test22.js:20
 
 Error: test26.js:20
  20: new Record().set('foo', "42");
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 20: new Record().set('foo', "42");
-     ^^^^^^^^^^^^^^^^ intersection
-  Member 1:
-   16:   set(x: 'foo', y: number): void;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: new Record().set('foo', "42");
-                               ^^^^ string. This type is incompatible with the expected param type of
-   16:   set(x: 'foo', y: number): void;
-                          ^^^^^^ number
-  Member 2:
-   17:   set(x: 'bar', y: string): void;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: new Record().set('foo', "42");
-                        ^^^^^ string. Expected string literal `bar`, got `foo` instead
-   17:   set(x: 'bar', y: string): void;
-                ^^^^^ string literal `bar`
+                             ^^^^ string. This type is incompatible with the expected param type of
+ 16:   set(x: 'foo', y: number): void;
+                        ^^^^^^ number
 
 Error: test33.js:7
   7: foo(bar); // error: ambiguous speculation

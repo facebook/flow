@@ -2460,10 +2460,11 @@ let dump_flow_error =
           (match use_op with Some _ -> "Some use_op" | None -> "None")
     | EPrivateLookupFailed (reason1, reason2) ->
         spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | EFunCallParam (reason1, reason2) ->
-        spf "EFunCallParam (%s, %s)"
+    | EFunCallParam (reason1, reason2, n) ->
+        spf "EFunCallParam (%s, %s, %d)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          n
     | EFunCallThis (reason1, reason2, reason_call) ->
         spf "EFunCallThis (%s, %s, %s)"
           (dump_reason cx reason1)

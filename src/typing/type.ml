@@ -1869,7 +1869,7 @@ end = struct
     | SetPropT (_,reason,_,_,_,_) -> reason
     | SetPrivatePropT (_,reason,_,_,_,_,_) -> reason
     | SetProtoT (reason,_) -> reason
-    | SpecializeT(_,reason,_,_,_,_) -> reason
+    | SpecializeT(_,_,reason,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason

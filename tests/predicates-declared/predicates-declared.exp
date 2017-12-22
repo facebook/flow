@@ -36,23 +36,7 @@ Error: sanity-parameter-mismatch.js:10
  10: foo(3, 3);
             ^ number. This type is incompatible with the expected param type of
   7:   types: string | Array<string>
-              ^^^^^^^^^^^^^^^^^^^^^^ union: string | array type
-  Member 1:
-    7:   types: string | Array<string>
-                ^^^^^^ string
-  Error:
-   10: foo(3, 3);
-              ^ number. This type is incompatible with
-    7:   types: string | Array<string>
-                ^^^^^^ string
-  Member 2:
-    7:   types: string | Array<string>
-                         ^^^^^^^^^^^^^ array type
-  Error:
-   10: foo(3, 3);
-              ^ number. This type is incompatible with
-    7:   types: string | Array<string>
-                         ^^^^^^^^^^^^^ array type
+              ^^^^^^ string
 
 Error: sanity-pred-with-body.js:6
   6: function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here

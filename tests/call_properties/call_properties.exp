@@ -118,30 +118,14 @@ Error: D.js:12
 
 Error: D.js:20
  20: function e(x: { (): string; (x: number): string }): () => number {
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection. This type is incompatible with
+                     ^^^^^^^^^^ function type. This type is incompatible with the expected return type of
  20: function e(x: { (): string; (x: number): string }): () => number {
                                                          ^^^^^^^^^^^^ function type
-  Member 1:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                       ^^^^^^^^^^ function type
-  Error:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                       ^^^^^^^^^^ function type. This type is incompatible with the expected return type of
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                                           ^^^^^^^^^^^^ function type
-    The return is incompatible:
-       20: function e(x: { (): string; (x: number): string }): () => number {
-                               ^^^^^^ string. This type is incompatible with
-       20: function e(x: { (): string; (x: number): string }): () => number {
-                                                                     ^^^^^^ number
-  Member 2:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                   ^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                                           ^^^^^^^^^^^^ function type. Too few arguments passed to
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                   ^^^^^^^^^^^^^^^^^^^ function type
+  The return is incompatible:
+     20: function e(x: { (): string; (x: number): string }): () => number {
+                             ^^^^^^ string. This type is incompatible with
+     20: function e(x: { (): string; (x: number): string }): () => number {
+                                                                   ^^^^^^ number
 
 Error: E.js:2
   2: var a : { someProp: number } = function () {};
