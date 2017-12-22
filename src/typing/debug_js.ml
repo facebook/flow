@@ -388,6 +388,7 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | Mixin -> "mixin"
   | Idx -> "idx"
   | DebugPrint -> "$Flow$DebugPrint"
+  | DebugThrow -> "$Flow$DebugThrow"
 )
 
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
@@ -1643,6 +1644,7 @@ and dump_t_ (depth, tvars) cx t =
     | Mixin -> "Mixin"
     | Idx -> "Idx"
     | DebugPrint -> "DebugPrint"
+    | DebugThrow -> "DebugThrow"
   in
 
   if depth = 0 then string_of_ctor t
@@ -2283,7 +2285,6 @@ let dump_flow_error =
   let dump_internal_error = function
   | PackageHeapNotFound _ -> "PackageHeapNotFound"
   | AbnormalControlFlow -> "AbnormalControlFlow"
-  | UncaughtException _ -> "UncaughtException"
   | MethodNotAFunction -> "MethodNotAFunction"
   | OptionalMethod -> "OptionalMethod"
   | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
@@ -2301,7 +2302,7 @@ let dump_flow_error =
   | ShadowWriteComputed -> "ShadowWriteComputed"
   | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
-  | InferJobException _ -> "InferJobException"
+  | Flow_error.DebugThrow -> "DebugThrow"
   | MergeJobException _ -> "MergeJobException"
   in
   let dump_upper_kind = function

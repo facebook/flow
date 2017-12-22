@@ -220,6 +220,7 @@ let rec gen_type t env = Type.(
   | CustomFunT (_, Mixin) -> add_str "$Facebookism$Mixin" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
   | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
+  | CustomFunT (_, DebugThrow) -> add_str "$Flow$DebugThrow" env
   (* TODO: Once predicate types are a little more fleshed out, fill out this
    *       codegen.
    *)

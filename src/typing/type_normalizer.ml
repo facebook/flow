@@ -241,6 +241,8 @@ let rec normalize_type_impl cx ids t = match t with
       ) in
       fake_fun [] [] rest_param Locationless.VoidT.t
 
+  | CustomFunT (_, DebugThrow) -> fake_fun [] [] None Locationless.EmptyT.t
+
   | CustomFunT (_, ReactPropType _) ->
     Locationless.AnyT.t (* TODO *)
 

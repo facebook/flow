@@ -60,6 +60,24 @@ let add_merge_on_diff ~audit leader_cx component_files xx =
   end;
   diff
 
+let add_merge_on_exn ~audit ~options component =
+  let leader_f = List.hd component in
+  let cx =
+    let metadata = Context.metadata_of_options options in
+    let module_ref = Files.module_ref leader_f in
+    Context.make metadata leader_f module_ref
+  in
+  let module_refs = List.map (fun f ->
+    let module_ref = Files.module_ref f in
+    let module_t = Type.Locationless.AnyT.t in
+    Context.add_module cx module_ref module_t;
+    LeaderHeap.add f leader_f;
+    module_ref
+  ) component in
+  let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
+  add_sig_context ~audit leader_f cx;
+  SigHashHeap.add leader_f xx
+
 let oldify_merge_batch files =
   LeaderHeap.oldify_batch files;
   SigContextHeap.oldify_batch files;

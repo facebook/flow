@@ -380,6 +380,7 @@ class ['a] t = object(self)
     | Mixin
     | Idx
     | DebugPrint
+    | DebugThrow
       -> kind
 
   method exports cx map_cx id =

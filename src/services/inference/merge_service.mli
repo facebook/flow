@@ -7,7 +7,7 @@
 
 open Utils_js
 
-type 'a merge_results = (File_key.t * ('a, exn) result) list
+type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   options:Options.t ->
   'a merge_results * File_key.t list ->

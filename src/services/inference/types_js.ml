@@ -199,9 +199,7 @@ let commit_modules_and_resolve_requires
 
   changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
-let error_set_of_merge_exception file exc =
-  let loc = Loc.({ none with source = Some file }) in
-  let msg = Flow_error.(EInternal (loc, MergeJobException exc)) in
+let error_set_of_merge_error file msg =
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
@@ -243,8 +241,8 @@ let merge
         update_errset errors file new_errors,
         update_suppressions suppressions file new_suppressions,
         update_severity_cover_set severity_cover_set file new_severity_cover
-      | Error exc ->
-        let new_errors = error_set_of_merge_exception file exc in
+      | Error msg ->
+        let new_errors = error_set_of_merge_error file msg in
         update_errset errors file new_errors, suppressions, severity_cover_set
     ) acc merged
   )
@@ -387,8 +385,8 @@ let typecheck
             match result with
             | Ok (errors, suppressions, severity_cover) ->
               file, errors, suppressions, severity_cover
-            | Error exc ->
-              let errors = error_set_of_merge_exception file exc in
+            | Error msg ->
+              let errors = error_set_of_merge_error file msg in
               let suppressions = Error_suppressions.empty in
               let severity_cover =
                 ExactCover.file_cover file

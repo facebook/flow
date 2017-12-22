@@ -245,6 +245,7 @@ class ['a] t = object(self)
   | Mixin
   | Idx
   | DebugPrint
+  | DebugThrow
     -> acc
 
   method use_type_ cx (acc: 'a) = function

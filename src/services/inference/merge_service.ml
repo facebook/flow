@@ -9,7 +9,7 @@ open Utils_js
 module Reqs = Merge_js.Reqs
 
 
-type 'a merge_results = (File_key.t * ('a, exn) result) list
+type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   options:Options.t ->
   'a merge_results * File_key.t list ->
@@ -267,11 +267,25 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       | SharedMem_js.Hash_table_full
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
-      | exc when not Build_mode.dev ->
+      | exc ->
+        (* Ensure heaps are in a good state before continuing. *)
+        Context_cache.add_merge_on_exn ~audit:Expensive.ok ~options component;
+        (* In dev mode, fail hard, but log and continue in prod. *)
+        if Build_mode.dev then raise exc else
+          prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
+            (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
+        (* An errored component is always changed. *)
         let file = List.hd component in
-        prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
-          (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-        ((file, Error exc) :: merged), unchanged
+        (* We can't pattern match on the exception type once it's marshalled
+           back to the master process, so we pattern match on it here to create
+           an error result. *)
+        let result = Error Flow_error.(match exc with
+        | EDebugThrow loc -> EInternal (loc, DebugThrow)
+        | _ ->
+          let loc = Loc.({ none with source = Some file }) in
+          EInternal (loc, MergeJobException exc)
+        ) in
+        ((file, result) :: merged), unchanged
   ) (merged, unchanged) elements
 
 (* make a map from component leaders to components *)

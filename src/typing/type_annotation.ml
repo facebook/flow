@@ -530,6 +530,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "$Flow$DebugPrint" ->
       mk_custom_fun cx loc typeParameters DebugPrint
+  | "$Flow$DebugThrow" ->
+      mk_custom_fun cx loc typeParameters DebugThrow
 
 
   (* You can specify in the .flowconfig the names of types that should be

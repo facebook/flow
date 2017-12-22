@@ -9,6 +9,8 @@ open Type
 open Utils_js
 open Reason
 
+exception EDebugThrow of Loc.t
+
 type invalid_char_set =
   | DuplicateChar of Char.t
   | InvalidChar of Char.t
@@ -183,7 +185,6 @@ and docblock_error =
 and internal_error =
   | PackageHeapNotFound of string
   | AbnormalControlFlow
-  | UncaughtException of exn
   | MethodNotAFunction
   | OptionalMethod
   | OpenPredWithoutSubst
@@ -200,7 +201,7 @@ and internal_error =
   | ShadowWriteComputed
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
-  | InferJobException of exn
+  | DebugThrow
   | MergeJobException of exn
 
 and unsupported_syntax =
@@ -1081,8 +1082,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
           spf "Package %S was not found in the PackageHeap!" pkg
       | AbnormalControlFlow ->
           "abnormal control flow"
-      | UncaughtException exc ->
-          Utils_js.fmt_exc exc
       | MethodNotAFunction ->
           "expected function type"
       | OptionalMethod ->
@@ -1115,10 +1114,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
           "unexpected rest parameter, expected an identifier pattern"
       | InterfaceTypeSpread ->
           "unexpected spread property in interface"
-      | InferJobException exc ->
-          "infer_job exception: "^(Utils_js.fmt_exc exc)
+      | DebugThrow ->
+          "debug throw"
       | MergeJobException exc ->
-          "merge_job exception: "^(Utils_js.fmt_exc exc)
+          "uncaught exception: "^(Utils_js.fmt_exc exc)
       in
       mk_error ~trace_infos ~kind:InternalError [loc, [
         spf "Internal error: %s" msg

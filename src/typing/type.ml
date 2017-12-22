@@ -977,6 +977,7 @@ module rec TypeTerm : sig
 
   (* Internal tools *)
   | DebugPrint
+  | DebugThrow
 
   and sentinel_value =
   | SentinelStr of string

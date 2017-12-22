@@ -4087,6 +4087,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) call_args_tlist;
       rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
+    | CustomFunT (_, DebugThrow), CallT (_, reason_op, _) ->
+      raise (Flow_error.EDebugThrow (loc_of_reason reason_op))
+
     | CustomFunT (_, (
           Compose _
         | ReactCreateElement
@@ -10533,6 +10536,7 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | Mixin
   | Idx
   | DebugPrint
+  | DebugThrow
     -> failwith "implemented elsewhere"
 
 (* Creates the appropriate constraints for the compose() function and its
