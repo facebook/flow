@@ -23,6 +23,8 @@ let method_decl_nop _ _ _ = ()
 
 let prop_decl_nop _ _ _ = ()
 
+let require_pattern_nop _ = ()
+
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
   (**
@@ -105,6 +107,9 @@ type hook_state_t = {
      (Context.t ->
       string -> Loc.t ->
       unit);
+
+  require_pattern_hook:
+    Loc.t -> unit
 }
 
 let nop_hook_state = {
@@ -117,6 +122,7 @@ let nop_hook_state = {
   ref_hook = ref_nop;
   method_decl_hook = method_decl_nop;
   prop_decl_hook = prop_decl_nop;
+  require_pattern_hook = require_pattern_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -148,6 +154,9 @@ let set_method_decl_hook hook =
 let set_prop_decl_hook hook =
   hook_state := { !hook_state with prop_decl_hook = hook }
 
+let set_require_pattern_hook hook =
+  hook_state := { !hook_state with require_pattern_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -177,3 +186,6 @@ let dispatch_method_decl_hook cx name loc =
 
 let dispatch_prop_decl_hook cx name loc =
   !hook_state.prop_decl_hook cx name loc
+
+let dispatch_require_pattern_hook loc =
+  !hook_state.require_pattern_hook loc

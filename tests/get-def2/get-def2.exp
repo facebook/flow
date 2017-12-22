@@ -4,13 +4,13 @@ main.js:6:5,6:13
 Parent.js:4:19,4:27
 Parent.js:3:5,3:13
 
-Trace `ParentFoo2` back to its def (TODO #2)
-main.js:11:5,11:14
-main.js:11:5,11:14
-main.js:3:5,3:10
+Trace `Parent2` back to its def (TODO #2)
+main.js:11:5,11:11
+main.js:11:5,11:11
+Parent.js:4:18,4:28
 
-Trace `ParentFoo3` back to its def
-main.js:16:5,16:14
+Trace `Parent3` back to its def
+main.js:16:5,16:11
 
 Trace `Parent` back to its def
 Parent.js:4:18,4:28
@@ -20,6 +20,9 @@ Trace `NonDestructuredFoo` back to its def
 main.js:20:5,20:7
 Parent.js:3:23,3:27
 Parent.js:3:18,3:20
+
+Trace `ParentFoo` back to its def
+Parent.js:4:19,4:27
 
 React class and attribute expressions
 react.js:3:7,3:7

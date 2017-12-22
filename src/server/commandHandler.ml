@@ -253,7 +253,7 @@ let gen_flow_files ~options env files =
 let find_refs ~genv ~env (file_input, line, col, global) =
   FindRefs_js.find_refs ~genv ~env ~file_input ~line ~col ~global
 
-let get_def ~options ~workers ~env command_context (file_input, line, col) =
+let rec get_def ~options ~workers ~env command_context (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let loc = Loc.make file line col in
@@ -270,7 +270,14 @@ let get_def ~options ~workers ~env command_context (file_input, line, col) =
         state
     end in
   GetDef_js.getdef_unset_hooks ();
-  result
+  result >>= function
+    | GetDef_js.Done loc -> Ok loc
+    | GetDef_js.Chain (line, col) ->
+      get_def ~options ~workers ~env command_context (file_input, line, col) >>= fun loc' ->
+      (* Chaining can sometimes lead to a dead end, due to lack of type
+         information. In that case, fall back to the previous location. *)
+      if loc' = Loc.none then Ok loc
+      else Ok loc'
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in

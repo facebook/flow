@@ -2289,6 +2289,17 @@ and variable cx kind
     | VariableDeclaration.Var -> init_var, (fun _ _ _ -> ())
   ) in
   let { VariableDeclaration.Declarator.id; init } = vdecl in
+  Ast.Expression.(match init with
+    | Some (_, Call { Call.callee = _, Identifier (_, "require"); _ })
+        when not (Env.local_scope_entry_exists "require") ->
+      let loc, _ = id in
+      (* Record the loc of the pattern, which contains the locations of any
+         local definitions introduced by the pattern. This information is used
+         by commands to automatically "follow" such definitions to the actual
+         definitions in the required module. *)
+      Type_inference_hooks_js.dispatch_require_pattern_hook loc
+    | _ -> ()
+  );
   match id with
     | (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
           name = (id_loc, name); typeAnnotation; optional

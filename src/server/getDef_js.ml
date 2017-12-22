@@ -8,10 +8,21 @@
 open Utils_js
 
 type getdef_type =
-| Gdloc of Loc.t
-| Gdval of Type.t
-| Gdmem of (string * Type.t)
-| Gdrequire of (Loc.t * string) * Loc.t
+  | Gdloc of Loc.t
+  | Gdval of Type.t
+  | Gdmem of (string * Type.t)
+  | Gdrequire of (Loc.t * string) * Loc.t
+
+type state = {
+  mutable getdef_type: getdef_type option;
+  mutable getdef_require_patterns: Loc.t list;
+}
+
+(* The result of a get-def is either a final location or an intermediate
+   location that is fed into a subsequent get-def. *)
+type result =
+  | Done of Loc.t
+  | Chain of int * int (* line, column *)
 
 let id state name =
   let env = Env.all_entries () in
@@ -20,12 +31,12 @@ let id state name =
     (* for references to import bindings, point directly to the exports they
        resolve to (rather than to the import bindings, which would themselves in
        turn point to the exports they resolve to) *)
-    state := Some (Gdval v)
+    state.getdef_type <- Some (Gdval v)
   | Some (Type { type_binding_kind = ImportTypeBinding; _type = v; _ }) ->
     (* similarly for import type bindings *)
-    state := Some (Gdval v)
+    state.getdef_type <- Some (Gdval v)
   | Some entry ->
-    state := Some (Gdloc (entry_loc entry))
+    state.getdef_type <- Some (Gdloc (entry_loc entry))
   | None ->
     ()
   )
@@ -39,42 +50,50 @@ let getdef_lval (state, loc1) _cx name loc2 rhs =
   if Reason.in_range loc1 loc2
   then match rhs with
   | Type_inference_hooks_js.Val v ->
-    state := Some (Gdval v)
+    state.getdef_type <- Some (Gdval v)
   | Type_inference_hooks_js.Parent t ->
-    state := Some (Gdmem (name, t))
+    state.getdef_type <- Some (Gdmem (name, t))
   | Type_inference_hooks_js.Id ->
     id state name
 
 let getdef_member (state, loc1) _cx name loc2 this_t =
   if (Reason.in_range loc1 loc2)
   then (
-    state := Some (Gdmem (name, this_t))
+    state.getdef_type <- Some (Gdmem (name, this_t))
   );
   false
 
 let getdef_call (state, loc1) _cx name loc2 this_t =
   if (Reason.in_range loc1 loc2)
   then (
-    state := Some (Gdmem (name, this_t))
+    state.getdef_type <- Some (Gdmem (name, this_t))
   )
 
 let getdef_import (state, user_requested_loc) _cx source import_loc =
   if (Reason.in_range user_requested_loc import_loc)
   then (
-    state := Some (Gdrequire (source, import_loc))
+    state.getdef_type <- Some (Gdrequire (source, import_loc))
   )
+
+let getdef_require_pattern state loc =
+  state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
 let getdef_get_result profiling client_logging_context ~options cx state =
-  Ok begin match !state with
-  | Some Gdloc loc -> loc
+  Ok begin match state.getdef_type with
+  | Some Gdloc loc ->
+    if List.exists (fun range -> Loc.contains range loc) state.getdef_require_patterns
+    then
+      let { Loc.line; column; _ } = loc.Loc.start in
+      Chain (line, column)
+    else Done loc
   | Some Gdval v ->
     (* Use `possible_types_of_type` instead of `resolve_type` because we're
        actually interested in the location of the resolved types. *)
     let ts = Flow_js.possible_types_of_type cx v in
-    begin match ts with
+    Done begin match ts with
     | [t] -> Type.def_loc_of_t t
     | _ -> Loc.none
     end
@@ -100,7 +119,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         ~profiling;
 
       let command_result = Flow_js.Members.to_command_result member_result in
-      begin match command_result with
+      Done begin match command_result with
       | Error _ -> Loc.none
       | Ok result_map ->
         begin match SMap.get name result_map with
@@ -125,7 +144,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         | Some file -> Loc.({none with source = Some file;})
         | None -> Loc.none)
       in
-      Type.(match module_t with
+      Done Type.(match module_t with
       (**
        * TODO: Specialized `import` hooks so that get-defs on named
        *       imports point to their actual remote def location.
@@ -149,16 +168,17 @@ let getdef_get_result profiling client_logging_context ~options cx state =
           (string_of_ctor module_t)
         )
       )
-  | None -> Loc.none
+  | None -> Done Loc.none
   end
 
 let getdef_set_hooks pos =
-  let state = ref None in
+  let state = { getdef_type = None; getdef_require_patterns = [] } in
   Type_inference_hooks_js.set_id_hook (getdef_id (state, pos));
   Type_inference_hooks_js.set_lval_hook (getdef_lval (state, pos));
   Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
   Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
   Type_inference_hooks_js.set_import_hook (getdef_import (state, pos));
+  Type_inference_hooks_js.set_require_pattern_hook (getdef_require_pattern state);
   state
 
 let getdef_unset_hooks () =
