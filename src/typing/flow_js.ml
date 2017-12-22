@@ -9662,7 +9662,12 @@ and multiflow_partial =
        * should flow VoidT to every remaining parameter, however we don't. This
        * is consistent with how we treat arrays almost everywhere else *)
       used_pairs @ List.map
-        (fun (_, param) -> (spread_arg_elemt, UseT (use_op, param)))
+        (fun (_, param) ->
+          let use_op = Frame (FunRestParam {
+            lower=(reason_of_t spread_arg_elemt);
+            upper=(reason_of_t param);
+          }, use_op) in
+          (spread_arg_elemt, UseT (use_op, param)))
         unused_parlist,
       []
 
@@ -9730,7 +9735,13 @@ and multiflow_partial =
         let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
         resolve_spread_list cx ~use_op ~reason_op:arg_array_reason elems resolve_to
       ) in
-      rec_flow cx trace (arg_array, UseT (use_op, rest_param));
+      let () =
+        let use_op = Frame (FunRestParam {
+          lower = reason_of_t arg_array;
+          upper = reason_of_t rest_param;
+        }, use_op) in
+        rec_flow cx trace (arg_array, UseT (use_op, rest_param))
+      in
 
       unused_parlist, Some (name, loc, unused_rest_param)
     end

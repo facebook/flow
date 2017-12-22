@@ -304,6 +304,7 @@ module rec TypeTerm : sig
     | FunCompatibility of { lower: reason; upper: reason }
     | FunMissingArg of reason * reason
     | FunParam of { n: int; lower: reason; upper: reason }
+    | FunRestParam of { lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
     | ImplicitTypeParam of Loc.t
     | IndexerKeyCompatibility of { lower: reason; upper: reason }
@@ -2510,6 +2511,7 @@ let string_of_frame_use_op = function
 | FunCompatibility _ -> "FunCompatibility"
 | FunMissingArg _ -> "FunMissingArg"
 | FunParam _ -> "FunParam"
+| FunRestParam _ -> "FunRestParam"
 | FunReturn _ -> "FunReturn"
 | ImplicitTypeParam _ -> "ImplicitTypeParam"
 | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"

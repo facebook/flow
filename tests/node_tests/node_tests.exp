@@ -2262,19 +2262,19 @@ Error: os/userInfo.js:14
 
 Error: process/nextTick.js:14
  14:   0, // Error: number ~> string
-       ^ number. This type is incompatible with the expected param type of
+       ^ number. This type is incompatible with
  13:   (a: string, b: number, c: boolean) => {},
            ^^^^^^ string
 
 Error: process/nextTick.js:16
  16:   null // Error: null ~> boolean
-       ^^^^ null. This type is incompatible with the expected param type of
+       ^^^^ null. This type is incompatible with
  13:   (a: string, b: number, c: boolean) => {},
                                  ^^^^^^^ boolean
 
 Error: process/nextTick.js:22
  22:   'y', // Error: string ~> number
-       ^^^ string. This type is incompatible with the expected param type of
+       ^^^ string. This type is incompatible with
  20:   (a: string, b: number, c: boolean) => {},
                       ^^^^^^ number
 

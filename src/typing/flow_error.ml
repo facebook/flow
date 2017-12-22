@@ -450,6 +450,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     let flip_frame = function
     | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
     | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
+    | FunRestParam c -> FunRestParam {lower = c.upper; upper = c.lower}
     | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
     | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
     | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
@@ -604,6 +605,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   (* Passthrough some frame use_ops that don't participate in the
    * error message. *)
   | Frame (FunCompatibility _, use_op)
+  | Frame (FunRestParam _, use_op)
   | Frame (ImplicitTypeParam _, use_op)
   | Frame (UnifyFlip, use_op)
     -> unwrap_use_ops ~force (reasons, extra, msg) use_op
