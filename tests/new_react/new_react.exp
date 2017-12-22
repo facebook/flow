@@ -750,40 +750,48 @@ Error: state5.js:5
                 ^^^^^^^^^^ undefined
 
 Error: state6.js:29
-                              v------------------------------------
+                       v-------------------------------------------
  29:     this.setState(() => ({ // Error: `bar` should be a number.
  30:       bar: '42',
  31:     }));
-         ^ object literal. This type is incompatible with the expected return type of
+         -^ function. This type is incompatible with the expected param type of
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                          ^^^^^^^^^^^^^^^^^^^^ union: `State` | undefined. See lib: <BUILTINS>/react.js:35
-  Member 1:
-   13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ State
-  Error:
-                                v------------------------------------
-   29:     this.setState(() => ({ // Error: `bar` should be a number.
-   30:       bar: '42',
-   31:     }));
-           ^ object literal. This type is incompatible with
-   13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ State
-    Property `bar` is incompatible:
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+  The return is incompatible:
+                                  v------------------------------------
+     29:     this.setState(() => ({ // Error: `bar` should be a number.
+     30:       bar: '42',
+     31:     }));
+             ^ object literal. This type is incompatible with
+     35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                              ^^^^^^^^^^^^^^^^^^^^ union: `State` | undefined. See lib: <BUILTINS>/react.js:35
+      Member 1:
+       13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                     ^^^^^ State
+      Error:
+                                    v------------------------------------
+       29:     this.setState(() => ({ // Error: `bar` should be a number.
        30:       bar: '42',
-                      ^^^^ string. This type is incompatible with
-        7: type State = {foo: number, bar: number};
-                                           ^^^^^^ number
-  Member 2:
-   35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:35
-  Error:
-                                v------------------------------------
-   29:     this.setState(() => ({ // Error: `bar` should be a number.
-   30:       bar: '42',
-   31:     }));
-           ^ object literal. This type is incompatible with
-   35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:35
+       31:     }));
+               ^ object literal. This type is incompatible with
+       13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                     ^^^^^ State
+        Property `bar` is incompatible:
+           30:       bar: '42',
+                          ^^^^ string. This type is incompatible with
+            7: type State = {foo: number, bar: number};
+                                               ^^^^^^ number
+      Member 2:
+       35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                                                ^^^^ undefined. See lib: <BUILTINS>/react.js:35
+      Error:
+                                    v------------------------------------
+       29:     this.setState(() => ({ // Error: `bar` should be a number.
+       30:       bar: '42',
+       31:     }));
+               ^ object literal. This type is incompatible with
+       35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                                                ^^^^ undefined. See lib: <BUILTINS>/react.js:35
 
 Error: state6.js:33
  33:       console.log(prevState.nope); // Error: `nope` does not exist.

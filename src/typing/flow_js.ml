@@ -7933,7 +7933,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
           (* ...and no unresolved tvars encountered during the speculative
              match! This is great news. It means that this alternative will
              definitely succeed. Fire any deferred actions and short-cut. *)
-          then fire_actions cx trace case.actions
+          then fire_actions cx trace spec case.actions
           (* Otherwise, record that we've found a promising alternative. *)
           else loop (Speculation.ConditionalMatch case) trials
 
@@ -7966,7 +7966,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
   and return = function
   | Speculation.ConditionalMatch case ->
     (* best choice that survived, congrats! fire deferred actions  *)
-    fire_actions cx trace case.actions
+    fire_actions cx trace spec case.actions
   | Speculation.NoMatch msgs ->
     (* everything failed; make a really detailed error message listing out the
        error found for each alternative *)
@@ -8127,9 +8127,24 @@ and guess_and_record_sentinel_prop cx ts =
       | _ -> ()
     ) ts
 
-and fire_actions cx trace = List.iter (function
-  | _, Speculation.Action.Flow (l, u) -> rec_flow cx trace (l, u)
-  | _, Speculation.Action.Unify (use_op, t1, t2) -> rec_unify cx trace ~use_op t1 t2
+(* When we fire_actions we also need to reconstruct the use_op for each action
+ * since before beginning speculation we replaced each use_op with
+ * an UnknownUse. *)
+and fire_actions cx trace spec = List.iter (function
+  | _, Speculation.Action.Flow (l, u) -> (match spec with
+    | IntersectionCases (_, _) ->
+      rec_flow cx trace (l, u)
+    | UnionCases (use_op, _, _) ->
+      rec_flow cx trace (l,
+        mod_op_of_use_t (replace_unknown_root_use_op use_op) u)
+    )
+  | _, Speculation.Action.Unify (use_op, t1, t2) -> (match spec with
+    | IntersectionCases (_, _) ->
+      rec_unify cx trace t1 t2 ~use_op
+    | UnionCases (use_op', _, _) ->
+      rec_unify cx trace t1 t2
+        ~use_op:(replace_unknown_root_use_op use_op' use_op)
+    )
 )
 
 and mk_union_reason r us =

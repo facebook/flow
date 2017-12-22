@@ -521,7 +521,7 @@ Error: response.js:44
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
+                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:900
   Type argument `T` is incompatible:
@@ -532,7 +532,7 @@ Error: urlsearchparams.js:4
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
+                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:900
   Type argument `T` is incompatible:

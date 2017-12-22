@@ -2356,6 +2356,14 @@ let rec root_of_use_op = function
 | Op use_op -> use_op
 | Frame (_, use_op) -> root_of_use_op use_op
 
+let rec replace_unknown_root_use_op new_parent_use_op = function
+| Op UnknownUse -> new_parent_use_op
+| (Op _) as use_op -> use_op
+| (Frame (frame, parent_use_op)) as use_op ->
+  let parent_use_op' = replace_unknown_root_use_op new_parent_use_op parent_use_op in
+  if parent_use_op' == parent_use_op then use_op
+  else Frame (frame, parent_use_op')
+
 let loc_of_root_use_op = function
 | AssignVar {init=op; _}
 | Cast {lower=op; _}

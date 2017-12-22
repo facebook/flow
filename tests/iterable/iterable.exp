@@ -63,7 +63,7 @@ Error: caching_bug.js:21
 
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
 494:   | { done: false, +value: Yield };
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:494
   Property `done` is incompatible:
@@ -74,7 +74,7 @@ Error: iterator_result.js:23
 
 Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
-                    ^^^^^^^^ object literal. This type is incompatible with
+                    ^^^^^^^^ object literal. This type is incompatible with the expected return type of
 493:   | { done: true, +value?: Return }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:493
   Property `done` is incompatible:
