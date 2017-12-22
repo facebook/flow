@@ -1468,13 +1468,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
         | ETypeAliasInValuePosition ->
             "type alias referenced from value position"
         | EConstReassigned
+        | EConstParamReassigned
         | EImportReassigned ->
             spf "%s cannot be reassigned" (Scope.Entry.string_of_kind entry)
-        | EConstParamReassigned ->
-            spf
-              "%s cannot be reassigned \
-               (see experimental.const_params=true in .flowconfig)"
-              (Scope.Entry.string_of_kind entry)
       in
       mk_error ~trace_infos [
         loc, [x; msg];

@@ -2,5 +2,11 @@ Error: test.js:3
   3: import type { T } from './import';
                    ^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./import`?
 
+Error: test.js:8
+  8:   x = 1;
+       ^ x. const param cannot be reassigned
+  7: function f(x) {
+                ^ const param x
 
-Found 1 error
+
+Found 2 errors
