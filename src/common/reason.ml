@@ -152,6 +152,7 @@ type reason_desc =
   | RUntypedModule of string
   | RCustom of string
   | RPolyType of reason_desc
+  | RPolyTest of reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -494,6 +495,7 @@ let rec string_of_desc = function
   | RCustom x -> x
   | RPolyType (RStatics d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
+  | RPolyTest d -> string_of_desc d
   | RExactType d -> string_of_desc d
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
@@ -568,10 +570,16 @@ let dump_reason ?(strip_root=None) r =
     | None -> ""
     end
 
-let desc_of_reason ?(unwrap_alias=true) r =
-  match r.desc with
-  | RTypeAlias (_, desc) when unwrap_alias -> desc
-  | desc -> desc
+let desc_of_reason =
+  let rec loop = function
+  | RTypeAlias (_, desc)
+  | RPolyTest desc
+    -> loop desc
+  | desc
+    -> desc
+  in
+  fun ?(unwrap=true) r ->
+    if not unwrap then r.desc else loop r.desc
 
 let internal_name name =
   spf ".%s" name
@@ -675,7 +683,7 @@ let reasons_overlap r1 r2 =
 
 (* returns reason with new description and position of original *)
 let replace_reason f r =
-  mk_reason (f (desc_of_reason ~unwrap_alias:false r)) (loc_of_reason r)
+  mk_reason (f (desc_of_reason ~unwrap:false r)) (loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
   let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
@@ -687,7 +695,7 @@ let repos_reason loc reason =
     let def_loc = def_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
-  mk_reason_with_test_id reason.test_id (desc_of_reason ~unwrap_alias:false reason) loc def_loc_opt
+  mk_reason_with_test_id reason.test_id (desc_of_reason ~unwrap:false reason) loc def_loc_opt
 
 module ReasonMap = MyMap.Make(struct
   type t = reason
@@ -697,7 +705,7 @@ end)
 (* Is this the reason of a scalar type? true if the type *cannot* recursively
  * hold any other types. For example, number is a scalar but an object like
  * {p: number} is not. *)
-let is_scalar_reason r = match desc_of_reason ~unwrap_alias:true r with
+let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
 | RString
 | RBoolean
@@ -802,6 +810,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap_alias:true r with
 | RUntypedModule _
 | RCustom _
 | RPolyType _
+| RPolyTest _
 | RExactType _
 | ROptional _
 | RMaybe _

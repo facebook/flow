@@ -287,7 +287,7 @@ Error: rest.js:38
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
                                           ^^^^^ Rest params are always arrays. This type is incompatible with
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                               ^^^^^^ string
+                                              ^ string
 
 Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty

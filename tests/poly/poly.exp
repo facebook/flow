@@ -128,7 +128,7 @@ Error: test.js:7
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
       The first parameter is incompatible:
           2:   foo<X>(x: X): X { return x; }
-                   ^ X. This type is incompatible with
+                         ^ X. This type is incompatible with
           8:   foo(x: number): number { return x; } // error (specialization, see below)
                       ^^^^^^ number
 
@@ -145,8 +145,8 @@ Error: test.js:7
       The return is incompatible:
           8:   foo(x: number): number { return x; } // error (specialization, see below)
                                ^^^^^^ number. This type is incompatible with
-          8:   foo(x: number): number { return x; } // error (specialization, see below)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
+          2:   foo<X>(x: X): X { return x; }
+                             ^ some incompatible instantiation of `X`
 
 
 Found 16 errors

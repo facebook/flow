@@ -269,7 +269,7 @@ and upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleUnclassified of string
 
-let desc_of_reason r = Reason.desc_of_reason ~unwrap_alias:(is_scalar_reason r) r
+let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* Decide reason order based on UB's flavor and blamability.
    If the order is unchanged, maintain reference equality. *)

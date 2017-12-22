@@ -23,8 +23,8 @@ Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                 ^^^^^^^^^^^^^^^^^^^^^^^^ CovArrayVerbose
   Type argument `X` is incompatible:
-      6: class NVerbose<E,I:E> {
-               ^^^^^^^^ some incompatible instantiation of `E`. This type is incompatible with
+      7:     x: CovArrayVerbose<E,I>;
+                                ^ some incompatible instantiation of `E`. This type is incompatible with
       8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                                     ^^^^^ mixed
 

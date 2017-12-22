@@ -6735,12 +6735,13 @@ and union_of_ts reason ts =
 and generate_tests =
   (* make bot type for given param *)
   let mk_bot reason _ { name; _ } =
-    let desc = RIncompatibleInstantiation name in
+    let desc = RPolyTest (RIncompatibleInstantiation name) in
     DefT (replace_reason_const desc reason, EmptyT)
   in
   (* make bound type for given param and argument map *)
   let mk_bound cx prev_args { bound; _ } =
-    subst cx prev_args bound
+    mod_reason_of_t (replace_reason (fun d -> RPolyTest d))
+      (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
   let mk_argmap mk_arg =
@@ -6885,9 +6886,15 @@ and subst =
       | BoundT typeparam ->
         begin match SMap.get typeparam.name map with
         | None -> t
+        | Some param_t when typeparam.name = "this" ->
+          ReposT (typeparam.reason, param_t)
         | Some param_t ->
-          if typeparam.name = "this" then ReposT (typeparam.reason, param_t)
-          else param_t
+          (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
+          | RPolyTest _ ->
+            mod_reason_of_t (repos_reason (loc_of_reason typeparam.reason)) param_t
+          | _ ->
+            param_t
+          )
         end
 
       | ExistsT reason ->
@@ -8127,8 +8134,8 @@ and fire_actions cx trace = List.iter (function
 
 and mk_union_reason r us =
   List.fold_left (fun reason t ->
-    let rdesc = string_of_desc (desc_of_reason ~unwrap_alias:false reason) in
-    let tdesc = string_of_desc (desc_of_reason ~unwrap_alias:false (reason_of_t t)) in
+    let rdesc = string_of_desc (desc_of_reason ~unwrap:false reason) in
+    let tdesc = string_of_desc (desc_of_reason ~unwrap:false (reason_of_t t)) in
     let udesc = if not (String_utils.string_starts_with rdesc "union:")
       then spf "union: %s" tdesc
       else if String_utils.string_ends_with rdesc "..."

@@ -241,14 +241,14 @@ Error: generic_class.js:18
 Error: generic_class.js:26
  26:   invalid: T = 42; // Error: number ~> Generic<T>
                     ^^ number. This type is incompatible with
- 25: class ClassGenericInitialized<T, U> {
-           ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+ 26:   invalid: T = 42; // Error: number ~> Generic<T>
+                ^ some incompatible instantiation of `T`
 
 Error: generic_class.js:29
  29:   static invalid: T = 42; // Error: number ~> Generic<T>
                            ^^ number. This type is incompatible with
- 25: class ClassGenericInitialized<T, U> {
-           ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+ 29:   static invalid: T = 42; // Error: number ~> Generic<T>
+                       ^ some incompatible instantiation of `T`
 
 Error: scoping.js:24
  24: (new Foo().outer: string); // Error: number ~> string

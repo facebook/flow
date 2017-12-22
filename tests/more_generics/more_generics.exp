@@ -2,7 +2,7 @@ Error: poly.js:3
   3: function foo2<T,S>(x:T):S { return x; }
                                         ^ T. This type is incompatible with the expected return type of
   3: function foo2<T,S>(x:T):S { return x; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `S`
+                             ^ some incompatible instantiation of `S`
 
 Error: poly.js:10
  10: function foo5<T>():Array<T> { return x; }
@@ -11,15 +11,15 @@ Error: poly.js:10
                         ^^^^^^^^ array type
   Type argument `T` is incompatible:
      10: function foo5<T>():Array<T> { return x; }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`. This type is incompatible with
+                                  ^ some incompatible instantiation of `T`. This type is incompatible with
      10: function foo5<T>():Array<T> { return x; }
-                       ^ T
+                                  ^ T
 
 Error: poly.js:20
  20: function foo7<R>(x:R):R { return foo5(); }
                                       ^^^^^^ array type. This type is incompatible with the expected return type of
  20: function foo7<R>(x:R):R { return foo5(); }
-     ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `R`
+                           ^ some incompatible instantiation of `R`
 
 Error: poly.js:24
  24:   y();

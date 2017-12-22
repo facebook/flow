@@ -792,9 +792,9 @@ Error: type_dict.js:96
 
 Error: type_generic.js:1
   1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-                     ^ A. This type is incompatible with
+                                         ^ A. This type is incompatible with
   1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `B`
+                                                ^ some incompatible instantiation of `B`
 
 Error: type_generic.js:2
   2:   const {p, ...o} = a;
