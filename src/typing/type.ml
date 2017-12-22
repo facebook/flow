@@ -526,6 +526,7 @@ module rec TypeTerm : sig
     | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
 
     | DebugPrintT of reason
+    | DebugSleepT of reason
 
     | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
 
@@ -978,6 +979,7 @@ module rec TypeTerm : sig
   (* Internal tools *)
   | DebugPrint
   | DebugThrow
+  | DebugSleep
 
   and sentinel_value =
   | SentinelStr of string
@@ -1817,6 +1819,7 @@ end = struct
     | CopyNamedExportsT (reason, _, _) -> reason
     | CopyTypeExportsT (reason, _, _) -> reason
     | DebugPrintT reason -> reason
+    | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
     | EqT (reason, _, _) -> reason
     | ExportNamedT (reason, _, _, _) -> reason
@@ -1966,6 +1969,7 @@ end = struct
     | CopyTypeExportsT (reason, target_module_t, t_out) ->
         CopyTypeExportsT(f reason, target_module_t, t_out)
     | DebugPrintT reason -> DebugPrintT (f reason)
+    | DebugSleepT reason -> DebugSleepT (f reason)
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
     | EqT (reason, flip, t) -> EqT (f reason, flip, t)
     | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
@@ -2322,6 +2326,7 @@ let any_propagating_use_t = function
   | AssertRestParamT _
   | ComparatorT _
   | DebugPrintT _
+  | DebugSleepT _
   | EqT _
   | HasOwnPropT _
   | ImplementsT _
@@ -2546,6 +2551,7 @@ let string_of_use_ctor = function
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
   | DebugPrintT _ -> "DebugPrintT"
+  | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"

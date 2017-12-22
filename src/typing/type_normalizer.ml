@@ -243,6 +243,11 @@ let rec normalize_type_impl cx ids t = match t with
 
   | CustomFunT (_, DebugThrow) -> fake_fun [] [] None Locationless.EmptyT.t
 
+  | CustomFunT (_, DebugSleep) ->
+      let tins = [Locationless.NumT.t] in
+      let params_names = [Some "seconds"] in
+      fake_fun params_names tins None Locationless.VoidT.t
+
   | CustomFunT (_, ReactPropType _) ->
     Locationless.AnyT.t (* TODO *)
 

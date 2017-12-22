@@ -381,6 +381,7 @@ class ['a] t = object(self)
     | Idx
     | DebugPrint
     | DebugThrow
+    | DebugSleep
       -> kind
 
   method exports cx map_cx id =
@@ -765,6 +766,7 @@ class ['a] t = object(self)
         if ipt' == ipt then t
         else IntersectionPreprocessKitT (r, ipt')
     | DebugPrintT _ -> t
+    | DebugSleepT _ -> t
     | SentinelPropTestT (r, t1, key, b, sentinel, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

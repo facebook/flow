@@ -157,6 +157,7 @@ type hash =
   | ChoiceKitUseH
   | IntersectionPreprocessKitH
   | DebugPrintH
+  | DebugSleepH
   | SentinelPropTestH
   | IdxUnwrapH
   | IdxUnMaybeifyH
@@ -307,6 +308,7 @@ let hash_of_use_ctor = Type.(function
   | ChoiceKitUseT _ -> ChoiceKitUseH
   | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
   | DebugPrintT _ -> DebugPrintH
+  | DebugSleepT _ -> DebugSleepH
   | SentinelPropTestT _ -> SentinelPropTestH
   | IdxUnwrap _ -> IdxUnwrapH
   | IdxUnMaybeifyT _ -> IdxUnMaybeifyH

@@ -10,6 +10,7 @@ open Utils_js
 open Reason
 
 exception EDebugThrow of Loc.t
+exception EMergeTimeout of float
 
 type invalid_char_set =
   | DuplicateChar of Char.t
@@ -202,6 +203,7 @@ and internal_error =
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
   | DebugThrow
+  | MergeTimeout of float
   | MergeJobException of exn
 
 and unsupported_syntax =
@@ -1116,6 +1118,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
           "unexpected spread property in interface"
       | DebugThrow ->
           "debug throw"
+      | MergeTimeout s ->
+          spf "merge job timed out after %0.2f seconds" s
       | MergeJobException exc ->
           "uncaught exception: "^(Utils_js.fmt_exc exc)
       in

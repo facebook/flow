@@ -389,6 +389,7 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | Idx -> "idx"
   | DebugPrint -> "$Flow$DebugPrint"
   | DebugThrow -> "$Flow$DebugThrow"
+  | DebugSleep -> "$Flow$DebugSleep"
 )
 
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
@@ -710,7 +711,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tmap", _json_of_t json_cx t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | DebugPrintT _reason -> []
+
+  | DebugPrintT _ -> []
+  | DebugSleepT _ -> []
 
   | MapTypeT (_, kind, t) -> [
       "kind", JSON_String (string_of_type_map kind);
@@ -1645,6 +1648,7 @@ and dump_t_ (depth, tvars) cx t =
     | Idx -> "Idx"
     | DebugPrint -> "DebugPrint"
     | DebugThrow -> "DebugThrow"
+    | DebugSleep -> "DebugSleep"
   in
 
   if depth = 0 then string_of_ctor t
@@ -1995,6 +1999,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | CopyNamedExportsT _ -> p t
   | CopyTypeExportsT _ -> p t
   | DebugPrintT _ -> p t
+  | DebugSleepT _ -> p t
   | ElemT _ -> p t
   | EqT (_, _, arg) -> p ~extra:(kid arg) t
   | ExportNamedT (_, _, tmap, arg) -> p t
@@ -2303,6 +2308,7 @@ let dump_flow_error =
   | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
   | Flow_error.DebugThrow -> "DebugThrow"
+  | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
   in
   let dump_upper_kind = function

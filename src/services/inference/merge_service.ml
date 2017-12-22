@@ -247,7 +247,8 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       try with_async_logging_timer
         ~interval:15.0
         ~on_timer:(fun run_time ->
-          Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files
+          Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
+          if run_time > 100.0 then raise (Flow_error.EMergeTimeout run_time)
         )
         ~f:(fun () ->
           Profile_utils.checktime ~options ~limit:1.0
@@ -276,14 +277,14 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
             (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
         (* An errored component is always changed. *)
         let file = List.hd component in
+        let file_loc = Loc.({ none with source = Some file }) in
         (* We can't pattern match on the exception type once it's marshalled
            back to the master process, so we pattern match on it here to create
            an error result. *)
         let result = Error Flow_error.(match exc with
         | EDebugThrow loc -> EInternal (loc, DebugThrow)
-        | _ ->
-          let loc = Loc.({ none with source = Some file }) in
-          EInternal (loc, MergeJobException exc)
+        | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
+        | _ -> EInternal (file_loc, MergeJobException exc)
         ) in
         ((file, result) :: merged), unchanged
   ) (merged, unchanged) elements

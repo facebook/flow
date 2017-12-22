@@ -1581,6 +1581,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let str = Debug_js.jstr_of_t cx l in
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
+    | DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _ ->
+      Unix.sleepf n
+
     (*************************)
     (* repositioning, part 1 *)
     (*************************)
@@ -4089,6 +4092,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, DebugThrow), CallT (_, reason_op, _) ->
       raise (Flow_error.EDebugThrow (loc_of_reason reason_op))
+
+    | CustomFunT (_, DebugSleep),
+      CallT (_, reason_op, { call_args_tlist=arg1::_; call_tout; _ }) ->
+      let t = extract_non_spread cx ~trace arg1 in
+      rec_flow cx trace (t, DebugSleepT reason_op);
+      rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
     | CustomFunT (_, (
           Compose _
@@ -10537,6 +10546,7 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | Idx
   | DebugPrint
   | DebugThrow
+  | DebugSleep
     -> failwith "implemented elsewhere"
 
 (* Creates the appropriate constraints for the compose() function and its

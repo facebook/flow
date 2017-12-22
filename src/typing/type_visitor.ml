@@ -246,6 +246,7 @@ class ['a] t = object(self)
   | Idx
   | DebugPrint
   | DebugThrow
+  | DebugSleep
     -> acc
 
   method use_type_ cx (acc: 'a) = function
@@ -526,6 +527,7 @@ class ['a] t = object(self)
     acc
 
   | DebugPrintT _ -> acc
+  | DebugSleepT _ -> acc
 
   | SentinelPropTestT (_, t, _, _, _, tout) ->
     let acc = self#type_ cx pole_TODO acc t in
