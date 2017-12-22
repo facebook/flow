@@ -58,10 +58,10 @@ let getdef_call (state, loc1) _cx name loc2 this_t =
     state := Some (Gdmem (name, this_t))
   )
 
-let getdef_require (state, user_requested_loc) _cx source require_loc =
-  if (Reason.in_range user_requested_loc require_loc)
+let getdef_import (state, user_requested_loc) _cx source import_loc =
+  if (Reason.in_range user_requested_loc import_loc)
   then (
-    state := Some (Gdrequire (source, require_loc))
+    state := Some (Gdrequire (source, import_loc))
   )
 
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
@@ -158,8 +158,7 @@ let getdef_set_hooks pos =
   Type_inference_hooks_js.set_lval_hook (getdef_lval (state, pos));
   Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
   Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
-  Type_inference_hooks_js.set_require_hook (getdef_require (state, pos));
-  Type_inference_hooks_js.set_import_hook (getdef_require (state, pos));
+  Type_inference_hooks_js.set_import_hook (getdef_import (state, pos));
   state
 
 let getdef_unset_hooks () =

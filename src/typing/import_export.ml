@@ -73,7 +73,7 @@ let require_t_of_ref_unsafe cx (loc, _) =
   Context.find_require cx loc
 
 let require cx ((_, module_ref) as source) require_loc =
-  Type_inference_hooks_js.dispatch_require_hook cx source require_loc;
+  Type_inference_hooks_js.dispatch_import_hook cx source require_loc;
   let module_t = require_t_of_ref_unsafe cx source in
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in
   Tvar.mk_where cx reason (fun t ->

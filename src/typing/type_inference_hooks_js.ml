@@ -13,8 +13,6 @@ let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
 
-let require_nop _ _ _ = ()
-
 let import_nop _ _ _ = ()
 
 let jsx_nop _ _ _ _ = false
@@ -82,11 +80,6 @@ type hook_state_t = {
       string -> Loc.t -> Type.t ->
       unit);
 
-  require_hook:
-     (Context.t ->
-      (Loc.t * string) -> Loc.t ->
-      unit);
-
   import_hook:
       (Context.t ->
        (Loc.t * string) -> Loc.t ->
@@ -119,7 +112,6 @@ let nop_hook_state = {
   lval_hook = lval_nop;
   member_hook = member_nop;
   call_hook = call_nop;
-  require_hook = require_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
   ref_hook = ref_nop;
@@ -140,9 +132,6 @@ let set_member_hook hook =
 
 let set_call_hook hook =
   hook_state := { !hook_state with call_hook = hook }
-
-let set_require_hook hook =
-  hook_state := { !hook_state with require_hook = hook }
 
 let set_import_hook hook =
   hook_state := { !hook_state with import_hook = hook }
@@ -173,9 +162,6 @@ let dispatch_member_hook cx name loc this_t =
 
 let dispatch_call_hook cx name loc this_t =
   !hook_state.call_hook cx name loc this_t
-
-let dispatch_require_hook cx name loc =
-  !hook_state.require_hook cx name loc
 
 let dispatch_import_hook cx name loc =
   !hook_state.import_hook cx name loc
