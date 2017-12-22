@@ -3672,7 +3672,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
        * dynamically in library code such as `React.createElement`)
        *)
      let component_t_reason =
-       let desc = RCustom (spf "JSX Intrinsic: `%s`" name) in
+       let desc = RCustom (spf "`%s`" name) in
        mk_reason desc loc
      in
      let component_t =

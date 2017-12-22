@@ -403,14 +403,13 @@ let rec string_of_desc = function
   | RFunctionCall d -> spf "call of %s" (string_of_desc d)
   | RFunctionCallType -> "`$Call`"
   | RFunctionUnusedArgument -> "unused function argument"
-  | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
-  | RJSXIdentifier (raw_jsx, name) ->
-      spf "JSX desugared to `%s(...)`. identifier %s" raw_jsx name
+  | RJSXFunctionCall raw_jsx -> spf "`%s(...)`" raw_jsx
+  | RJSXIdentifier (_, name) -> spf "`%s`" name
   | RJSXElement x ->
     (match x with
     | Some x -> spf "JSX element `%s`" x
     | None -> "JSX element")
-  | RJSXElementProps x -> spf "props of JSX element `%s`" x
+  | RJSXElementProps _ -> "props"
   | RJSXText -> spf "JSX text"
   | RUnaryOperator (operator, value) ->
     spf "%s %s" operator (string_of_desc value)
