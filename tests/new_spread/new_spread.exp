@@ -265,7 +265,7 @@ Error: type_empty.js:14
  14:   fn({}); // Error: object ~> empty
           ^^ object literal. This type is incompatible with the expected param type of
  13: function fn2<T>(fn: ({...T}) => void) {
-                          ^^^^^^ some incompatible instantiation of `T`
+                          ^^^^^^ T
 
 Error: type_generic.js:3
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)

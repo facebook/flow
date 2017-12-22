@@ -146,7 +146,7 @@ Error: test.js:7
           8:   foo(x: number): number { return x; } // error (specialization, see below)
                                ^^^^^^ number. This type is incompatible with
           2:   foo<X>(x: X): X { return x; }
-                             ^ some incompatible instantiation of `X`
+                             ^ X
 
 
 Found 16 errors

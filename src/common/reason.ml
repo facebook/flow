@@ -519,7 +519,7 @@ let rec string_of_desc = function
   | RPredicateCallNeg d ->
     spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
-  | RIncompatibleInstantiation x -> spf "some incompatible instantiation of `%s`" x
+  | RIncompatibleInstantiation x -> spf "`%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"

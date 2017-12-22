@@ -794,7 +794,7 @@ Error: type_generic.js:1
   1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
                                          ^ A. This type is incompatible with
   1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-                                                ^ some incompatible instantiation of `B`
+                                                ^ B
 
 Error: type_generic.js:2
   2:   const {p, ...o} = a;

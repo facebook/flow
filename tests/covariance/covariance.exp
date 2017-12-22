@@ -24,7 +24,7 @@ Error: test.js:8
                 ^^^^^^^^^^^^^^^^^^^^^^^^ CovArrayVerbose
   Type argument `X` is incompatible:
       7:     x: CovArrayVerbose<E,I>;
-                                ^ some incompatible instantiation of `E`. This type is incompatible with
+                                ^ E. This type is incompatible with
       8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                                     ^^^^^ mixed
 

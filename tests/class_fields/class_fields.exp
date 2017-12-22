@@ -242,13 +242,13 @@ Error: generic_class.js:26
  26:   invalid: T = 42; // Error: number ~> Generic<T>
                     ^^ number. This type is incompatible with
  26:   invalid: T = 42; // Error: number ~> Generic<T>
-                ^ some incompatible instantiation of `T`
+                ^ T
 
 Error: generic_class.js:29
  29:   static invalid: T = 42; // Error: number ~> Generic<T>
                            ^^ number. This type is incompatible with
  29:   static invalid: T = 42; // Error: number ~> Generic<T>
-                       ^ some incompatible instantiation of `T`
+                       ^ T
 
 Error: scoping.js:24
  24: (new Foo().outer: string); // Error: number ~> string

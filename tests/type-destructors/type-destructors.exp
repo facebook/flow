@@ -263,7 +263,7 @@ Error: tvar4.js:43
  43:   return p => a({p});
                      ^^^ object literal. This type is incompatible with the expected param type of
  40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
-                                    ^ some incompatible instantiation of `T`
+                                    ^ T
 
 Error: tvar4.js:47
  47: fn4((x: {p: string}) => {})(42);

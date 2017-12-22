@@ -104,7 +104,7 @@ Error: import.js:7
           8:   foo(): B1 { return new B1(); } // error
                       ^^ B1. This type is incompatible with
           2:   foo(): this { return this; }
-                      ^^^^ some incompatible instantiation of `this`. See: export.js:2
+                      ^^^^ this. See: export.js:2
 
 Error: import.js:13
  13: class B3<X> extends A3<X> {
@@ -120,7 +120,7 @@ Error: import.js:13
          14:   foo(): B3<X> { return new B3(); } // error
                       ^^^^^ B3. This type is incompatible with
           7:   foo(): this { return this; }
-                      ^^^^ some incompatible instantiation of `this`. See: export.js:7
+                      ^^^^ this. See: export.js:7
 
 Error: import.js:18
  18: (new B3().qux(0): string); // error
@@ -153,7 +153,7 @@ Error: self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
                             ^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-              ^^^^ some incompatible instantiation of `this`
+              ^^^^ this
 
 Error: statics.js:17
  17: (A.make(): B); // error
@@ -203,7 +203,7 @@ Error: test.js:47
          51:   bar(): Override2 { return new Override2; } // error (cf. OK above)
                       ^^^^^^^^^ Override2. This type is incompatible with
          38:   bar(): this { return this; }
-                      ^^^^ some incompatible instantiation of `this`
+                      ^^^^ this
 
 Error: test.js:47
  47: class Override2 extends Base2 {
@@ -235,7 +235,7 @@ Error: test.js:47
          42:   grault(that: Base2) { }
                             ^^^^^ Base2. This type is incompatible with
          56:   grault(that: this) { } // error, too
-                            ^^^^ some incompatible instantiation of `this`
+                            ^^^^ this
 
 Error: test.js:54
  54:   corge(that: this) { } // error
