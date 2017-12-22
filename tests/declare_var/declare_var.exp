@@ -2,7 +2,7 @@ Error: test.js:4
   4: (null: T); // error: null ~> number
       ^^^^ null. This type is incompatible with
   4: (null: T); // error: null ~> number
-            ^ T
+            ^ number
 
 
 Found 1 error

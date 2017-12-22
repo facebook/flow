@@ -8,7 +8,7 @@ Error: annot.js:6
                          ^^^^^^^^^^^^^^^^^ function type
   Error:
     6: f(x); // error should point to `x` here, not at type alias
-         ^ T. This type is incompatible with the expected param type of
+         ^ null. This type is incompatible with the expected param type of
     1: declare function f(x: string): void;
                              ^^^^^^ string
   Member 2:
@@ -16,7 +16,7 @@ Error: annot.js:6
                          ^^^^^^^^^^^^^^^^^ function type
   Error:
     6: f(x); // error should point to `x` here, not at type alias
-         ^ T. This type is incompatible with the expected param type of
+         ^ null. This type is incompatible with the expected param type of
     2: declare function f(x: number): void;
                              ^^^^^^ number
 

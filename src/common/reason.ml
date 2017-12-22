@@ -694,3 +694,147 @@ module ReasonMap = MyMap.Make(struct
   type t = reason
   let compare = Pervasives.compare
 end)
+
+(* Is this the reason of a scalar type? true if the type *cannot* recursively
+ * hold any other types. For example, number is a scalar but an object like
+ * {p: number} is not. *)
+let is_scalar_reason r = match desc_of_reason ~unwrap_alias:true r with
+| RNumber
+| RString
+| RBoolean
+| RVoid
+| RNull
+| RNullOrVoid
+| RStringLit _
+| RNumberLit _
+| RBooleanLit _
+| RJSXText
+| RUnknownString
+| RStringEnum
+| RNumberEnum
+| RKeySet
+| RRegExp
+  -> true
+| RMixed
+| REmpty
+| RAny
+| RMatchingProp _
+| RObject
+| RObjectLit
+| RObjectType
+| RObjectClassName
+| RArray
+| RArrayLit
+| REmptyArrayLit
+| RArrayType
+| RROArrayType
+| RTupleType
+| RTupleElement
+| RTupleOutOfBoundsAccess
+| RFunction _
+| RFunctionType
+| RFunctionBody
+| RFunctionCall _
+| RFunctionCallType
+| RFunctionUnusedArgument
+| RJSXFunctionCall _
+| RJSXIdentifier _
+| RJSXElementProps _
+| RJSXElement _
+| RUnaryOperator _
+| RBinaryOperator _
+| RLogical _
+| RAnyObject
+| RAnyFunction
+| RGetterSetterProperty
+| RThis
+| RThisType
+| RExistential
+| RTooFewArgs
+| RTooFewArgsExpectedRest
+| RUninitializedThis
+| RConstructorReturn
+| RNewObject
+| RUnion
+| RUnionType
+| RIntersection
+| RIntersectionType
+| RAnd
+| RConditional
+| RPrototype
+| RObjectPrototype
+| RFunctionPrototype
+| RDestructuring
+| RDefaultValue
+| RConstructor
+| RDefaultConstructor
+| RConstructorCall _
+| RReturn
+| RSuper
+| RNoSuper
+| RDummyPrototype
+| RDummyThis
+| RTupleMap
+| RObjectMap
+| RObjectMapi
+| RType _
+| RTypeAlias _
+| ROpaqueType _
+| RTypeParam _
+| RMethod _
+| RMethodCall _
+| RParameter _
+| RRestParameter _
+| RIdentifier _
+| RIdentifierAssignment _
+| RPropertyAssignment _
+| RProperty _
+| RPrivateProperty _
+| RShadowProperty _
+| RPropertyOf _
+| RPropertyIsAString _
+| RMissingProperty _
+| RUnknownProperty _
+| RUndefinedProperty _
+| RSomeProperty
+| RNameProperty _
+| RMissingAbstract _
+| RFieldInitializer _
+| RUntypedModule _
+| RCustom _
+| RPolyType _
+| RExactType _
+| ROptional _
+| RMaybe _
+| RRestArray _
+| RAbstract _
+| RTypeApp _
+| RThisTypeApp _
+| RExtends _
+| RStatics _
+| RSuperOf _
+| RFrozen _
+| RBound _
+| RVarianceCheck _
+| RPredicateOf _
+| RPredicateCall _
+| RPredicateCallNeg _
+| RRefined _
+| RIncompatibleInstantiation _
+| RSpreadOf _
+| RObjectPatternRestProp
+| RArrayPatternRestProp
+| RCommonJSExports _
+| RReactProps
+| RReactElement _
+| RReactClass
+| RReactComponent
+| RReactStatics
+| RReactDefaultProps
+| RReactState
+| RReactPropTypes
+| RReactChildren
+| RReactChildrenOrType _
+| RReactChildrenOrUndefinedOrType _
+| RReactSFC
+  -> false

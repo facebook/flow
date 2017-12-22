@@ -17,7 +17,7 @@ Error: main.js:12
  12: (42: str2); // Error: number ~> string
       ^^ number. This type is incompatible with
  12: (42: str2); // Error: number ~> string
-          ^^^^ str2
+          ^^^^ string
 
 Error: main.js:21
  21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string

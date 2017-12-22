@@ -2,7 +2,7 @@ Error: import_declare_type.js:11
  11: var k2: baz = "shab"; // Error: string to int
                    ^^^^^^ string. This type is incompatible with
  11: var k2: baz = "shab"; // Error: string to int
-             ^^^ baz
+             ^^^ number
 
 Error: import_declare_type.js:26
  26: ({toz:3} : Foo); // error : {toz : number} ~> string

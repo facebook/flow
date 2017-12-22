@@ -21,7 +21,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             9: ("str": T);
                 ^^^^^ string. This type is incompatible with
             9: ("str": T);
-                       ^ T
+                       ^ number
         `,
       ),
   ]),
@@ -40,7 +40,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             9: ("str": U);
                 ^^^^^ string. This type is incompatible with
             9: ("str": U);
-                       ^ T
+                       ^ number
         `,
       ),
   ]),

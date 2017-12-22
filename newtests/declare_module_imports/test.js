@@ -17,7 +17,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  7: ("str": BT);
                                      ^^^^^ string. This type is incompatible with
                                  7: ("str": BT);
-                                            ^^ AT
+                                            ^^ number
                              `,
                            ),
   ]),

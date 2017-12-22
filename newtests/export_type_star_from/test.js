@@ -21,7 +21,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                 8: (42: aType)
                                     ^^ number. This type is incompatible with
                                 8: (42: aType)
-                                        ^^^^^ aType
+                                        ^^^^^ string
                             `,
                           ),
 
@@ -83,7 +83,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                      8: ("asdf": aType);
                                          ^^^^^^ string. This type is incompatible with
                                      8: ("asdf": aType);
-                                                 ^^^^^ aType
+                                                 ^^^^^ number
                                  `,
                                ),
   ]),
@@ -103,7 +103,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                      8: ("asdf": aType);
                                          ^^^^^^ string. This type is incompatible with
                                      8: ("asdf": aType);
-                                                 ^^^^^ aType
+                                                 ^^^^^ number
                                  `,
                                ),
   ]),

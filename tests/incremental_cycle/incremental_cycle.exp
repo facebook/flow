@@ -29,7 +29,7 @@ Error: C.js:5
                      ^ A
   Property `b` is incompatible:
       6:   b: B;
-              ^ B. This type is incompatible with
+              ^ string. This type is incompatible with
       4:   b: number;
               ^^^^^^ number. See: A.js:4
 
@@ -42,7 +42,7 @@ Error: C.js:5
                      ^ A
   Property `b` is incompatible:
       6:   b: B;
-              ^ B. This type is incompatible with
+              ^ string. This type is incompatible with
       4:   b: number;
               ^^^^^^ number. See: A.js:4
 
@@ -55,7 +55,7 @@ Error: C.js:5
                      ^ A
   Property `b` is incompatible:
       6:   b: B;
-              ^ B. This type is incompatible with
+              ^ string. This type is incompatible with
       4:   b: number;
               ^^^^^^ number. See: A.js:4
 

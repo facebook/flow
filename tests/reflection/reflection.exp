@@ -14,7 +14,7 @@ Error: type.js:6
   6: var x:T = "...";
                ^^^^^ string. This type is incompatible with
   6: var x:T = "...";
-           ^ T
+           ^ number
 
 
 Found 3 errors
