@@ -11,6 +11,9 @@ layout: guide
 * [`all`](#toc-all)
 * [`sketchy-null`](#toc-sketchy-null)
 * [`untyped-type-import`](#toc-untyped-type-import)
+* [`untyped-import`](#toc-untyped-import)
+* [`unclear-type`](#toc-unclear-type)
+* [`unsafe-getters-setters`](#toc-unsafe-getters-setters)
 * [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
@@ -75,6 +78,28 @@ Triggers when you import a type from an untyped file. Importing a type from an
 untyped file results in an `any` alias, which is typically not the intended behavior.
 Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
+
+#### `untyped-import` <a class="toc" id="toc-untyped-import" href="#toc-untyped-import"></a>
+Triggers when you import from an untyped file. Importing from an untyped file
+results in those imports being typed as `any`, which is unsafe.
+
+#### `unclear-type` <a class="toc" id="toc-unclear-type" href="#toc-unclear-type"></a>
+Triggers when you use `any`, `Object`, or `Function` as type annotations. These
+types are unsafe.
+
+#### `unsafe-getters-setters` <a class="toc" id="toc-unsafe-getters-setters" href="#toc-unsafe-getters-setters"></a>
+Triggers when you use getters or setters. Getters and setters can have side
+effects and are unsafe.
+
+For example:
+
+```js
+const o = {
+  get a() { return 4; }, // Error: unsafe-getters-setters
+  set b(x: number) { this.c = x; }, // Error: unsafe-getters-setters
+  c: 10,
+};
+```
 
 #### `deprecated-declare-exports` <a class="toc" id="toc-deprecated-declare-exports" href="#toc-deprecated-declare-exports"></a>
 
