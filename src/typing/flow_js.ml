@@ -7041,7 +7041,10 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
   rec_flow cx trace (t, match d with
   | NonMaybeType ->
     let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
-    UseT (use_op, DefT (maybe_r, MaybeT tout))
+    (* We intentionally use `unknown_use` here! When we flow to a tout we never
+     * want to carry a `use_op`. We want whatever `use_op` the tout is used with
+     * to win. *)
+    UseT (unknown_use, DefT (maybe_r, MaybeT tout))
   | PropertyType x ->
     let reason_op = replace_reason_const (RProperty (Some x)) reason in
     GetPropT (use_op, reason, Named (reason_op, x), tout)
@@ -10806,7 +10809,8 @@ and object_kit =
             (mk_object cx reason options x1)
             (List.map (mk_object cx reason options) xs)))
         in
-        rec_flow cx trace (t, UseT (use_op, tout))
+        (* Intentional UnknownUse here. *)
+        rec_flow_t cx trace (t, tout)
       | t::todo_rev ->
         let tool = Resolve Next in
         let state = {todo_rev; acc = x::acc} in
@@ -10976,7 +10980,8 @@ and object_kit =
           | (x, []) -> x
           | (x0, x1::xs) -> DefT (reason, UnionT (UnionRep.make x0 x1 xs))
         in
-        rec_flow cx trace (t, UseT (use_op, tout))
+        (* Intentional UnknownUse here. *)
+        rec_flow_t cx trace (t, tout)
   in
 
   (********************)
@@ -10997,12 +11002,13 @@ and object_kit =
       if flags.exact then ExactT (reason, t) else t
     in
 
-    fun cx trace use_op reason tout x ->
+    fun cx trace _ reason tout x ->
       let t = match Nel.map (mk_read_only_object cx reason) x with
         | (t, []) -> t
         | (t0, t1::ts) -> DefT (reason, UnionT (UnionRep.make t0 t1 ts))
       in
-      rec_flow cx trace (t, UseT (use_op, tout))
+      (* Intentional UnknownUse here. *)
+      rec_flow_t cx trace (t, tout)
   in
 
   (****************)
