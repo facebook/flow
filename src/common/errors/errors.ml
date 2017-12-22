@@ -694,18 +694,18 @@ module Cli_output = struct
       let truncate = not (flags.show_all_errors) in
       let one_line = flags.one_line in
       let color = flags.color in
-      let print_error_if_not_truncated severity e curr =
+      let print_error_if_not_truncated severity curr e =
         begin if not(truncate) || curr < 50 then
           print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
         end;
 
         curr + 1
       in
-      let err_count = ErrorSet.fold (print_error_if_not_truncated Err) errors 0 in
-      let total_count = ErrorSet.fold
-        (print_error_if_not_truncated Warn) warnings err_count
-      in
-      let warn_count = total_count - err_count in
+      let rev_warnings = List.rev (ErrorSet.elements warnings) in
+      let warn_count = List.fold_left (print_error_if_not_truncated Warn) 0 rev_warnings in
+      let rev_errors = List.rev (ErrorSet.elements errors) in
+      let total_count = List.fold_left (print_error_if_not_truncated Err) warn_count rev_errors in
+      let err_count = total_count - warn_count in
       if total_count > 0 then print_newline ();
       if truncate && total_count > 50 then (
         let remaining_errs, remaining_warns = if err_count - 50 < 0
