@@ -51,14 +51,10 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
 let mk_resource_module_t cx loc f =
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
-    let desc_str = "Flow assumes requiring a .css file returns an Object" in
-    let reason = Reason.mk_reason (RCustom desc_str) loc in
+    let reason = Reason.mk_reason RObjectType loc in
     reason, Type.DefT (reason, Type.AnyObjT)
-  | Some ext ->
-    let desc_str =
-      Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext
-    in
-    let reason = Reason.mk_reason (RCustom desc_str) loc in
+  | Some _ ->
+    let reason = Reason.mk_reason RString loc in
     reason, Type.StrT.why reason
   | _ -> failwith "How did we find a resource file without an extension?!"
   in

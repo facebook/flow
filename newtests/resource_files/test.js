@@ -33,7 +33,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ Flow assumes requiring a .css file returns an Object. This type is incompatible with
+                ^^^ object type. This type is incompatible with
             5: (css: string)
                      ^^^^^^ string
         `,

@@ -35,7 +35,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            14:         esmodule.default;
                                 ^^^^^^^ property \`default\`. Property not found in
            14:         esmodule.default;
-                       ^^^^^^^^ exports of \`./esmodule\`
+                       ^^^^^^^^ module \`./esmodule\`
         `,
       ),
 

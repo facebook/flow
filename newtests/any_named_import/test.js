@@ -39,7 +39,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (Any: number);
-                ^^^ exports of \`any\`. This type is incompatible with
+                ^^^ module \`any\`. This type is incompatible with
             5: (Any: number);
                      ^^^^^^ number
         `,
@@ -94,7 +94,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: number);
-                ^^^ exports of \`object\`. This type is incompatible with
+                ^^^ module \`object\`. This type is incompatible with
             5: (obj: number);
                      ^^^^^^ number
         `,

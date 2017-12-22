@@ -88,7 +88,7 @@ Error: commonjs-pascal.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: const React = require('React');
-                   ^^^^^^^^^^^^^^^^ exports of module `react`
+                   ^^^^^^^^^^^^^^^^ module `react`
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
@@ -180,7 +180,7 @@ Error: commonjs.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: const React = require('react');
-                   ^^^^^^^^^^^^^^^^ CommonJS exports of `react`
+                   ^^^^^^^^^^^^^^^^ module `react`
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
@@ -272,7 +272,7 @@ Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
             ^^^^^^^^^^^^^ Missing. Property not found in
 261:   declare module.exports: $Exports<'react'>;
-                               ^^^^^^^^^^^^^^^^^ exports of module `react`. See lib: <BUILTINS>/react.js:261
+                               ^^^^^^^^^^^^^^^^^ module `react`. See lib: <BUILTINS>/react.js:261
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
@@ -403,7 +403,7 @@ Error: es-namespace-pascal.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: import * as React from 'React';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of `React`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ module `React`
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
@@ -495,7 +495,7 @@ Error: es-namespace.js:7
   7: (null: React.Missing); // Error
             ^^^^^^^^^^^^^ Missing. Property not found in
   1: import * as React from 'react';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exports of `react`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ module `react`
 
 
 Found 19 errors

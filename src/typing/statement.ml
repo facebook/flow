@@ -1837,7 +1837,7 @@ and statement cx = Ast.Statement.(
             [import_loc, local_name, module_ns_typeof, None]
           | ImportDeclaration.ImportValue ->
             let reason =
-              mk_reason (RCustom (spf "exports of `%s`" module_name)) import_loc
+              mk_reason (RCustom (spf "module `%s`" module_name)) import_loc
             in
             let module_ns_t =
               import_ns cx reason (fst source, module_name) import_loc
@@ -3021,7 +3021,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
       let imported_module_t =
         let import_reason = mk_reason (RCustom (
-          spf "exports of `%s`" module_name
+          spf "module `%s`" module_name
         )) loc in
         import_ns cx import_reason (source_loc, module_name) loc
       in

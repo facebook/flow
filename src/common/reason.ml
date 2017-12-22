@@ -522,7 +522,7 @@ let rec string_of_desc = function
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
-  | RCommonJSExports x -> spf "CommonJS exports of `%s`" x
+  | RCommonJSExports x -> spf "module `%s`" x
 
   | RReactProps -> "props"
   | RReactElement x ->
