@@ -3853,7 +3853,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, FunT (_, _, ft1)),
       UseT (use_op, DefT (ureason, FunT (_, _, ft2))) ->
-      let use_op = Frame (FunCompatibility { lower = lreason; upper = ureason }, use_op) in
+      let use_op = Frame (
+        FunCompatibility { lower = lreason; upper = ureason },
+        (* The $call PropertyCompatibility is redundant when we have a
+         * FunCompatibility use_op. *)
+        match use_op with
+        | Frame (PropertyCompatibility {prop = Some "$call"; _}, use_op) -> use_op
+        | _ -> use_op
+      ) in
       rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
       let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
       let args = List.rev (match ft2.rest_param with

@@ -545,23 +545,18 @@ Error: hoc.js:36
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  137:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.StatelessFunctionalComponent. See lib: <BUILTINS>/react.js:137
-    Callable property is incompatible:
+  122:   (props: Props, context: any): React$Node,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
+    The first parameter is incompatible:
+        6:   Component: React$ComponentType<{foo: number, bar: number}>,
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-      122:   (props: Props, context: any): React$Node,
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-        The first parameter is incompatible:
+                                       ^^^^^^^^^^^^^ object type
+        Property `foo` is incompatible:
             6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                                      ^^^^^^ number. This type is incompatible with
            36: myHOC(function Empty(props: {foo: string}) {}); // Error
-                                           ^^^^^^^^^^^^^ object type
-            Property `foo` is incompatible:
-                6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                                          ^^^^^^ number. This type is incompatible with
-               36: myHOC(function Empty(props: {foo: string}) {}); // Error
-                                                     ^^^^^^ string
+                                                 ^^^^^^ string
   Member 2:
   138:   | Class<React$Component<Props, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of `React.Component`. See lib: <BUILTINS>/react.js:138

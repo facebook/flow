@@ -1,18 +1,13 @@
 Error: fun.js:5
   5: var f0: F = () => 0; // error: number ~> void
                  ^^^^^^^ function. This type is incompatible with
-  5: var f0: F = () => 0; // error: number ~> void
-             ^ F
-  Callable property is incompatible:
+  2:   (): void;
+       ^^^^^^^^ function type
+  The return is incompatible:
       5: var f0: F = () => 0; // error: number ~> void
-                     ^^^^^^^ function. This type is incompatible with
+                           ^ number. This type is incompatible with
       2:   (): void;
-           ^^^^^^^^ function type
-      The return is incompatible:
-          5: var f0: F = () => 0; // error: number ~> void
-                               ^ number. This type is incompatible with
-          2:   (): void;
-                   ^^^^ undefined
+               ^^^^ undefined
 
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
