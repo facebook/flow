@@ -1,3 +1,34 @@
+### 0.62.0
+
+Likely to cause new Flow errors:
+
+* Removed support for static properties on interfaces. Static properties were never well supported, and in most cases their types were not actually checked.
+* Fixed the polarity checker, which was not erroring in many places where it should have, like class statics.
+* Removed `unsafe.enable_getters_and_setters` option. Getters and setters are now enabled by default. Use the `unsafe-getters-setters` lint rule to disable.
+
+New Features:
+
+* Improved error message locations and context around type errors in many cases
+* Added `flow cycle` subcommand, which prints a `.dot` describing the cycle for a given file.
+
+Notable bug fixes:
+
+* Fixed bug where `[lib]` files outside the Flow root would not be watched for changes
+* Fixed a few race conditions, which would mask errors depending on the order of imports in a file.
+* Fixed refinements on opaque types with declared bounds.
+
+Misc:
+
+* Added `nonstrict-import` lint rule, which requires that strict files can only depend on other strict files.
+* Added `unsafe-getters-setters` lint rule, which replaces the `unsafe.enable_getters_and_setters` flowconfig option.
+
+Parser:
+
+* Added missing `method` property to object type property AST node.
+* Added support for properties named `static` for declare class and interfaces.
+* Changed to separate `Variance` AST node for +/- annotations, matching Babylon.
+* Improved performance by reducing GC pressure.
+
 ### 0.61.0
 
 #### New Features:
