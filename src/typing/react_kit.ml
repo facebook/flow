@@ -406,8 +406,14 @@ let run cx trace ~use_op reason_op l u
       (* We need to treat config input as a literal here so we ensure it has the
        * RReactProps reason description. *)
       let reason = replace_reason_const RReactProps (reason_of_t config) in
-      (* Create the final config object using the ReactConfig object kit tool and
-       * flow it to our type for props. *)
+      (* Create the final config object using the ReactConfig object kit tool
+       * and flow it to our type for props.
+       *
+       * We wrap our use_op in a ReactConfigCheck frame to increment the
+       * speculation error message score. Usually we will already have a
+       * ReactCreateElementCall use_op, but we want errors after this point to
+       * win when picking the best errors speculation discovered. *)
+      let use_op = Frame (ReactConfigCheck, use_op) in
       rec_flow cx trace (config,
         ObjKitT (use_op, reason, Resolve Next,
           ReactConfig (Config { defaults; children }), props))

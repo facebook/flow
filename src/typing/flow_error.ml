@@ -711,6 +711,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
     | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
     | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
+    | ReactConfigCheck -> ReactConfigCheck
     | TupleElementCompatibility c ->
       TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
     | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
@@ -864,6 +865,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | Frame (FunCompatibility _, use_op)
   | Frame (FunRestParam _, use_op)
   | Frame (ImplicitTypeParam _, use_op)
+  | Frame (ReactConfigCheck, use_op)
   | Frame (UnifyFlip, use_op)
     -> unwrap_use_ops ~force (reasons, extra, msg) use_op
   (* Some use_ops always have the definitive location for an error message.

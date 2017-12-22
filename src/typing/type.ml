@@ -314,6 +314,7 @@ module rec TypeTerm : sig
         upper: reason;
         is_sentinel: bool;
       }
+    | ReactConfigCheck
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
     | TypeArgCompatibility of string * reason * reason
     | TypeParamBound of { name: string }
@@ -2521,6 +2522,7 @@ let string_of_frame_use_op = function
 | ImplicitTypeParam _ -> "ImplicitTypeParam"
 | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
 | PropertyCompatibility _ -> "PropertyCompatibility"
+| ReactConfigCheck -> "ReactConfigCheck"
 | TupleElementCompatibility _ -> "TupleElementCompatibility"
 | TypeArgCompatibility _ -> "TypeArgCompatibility"
 | TypeParamBound _ -> "TypeParamBound"

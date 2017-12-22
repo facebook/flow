@@ -1011,6 +1011,17 @@ Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
             ^^^^^^ number
 
+Error: intersection_component_error.js:12
+ 12: <MyComponent />;
+     ^^^^^^^^^^^^^^^ props. This type is incompatible with
+  8: declare var MyComponent: React.ComponentType<{foo: number}> & {
+                                                  ^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      8: declare var MyComponent: React.ComponentType<{foo: number}> & {
+                                                      ^^^^^^^^^^^^^ property `foo`. Property not found in
+     12: <MyComponent />;
+         ^^^^^^^^^^^^^^^ props
+
 Error: jsx_spread.js:11
  11: var blah = <Foo {...props} />; // error bar, number given string expected
                 ^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
@@ -1951,4 +1962,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 172 errors
+Found 173 errors
