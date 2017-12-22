@@ -417,7 +417,7 @@ props(promises).then(o => {
 
 `$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`. This is analogous to the Javascript function `map`.
 
-Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate it's return type like this:
+Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate its return type like this:
 
 ```js
 // @flow
@@ -443,7 +443,7 @@ Let's see a couple of examples:
 ```js
 // @flow
 
-// Takes an object type, returns the type of it's `prop` key
+// Takes an object type, returns the type of its `prop` key
 type ExtractPropType = <T>({prop: T}) => T;
 type Obj = {prop: number};
 type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
