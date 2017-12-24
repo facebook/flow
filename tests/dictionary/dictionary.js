@@ -164,7 +164,7 @@ function unification_dict_keys_invariant(
 function subtype_dict_keys_invariant(
   x: {[k:B]:any},
 ) {
-  let a: {[k:A]:any} = x; // error
+  let a: {[k:A]:any} = x; // ok
   let b: {[k:B]:any} = x; // ok
   let c: {[k:C]:any} = x; // error
 }

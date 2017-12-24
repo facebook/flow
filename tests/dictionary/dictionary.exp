@@ -175,26 +175,15 @@ Error: dictionary.js:161
                                 ^ C
 
 Error: dictionary.js:167
-167:   let a: {[k:A]:any} = x; // error
+167:   let a: {[k:A]:any} = x; // ok
                             ^ object type. This type is incompatible with
-167:   let a: {[k:A]:any} = x; // error
+167:   let a: {[k:A]:any} = x; // ok
               ^^^^^^^^^^^ object type
   Indexer key is incompatible:
+    167:   let a: {[k:A]:any} = x; // ok
+                      ^ A. This type is incompatible with
     165:   x: {[k:B]:any},
-                  ^ B. This type is incompatible with
-    167:   let a: {[k:A]:any} = x; // error
-                      ^ A
-
-Error: dictionary.js:169
-169:   let c: {[k:C]:any} = x; // error
-                            ^ object type. This type is incompatible with
-169:   let c: {[k:C]:any} = x; // error
-              ^^^^^^^^^^^ object type
-  Indexer key is incompatible:
-    165:   x: {[k:B]:any},
-                  ^ B. This type is incompatible with
-    169:   let c: {[k:C]:any} = x; // error
-                      ^ C
+                  ^ B
 
 Error: dictionary.js:175
 175:   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
@@ -543,10 +532,10 @@ Error: incompatible.js:5
   5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Indexer key is incompatible:
-      3: var x : {[key: string]: string} = {};
-                        ^^^^^^ string. This type is incompatible with
       5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
-                        ^^^^^^ number
+                        ^^^^^^ number. This type is incompatible with
+      3: var x : {[key: string]: string} = {};
+                        ^^^^^^ string
 
 Error: incompatible.js:8
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
@@ -690,4 +679,4 @@ Error: test_client.js:3
                                                   ^^^^^^ string. See: test.js:2
 
 
-Found 61 errors
+Found 60 errors
