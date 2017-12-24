@@ -74,5 +74,95 @@ Error: multiple.js:7
   7:       [k2: number]: number, // error: not supported (yet)
            ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
 
+Error: variance.js:5
+  5: (w[0]: number); //ng
+      ^^^^ computed property. Contravariant property `$value` incompatible with covariant use in
+  5: (w[0]: number); //ng
+      ^^^^ computed property
 
-Found 8 errors
+Error: variance.js:8
+  8: w[null] = 3; //ng
+       ^^^^ null. This type is incompatible with
+  8: w[null] = 3; //ng
+     ^^^^^^^ union: number | string
+  Member 1:
+    2:   -[number | string]: number
+           ^^^^^^ number
+  Error:
+    8: w[null] = 3; //ng
+         ^^^^ null. This type is incompatible with
+    2:   -[number | string]: number
+           ^^^^^^ number
+  Member 2:
+    2:   -[number | string]: number
+                    ^^^^^^ string
+  Error:
+    8: w[null] = 3; //ng
+         ^^^^ null. This type is incompatible with
+    2:   -[number | string]: number
+                    ^^^^^^ string
+
+Error: variance.js:15
+ 15: r[5] = 5.5; //ng
+     ^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+ 15: r[5] = 5.5; //ng
+     ^^^^ assignment of computed property/element
+
+Error: variance.js:16
+ 16: r["another string"] = 6; //ng
+     ^^^^^^^^^^^^^^^^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+ 16: r["another string"] = 6; //ng
+     ^^^^^^^^^^^^^^^^^^^ assignment of computed property/element
+
+Error: variance.js:17
+ 17: r[null] = 7; //ng
+     ^^^^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+ 17: r[null] = 7; //ng
+     ^^^^^^^ assignment of computed property/element
+
+Error: variance.js:17
+ 17: r[null] = 7; //ng
+       ^^^^ null. This type is incompatible with
+ 17: r[null] = 7; //ng
+     ^^^^^^^ union: number | string
+  Member 1:
+   11:   +[number | string]: number
+           ^^^^^^ number
+  Error:
+   17: r[null] = 7; //ng
+         ^^^^ null. This type is incompatible with
+   11:   +[number | string]: number
+           ^^^^^^ number
+  Member 2:
+   11:   +[number | string]: number
+                    ^^^^^^ string
+  Error:
+   17: r[null] = 7; //ng
+         ^^^^ null. This type is incompatible with
+   11:   +[number | string]: number
+                    ^^^^^^ string
+
+Error: variance.js:26
+ 26: rw[null] = 11; //ng
+        ^^^^ null. This type is incompatible with
+ 26: rw[null] = 11; //ng
+     ^^^^^^^^ union: number | string
+  Member 1:
+   20:   [number | string]: number
+          ^^^^^^ number
+  Error:
+   26: rw[null] = 11; //ng
+          ^^^^ null. This type is incompatible with
+   20:   [number | string]: number
+          ^^^^^^ number
+  Member 2:
+   20:   [number | string]: number
+                   ^^^^^^ string
+  Error:
+   26: rw[null] = 11; //ng
+          ^^^^ null. This type is incompatible with
+   20:   [number | string]: number
+                   ^^^^^^ string
+
+
+Found 15 errors
