@@ -6387,13 +6387,10 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   (match ldict, udict with
     | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
       Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
-      (* Don't report polarity errors when checking the indexer key. We would
-       * report these errors again a second time when checking values. *)
-      rec_flow_p cx trace ~report_polarity:false ~use_op:(Frame (IndexerKeyCompatibility {
+      rec_flow_t cx trace ~use_op:(Frame (IndexerKeyCompatibility {
         lower = lreason;
         upper = ureason;
-      }, use_op)) lreason ureason (Computed uk)
-        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
+      }, use_op)) (uk, lk);
       rec_flow_p cx trace ~use_op:(Frame (PropertyCompatibility {
         prop = None;
         lower = lreason;
@@ -7177,7 +7174,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity_propmap cx ?trace polarity obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
-      check_polarity cx ?trace Neutral key;
+      check_polarity cx ?trace (Polarity.inv polarity) key;
       check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
     | None -> ())
 
