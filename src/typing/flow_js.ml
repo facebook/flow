@@ -11318,8 +11318,7 @@ and object_kit =
     let id, dict =
       let props = Context.find_props cx id in
       match SMap.get "$key" props, SMap.get "$value" props with
-      | Some (Field (_, key, polarity)), Some (Field (_, value, polarity'))
-        when polarity = polarity' ->
+      | Some (Field (_, key, _)), Some (Field (_, value, polarity)) ->
         let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
         let id = Context.make_property_map cx props in
         let dict = {dict_name = None; key; value; dict_polarity = polarity} in

@@ -698,10 +698,9 @@ let add_interface_properties cx properties s =
     | Indexer (_, { Indexer.key; value; static; variance; _ }) ->
       let k = Anno.convert cx tparams_map key in
       let v = Anno.convert cx tparams_map value in
-      let polarity = Anno.polarity variance in
       x
-        |> add_field ~static "$key" (None, polarity, Annot k)
-        |> add_field ~static "$value" (None, polarity, Annot v)
+        |> add_field ~static "$key" (None, Type.Negative, Annot k)
+        |> add_field ~static "$value" (None, Anno.polarity variance, Annot v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
