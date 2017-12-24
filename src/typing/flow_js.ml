@@ -11058,7 +11058,11 @@ and object_kit =
       let (r, props, dict, flags) = slice in
 
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+      let dict = match dict with
+        | Some { dict_polarity = Negative; _ } -> None
+        | Some dict -> Some { dict with dict_polarity = polarity }
+        | None -> None
+      in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
       let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
