@@ -24,3 +24,16 @@ declare var rw: RW;
 rw[9] = 9.5;
 rw["yet another string"] = 10;
 rw[null] = 11; //ng
+
+type U_W = {
+  -[number | string | null]: number
+};
+type U_R = {
+  +[number | string | null]: number
+};
+type U_RW = {
+  [number | string | null]: number
+};
+(w: U_W);
+(r: U_R);
+(rw: U_RW);
