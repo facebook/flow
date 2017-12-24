@@ -10398,8 +10398,7 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace ?(use_op=unknown_use) (t1, t2) =
   rec_flow cx trace (t1, UseT (use_op, t2))
 
-and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true)
-  lreason ureason propref = function
+and rec_flow_p cx trace ?(use_op=unknown_use) lreason ureason propref = function
   (* unification cases *)
   | Field (_, lt, Neutral),
     Field (_, ut, Neutral) ->
@@ -10410,7 +10409,7 @@ and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true)
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (lt, UseT (use_op, ut))
-    | None, Some _ when report_polarity ->
+    | None, Some _ ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
@@ -10419,7 +10418,7 @@ and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true)
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (ut, UseT (use_op, lt))
-    | None, Some _ when report_polarity ->
+    | None, Some _ ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
