@@ -746,7 +746,7 @@ Misc:
 ### v0.39.0
 
 Likely to cause new Flow errors:
-* Previous usage of `ReactElement<*>` as a return type for render functions in React may now cause new errors now that a type propogation bug has been fixed. The general solution for this is to remove the return type for functions that return a React element (return types can be inferred by Flow, and Flow has never had a good way to express the type of a *specific* React element)
+* Previous usage of `ReactElement<*>` as a return type for render functions in React may now cause new errors now that a type propagation bug has been fixed. The general solution for this is to remove the return type for functions that return a React element (return types can be inferred by Flow, and Flow has never had a good way to express the type of a *specific* React element)
 * Several significant improvements to the locations Flow points to in error messages about objects and property accesses may move errors that were previously suppressed with a [suppression comment](https://flowtype.org/docs/advanced-configuration.html#options) to a new location
 
 New Features:
@@ -961,12 +961,12 @@ New features:
 
 Notable bug fixes:
 * Fixed an issue where some predicates could cause Flow to crash
-* Fixed an issue where we weren't propertly looking things up on `Function.prototype` and `Object.prototype`
+* Fixed an issue where we weren't properly looking things up on `Function.prototype` and `Object.prototype`
 * Fixed an issue where Flow could crash when extracting coverage on empty types
 * Fixed an issue where long paths that are ignored could give a bunch of warnings on Windows
 * Fixed an issue where `flow get-def` wouldn't hop to the location of a type coming through an `import type`
 * Fixed an issue with dictionary types where using an `any`-typed variable as a computed-property lookup results in the wrong property-value type
-* Fixed some issues where Flow wouldn't allow defininition of properties or methods called "static" on classes
+* Fixed some issues where Flow wouldn't allow definition of properties or methods called "static" on classes
 * Fixed an issue where Flow wouldn't permit `throw`s at the toplevel of a module
 * Fixed an issue where adding a file to `[libs]` with an extension not listed in `module.file_exts`, it would previously be silently ignored
 * Fixed an issue where `import * as` on a `declare module.exports: any;` libdef would not result in a module with every possible named export
@@ -1033,7 +1033,7 @@ New Features:
 - It is now possible to use leading-`|` and `&` on any type annotation, not just in type aliases
 
 Notable bug fixes:
-- Signficant perf improvements on checking disjoint unions
+- Significant perf improvements on checking disjoint unions
 - Fixed an issue where `flow start` would sometimes hang on Windows
 - Fixed an issue where `flow get-def` on a react element would always point to the internal react libdef (rather than the component that defines the element)
 - Error messages for builtin types are now more descriptive in more scenarios
@@ -1133,7 +1133,7 @@ Notable bug fixes:
 - Fixed an issue where duplicate method declarations weren't understood correctly
 
 ### v0.26.0
-([@gabelevi](https://github.com/gabelevi) mistakingly listed a few v0.26.0 changes as being in v0.25.0. The Changelog has been updated to reflect reality. Sorry!)
+([@gabelevi](https://github.com/gabelevi) mistakenly listed a few v0.26.0 changes as being in v0.25.0. The Changelog has been updated to reflect reality. Sorry!)
 
 Likely to cause new Flow errors:
 - Flow now understands stateless functional React components, which may reveal many errors if you use them heavily.
@@ -1260,7 +1260,7 @@ Likely to cause new Flow errors:
 
 New features:
 - Flow now gives precedence to library definitions over non-@flow implementation files. This means that it should no longer be necessary to specify a `node_modules` dependency in the `[ignore]` section of your `.flowconfig` if you have a library definition defined for that dependency.
-- Significant improvements to `Promise.all`: We now preserve the type of each item in the array passed to `Promise.all()` so that it may be propogated through to the resulting `.then()` handler.
+- Significant improvements to `Promise.all`: We now preserve the type of each item in the array passed to `Promise.all()` so that it may be propagated through to the resulting `.then()` handler.
 - We no longer try to parse files that are not marked with an `@flow` pragma. We anticipate this will improve performance for projects with large, non-Flow node_modules directories.
 - Classes with static members are now subtype-compatible with structural object types
 - It is now possible to specify a leading `|` or `&` for type aliases of long unions/intersections. This is useful, as one example, for disjoint unions with a large number of members (where each member sits on a new line):
@@ -1310,10 +1310,10 @@ Notable bug fixes:
 - Fixed an incorrect refinement when assigning an object to a variable.
 
 Misc:
-- Some internal errors now will be made user visibile instead of silently failing. They generally mean that Flow has some bug or is making an untrue assumption/assertion. If you see these please report them!
+- Some internal errors now will be made user visible instead of silently failing. They generally mean that Flow has some bug or is making an untrue assumption/assertion. If you see these please report them!
 - Improvements to how we report certain types (type application, optional types) via our APIs
 - Various sentinel improvements, including boolean sentinels
-- Various improvements to the buildin flow libraries (thanks everyone for the pull requests!)
+- Various improvements to the builtin flow libraries (thanks everyone for the pull requests!)
 
 ### v0.20.1
 
