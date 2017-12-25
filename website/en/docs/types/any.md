@@ -34,7 +34,7 @@ getNestedProperty({});
 
 There are only a couple of scenarios where you might consider using `any`:
 
-1. When you are in the process of converting a existing code to using Flow
+1. When you are in the process of converting existing code to using Flow
   types and you are currently blocked on having the code type checked (maybe
   other code needs to be converted first).
 2. When you are certain your code works and for some reason Flow is unable to
