@@ -12,9 +12,8 @@ OCAML_HEADERS=\
 
 all: deps
 
-.PHONY: lib/libflowparser.a
-lib/libflowparser.a:
-	@mkdir -p lib
+lib/mac/libflowparser.a lib/linux/libflowparser.a lib/win/libflowparser.a:
+	@mkdir -p "$(dir $@)"
 	$(MAKE) -C ../../src/parser lib/libflowparser.a
 	cp ../../src/parser/lib/libflowparser.a "$@"
 
@@ -26,7 +25,12 @@ $(OCAML_HEADERS): include/%: $(OCAML_PATH)/%
 	@mkdir -p "$(dir $@)"
 	cp "$<" "$@"
 
-deps: lib/libflowparser.a include/flowparser/libflowparser.h $(OCAML_HEADERS)
+.PHONY: headers
+headers: include/flowparser/libflowparser.h $(OCAML_HEADERS)
+
+deps-linux: headers lib/linux/libflowparser.a
+deps-mac: headers lib/mac/libflowparser.a
+deps-win: headers lib/win/libflowparser.a
 
 clean:
 	rm -rf include/ lib/
