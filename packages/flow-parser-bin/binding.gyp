@@ -2,16 +2,16 @@
   "targets": [
     {
       "target_name": "flow_parser",
+      "dependencies": ["build_deps"],
       "sources": [
         "src/flow_parser_node.cc",
-        "../lib/libflowparser.a",
       ],
       "include_dirs": [
         "include/",
         "<!(node -e \"require('nan')\")",
       ],
       "libraries": [
-        "-L../lib",
+        "-L../lib/<(OS)",
         "-lflowparser",
       ],
       "conditions": [
@@ -26,6 +26,22 @@
           },
         }],
       ],
+    },
+    {
+      "target_name": "build_deps",
+      "type": "none",
+      "actions": [
+        {
+          "action_name": "make_deps",
+          "inputs": [],
+          "outputs": ["lib/<(OS)/libflowparser.a"],
+          "conditions": [
+            ['OS=="mac"', {"action": ["make", "deps-mac"]}],
+            ['OS=="win"', {"action": ["make", "deps-win"]}],
+            ['OS=="linux"', {"action": ["make", "deps-linux"]}],
+          ],
+        }
+      ]
     }
   ]
 }
