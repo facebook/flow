@@ -1,5 +1,7 @@
 # Copyright (c) 2013-present, Facebook, Inc.
-# All rights reserved.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)/../..
@@ -32,6 +34,13 @@ RUNNER_DEPS=\
 	src/parser\
 	src/parser_utils
 
+OCAML_PATH=$(shell ocamlc -where)
+OCAML_HEADERS=\
+	$(sort $(patsubst $(OCAML_PATH)/%,dist/libflowparser/include/%, \
+		$(filter $(OCAML_PATH)/%,$(shell \
+			$(CC) -I $(OCAML_PATH) -MM -MT deps libflowparser.h \
+	))))
+
 all: build-parser
 
 clean:
@@ -39,19 +48,33 @@ clean:
 	cd $(TOP); \
 	$(OCB) -clean; \
 	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files; \
-	rm -rf $(REL_DIR)/lib
+	rm -rf $(REL_DIR)/dist
 
 build-parser:
 	cd $(TOP); \
 	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
 
-.PHONY: lib/libflowparser.a
-lib/libflowparser.a:
-	@mkdir -p lib
-	cp "$(shell ocamlc -where)"/libasmrun_pic.a "$@"
+.PHONY: dist/libflowparser/lib/libflowparser.a
+dist/libflowparser/lib/libflowparser.a:
+	@mkdir -p "$(@D)"
+	cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"
 	cd $(TOP) && $(OCB) -no-links -tag "runtime_variant(_pic)" \
 		$(REL_DIR)/libflowparser.native.o
 	ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"
+
+$(OCAML_HEADERS): dist/libflowparser/include/%: $(OCAML_PATH)/%
+	@mkdir -p "$(@D)"
+	cp "$<" "$@"
+
+dist/libflowparser/include/flowparser/libflowparser.h: libflowparser.h
+	@mkdir -p "$(@D)"
+	cp "$<" "$@"
+
+dist/libflowparser.zip: \
+		$(OCAML_HEADERS) \
+		dist/libflowparser/include/flowparser/libflowparser.h \
+		dist/libflowparser/lib/libflowparser.a
+	cd dist && zip -r $(@F) libflowparser
 
 js:
 	cd $(TOP); \
