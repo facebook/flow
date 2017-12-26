@@ -1,4 +1,11 @@
 {
+  "variables": {
+    "conditions": [
+      ['OS=="mac"', {"platform": "osx"}],
+      ['OS=="win"', {"platform": "win64"}],
+      ['OS=="linux"', {"platform": "linux64"}],
+    ],
+  },
   "targets": [
     {
       "target_name": "flow_parser",
@@ -11,7 +18,7 @@
         "<!(node -e \"require('nan')\")",
       ],
       "libraries": [
-        "-L../lib/<(OS)",
+        "-L../lib/<(platform)",
         "-lflowparser",
       ],
       "conditions": [
@@ -34,12 +41,8 @@
         {
           "action_name": "make_deps",
           "inputs": [],
-          "outputs": ["lib/<(OS)/libflowparser.a"],
-          "conditions": [
-            ['OS=="mac"', {"action": ["make", "deps-mac"]}],
-            ['OS=="win"', {"action": ["make", "deps-win"]}],
-            ['OS=="linux"', {"action": ["make", "deps-linux"]}],
-          ],
+          "outputs": ["lib/<(platform)/libflowparser.a", "include"],
+          "action": ["make", "include", "lib/<(platform)/libflowparser.a"],
         }
       ]
     }
