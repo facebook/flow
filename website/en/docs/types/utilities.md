@@ -15,6 +15,7 @@ Table of contents:
 - [`$PropertyType<T>`](#toc-propertytype)
 - [`$ElementType<T>`](#toc-elementtype)
 - [`$ObjMap<T, F>`](#toc-objmap)
+- [`$ObjMapi<T, F>`](#toc-objmapi)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
 - [`Class<T>`](#toc-class)
@@ -411,6 +412,32 @@ props(promises).then(o => {
   // $ExpectError
   (o.a: 43); // Error, flow knows it's 42
 });
+```
+
+## `$ObjMapi<T, F>` <a class="toc" id="toc-objmapi" href="#toc-objmapi"></a>
+
+`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap), the difference being the given function type `F` will be [called](#toc-call) with both key and value instead of just the value. For example:
+
+```js
+// @flow
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+
+type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V }
+function run<A, O: Object>(o: O): $ObjMapi<O, ExtractReturnObjectType> {
+  return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: { k, v: o[k]() } }), {});
+}
+
+(run(o).a: { k: 'a', v: boolean }); // Ok
+(run(o).b: { k: 'b', v: string });  // Ok
+// $ExpectError
+(run(o).a: { k: 'b', v: boolean }); // Nope, a.k is "a"
+// $ExpectError
+(run(o).b: { k: 'b', v: number });  // Nope, b.v is a string
+// $ExpectError
+run(o).c;                           // Nope, c was not in the original object
 ```
 
 ## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
