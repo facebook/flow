@@ -3,36 +3,37 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-OCAML_PATH=$(shell ocamlc -where)
-OCAML_HEADERS=\
-	$(sort $(patsubst $(OCAML_PATH)/%,include/%, \
-		$(filter $(OCAML_PATH)/%,$(shell \
-			$(CC) -I $(OCAML_PATH) -MM -MT deps ../../src/parser/libflowparser.h \
-	))))
+FLOW_VERSION ?= $(shell node -p 'require("./package.json").version')
+HOST ?= https://github.com/facebook/flow/releases/download/v$(FLOW_VERSION)
+PLATFORMS = linux64 osx win64
+LIBS = $(patsubst %,lib/%/libflowparser.a,$(PLATFORMS))
+ZIPS = $(patsubst %,dist/libflowparser-%.zip,$(PLATFORMS))
 
-all: deps
+all: include SHASUM256.txt
 
-lib/mac/libflowparser.a lib/linux/libflowparser.a lib/win/libflowparser.a:
-	@mkdir -p "$(dir $@)"
-	$(MAKE) -C ../../src/parser lib/libflowparser.a
-	cp ../../src/parser/lib/libflowparser.a "$@"
+$(ZIPS):
+	@mkdir -p "$(@D)"
+	curl --max-time 300 -L "$(patsubst dist/%.zip,$(HOST)/%-v$(FLOW_VERSION).zip,$@)" -o "$@" || rm "$@"
 
-include/flowparser/libflowparser.h: ../../src/parser/libflowparser.h
-	@mkdir -p "$(dir $@)"
-	cp "$<" "$@"
+$(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
+	DIR="$(basename $<)"; \
+	mkdir -p "$$DIR" "$(@D)"; \
+	unzip "$<" libflowparser/lib/libflowparser.a -d "$$DIR" && \
+	mv "$$DIR/libflowparser/lib/libflowparser.a" "$@"; \
+	rm -rf "$$DIR"
+	touch "$@"
 
-$(OCAML_HEADERS): include/%: $(OCAML_PATH)/%
-	@mkdir -p "$(dir $@)"
-	cp "$<" "$@"
+include: dist/libflowparser-linux64.zip
+	DIR="$(basename $<)"; \
+	mkdir -p "$$DIR" "$(@D)"; \
+	unzip "$<" "libflowparser/include/**" -d "$$DIR" && \
+	mv "$$DIR/libflowparser/include" "$@"; \
+	rm -rf "$$DIR"
 
-.PHONY: headers
-headers: include/flowparser/libflowparser.h $(OCAML_HEADERS)
-
-deps-linux: headers lib/linux/libflowparser.a
-deps-mac: headers lib/mac/libflowparser.a
-deps-win: headers lib/win/libflowparser.a
+SHASUM256.txt: $(LIBS)
+	shasum -a 256 $^ > $@
 
 clean:
-	rm -rf include/ lib/
+	rm -rf SHASUM256.txt include/ lib/ dist/ build/
 
 .PHONY: all deps clean
