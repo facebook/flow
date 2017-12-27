@@ -87,6 +87,12 @@ let rpartition s c =
     String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
   first, second
 
+(** If s is longer than length len, return a copy of s truncated to length len. *)
+let truncate len s =
+  if String.length s <= len then
+    s
+  else
+    String.sub s 0 len
 
 (** [index_not_from_opt str i chars] is like [index_from_opt], but returns the index of the first
     char in [str] after position [i] that is not in [chars] if it exists, or [None] otherwise. *)
