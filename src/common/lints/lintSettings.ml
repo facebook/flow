@@ -59,12 +59,9 @@ let map f settings =
 
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
-let default_severities = {
+let empty_severities = {
   default_value = Off;
-  explicit_values = (
-    LintMap.empty
-    |> LintMap.add DeprecatedDeclareExports (Err, None)
-  );
+  explicit_values = LintMap.empty;
 }
 
 let is_enabled lint_kind settings =

@@ -181,7 +181,7 @@ let union_all cover_set =
 
 type lint_severity_cover = Severity.severity LintSettings.t t
 
-let default_file_cover source = file_cover source LintSettings.default_severities
+let default_file_cover source = file_cover source LintSettings.empty_severities
 
 let get_severity lint_kind loc severity_cover =
 find loc severity_cover |> LintSettings.get_value lint_kind

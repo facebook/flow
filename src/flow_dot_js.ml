@@ -73,7 +73,7 @@ let load_lib_files ~master_cx ~metadata files
       | Ok (ast, file_sig) ->
         let cx, syms = Type_inference_js.infer_lib_file
           ~metadata ~exclude_syms ~file_sig
-          ~lint_severities:LintSettings.default_severities
+          ~lint_severities:LintSettings.empty_severities
           lib_file ast
         in
 
@@ -178,7 +178,7 @@ let infer_and_merge ~root filename ast file_sig =
     (module_name, locs, m, filename) :: acc
   ) require_loc_map [] in
   let reqs = Merge_js.Reqs.({ empty with decls }) in
-  let lint_severities = LintSettings.default_severities in
+  let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let cx, _other_cxs = Merge_js.merge_component_strict

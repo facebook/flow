@@ -361,7 +361,7 @@ end = struct
     let lint_severities = config.lint_severities in
     let lint_default = LintSettings.get_default lint_severities in
     (* Don't print an 'all' setting if it matches the default setting. *)
-    if (lint_default <> LintSettings.get_default LintSettings.default_severities) then
+    if (lint_default <> LintSettings.get_default LintSettings.empty_severities) then
       fprintf o "all=%s\n" (string_of_severity lint_default);
     LintSettings.iter (fun kind (state, _) ->
         (fprintf o "%s=%s\n"
@@ -410,7 +410,7 @@ let empty_config = {
   untyped = [];
   includes = [];
   libs = [];
-  lint_severities = LintSettings.default_severities;
+  lint_severities = LintSettings.empty_severities;
   strict_mode = StrictModeSettings.empty;
   options = Opts.default_options
 }
@@ -873,7 +873,7 @@ let parse_version config lines =
   | _ -> config
 
 let parse_lints config lines =
-  match lines |> trim_labeled_lines |> LintSettings.of_lines LintSettings.default_severities with
+  match lines |> trim_labeled_lines |> LintSettings.of_lines config.lint_severities with
   | Ok lint_severities -> {config with lint_severities}
   | Error (ln, msg) -> error ln msg
 
@@ -912,12 +912,22 @@ let is_not_comment =
       (fun (regexp) -> Str.string_match regexp line 0)
       comment_regexps)
 
+let default_lint_severities = [
+  Lints.DeprecatedDeclareExports, (Severity.Err, None);
+]
+
 let read filename =
   let lines = Sys_utils.cat_no_fail filename
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
     |> List.filter is_not_comment in
-  parse empty_config lines
+  let config = {
+    empty_config with
+    lint_severities = List.fold_left (fun acc (lint, severity) ->
+      LintSettings.set_value lint severity acc
+    ) empty_config.lint_severities default_lint_severities
+  } in
+  parse config lines
 
 let init ~ignores ~untyped ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in

@@ -560,7 +560,7 @@ let flow_check (code : string) : string option =
 
       (* Merge builtins *)
       let builtin_metadata = stub_metadata ~root ~checked:true in
-      let lint_severities = LintSettings.default_severities in
+      let lint_severities = LintSettings.empty_severities in
       let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
       let builtins_file_sig = match File_sig.program ~ast:builtins_ast with
       | Ok file_sig -> file_sig
