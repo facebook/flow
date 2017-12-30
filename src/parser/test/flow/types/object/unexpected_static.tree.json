@@ -15,19 +15,11 @@
     {
       "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":17}},
       "message":"Unexpected static modifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":17}},
-      "message":"Unexpected static modifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":20,"column":11},"end":{"line":20,"column":17}},
-      "message":"Unexpected static modifier"
     }
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":20,"column":27}},
-  "range":[48,604],
+  "range":[48,494],
   "body":[
     {
       "type":"TypeAlias",
@@ -303,11 +295,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":24}},
-      "range":[466,490],
+      "range":[406,430],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":17,"column":5},"end":{"line":17,"column":6}},
-        "range":[471,472],
+        "range":[411,412],
         "name":"F",
         "typeAnnotation":null,
         "optional":false
@@ -316,28 +308,34 @@
       "right":{
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":17,"column":9},"end":{"line":17,"column":24}},
-        "range":[475,490],
+        "range":[415,430],
         "exact":false,
-        "properties":[],
-        "indexers":[],
-        "callProperties":[
+        "properties":[
           {
-            "type":"ObjectTypeCallProperty",
+            "type":"ObjectTypeProperty",
             "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":22}},
-            "range":[477,488],
+            "range":[417,428],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":17}},
+              "range":[417,423],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
             "value":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":17,"column":17},"end":{"line":17,"column":22}},
-              "range":[483,488],
+              "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":22}},
+              "range":[417,428],
               "params":[],
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":17,"column":21},"end":{"line":17,"column":22}},
-                "range":[487,488],
+                "range":[427,428],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":17,"column":21},"end":{"line":17,"column":22}},
-                  "range":[487,488],
+                  "range":[427,428],
                   "name":"R",
                   "typeAnnotation":null,
                   "optional":false
@@ -347,19 +345,25 @@
               "rest":null,
               "typeParameters":null
             },
-            "static":false
+            "method":true,
+            "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
           }
-        ]
+        ],
+        "indexers":[],
+        "callProperties":[]
       }
     },
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":20,"column":0},"end":{"line":20,"column":27}},
-      "range":[577,604],
+      "range":[467,494],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":20,"column":5},"end":{"line":20,"column":6}},
-        "range":[582,583],
+        "range":[472,473],
         "name":"G",
         "typeAnnotation":null,
         "optional":false
@@ -368,28 +372,34 @@
       "right":{
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":27}},
-        "range":[586,604],
+        "range":[476,494],
         "exact":false,
-        "properties":[],
-        "indexers":[],
-        "callProperties":[
+        "properties":[
           {
-            "type":"ObjectTypeCallProperty",
+            "type":"ObjectTypeProperty",
             "loc":{"source":null,"start":{"line":20,"column":11},"end":{"line":20,"column":25}},
-            "range":[588,602],
+            "range":[478,492],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":20,"column":11},"end":{"line":20,"column":17}},
+              "range":[478,484],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
             "value":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":20,"column":20},"end":{"line":20,"column":25}},
-              "range":[597,602],
+              "loc":{"source":null,"start":{"line":20,"column":11},"end":{"line":20,"column":25}},
+              "range":[478,492],
               "params":[],
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":20,"column":24},"end":{"line":20,"column":25}},
-                "range":[601,602],
+                "range":[491,492],
                 "id":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":20,"column":24},"end":{"line":20,"column":25}},
-                  "range":[601,602],
+                  "range":[491,492],
                   "name":"R",
                   "typeAnnotation":null,
                   "optional":false
@@ -400,12 +410,12 @@
               "typeParameters":{
                 "type":"TypeParameterDeclaration",
                 "loc":{"source":null,"start":{"line":20,"column":17},"end":{"line":20,"column":20}},
-                "range":[594,597],
+                "range":[484,487],
                 "params":[
                   {
                     "type":"TypeParameter",
                     "loc":{"source":null,"start":{"line":20,"column":18},"end":{"line":20,"column":19}},
-                    "range":[595,596],
+                    "range":[485,486],
                     "name":"X",
                     "bound":null,
                     "variance":null,
@@ -414,9 +424,15 @@
                 ]
               }
             },
-            "static":false
+            "method":true,
+            "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
           }
-        ]
+        ],
+        "indexers":[],
+        "callProperties":[]
       }
     }
   ],
@@ -453,15 +469,15 @@
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":86}},
-      "range":[379,465],
-      "value":" error: parsed as a static callable (TODO: consider parsing as method named static?)"
+      "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":26}},
+      "range":[379,405],
+      "value":" ok: method named static"
     },
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":84}},
-      "range":[492,576],
-      "value":" error: parsed as static callable (TODO: consider parsing as method named static?)"
+      "loc":{"source":null,"start":{"line":19,"column":0},"end":{"line":19,"column":34}},
+      "range":[432,466],
+      "value":" ok: generic method named static"
     }
   ]
 }
