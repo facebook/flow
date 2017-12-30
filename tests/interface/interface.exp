@@ -11,7 +11,7 @@ Error: fun.js:5
 
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
-       ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
+       ^^^^^^^^^^^^^^^^^^^^ multiple indexer properties are not supported
 
 Error: interface.js:3
   3: var x: string = new C().x;

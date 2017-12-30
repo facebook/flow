@@ -1439,7 +1439,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         | PredicateVoidReturn ->
             "Predicate functions need to return non-void."
         | MultipleIndexers ->
-            "multiple indexers are not supported"
+            "multiple indexer properties are not supported"
         | SpreadArgument ->
             "A spread argument is unsupported here"
       in

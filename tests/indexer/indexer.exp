@@ -72,7 +72,7 @@ Error: call.js:4
 
 Error: multiple.js:7
   7:       [k2: number]: number, // error: not supported (yet)
-           ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
+           ^^^^^^^^^^^^^^^^^^^^ multiple indexer properties are not supported
 
 Error: variance.js:5
   5: (w[0]: number); //ng
