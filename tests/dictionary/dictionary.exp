@@ -38,7 +38,7 @@ Error: dictionary.js:110
                     ^^^^^^^^^^^^^^ object type. This type is incompatible with
     110:   let a: Array<{[k:string]:A}> = x; // error
                         ^^^^^^^^^^^^^^ object type
-      Indexable signature is incompatible:
+      Indexer property value is incompatible:
         108:   x: Array<{[k:string]:B}>,
                                     ^ B. This type is incompatible with
         110:   let a: Array<{[k:string]:A}> = x; // error
@@ -54,7 +54,7 @@ Error: dictionary.js:115
                     ^^^^^^^^^^^^^^ object type. This type is incompatible with
     115:   let c: Array<{[k:string]:C}> = x; // error
                         ^^^^^^^^^^^^^^ object type
-      Indexable signature is incompatible:
+      Indexer property value is incompatible:
         108:   x: Array<{[k:string]:B}>,
                                     ^ B. This type is incompatible with
         115:   let c: Array<{[k:string]:C}> = x; // error
@@ -71,7 +71,7 @@ Error: dictionary.js:122
                                ^ object type. This type is incompatible with
 122:   let a: {[k:string]:A} = x; // error
               ^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
     120:   x: {[k:string]:B},
                           ^ B. This type is incompatible with
     122:   let a: {[k:string]:A} = x; // error
@@ -82,7 +82,7 @@ Error: dictionary.js:127
                                ^ object type. This type is incompatible with
 127:   let c: {[k:string]:C} = x; // error
               ^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
     120:   x: {[k:string]:B},
                           ^ B. This type is incompatible with
     127:   let c: {[k:string]:C} = x; // error
@@ -520,7 +520,7 @@ Error: incompatible.js:4
                                        ^ object type. This type is incompatible with
   4: var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
              ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
       3: var x : {[key: string]: string} = {};
                                  ^^^^^^ string. This type is incompatible with
       4: var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
@@ -542,7 +542,7 @@ Error: incompatible.js:8
                                        ^ object type. This type is incompatible with
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
              ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
       7: var a : {[key: string]: ?string} = {};
                                  ^^^^^^^ null or undefined. This type is incompatible with
       8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
@@ -553,7 +553,7 @@ Error: incompatible.js:9
                                         ^ object type. This type is incompatible with
   9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
              ^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
       8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                                  ^^^^^^ string. This type is incompatible with
       9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
@@ -569,7 +569,7 @@ Error: incompatible.js:13
                                 ^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
      12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Indexable signature is incompatible:
+      Indexer property value is incompatible:
          12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
                                                     ^^^^^^ number. This type is incompatible with
          12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {

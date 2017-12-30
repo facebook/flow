@@ -762,7 +762,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
       let prop =
         match x with
         | Some "$call" -> "Callable property"
-        | None | Some "$key" | Some "$value" -> "Indexable signature"
+        | Some "$key" -> "Indexer property key"
+        | None | Some "$value" -> "Indexer property value"
         | Some x -> spf "Property `%s`" x
       in
       extra_info_of_use_op reasons extra msg

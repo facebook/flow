@@ -237,7 +237,7 @@ Error: type_contra.js:12
       ^^ object type. This type is incompatible with
  12: (o2: {[string]:T}); // error: unknown ~> T
           ^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
+  Indexer property value is incompatible:
       9: type O2 = {...{-[string]:T}};
                        ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
      12: (o2: {[string]:T}); // error: unknown ~> T

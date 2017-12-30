@@ -25,7 +25,7 @@ Error: test_obj.js:29
               ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-    Indexable signature is incompatible:
+    Indexer property value is incompatible:
        33: type C = { [key: string]: number } & { [key: string]: number };
                                      ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
        28: type E = { [key: string]: string };
@@ -40,7 +40,7 @@ Error: test_obj.js:29
               ^ E. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-    Indexable signature is incompatible:
+    Indexer property value is incompatible:
        33: type C = { [key: string]: number } & { [key: string]: number };
                                                                  ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
        28: type E = { [key: string]: string };
