@@ -649,6 +649,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   let prop_polarity_error_msg x reasons p1 p2 =
     let prop_name = match x with
+    | Some "$value" -> "indexer property value"
     | Some x -> spf "property `%s`" x
     | None -> "computed property"
     in

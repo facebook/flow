@@ -76,7 +76,7 @@ Error: multiple.js:7
 
 Error: variance.js:5
   5: (w[0]: number); //ng
-      ^^^^ computed property. Contravariant property `$value` incompatible with covariant use in
+      ^^^^ computed property. Contravariant indexer property value incompatible with covariant use in
   5: (w[0]: number); //ng
       ^^^^ computed property
 
@@ -104,19 +104,19 @@ Error: variance.js:8
 
 Error: variance.js:15
  15: r[5] = 5.5; //ng
-     ^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+     ^^^^ assignment of computed property/element. Covariant indexer property value incompatible with contravariant use in
  15: r[5] = 5.5; //ng
      ^^^^ assignment of computed property/element
 
 Error: variance.js:16
  16: r["another string"] = 6; //ng
-     ^^^^^^^^^^^^^^^^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+     ^^^^^^^^^^^^^^^^^^^ assignment of computed property/element. Covariant indexer property value incompatible with contravariant use in
  16: r["another string"] = 6; //ng
      ^^^^^^^^^^^^^^^^^^^ assignment of computed property/element
 
 Error: variance.js:17
  17: r[null] = 7; //ng
-     ^^^^^^^ assignment of computed property/element. Covariant property `$value` incompatible with contravariant use in
+     ^^^^^^^ assignment of computed property/element. Covariant indexer property value incompatible with contravariant use in
  17: r[null] = 7; //ng
      ^^^^^^^ assignment of computed property/element
 
