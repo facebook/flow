@@ -231,25 +231,22 @@ var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
 
 ## Objects as maps <a class="toc" id="toc-objects-as-maps" href="#toc-objects-as-maps"></a>
 
-Newer versions of the JavaScript standard include a `Map` class, but it is
-still very common to use objects as maps as well. In this use case, an object
-will likely have properties added to it and retrieved throughout its lifecycle.
-Furthermore, the property keys may not even be known statically, so writing out
-a type annotation would not be possible.
-
-For objects like these, Flow provides a special kind of property, called an
-"indexer property." An indexer property allows reads and writes using any key
-that matches the indexer key type.
+Newer versions of the JavaScript standard include a `Map` class whose instances
+store and lookup values indexed by key. It is still common to use an object
+analogously. These objects may have many keys. Furthermore, some keys may not
+even be known statically. For such objects, Flow provides a special kind of
+property called an "indexer property." An indexer property allows reads and
+writes using any key that matches the indexer property's key type.
 
 ```js
 // @flow
 var o: { [string]: number } = {};
-o["foo"] = 0;
-o["bar"] = 1;
-var foo: number = o["foo"];
+o["key1"] = 0;
+o["key2"] = 1;
+var foo: number = o["key1"];
 ```
 
-An indexer can be optionally named, for documentation purposes:
+An indexer property's key can be optionally named, for documentation purposes:
 
 ```js
 // @flow
@@ -260,17 +257,17 @@ obj[3] = "Justin";
 obj[4] = "Mark";
 ```
 
-When an object type has an indexer property, property accesses are assumed to
-have the annotated type, even if the object does not have a value in that slot
-at runtime. It is the programmer's responsibility to ensure the access is safe,
-as with arrays.
+When an object type has an indexer property, any lookup is assumed to have the
+indexer property's value type, even if the object does not have a value in that
+slot at runtime. It is the programmer's responsibility to ensure the lookup is
+safe, as with arrays.
 
 ```js
 var obj: { [number]: string } = {};
 obj[42].length; // No type error, but will throw at runtime
 ```
 
-Indexer properties can be mixed with named properties:
+An indexer property can be mixed with named properties:
 
 ```js
 // @flow

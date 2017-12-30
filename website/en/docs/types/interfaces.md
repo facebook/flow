@@ -114,7 +114,7 @@ interface MyInterface {
 
 ##### Interfaces as maps <a class="toc" id="toc-interfaces-as-maps" href="#toc-interfaces-as-maps"></a>
 
-You can create ["indexer properties"](../objects/#toc-objects-as-maps) the same
+You can define an [indexer property](../objects/#toc-objects-as-maps) the same
 way as with objects.
 
 ```js
