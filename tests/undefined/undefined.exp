@@ -30,7 +30,7 @@ Error: undefined2.js:13
 
 Error: undefined2.js:22
  22:       x[0]; // should error, could be void
-           ^^^^ computed property. Indexable signature not found in
+           ^^^^ computed property. Indexer property not found in
  22:       x[0]; // should error, could be void
            ^ Number
 

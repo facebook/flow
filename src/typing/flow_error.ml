@@ -1083,7 +1083,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     else
       let msg = match x with
       | Some "$call" -> "Callable signature not found in"
-      | Some "$key" | Some "$value" -> "Indexable signature not found in"
+      | Some "$key" | Some "$value" -> "Indexer property not found in"
       | _ -> "Property not found in"
       in
       begin match use_op with

@@ -403,13 +403,13 @@ Error: not.js:11
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
  11:     x[0]; // should error for null, void and number (0)
          ^ Number
 
 Error: not.js:21
  21:     x[0]; // should error for number (0)
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
  21:     x[0]; // should error for number (0)
          ^ Number
 
@@ -675,13 +675,13 @@ Error: switch.js:8
 
 Error: switch.js:27
  27:       return text[0]; // error, [0] on number
-                  ^^^^^^^ computed property. Indexable signature not found in
+                  ^^^^^^^ computed property. Indexer property not found in
  27:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
 Error: switch.js:37
  37:       return text[0]; // error, [0] on number
-                  ^^^^^^^ computed property. Indexable signature not found in
+                  ^^^^^^^ computed property. Indexer property not found in
  37:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
@@ -961,7 +961,7 @@ Error: tagged_union.js:265
 
 Error: typeof.js:5
   5:     x[0]; // error for boolean, not number
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
   5:     x[0]; // error for boolean, not number
          ^ Boolean
 
@@ -1045,19 +1045,19 @@ Error: undef.js:77
 
 Error: union.js:7
   7:     x[0]; // error on boolean
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
   7:     x[0]; // error on boolean
          ^ Boolean
 
 Error: union.js:13
  13:     x[0]; // error on number
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
  13:     x[0]; // error on number
          ^ Number
 
 Error: union.js:19
  19:     x[0]; // error on number
-         ^^^^ computed property. Indexable signature not found in
+         ^^^^ computed property. Indexer property not found in
  19:     x[0]; // error on number
          ^ Number
 
