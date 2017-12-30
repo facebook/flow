@@ -485,9 +485,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
-    in let prelude_keywords env =
+    in let prelude_keywords ~allow_static env =
       let id_opt name = function
-        | Some loc -> Some (loc, name)
+        | Some loc -> Some (Expression.Object.Property.Identifier (loc, name))
         | None -> None
       in
       let loc = Peek.loc env in
@@ -496,13 +496,16 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_PLING
       | T_COLON ->
           ((None), id_opt "static" static)
+      | T_LESS_THAN
+      | T_LPAREN when not allow_static ->
+          ((None), id_opt "static" static)
       | _ ->
           ((static), None)
 
     in let rec properties ~allow_static ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
-      let ((static), key) = match prelude_keywords env with
+      let ((static), key) = match prelude_keywords ~allow_static env with
         | ((Some loc), k) when not allow_static ->
           error_at env (loc, Error.UnexpectedStatic);
           None, k
@@ -556,13 +559,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_LESS_THAN
       | T_LPAREN ->
         error_unsupported_variance env variance;
-        next env (call_property env start_loc (static<>None))
+        begin match key with
+        | Some k -> next env (method_property env start_loc (static<>None) k)
+        | None -> next env (call_property env start_loc (static<>None))
+        end
       | T_PLING
       | T_COLON ->
         begin match key with
-        | Some k ->
-          let key = Expression.Object.Property.Identifier k in
-          next env (property env start_loc (static<>None) variance key)
+        | Some k -> next env (property env start_loc (static<>None) variance k)
         | None -> skip env
         end
       | T_ELLIPSIS ->
