@@ -774,7 +774,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     unwrap_use_ops (obj_reasons, extra, msg) use_op
   | Frame (IndexerKeyCompatibility {lower=rl'; upper=ru'}, use_op) ->
     let extra =
-      extra_info_of_use_op reasons extra msg "Indexer key is incompatible:"
+      extra_info_of_use_op reasons extra msg "Indexer property key is incompatible:"
     in
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in

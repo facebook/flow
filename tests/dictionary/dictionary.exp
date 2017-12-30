@@ -152,7 +152,7 @@ Error: dictionary.js:159
                     ^^^^^^^^^^^ object type. This type is incompatible with
     159:   let a: Array<{[k:A]:any}> = x; // error
                         ^^^^^^^^^^^ object type
-      Indexer key is incompatible:
+      Indexer property key is incompatible:
         157:   x: Array<{[k:B]:any}>,
                             ^ B. This type is incompatible with
         159:   let a: Array<{[k:A]:any}> = x; // error
@@ -168,7 +168,7 @@ Error: dictionary.js:161
                     ^^^^^^^^^^^ object type. This type is incompatible with
     161:   let c: Array<{[k:C]:any}> = x; // error
                         ^^^^^^^^^^^ object type
-      Indexer key is incompatible:
+      Indexer property key is incompatible:
         157:   x: Array<{[k:B]:any}>,
                             ^ B. This type is incompatible with
         161:   let c: Array<{[k:C]:any}> = x; // error
@@ -179,7 +179,7 @@ Error: dictionary.js:167
                             ^ object type. This type is incompatible with
 167:   let a: {[k:A]:any} = x; // ok
               ^^^^^^^^^^^ object type
-  Indexer key is incompatible:
+  Indexer property key is incompatible:
     167:   let a: {[k:A]:any} = x; // ok
                       ^ A. This type is incompatible with
     165:   x: {[k:B]:any},
@@ -531,7 +531,7 @@ Error: incompatible.js:5
                                        ^ object type. This type is incompatible with
   5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
              ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexer key is incompatible:
+  Indexer property key is incompatible:
       5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
                         ^^^^^^ number. This type is incompatible with
       3: var x : {[key: string]: string} = {};

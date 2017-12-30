@@ -3,7 +3,7 @@ Error: A.js:13
               ^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
  12: function foo2(): {[key: number]: string} {
                       ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexer key is incompatible:
+  Indexer property key is incompatible:
      13:   return { foo: "bar" }
                   ^^^^^^^^^^^^^^ string `foo`. This type is incompatible with
      12: function foo2(): {[key: number]: string} {
@@ -25,7 +25,7 @@ Error: A.js:23
               ^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
  22: function foo4(): {[key: number]: number} {
                       ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Indexer key is incompatible:
+  Indexer property key is incompatible:
      23:   return { foo: "bar" }
                   ^^^^^^^^^^^^^^ string `foo`. This type is incompatible with
      22: function foo4(): {[key: number]: number} {
