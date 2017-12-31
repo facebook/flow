@@ -354,11 +354,11 @@ getProp({a: 42}, 'b'); // Error: `b` does not exist
 
 `ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
 
-Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
+Let's see an example. Suppose you have a function called `run` that takes an object of thunks as input:
 
 ```js
 // @flow
-function run<A, O: {[key: string]: () => A}>(o: O) {
+function run(o) {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 ```
@@ -375,7 +375,7 @@ This is where `ObjMap<T, F>` comes in handy.
 // let's write a function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V
 
-function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
+function run<A, O: *>(o: O): $ObjMap<O, ExtractReturnType> {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 
