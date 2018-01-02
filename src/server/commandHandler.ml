@@ -122,8 +122,7 @@ let get_cycle ~workers ~env fn =
   (* Re-calculate SCC *)
   let parsed = FilenameSet.elements !env.ServerEnv.files in
   let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-  let partition = Sort_js.topsort dependency_graph in
-  let component_map = Sort_js.component_map partition in
+  let component_map = Sort_js.topsort dependency_graph in
 
   (* Get component for target file *)
   let leader_map =

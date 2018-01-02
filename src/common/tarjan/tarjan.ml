@@ -8,10 +8,7 @@
 (* For a detailed description of the algorithm, see:
    http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm
 
-   The code below is mostly a transcription of the above. In addition to
-   computing strongly connected components, we also compute their "heights": the
-   height of a strongly connected component is the length of the longest path of
-   strongly connected components from it in the residual graph. *)
+   The code below is mostly a transcription of the above. *)
 
 module type NODE = sig
   type t
@@ -36,8 +33,6 @@ module Make
     mutable stack: N.t list;
     (* back edges to earliest visited nodes *)
     mutable lowlinks: int NMap.t;
-    (* heights *)
-    mutable heights: int NMap.t;
     (* components *)
     mutable components: N.t list NMap.t;
   }
@@ -48,7 +43,6 @@ module Make
     indices = NMap.empty;
     stack = [];
     lowlinks = NMap.empty;
-    heights = NMap.empty;
     components = NMap.empty;
   }
 
@@ -67,18 +61,12 @@ module Make
     (* initialize lowlink *)
     let lowlink = ref i in
 
-    (* initialize height *)
-    let height = ref 0 in
-
     (* for each require r in rs: *)
     rs |> NSet.iter (fun r ->
       match NMap.get r state.not_yet_visited with
       | Some rs_ ->
           (* recursively compute strongly connected component of r *)
-          let h = strongconnect state r rs_ in
-
-          (* update height with that of r *)
-          height := max !height h;
+          strongconnect state r rs_;
 
           (* update lowlink with that of r *)
           let lowlink_r = NMap.find_unsafe r state.lowlinks in
@@ -91,33 +79,21 @@ module Make
             (* update lowlink with index of r *)
             let index_r = NMap.find_unsafe r state.indices in
             lowlink := min !lowlink index_r
-          else
-            match NMap.get r state.heights with
-            | Some h ->
-                (** cross edge where strongly connected component is complete **)
-                (* update height *)
-                height := max !height h
-            | None -> ()
     );
 
     state.lowlinks <- NMap.add m !lowlink state.lowlinks;
-    if (!lowlink = i) then (
+    if (!lowlink = i) then
       (* strongly connected component *)
-      let h = !height + 1 in
-      let c = component state m h in
-      state.components <- NMap.add m c state.components;
-      h
-    )
-    else !height
+      let c = component state m in
+      state.components <- NMap.add m c state.components
 
   (* Return component strongly connected to m. *)
-  and component state m h =
+  and component state m =
     (* pop stack until m is found *)
     let m_ = List.hd state.stack in
     state.stack <- List.tl state.stack;
-    state.heights <- state.heights |> NMap.add m_ h;
     if (m = m_) then []
-    else m_ :: (component state m h)
+    else m_ :: (component state m)
 
   (** main loop **)
   let tarjan state =
@@ -132,24 +108,10 @@ module Make
       strongconnect state m rs |> ignore
     done
 
-  (* Order nodes by their computed heights. It is guaranteed that height ordering
-     implies topological sort ordering; in particular, nodes at a particular
-     height are guaranteed to only depend on nodes at lower heights, so we can
-     partition nodes by their heights, and run a series of parallel jobs, one for
-     each partition, by height. *)
-  let partition heights components =
-    NMap.fold (fun m c map ->
-      let mc = m::c in
-      let height = NMap.find_unsafe m heights in
-      match IMap.get height map with
-      | None -> IMap.add height [mc] map
-      | Some mcs -> IMap.add height (mc::mcs) map
-    ) components IMap.empty
-
   let topsort nodes =
     let state = initial_state nodes in
     tarjan state;
-    partition state.heights state.components
+    NMap.mapi (fun m c -> m::c) state.components
 
   let reverse nodes =
     nodes
@@ -162,24 +124,15 @@ module Make
         ) nodes
 
   let log =
-    IMap.iter (fun _ mcs ->
-      List.iter (fun mc ->
-        (* Show cycles, which are components with more than one node. *)
-        if List.length mc > 1
-        then
-          let nodes = mc
-          |> List.map N.to_string
-          |> String.concat "\n\t"
-          in
-          Printf.ksprintf prerr_endline
-            "cycle detected among the following nodes:\n\t%s" nodes
-      ) mcs;
+    NMap.iter (fun _ mc ->
+      (* Show cycles, which are components with more than one node. *)
+      if List.length mc > 1
+      then
+        let nodes = mc
+        |> List.map N.to_string
+        |> String.concat "\n\t"
+        in
+        Printf.ksprintf prerr_endline
+          "cycle detected among the following nodes:\n\t%s" nodes
     )
-
-  let component_map partition =
-    IMap.fold (fun _ components acc ->
-      List.fold_left (fun acc component ->
-        NMap.add (List.hd component) component acc
-      ) acc components
-    ) partition NMap.empty
 end
