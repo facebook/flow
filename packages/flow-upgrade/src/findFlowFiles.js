@@ -87,9 +87,11 @@ module.exports = function findFlowFiles(
             processDirectory(filePath);
           }
         } else if (stats.isFile()) {
-          // Otherwise if this is a JavaScript file and it is not an ignored
+          // Otherwise if this is a JavaScript/JSX file and it is not an ignored
           // JavaScript file...
-          if (fileName.endsWith('.js') && !fileName.endsWith('-flowtest.js')) {
+          const fileIsJsOrJsx = /\.jsx?$/.test(fileName);
+          const fileIsIgnored = fileName.endsWith('-flowtest.js');
+          if (fileIsJsOrJsx && !fileIsIgnored) {
             // Then process the file path as JavaScript.
             processJavaScriptFilePath(filePath, stats.size);
           }
