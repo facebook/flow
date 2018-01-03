@@ -34,7 +34,7 @@ module Make
     (* back edges to earliest visited nodes *)
     mutable lowlinks: int NMap.t;
     (* components *)
-    mutable components: N.t list NMap.t;
+    mutable components: N.t list list;
   }
 
   let initial_state nodes = {
@@ -43,7 +43,7 @@ module Make
     indices = NMap.empty;
     stack = [];
     lowlinks = NMap.empty;
-    components = NMap.empty;
+    components = [];
   }
 
   (* Compute strongly connected component for node m with requires rs. *)
@@ -85,7 +85,7 @@ module Make
     if (!lowlink = i) then
       (* strongly connected component *)
       let c = component state m in
-      state.components <- NMap.add m c state.components
+      state.components <- (m::c):: state.components
 
   (* Return component strongly connected to m. *)
   and component state m =
@@ -111,7 +111,20 @@ module Make
   let topsort nodes =
     let state = initial_state nodes in
     tarjan state;
-    NMap.mapi (fun m c -> m::c) state.components
+    state.components
+
+  let log =
+    List.iter (fun mc ->
+      (* Show cycles, which are components with more than one node. *)
+      if List.length mc > 1
+      then
+        let nodes = mc
+        |> List.map N.to_string
+        |> String.concat "\n\t"
+        in
+        Printf.ksprintf prerr_endline
+          "cycle detected among the following nodes:\n\t%s" nodes
+    )
 
   let reverse nodes =
     nodes
@@ -123,16 +136,4 @@ module Make
          )
         ) nodes
 
-  let log =
-    NMap.iter (fun _ mc ->
-      (* Show cycles, which are components with more than one node. *)
-      if List.length mc > 1
-      then
-        let nodes = mc
-        |> List.map N.to_string
-        |> String.concat "\n\t"
-        in
-        Printf.ksprintf prerr_endline
-          "cycle detected among the following nodes:\n\t%s" nodes
-    )
 end

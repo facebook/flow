@@ -122,18 +122,10 @@ let get_cycle ~workers ~env fn =
   (* Re-calculate SCC *)
   let parsed = FilenameSet.elements !env.ServerEnv.files in
   let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-  let component_map = Sort_js.topsort dependency_graph in
+  let components = Sort_js.topsort dependency_graph in
 
   (* Get component for target file *)
-  let leader_map =
-    FilenameMap.fold (fun file component acc ->
-      List.fold_left (fun acc file_ ->
-        FilenameMap.add file_ file acc
-      ) acc component
-    ) component_map FilenameMap.empty
-  in
-  let leader = FilenameMap.find_unsafe fn leader_map in
-  let component = FilenameMap.find_unsafe leader component_map in
+  let component = List.find (List.mem fn) components in
 
   (* Restrict dep graph to only in-cycle files *)
   let subgraph = List.fold_left (fun acc f ->

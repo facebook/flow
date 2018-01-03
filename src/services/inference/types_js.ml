@@ -206,8 +206,12 @@ let error_set_of_merge_error file msg =
 let calc_deps ~options ~profiling ~workers to_merge =
   with_timer ~options "CalcDeps" profiling (fun () ->
     let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
-    let component_map = Sort_js.topsort dependency_graph in
-    if Options.should_profile options then Sort_js.log component_map;
+    let components = Sort_js.topsort dependency_graph in
+    if Options.should_profile options then Sort_js.log components;
+    let component_map = List.fold_left (fun component_map component ->
+      let file = List.hd component in
+      FilenameMap.add file component component_map
+    ) FilenameMap.empty components in
     dependency_graph, component_map
   )
 
@@ -282,14 +286,14 @@ let typecheck
        * cycles *)
       let all_dependencies_subgraph =
         Dep_service.calc_all_dependencies_subgraph dependency_graph roots in
-      let component_map = Sort_js.topsort all_dependencies_subgraph in
-      FilenameMap.fold (fun _ component dependencies ->
+      let components = Sort_js.topsort all_dependencies_subgraph in
+      List.fold_left (fun dependencies component ->
         if List.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
         (* If at least one member of the component is not unchanged, then keep the component *)
         then List.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
         (* If every element is unchanged, drop the component *)
         else dependencies
-      ) component_map FilenameSet.empty
+      ) FilenameSet.empty components
     ) in
 
     CheckedSet.add ~dependencies infer_input
