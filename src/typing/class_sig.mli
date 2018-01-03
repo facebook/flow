@@ -3,7 +3,7 @@
 type t
 
 type field = Loc.t option * Type.polarity * field'
-and field' = Annot of Type.t | Infer of Func_sig.t
+and field' = Decl of Type.t | Init of Func_sig.t
 
 type super =
   | Interface of {

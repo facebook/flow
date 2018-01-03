@@ -11,7 +11,7 @@ module Flow = Flow_js
 open Reason
 
 type field = Loc.t option * Type.polarity * field'
-and field' = Annot of Type.t | Infer of Func_sig.t
+and field' = Decl of Type.t | Init of Func_sig.t
 
 type signature = {
   reason: reason;
@@ -199,8 +199,8 @@ let mk_method cx ~expr x loc func =
 
 let mk_field cx loc ~polarity x reason typeAnnotation init =
   loc, polarity, match init with
-  | None -> Annot (Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation)
-  | Some expr -> Infer (
+  | None -> Decl (Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation)
+  | Some expr -> Init (
     Func_sig.field_initializer cx x.tparams_map reason expr typeAnnotation)
 
 let mem_constructor {constructor; _} = constructor <> []
@@ -215,8 +215,8 @@ let iter_methods f s =
 (* TODO? *)
 let subst_field cx map (loc, polarity, field) =
   loc, polarity, match field with
-  | Annot t -> Annot (Flow.subst cx map t)
-  | Infer fsig -> Infer (Func_sig.subst cx map fsig)
+  | Decl t -> Decl (Flow.subst cx map t)
+  | Init fsig -> Init (Func_sig.subst cx map fsig)
 
 let subst_sig cx map s =
   let subst_func_sig (loc, sig_) = (loc, Func_sig.subst cx map sig_) in
@@ -244,8 +244,8 @@ let generate_tests cx f x =
 
 let to_field (loc, polarity, field) =
   let t = match field with
-  | Annot t -> t
-  | Infer fsig -> Func_sig.gettertype fsig
+  | Decl t -> t
+  | Init fsig -> Func_sig.gettertype fsig
   in
   Type.Field (loc, t, polarity)
 
@@ -292,8 +292,8 @@ let elements cx ?constructor s =
    * (syntactically) which fields have initializers *)
   let initialized_field_names = SMap.fold (fun x (_, _, field) acc ->
     match field with
-    | Annot _ -> acc
-    | Infer _ -> SSet.add x acc
+    | Decl _ -> acc
+    | Init _ -> SSet.add x acc
   ) s.fields SSet.empty in
 
   initialized_field_names, fields, methods
@@ -562,7 +562,7 @@ let mk cx _loc reason self ~expr =
   let class_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) class_sig
+    add_field ~static:true "name" (None, Type.Neutral, Decl t) class_sig
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -700,8 +700,8 @@ let add_interface_properties cx properties s =
       let v = Anno.convert cx tparams_map value in
       let polarity = Anno.polarity variance in
       x
-        |> add_field ~static "$key" (None, polarity, Annot k)
-        |> add_field ~static "$value" (None, polarity, Annot v)
+        |> add_field ~static "$key" (None, polarity, Decl k)
+        |> add_field ~static "$value" (None, polarity, Decl v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
@@ -730,7 +730,7 @@ let add_interface_properties cx properties s =
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          add_field ~static name (Some id_loc, polarity, Annot t) x
+          add_field ~static name (Some id_loc, polarity, Decl t) x
 
       (* unsafe getter property *)
       | _, Property.Identifier (id_loc, name),
@@ -780,7 +780,7 @@ let of_interface cx reason { Ast.Statement.Interface.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field ~static:true "name" (None, Type.Neutral, Decl t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in
@@ -832,7 +832,7 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field ~static:true "name" (None, Type.Neutral, Decl t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in
@@ -866,8 +866,8 @@ let toplevels cx ~decls ~stmts ~expr x =
     let field config this super _name (_, _, value) =
       match config, value with
       | Options.ESPROPOSAL_IGNORE, _ -> ()
-      | _, Annot _ -> ()
-      | _, Infer fsig -> method_ this super fsig
+      | _, Decl _ -> ()
+      | _, Init fsig -> method_ this super fsig
     in
 
     let this = SMap.find_unsafe "this" x.tparams_map in
