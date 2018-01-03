@@ -200,8 +200,21 @@ let mk_method cx ~expr x loc func =
 let mk_field cx loc ~polarity x reason typeAnnotation init =
   loc, polarity, match init with
   | None -> Decl (Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation)
-  | Some expr -> Init (
-    Func_sig.field_initializer cx x.tparams_map reason expr typeAnnotation)
+  | Some expr ->
+    let typeAnnotation = match typeAnnotation with
+    | Some _ -> typeAnnotation
+    | None ->
+      (* If there is no type annotation on this field, but the initializre is a
+         function, try to extract a type annotation from the function AST and
+         use that instead. Only applies if the function is fully annotated. *)
+      match expr with
+      | loc, Ast.Expression.Function f
+      | loc, Ast.Expression.ArrowFunction f ->
+        Ast_utils.function_type_of_function loc f
+        |> Option.map ~f:(fun t -> Loc.none, t)
+      | _ -> None
+    in
+    Init (Func_sig.field_initializer cx x.tparams_map reason expr typeAnnotation)
 
 let mem_constructor {constructor; _} = constructor <> []
 

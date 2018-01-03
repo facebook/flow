@@ -108,6 +108,18 @@ Error: expr.js:30
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
                  ^^^^^ Alias
 
+Error: field_init.js:21
+ 21:   m(x: T): T { return this.f(x) } // error: incompatible instantiation
+                           ^^^^^^^^^ T. This type is incompatible with the expected return type of
+ 21:   m(x: T): T { return this.f(x) } // error: incompatible instantiation
+                ^ T
+
+Error: field_init.js:21
+ 21:   m(x: T): T { return this.f(x) } // error: incompatible instantiation
+                                  ^ T. This type is incompatible with the expected param type of
+ 20:   f = (x: T) => x;
+               ^ T
+
 Error: loc.js:5
   5: class Foo {} // error, shadows type Foo
            ^^^ Foo. name is already bound
@@ -144,4 +156,4 @@ Error: statics.js:25
               ^^^^^ empty
 
 
-Found 19 errors
+Found 21 errors

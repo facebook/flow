@@ -19,3 +19,7 @@ val bindings_of_variable_declarations:
 val partition_directives:
   Loc.t Ast.Statement.t list ->
   Loc.t Ast.Statement.t list * Loc.t Ast.Statement.t list
+
+(* Extract function type AST from fully-annotated function AST *)
+val function_type_of_function:
+  Loc.t -> Loc.t Ast.Function.t -> Loc.t Ast.Type.t option

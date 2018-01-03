@@ -54,3 +54,38 @@ let partition_directives statements =
     | rest -> List.rev directives, rest
   in
   helper [] statements
+
+
+let function_type_of_function =
+  let open Option.Monad_infix in
+  let rec param_type_of_pattern ?(optional=false) (loc, patt) =
+    let open Pattern in
+    match patt with
+    | Expression _ -> None
+    | Assignment { Assignment.left; _ } ->
+      param_type_of_pattern ~optional:true left
+    | Identifier { Identifier.name; typeAnnotation; optional } ->
+      typeAnnotation >>| fun (_, typeAnnotation) ->
+      let name = Some name in
+      (loc, { Type.Function.Param.name; typeAnnotation; optional })
+    | Object { Object.typeAnnotation; _ }
+    | Array { Array.typeAnnotation; _ } ->
+      typeAnnotation >>| fun (_, typeAnnotation) ->
+      let name = None in
+      (loc, { Type.Function.Param.name; typeAnnotation; optional })
+  in
+  let rest_type_of_rest = function
+    | None -> Some None
+    | Some (loc, { Function.RestElement.argument }) ->
+      param_type_of_pattern argument >>| fun argument ->
+      Some (loc, { Type.Function.RestParam.argument })
+  in
+  let params_type_of_params (loc, { Function.Params.params; rest }) =
+    Option.all (List.map param_type_of_pattern params) >>= fun params ->
+    rest_type_of_rest rest >>| fun rest ->
+    (loc, { Type.Function.Params.params; rest })
+  in
+  fun loc { Function.params; returnType; typeParameters; _ } ->
+    params_type_of_params params >>= fun params ->
+    returnType >>| fun (_, returnType) ->
+    (loc, Type.Function { Type.Function.params; returnType; typeParameters })
