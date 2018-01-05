@@ -11,6 +11,10 @@ printf "travis_fold:start:make\nBuilding flow\n"
 make
 printf "travis_fold:end:make\n"
 
+printf "travis_fold:start:libflowparser\nBuilding libflowparser\n"
+make -C src/parser dist/libflowparser.zip
+printf "travis_fold:end:libflowparser\n"
+
 printf "travis_fold:start:make_js\nBuilding flow.js\n"
 make js
 printf "travis_fold:end:make_js\n"
