@@ -13,8 +13,14 @@ type D = { static: X }
 // error: static prop named static
 type E = { static static: X }
 
-// error: parsed as a static callable (TODO: consider parsing as method named static?)
+// ok: parsed as a method named static
 type F = { static(): R }
 
-// error: parsed as static callable (TODO: consider parsing as method named static?)
+// ok: parsed as a poly method named static
 type G = { static<X>(): R }
+
+// error: static method named static
+type H = { static static(): R }
+
+// error: static poly method named static
+type I = { static static<X>(): R }
