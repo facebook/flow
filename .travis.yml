@@ -61,7 +61,9 @@ deploy:
   repo: facebook/flow
   skip_cleanup: true
   file_glob: true
-  file: flow-*.zip
+  file:
+    - flow-*.zip
+    - libflowparser-*.zip
   on:
     tags: true
     condition:
