@@ -1482,41 +1482,6 @@ module.exports = {
     // ECMAScript 6th Syntax, 13.2 Arrow Function Definitions
 
     'ES6: Arrow Function': [
-        '() => "test"',
-        'e => "test"',
-        '(e) => "test"',
-        '(a, b) => "test"',
-        'e => { 42; }',
-        'e => ({ property: 42 })',
-        // Not an object!
-        {
-          content: 'e => { label: 42 }',
-          explanation: "Esprima counts the implicit semicolon in its loc, " +
-            "Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.body.loc.end.column': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 16
-            },
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 16
-            },
-            'root.body.0.expression.body.body.0.body.range.1': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 16
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 16
-            },
-          }
-        },
-        '(a, b) => { 42; }',
         '([a, , b]) => 42',
         {
           content: '([a.a]) => 42',
@@ -1534,25 +1499,6 @@ module.exports = {
             }
           },
         },
-        '(x=1) => x * x',
-        // not strict mode, using eval
-        'eval => 42',
-        // not strict mode, using arguments
-        'arguments => 42',
-        // not strict mode, using octals
-        '(a) => 00',
-        // not strict mode, using eval, IsSimpleParameterList is true
-        '(eval, a) => 42',
-        // not strict mode, assigning to eval
-        '(eval = 10) => 42',
-        // not strict mode, using eval, IsSimpleParameterList is false
-        '(eval, a = 10) => 42',
-        '(x => x)',
-        'x => y => 42',
-        '(x) => ((y, z) => (x, y, z))',
-        'foo(() => {})',
-        'foo((x, y) => {})',
-        '(sun) => earth',
         // I don't see why this should be an error. 14.2.9
         {
           content: '(a, a) => 42',
@@ -1570,96 +1516,6 @@ module.exports = {
     ],
 
 
-    // ECMAScript 6th Syntax, 13.13 Method Definitions
-
-    'ES6: Method Definition': [
-        {
-          content: 'x = { method() { } }',
-          explanation: "Esprima-fb doesn't include params in " +
-            "FunctionExpression location",
-          expected_differences: {
-            'root.body.0.expression.right.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 15,
-              actual: 12,
-            },
-            'root.body.0.expression.right.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 15,
-              actual: 12,
-            },
-          },
-        },
-        {
-          content: 'x = { method(test) { } }',
-          explanation: "Esprima-fb doesn't include params in " +
-            "FunctionExpression location",
-          expected_differences: {
-            'root.body.0.expression.right.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 19,
-              actual: 12,
-            },
-            'root.body.0.expression.right.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 19,
-              actual: 12,
-            },
-          },
-        },
-        {
-          content: 'x = { \'method\'() { } }',
-          explanation: "Esprima-fb doesn't include params in " +
-            "FunctionExpression location",
-          expected_differences: {
-            'root.body.0.expression.right.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 14,
-            },
-            'root.body.0.expression.right.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 17,
-              actual: 14,
-            },
-          },
-        },
-        {
-          content: 'x = { get() { } }',
-          explanation: "Esprima-fb doesn't include params in " +
-            "FunctionExpression location",
-          expected_differences: {
-            'root.body.0.expression.right.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 12,
-              actual: 9,
-            },
-            'root.body.0.expression.right.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 12,
-              actual: 9,
-            },
-          },
-        },
-        {
-          content: 'x = { set() { } }',
-          explanation: "Esprima-fb doesn't include params in " +
-            "FunctionExpression location",
-          expected_differences: {
-            'root.body.0.expression.right.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 12,
-              actual: 9,
-            },
-            'root.body.0.expression.right.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 12,
-              actual: 9,
-            },
-          },
-        },
-    ],
-
     'Array Comprehension': [
         '[[x,b,c] for (x in []) for (b in []) if (b && c)]' ,
         '[x for (a in [])]' ,
@@ -1667,12 +1523,6 @@ module.exports = {
         '[(x,1) for (x in [])]' ,
         '[x for (x of array)]',
         '[x for (x of array) for (y of array2) if (x === test)]'
-    ],
-
-    // http://wiki.ecmascript.org/doku.php?id=harmony:object_literals#object_literal_property_value_shorthand
-
-    'Harmony: Object Literal Property Value Shorthand': [
-        'x = { y, z }'
     ],
 
     // http://wiki.ecmascript.org/doku.php?id=harmony:destructuring
@@ -1855,36 +1705,6 @@ module.exports = {
         'function* f () { var e = () => yield 1; }',
     ],
 
-
-
-    // http://wiki.ecmascript.org/doku.php?id=harmony:iterators
-
-    'Harmony: Iterators': [
-        'for(x of list) process(x);',
-        'for (var x of list) process(x);',
-        'for (let x of list) process(x);',
-        {
-          content: 'for (var x = 42 of list) process(x);',
-          explanation: "Esprima thinks this is valid, it isn't",
-          expected_differences : {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: undefined,
-              actual: 6,
-            },
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: undefined,
-              actual: 1,
-            },
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: undefined,
-              actual: 'Invalid left-hand side in for-of',
-            }
-          }
-        }
-    ],
 
 
     // http://wiki.ecmascript.org/doku.php?id=strawman:maximally_minimal_classes
@@ -2549,9 +2369,6 @@ module.exports = {
           },
         },
         '(({x} = {x: 10}) => {})',
-        'x = function(y = 1) {}',
-        'function f(a = 1) {}',
-        'x = { f: function(a=1) {} }',
         {
           content: 'x = { f(a=1) {} }',
           explanation: "Esprima-fb doesn't include params in " +
@@ -2575,12 +2392,7 @@ module.exports = {
     // http://wiki.ecmascript.org/doku.php?id=harmony:rest_parameters
     'ES6: Rest parameters': [
         'function f(...a) {}',
-        'function f(a, ...b) {}',
         'function f(a = 4, ...b) {}',
-        'var a = function f(...a) {}',
-        'var a = function f(a, ...b) {}',
-        '(...a) => a',
-        '(a, ...b) => a',
     ],
 
     'ES6: Destructured Parameters': [
@@ -2660,24 +2472,6 @@ module.exports = {
     ],
 
     'Harmony Invalid syntax': [
-        '0o',
-        '0o1a',
-        '0o9',
-        '0o18',
-        '0O',
-        '0O1a',
-        '0O9',
-        '0O18',
-        '0b',
-        '0b1a',
-        '0b9',
-        '0b18',
-        '0b12',
-        '0B',
-        '0B1a',
-        '0B9',
-        '0B18',
-        '0B12',
         '"\\u{110000}"',
         '[v] += ary',
         '[2] = 42',
@@ -2751,7 +2545,6 @@ module.exports = {
         '[for (x in [])]  // no espression',
         '({ "chance" }) = obj',
         '({ 42 }) = obj',
-        'function f(a, ...b, c)',
         'function f(a, ...b = 0)',
         'function x(...{ a }){}',
         '"use strict"; function x(a, { a }){}',
@@ -2970,137 +2763,7 @@ module.exports = {
       'options': { sourceType: "module" },
       'tests': [
         {
-          content: 'export * from "foo";',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportAllDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-            'root.body.0.declaration': {
-              type: 'Missing property',
-            },
-            'root.body.0.specifiers': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export * from "foo"',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportAllDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-            'root.body.0.declaration': {
-              type: 'Missing property',
-            },
-            'root.body.0.specifiers': {
-              type: 'Missing property',
-            },
-          },
-        },
-        /* This should be supported...
-        'export {} from "foo";',
-        */
-        {
-          content: 'export { bar } from "foo";',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export { bar } from "foo"',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export { bar, baz } from "foo";',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export { bar };',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        /* Esprima should support trailing comma
-        'export { bar, }',
-        */
-        {
-          content: 'export { bar, baz };',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
           content: 'export var x, y',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export var y = 12',
           explanation: 'esprima-fb is outdated',
           expected_differences: {
             'root.body.0.type': {
@@ -3127,49 +2790,7 @@ module.exports = {
             },
           },
         },
-        {
-          content: 'export let y = 12',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
         'export const x, y',
-        {
-          content: 'export const y = 12',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
-        {
-          content: 'export function foo() {}',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-          },
-        },
         {
           content: 'export class A {}',
           explanation: 'esprima-fb is outdated',
@@ -3239,31 +2860,6 @@ module.exports = {
         'export class {}',
         */
         'export function {}',
-        {
-          content: 'export default function() {}',
-          explanation: 'esprima-fb is outdated',
-          expected_differences: {
-            'root.body.0.type': {
-              type: 'Wrong string',
-              expected: 'ExportDeclaration',
-              actual: 'ExportDefaultDeclaration',
-            },
-            'root.body.0.default': {
-              type: 'Missing property',
-            },
-            'root.body.0.specifiers': {
-              type: 'Missing property',
-            },
-            'root.body.0.source': {
-              type: 'Missing property',
-            },
-            'root.body.0.declaration.type': {
-              type: 'Wrong string',
-              expected: 'FunctionExpression',
-              actual: 'FunctionDeclaration',
-            },
-          },
-        },
         /* Esprima parses default exports wrong
         'export default class A {}',
         */
@@ -3272,21 +2868,10 @@ module.exports = {
     'Import': {
       'options': { sourceType: "module" },
       'tests': [
-        'import "MyModule";',
-        'import defaultbinding from "MyModule";',
-        'import * as namespace from "MyModule";',
-        'import {} from "MyModule";',
         'import defaultbinding, {} from "MyModule";',
         /* TODO Esprima should support these
-        'import {x,} from "MyModule";',
         'import defaultbinding, {x,} from "MyModule";',
         */
-        'import {x} from "MyModule";',
-        'import {x,y} from "MyModule";',
-        'import {x as z} from "MyModule";',
-        'import {x, y as z} from "MyModule";',
-        'import defaultbinding, * as namespace from "MyModule";',
-        'import defaultbinding, {x} from "MyModule";',
         'import defaultbinding, {x,y} from "MyModule";',
         'import defaultbinding, {x as z} from "MyModule";',
         'import defaultbinding, {x, y as z} from "MyModule";',
@@ -3500,30 +3085,6 @@ module.exports = {
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
       'class Foo<T: Bar>() {}',
-    ],
-    'For Of Loops': [
-        'for(x of list) process(x);',
-        'for (var x of list) process(x);',
-        'for (let x of list) process(x);',
-    ],
-    'Invalid For Of Loops': [
-        {
-          content: 'for (let x = 42 of list) process(x);',
-          explanation: 'Exprima is off by one here location-wise '+
-            'and I like my error here better',
-          expected_differences: {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: 16,
-              actual: '5-15',
-            } ,
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected identifier',
-              actual: 'Invalid left-hand side in for-of',
-            }
-          }
-        },
     ],
     'Async/Await': [
         'try { foo(); } catch (async) { bar(); }',
