@@ -524,11 +524,25 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties ~allow_static ~allow_spread ~exact env (indexer::acc)
       | T_LESS_THAN
       | T_LPAREN ->
-        error_if_unexpected_static env ~allow_static static_loc;
+        (* If `not allow_static`, we want to treat `static(): T` and
+           `static<T>(): U` as a method property, which is handled in the
+           catch-all case below. *)
         error_unsupported_variance env variance;
-        let call_prop = call_property env start_loc static in
-        semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
+        begin match static_loc with
+        | Some static_loc when not allow_static ->
+          let key = Expression.Object.Property.Identifier (
+            static_loc,
+            "static"
+          ) in
+          let static = false in
+          let property = method_property env start_loc static key in
+          semicolon exact env;
+          properties ~allow_static ~allow_spread ~exact env (property::acc)
+        | _ ->
+          let call_prop = call_property env start_loc static in
+          semicolon exact env;
+          properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
+        end
       | T_ELLIPSIS when allow_spread ->
         error_if_unexpected_static env ~allow_static static_loc;
         error_unsupported_variance env variance;
@@ -541,21 +555,17 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (property::acc)
       | token ->
-        let property = match static, variance, token with
-        | true, None, (T_PLING | T_COLON) ->
+        let property = match static_loc, variance, token with
+        | Some static_loc, None, (T_PLING | T_COLON) ->
+            (* We speculatively parsed `static` as a static modifier, but now
+               that we've parsed the next token, we changed our minds and want
+               to parse `static` as the key of a named property. *)
             let key = Expression.Object.Property.Identifier (
-              start_loc,
+              static_loc,
               "static"
             ) in
             let static = false in
-            begin match Peek.token env with
-            | T_LESS_THAN
-            | T_LPAREN ->
-              error_unsupported_variance env variance;
-              method_property env start_loc static key
-            | _ ->
-              property env start_loc static variance key
-            end
+            property env start_loc static variance key
         | _ ->
             error_if_unexpected_static env ~allow_static static_loc;
             let object_key env =
