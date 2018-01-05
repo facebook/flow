@@ -50,6 +50,8 @@
                       "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":27}},
                       "range":[9,27],
                       "params":[],
+                      "async":false,
+                      "generator":false,
                       "returnType":{
                         "type":"NumberTypeAnnotation",
                         "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":27}},
@@ -60,6 +62,7 @@
                     },
                     "method":false,
                     "optional":false,
+                    "abstract":false,
                     "static":false,
                     "variance":null,
                     "kind":"get"

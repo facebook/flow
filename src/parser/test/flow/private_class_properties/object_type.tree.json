@@ -47,6 +47,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":false,
             "variance":null,
             "kind":"init"

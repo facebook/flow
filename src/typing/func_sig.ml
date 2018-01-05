@@ -26,7 +26,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: Loc.t Ast.Function.body;
+  body: Loc.t Ast.Function.body option;
   return_t: Type.t;
 }
 
@@ -73,7 +73,7 @@ let mk cx tparams_map ~expr loc func =
         );
         Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
-  {reason; kind; tparams; tparams_map; fparams; body; return_t}
+  {reason; kind; tparams; tparams_map; fparams; body = Some body; return_t}
 
 let empty_body =
   let loc = Loc.none in
@@ -83,15 +83,19 @@ let empty_body =
 let convert cx tparams_map loc func =
   let {Ast.Type.Function.typeParameters; returnType; _} = func in
   let reason = mk_reason RFunctionType loc in
-  let kind = Ordinary in
+  let kind = Ast.Type.Function.(match func.async, func.generator with
+    | true, false -> Generator
+    | false, true -> Async
+    | true, true -> AsyncGenerator
+    | false, false -> Ordinary
+  ) in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let fparams = Func_params.convert cx tparams_map func in
-  let body = empty_body in
   let return_t = Anno.convert cx tparams_map returnType in
 
-  {reason; kind; tparams; tparams_map; fparams; body; return_t}
+  {reason; kind; tparams; tparams_map; fparams; body = None; return_t}
 
 let default_constructor reason = {
   reason;
@@ -99,7 +103,7 @@ let default_constructor reason = {
   tparams = [];
   tparams_map = SMap.empty;
   fparams = Func_params.empty;
-  body = empty_body;
+  body = Some empty_body;
   return_t = VoidT.why reason;
 }
 
@@ -109,7 +113,7 @@ let field_initializer cx tparams_map reason expr annot = {
   tparams = [];
   tparams_map;
   fparams = Func_params.empty;
-  body = empty_body;
+  body = Some empty_body;
   return_t = Anno.mk_type_annotation cx tparams_map reason annot;
 }
 
@@ -141,7 +145,8 @@ let generate_tests cx f x =
 let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
   let knot = Tvar.mk cx reason in
   let static =
-    let props = SMap.singleton "$call" (Method (None, knot)) in
+    let meth = (Property.Member ("$call", loc_of_reason reason), None, knot) in
+    let props = SMap.singleton "$call" (Method meth) in
     let proto = FunProtoT reason in
     Obj_type.mk_with_proto cx reason ~props proto
   in
@@ -186,6 +191,10 @@ let settertype {fparams; _} =
 
 let toplevels id cx this super ~decls ~stmts ~expr
   {kind; tparams_map; fparams; body; return_t; _} =
+
+  match body with
+  | None -> ()
+  | Some body ->
 
   let loc, reason =
     let loc = Ast.Function.(match body with
@@ -361,5 +370,13 @@ let toplevels id cx this super ~decls ~stmts ~expr
   Env.pop_var_scope ();
 
   Env.update_env cx loc env
+
+let reason_of_t ({reason; _}:t) = reason
+
+let replace_reason f (t:t):t =
+  {t with reason = replace_reason f t.reason}
+
+let replace_reason_const desc (t:t):t =
+  {t with reason = replace_reason_const desc t.reason}
 
 let to_ctor_sig f = { f with kind = Ctor }

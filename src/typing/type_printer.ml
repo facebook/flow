@@ -55,18 +55,21 @@ let rec type_printer_impl ~size override enclosure cx t =
   let pp_opt = type_printer_opt ~size override in
 
   let rec prop x = function
-    | Field (_, t, polarity) -> spf "%s%s: %s"
+    | Field ((_, _, t), polarity) -> spf "%s%s: %s"
       (Polarity.sigil polarity)
       (prop_name cx x t)
       (pp EnclosureProp cx t)
-    | Get (_, t) -> spf "get %s(): %s" x (pp EnclosureRet cx t)
-    | Set (_, t) -> spf "set %s(value: %s): void" x (pp EnclosureParam cx t)
-    | GetSet (loc1, t1, loc2, t2) ->
+    | Get (_, _, t) -> spf "get %s(): %s" x (pp EnclosureRet cx t)
+    | Set (_, _, t) -> spf "set %s(value: %s): void" x (pp EnclosureParam cx t)
+    | GetSet (get, set) ->
       String.concat ", " [
-        prop x (Get (loc1, t1));
-        prop x (Set (loc2, t2));
+        prop x (Get get);
+        prop x (Set set);
       ]
-    | Method (_, t) -> spf "%s%s"
+    | Method (_, _, t) -> spf "%s%s"
+      (prop_name cx x t)
+      (pp EnclosureMethod cx t)
+    | Abstract (_, _, t) -> spf "abstract %s%s"
       (prop_name cx x t)
       (pp EnclosureMethod cx t)
   in
@@ -82,7 +85,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     in
     let indexer =
       (match dict_t with
-      | Some { dict_name; key; value; dict_polarity } ->
+      | Some { dict_name; dict_kind = _; key; value; dict_polarity } ->
           let indexer_prefix =
             if props <> ""
             then ", "
@@ -209,8 +212,8 @@ let rec type_printer_impl ~size override enclosure cx t =
           |> String.concat ", "
         in
         let type_s = match t with
-        | DefT (_, ClassT u)
-        | ThisClassT (_, u) ->
+        | DefT (_, ClassT (u, _))
+        | ThisClassT (_, u, _) ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
           spf "<%s>%s" xs_str (pp
@@ -257,7 +260,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ShapeT t -> Some (spf "$Shape<%s>" (pp EnclosureNone cx t))
 
     (* The following types are not syntax-supported *)
-    | DefT (_, ClassT t) ->
+    | DefT (_, ClassT (t, _)) ->
         Some (spf "[class: %s]" (pp EnclosureNone cx t))
 
     | DefT (_, TypeT t) ->
@@ -301,6 +304,7 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     (* TODO: Fix these *)
 
+    | AbstractsT _
     | FunProtoT _
     | FunProtoBindT _
     | CustomFunT _
@@ -323,8 +327,8 @@ let rec type_printer_impl ~size override enclosure cx t =
 
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
-  | DefT (_, PolyT (_, ThisClassT (_, t), _))
-  | DefT (_, PolyT (_, DefT (_, ClassT t), _))
+  | DefT (_, PolyT (_, ThisClassT (_, t, _), _))
+  | DefT (_, PolyT (_, DefT (_, ClassT (t, _)), _))
     -> type_printer ~size override enclosure cx t
 
   | DefT (_, PolyT (_, DefT (reason, TypeT _), _))
@@ -456,8 +460,8 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       (* unwrap PolyT (ClassT t) because class names are parsable as part of a
          polymorphic type declaration. *)
       let t = match t with
-        | ThisClassT (_, u)
-        | DefT (_, ClassT u) -> u
+        | ThisClassT (_, u, _)
+        | DefT (_, ClassT (u, _)) -> u
         | _ -> t
       in
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -478,10 +482,10 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* these are types which are not really parsable, but they make sense to a
      human user in cases of autocompletion *)
   | DefT (_, TypeT t)
-  | DefT (_, ClassT t)
+  | DefT (_, ClassT (t, _))
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
-  | ThisClassT (_, t)
+  | ThisClassT (_, t, _)
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -494,9 +498,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       false
 
 and is_instantiable_poly_type weak cx enclosure = function
-  | DefT (_, PolyT (_, ThisClassT (_, t), _))
-  | DefT (_, PolyT (_, DefT (_, ClassT t), _))
-    -> is_printed_type_parsable_impl weak cx enclosure t
+  | DefT (_, PolyT (_, ThisClassT (_, t, _), _))
+  | DefT (_, PolyT (_, DefT (_, ClassT (t, _)), _)) ->
+    is_printed_type_parsable_impl weak cx enclosure t
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _))
     -> true

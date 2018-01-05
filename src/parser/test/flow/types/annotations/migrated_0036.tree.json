@@ -50,6 +50,8 @@
                       "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":24}},
                       "range":[9,24],
                       "params":[],
+                      "async":false,
+                      "generator":false,
                       "returnType":{
                         "type":"VoidTypeAnnotation",
                         "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":24}},
@@ -60,6 +62,7 @@
                     },
                     "method":false,
                     "optional":false,
+                    "abstract":false,
                     "static":false,
                     "variance":null,
                     "kind":"set"

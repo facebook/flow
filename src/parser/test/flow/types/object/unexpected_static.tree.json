@@ -76,6 +76,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":true,
             "variance":null,
             "kind":"init"
@@ -235,6 +236,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":false,
             "variance":null,
             "kind":"init"
@@ -291,6 +293,7 @@
             },
             "method":false,
             "optional":false,
+            "abstract":false,
             "static":true,
             "variance":null,
             "kind":"init"
@@ -330,6 +333,8 @@
               "loc":{"source":null,"start":{"line":17,"column":17},"end":{"line":17,"column":22}},
               "range":[483,488],
               "params":[],
+              "async":false,
+              "generator":false,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":17,"column":21},"end":{"line":17,"column":22}},
@@ -382,6 +387,8 @@
               "loc":{"source":null,"start":{"line":20,"column":20},"end":{"line":20,"column":25}},
               "range":[597,602],
               "params":[],
+              "async":false,
+              "generator":false,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":20,"column":24},"end":{"line":20,"column":25}},

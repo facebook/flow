@@ -31,6 +31,8 @@
                     "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":20}},
                     "range":[8,20],
                     "params":[],
+                    "async":false,
+                    "generator":false,
                     "returnType":{
                       "type":"NumberTypeAnnotation",
                       "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":20}},
@@ -44,6 +46,8 @@
                     "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":36}},
                     "range":[24,36],
                     "params":[],
+                    "async":false,
+                    "generator":false,
                     "returnType":{
                       "type":"StringTypeAnnotation",
                       "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":36}},

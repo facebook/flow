@@ -7,10 +7,6 @@
     {
       "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
       "message":"Unexpected token {"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-      "message":"Unexpected token }"
     }
   ],
   "type":"Program",
@@ -35,31 +31,7 @@
         "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":31}},
         "range":[25,31],
         "exact":false,
-        "properties":[
-          {
-            "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":31}},
-            "range":[27,31],
-            "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":28}},
-              "range":[27,28],
-              "name":"C",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-              "range":[30,31]
-            },
-            "method":false,
-            "optional":false,
-            "static":false,
-            "variance":null,
-            "kind":"init"
-          }
-        ],
+        "properties":[],
         "indexers":[],
         "callProperties":[]
       },

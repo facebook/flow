@@ -102,4 +102,7 @@ val settertype: t -> Type.t
 
 (** The location of the return type for a function. *)
 val return_loc: Loc.t Ast.Function.t -> Loc.t
+val reason_of_t: t -> Reason.t
+val replace_reason: (Reason.reason_desc -> Reason.reason_desc) -> t -> t
+val replace_reason_const: Reason.reason_desc -> t -> t
 val to_ctor_sig: t -> t

@@ -59,6 +59,7 @@ type hash =
   | TypeAppH
   | ThisClassH
   | ThisTypeAppH
+  | AbstractsH
   | BoundH
   | ExistsH
   | ExactH
@@ -96,6 +97,7 @@ type hash =
   | GetElemH
   | CallElemH
   | GetStaticsH
+  | AssertNonabstractH
   | GetProtoH
   | SetProtoH
   | ReposLowerH
@@ -104,6 +106,7 @@ type hash =
   | SuperH
   | ImplementsH
   | MixinH
+  | AccAbstractsH
   | AdderH
   | ComparatorH
   | UnaryMinusH
@@ -230,6 +233,7 @@ let hash_of_ctor = Type.(function
   | ShapeT _ -> ShapeH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
+  | AbstractsT _ -> AbstractsH
 )
 
 let hash_of_use_ctor = Type.(function
@@ -247,6 +251,7 @@ let hash_of_use_ctor = Type.(function
   | GetElemT _ -> GetElemH
   | CallElemT _ -> CallElemH
   | GetStaticsT _ -> GetStaticsH
+  | AssertNonabstractT _ -> AssertNonabstractH
   | GetProtoT _ -> GetProtoH
   | SetProtoT _ -> SetProtoH
   | ReposLowerT _ -> ReposLowerH
@@ -255,6 +260,7 @@ let hash_of_use_ctor = Type.(function
   | SuperT _ -> SuperH
   | ImplementsT _ -> ImplementsH
   | MixinT _ -> MixinH
+  | AccAbstractsT _ -> AccAbstractsH
   | AdderT _ -> AdderH
   | ComparatorT _ -> ComparatorH
   | UnaryMinusT _ -> UnaryMinusH
@@ -368,13 +374,14 @@ let add_reason state r =
 let add_polarity = add_int
 
 let add_prop state = Type.(function
-  | Field (_, _, polarity) ->
+  | Field (_, polarity) ->
     add_int state 0;
     add_int state polarity
   | Get _ -> add_int state 1
   | Set _ -> add_int state 2
   | GetSet _ -> add_int state 3
   | Method _ -> add_int state 4
+  | Abstract _ -> add_int state 5
 )
 
 let add_props_map state =

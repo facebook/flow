@@ -743,6 +743,7 @@ let token (env: Lex_env.t) lexbuf : result =
     Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
 
   (* Keywords *)
+  | "abstract" -> Token (env, T_ABSTRACT)
   | "async" -> Token (env, T_ASYNC)
   | "await" -> Token (env, T_AWAIT)
   | "break" -> Token (env, T_BREAK)
@@ -1612,6 +1613,7 @@ let type_token env lexbuf =
     Token (env, mk_num_singleton NORMAL num)
 
   (* Keywords *)
+  | "abstract" -> Token (env, T_ABSTRACT)
   | "any" -> Token (env, T_ANY_TYPE)
   | "bool" -> Token (env, (T_BOOLEAN_TYPE BOOL))
   | "boolean" -> Token (env, (T_BOOLEAN_TYPE BOOLEAN))

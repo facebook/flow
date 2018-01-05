@@ -283,6 +283,7 @@ let object_ cx t =
       key = StrT.why r;
       value = DefT (replace_reason_const MixedT.desc r, MixedT Mixed_everything);
       dict_name = None;
+      dict_kind = Property.Explicit (loc_of_reason r);
       dict_polarity = Neutral;
     } in
     let proto = ObjProtoT reason in

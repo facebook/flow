@@ -266,10 +266,20 @@ class mapper = object(this)
   method class_element (elem: Loc.t Ast.Class.Body.element) =
     let open Ast.Class.Body in
     match elem with
+    | AbstractMethod (loc, meth) -> id this#abstract_class_method meth elem
+      (fun meth -> AbstractMethod (loc, meth))
     | Method (loc, meth) -> id this#class_method meth elem (fun meth -> Method (loc, meth))
     | Property (loc, prop) -> id this#class_property prop elem (fun prop -> Property (loc, prop))
     | PrivateField (loc, field) -> id this#class_private_field field elem
       (fun field -> PrivateField (loc, field))
+
+  method abstract_class_method (meth: Loc.t Ast.Class.AbstractMethod.t') =
+    let open Ast.Class.AbstractMethod in
+    let { key; value; static = _; } = meth in
+    let key' = this#identifier key in
+    let value' = map_loc this#function_type value in
+    if key == key' && value == value' then meth
+    else { meth with key = key'; value = value' }
 
   method class_method (meth: Loc.t Ast.Class.Method.t') =
     let open Ast.Class.Method in
@@ -502,6 +512,8 @@ class mapper = object(this)
     let open Ast.Type.Function in
     let {
       params = (params_loc, { Params.params = ps; rest = rpo });
+      async;
+      generator;
       returnType;
       typeParameters;
     } = ft in
@@ -511,6 +523,8 @@ class mapper = object(this)
     if ps' == ps && rpo' == rpo && returnType' == returnType then ft
     else {
       params = (params_loc, { Params.params = ps'; rest = rpo' });
+      async;
+      generator;
       returnType = returnType';
       typeParameters
     }
@@ -527,10 +541,10 @@ class mapper = object(this)
 
   method object_property_type (opt: Loc.t Ast.Type.Object.Property.t) =
     let open Ast.Type.Object.Property in
-    let loc, { key; value; optional; static; _method; variance; } = opt in
+    let loc, { key; value; optional; abstract; static; _method; variance; } = opt in
     let value' = this#object_property_value_type value in
     if value' == value then opt
-    else loc, { key; value = value'; optional; static; _method; variance }
+    else loc, { key; value = value'; optional; abstract; static; _method; variance; }
 
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in

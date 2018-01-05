@@ -157,12 +157,12 @@ type reason_desc =
   | ROptional of reason_desc
   | RMaybe of reason_desc
   | RRestArray of reason_desc
-  | RAbstract of reason_desc
   | RTypeApp of reason_desc
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
   | RStatics of reason_desc
   | RSuperOf of reason_desc
+  | RAbstractsOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
   | RVarianceCheck of reason_desc
@@ -175,6 +175,8 @@ type reason_desc =
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
+  | RPropertyDef of reason_desc_property
+  | RMember of string
 
   | RReactProps
   | RReactElement of string option
@@ -194,6 +196,13 @@ and reason_desc_function =
   | RGenerator
   | RAsyncGenerator
   | RNormal
+
+and reason_desc_property =
+  | RFieldDef
+  | RGetterDef
+  | RSetterDef
+  | RMethodDef
+  | RAbstractMethodDef
 
 type reason = {
   test_id: int option;
@@ -505,12 +514,12 @@ let rec string_of_desc = function
     in
     spf "nullable %s" (string_of_desc (loop d))
   | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
-  | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
+  | RAbstractsOf d -> spf "abstracts of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
   | RVarianceCheck d -> spf "variance check: %s" (string_of_desc d)
@@ -524,6 +533,14 @@ let rec string_of_desc = function
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "module `%s`" x
+  | RPropertyDef x ->
+    (match x with
+    | RFieldDef -> "field"
+    | RGetterDef -> "getter"
+    | RSetterDef -> "setter"
+    | RMethodDef -> "method"
+    | RAbstractMethodDef -> "abstract method")
+  | RMember x -> spf "member `%s`" x
 
   | RReactProps -> "props"
   | RReactElement x ->
@@ -815,12 +832,12 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | ROptional _
 | RMaybe _
 | RRestArray _
-| RAbstract _
 | RTypeApp _
 | RThisTypeApp _
 | RExtends _
 | RStatics _
 | RSuperOf _
+| RAbstractsOf _
 | RFrozen _
 | RBound _
 | RVarianceCheck _
@@ -833,6 +850,8 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RObjectPatternRestProp
 | RArrayPatternRestProp
 | RCommonJSExports _
+| RPropertyDef _
+| RMember _
 | RReactProps
 | RReactElement _
 | RReactClass
@@ -960,12 +979,12 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RExactType _
 | ROptional _
 | RMaybe _
-| RAbstract _
 | RTypeApp _
 | RThisTypeApp _
 | RExtends _
 | RStatics _
 | RSuperOf _
+| RAbstractsOf _
 | RFrozen _
 | RBound _
 | RVarianceCheck _
@@ -977,6 +996,8 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RSpreadOf _
 | RObjectPatternRestProp
 | RCommonJSExports _
+| RPropertyDef _
+| RMember _
 | RReactProps
 | RReactElement _
 | RReactClass

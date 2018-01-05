@@ -757,9 +757,18 @@ end with type t = Impl.t) = struct
   )
 
   and class_element = Class.Body.(function
+    | AbstractMethod m -> class_abstract_method m
     | Method m -> class_method m
     | PrivateField p -> class_private_field p
     | Property p -> class_property p)
+
+  and class_abstract_method (loc, method_) =
+    let { Class.AbstractMethod.key; value; static; } = method_ in
+    node "AbstractMethodDefinition" loc [
+      "key", identifier key;
+      "value", function_type value;
+      "static", bool static;
+    ]
 
   and class_method (loc, method_) =
     let { Class.Method.key; value; kind; static; decorators; } = method_ in
@@ -1071,6 +1080,8 @@ end with type t = Impl.t) = struct
     let (_, { Params.params; rest }) = fn.params in
     node "FunctionTypeAnnotation" loc [
       "params", array_of_list function_type_param params;
+      "async", bool fn.async;
+      "generator", bool fn.generator;
       "returnType", _type fn.returnType;
       "rest", option function_type_rest rest;
       "typeParameters", option type_parameter_declaration fn.typeParameters;
@@ -1119,7 +1130,7 @@ end with type t = Impl.t) = struct
   )
 
   and object_type_property (loc, { Type.Object.Property.
-    key; value; optional; static; variance = variance_; _method;
+    key; value; optional; abstract; static; variance = variance_; _method;
   }) =
     let key = match key with
     | Expression.Object.Property.Literal lit -> literal lit
@@ -1139,6 +1150,7 @@ end with type t = Impl.t) = struct
       "value", value;
       "method", bool _method;
       "optional", bool optional;
+      "abstract", bool abstract;
       "static", bool static;
       "variance", option variance variance_;
       "kind", string kind;

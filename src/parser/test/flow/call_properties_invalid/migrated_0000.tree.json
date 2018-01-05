@@ -48,6 +48,8 @@
                       "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":2,"column":0}},
                       "range":[10,15],
                       "params":[],
+                      "async":false,
+                      "generator":false,
                       "returnType":{
                         "type":"AnyTypeAnnotation",
                         "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},

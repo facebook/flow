@@ -76,9 +76,10 @@ module rec TypeTerm : sig
     | ExistsT of reason
 
     (* this-abstracted class *)
-    | ThisClassT of reason * t
+    | ThisClassT of reason * t * t
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
+    | AbstractsT of reason * (abstracts * abstracts)
 
     (* exact *)
     | ExactT of reason * t
@@ -202,7 +203,7 @@ module rec TypeTerm : sig
     | ObjT of objtype
     | ArrT of arrtype
     (* type of a class *)
-    | ClassT of t
+    | ClassT of t * t
     (* type of an instance of a class *)
     | InstanceT of static * super * implements * insttype
     (* singleton string, matches exactly a given string literal *)
@@ -358,6 +359,7 @@ module rec TypeTerm : sig
     | GetElemT of use_op * reason * t * t
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
+    | AssertNonabstractT of use_op * reason * nonabstract
 
     | GetProtoT of reason * t_out
     | SetProtoT of reason * t
@@ -370,8 +372,9 @@ module rec TypeTerm : sig
     | ConstructorT of use_op * reason * call_arg list * t
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
-    | MixinT of reason * t
+    | MixinT of use_op * reason * t
     | ToStringT of reason * t
+    | AccAbstractsT of reason * (SSet.t * SSet.t) * (abstracts * abstracts) * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * bool * t * t
@@ -840,6 +843,7 @@ module rec TypeTerm : sig
 
   and dicttype = {
     dict_name: string option;
+    dict_kind: Property.kind;
     key: t;
     value: t;
     dict_polarity: polarity;
@@ -847,13 +851,13 @@ module rec TypeTerm : sig
 
   and polarity = Negative | Neutral | Positive
 
-  (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of Loc.t option * t * polarity
-    | Get of Loc.t option * t
-    | Set of Loc.t option * t
-    | GetSet of Loc.t option * t * Loc.t option * t
-    | Method of Loc.t option * t
+    | Field of Property.triple * polarity
+    | Get of Property.triple
+    | Set of Property.triple
+    | GetSet of Property.triple * Property.triple
+    | Method of Property.triple
+    | Abstract of Property.triple
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
@@ -957,6 +961,12 @@ module rec TypeTerm : sig
   and static = t
 
   and implements = t list
+
+  and abstracts = reason SMap.t
+
+  and nonabstract =
+  | NonabstractMember of bool (* static *) * string
+  | NonabstractClass
 
   and t_out = t
 
@@ -1121,14 +1131,24 @@ end
 and Property : sig
   type t = TypeTerm.property
 
+  (* Locations refer to the location of the identifier, if one exists *)
+  type triple = kind * Loc.t option * TypeTerm.t
+
+   and kind =
+    | Explicit of Loc.t (* The location of the identifier and its value *)
+    | Member of string * Loc.t (* The location of the property's container *)
+    | Custom of string * Loc.t
+
   val polarity: t -> Polarity.t
 
+  val choose: t -> triple
+  val read: t -> triple option
+  val write: ?ctx:TypeTerm.write_ctx -> t -> triple option
   val read_t: t -> TypeTerm.t option
   val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
   val access: TypeTerm.rw -> t -> TypeTerm.t option
 
-  val read_loc: t -> Loc.t option
-  val write_loc: t -> Loc.t option
+  val iter_reason: (reason -> unit) -> t -> unit
 
   val iter_t: (TypeTerm.t -> unit) -> t -> unit
   val fold_t: ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
@@ -1142,104 +1162,120 @@ end = struct
 
   type t = property
 
+  type triple = kind * Loc.t option * TypeTerm.t
+
+  and kind =
+    | Explicit of Loc.t
+    | Member of string * Loc.t
+    | Custom of string * Loc.t
+
+  let triples = function
+    | Field (triple, _)
+    | Get triple
+    | Set triple
+    | Method triple
+    | Abstract triple ->
+      Nel.one triple
+    | GetSet (get, set) ->
+      Nel.cons get (Nel.one set)
+
+  let third (_, _, t) = t
+
   let polarity = function
-    | Field (_, _, polarity) -> polarity
+    | Field (_, polarity) -> polarity
     | Get _ -> Positive
     | Set _ -> Negative
     | GetSet _ -> Neutral
     | Method _ -> Positive
+    | Abstract _ -> Positive
 
-  let read_t = function
-    | Field (_, t, polarity) ->
+  let choose = Fn.compose Nel.hd triples
+
+  let read = function
+    | Field (triple, polarity) ->
       if Polarity.compat (polarity, Positive)
-      then Some t
+      then Some triple
       else None
-    | Get (_, t) -> Some t
+    | Get triple -> Some triple
     | Set _ -> None
-    | GetSet (_, t, _, _) -> Some t
-    | Method (_, t) -> Some t
+    | GetSet (triple, _) -> Some triple
+    | Method triple -> Some triple
+    | Abstract triple -> Some triple
 
-  let write_t ?(ctx=Normal) = function
-    | Field (_, t, _) when ctx = ThisInCtor -> Some t
-    | Field (_, t, polarity) ->
+  let write ?(ctx=Normal) = function
+    | Field (triple, _) when ctx = ThisInCtor -> Some triple
+    | Field (triple, polarity) ->
       if Polarity.compat (polarity, Negative)
-      then Some t
+      then Some triple
       else None
     | Get _ -> None
-    | Set (_, t) -> Some t
-    | GetSet (_, _, _, t) -> Some t
+    | Set triple -> Some triple
+    | GetSet (_, triple) -> Some triple
     | Method _ -> None
+    | Abstract _ -> None
 
-  let read_loc = function
-    | Field (loc, _, _)
-    | Get (loc, _)
-    | GetSet (loc, _, _, _)
-    | Method (loc, _) ->
-        loc
-    | Set _ -> None
+  let read_t = Fn.compose (Option.map ~f:third) read
+  let write_t ?(ctx=Normal) = Fn.compose (Option.map ~f:third) (write ~ctx)
 
-  let write_loc = function
-    | Field (loc, _, _)
-    | Set (loc, _)
-    | GetSet (_, _, loc, _) ->
-        loc
-    | Method _
-    | Get _ ->
-        None
+  let kind_reason explicit_desc = function
+    | Explicit loc -> mk_reason (RPropertyDef explicit_desc) loc
+    | Member (name, loc) -> mk_reason (RMember name) loc
+    | Custom (msg, loc) -> mk_reason (RCustom msg) loc
+
+  let iter_reason f = function
+    | Field ((kind, _, _), _) -> f (kind_reason RFieldDef kind)
+    | Get (kind, _, _) -> f (kind_reason RGetterDef kind)
+    | Set (kind, _, _) -> f (kind_reason RSetterDef kind)
+    | GetSet ((get_kind, _, _), (set_kind, _, _)) ->
+        f (kind_reason RGetterDef get_kind);
+        f (kind_reason RSetterDef set_kind)
+    | Method (kind, _, _) -> f (kind_reason RMethodDef kind)
+    | Abstract (kind, _, _) -> f (kind_reason RAbstractMethodDef kind)
 
   let access = function
     | Read -> read_t
     | Write (ctx, _) -> write_t ~ctx
 
-  let iter_t f = function
-    | Field (_, t, _)
-    | Get (_, t)
-    | Set (_, t)
-    | Method (_, t) ->
-      f t
-    | GetSet (_, t1, _, t2) ->
-      f t1;
-      f t2
-
-  let fold_t f acc = function
-    | Field (_, t, _)
-    | Get (_, t)
-    | Set (_, t)
-    | Method (_, t) ->
-      f acc t
-    | GetSet (_, t1, _, t2) ->
-      f (f acc t1) t2
+  let ts = Fn.compose (Nel.map third) triples
+  let iter_t f = Fn.compose (Nel.iter f) ts
+  let fold_t f acc = Fn.compose (Nel.fold_left f acc) ts
 
   let map_t f = function
-    | Field (loc, t, polarity) -> Field (loc, f t, polarity)
-    | Get (loc, t) -> Get (loc, f t)
-    | Set (loc, t) -> Set (loc, f t)
-    | GetSet (loc1, t1, loc2, t2) -> GetSet (loc1, f t1, loc2, f t2)
-    | Method (loc, t) -> Method (loc, f t)
+    | Field ((kind, key_loc, t), polarity) -> Field ((kind, key_loc, f t), polarity)
+    | Get (kind, key_loc, t) -> Get (kind, key_loc, f t)
+    | Set (kind, key_loc, t) -> Set (kind, key_loc, f t)
+    | GetSet ((kind1, key_loc1, t1), (kind2, key_loc2, t2)) ->
+        GetSet ((kind1, key_loc1, f t1), (kind2, key_loc2, f t2))
+    | Method (kind, key_loc, t) -> Method (kind, key_loc, f t)
+    | Abstract (kind, key_loc, t) -> Abstract (kind, key_loc, f t)
 
   let ident_map_t f p =
     match p with
-    | Field (loc, t, polarity) ->
+    | Field ((kind, key_loc, t), polarity) ->
       let t_ = f t in
-      if t_ == t then p else Field (loc, t_, polarity)
-    | Get (loc, t) ->
+      if t_ == t then p else Field ((kind, key_loc, t_), polarity)
+    | Get (kind, key_loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Get (loc, t_)
-    | Set (loc, t) ->
+      if t_ == t then p else Get (kind, key_loc, t_)
+    | Set (kind, key_loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Set (loc, t_)
-    | GetSet (loc1, t1, loc2, t2) ->
+      if t_ == t then p else Set (kind, key_loc, t_)
+    | GetSet ((kind1, key_loc1, t1), (kind2, key_loc2, t2)) ->
       let t1_ = f t1 in
       let t2_ = f t2 in
-      if t1_ == t1 && t2_ == t2 then p else GetSet (loc1, t1_, loc2, t2_)
-    | Method (loc, t) ->
+      if t1_ == t1 && t2_ == t2 then p
+      else GetSet ((kind1, key_loc1, t1_), (kind2, key_loc2, t2_))
+    | Method (kind, key_loc, t) ->
       let t_ = f t in
-      if t_ == t then p else Method (loc, t_)
+      if t_ == t then p else Method (kind, key_loc, t_)
+    | Abstract (kind, key_loc, t) ->
+      let t_ = f t in
+      if t_ == t then p else Abstract (kind, key_loc, t_)
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
   let assert_field = function
-    | Field (_, t, _) -> t
+    | Field ((_, _, t), _) -> t
     | _ -> assert_false "Unexpected field type"
 end
 
@@ -1250,10 +1286,11 @@ and Properties : sig
   module Map : MyMap.S with type key = id
   type map = t Map.t
 
-  val add_field: string -> Polarity.t -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_getter: string -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_setter: string -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_method: string -> Loc.t option -> TypeTerm.t -> t -> t
+  val add_field: string -> Property.triple -> Polarity.t -> t -> t
+  val add_getter: string -> Property.triple -> t -> t
+  val add_setter: string -> Property.triple -> t -> t
+  val add_method: string -> Property.triple -> t -> t
+  val add_abstract: string -> Property.triple -> t -> t
 
   val mk_id: unit -> id
   val fake_id: id
@@ -1278,25 +1315,28 @@ end = struct
   end)
   type map = t Map.t
 
-  let add_field x polarity loc t =
-    SMap.add x (Field (loc, t, polarity))
+  let add_field x fld polarity =
+    SMap.add x (Field (fld, polarity))
 
-  let add_getter x loc get_t map =
+  let add_getter x get map =
     let p = match SMap.get x map with
-    | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
-    | _ -> Get (loc, get_t)
+    | Some (Set set) -> GetSet (get, set)
+    | _ -> Get get
     in
     SMap.add x p map
 
-  let add_setter x loc set_t map =
+  let add_setter x set map =
     let p = match SMap.get x map with
-    | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
-    | _ -> Set (loc, set_t)
+    | Some (Get get) -> GetSet (get, set)
+    | _ -> Set set
     in
     SMap.add x p map
 
-  let add_method x loc t =
-    SMap.add x (Method (loc, t))
+  let add_method x meth =
+    SMap.add x (Method meth)
+
+  let add_abstract x ameth =
+    SMap.add x (Abstract ameth)
 
   let mk_id = Reason.mk_id
   let fake_id = 0
@@ -1314,12 +1354,12 @@ end = struct
   let map_t f = SMap.map (Property.map_t f)
 
   let map_fields f = SMap.map (function
-    | Field (loc, t, polarity) -> Field (loc, f t, polarity)
+    | Field ((kind, key_loc, t), polarity) -> Field ((kind, key_loc, f t), polarity)
     | p -> p
   )
 
   let mapi_fields f = SMap.mapi (fun k -> function
-    | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
+    | Field ((kind, key_loc, t), polarity) -> Field ((kind, key_loc, f k t), polarity)
     | p -> p
   )
 end
@@ -1595,7 +1635,7 @@ and Object : sig
   and slice = reason * props * dict * TypeTerm.flags
 
   and props = prop SMap.t
-  and prop = TypeTerm.t * bool (* own *)
+  and prop = Property.kind * TypeTerm.t * bool (* own *)
 
   and dict = TypeTerm.dicttype option
 
@@ -1662,7 +1702,7 @@ and React : sig
   type resolve_object =
   | ResolveObject
   | ResolveDict of (TypeTerm.dicttype * Properties.t * resolved_object)
-  | ResolveProp of (string * Properties.t * resolved_object)
+  | ResolveProp of (string * Property.kind * Loc.t option * Properties.t * resolved_object)
 
   type resolve_array =
   | ResolveArray
@@ -1765,6 +1805,7 @@ end = struct
 
   let rec reason_of_t = function
     | OpenT (reason,_) -> reason
+    | AbstractsT (reason, _) -> reason
     | AnnotT ((reason, _), _) -> reason
     | AnyWithLowerBoundT (t) -> reason_of_t t
     | AnyWithUpperBoundT (t) -> reason_of_t t
@@ -1793,7 +1834,7 @@ end = struct
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
     | ShapeT (t) -> reason_of_t t
-    | ThisClassT (reason, _) -> reason
+    | ThisClassT (reason, _, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
 
   and reason_of_defer_use_t = function
@@ -1803,6 +1844,7 @@ end = struct
 
   and reason_of_use_t = function
     | UseT (_, t) -> reason_of_t t
+    | AccAbstractsT (reason, _, _, _) -> reason
     | AdderT (reason,_,_,_) -> reason
     | AndT (reason, _, _) -> reason
     | ArrRestT (_, reason, _, _) -> reason
@@ -1810,6 +1852,7 @@ end = struct
     | AssertBinaryInLHST reason -> reason
     | AssertBinaryInRHST reason -> reason
     | AssertForInRHST reason -> reason
+    | AssertNonabstractT (_, reason, _) -> reason
     | AssertRestParamT reason -> reason
     | AssertImportIsValueT (reason, _) -> reason
     | BecomeT (reason, _) -> reason
@@ -1854,7 +1897,7 @@ end = struct
     | MakeExactT (reason, _) -> reason
     | MapTypeT (reason, _, _) -> reason
     | MethodT (_,reason,_,_,_,_) -> reason
-    | MixinT (reason, _) -> reason
+    | MixinT (_, reason, _) -> reason
     | NotT (reason, _) -> reason
     | ObjAssignToT (reason, _, _, _) -> reason
     | ObjAssignFromT (reason, _, _, _) -> reason
@@ -1908,6 +1951,7 @@ end = struct
   (* TODO make a type visitor *)
   let rec mod_reason_of_t f = function
     | OpenT (reason, id) -> OpenT (f reason, id)
+    | AbstractsT (reason, abstracts) -> AbstractsT (f reason, abstracts)
     | AnnotT ((reason, id), use_desc) -> AnnotT ((f reason, id), use_desc)
     | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
     | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
@@ -1938,7 +1982,7 @@ end = struct
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
     | ShapeT t -> ShapeT (mod_reason_of_t f t)
-    | ThisClassT (reason, t) -> ThisClassT (f reason, t)
+    | ThisClassT (reason, t, abstracts) -> ThisClassT (f reason, t, abstracts)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
 
   and mod_reason_of_defer_use_t f = function
@@ -1947,6 +1991,8 @@ end = struct
 
   and mod_reason_of_use_t f = function
     | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
+    | AccAbstractsT (reason, masks, local_abstracts, t) ->
+        AccAbstractsT (f reason, masks, local_abstracts, t)
     | AdderT (reason, flip, rt, lt) -> AdderT (f reason, flip, rt, lt)
     | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
     | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
@@ -1954,6 +2000,8 @@ end = struct
     | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
     | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
     | AssertForInRHST reason -> AssertForInRHST (f reason)
+    | AssertNonabstractT (use_op, reason, nonabstract) ->
+        AssertNonabstractT (use_op, f reason, nonabstract)
     | AssertRestParamT reason -> AssertRestParamT (f reason)
     | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
     | BecomeT (reason, t) -> BecomeT (f reason, t)
@@ -2012,7 +2060,7 @@ end = struct
     | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
-    | MixinT (reason, inst) -> MixinT (f reason, inst)
+    | MixinT (use_op, reason, inst) -> MixinT (use_op, f reason, inst)
     | NotT (reason, t) -> NotT (f reason, t)
     | ObjAssignToT (reason, t, t2, kind) ->
         ObjAssignToT (f reason, t, t2, kind)
@@ -2063,6 +2111,7 @@ end = struct
     in
     match u with
     | UseT (op, t) -> util op (fun op -> UseT (op, t))
+    | AssertNonabstractT (op, r, n) -> util op (fun op -> AssertNonabstractT (op, r, n))
     | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
     | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
     | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
@@ -2079,6 +2128,7 @@ end = struct
     | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
     | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
     | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
+    | MixinT (op, r, t) -> util op (fun op -> MixinT (op, r, t))
     | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
     | TypeAppVarianceCheckT (op, r1, r2, ts) ->
       util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
@@ -2255,6 +2305,7 @@ let primitive_promoting_use_t = function
 
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
+  | AccAbstractsT _
   | AdderT _
   | AndT _
   | ArrRestT _
@@ -2330,6 +2381,7 @@ let any_propagating_use_t = function
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT _
+  | AssertNonabstractT _
   | AssertRestParamT _
   | ComparatorT _
   | DebugPrintT _
@@ -2454,6 +2506,7 @@ let string_of_def_ctor = function
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
+  | AbstractsT _ -> "AbstractsT"
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
@@ -2540,6 +2593,7 @@ let string_of_use_op_rec =
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
+  | AccAbstractsT _ -> "AccAbstractsT"
   | AdderT _ -> "AdderT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
@@ -2548,6 +2602,7 @@ let string_of_use_ctor = function
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
+  | AssertNonabstractT _ -> "AssertNonabstractT"
   | AssertRestParamT _ -> "AssertRestParamT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
@@ -2736,13 +2791,25 @@ let maybe t =
 let exact t =
   ExactT (reason_of_t t, t)
 
-let class_type t =
-  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
-  DefT (reason, ClassT t)
+let abstracts_type t statics nonstatics =
+  let reason = replace_reason (fun desc -> RAbstractsOf desc) (reason_of_t t) in
+  AbstractsT (reason, (statics, nonstatics))
 
-let this_class_type t =
+let class_type t abstracts =
   let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
-  ThisClassT (reason, t)
+  DefT (reason, ClassT (t, abstracts))
+
+let nonabstract_class_type t =
+  let abstracts = abstracts_type t SMap.empty SMap.empty in
+  class_type t abstracts
+
+let this_class_type t abstracts =
+  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
+  ThisClassT (reason, t, abstracts)
+
+let nonabstract_this_class_type t =
+  let abstracts = abstracts_type t SMap.empty SMap.empty in
+  this_class_type t abstracts
 
 let extends_type r l u =
   let reason = replace_reason (fun desc -> RExtends desc) r in

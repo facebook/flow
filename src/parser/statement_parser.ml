@@ -613,7 +613,7 @@ module Statement
         Expect.token env T_EXTENDS;
         supers env []
       end else [] in
-      let body = Type._object ~allow_static:false env in
+      let body = Type._object ~allow_abstract:false ~allow_static:false env in
       Statement.Interface.({
         id;
         typeParameters;
@@ -646,7 +646,8 @@ module Statement
         mixins env acc
       | _ -> List.rev acc
 
-    (* This is identical to `interface`, except that mixins are allowed *)
+    (* This is identical to `interface`, except that mixins and abstracts are
+       allowed. *)
     in fun env ->
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
@@ -657,7 +658,7 @@ module Statement
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
       | _ -> []
       in
-      let body = Type._object ~allow_static:true env in
+      let body = Type._object ~allow_abstract:true ~allow_static:true env in
       Statement.DeclareClass.({
         id;
         typeParameters;
@@ -668,6 +669,7 @@ module Statement
 
   and declare_class_statement env = with_loc (fun env ->
     Expect.token env T_DECLARE;
+    ignore (Expect.maybe env T_ABSTRACT);
     let fn = declare_class env in
     Statement.DeclareClass fn
   ) env
@@ -684,6 +686,8 @@ module Statement
     let loc = Loc.btwn start_sig_loc end_loc in
     let typeAnnotation = loc, Ast.Type.(Function {Function.
       params;
+      async = false;
+      generator = false;
       returnType;
       typeParameters;
     }) in
@@ -834,6 +838,7 @@ module Statement
     then error env Error.UnexpectedTypeDeclaration;
     (* eventually, just emit a wrapper AST node *)
     (match Peek.ith_token ~i:1 env with
+      | T_ABSTRACT
       | T_CLASS ->
           declare_class_statement env
       | T_INTERFACE ->

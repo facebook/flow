@@ -119,9 +119,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
+    | ThisClassT(_, DefT (_, InstanceT (_, _, _, {class_id; _;})), _) ->
       class_id
-    | DefT (_, PolyT(_, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;}))), _)) ->
+    | DefT (_, PolyT(_, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;})), _), _)) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -184,7 +184,7 @@ let rec gen_type t env = Type.(
   | DefT (_, BoolT None) ->
     add_str "boolean" env
   | BoundT {name; _;} -> add_str name env
-  | DefT (_, ClassT t) ->
+  | DefT (_, ClassT (t, _)) ->
     add_str "Class<" env
       |> gen_type t
       |> add_str ">"
@@ -272,7 +272,7 @@ let rec gen_type t env = Type.(
     (* Generate potential dict entry *)
     let env =
       match dict_t with
-      | Some {dict_name; key; value; dict_polarity} ->
+      | Some {dict_name; dict_kind = _; key; value; dict_polarity} ->
         let key_name = (
           match dict_name with
           | Some n -> n
@@ -307,7 +307,7 @@ let rec gen_type t env = Type.(
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "string" env
   | DefT (_, StrT (Truthy|AnyLiteral)) -> add_str "string" env
-  | ThisClassT (_, t) -> gen_type t env
+  | ThisClassT (_, t, _) -> gen_type t env
   | ThisTypeAppT (_, t, _, Some ts) -> add_applied_tparams ts env |> gen_type t
   | ThisTypeAppT (_, t, _, None) -> gen_type t env
   | DefT (_, TypeAppT (t, ts)) -> add_applied_tparams ts env |> gen_type t
@@ -324,6 +324,7 @@ let rec gen_type t env = Type.(
    *       handling for these types depening on the needs of the API user
    *       (i.e. raise, etc).
    *)
+  | AbstractsT _
   | InternalT (ChoiceKitT _)
   | TypeDestructorTriggerT _
   | DefT (_, EmptyT)
@@ -337,7 +338,7 @@ let rec gen_type t env = Type.(
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 
-and gen_prop k p env =
+and gen_prop ?(static=false) k p env =
   let open Type in
 
   let gen_getter k t env =
@@ -369,8 +370,14 @@ and gen_prop k p env =
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 
+  let env =
+    match p with
+    | Abstract _ -> add_str "abstract " env
+    | _ -> env
+  in
+  let env = gen_if static (add_str "static ") env in
   match p with
-  | Field (_, t, polarity) ->
+  | Field ((_, _, t), polarity) ->
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
@@ -381,11 +388,12 @@ and gen_prop k p env =
       |> add_str k
       |> add_str sep
       |> gen_type t
-  | Get (_, t) -> gen_getter k t env
-  | Set (_, t) -> gen_setter k t env
-  | GetSet (_, t1, _, t2) ->
+  | Get (_, _, t) -> gen_getter k t env
+  | Set (_, _, t) -> gen_setter k t env
+  | GetSet ((_, _, t1), (_, _, t2)) ->
     gen_getter k t1 env |> gen_setter k t2
-  | Method (_, t) -> gen_method k t env
+  | Method (_, _, t)
+  | Abstract (_, _, t) -> gen_method k t env
 
 and gen_func_params params rest_param env =
   let params_rev = List.fold_left (fun acc (name, t) ->

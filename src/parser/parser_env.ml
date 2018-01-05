@@ -528,6 +528,7 @@ module Peek = struct
       | T_NUMBER_SINGLETON_TYPE _
 
       (* identifier-ish *)
+      | T_ABSTRACT
       | T_ASYNC
       | T_AWAIT
       | T_BREAK
@@ -680,6 +681,7 @@ module Peek = struct
   let is_class env =
     match token env with
     | T_CLASS
+    | T_ABSTRACT
     | T_AT -> true
     | _ -> false
 end
