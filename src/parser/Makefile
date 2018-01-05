@@ -7,10 +7,6 @@ DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)/../..
 REL_DIR=src/parser
 
-JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
-JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
-JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
-
 OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
@@ -79,18 +75,9 @@ dist/libflowparser.zip: \
 js:
 	cd $(TOP); \
 	$(OCB) -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
-	\
-	if [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; then \
-	    js_of_ocaml --opt 3 \
-				-o $(REL_DIR)/flow_parser.js \
-				_build/$(REL_DIR)/flow_parser_dot_js.byte; \
-	else \
-	    js_of_ocaml --opt 3 \
-				-o $(REL_DIR)/flow_parser.js \
-				$(TOP)/js/optional/caml_hexstring_of_float.js \
-				_build/$(REL_DIR)/flow_parser_dot_js.byte; \
-	fi; \
-	\
+	js_of_ocaml --opt 3 \
+		-o $(REL_DIR)/flow_parser.js \
+		_build/$(REL_DIR)/flow_parser_dot_js.byte; \
 	rm flow_parser_dot_js.byte
 
 test-js: build-parser js
