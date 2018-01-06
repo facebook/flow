@@ -1,3 +1,23 @@
+### 0.63.0
+
+Likely to cause new Flow errors:
+* Strict mode now treats function parameters as `const`
+* Declaring the exported type of a CommonJS module via `declare var exports: T` is deprecated in favor of `declare module.exports: T`
+
+Notable bug fixes:
+* If a single file (or cycle of files) takes more than 100s to merge (which indicates something is horribly wrong), Flow will emit an error, stop merging that file/cycle, and continue merging the rest of the files.
+* Better handling of internal Flow errors during merge. A file (or cycle of files) with an internal error during merge will emit the error and set the type of the exports to `any`. This avoids cascading internal errors.
+
+Misc:
+* `flow get-def` (used by IDEs for jump to definition) now behaves differently for variables introduced by an `import` or `require()`. Previously, it would show where the variable was created, in the import. Now it looks through the import and shows where the variable was exported.
+* The first steps in a large error message revamp are included in this version of Flow. Larger changes will follow in later versions.
+* Some small perf improvements
+* A bunch of libdef improvements. Thanks everyone for the PRs!
+
+Parser:
+* Enforce that the rest property in object destructuring must be last.
+* Fixed a bug which banned methods named `static` in object types
+
 ### 0.62.0
 
 Likely to cause new Flow errors:
