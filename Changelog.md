@@ -1,3 +1,8 @@
+### 0.63.1
+
+Bug fix:
+* Forgot to cherry-pick a diff to fix `flow init`, which was generated an invalid `.flowconfig`
+
 ### 0.63.0
 
 Likely to cause new Flow errors:
