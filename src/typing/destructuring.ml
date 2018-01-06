@@ -144,7 +144,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
     )
 
-  | loc, Identifier { Identifier.name = (_, name); _ } ->
+  | loc, Identifier { Identifier.name = (id_loc, name); _ } ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
         match parent_pattern_t with
         (**
@@ -170,6 +170,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         -> RIdentifier name
       | desc -> desc
       )) curr_t in
+      Type_table.set_info (Context.type_table cx) id_loc curr_t;
       f loc name default curr_t
 
   | loc, Assignment { Assignment.left; right } ->

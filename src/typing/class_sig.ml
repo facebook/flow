@@ -149,13 +149,24 @@ let add_default_constructor reason s =
 let append_constructor loc fsig s =
   {s with constructor = (loc, Func_sig.to_ctor_sig fsig)::s.constructor}
 
-let add_field ~static name fld = map_sig ~static (fun s -> {
+let add_field_ ~static name fld = map_sig ~static (fun s -> {
   s with
   fields = SMap.add name fld s.fields;
   methods = if static then SMap.remove name s.methods else s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
 })
+
+let add_field cx ~static name fld =
+  let loc_type_opt = match fld with
+  | Some loc, _, Annot t -> Some (loc, t)
+  | Some loc, _, Infer func_sig -> Some (loc, Func_sig.gettertype func_sig)
+  | _ -> None
+  in
+  Option.iter ~f:(fun (loc, t) ->
+    Type_table.set_info (Context.type_table cx) loc t
+  ) loc_type_opt;
+  add_field_ ~static name fld
 
 let add_method ~static name loc fsig = map_sig ~static (fun s -> {
   s with
@@ -255,7 +266,15 @@ let elements cx ?constructor s =
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
     SMap.map Type.(fun xs ->
-      match Nel.rev_map (fun (loc, x) -> loc, Func_sig.methodtype cx x) xs with
+      let ms = Nel.rev_map (fun (loc, x) -> loc, Func_sig.methodtype cx x) xs in
+      (* Keep track of these before intersections are merged, to enable
+       * type information on every member of the intersection. *)
+      ms |> Nel.iter (fun (loc, t) ->
+        Option.iter loc ~f:(fun loc ->
+          Type_table.set_info (Context.type_table cx) loc t
+        )
+      );
+      match ms with
       | x, [] -> x
       | (loc0, t0), (_, t1)::ts ->
           let ts = List.map (fun (_loc, t) -> t) ts in
@@ -562,7 +581,7 @@ let mk cx _loc reason self ~expr =
   let class_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) class_sig
+    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) class_sig
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -643,7 +662,7 @@ let mk cx _loc reason self ~expr =
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
         let field = mk_field cx (Some id_loc) ~polarity c reason typeAnnotation value in
-        add_field ~static name field c
+        add_field cx ~static name field c
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -700,8 +719,8 @@ let add_interface_properties cx properties s =
       let v = Anno.convert cx tparams_map value in
       let polarity = Anno.polarity variance in
       x
-        |> add_field ~static "$key" (None, polarity, Annot k)
-        |> add_field ~static "$value" (None, polarity, Annot v)
+        |> add_field cx ~static "$key" (None, polarity, Annot k)
+        |> add_field cx ~static "$value" (None, polarity, Annot v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
@@ -730,7 +749,7 @@ let add_interface_properties cx properties s =
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          add_field ~static name (Some id_loc, polarity, Annot t) x
+          add_field cx ~static name (Some id_loc, polarity, Annot t) x
 
       (* unsafe getter property *)
       | _, Property.Identifier (id_loc, name),
@@ -754,12 +773,14 @@ let add_interface_properties cx properties s =
   ) s properties
 
 let of_interface cx reason { Ast.Statement.Interface.
+  id = (id_loc, _);
   typeParameters;
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
   _;
 } =
   let self = Tvar.mk cx reason in
+  Type_table.set_info (Context.type_table cx) id_loc self;
 
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx typeParameters in
@@ -780,7 +801,7 @@ let of_interface cx reason { Ast.Statement.Interface.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in
@@ -832,7 +853,7 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in

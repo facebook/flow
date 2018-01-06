@@ -39,28 +39,26 @@ type result =
 | Success of Loc.t * Type.t * Type.t list
 
 let query_type cx loc =
-  let result = ref FailureNoMatch in
-  let diff = ref (max_int, max_int) in
-  Type_table.iter (fun range t ->
-    if Reason.in_range loc range
-    then (
-      let d = Reason.diff_range range in
-      if d < !diff then (
-        diff := d;
-        Type_normalizer.suggested_type_cache := IMap.empty;
-        let ground_t = Type_normalizer.normalize_type cx t in
-        let possible_ts = Flow_js.possible_types_of_type cx t in
-        result := if Type_printer.is_printed_type_parsable cx ground_t
-          then Success (range, ground_t, possible_ts)
-          else FailureUnparseable (range, ground_t, possible_ts)
-      )
-    )
-  ) (Context.type_table cx);
-  !result
+  let matching_entries = Type_table.find_all_type_info
+    (fun range _ -> Reason.in_range loc range)
+    (Context.type_table cx)
+  in
+  let handle_result (range, t) =
+    Type_normalizer.suggested_type_cache := IMap.empty;
+    let ground_t = Type_normalizer.normalize_type cx t in
+    let possible_ts = Flow_js.possible_types_of_type cx t in
+    if Type_printer.is_printed_type_parsable cx ground_t
+      then Success (range, ground_t, possible_ts)
+      else FailureUnparseable (range, ground_t, possible_ts)
+
+  in
+  match matching_entries with
+  | [] -> FailureNoMatch
+  | x::_ -> handle_result x
 
 let dump_types printer cx =
   Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold (fun loc t list ->
+  let lst = Type_table.fold_coverage (fun loc t list ->
     let ground_t = Type_normalizer.normalize_type cx t in
     let possible_ts = Flow_js.possible_types_of_type cx t in
     let possible_reasons = possible_ts
@@ -81,7 +79,7 @@ let is_covered = function
 
 let covered_types cx =
   Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold (fun loc t list ->
+  let lst = Type_table.fold_coverage (fun loc t list ->
     let ground_t = Type_normalizer.normalize_type cx t in
     (loc, is_covered ground_t)::list
   ) (Context.type_table cx) [] in

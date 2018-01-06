@@ -26,7 +26,7 @@ let mk cx type_params_map ~expr func =
   let add_param_with_default params pattern default = Ast.Pattern.(
     match pattern with
     | loc, Identifier { Ast.Pattern.Identifier.
-        name = (_, name);
+        name = (id_loc, name);
         typeAnnotation;
         optional;
       } ->
@@ -40,6 +40,7 @@ let mk cx type_params_map ~expr func =
           else t
         in
         Type_table.set (Context.type_table cx) loc t;
+        Type_table.set_info (Context.type_table cx) id_loc t;
         let binding = Some name, t, loc in
         let list = Simple (t, binding) :: params.list in
         { params with list }
@@ -117,12 +118,15 @@ let mk cx type_params_map ~expr func =
 (* Ast.Type.Function.t -> Func_params.t *)
 let convert cx type_params_map func = Ast.Type.Function.(
   let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
-    let name = match name with
-    | None -> None
-    | Some (_, name) -> Some name in
+    let name_loc, name = match name with
+    | None -> None, None
+    | Some (loc, name) -> Some loc, Some name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let t = if optional then Type.optional t else t in
     let binding = name, t, loc in
+    Option.iter ~f:(fun loc ->
+      Type_table.set_info (Context.type_table cx) loc t
+    ) name_loc;
     { params with list = Simple (t, binding) :: params.list }
   in
   let add_rest params (loc, {Param.name; typeAnnotation; _}) =

@@ -229,7 +229,7 @@ and statement_decl cx = Ast.Statement.(
       Env.bind_declare_var cx name t loc
 
   | (loc, DeclareFunction { DeclareFunction.
-      id = (_, name) as id;
+      id = (id_loc, name) as id;
       typeAnnotation;
       predicate}) ->
       (match declare_function_to_function_declaration
@@ -239,6 +239,7 @@ and statement_decl cx = Ast.Statement.(
           let t =
             Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
           Type_table.set (Context.type_table cx) loc t;
+          Type_table.set_info (Context.type_table cx) id_loc t;
           Env.bind_declare_fun cx name t loc
       | Some func_decl ->
           statement_decl cx (loc, func_decl)
@@ -674,6 +675,7 @@ and statement cx = Ast.Statement.(
       let type_ = poly_type (Context.make_nominal cx) typeparams (DefT (r, TypeT t)) in
       Flow.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;
+      Type_table.set_info (Context.type_table cx) name_loc type_;
       Env.init_type cx name type_ name_loc
 
   | (loc, DeclareOpaqueType
@@ -704,6 +706,7 @@ and statement cx = Ast.Statement.(
       | _ -> ()
       in
       Type_table.set (Context.type_table cx) loc type_;
+      Type_table.set_info (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
   (*******************************************************)
@@ -1471,16 +1474,18 @@ and statement cx = Ast.Statement.(
       in
       Type_table.set (Context.type_table cx) type_table_loc fn_type;
       (match id with
-      | Some(_, name) ->
+      | Some(id_loc, name) ->
+        Type_table.set_info (Context.type_table cx) id_loc fn_type;
         Env.init_fun cx name fn_type loc
       | None -> ())
 
   | (loc, DeclareVariable { DeclareVariable.
-      id = (_, name);
+      id = (id_loc, name);
       typeAnnotation;
     }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
+      Type_table.set_info (Context.type_table cx) id_loc t;
       Env.unify_declared_type cx name t;
 
   | (loc, DeclareFunction { DeclareFunction.
@@ -1504,6 +1509,7 @@ and statement cx = Ast.Statement.(
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
       let class_t = mk_class cx class_loc reason c in
       Type_table.set (Context.type_table cx) class_loc class_t;
+      Type_table.set_info (Context.type_table cx) name_loc class_t;
       Env.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
@@ -1520,9 +1526,10 @@ and statement cx = Ast.Statement.(
     interface cx loc decl
 
   | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
-    let name = match id with
-    | DeclareModule.Identifier (_, value)
-    | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
+    let id_loc, name = match id with
+    | DeclareModule.Identifier (id_loc, value)
+    | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
+      id_loc, value
     in
     let _, { Ast.Statement.Block.body = elements } = body in
 
@@ -1584,6 +1591,7 @@ and statement cx = Ast.Statement.(
       );
       mk_commonjs_module_t cx reason reason cjs_exports
     in
+    Type_table.set_info (Context.type_table cx) id_loc module_t;
 
     Flow.flow_t cx (module_t, initial_module_t);
 
@@ -2093,6 +2101,7 @@ and object_prop cx map = Ast.Expression.Object.(function
         });
       value = v; _ }) ->
     let t = expression cx v in
+    Type_table.set_info (Context.type_table cx) loc t;
     Properties.add_field name Neutral (Some loc) t map
 
   (* named method *)
@@ -2106,6 +2115,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = (fn_loc, func);
     }) ->
     let t = expression cx (fn_loc, Ast.Expression.Function func) in
+    Type_table.set_info (Context.type_table cx) loc t;
     Properties.add_field name Neutral (Some loc) t map
 
   (* We enable some unsafe support for getters and setters. The main unsafe bit
@@ -2125,6 +2135,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
     let function_type = mk_function None cx vloc func in
     let return_t = Type.extract_getter_type function_type in
+    Type_table.set_info (Context.type_table cx) id_loc return_t;
     Properties.add_getter name (Some id_loc) return_t map
 
   (* unsafe setter property *)
@@ -2140,6 +2151,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
     let function_type = mk_function None cx vloc func in
     let param_t = Type.extract_setter_type function_type in
+    Type_table.set_info (Context.type_table cx) id_loc param_t;
     Properties.add_setter name (Some id_loc) param_t map
 
   (* literal LHS *)
@@ -2310,6 +2322,7 @@ and variable cx kind
           let desc = RIdentifier name in
           let anno_reason = mk_reason desc loc in
           Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
+        Type_table.set_info (Context.type_table cx) id_loc t;
         Env.unify_declared_type cx name t;
         let has_anno = not (typeAnnotation = None) in
         Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
@@ -2412,7 +2425,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       identifier cx name loc
 
   | This ->
-      this_ cx loc
+      let t = this_ cx loc in
+      Type_table.set_info (Context.type_table cx) loc t;
+      t
 
   | Super ->
       identifier cx "super" loc
@@ -2487,6 +2502,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
         let super = super_ cx super_loc in
+        Type_table.set_info (Context.type_table cx) super_loc super;
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
@@ -2499,6 +2515,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           )
         )
       )
+      |> fun t -> Type_table.set_info (Context.type_table cx) ploc t; t
 
   | Member {
       Member._object;
@@ -2515,6 +2532,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
         get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
     )
+    |> fun t -> Type_table.set_info (Context.type_table cx) ploc t; t
 
   | Member {
       Member._object;
@@ -2531,6 +2549,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         then AnyT.at ploc
         else get_private_field cx expr_reason tobj (prop_reason, name)
     )
+    |> fun t -> Type_table.set_info (Context.type_table cx) ploc t; t
 
   | Object { Object.properties } ->
     let reason = mk_reason RObjectLit loc in
@@ -2698,6 +2717,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx super_loc in
+      Type_table.set_info (Context.type_table cx) super_loc super;
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Tvar.mk_where cx reason (fun t ->
@@ -2708,6 +2728,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           prop=reason_prop;
         }) in
         let prop_t = Tvar.mk cx reason_prop in
+        Type_table.set_info (Context.type_table cx) ploc prop_t;
         Flow.flow cx (
           super,
           MethodT (use_op, reason, reason_lookup, Named (reason_prop, name),
@@ -2754,6 +2775,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
       let this = this_ cx loc in
       let super = super_ cx ploc in
+      Type_table.set_info (Context.type_table cx) ploc super;
       let super_reason = reason_of_t super in
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype this argts t in
@@ -3123,6 +3145,7 @@ and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
           op=reason;
           fn=reason_of_t f;
         })) in
+        Type_table.set_info (Context.type_table cx) prop_loc f;
         Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
@@ -3141,11 +3164,12 @@ and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
           prop=reason_prop;
         })) in
         let prop_t = Tvar.mk cx reason_prop in
+        Type_table.set_info (Context.type_table cx) prop_loc prop_t;
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app, Some prop_t))
       )
   )
 
-and identifier cx name loc =
+and identifier_ cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
   else (
@@ -3166,6 +3190,11 @@ and identifier cx name loc =
         Tvar.mk_where cx reason (Flow.unify cx t)
       )
   )
+
+and identifier cx name loc =
+  let t = identifier_ cx name loc in
+  Type_table.set_info (Context.type_table cx) loc t;
+  t
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
@@ -3408,7 +3437,7 @@ and assignment cx loc = Ast.Expression.(function
 
         (* super.name = e *)
         | lhs_loc, Ast.Pattern.Expression (_, Member {
-            Member._object = _, Super;
+            Member._object = super_loc, Super;
             property = Member.PropertyIdentifier (ploc, name);
             _
           }) ->
@@ -3416,8 +3445,10 @@ and assignment cx loc = Ast.Expression.(function
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
+            Type_table.set_info (Context.type_table cx) super_loc super;
             let use_op = Op (SetProperty reason) in
             let prop_t = Tvar.mk cx prop_reason in
+            Type_table.set_info (Context.type_table cx) ploc prop_t;
             Flow.flow cx (super, SetPropT (
               use_op, reason, Named (prop_reason, name), Normal, t, Some prop_t
             ))
@@ -3439,6 +3470,7 @@ and assignment cx loc = Ast.Expression.(function
               let use_op = Op (SetProperty reason) in
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
               let prop_t = Tvar.mk cx prop_reason in
+              Type_table.set_info (Context.type_table cx) ploc prop_t;
               Flow.flow cx (o, SetPrivatePropT (
                 use_op, reason, name, class_entries, false, t, Some prop_t
               ));
@@ -3465,6 +3497,7 @@ and assignment cx loc = Ast.Expression.(function
               (* flow type to object property itself *)
               let use_op = Op (SetProperty reason) in
               let prop_t = Tvar.mk cx prop_reason in
+              Type_table.set_info (Context.type_table cx) ploc prop_t;
               Flow.flow cx (o, SetPropT (
                 use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
               ));
@@ -4043,6 +4076,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         else get_prop ~is_cond:true cx
           expr_reason obj_t (prop_reason, prop_name)
       in
+      Type_table.set_info (Context.type_table cx) prop_loc prop_t;
 
       (* refine the object (`foo.bar` in the example) based on the prop. *)
       let refinement = match Refinement.key _object with
@@ -4296,7 +4330,10 @@ and predicates_of_condition cx e = Ast.(Expression.(
     ->
       let obj_t = match _object with
       | super_loc, Super ->
-          super_ cx super_loc
+          let t = super_ cx super_loc in
+          Type_table.set_info (Context.type_table cx) super_loc t;
+          t
+
       | _ ->
           (* use `expression` instead of `condition` because `_object` is the
              object in a member expression; if it itself is a member expression,
@@ -4318,6 +4355,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (* since we never called `expression cx e`, we have to add to the
          type table ourselves *)
       Type_table.set (Context.type_table cx) loc t;
+      Type_table.set_info (Context.type_table cx) prop_loc t;
 
       let out = match Refinement.key e with
       | Some name -> result t name t (ExistsP (Some loc)) true
@@ -4385,6 +4423,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t))
       ) in
       Type_table.set (Context.type_table cx) prop_loc fn_t;
+      Type_table.set_info (Context.type_table cx) prop_loc fn_t;
       let bool = BoolT.at loc in
 
       match refinable_lvalue arg with
@@ -4583,6 +4622,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let prop_reason = mk_reason (RProperty (Some x)) ploc in
     Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
     let prop_t = Tvar.mk cx prop_reason in
+    Type_table.set_info (Context.type_table cx) ploc prop_t;
     Flow.flow cx (o, SetPropT (
       unknown_use, reason, Named (prop_reason, x), Normal, tvar, Some prop_t
     ));

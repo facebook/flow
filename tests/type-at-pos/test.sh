@@ -29,8 +29,6 @@ assert_ok \
 assert_ok \
   "$FLOW" type-at-pos optional.js 7 2 --strip-root --pretty
 assert_ok \
-  "$FLOW" type-at-pos optional.js 7 4 --strip-root --pretty
-assert_ok \
   "$FLOW" type-at-pos optional.js 10 11 --strip-root --pretty
 assert_ok \
   "$FLOW" type-at-pos optional.js 10 14 --strip-root --pretty
@@ -113,3 +111,89 @@ assert_ok \
 printf "array.js:10:15 = "
 assert_ok \
   "$FLOW" type-at-pos array.js 10 15 --strip-root --pretty
+
+printf "object.js:8:16 = "
+assert_ok "$FLOW" type-at-pos object.js 8 16 --strip-root --pretty
+printf "object.js:14:7 = "
+assert_ok "$FLOW" type-at-pos object.js 14 7 --strip-root --pretty
+printf "object.js:15:3 = "
+assert_ok "$FLOW" type-at-pos object.js 15 3 --strip-root --pretty
+printf "object.js:16:3 = "
+assert_ok "$FLOW" type-at-pos object.js 16 3 --strip-root --pretty
+printf "object.js:19:7 = "
+assert_ok "$FLOW" type-at-pos object.js 19 7 --strip-root --pretty
+printf "object.js:20:7 = "
+assert_ok "$FLOW" type-at-pos object.js 20 7 --strip-root --pretty
+printf "object.js:26:4 = "
+assert_ok "$FLOW" type-at-pos object.js 26 4 --strip-root --pretty
+printf "object.js:32:4 = "
+assert_ok "$FLOW" type-at-pos object.js 32 4 --strip-root --pretty
+printf "object.js:32:6 = "
+assert_ok "$FLOW" type-at-pos object.js 32 6 --strip-root --pretty
+printf "object.js:33:21 = "
+assert_ok "$FLOW" type-at-pos object.js 33 21 --strip-root --pretty
+printf "object.js:33:24 = "
+assert_ok "$FLOW" type-at-pos object.js 33 24 --strip-root --pretty
+printf "object.js:38:6 = "
+assert_ok "$FLOW" type-at-pos object.js 38 6 --strip-root --pretty
+printf "object.js:42:17 = "
+assert_ok "$FLOW" type-at-pos object.js 42 17 --strip-root --pretty
+printf "object.js:46:3 = "
+assert_ok "$FLOW" type-at-pos object.js 46 3 --strip-root --pretty
+printf "object.js:47:3 = "
+assert_ok "$FLOW" type-at-pos object.js 47 3 --strip-root --pretty
+printf "object.js:52:5 = "
+assert_ok "$FLOW" type-at-pos object.js 52 5 --strip-root --pretty
+printf "object.js:55:5 = "
+assert_ok "$FLOW" type-at-pos object.js 55 5 --strip-root --pretty
+
+printf "object.js:58:14 = "
+assert_ok "$FLOW" type-at-pos object.js 58 14 --strip-root --pretty
+printf "object.js:59:6 = "
+assert_ok "$FLOW" type-at-pos object.js 59 6 --strip-root --pretty
+printf "object.js:60:6 = "
+assert_ok "$FLOW" type-at-pos object.js 60 6 --strip-root --pretty
+printf "object.js:62:15 = "
+assert_ok "$FLOW" type-at-pos object.js 62 15 --strip-root --pretty
+printf "object.js:63:10 = "
+assert_ok "$FLOW" type-at-pos object.js 63 10 --strip-root --pretty
+printf "object.js:64:10 = "
+assert_ok "$FLOW" type-at-pos object.js 64 10 --strip-root --pretty
+
+printf "object.js:66:7 = "
+assert_ok "$FLOW" type-at-pos object.js 66 7 --strip-root --pretty
+printf "object.js:66:11 = "
+assert_ok "$FLOW" type-at-pos object.js 66 11 --strip-root --pretty
+# TODO PV fix expected result
+printf "object.js:68:7 = "
+assert_ok "$FLOW" type-at-pos object.js 68 7 --strip-root --pretty
+printf "object.js:69:7 = "
+assert_ok "$FLOW" type-at-pos object.js 69 7 --strip-root --pretty
+printf "object.js:69:11 = "
+assert_ok "$FLOW" type-at-pos object.js 69 11 --strip-root --pretty
+printf "object.js:71:5 = "
+assert_ok "$FLOW" type-at-pos object.js 71 5 --strip-root --pretty
+printf "object.js:72:14 = "
+assert_ok "$FLOW" type-at-pos object.js 72 14 --strip-root --pretty
+
+printf "object.js:79:7 = "
+assert_ok "$FLOW" type-at-pos object.js 79 7 --strip-root --pretty
+# TODO PV fix expected result
+printf "object.js:79:31 = "
+assert_ok "$FLOW" type-at-pos object.js 79 31 --strip-root --pretty
+printf "object.js:80:3 = "
+assert_ok "$FLOW" type-at-pos object.js 80 3 --strip-root --pretty
+printf "object.js:80:8 = "
+assert_ok "$FLOW" type-at-pos object.js 80 8 --strip-root --pretty
+printf "object.js:81:8 = "
+assert_ok "$FLOW" type-at-pos object.js 81 8 --strip-root --pretty
+
+# TODO PV fix expected result
+printf "object.js:84:8 = "
+assert_ok "$FLOW" type-at-pos object.js 84 8 --strip-root --pretty
+
+printf "object.js:89:8 = "
+assert_ok "$FLOW" type-at-pos object.js 89 8 --strip-root --pretty
+# TODO PV fix expected result
+printf "object.js:90:10 = "
+assert_ok "$FLOW" type-at-pos object.js 90 10 --strip-root --pretty

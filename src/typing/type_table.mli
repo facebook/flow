@@ -9,8 +9,9 @@ type t
 
 val create: unit -> t
 val set: t -> Loc.t -> Type.t -> unit
-val iter: (Loc.t -> Type.t -> unit) -> t -> unit
-val fold: (Loc.t -> Type.t -> 'a -> 'a) -> t -> 'a -> 'a
-val find_unsafe: t -> Loc.t -> Type.t
+val set_info: t -> Loc.t -> Type.t -> unit
+val fold_coverage: (Loc.t -> Type.t -> 'a -> 'a) -> t -> 'a -> 'a
+val find_unsafe_coverage: t -> Loc.t -> Type.t
 val reset: t -> unit
 val copy: t -> t
+val find_all_type_info: (Loc.t -> Type.t -> bool) -> t -> (Loc.t * Type.t) list

@@ -166,9 +166,10 @@ let rec convert cx tparams_map = Ast.Type.(function
        { Generic.Identifier.qualification; id; }); typeParameters } ->
 
   let m = convert_qualification cx "type-annotation" qualification in
-  let _, name = id in
+  let id_loc, name = id in
   let reason = mk_reason (RType name) loc in
   let t = Tvar.mk_where cx reason (fun t ->
+    Type_table.set_info (Context.type_table cx) id_loc t;
     Flow.flow cx (m, GetPropT (unknown_use, reason, Named (reason, name), t));
   ) in
   let typeParameters = extract_type_param_instantiations typeParameters in
@@ -179,7 +180,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     Generic.id = Generic.Identifier.Unqualified (id);
     typeParameters
   } ->
-  let _, name = id in
+  let name_loc, name = id in
   let typeParameters = extract_type_param_instantiations typeParameters in
 
   let convert_type_params () = Option.value_map
@@ -559,7 +560,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      Flow.reposition cx loc (SMap.find_unsafe name tparams_map)
+      let t = Flow.reposition cx loc (SMap.find_unsafe name tparams_map) in
+      Type_table.set_info (Context.type_table cx) name_loc t;
+      t
     )
 
   | "$Pred" ->
@@ -605,6 +608,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | _ ->
     let reason = mk_reason (RType name) loc in
     let c = type_identifier cx name loc in
+    Type_table.set_info (Context.type_table cx) name_loc c;
     mk_nominal_type cx reason tparams_map (c, typeParameters)
 
   end
@@ -621,6 +625,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     let { Function.Param.name; typeAnnotation; optional } = param in
     let t = convert cx tparams_map typeAnnotation in
     let t = if optional then Type.optional t else t in
+    Option.iter ~f:(fun (loc, _) ->
+      Type_table.set_info (Context.type_table cx) loc t;
+    ) name;
     (Option.map ~f:ident_name name, t) :: acc
   ) [] params in
 
@@ -727,6 +734,13 @@ let rec convert cx tparams_map = Ast.Type.(function
             props, Some (Flow.mk_typeof_annotation cx reason proto)
           else
             let t = if optional then Type.optional t else t in
+            let key_loc = match key with
+              | Ast.Expression.Object.Property.Literal (loc, _) -> loc
+              | Ast.Expression.Object.Property.Identifier (loc, _) -> loc
+              | Ast.Expression.Object.Property.PrivateName (loc, _) -> loc
+              | Ast.Expression.Object.Property.Computed (loc, _) -> loc
+            in
+            Type_table.set_info (Context.type_table cx) key_loc t;
             let polarity = if _method then Positive else polarity variance in
             let props = SMap.add name (Field (Some loc, t, polarity)) props in
             props, proto
@@ -743,6 +757,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let return_t = Type.extract_getter_type function_type in
+      Type_table.set_info (Context.type_table cx) id_loc return_t;
       let props = Properties.add_getter name (Some id_loc) return_t props in
       props, proto
 
@@ -754,6 +769,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
       let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
       let param_t = Type.extract_setter_type function_type in
+      Type_table.set_info (Context.type_table cx) id_loc param_t;
       let props = Properties.add_setter name (Some id_loc) param_t props in
       props, proto
 
@@ -845,15 +861,18 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   = Ast.Type.Generic.Identifier.(function
   | Qualified (loc, { qualification; id; }) ->
     let m = convert_qualification ~lookup_mode cx reason_prefix qualification in
-    let name = ident_name id in
+    let id_loc, name = id in
     let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
     let reason = mk_reason desc loc in
     Tvar.mk_where cx reason (fun t ->
+      Type_table.set_info (Context.type_table cx) id_loc t;
       Flow.flow cx (m, GetPropT (unknown_use, reason, Named (reason, name), t));
     )
 
   | Unqualified (loc, name) ->
-    Env.get_var ~lookup_mode cx name loc
+    let t = Env.get_var ~lookup_mode cx name loc in
+    Type_table.set_info (Context.type_table cx) loc t;
+    t
 )
 
 and mk_type cx tparams_map reason = function
@@ -919,8 +938,10 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
         Some t in
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default; } in
+    let t = BoundT tparam in
+    Type_table.set_info (Context.type_table cx) loc t;
     (tparam :: tparams,
-     SMap.add name (BoundT tparam) tparams_map,
+     SMap.add name t tparams_map,
      SMap.add name (Flow.subst cx bounds_map bound) bounds_map)
   in
   let tparams, tparams_map, _ =
