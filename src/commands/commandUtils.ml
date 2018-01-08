@@ -689,7 +689,6 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
-    opt_enforce_strict_type_args = FlowConfig.enforce_strict_type_args flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;

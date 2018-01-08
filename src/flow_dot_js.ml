@@ -115,7 +115,6 @@ let stub_metadata ~root ~checked = { Context.
   };
   global_metadata = { Context.
     enable_const_params = false;
-    enforce_strict_type_args = true;
     enforce_strict_call_arity = true;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;

@@ -3643,18 +3643,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
 
-    | DefT (_, PolyT (ids,t,_)), SpecializeT(use_op,reason_op,reason_tapp,cache,Some ts,tvar) ->
+    | DefT (_, PolyT (ids,t,_)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
+      let ts = Option.value ts ~default:[] in
       let t_ = instantiate_poly_with_targs cx trace
         ~use_op ~reason_op ~reason_tapp ?cache (ids,t) ts in
-      rec_flow_t cx trace (t_, tvar)
-
-    (* NOTE: Implicit specialization of polymorphic definitions is handled by a
-       fall-through case below. The exception is when the PolyT has type
-       parameters with defaults. TODO: Get rid of this exception. *)
-    | DefT (_, PolyT (ids,t,_)), SpecializeT(use_op,reason_op,reason_tapp,cache,None,tvar)
-        when Context.enforce_strict_type_args cx ->
-      let t_ = instantiate_poly_with_targs cx trace
-        ~use_op ~reason_op ~reason_tapp ?cache (ids,t) [] in
       rec_flow_t cx trace (t_, tvar)
 
     | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
@@ -3782,16 +3774,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_op = reason_of_use_t u in
       begin match u with
       | UseT (use_op, DefT (_, TypeT _)) ->
-        if Context.enforce_strict_type_args cx then
-          add_output cx ~trace (FlowError.EMissingTypeArgs {
-            reason = reason_op;
-            min_arity = poly_minimum_arity ids;
-            max_arity = List.length ids;
-          })
-        else
-          let inst = instantiate_poly_default_args
-            cx trace ~use_op ~reason_op ~reason_tapp (ids, t) in
-          rec_flow cx trace (inst, u)
+        ignore use_op; (* TODO: add use op to missing type arg error? *)
+        add_output cx ~trace (FlowError.EMissingTypeArgs {
+          reason = reason_op;
+          min_arity = poly_minimum_arity ids;
+          max_arity = List.length ids;
+        })
       (* Special case for `_ instanceof C` where C is polymorphic *)
       | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
         let l = instantiate_poly_default_args cx trace
@@ -7328,7 +7316,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
     t_
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
-(* Needed only for experimental.enforce_strict_type_args=false killswitch *)
+(* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
 and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t) =
   (* Remember: other_bound might refer to other type params *)
   let ts, _ = List.fold_left
