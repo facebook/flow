@@ -10,7 +10,7 @@ Flow 0.14.0 included support for generator functions. Generator functions provid
 
 So much wonderful material has already been produced describing generators. I am going to focus on the interaction of static typing with generators. Please refer to the following materials for information about generators:
 
-* Jafar Husain gave an [incredibly lucid and well-illustrated talk](https://www.youtube.com/watch?v=DqMFX91ToLw#t=970) that covers genrators. I have linked to the point where he gets into generators, but I highly recommend the entire talk.
+* Jafar Husain gave an [incredibly lucid and well-illustrated talk](https://www.youtube.com/watch?v=DqMFX91ToLw#t=970) that covers generators. I have linked to the point where he gets into generators, but I highly recommend the entire talk.
 * Exploring ES6, a comprehensive book by Axel Rauschmayer, who has generously made the contents available for free online, has a [chapter on generators](http://exploringjs.com/es6/ch_generators.html).
 * The venerable MDN has a [useful page](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators) describing the `Iterator` interface and generators.
 
