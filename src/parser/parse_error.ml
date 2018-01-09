@@ -107,6 +107,7 @@ type t =
   | LiteralShorthandProperty
   | ComputedShorthandProperty
   | MethodInDestructuring
+  | TrailingCommaAfterRestElement
 
 exception Error of (Loc.t * t) list
 
@@ -270,4 +271,5 @@ module PP =
       | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
       | ComputedShorthandProperty -> "Computed properties must have a value."
       | MethodInDestructuring -> "Object pattern can't contain methods"
+      | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
   end

@@ -324,20 +324,30 @@ module Object
         ) env in
         Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
 
-    and properties env (props, errs) =
+    and properties env ~rest_trailing_comma (props, errs) =
       match Peek.token env with
       | T_EOF
-      | T_RCURLY -> List.rev props, Pattern_cover.rev_errors errs
+      | T_RCURLY ->
+        let errs = match rest_trailing_comma with
+        | Some loc ->
+          { errs with if_patt = (loc, Parse_error.TrailingCommaAfterRestElement)::errs.if_patt }
+        | None -> errs in
+        List.rev props, Pattern_cover.rev_errors errs
       | _ ->
           let prop, new_errs = property env in
+          let rest_trailing_comma = match prop with
+          | Ast.Expression.Object.SpreadProperty _ when Peek.token env = T_COMMA ->
+            Some (Peek.loc env)
+          | _ -> None in
           if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
           let errs = Pattern_cover.rev_append_errors new_errs errs in
-          properties env (prop::props, errs)
+          properties env ~rest_trailing_comma (prop::props, errs)
 
     in fun env ->
       let loc, (expr, errs) = with_loc (fun env ->
         Expect.token env T_LCURLY;
-        let props, errs = properties env ([], Pattern_cover.empty_errors) in
+        let props, errs =
+          properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors) in
         Expect.token env T_RCURLY;
         { Ast.Expression.Object.properties = props; }, errs
       ) env in
