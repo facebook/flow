@@ -209,7 +209,7 @@ let calc_deps ~options ~profiling ~workers to_merge =
     let components = Sort_js.topsort dependency_graph in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
-      let file = List.hd component in
+      let file = Nel.hd component in
       FilenameMap.add file component component_map
     ) FilenameMap.empty components in
     dependency_graph, component_map
@@ -233,7 +233,7 @@ let merge
       let component = FilenameMap.find_unsafe file component_map in
       (* remove all errors, suppressions for rechecked component *)
       let errors, suppressions, severity_cover_set =
-        List.fold_left (fun (errors, suppressions, severity_cover_set) file ->
+        Nel.fold_left (fun (errors, suppressions, severity_cover_set) file ->
           FilenameMap.remove file errors,
           FilenameMap.remove file suppressions,
           FilenameMap.remove file severity_cover_set
@@ -288,9 +288,9 @@ let typecheck
         Dep_service.calc_all_dependencies_subgraph dependency_graph roots in
       let components = Sort_js.topsort all_dependencies_subgraph in
       List.fold_left (fun dependencies component ->
-        if List.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
+        if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
         (* If at least one member of the component is not unchanged, then keep the component *)
-        then List.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
+        then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
         (* If every element is unchanged, drop the component *)
         else dependencies
       ) FilenameSet.empty components

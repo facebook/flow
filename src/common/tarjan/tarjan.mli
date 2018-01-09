@@ -19,7 +19,7 @@ module Make
      cyclic, as well as a topologically sorted list of key lists where any keys in
      a list only depend on keys in a subsequent list
   *)
-  val topsort: NSet.t NMap.t -> N.t list list
-  val log: N.t list list -> unit
+  val topsort: NSet.t NMap.t -> N.t Nel.t list
+  val log: N.t Nel.t list -> unit
   val reverse: NSet.t NMap.t -> NSet.t NMap.t
 end

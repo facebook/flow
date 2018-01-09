@@ -34,7 +34,7 @@ module Make
     (* back edges to earliest visited nodes *)
     mutable lowlinks: int NMap.t;
     (* components *)
-    mutable components: N.t list list;
+    mutable components: N.t Nel.t list;
   }
 
   let initial_state nodes = {
@@ -85,7 +85,7 @@ module Make
     if (!lowlink = i) then
       (* strongly connected component *)
       let c = component state m in
-      state.components <- (m::c):: state.components
+      state.components <- (m, c) :: state.components
 
   (* Return component strongly connected to m. *)
   and component state m =
@@ -116,9 +116,10 @@ module Make
   let log =
     List.iter (fun mc ->
       (* Show cycles, which are components with more than one node. *)
-      if List.length mc > 1
+      if Nel.length mc > 1
       then
         let nodes = mc
+        |> Nel.to_list
         |> List.map N.to_string
         |> String.concat "\n\t"
         in

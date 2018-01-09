@@ -18,7 +18,7 @@ val calc_deps:
   profiling:Profiling_js.running ->
   workers:Worker.t list option ->
   File_key.t list ->
-  FilenameSet.t FilenameMap.t * File_key.t list FilenameMap.t
+  FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t
 
 (* incremental typecheck entry point *)
 val recheck:

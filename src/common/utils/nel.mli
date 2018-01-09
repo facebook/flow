@@ -10,6 +10,8 @@ type 'a t = 'a * 'a list
 val to_list: 'a t -> 'a list
 val one: 'a -> 'a t
 val cons: 'a -> 'a t -> 'a t
+val mem: 'a -> 'a t -> bool
+val exists: ('a -> bool) -> 'a t -> bool
 val iter: ('a -> unit) -> 'a t -> unit
 val map: ('a -> 'b) -> 'a t -> 'b t
 val ident_map: ('a -> 'a) -> 'a t -> 'a t

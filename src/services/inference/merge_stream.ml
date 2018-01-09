@@ -64,7 +64,7 @@ let rec take n =
 
 type element =
 | Skip of File_key.t
-| Component of File_key.t list
+| Component of File_key.t Nel.t
 
 let component (f, diff) =
   if diff then Component (FilenameMap.find_unsafe f !components)
@@ -78,7 +78,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
   to_recheck := recheck_leader_map;
 
   let total_number_of_files =
-    FilenameMap.fold (fun _ files acc -> List.length files + acc) component_map 0 in
+    FilenameMap.fold (fun _ files acc -> Nel.length files + acc) component_map 0 in
   let files_merged_so_far = ref 0 in
 
   let leader f = FilenameMap.find_unsafe f leader_map in
@@ -125,7 +125,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
       if result <> [] then begin
         let length = List.fold_left (fun acc element -> match element with
           | Skip _ -> acc
-          | Component files -> List.length files + acc) 0 result in
+          | Component files -> Nel.length files + acc) 0 result in
         MonitorRPC.status_update ServerStatus.(Merging_progress {
           finished = !files_merged_so_far;
           total = Some total_number_of_files;
@@ -161,11 +161,11 @@ let join result_callback =
     ) [] merged) in
     List.iter (fun leader_f ->
       let fs = FilenameMap.find_unsafe leader_f !components in
-      Context_cache.revive_merge_batch (FilenameSet.of_list fs);
+      Context_cache.revive_merge_batch (FilenameSet.of_list (Nel.to_list fs));
     ) unchanged;
     List.iter (fun leader_f ->
       let fs = FilenameMap.find_unsafe leader_f !components in
-      Context_cache.remove_old_merge_batch (FilenameSet.of_list fs);
+      Context_cache.remove_old_merge_batch (FilenameSet.of_list (Nel.to_list fs));
     ) changed;
     push (List.rev_append
       (List.rev_map (fun leader_f -> (leader_f, true)) changed)

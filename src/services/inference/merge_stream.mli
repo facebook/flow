@@ -9,7 +9,7 @@ open Utils_js
 
 type element =
 | Skip of File_key.t
-| Component of File_key.t list
+| Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
 
@@ -19,7 +19,7 @@ val make :
   (* leader map *)
   File_key.t FilenameMap.t ->
   (* component map *)
-  File_key.t list FilenameMap.t ->
+  File_key.t Nel.t FilenameMap.t ->
   (* recheck_leader_map *)
   bool FilenameMap.t ->
   unit ->

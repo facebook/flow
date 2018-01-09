@@ -125,12 +125,12 @@ let get_cycle ~workers ~env fn =
   let components = Sort_js.topsort dependency_graph in
 
   (* Get component for target file *)
-  let component = List.find (List.mem fn) components in
+  let component = List.find (Nel.mem fn) components in
 
   (* Restrict dep graph to only in-cycle files *)
-  let subgraph = List.fold_left (fun acc f ->
+  let subgraph = Nel.fold_left (fun acc f ->
     Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
-      let subdeps = FilenameSet.filter (fun f -> List.mem f component) deps in
+      let subdeps = FilenameSet.filter (fun f -> Nel.mem f component) deps in
       if FilenameSet.is_empty subdeps
       then acc
       else FilenameMap.add f subdeps acc
@@ -212,7 +212,8 @@ let gen_flow_files ~options env files =
       | None ->
         try
           let flow_file_cxs = List.map (fun file ->
-            let { Merge_service.cx; _ } = Merge_service.merge_strict_context ~options [file] in
+            let component = Nel.one file in
+            let { Merge_service.cx; _ } = Merge_service.merge_strict_context ~options component in
             cx
           ) flow_files in
 

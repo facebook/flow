@@ -54,14 +54,14 @@ let add_merge_on_diff ~audit leader_cx component_files xx =
     | Some xx_old -> File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
     | None -> true in
   if diff then begin
-    List.iter (fun f -> LeaderHeap.add f leader_f) component_files;
+    Nel.iter (fun f -> LeaderHeap.add f leader_f) component_files;
     add_sig_context ~audit leader_f leader_cx;
     SigHashHeap.add leader_f xx;
   end;
   diff
 
 let add_merge_on_exn ~audit ~options component =
-  let leader_f = List.hd component in
+  let leader_f = Nel.hd component in
   let cx =
     let metadata = Context.metadata_of_options options in
     let module_ref = Files.module_ref leader_f in
@@ -73,7 +73,7 @@ let add_merge_on_exn ~audit ~options component =
     Context.add_module cx module_ref module_t;
     LeaderHeap.add f leader_f;
     module_ref
-  ) component in
+  ) (Nel.to_list component) in
   let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
   add_sig_context ~audit leader_f cx;
   SigHashHeap.add leader_f xx

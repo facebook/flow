@@ -123,6 +123,7 @@ begin library "flow-common-tarjan"
   files = begin fb-glob "src/common/tarjan"
   end
   requires = [
+    "flow-common-utils"
     "hh-utils-collections"
   ]
 end

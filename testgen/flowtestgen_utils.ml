@@ -596,7 +596,7 @@ let flow_check (code : string) : string option =
           ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> input_ast)
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
-          [filename] reqs [] master_cx in  (* merge_component_strict expects the master's sig context here. *)
+          (Nel.one filename) reqs [] master_cx in  (* merge_component_strict expects the master's sig context here. *)
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
           Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
       in

@@ -184,7 +184,7 @@ let infer_and_merge ~root filename ast file_sig =
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
-    [filename] reqs [] master_cx
+    (Nel.one filename) reqs [] master_cx
   in
   cx
 

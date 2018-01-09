@@ -207,7 +207,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
   component reqs dep_cxs master_cx =
 
-  let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
+  let rev_cxs, impl_cxs = Nel.fold_left (fun (cxs, impl_cxs) filename ->
     let ast = get_ast_unsafe filename in
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in

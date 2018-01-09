@@ -11,7 +11,7 @@ type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) lis
 type 'a merge_job =
   options:Options.t ->
   'a merge_results * File_key.t list ->
-  File_key.t list ->
+  File_key.t Nel.t ->
   'a merge_results * File_key.t list
 
 type merge_strict_context_result = {
@@ -22,7 +22,7 @@ type merge_strict_context_result = {
 
 val merge_strict_context:
   options: Options.t ->
-  File_key.t list ->
+  File_key.t Nel.t ->
   merge_strict_context_result
 
 val merge_contents_context:
@@ -40,7 +40,7 @@ val merge_runner:
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  (File_key.t list) FilenameMap.t ->
+  (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->
   'a merge_results
 
@@ -52,6 +52,6 @@ val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  (File_key.t list) FilenameMap.t ->
+  (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->
   (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover) merge_results

@@ -35,15 +35,15 @@ val merge_component_strict:
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
   (* component *)
-  File_key.t list ->
+  File_key.t Nel.t ->
   (* requires *)
   Reqs.t ->
   (* dependency cxs *)
   Context.t list ->
   (* master cx *)
   Context.t ->
-  (* merged cx *)
-  Context.t * Context.t list
+  (* cxs in component order, hd is merged leader *)
+  Context.t Nel.t
 
 val clear_master_shared: Context.t -> Context.t -> unit
 
