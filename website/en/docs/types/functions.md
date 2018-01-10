@@ -141,7 +141,7 @@ method(null);      // Error!
 ### Rest Parameters <a class="toc" id="toc-rest-parameters" href="#toc-rest-parameters"></a>
 
 JavaScript also supports having rest parameters or parameters that collect an
-array of arguments at the end of a list of parameters. These have an elipsis
+array of arguments at the end of a list of parameters. These have an ellipsis
 `...` before them.
 
 You can also add type annotations for rest parameters using the same syntax but

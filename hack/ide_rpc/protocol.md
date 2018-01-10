@@ -10,7 +10,7 @@ Where `<path>` is a directory (or descendant of directory) containing `.hhconfig
 
 ## Transport layer
 
-All the the messages sent / received should be ASCII encoded, single line, JSON strings. The newline character is used to separate individual messages. All of the JSON fields that deserialize to string type, should deserialize to ASCII strings - there is no support for Unicode file names or Unicode source files.
+All the messages sent / received should be ASCII encoded, single line, JSON strings. The newline character is used to separate individual messages. All of the JSON fields that deserialize to string type, should deserialize to ASCII strings - there is no support for Unicode file names or Unicode source files.
 
 ## RPC protocol
 

@@ -11,7 +11,7 @@ To build the executable, run `make`.
 `ruleset_base.ml` contains a lot of rules used to generate
 programs. However, to accomplish a certain task, one might not want to
 use all those rules. Instead, a recommended way to do that is to
-inherite the `ruleset_base` class, pick the necessary rules and
+inherit the `ruleset_base` class, pick the necessary rules and
 possibly overwrite those methods. 
 
 Here are the steps to extend the 
