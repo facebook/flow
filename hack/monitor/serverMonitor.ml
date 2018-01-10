@@ -45,6 +45,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      *
      * String is the server name it wants to connect to. *)
     purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
+    (** Whether to ignore hh version mismatches *)
+    ignore_hh_version : bool;
   }
 
   type t = env * ServerMonitorUtils.monitor_config * Unix.file_descr
@@ -340,7 +342,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   and ack_and_handoff_client env client_fd =
     try
       let client_version = read_version client_fd in
-      if client_version <> Build_id.build_revision
+      if (not env.ignore_hh_version) && client_version <> Build_id.build_revision
       then
         client_out_of_date env client_fd ServerMonitorUtils.current_build_info
       else (
@@ -470,6 +472,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = server_process;
       server_start_options;
       retries = 0;
+      ignore_hh_version = Informant.should_ignore_hh_version informant_init_env;
     } in
     env, monitor_config, socket
 

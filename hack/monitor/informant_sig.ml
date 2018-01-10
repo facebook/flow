@@ -38,4 +38,5 @@ module type S = sig
    *)
   val is_managing : t -> bool
   val should_start_first_server : t -> bool
+  val should_ignore_hh_version : init_env -> bool
 end
