@@ -5,7 +5,7 @@
 
 FLOW_VERSION ?= $(shell node -p 'require("./package.json").version')
 HOST ?= https://github.com/facebook/flow/releases/download/v$(FLOW_VERSION)
-PLATFORMS = linux64 osx win64
+PLATFORMS = linux64 osx # TODO: win64
 LIBS = $(patsubst %,lib/%/libflowparser.a,$(PLATFORMS))
 ZIPS = $(patsubst %,dist/libflowparser-%.zip,$(PLATFORMS))
 
