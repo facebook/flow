@@ -10,6 +10,18 @@
     "bindings": "^1.3.0",
     "nan": "^2.8.0"
   },
+  "scripts": {
+    "prepublish": "make all",
+    "verify": "shasum -c SHASUM256.txt"
+  },
+  "files": [
+    "lib",
+    "include",
+    "src",
+    "index.js",
+    "binding.gyp",
+    "SHASUM256.txt"
+  ],
   "os": ["darwin", "linux"],
   "cpu": ["x64"]
 }

@@ -9,7 +9,6 @@
   "targets": [
     {
       "target_name": "flow_parser",
-      "dependencies": ["build_deps"],
       "sources": [
         "src/flow_parser_node.cc",
       ],
@@ -33,18 +32,6 @@
           },
         }],
       ],
-    },
-    {
-      "target_name": "build_deps",
-      "type": "none",
-      "actions": [
-        {
-          "action_name": "make_deps",
-          "inputs": [],
-          "outputs": ["lib/<(platform)/libflowparser.a", "include"],
-          "action": ["make", "include", "lib/<(platform)/libflowparser.a"],
-        }
-      ]
     }
   ]
 }
