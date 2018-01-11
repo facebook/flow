@@ -324,98 +324,122 @@ let handle_ephemeral_unsafe
   let workers = genv.ServerEnv.workers in
   Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
-  begin match command with
-  | ServerProt.Request.AUTOCOMPLETE fn ->
-      ServerProt.Response.AUTOCOMPLETE (
-        autocomplete ~options ~workers ~env client_logging_context fn
-      ) |> respond
-  | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
-      let options = { options with Options.
-        opt_verbose = verbose;
-        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-      } in
-      ServerProt.Response.CHECK_FILE (
-        check_file ~options ~workers ~env ~force fn: ServerProt.Response.status_response
-      ) |> respond
-  | ServerProt.Request.COVERAGE (fn, force) ->
-      ServerProt.Response.COVERAGE (
-        coverage ~options ~workers ~env ~force fn: ServerProt.Response.coverage_response
-      ) |> respond
-  | ServerProt.Request.CYCLE fn ->
-      let file_options = Options.file_options options in
-      let fn = Files.filename_from_string ~options:file_options fn in
-      ServerProt.Response.CYCLE (
-        get_cycle ~workers ~env fn: ServerProt.Response.cycle_response
-      ) |> respond
-  | ServerProt.Request.DUMP_TYPES (fn) ->
-      ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env fn)
-      |> respond
-  | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
-      ServerProt.Response.FIND_MODULE (
-        find_module ~options (moduleref, filename): File_key.t option
-      ) |> respond
-  | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
-      ServerProt.Response.FIND_REFS (
-        find_refs
-          ~genv ~env (fn, line, char, global): ServerProt.Response.find_refs_response
-      ) |> respond
-  | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
-      respond ServerProt.Response.FORCE_RECHECK;
-      let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-      env := Rechecker.recheck genv !env ~force_focus updates
-  | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
-      let options = { options with Options.
-        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-      } in
-      ServerProt.Response.GEN_FLOW_FILES (
-        gen_flow_files ~options !env files: ServerProt.Response.gen_flow_files_response
-      ) |> respond
-  | ServerProt.Request.GET_DEF (fn, line, char) ->
-      ServerProt.Response.GET_DEF (
-        get_def ~options ~workers ~env client_logging_context (fn, line, char)
-      ) |> respond
-  | ServerProt.Request.GET_IMPORTS module_names ->
-      ServerProt.Response.GET_IMPORTS (
-        get_imports ~options module_names: ServerProt.Response.get_imports_response
-      ) |> respond
-  | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
-      ServerProt.Response.INFER_TYPE (
-        infer_type
-          ~options ~workers ~env
-          client_logging_context
-          (fn, line, char, verbose)
-      ) |> respond
-  | ServerProt.Request.PORT (files) ->
-      ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
-      |> respond
-  | ServerProt.Request.STATUS (client_root, include_warnings) ->
-      let genv = {genv with
-        options = let open Options in {genv.options with
-          opt_include_warnings = genv.options.opt_include_warnings || include_warnings
-        }
-      } in
-      let status = get_status genv !env client_root in
-      respond (ServerProt.Response.STATUS status);
-      begin match status with
-        | ServerProt.Response.DIRECTORY_MISMATCH {ServerProt.Response.server; client} ->
-            Hh_logger.fatal "Status: Error";
-            Hh_logger.fatal "server_dir=%s, client_dir=%s"
-              (Path.to_string server)
-              (Path.to_string client);
-            Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-            FlowExitStatus.(exit Server_client_directory_mismatch)
-        | _ -> ()
-      end
-  | ServerProt.Request.SUGGEST (files) ->
-      ServerProt.Response.SUGGEST (
-        suggest ~options ~workers ~env files: ServerProt.Response.suggest_response
-      ) |> respond
-  end;
+  let should_print_summary = Options.should_profile genv.options in
+  let profiling, json_data =
+    Profiling_js.with_profiling ~should_print_summary begin fun _ ->
+      match command with
+      | ServerProt.Request.AUTOCOMPLETE fn ->
+          ServerProt.Response.AUTOCOMPLETE (
+            autocomplete ~options ~workers ~env client_logging_context fn
+          ) |> respond;
+          None
+      | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
+          let options = { options with Options.
+            opt_verbose = verbose;
+            opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+          } in
+          ServerProt.Response.CHECK_FILE (
+            check_file ~options ~workers ~env ~force fn: ServerProt.Response.status_response
+          ) |> respond;
+          None
+      | ServerProt.Request.COVERAGE (fn, force) ->
+          ServerProt.Response.COVERAGE (
+            coverage ~options ~workers ~env ~force fn: ServerProt.Response.coverage_response
+          ) |> respond;
+          None
+      | ServerProt.Request.CYCLE fn ->
+          let file_options = Options.file_options options in
+          let fn = Files.filename_from_string ~options:file_options fn in
+          ServerProt.Response.CYCLE (
+            get_cycle ~workers ~env fn: ServerProt.Response.cycle_response
+          ) |> respond;
+          None
+      | ServerProt.Request.DUMP_TYPES (fn) ->
+          ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env fn)
+          |> respond;
+          None
+      | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
+          ServerProt.Response.FIND_MODULE (
+            find_module ~options (moduleref, filename): File_key.t option
+          ) |> respond;
+          None
+      | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
+          ServerProt.Response.FIND_REFS (
+            find_refs
+              ~genv ~env (fn, line, char, global): ServerProt.Response.find_refs_response
+          ) |> respond;
+          None
+      | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
+          respond ServerProt.Response.FORCE_RECHECK;
+          let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
+          env := Rechecker.recheck genv !env ~force_focus updates;
+          None
+      | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
+          let options = { options with Options.
+            opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+          } in
+          ServerProt.Response.GEN_FLOW_FILES (
+            gen_flow_files ~options !env files: ServerProt.Response.gen_flow_files_response
+          ) |> respond;
+          None
+      | ServerProt.Request.GET_DEF (fn, line, char) ->
+          ServerProt.Response.GET_DEF (
+            get_def ~options ~workers ~env client_logging_context (fn, line, char)
+          ) |> respond;
+          None
+      | ServerProt.Request.GET_IMPORTS module_names ->
+          ServerProt.Response.GET_IMPORTS (
+            get_imports ~options module_names: ServerProt.Response.get_imports_response
+          ) |> respond;
+          None
+      | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
+          ServerProt.Response.INFER_TYPE (
+            infer_type
+              ~options ~workers ~env
+              client_logging_context
+              (fn, line, char, verbose)
+          ) |> respond;
+          None
+      | ServerProt.Request.PORT (files) ->
+          ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
+          |> respond;
+          None
+      | ServerProt.Request.STATUS (client_root, include_warnings) ->
+          let genv = {genv with
+            options = let open Options in {genv.options with
+              opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+            }
+          } in
+          let status = get_status genv !env client_root in
+          respond (ServerProt.Response.STATUS status);
+          begin match status with
+            | ServerProt.Response.DIRECTORY_MISMATCH {ServerProt.Response.server; client} ->
+                Hh_logger.fatal "Status: Error";
+                Hh_logger.fatal "server_dir=%s, client_dir=%s"
+                  (Path.to_string server)
+                  (Path.to_string client);
+                Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
+                FlowExitStatus.(exit Server_client_directory_mismatch)
+            | _ -> ()
+          end;
+          None
+      | ServerProt.Request.SUGGEST (files) ->
+          ServerProt.Response.SUGGEST (
+            suggest ~options ~workers ~env files: ServerProt.Response.suggest_response
+          ) |> respond;
+          None
+    end in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-  !env
+  !env, profiling, json_data
 
 let handle_ephemeral genv env (request_id, command) =
-  try handle_ephemeral_unsafe genv env (request_id, command)
+  try
+    let env, profiling, json_data = handle_ephemeral_unsafe genv env (request_id, command) in
+    FlowEventLogger.ephemeral_command_success
+      ?json_data
+      ~client_context:command.ServerProt.Request.client_logging_context
+      ~profiling;
+    env
   with exn ->
     let backtrace = String.trim (Printexc.get_backtrace ()) in
     let exn_str = Printf.sprintf
@@ -427,6 +451,9 @@ let handle_ephemeral genv env (request_id, command) =
       "Uncaught exception while handling a request (%s): %s"
       (ServerProt.Request.to_string command.ServerProt.Request.command)
       exn_str;
+    FlowEventLogger.ephemeral_command_failure
+      ~client_context:command.ServerProt.Request.client_logging_context
+      ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
     MonitorRPC.request_failed ~request_id ~exn_str;
     env
 
@@ -437,63 +464,70 @@ let handle_persistent genv env client_id msg =
   Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let client = Persistent_connection.get_client !env.connections client_id in
-  let env = match msg with
-    | Persistent_connection_prot.Subscribe ->
-        let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings !env in
-        let new_connections = Persistent_connection.subscribe_client
-          ~clients:!env.connections ~client ~current_errors ~current_warnings
-        in
-        { !env with connections = new_connections }
-    | Persistent_connection_prot.Autocomplete (file_input, id) ->
-        let client_logging_context = Persistent_connection.get_logging_context client in
-        let results = autocomplete ~options ~workers ~env client_logging_context file_input in
-        let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
-        Persistent_connection.send_message wrapped client;
-        !env
-    | Persistent_connection_prot.DidOpen filenames ->
-        Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+  let client_logging_context = Persistent_connection.get_logging_context client in
+  let should_print_summary = Options.should_profile genv.options in
+  let profiling, (env, json_data) =
+    Profiling_js.with_profiling ~should_print_summary begin fun _ ->
+      match msg with
+      | Persistent_connection_prot.Subscribe ->
+          let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings !env in
+          let new_connections = Persistent_connection.subscribe_client
+            ~clients:!env.connections ~client ~current_errors ~current_warnings
+          in
+          { !env with connections = new_connections }, None
+      | Persistent_connection_prot.Autocomplete (file_input, id) ->
+          let results = autocomplete ~options ~workers ~env client_logging_context file_input in
+          let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
+          Persistent_connection.send_message wrapped client;
+          !env, None
+      | Persistent_connection_prot.DidOpen filenames ->
+          Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
 
-        begin match Persistent_connection.client_did_open !env.connections client ~filenames with
-        | None -> !env (* No new files were opened, so do nothing *)
-        | Some (connections, client) ->
-          let env = {!env with connections} in
+          begin match Persistent_connection.client_did_open !env.connections client ~filenames with
+          | None -> !env, None (* No new files were opened, so do nothing *)
+          | Some (connections, client) ->
+            let env = {!env with connections} in
 
-          match Options.lazy_mode options with
-          | Some Options.LAZY_MODE_IDE ->
-            (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
-             * opens. So when an IDE opens a new file, that file is now focused.
-             *
-             * If the newly opened file was previously unchecked or checked as a dependency, then
-             * we will do a new recheck.
-             *
-             * If the newly opened file was already checked, then we'll just send the errors to
-             * the client
-             *)
-            let env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
-            if not triggered_recheck then begin
-              (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+            match Options.lazy_mode options with
+            | Some Options.LAZY_MODE_IDE ->
+              (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+               * opens. So when an IDE opens a new file, that file is now focused.
+               *
+               * If the newly opened file was previously unchecked or checked as a dependency, then
+               * we will do a new recheck.
+               *
+               * If the newly opened file was already checked, then we'll just send the errors to
+               * the client
+               *)
+              let env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
+              if not triggered_recheck then begin
+                (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+                let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+                Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+              end;
+              env, None
+            | Some Options.LAZY_MODE_FILESYSTEM
+            | None ->
+              (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+               * a new file is opened is to send the errors to the client *)
               let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-              Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
-            end;
-            env
-          | Some Options.LAZY_MODE_FILESYSTEM
-          | None ->
-            (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
-             * a new file is opened is to send the errors to the client *)
-            let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-            env
-          end
+              Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+              env, None
+            end
 
-    | Persistent_connection_prot.DidClose filenames ->
-        Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-        begin match Persistent_connection.client_did_close !env.connections client ~filenames with
-        | None -> !env (* No new files were closed, so do nothing *)
-        | Some (connections, client) ->
-          let errors, warnings, _ = ErrorCollator.get_with_separate_warnings !env in
-          Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-          {!env with connections}
-        end
-  in
+      | Persistent_connection_prot.DidClose filenames ->
+          Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
+          begin match Persistent_connection.client_did_close !env.connections client ~filenames with
+          | None -> !env, None (* No new files were closed, so do nothing *)
+          | Some (connections, client) ->
+            let errors, warnings, _ = ErrorCollator.get_with_separate_warnings !env in
+            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+            {!env with connections}, None
+          end
+  end in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+  FlowEventLogger.persistent_command_success
+    ?json_data
+    ~client_context:client_logging_context
+    ~profiling;
   env
