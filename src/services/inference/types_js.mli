@@ -40,17 +40,6 @@ val full_check:
   ServerEnv.errors ->
   CheckedSet.t * ServerEnv.errors
 
-val deprecated_basic_check_contents:
-  options: Options.t ->
-  workers: Worker.t list option ->
-  env: ServerEnv.env ref ->
-  string ->               (* contents *)
-  File_key.t ->           (* fake file-/module name *)
-  (Profiling_js.finished *
-   Context.t *
-   Docblock.t,
-   string) result
-
  val basic_check_contents:
    options: Options.t ->
    workers: Worker.t list option ->
@@ -66,6 +55,7 @@ val typecheck_contents:
   options: Options.t ->
   workers: Worker.t list option ->
   env: ServerEnv.env ref ->
+  profiling: Profiling_js.running ->
   string ->               (* contents *)
   File_key.t ->           (* fake file-/module name *)
   Errors.ErrorSet.t *     (* errors *)
