@@ -85,3 +85,7 @@ assert_ok \
 printf "override.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --json override.js 10 16 < override.js
+
+printf "class.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --json class.js 7 5 < class.js
