@@ -166,6 +166,7 @@ module PropertyRefs: sig
   val find_refs:
     ServerEnv.genv ->
     ServerEnv.env ref ->
+    profiling: Profiling_js.running ->
     content: string ->
     File_key.t ->
     Loc.t ->
@@ -262,18 +263,19 @@ end = struct
       else
         refs
 
-  let find_refs genv env ~content file_key loc ~global =
+  let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
     let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
       let props_access_info = ref None in
       set_def_loc_hook props_access_info loc;
       let cx_result =
-        get_ast_result file_key content >>| fun (ast, file_sig, info) ->
-        let _, result = Profiling_js.with_profiling ~should_print_summary:false begin fun profiling ->
-          let ensure_checked = Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
-          Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-        end in
-        result
+        get_ast_result file_key content
+        >>| fun (ast, file_sig, info) ->
+          Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
+            let ensure_checked =
+              Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
+            Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+          )
       in
       unset_hooks ();
       cx_result >>= fun cx ->
@@ -324,15 +326,21 @@ let sort_find_refs_result = function
       Ok (Some (name, locs))
   | x -> x
 
-let find_refs ~genv ~env ~file_input ~line ~col ~global =
+let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
   let options, workers = genv.options, genv.workers in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
-  File_input.content_of_file_input file_input >>= fun content ->
-  let unsorted =
-    VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
-      | Some _ as result -> Ok result
-      | None -> PropertyRefs.find_refs genv env content file_key loc global
-  in
-  sort_find_refs_result unsorted
+  match File_input.content_of_file_input file_input with
+  | Error err -> Error err, None
+  | Ok content ->
+    let unsorted =
+      VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
+        | Some _ as result -> Ok result
+        | None -> PropertyRefs.find_refs genv env ~profiling ~content file_key loc ~global
+    in
+    let result = sort_find_refs_result unsorted in
+    let json_data = Hh_json.JSON_Object [
+      "result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE");
+    ] in
+    result, Some json_data
