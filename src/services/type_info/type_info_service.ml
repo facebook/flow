@@ -15,38 +15,32 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1; offset = 0; };
   }
 
-let type_at_pos ~options ~workers ~env ~client_context file content line col =
-  Types_js.deprecated_basic_check_contents ~options ~workers ~env content file
-  >>| fun (profiling, cx, _info) ->
+let type_at_pos ~options ~workers ~env ~profiling file content line col =
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+  |> map_error ~f:(fun str -> str, None)
+  >>| fun (cx, _info) ->
     let loc = mk_loc file line col in
-    let result_str, data, loc, ground_t, possible_ts =
-      let mk_data loc ty = [
+    let json_data, loc, ground_t, possible_ts =
+      let mk_data result_str loc ty = Hh_json.JSON_Object [
+        "result", Hh_json.JSON_String result_str;
         "loc", Reason.json_of_loc loc;
-        "type", Debug_js.json_of_t ~depth:3 cx ty
+        "type", Debug_js.json_of_t ~depth:3 cx ty;
       ] in
       Query_types.(match query_type cx loc with
         | FailureNoMatch ->
-          "FAILURE_NO_MATCH", [],
-          Loc.none, None, []
+          Hh_json.JSON_Object ["result", Hh_json.JSON_String "FAILURE_NO_MATCH"], Loc.none, None, []
         | FailureUnparseable (loc, gt, possible_ts) ->
-          "FAILURE_UNPARSEABLE", mk_data loc gt,
-          loc, None, possible_ts
+          mk_data "FAILURE_UNPARSEABLE" loc gt, loc, None, possible_ts
         | Success (loc, gt, possible_ts) ->
-          "SUCCESS", mk_data loc gt,
-          loc, Some gt, possible_ts
-      ) in
-    FlowEventLogger.type_at_pos_result
-      ~client_context
-      ~result_str
-      ~json_data:(Hh_json.JSON_Object data)
-      ~profiling;
-
-  let ty = match ground_t with
-    | None -> None
-    | Some t -> Some (Type_printer.string_of_t cx t)
-  in
-  let reasons = List.map Type.reason_of_t possible_ts in
-  loc, ty, reasons
+          mk_data "SUCCESS" loc gt, loc, Some gt, possible_ts
+      )
+    in
+    let ty = match ground_t with
+      | None -> None
+      | Some t -> Some (Type_printer.string_of_t cx t)
+    in
+    let reasons = List.map Type.reason_of_t possible_ts in
+    (loc, ty, reasons), Some json_data
 
 let dump_types ~options ~workers ~env file content =
   (* Print type using Flow type syntax *)
@@ -92,3 +86,4 @@ let suggest ~options ~workers ~env file region content =
             (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
           )
       | _ -> assert false
+
