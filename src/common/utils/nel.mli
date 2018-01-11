@@ -23,3 +23,4 @@ val rev_append: 'a t -> 'a t -> 'a t
 val length: 'a t -> int
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val hd: 'a t -> 'a
+val nth: 'a t -> int -> 'a

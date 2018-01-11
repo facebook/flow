@@ -66,3 +66,5 @@ let length (_, xs) = 1 + List.length xs
 let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)
 
 let hd (x, _) = x
+
+let nth nel n = List.nth (to_list nel) n
