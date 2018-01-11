@@ -21,6 +21,7 @@ val dump_types :
   options:Options.t ->
   workers:Worker.t list option ->
   env:ServerEnv.env ref ->
+  profiling:Profiling_js.running ->
   File_key.t ->
   string ->
   ((Loc.t * string * string * Reason.reason list) list, string) Core_result.t
@@ -29,6 +30,7 @@ val coverage :
   options:Options.t ->
   workers:Worker.t list option ->
   env:ServerEnv.env ref ->
+  profiling:Profiling_js.running ->
   force:bool ->
   File_key.t ->
   string -> ((Loc.t * bool) list, string) Core_result.t
@@ -37,6 +39,7 @@ val suggest :
   options:Options.t ->
   workers:Worker.t list option ->
   env:ServerEnv.env ref ->
+  profiling:Profiling_js.running ->
   File_key.t ->
   string list ->
   string -> ((int * int * string) list, string) Core_result.t

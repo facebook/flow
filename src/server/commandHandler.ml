@@ -108,21 +108,21 @@ let infer_type
     end
     |> extract_json_data
 
-let dump_types ~options ~workers ~env file_input =
+let dump_types ~options ~workers ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input >>= fun content ->
   try_with begin fun () ->
     Type_info_service.dump_types
-      ~options ~workers ~env file content
+      ~options ~workers ~env ~profiling file content
   end
 
-let coverage ~options ~workers ~env ~force file_input =
+let coverage ~options ~workers ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input >>= fun content ->
   try_with begin fun () ->
-    Type_info_service.coverage ~options ~workers ~env ~force file content
+    Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
   end
 
 let get_cycle ~workers ~env fn =
@@ -156,13 +156,13 @@ let get_cycle ~workers ~env fn =
   Ok subgraph
 
 let suggest =
-  let suggest_for_file ~options ~workers ~env result_map (file, region) =
+  let suggest_for_file ~options ~workers ~env ~profiling result_map (file, region) =
     SMap.add file (try_with begin fun () ->
-      Type_info_service.suggest ~options ~workers ~env
+      Type_info_service.suggest ~options ~workers ~env ~profiling
         (File_key.SourceFile file) region (Sys_utils.cat file)
     end) result_map
-  in fun ~options ~workers ~env files ->
-    List.fold_left (suggest_for_file ~options ~workers ~env) SMap.empty files
+  in fun ~options ~workers ~env ~profiling files ->
+    List.fold_left (suggest_for_file ~options ~workers ~env ~profiling) SMap.empty files
 
 (* NOTE: currently, not only returns list of annotations, but also writes a
    timestamped file with annotations *)
@@ -365,7 +365,7 @@ let handle_ephemeral_unsafe
           None
       | ServerProt.Request.COVERAGE (fn, force) ->
           ServerProt.Response.COVERAGE (
-            coverage ~options ~workers ~env ~force fn: ServerProt.Response.coverage_response
+            coverage ~options ~workers ~env ~profiling ~force fn
           ) |> respond;
           None
       | ServerProt.Request.CYCLE fn ->
@@ -376,7 +376,7 @@ let handle_ephemeral_unsafe
           ) |> respond;
           None
       | ServerProt.Request.DUMP_TYPES (fn) ->
-          ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env fn)
+          ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env ~profiling fn)
           |> respond;
           None
       | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
@@ -440,7 +440,7 @@ let handle_ephemeral_unsafe
           None
       | ServerProt.Request.SUGGEST (files) ->
           ServerProt.Response.SUGGEST (
-            suggest ~options ~workers ~env files: ServerProt.Response.suggest_response
+            suggest ~options ~workers ~env ~profiling files
           ) |> respond;
           None
     end in
