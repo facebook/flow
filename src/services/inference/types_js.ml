@@ -54,9 +54,7 @@ let update_severity_cover_set map file severity_cover =
   FilenameMap.add file severity_cover map
 
 let with_timer ?options timer profiling f =
-  Profiling_js.start_timer ~timer profiling;
-  let ret = f () in
-  Profiling_js.stop_timer ~timer profiling;
+  let ret = Profiling_js.with_timer ~timer ~f profiling in
 
   (* If we're profiling then output timing information to stderr *)
   (match options with

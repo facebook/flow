@@ -120,14 +120,7 @@ let autocomplete_filter_members members =
     not (Reason.is_internal_name key)
   ) members
 
-let autocomplete_member
-  profiling
-  client_logging_context
-  cx
-  this
-  ac_name
-  ac_loc
-  docblock = Flow_js.(
+let autocomplete_member ~ac_type cx this ac_name ac_loc docblock = Flow_js.(
 
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
@@ -137,15 +130,6 @@ let autocomplete_member
 
   let open Hh_json in
 
-  let json_data_list = [
-    "ac_name", JSON_String ac_name;
-    "ac_loc",
-      (* don't need to strip root for logging *)
-      JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
-    "loc", Reason.json_of_loc ac_loc;
-    "docblock", Docblock.json_of_docblock docblock;
-  ] in
-
   let result_str, t = Members.(match result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
@@ -153,29 +137,30 @@ let autocomplete_member
     | FailureAnyType -> "FAILURE_NO_COVERAGE", this
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 
-  let json_data = JSON_Object (
-    ("type", Debug_js.json_of_t ~depth:3 cx t)::json_data_list
-  ) in
-  FlowEventLogger.autocomplete_member_result
-    ~client_context:client_logging_context
-    ~result_str
-    ~json_data
-    ~profiling;
+  let json_data_to_log = JSON_Object [
+    "ac_type", JSON_String ac_type;
+    "ac_name", JSON_String ac_name;
+    (* don't need to strip root for logging *)
+    "ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
+    "loc", Reason.json_of_loc ac_loc;
+    "docblock", Docblock.json_of_docblock docblock;
+    "result", JSON_String result_str;
+    "type", Debug_js.json_of_t ~depth:3 cx t;
+  ] in
 
   match Members.to_command_result result with
-  | Error error -> Error error
+  | Error error -> Error (error, Some json_data_to_log)
   | Ok result_map ->
-    Ok (
-      result_map
-      |> autocomplete_filter_members
-      |> SMap.mapi (fun name (_id_loc, t) ->
-          let loc = Type.loc_of_t t in
-          let gt = Type_normalizer.normalize_type cx t in
-          autocomplete_create_result cx name gt loc
-        )
-      |> SMap.values
-      |> List.rev
-    )
+    let result = result_map
+    |> autocomplete_filter_members
+    |> SMap.mapi (fun name (_id_loc, t) ->
+        let loc = Type.loc_of_t t in
+        let gt = Type_normalizer.normalize_type cx t in
+        autocomplete_create_result cx name gt loc
+      )
+    |> SMap.values
+    |> List.rev in
+    Ok (result, Some json_data_to_log)
 )
 
 (* env is all visible bound names at cursor *)
@@ -204,20 +189,13 @@ let autocomplete_id cx env =
       result :: acc
     )
   ) env [] in
-  Ok result
+  Ok (result, None)
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx
-  profiling
-  client_logging_context
-  cx
-  cls
-  ac_name
-  ac_loc
-  docblock = Flow_js.(
+let autocomplete_jsx cx cls ac_name ac_loc docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = Tvar.mk_where cx reason (fun tvar ->
@@ -226,25 +204,17 @@ let autocomplete_jsx
         component_instance,
         Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar))
     ) in
-    autocomplete_member
-      profiling
-      client_logging_context
-      cx
-      props_object
-      ac_name
-      ac_loc
-      docblock
+    autocomplete_member ~ac_type:"Acjsx" cx props_object ac_name ac_loc docblock
   )
 
-let autocomplete_get_results
-  profiling client_logging_context cx state docblock =
+let autocomplete_get_results cx state docblock =
   (* FIXME: See #5375467 *)
   Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
     autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-    autocomplete_member profiling client_logging_context cx this ac_name ac_loc docblock
+    autocomplete_member ~ac_type:"Acmem" cx this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-    autocomplete_jsx profiling client_logging_context cx cls ac_name ac_loc docblock
-  | None -> Ok []
+    autocomplete_jsx cx cls ac_name ac_loc docblock
+  | None -> Ok ([], None)
