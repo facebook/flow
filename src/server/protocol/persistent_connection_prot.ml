@@ -19,6 +19,14 @@ let string_of_request = function
 | DidOpen _ -> "didOpen"
 | DidClose _ -> "didClose"
 
+(* Whereas string_of_request returns a normalized description of the request, this returns a more
+ * detailed description *)
+let denorm_string_of_request = function
+| Subscribe -> "subscribe"
+| Autocomplete (f, _) -> Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input f)
+| DidOpen files -> Printf.sprintf "didOpen %s" (String.concat " " (Nel.to_list files))
+| DidClose files -> Printf.sprintf "didClose %s" (String.concat " " (Nel.to_list files))
+
 type response =
   | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
   | StartRecheck

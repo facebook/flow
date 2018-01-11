@@ -544,6 +544,7 @@ let handle_persistent genv env client_id msg =
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
   FlowEventLogger.persistent_command_success
     ?json_data
+    ~request:(Persistent_connection_prot.denorm_string_of_request msg)
     ~client_context:client_logging_context
     ~profiling;
   env
