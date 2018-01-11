@@ -29,6 +29,10 @@
               #   _caml_start_program: dwarf uses DW_CFA_same_value
               "-Wl,-no_compact_unwind",
             ],
+            # travis builds libflowparser on 10.12. if this is a problem,
+            # we need to set MACOSX_DEPLOYMENT_TARGET in Travis when
+            # compiling ocaml and libflowparser.
+            "MACOSX_DEPLOYMENT_TARGET": "10.12",
           },
         }],
       ],
