@@ -154,7 +154,7 @@ let join result_callback =
       ) (FilenameMap.find_unsafe leader_f !dependents)
     ) leader_fs_diffs
   in
-  fun (merged, unchanged) (merged_acc, unchanged_acc) ->
+  fun (merged, unchanged) merged_acc ->
     let () = result_callback (lazy merged) in
     let changed = List.rev (List.fold_left (fun acc (f, _) ->
       if not (List.mem f unchanged) then f::acc else acc
@@ -171,4 +171,4 @@ let join result_callback =
       (List.rev_map (fun leader_f -> (leader_f, true)) changed)
       (List.rev_map (fun leader_f -> (leader_f, false)) unchanged)
     );
-    List.rev_append merged merged_acc, List.rev_append unchanged unchanged_acc
+    List.rev_append merged merged_acc

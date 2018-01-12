@@ -225,7 +225,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~options ~job (merged, unchanged) elements =
+let merge_strict_job ~options ~job merged elements =
   List.fold_left (fun (merged, unchanged) -> function
     | Merge_stream.Skip file ->
       (* Skip rechecking this file (because none of its dependencies changed).
@@ -293,7 +293,7 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
         | _ -> EInternal (file_loc, MergeJobException exc)
         ) in
         ((file, result) :: merged), unchanged
-  ) (merged, unchanged) elements
+  ) (merged, []) elements
 
 (* make a map from component leaders to components *)
 let merge_runner ~job ~intermediate_result_callback ~options ~workers
@@ -314,14 +314,13 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
     ~msg:(fun t -> spf "merged (strict) in %f" t)
     ~f:(fun () ->
       (* returns parallel lists of filenames, error sets, and suppression sets *)
-      let merged, _ = MultiWorker.call
+      MultiWorker.call
         workers
         ~job: (merge_strict_job ~options ~job)
-        ~neutral: ([], [])
+        ~neutral: []
         ~merge: (Merge_stream.join intermediate_result_callback)
         ~next: (Merge_stream.make
-                  dependency_graph leader_map component_map recheck_leader_map) in
-      merged
+                  dependency_graph leader_map component_map recheck_leader_map)
     )
 
 let merge_strict = merge_runner ~job:merge_strict_component
