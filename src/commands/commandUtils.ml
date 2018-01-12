@@ -73,28 +73,6 @@ let expand_path file =
       FlowExitStatus.(exit ~msg Input_error)
     end
 
-let global_kill_time = ref None
-
-let set_timeout max_wait_time_seconds =
-  global_kill_time := Some (Unix.time() +. (float_of_int max_wait_time_seconds))
-
-let timeout_go_boom () =
-  FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time)
-
-let check_timeout () =
-  match !global_kill_time with
-    | None -> ()
-    | Some kill_time ->
-        if Unix.time () > kill_time then timeout_go_boom ()
-
-let sleep seconds =
-  match !global_kill_time with
-    | None -> Unix.sleep seconds
-    | Some kill_time ->
-        if int_of_float (ceil (kill_time -. Unix.time ())) <= seconds
-        then timeout_go_boom ()
-        else Unix.sleep seconds
-
 let collect_error_flags main color include_warnings one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
@@ -473,7 +451,7 @@ type command_params = {
   from               : string;
   retries            : int;
   retry_if_init      : bool;
-  timeout            : int;
+  timeout            : int option;
   no_auto_start      : bool;
   temp_dir           : string option;
   shm_flags          : shared_mem_params;
@@ -496,11 +474,16 @@ let collect_server_flags
   | Some x -> x
   | None -> def in
   FlowEventLogger.set_from from;
+  (match timeout with
+  | Some n when n <= 0 ->
+    let msg = spf "Timeout must be a positive integer. Got %d" n in
+    FlowExitStatus.(exit ~msg Commandline_usage_error)
+  | _ -> ());
   main {
     from = (default "" from);
     retries = (default 3 retries);
     retry_if_init = (default true retry_if_init);
-    timeout = (default 0 timeout);
+    timeout = timeout;
     no_auto_start = no_auto_start;
     temp_dir;
     shm_flags;
@@ -736,8 +719,8 @@ let connect ~client_type server_flags root =
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
-  | 0 -> None
-  | n -> Some (Unix.time () +. float n) in
+  | None -> None
+  | Some n -> Some (Unix.time () +. float n) in
   let env = { CommandConnect.
     root;
     autostart = not server_flags.no_auto_start;
@@ -847,24 +830,24 @@ let exe_name = Utils_js.exe_name
  * server *)
 let rec connect_and_make_request =
   (* Sends the command over the socket *)
-  let send_command (oc:out_channel) (cmd:ServerProt.Request.command): unit =
+  let send_command ?timeout (oc:out_channel) (cmd:ServerProt.Request.command): unit =
     let command = { ServerProt.Request.
       client_logging_context = FlowEventLogger.get_context ();
       command = cmd;
     } in
-    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) command;
+    Marshal_tools.to_fd_with_preamble ?timeout (Unix.descr_of_out_channel oc) command;
     flush oc
   in
 
   (* Waits for a response over the socket. If the connection dies, this will throw an exception *)
-  let rec wait_for_response ~quiet ~root (ic: Timeout.in_channel) =
+  let rec wait_for_response ?timeout ~quiet ~root (ic: Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () &&
       Server_files_js.config_file root
       |> FlowConfig.get
       |> FlowConfig.emoji in
 
     let response: MonitorProt.monitor_to_client_message = try
-      Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel ic)
+      Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic)
     with
     | Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _) ->
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
@@ -878,7 +861,7 @@ let rec connect_and_make_request =
     (* Let's ignore messages from the server that it is free. It's a confusing message for the
      * user *)
     | MonitorProt.Please_hold status when ServerStatus.is_free status ->
-      wait_for_response ~quiet ~root ic
+      wait_for_response ?timeout ~quiet ~root ic
     (* The server is busy, so we print the server's status and keep reading from the socket *)
     | MonitorProt.Please_hold status ->
       if not quiet then begin
@@ -888,7 +871,7 @@ let rec connect_and_make_request =
           (ServerStatus.string_of_status ~use_emoji status)
           (Tty.spinner())
       end;
-      wait_for_response ~quiet ~root ic
+      wait_for_response ?timeout ~quiet ~root ic
     | MonitorProt.Data response ->
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
       response
@@ -898,7 +881,7 @@ let rec connect_and_make_request =
       FlowExitStatus.(exit ~msg Unknown_error)
   in
 
-  fun ?retries server_flags root request ->
+  fun ?timeout ?retries server_flags root request ->
     let retries = match retries with
     | None -> server_flags.retries
     | Some retries -> retries in
@@ -907,9 +890,10 @@ let rec connect_and_make_request =
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
     let quiet = server_flags.quiet in
+    (* connect handles timeouts itself *)
     let ic, oc = connect ~client_type:SocketHandshake.Ephemeral server_flags root in
-    send_command oc request;
-    try wait_for_response ~quiet ~root ic
+    send_command ?timeout oc request;
+    try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->
       if not quiet then begin
         Printf.eprintf
@@ -917,7 +901,18 @@ let rec connect_and_make_request =
           retries
           (if retries = 1 then "retry" else "retries")
       end;
-      connect_and_make_request ~retries:(retries - 1) server_flags root request
+      connect_and_make_request ?timeout ~retries:(retries - 1) server_flags root request
+
+(* If --timeout is set, wrap connect_and_make_request in a timeout *)
+let connect_and_make_request ?retries server_flags root request =
+  match server_flags.timeout with
+  | None ->
+    connect_and_make_request ?retries server_flags root request
+  | Some timeout ->
+    Timeout.with_timeout
+      ~timeout
+      ~on_timeout:(fun () -> FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time))
+      ~do_:(fun timeout -> connect_and_make_request ~timeout ?retries server_flags root request)
 
 let failwith_bad_response ~request ~response =
   let msg = Printf.sprintf

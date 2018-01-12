@@ -96,7 +96,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     strip_root: bool;
   }
 
-  let rec check_status (args:args) server_flags =
+  let check_status (args:args) server_flags =
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
@@ -147,17 +147,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  and retry (args, server_flags) sleep msg =
-    check_timeout ();
-    let retries = server_flags.retries in
-    if retries > 0
-    then begin
-      Printf.fprintf stderr "%s\n%!" msg;
-      CommandUtils.sleep sleep;
-      check_status args { server_flags with retries = retries - 1 }
-    end else
-      FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
-
   let main server_flags json pretty error_flags strip_root from version root () =
     FlowEventLogger.set_from from;
     if version then (
@@ -168,8 +157,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     );
 
     let root = guess_root root in
-    let timeout_arg = server_flags.timeout in
-    if timeout_arg > 0 then set_timeout timeout_arg;
 
     let json = json || pretty in
 
