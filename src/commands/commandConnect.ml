@@ -121,7 +121,7 @@ let rec connect ~client_type env retries start_time =
     FlowExitStatus.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries);
   let has_timed_out = match env.expiry with
     | None -> false
-    | Some t -> Unix.time() > t
+    | Some t -> Unix.gettimeofday() > t
   in
   if has_timed_out
   then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
@@ -150,7 +150,7 @@ let rec connect ~client_type env retries start_time =
       let msg = "The flow server's version didn't match the client's, so it exited." in
       if env.autostart
       then
-        let start_time = Unix.time () in
+        let start_time = Unix.gettimeofday () in
         begin
           if not env.quiet then
             Utils_js.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
@@ -173,7 +173,7 @@ let rec connect ~client_type env retries start_time =
         if not env.quiet then Utils_js.prerr_endlinef
           "Successfully killed server for `%s`"
           (Path.to_string env.root);
-        let start_time = Unix.time () in
+        let start_time = Unix.gettimeofday () in
         handle_missing_server ~client_type env retries start_time
       with CommandMeanKill.FailedToKill err ->
         begin if not env.quiet then match err with
@@ -209,7 +209,7 @@ and handle_missing_server ~client_type env retries start_time =
   end
 
 let connect ~client_type env =
-  let start_time = Unix.time () in
+  let start_time = Unix.gettimeofday () in
   let retries = {
     retries_remaining = env.retries;
     original_retries = env.retries;

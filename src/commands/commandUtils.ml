@@ -720,7 +720,7 @@ let connect ~client_type server_flags root =
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
   | None -> None
-  | Some n -> Some (Unix.time () +. float n) in
+  | Some n -> Some (Unix.gettimeofday () +. float n) in
   let env = { CommandConnect.
     root;
     autostart = not server_flags.no_auto_start;
