@@ -55,8 +55,8 @@ module type WRITER_READER = sig
   val fail: exn -> 'a result
   val (>>=): 'a result -> ('a -> 'b result) -> 'b result
 
-  val write: fd -> buffer:bytes -> offset:int -> size:int -> int result
-  val read:  fd -> buffer:bytes -> offset:int -> size:int -> int result
+  val write: ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
+  val read:  ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
 
   val log: string -> unit
 end
@@ -72,12 +72,11 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
   let fail exn = raise exn
   let (>>=) a f = f a
 
-  let rec write fd ~buffer ~offset ~size =
-    try Unix.write fd buffer offset size
-    with
-    (* EINTR often happens if a signal shows up during the system call. Generally, the best thing
-     * to do is to just try again *)
-    | Unix.Unix_error (Unix.EINTR, _, _) -> write fd ~buffer ~offset ~size
+  let write ?timeout fd ~buffer ~offset ~size =
+    match Timeout.select ?timeout [] [fd] [] ~-.1.0 with
+    | _, [], _ -> 0
+    | _ -> Unix.write fd buffer offset size
+
 
   (* Marshal_tools reads from file descriptors. These file descriptors might be for some
    * non-blocking socket. Normally if you try to read from an fd, it will block until some data is
@@ -87,26 +86,18 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
    * People using Marshal_tools probably are calling Unix.select first. However that only guarantees
    * that the first read won't block. Marshal_tools will always do at least 2 reads (one for the
    * preamble and one or more for the data). Any read after the first might block.
-   *
-   * One day we should probably add a timeout to Marshal_tools, rather than blocking forever on
-   * partially written data
    *)
-  let rec read fd ~buffer ~offset ~size =
-    try
-      match Unix.select [fd] [] [] ~-.1.0 with
-      | [], _, _ -> 0
-      | _ -> Unix.read fd buffer offset size
-    with
-    (* EINTR often happens if a signal shows up during the system call. Generally, the best thing
-     * to do is to just try again *)
-    | Unix.Unix_error (Unix.EINTR, _, _) -> read fd ~buffer ~offset ~size
+  let read ?timeout fd ~buffer ~offset ~size =
+    match Timeout.select ?timeout [fd] [] [] ~-.1.0 with
+    | [], _, _ -> 0
+    | _ -> Unix.read fd buffer offset size
 
   let log str = Printf.eprintf "%s\n%!" str
 end
 
 module MarshalToolsFunctor (WriterReader: WRITER_READER): sig
-  val to_fd_with_preamble: WriterReader.fd -> 'a -> unit WriterReader.result
-  val from_fd_with_preamble: WriterReader.fd -> 'a WriterReader.result
+  val to_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a -> unit WriterReader.result
+  val from_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
 end = struct
 
   let (>>=) = WriterReader.(>>=)
@@ -144,45 +135,45 @@ end = struct
       else loop (i + 1) ((acc * 256) + (int_of_char (String.get preamble i))) in
     loop 1 0
 
-  let rec write_payload fd buffer offset to_write =
+  let rec write_payload ?timeout fd buffer offset to_write =
     if to_write = 0 then WriterReader.return offset else begin
-      WriterReader.write fd ~buffer ~offset ~size:to_write
+      WriterReader.write ?timeout fd ~buffer ~offset ~size:to_write
       >>= (fun bytes_written ->
         if bytes_written = 0 then WriterReader.return offset else begin
-          write_payload fd buffer (offset+bytes_written) (to_write-bytes_written)
+          write_payload ?timeout fd buffer (offset+bytes_written) (to_write-bytes_written)
         end
       )
     end
 
-  let to_fd_with_preamble fd obj =
+  let to_fd_with_preamble ?timeout fd obj =
     let flag_list = [] in
     let payload = Marshal.to_string obj flag_list in
     let size = String.length payload in
     let preamble = make_preamble size in
-    write_payload fd preamble 0 expected_preamble_size
+    write_payload ?timeout fd preamble 0 expected_preamble_size
     >>= (fun preamble_bytes_written ->
       if preamble_bytes_written <> expected_preamble_size
       then WriterReader.fail Writing_Preamble_Exception
       else WriterReader.return ())
-    >>= (fun () -> write_payload fd payload 0 size)
+    >>= (fun () -> write_payload ?timeout fd payload 0 size)
     >>= (fun bytes_written ->
       if bytes_written <> size
       then WriterReader.fail Writing_Payload_Exception
       else WriterReader.return ())
 
-  let rec read_payload fd buffer offset to_read =
+  let rec read_payload ?timeout fd buffer offset to_read =
     if to_read = 0 then WriterReader.return offset else begin
-      WriterReader.read fd ~buffer ~offset ~size:to_read
+      WriterReader.read ?timeout fd ~buffer ~offset ~size:to_read
       >>= (fun bytes_read ->
         if bytes_read = 0 then WriterReader.return offset else begin
-          read_payload fd buffer (offset+bytes_read) (to_read-bytes_read)
+          read_payload ?timeout fd buffer (offset+bytes_read) (to_read-bytes_read)
         end
       )
     end
 
-  let from_fd_with_preamble fd =
+  let from_fd_with_preamble ?timeout fd =
     let preamble = String.create expected_preamble_size in
-    WriterReader.read fd ~buffer:preamble ~offset:0 ~size:expected_preamble_size
+    WriterReader.read ?timeout fd ~buffer:preamble ~offset:0 ~size:expected_preamble_size
     >>= (fun bytes_read ->
       if bytes_read = 0
       (** Unix manpage for read says 0 bytes read indicates end of file. *)
@@ -198,7 +189,7 @@ end = struct
     >>= (fun () ->
       let payload_size = parse_preamble preamble in
       let payload = String.create payload_size in
-      read_payload fd payload 0 payload_size
+      read_payload ?timeout fd payload 0 payload_size
       >>= (fun payload_size_read ->
         if (payload_size_read <> payload_size)
         then WriterReader.fail Reading_Payload_Exception
