@@ -39,6 +39,8 @@ module Alarm_timeout = struct
 
   let check_timeout _ = ()
 
+  let select ?timeout:_ = Sys_utils.select_non_intr
+
   (** Channel *)
 
   type in_channel = Pervasives.in_channel * int option
@@ -137,13 +139,6 @@ module Select_timeout = struct
   let check_timeout t =
     if Unix.gettimeofday () > t.timeout then raise (Timeout t.id)
 
-  let get_current_timeout = function
-    | None -> -. 1.
-    | Some { timeout; id }  ->
-        let timeout = timeout -. Unix.gettimeofday () in
-        if timeout < 0. then raise (Timeout id);
-        timeout
-
   (** Channel *)
 
   type channel = {
@@ -181,14 +176,36 @@ module Select_timeout = struct
         close_in tic;
         snd (Sys_utils.waitpid_non_intr [] pid)
 
+  (* A negative timeout for select means block until a fd is ready *)
+  let no_select_timeout = ~-.1.0
+
+  (* A wrapper around Sys_utils.select_non_intr. If timeout would fire before the select's timeout,
+   * then change the select's timeout and throw an exception when it fires *)
+  let select ?timeout rfds wfds xfds select_timeout =
+    match timeout with
+    (* No timeout set, fallback to Sys_utils.select_non_intr *)
+    | None -> Sys_utils.select_non_intr rfds wfds xfds select_timeout
+    | Some { timeout; id }  ->
+      let timeout = timeout -. Unix.gettimeofday () in
+      (* Whoops, timeout already fired, throw right away! *)
+      if timeout < 0. then raise (Timeout id);
+      (* A negative select_timeout would mean wait forever *)
+      if select_timeout >= 0.0 && select_timeout < timeout
+      (* The select's timeout is smaller than our timeout, so leave it alone *)
+      then Sys_utils.select_non_intr rfds wfds xfds select_timeout
+      else
+        (* Our timeout is smaller, so use that *)
+        match Sys_utils.select_non_intr rfds wfds xfds timeout with
+        (* Timeout hit! Throw an exception! *)
+        | [], [], [] -> raise (Timeout id)
+        (* Got a result before the timeout fired, so just return that *)
+        | ret -> ret
+
   let do_read ?timeout tic =
-    let timeout_duration = get_current_timeout timeout in
-    match Unix.select [ tic.fd ] [] [] timeout_duration with
+    match select ?timeout [ tic.fd ] [] [] no_select_timeout with
     | [], _, _ ->
-      (match timeout with
-      | Some timeout -> raise (Timeout timeout.id)
-      | None -> failwith ("This should be unreachable. "^
-        "How did Unix.select return with no fd when there is no timeout?"))
+      failwith
+        "This should be unreachable. How did select return with no fd when there is no timeout?"
     | [_], _, _ ->
         let read = try
           Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max)
@@ -414,15 +431,12 @@ module Select_timeout = struct
         Unix.connect sock sockaddr;
       with
       | Unix.Unix_error ((Unix.EINPROGRESS | Unix.EWOULDBLOCK), _, _) -> begin
-          let timeout_duration = get_current_timeout timeout in
-          match Unix.select [] [sock] [] timeout_duration with
+          match select ?timeout [] [sock] [] no_select_timeout with
           | _, [], [exn_sock] when exn_sock = sock ->
             failwith "Failed to connect to socket"
           | _, [], _ ->
-            (match timeout with
-            | Some timeout -> raise (Timeout timeout.id)
-            | None -> failwith ("This should be unreachable. "^
-              "How did Unix.select return with no fd when there is no timeout?"))
+            failwith
+            "This should be unreachable. How did select return with no fd when there is no timeout?"
           | _, [sock], _ -> ()
           | _, _, _ -> assert false
         end
@@ -461,6 +475,13 @@ module type S = sig
   val open_in: string -> in_channel
   val close_in: in_channel -> unit
   val close_in_noerr: in_channel -> unit
+  val select:
+    ?timeout:t ->
+    Unix.file_descr list ->
+    Unix.file_descr list ->
+    Unix.file_descr list ->
+    float ->
+    Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
   val input: ?timeout:t -> in_channel -> bytes -> int -> int -> int
   val really_input: ?timeout:t -> in_channel -> bytes -> int -> int -> unit
   val input_char: ?timeout:t -> in_channel -> char
