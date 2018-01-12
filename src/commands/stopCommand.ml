@@ -72,7 +72,7 @@ let main temp_dir from quiet root () =
     | Error Build_id_mismatch ->
         if not quiet then prerr_endlinef
           "Successfully killed server for `%s`" root_s
-    | Error Server_busy
+    | Error Server_busy _
     | Error Server_socket_missing ->
         begin try
           if not quiet then prerr_endlinef

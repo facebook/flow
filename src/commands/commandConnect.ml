@@ -92,7 +92,7 @@ type retry_info = {
 
 let reset_retries_if_necessary retries = function
   | Error CCS.Server_missing
-  | Error CCS.Server_busy -> retries
+  | Error CCS.Server_busy _ -> retries
   | Ok _
   | Error CCS.Server_socket_missing
   | Error CCS.Build_id_mismatch ->
@@ -134,9 +134,14 @@ let rec connect ~client_type env retries start_time =
   | Ok (ic, oc) -> (ic, oc)
   | Error CCS.Server_missing ->
       handle_missing_server ~client_type env retries start_time
-  | Error CCS.Server_busy ->
+  | Error CCS.Server_busy busy_reason ->
+      let busy_reason = match busy_reason with
+      | CCS.Too_many_clients -> "has too many clients and rejected our connection"
+      | CCS.Not_responding -> "is not responding"
+      in
       if not env.quiet then Printf.eprintf
-        "The flow server is not responding (%d %s remaining): %s%!"
+        "The flow server %s (%d %s remaining): %s%!"
+        busy_reason
         retries.retries_remaining
         (if retries.retries_remaining = 1 then "retry" else "retries")
         (Tty.spinner());

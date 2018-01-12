@@ -5,9 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+ type busy_reason =
+ | Too_many_clients
+ | Not_responding
+
 type error =
   | Build_id_mismatch
-  | Server_busy
+  | Server_busy of busy_reason
   | Server_missing
   | Server_socket_missing
 

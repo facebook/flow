@@ -137,10 +137,20 @@ let perform_handshake_and_get_client_type ~client_fd =
         Logger.fatal "%s" msg;
         FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
       )
-    end else
-      (* If the build id matches, send the Ok and return the client_type *)
-      Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
-      >|= (fun () -> client_type)
+    end else begin
+      (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
+       * So we can't have an unlimited number of clients. So if the new fd is too large, let's
+       * reject it. Never reject a kill handshake, though. *)
+      let fd_as_int: int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
+      if client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500
+      then
+        Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Too_many_clients
+        >|= (fun () -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
+      else
+        (* If the build id matches, send the Ok and return the client_type *)
+        Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
+        >|= (fun () -> client_type)
+    end
   )
 
 let close client_fd () =

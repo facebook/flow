@@ -7,9 +7,13 @@
 
 module Server_files = Server_files_js
 
+type busy_reason =
+| Too_many_clients
+| Not_responding
+
 type error =
   | Build_id_mismatch
-  | Server_busy
+  | Server_busy of busy_reason
   | Server_missing
   | Server_socket_missing (* pre-server-monitor versions used a different socket *)
 
@@ -88,7 +92,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
      * trouble right here. *)
     let handshake : SocketHandshake.monitor_to_client =
       Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel ic) in
-    Ok (ic, oc, handshake)
+    Ok (sockaddr, ic, oc, handshake)
   with
   | ConnectError Timeout as e ->
       (* Timeouts are expected *)
@@ -98,7 +102,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       close_connection sockaddr;
       raise e
 
-let verify_handshake ic = function
+let verify_handshake sockaddr ic = function
   | SocketHandshake.Connection_ok -> Ok ()
   | SocketHandshake.Build_id_mismatch _ ->
       (* TODO (glevi) - I want to change this behavior. I want the server to survive and the client
@@ -115,6 +119,9 @@ let verify_handshake ic = function
       wait_on_server_restart ic;
       Timeout.close_in_noerr ic;
       Error Build_id_mismatch
+  | SocketHandshake.Too_many_clients ->
+    close_connection sockaddr;
+    Error (Server_busy Too_many_clients)
 
 (* Connects to the server via a socket. As soon as the server starts up,
  * it opens the socket but it doesn't read or write to it. So during
@@ -128,8 +135,8 @@ let connect_once ~client_type ~tmp_dir root =
       ~do_:begin fun timeout ->
         establish_connection ~timeout ~client_type ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
         get_handshake ~timeout sockaddr ic oc
-      end >>= fun (ic, oc, cstate) ->
-      verify_handshake ic cstate >>= fun () ->
+      end >>= fun (sockaddr, ic, oc, cstate) ->
+      verify_handshake sockaddr ic cstate >>= fun () ->
       Ok (ic, oc)
   with
   | ConnectError Missing_socket ->
@@ -139,5 +146,5 @@ let connect_once ~client_type ~tmp_dir root =
   | ConnectError Timeout
   | _ ->
     if server_exists ~tmp_dir root
-    then Error Server_busy
+    then Error (Server_busy Not_responding)
     else Error Server_missing
