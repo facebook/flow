@@ -11,13 +11,16 @@ import BarObj from './nonstrict_exports.js'; // Error
 const BarObj2 = require("./nonstrict_exports"); // Error
 
 // Imports from strict file
-import {A} from './strict_exports.js' // Not an error
-import ADefault from './strict_exports.js' // Not an error
+import {A} from './strict_exports.js'; // Not an error
+import ADefault from './strict_exports.js'; // Not an error
 
 // Import from library
-import StrictLib from './strict_lib.js' // Not an error
+import StrictLib from './strict_lib.js'; // Not an error
 
-import NonstrictLib from './nonstrict_lib.js' // Error
+import NonstrictLib from './nonstrict_lib.js'; // Error
+
+const CommonJSModule = require('CommonJSModule'); // Not an error
+import ESModule from 'ESModule'; // Not an error
 
 // Suppressed imports
 // flowlint nonstrict-import:off

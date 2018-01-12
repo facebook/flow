@@ -3,6 +3,7 @@
 [include]
 
 [libs]
+libs/
 
 [options]
 
@@ -12,3 +13,4 @@
 nonstrict-import
 untyped-type-import
 untyped-import
+unclear-type

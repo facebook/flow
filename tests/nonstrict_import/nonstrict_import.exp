@@ -15,7 +15,7 @@ Error: imports.js:11
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ nonstrict-import: Dependencies of a strict module must also be strict!
 
 Error: imports.js:20
- 20: import NonstrictLib from './nonstrict_lib.js' // Error
+ 20: import NonstrictLib from './nonstrict_lib.js'; // Error
             ^^^^^^^^^^^^ nonstrict-import: Dependencies of a strict module must also be strict!
 
 
