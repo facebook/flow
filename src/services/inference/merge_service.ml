@@ -245,11 +245,16 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       |> String.concat "\n\t"
       in
 
+      let merge_timeout = Options.merge_timeout options in
+      let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
+
       try with_async_logging_timer
-        ~interval:15.0
+        ~interval
         ~on_timer:(fun run_time ->
           Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
-          if run_time > 100.0 then raise (Flow_error.EMergeTimeout run_time)
+          Option.iter merge_timeout ~f:(fun merge_timeout ->
+            if run_time >= merge_timeout then raise (Flow_error.EMergeTimeout run_time)
+          )
         )
         ~f:(fun () ->
           Profile_utils.checktime ~options ~limit:1.0
