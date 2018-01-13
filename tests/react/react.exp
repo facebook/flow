@@ -370,6 +370,167 @@ Error: default_props_undefined.js:10
       5: class Foo extends React.Component<{bar: number}, void> {
                                                  ^^^^^^ number
 
+Error: element_config.js:15
+ 15:   static defaultProps = {p: 'foo'}; // Error: string ~> number
+                                 ^^^^^ string. This type is incompatible with
+ 14: class B extends React.Component<{p: ?number}> {
+                                          ^^^^^^ number
+
+Error: element_config.js:31
+ 31:   static defaultProps = {p: 42}; // Error: extra property `p`
+                             ^^^^^^^ object literal. This type is incompatible with
+ 30: class F extends React.Component<{||}> {
+                                     ^^^^ object type
+  Property `p` is incompatible:
+     31:   static defaultProps = {p: 42}; // Error: extra property `p`
+                                 ^^^^^^^ property `p`. Property not found in
+     30: class F extends React.Component<{||}> {
+                                         ^^^^ object type
+
+Error: element_config.js:39
+ 39:   static defaultProps = {p: 'foo'}; // Error: string ~> number
+                                 ^^^^^ string. This type is incompatible with
+ 38: class H extends React.Component<{p?: ?number}> {
+                                           ^^^^^^ number
+
+Error: element_config.js:47
+ 47:   static defaultProps = ({}: {p?: string}); // Error: string ~> number
+                                       ^^^^^^ string. This type is incompatible with
+ 46: class J extends React.Component<{p?: ?number}> {
+                                           ^^^^^^ number
+
+Error: element_config.js:52
+ 52: ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 52: ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     52: ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     10: class A extends React.Component<{p: ?number}> {
+                                              ^^^^^^ number
+
+Error: element_config.js:56
+ 56: ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 56: ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     56: ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     14: class B extends React.Component<{p: ?number}> {
+                                              ^^^^^^ number
+
+Error: element_config.js:58
+ 58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+      ^^ object literal. This type is incompatible with
+ 58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+     58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+          ^^ object literal
+
+Error: element_config.js:60
+ 60: ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 60: ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     60: ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     18: class C extends React.Component<{p: ?number}> {
+                                              ^^^^^^ number
+
+Error: element_config.js:62
+ 62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+      ^^ object literal. This type is incompatible with
+ 62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
+     62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+          ^^ object literal
+
+Error: element_config.js:64
+ 64: ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 64: ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     64: ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     22: class D extends React.Component<{p: ?number}> {
+                                              ^^^^^^ number
+
+Error: element_config.js:71
+ 71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+      ^^^^^^^ object literal. This type is incompatible with
+ 71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+          ^^^^^^^ property `p`. Property not found in
+     71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: element_config.js:72
+ 72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+          ^^^^^^^^^^ property `p`. Property not found in
+     72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: element_config.js:76
+ 76: ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 76: ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     76: ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     34: class G extends React.Component<{p: ?number}> {
+                                              ^^^^^^ number
+
+Error: element_config.js:80
+ 80: ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 80: ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     80: ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     38: class H extends React.Component<{p?: ?number}> {
+                                               ^^^^^^ number
+
+Error: element_config.js:84
+ 84: ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 84: ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     84: ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     42: class I extends React.Component<{p?: ?number}> {
+                                               ^^^^^^ number
+
+Error: element_config.js:88
+ 88: ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 88: ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     88: ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
+              ^^^^^ string. This type is incompatible with
+     46: class J extends React.Component<{p?: ?number}> {
+                                               ^^^^^^ number
+
 Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React.Element. This type is incompatible with
@@ -1962,4 +2123,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 173 errors
+Found 189 errors
