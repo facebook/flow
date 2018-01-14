@@ -150,6 +150,7 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
+  | RNamedImportedType of string
   | RCustom of string
   | RPolyType of reason_desc
   | RPolyTest of reason_desc
@@ -492,6 +493,7 @@ let rec string_of_desc = function
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
+  | RNamedImportedType m -> spf "Named import from module `%s`" m
   | RCustom x -> x
   | RPolyType (RStatics d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
@@ -808,6 +810,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RMissingAbstract _
 | RFieldInitializer _
 | RUntypedModule _
+| RNamedImportedType _
 | RCustom _
 | RPolyType _
 | RPolyTest _
@@ -954,6 +957,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RMissingAbstract _
 | RFieldInitializer _
 | RUntypedModule _
+| RNamedImportedType _
 | RCustom _
 | RPolyType _
 | RPolyTest _

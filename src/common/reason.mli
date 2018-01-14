@@ -102,6 +102,7 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
+  | RNamedImportedType of string
   | RCustom of string
   | RPolyType of reason_desc
   | RPolyTest of reason_desc

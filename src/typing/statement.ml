@@ -1796,10 +1796,7 @@ and statement cx = Ast.Statement.(
           ) in
           let imported_t =
             let import_reason =
-              let import_reason_str =
-                spf "Named import from module `%s`" module_name
-              in
-              mk_reason (RCustom import_reason_str) (fst remote)
+              mk_reason (RNamedImportedType module_name) (fst remote)
             in
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name loc module_t
