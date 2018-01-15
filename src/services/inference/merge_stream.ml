@@ -138,37 +138,42 @@ let make dependency_graph leader_map component_map recheck_leader_map =
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)
 let join result_callback =
-  let push leader_fs_diffs =
-    List.iter (fun (leader_f, diff) ->
-      FilenameSet.iter (fun dep_leader_f ->
-        let n = (Hashtbl.find blocking dep_leader_f) - 1 in
-        (* dep_leader blocked on one less *)
-        Hashtbl.replace blocking dep_leader_f n;
-        (* dep_leader should be rechecked if diff *)
-        let recheck = diff || FilenameMap.find_unsafe dep_leader_f !to_recheck in
-        to_recheck := FilenameMap.add dep_leader_f recheck !to_recheck;
-        (* no more waiting, yay! *)
-        if n = 0 then
-          (* one less blocked; add dep_leader_f to stream *)
-          (decr blocked; stream := (dep_leader_f, recheck)::!stream)
-      ) (FilenameMap.find_unsafe leader_f !dependents)
-    ) leader_fs_diffs
+  let push leader_f diff =
+    FilenameSet.iter (fun dep_leader_f ->
+      let n = (Hashtbl.find blocking dep_leader_f) - 1 in
+      (* dep_leader blocked on one less *)
+      Hashtbl.replace blocking dep_leader_f n;
+      (* dep_leader should be rechecked if diff *)
+      let recheck = diff || FilenameMap.find_unsafe dep_leader_f !to_recheck in
+      to_recheck := FilenameMap.add dep_leader_f recheck !to_recheck;
+      (* no more waiting, yay! *)
+      if n = 0 then
+        (* one less blocked; add dep_leader_f to stream *)
+        (decr blocked; stream := (dep_leader_f, recheck)::!stream)
+    ) (FilenameMap.find_unsafe leader_f !dependents)
   in
-  fun (merged, unchanged) merged_acc ->
+  fun (merged, skipped) merged_acc ->
     let () = result_callback (lazy merged) in
-    let changed = List.rev (List.fold_left (fun acc (f, _) ->
-      if not (List.mem f unchanged) then f::acc else acc
-    ) [] merged) in
+    List.iter (fun (leader_f, _) ->
+      let diff = Context_cache.sig_hash_changed leader_f in
+      let () =
+        let fs =
+          FilenameMap.find_unsafe leader_f !components
+          |> Nel.to_list
+          |> FilenameSet.of_list
+        in
+        if diff
+        then Context_cache.remove_old_merge_batch fs
+        else Context_cache.revive_merge_batch fs
+      in
+      push leader_f diff;
+    ) merged;
     List.iter (fun leader_f ->
-      let fs = FilenameMap.find_unsafe leader_f !components in
-      Context_cache.revive_merge_batch (FilenameSet.of_list (Nel.to_list fs));
-    ) unchanged;
-    List.iter (fun leader_f ->
-      let fs = FilenameMap.find_unsafe leader_f !components in
-      Context_cache.remove_old_merge_batch (FilenameSet.of_list (Nel.to_list fs));
-    ) changed;
-    push (List.rev_append
-      (List.rev_map (fun leader_f -> (leader_f, true)) changed)
-      (List.rev_map (fun leader_f -> (leader_f, false)) unchanged)
-    );
+      let fs =
+        FilenameMap.find_unsafe leader_f !components
+        |> Nel.to_list
+        |> FilenameSet.of_list
+      in
+      Context_cache.revive_merge_batch fs
+    ) skipped;
     List.rev_append merged merged_acc
