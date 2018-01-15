@@ -815,7 +815,7 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
   mixins;
-  _;
+  implements;
 } =
   let self = Tvar.mk cx reason in
 
@@ -840,12 +840,19 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
       |> extract_mixins cx
       |> List.map (mk_mixins cx tparams_map)
     in
+    let implements = List.map (fun (_, i) ->
+      let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
+      let reason = mk_reason (RCustom "implements") loc in
+      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
+      let params = Anno.extract_type_param_instantiations typeParameters in
+      Anno.mk_nominal_type cx reason tparams_map (c, params)
+    ) implements in
     let super =
       let extends = match extends with
       | None -> Implicit { null = is_object_builtin_libdef ident }
       | Some t -> Explicit t
       in
-      Class { extends; mixins; implements = [] }
+      Class { extends; mixins; implements }
     in
     empty id reason tparams tparams_map super
   in

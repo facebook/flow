@@ -21,6 +21,7 @@ module type OBJECT = sig
   val _initializer : env -> Loc.t * Loc.t Ast.Expression.Object.t * pattern_errors
   val class_declaration : env -> Loc.t Ast.Expression.t list -> Loc.t Ast.Statement.t
   val class_expression : env -> Loc.t Ast.Expression.t
+  val class_implements : env -> Loc.t Ast.Class.Implements.t list -> Loc.t Ast.Class.Implements.t list
   val decorator_list : env -> Loc.t Ast.Expression.t list
 end
 
@@ -353,6 +354,23 @@ module Object
       ) env in
       loc, expr, errs
 
+  let rec class_implements env acc =
+    let id = Type.type_identifier env in
+    let typeParameters = Type.type_parameter_instantiation env in
+    let loc = match typeParameters with
+    | None -> fst id
+    | Some (loc, _) -> Loc.btwn (fst id) loc in
+    let implement = loc, Ast.Class.Implements.({
+      id;
+      typeParameters;
+    }) in
+    let acc = implement::acc in
+    match Peek.token env with
+    | T_COMMA ->
+        Expect.token env T_COMMA;
+        class_implements env acc
+    | _ -> List.rev acc
+
   let rec _class env =
     let superClass, superTypeParameters =
       if Peek.token env = T_EXTENDS
@@ -373,23 +391,6 @@ module Object
       end else [] in
     let body = class_body env in
     body, superClass, superTypeParameters, implements
-
-  and class_implements env acc =
-    let id = Type.type_identifier env in
-    let typeParameters = Type.type_parameter_instantiation env in
-    let loc = match typeParameters with
-    | None -> fst id
-    | Some (loc, _) -> Loc.btwn (fst id) loc in
-    let implement = loc, Ast.Class.Implements.({
-      id;
-      typeParameters;
-    }) in
-    let acc = implement::acc in
-    match Peek.token env with
-    | T_COMMA ->
-        Expect.token env T_COMMA;
-        class_implements env acc
-    | _ -> List.rev acc
 
   and class_body =
     let rec elements env seen_constructor private_names acc =

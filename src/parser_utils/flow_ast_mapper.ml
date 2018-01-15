@@ -321,7 +321,7 @@ class mapper = object(this)
 
   method declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
     let open Ast.Statement.DeclareClass in
-    let { id = ident; typeParameters; body; extends; mixins } = decl in
+    let { id = ident; typeParameters; body; extends; mixins; implements } = decl in
     let id' = this#class_identifier ident in
     let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
     let body' = map_loc this#object_type body in
@@ -330,7 +330,7 @@ class mapper = object(this)
     if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
       && mixins' == mixins then decl
     else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends';
-           mixins = mixins' }
+           mixins = mixins'; implements }
 
   method declare_export_declaration _loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
     let open Ast.Statement.DeclareExportDeclaration in

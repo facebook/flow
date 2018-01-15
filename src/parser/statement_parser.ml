@@ -657,6 +657,10 @@ module Statement
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
       | _ -> []
       in
+      let implements = match Peek.token env with
+      | T_IMPLEMENTS -> Eat.token env; Object.class_implements env []
+      | _ -> []
+      in
       let body = Type._object ~allow_static:true env in
       Statement.DeclareClass.({
         id;
@@ -664,6 +668,7 @@ module Statement
         body;
         extends;
         mixins;
+        implements;
       })
 
   and declare_class_statement env = with_loc (fun env ->

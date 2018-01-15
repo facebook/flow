@@ -382,6 +382,7 @@ and Statement : sig
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) option;
       mixins: ('M * 'M Type.Generic.t) list;
+      implements: 'M Class.Implements.t list;
     }
   end
   module DeclareVariable : sig
