@@ -4809,17 +4809,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
+      let props_to_skip = ["$call"; "$key"; "$value"] in
       pmap |> SMap.iter (fun x p ->
-        match Property.read_t p with
-        | Some t ->
-          let propref = Named (reason_op, x) in
-          rec_flow cx trace (proto, SetPropT (
-            unknown_use, reason_op, propref, Normal, t, None
-          ))
-        | None ->
-          add_output cx ~trace (FlowError.EPropAccess (
-            (lreason, reason_op), Some x, Property.polarity p, Read
-          ))
+        if not (List.mem x props_to_skip) then (
+          match Property.read_t p with
+          | Some t ->
+            let propref = Named (reason_op, x) in
+            rec_flow cx trace (proto, SetPropT (
+              unknown_use, reason_op, propref, Normal, t, None
+            ))
+          | None ->
+            add_output cx ~trace (FlowError.EPropAccess (
+              (lreason, reason_op), Some x, Property.polarity p, Read
+            ))
+        )
       );
       rec_flow_t cx trace (proto, t)
 

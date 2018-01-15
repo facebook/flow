@@ -61,5 +61,38 @@ Error: test8.js:8
       8: ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
                          ^^^^^^ string
 
+Error: test9.js:5
+  5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+      ^^^^^^^^^^^^^ object literal. This type is incompatible with
+  5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+                     ^^^^^^^^^^^^^^^^ object type
+  Callable property is incompatible:
+      5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+                         ^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
+      5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+          ^^^^^^^^^^^^^ object literal
 
-Found 8 errors
+Error: test9.js:11
+ 11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+                      ^^^^^^^^^^^^^^^ object type
+  Indexable signature is incompatible:
+     11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+                          ^^^^^^^^^^^^^^^ property `$key`. Indexable signature not found in
+     11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+          ^^^^^^^^^^^^^^ object literal
+
+Error: test9.js:12
+ 12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+                      ^^^^^^^^^^^^^^^^^ object type
+  Indexable signature is incompatible:
+     12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+                          ^^^^^^^^^^^^^^^^^ property `$value`. Indexable signature not found in
+     12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+          ^^^^^^^^^^^^^^ object literal
+
+
+Found 11 errors
