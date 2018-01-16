@@ -302,9 +302,14 @@ let rec type_printer_impl ~size override enclosure cx t =
     | MergedT _ ->
         Some "/* TODO: */ $MergedT"
 
+    | ObjProtoT _ ->
+        Some "typeof Object.prototype"
+
+    | FunProtoT _ ->
+        Some "typeof Function.prototype"
+
     (* TODO: Fix these *)
 
-    | FunProtoT _
     | FunProtoBindT _
     | CustomFunT _
     | FunProtoApplyT _
@@ -318,7 +323,6 @@ let rec type_printer_impl ~size override enclosure cx t =
         None
 
     | FunProtoCallT _
-    | ObjProtoT _
     | NullProtoT _
     | InternalT (ExtendsT _) ->
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
