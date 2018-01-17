@@ -23,8 +23,10 @@ module Make
 
   (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
+    (* outgoing edges not yet explored *)
+    mutable unexplored_edges: NSet.t NMap.t;
     (* nodes not yet visited *)
-    mutable not_yet_visited: NSet.t NMap.t;
+    mutable not_yet_visited: NSet.t;
     (* number of nodes visited *)
     mutable visit_count: int;
     (* visit ordering *)
@@ -37,14 +39,19 @@ module Make
     mutable components: N.t Nel.t list;
   }
 
-  let initial_state nodes = {
-    not_yet_visited = nodes;
-    visit_count = 0;
-    indices = NMap.empty;
-    stack = [];
-    lowlinks = NMap.empty;
-    components = [];
-  }
+  let initial_state ?roots graph =
+    let not_yet_visited = match roots with
+      | Some roots -> roots
+      | None -> NMap.fold (fun m _ -> NSet.add m) graph NSet.empty in
+    {
+      unexplored_edges = graph;
+      not_yet_visited;
+      visit_count = 0;
+      indices = NMap.empty;
+      stack = [];
+      lowlinks = NMap.empty;
+      components = [];
+    }
 
   (* Compute strongly connected component for node m with requires rs. *)
   let rec strongconnect state m rs =
@@ -53,7 +60,8 @@ module Make
 
     (* visit m *)
     state.indices <- NMap.add m i state.indices;
-    state.not_yet_visited <- NMap.remove m state.not_yet_visited;
+    state.not_yet_visited <- NSet.remove m state.not_yet_visited;
+    state.unexplored_edges <- NMap.remove m state.unexplored_edges;
 
     (* push on stack *)
     state.stack <- m :: state.stack;
@@ -63,7 +71,7 @@ module Make
 
     (* for each require r in rs: *)
     rs |> NSet.iter (fun r ->
-      match NMap.get r state.not_yet_visited with
+      match NMap.get r state.unexplored_edges with
       | Some rs_ ->
           (* recursively compute strongly connected component of r *)
           strongconnect state r rs_;
@@ -97,19 +105,17 @@ module Make
 
   (** main loop **)
   let tarjan state =
-    while not (NMap.is_empty state.not_yet_visited) do
+    while not (NSet.is_empty state.not_yet_visited) do
       (* choose a node, compute its strongly connected component *)
       (** NOTE: this choice is non-deterministic, so any computations that depend
           on the visit order, such as heights, are in general non-repeatable. **)
-      let m, rs =
-         match NMap.choose state.not_yet_visited with
-         | Some (m, rs) -> m, rs
-         | None -> failwith "choose should always work on a non empty node map" in
-      strongconnect state m rs |> ignore
+      let m = NSet.choose state.not_yet_visited in
+      let rs = NMap.find_unsafe m state.unexplored_edges in
+      strongconnect state m rs
     done
 
-  let topsort nodes =
-    let state = initial_state nodes in
+  let topsort ?roots graph =
+    let state = initial_state ?roots graph in
     tarjan state;
     state.components
 

@@ -282,9 +282,7 @@ let typecheck
     let dependencies = with_timer ~options "PruneDeps" profiling (fun () ->
       (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
        * cycles *)
-      let all_dependencies_subgraph =
-        Dep_service.calc_all_dependencies_subgraph dependency_graph roots in
-      let components = Sort_js.topsort all_dependencies_subgraph in
+      let components = Sort_js.topsort ~roots dependency_graph in
       List.fold_left (fun dependencies component ->
         if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
         (* If at least one member of the component is not unchanged, then keep the component *)

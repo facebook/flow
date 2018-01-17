@@ -26,8 +26,3 @@ val calc_all_dependencies:
   FilenameSet.t FilenameMap.t -> (* dependency graph *)
   FilenameSet.t -> (* files *)
   FilenameSet.t
-
-val calc_all_dependencies_subgraph:
-  FilenameSet.t FilenameMap.t -> (* dependency graph *)
-  FilenameSet.t -> (* files *)
-  FilenameSet.t FilenameMap.t
