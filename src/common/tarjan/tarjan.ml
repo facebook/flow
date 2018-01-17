@@ -39,19 +39,15 @@ module Make
     mutable components: N.t Nel.t list;
   }
 
-  let initial_state ?roots graph =
-    let not_yet_visited = match roots with
-      | Some roots -> roots
-      | None -> NMap.fold (fun m _ -> NSet.add m) graph NSet.empty in
-    {
-      unexplored_edges = graph;
-      not_yet_visited;
-      visit_count = 0;
-      indices = NMap.empty;
-      stack = [];
-      lowlinks = NMap.empty;
-      components = [];
-    }
+  let initial_state ~roots graph = {
+    unexplored_edges = graph;
+    not_yet_visited = roots;
+    visit_count = 0;
+    indices = NMap.empty;
+    stack = [];
+    lowlinks = NMap.empty;
+    components = [];
+  }
 
   (* Compute strongly connected component for node m with requires rs. *)
   let rec strongconnect state m rs =
@@ -114,8 +110,8 @@ module Make
       strongconnect state m rs
     done
 
-  let topsort ?roots graph =
-    let state = initial_state ?roots graph in
+  let topsort ~roots graph =
+    let state = initial_state ~roots graph in
     tarjan state;
     state.components
 
