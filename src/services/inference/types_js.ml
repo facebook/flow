@@ -203,8 +203,8 @@ let error_set_of_merge_error file msg =
 
 let calc_deps ~options ~profiling ~workers to_merge =
   with_timer ~options "CalcDeps" profiling (fun () ->
-    let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
-    let components = Sort_js.topsort dependency_graph in
+    let dependency_graph = Dep_service.calc_dependency_graph workers (to_merge |> FilenameSet.elements) in
+    let components = Sort_js.topsort ~roots:to_merge dependency_graph in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
       let file = Nel.hd component in
@@ -372,7 +372,7 @@ let typecheck
     Hh_logger.info "Calculating dependencies";
     MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
     let dependency_graph, component_map =
-      calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
+      calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge) in
 
     Hh_logger.info "Merging";
     let merge_errors, suppressions, severity_cover_set = try
