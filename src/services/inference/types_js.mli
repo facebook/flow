@@ -36,7 +36,7 @@ val full_check:
   workers:Worker.t list option ->
   focus_targets:FilenameSet.t option ->
   should_merge:bool ->
-  File_key.t list ->
+  FilenameSet.t ->
   ServerEnv.errors ->
   CheckedSet.t * ServerEnv.errors
 

@@ -241,9 +241,9 @@ let calc_dependency_graph workers files =
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (MultiWorker.next workers files) in
+    ~next: (MultiWorker.next workers (FilenameSet.elements files)) in
   FilenameMap.map (
-    FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
+    FilenameSet.filter (fun f -> FilenameSet.mem f files)
   ) dependency_graph
 
 (* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies

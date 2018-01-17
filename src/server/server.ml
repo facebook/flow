@@ -52,7 +52,6 @@ let init ~focus_targets genv =
       if Options.is_lazy_mode options then
         CheckedSet.empty, errors
       else
-        let parsed = FilenameSet.elements parsed in
         Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
     in
 

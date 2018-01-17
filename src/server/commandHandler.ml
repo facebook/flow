@@ -128,9 +128,9 @@ let coverage ~options ~workers ~env ~profiling ~force file_input =
 
 let get_cycle ~workers ~env fn =
   (* Re-calculate SCC *)
-  let parsed = FilenameSet.elements !env.ServerEnv.files in
+  let parsed = !env.ServerEnv.files in
   let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-  let components = Sort_js.topsort dependency_graph in
+  let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
   (* Get component for target file *)
   let component = List.find (Nel.mem fn) components in

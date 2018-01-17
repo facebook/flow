@@ -203,7 +203,7 @@ let error_set_of_merge_error file msg =
 
 let calc_deps ~options ~profiling ~workers to_merge =
   with_timer ~options "CalcDeps" profiling (fun () ->
-    let dependency_graph = Dep_service.calc_dependency_graph workers (to_merge |> FilenameSet.elements) in
+    let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
     let components = Sort_js.topsort ~roots:to_merge dependency_graph in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
@@ -452,7 +452,7 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
   then ()
   else begin
     let errors = !env.ServerEnv.errors in
-    let parsed = FilenameSet.elements !env.ServerEnv.files in
+    let parsed = !env.ServerEnv.files in
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let checked, errors = typecheck
@@ -632,7 +632,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
  * - Around 20% of the time is calc_dependency_graph building the dependency graph
  **)
 let focused_files_to_infer ~workers ~focused ~parsed =
-  let dependency_graph = Dep_service.calc_dependency_graph workers (FilenameSet.elements parsed) in
+  let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
 
   let focused = focused |> FilenameSet.filter (fun f ->
     Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
@@ -674,7 +674,7 @@ let unfocused_files_to_infer ~options ~workers ~parsed =
   let focused = filter_out_node_modules ~options parsed in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
-  let dependency_graph = Dep_service.calc_dependency_graph workers (FilenameSet.elements parsed) in
+  let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
   let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
   CheckedSet.add
     ~focused
@@ -955,7 +955,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   );
 
   let parsed = FilenameSet.union freshparsed unchanged in
-  let parsed_list = FilenameSet.elements parsed in
 
   Hh_logger.info "Recalculating dependency graph";
   let updated_checked_files, all_dependent_files =
@@ -1026,7 +1025,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     ~errors
     ~unchanged_checked
     ~infer_input
-    ~parsed:parsed_list
+    ~parsed
     ~all_dependent_files
     ~persistent_connections:(Some env.ServerEnv.connections)
     ~make_merge_input:(fun inferred ->
@@ -1156,7 +1155,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
   let infer_input = files_to_infer
-    ~options ~workers ~focused:focus_targets ~profiling ~parsed:(FilenameSet.of_list parsed) in
+    ~options ~workers ~focused:focus_targets ~profiling ~parsed in
   typecheck
     ~options
     ~profiling
