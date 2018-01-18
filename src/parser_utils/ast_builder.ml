@@ -95,6 +95,27 @@ module Classes = struct
     }
 end
 
+module JSXs = struct
+  open Ast.JSX
+
+  let identifier name = Identifier (Loc.none, { Identifier.name })
+
+  let attr_identifier name = Attribute.Identifier (Loc.none, { Identifier.name })
+
+  let attr_literal lit = Attribute.Literal (Loc.none, lit)
+
+  let attr name value = Opening.Attribute (Loc.none, { Attribute.name; value })
+
+  let element ?selfclosing:(selfClosing=false) ?attrs:(attributes=[]) ?(children=[]) name =
+    { openingElement = Loc.none, { Opening.name; selfClosing; attributes };
+      closingElement = if selfClosing then None else Some (Loc.none, { Closing.name });
+      children;
+    }
+
+  let child_element ?selfclosing ?attrs ?children name =
+    Loc.none, Element (element ?selfclosing ?attrs ?children name)
+end
+
 module Statements = struct
   open Ast.Statement
 
@@ -261,6 +282,9 @@ module Expressions = struct
 
   let spread expr =
     Spread (Loc.none, { SpreadElement.argument = expr })
+
+  let jsx_element elem =
+    Loc.none, JSXElement elem
 
   let true_ () =
     literal (Literals.bool true)
