@@ -55,7 +55,7 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
-    | LetConstlikeVarBinding
+    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
@@ -71,7 +71,7 @@ module Entry = struct
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
-  | Let LetConstlikeVarBinding -> "let"
+  | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
@@ -199,7 +199,7 @@ module Entry = struct
       entry
     | Value { kind = Var ConstlikeVarBinding; _ } ->
       entry
-    | Value { kind = Let LetConstlikeVarBinding; _ } ->
+    | Value { kind = Let ConstlikeLetVarBinding; _ } ->
       entry
     | Value { kind = Let ConstlikeParamBinding; _ } ->
       entry

@@ -654,7 +654,7 @@ let init_value_entry kind cx name ~has_anno specific loc =
         else kind
         | Let LetVarBinding ->
         if (promote_to_const_like cx loc)
-        then Entry.(Let LetConstlikeVarBinding)
+        then Entry.(Let ConstlikeLetVarBinding)
         else kind
         | _ -> kind in
       let value_binding = { v with

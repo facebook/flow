@@ -22,8 +22,8 @@ module Entry :
       | ConstParamBinding
       | ConstVarBinding
     and let_binding_kind =
-        LetVarBinding
-      | LetConstlikeVarBinding
+      | LetVarBinding
+      | ConstlikeLetVarBinding
       | ClassNameBinding
       | CatchParamBinding
       | FunctionBinding
