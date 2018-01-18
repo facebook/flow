@@ -257,8 +257,12 @@ let toplevels id cx this super ~decls ~stmts ~expr
     if const_params
     then Env.bind_implicit_const ~state:State.Initialized
       Entry.ConstParamBinding cx name t loc
-    else Env.bind_implicit_let ~state:State.Initialized
-      Entry.ParamBinding cx name t loc
+    else
+      let new_kind =
+        if Env.promote_to_const_like cx loc then Entry.ConstlikeParamBinding
+        else Entry.ParamBinding in
+      Env.bind_implicit_let ~state:State.Initialized
+      new_kind cx name t loc
   );
 
   (* early-add our own name binding for recursive calls *)

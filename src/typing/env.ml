@@ -480,6 +480,7 @@ let bind_entry cx name entry loc =
               (Var _ | Let FunctionBinding) -> true
             (* vars can shadow function params *)
             | Var _, Let ParamBinding -> true
+            | Var _, Let ConstlikeParamBinding -> true
             | Var _, Const ConstParamBinding -> true
             | _ -> false
           in

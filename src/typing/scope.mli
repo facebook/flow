@@ -28,6 +28,7 @@ module Entry :
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
+      | ConstlikeParamBinding
     and var_binding_kind =
       | VarBinding
       | ConstlikeVarBinding

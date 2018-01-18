@@ -60,6 +60,7 @@ module Entry = struct
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
+    | ConstlikeParamBinding
 
   and var_binding_kind =
     | VarBinding
@@ -75,6 +76,7 @@ module Entry = struct
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
+  | Let ConstlikeParamBinding -> "param"
   | Var VarBinding -> "var"
   | Var ConstlikeVarBinding -> "var"
 
@@ -198,6 +200,8 @@ module Entry = struct
     | Value { kind = Var ConstlikeVarBinding; _ } ->
       entry
     | Value { kind = Let LetConstlikeVarBinding; _ } ->
+      entry
+    | Value { kind = Let ConstlikeParamBinding; _ } ->
       entry
     | Value v ->
       if Reason.is_internal_name name

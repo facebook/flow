@@ -47,6 +47,8 @@ val update_env: Context.t -> Loc.t -> t -> unit
 
 (***)
 
+val promote_to_const_like: Context.t -> Loc.t -> bool
+
 val bind_class: Context.t -> int -> Type.Properties.id -> Type.Properties.id -> unit
 
 val bind_var: ?state:State.t -> Context.t -> string -> Type.t ->
