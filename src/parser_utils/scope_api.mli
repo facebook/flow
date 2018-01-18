@@ -7,6 +7,7 @@
 
 type scope = int
 type use = Loc.t
+type uses = Loc.LocSet.t
 module Def: sig
   type t = {
     locs: Loc.t list;
@@ -30,11 +31,11 @@ type info = {
 
 val scope: info -> scope -> Scope.t
 
-val all_uses: info -> use list
+val all_uses: info -> uses
 val def_of_use: info -> use -> Def.t
 val use_is_def: info -> use -> bool
-val uses_of_def: info -> ?exclude_def:bool -> Def.t -> use list
-val uses_of_use: info -> ?exclude_def:bool -> use -> use list
+val uses_of_def: info -> ?exclude_def:bool -> Def.t -> uses
+val uses_of_use: info -> ?exclude_def:bool -> use -> uses
 val def_is_unused: info -> Def.t -> bool
 val is_local_use: info -> use -> bool
 val fold_scope_chain: info -> (scope -> Scope.t -> 'a -> 'a) -> scope -> 'a -> 'a
