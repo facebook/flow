@@ -572,8 +572,8 @@ Error: props4.js:18
 Error: props4.js:19
  19:   document.body
        ^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: state.js:19
  19:                 {this.state.bar.qux}

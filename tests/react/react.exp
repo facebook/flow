@@ -1244,8 +1244,8 @@ Error: key.js:21
 Error: portals.js:12
  12:       document.getElementById('portal'),
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 23:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:23
+ 24:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:24
 
 Error: proptype_arrayOf.js:13
  13: var fail_missing = <Example />
@@ -2049,67 +2049,73 @@ Error: ref.js:26
 Error: render_callback.js:13
  13: ReactDOM.render(<Example/>, document.querySelector('#site'), () => {
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:17
  17: ReactDOM.render(<Example/>, document.querySelector('#site'), function() {
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+ 19:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:19
 
 Error: render_callback.js:23
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:23
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. This type is incompatible with the expected param type of
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+ 19:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:19
   Callable property is incompatible:
-     18:     callback?: () => void,
-                        ^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react-dom.js:18
+     19:     callback?: () => void,
+                        ^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react-dom.js:19
      23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                       ^^ object literal
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+ 19:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:19
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 17:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:17
+ 18:     container: Element,
+                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+ 19:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:19
+
+Error: test-utils.js:34
+ 34:   child => child.tagName === 'BUTTON',
+                      ^^^^^^^ property `tagName`. Property not found in
+ 34:   child => child.tagName === 'BUTTON',
+                ^^^^^ React.Component
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
@@ -2123,4 +2129,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 189 errors
+Found 190 errors

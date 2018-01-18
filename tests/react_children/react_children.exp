@@ -90,13 +90,13 @@ Error: api.js:25
 Error: builtin_intrinsic.js:24
  24: <builtin>
      ^^^^^^^^^ props. This type is incompatible with
-314: type ReactDOM$HTMLElementJSXIntrinsic = {instance: HTMLElement, props: {children?: React$Node, [key: string]: any}};
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react-dom.js:314
+384:   props: {children?: React$Node, [key: string]: any},
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react-dom.js:384
   Property `children` is incompatible:
      25:   {{a: 1, b: 2, c: 3}}
             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    314: type ReactDOM$HTMLElementJSXIntrinsic = {instance: HTMLElement, props: {children?: React$Node, [key: string]: any}};
-                                                                                            ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`. See lib: <BUILTINS>/react-dom.js:314
+    384:   props: {children?: React$Node, [key: string]: any},
+                              ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`. See lib: <BUILTINS>/react-dom.js:384
       Member 6:
        18:   | React$Element<any>
                ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
