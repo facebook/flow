@@ -115,7 +115,7 @@ class scope_builder = object(this)
       uses <- [];
       current_scope_opt <- Some child;
       env <- Env.mk_env (fun () -> this#next) old_env bindings;
-      let node' = visit node in
+      let result = Core_result.try_with (fun () -> visit node) in
       this#update_acc (fun acc ->
         let defs = Env.defs env in
         let locals = SMap.fold (fun _ def locals ->
@@ -133,7 +133,7 @@ class scope_builder = object(this)
       current_scope_opt <- parent;
       env <- old_env;
       counter <- save_counter;
-      node'
+      Core_result.ok_exn result
 
   method! identifier (expr: Loc.t Ast.Identifier.t) =
     uses <- expr::uses;
