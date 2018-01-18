@@ -386,10 +386,10 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
 
   let module_ref = Context.module_ref cx in
 
-  let dep_mapper = new Dep_mapper.mapper in
-  let _ = dep_mapper#program ast in
-  let _ = Context.set_dep_map cx dep_mapper#dep_map in
-  let _ = Context.set_use_def_map cx dep_mapper#use_def_map in
+  begin
+    try Context.set_use_def cx @@ Ssa_builder.program_with_scope ast
+    with _ -> ()
+  end;
 
   let checked = Context.is_checked cx in
 

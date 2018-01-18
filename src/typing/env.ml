@@ -604,19 +604,23 @@ let declare_implicit_let kind =
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 let promote_to_const_like cx loc =
-(* Does Dep info says single dependence? *)
-(try
-  let open Dep_mapper in
-  let use_def_map = Context.use_def_map cx in
-  let dep_map = Context.dep_map cx in
-  let d = Utils_js.LocMap.find loc use_def_map in
-  let { Dep.typeDep=_; valDep } =
-    DepMap.find (DepKey.Id d) dep_map in
-    (match valDep with
-    | Dep.Depends l -> (List.length l) = 1
-    | Dep.Primitive -> true
-    | _ -> false)
-  with _ -> false)
+  try
+    let info, values = Context.use_def cx in
+    let uses = Scope_api.uses_of_use info loc in
+    (* We consider a binding to be const-like if all reads point to the same
+       write, modulo initialization. *)
+    let writes = Loc.LocSet.fold (fun use acc ->
+      match LocMap.get use values with
+        | None -> (* use is a write *) acc
+        | Some write_locs -> (* use is a read *)
+          (* collect writes pointed to by the read, modulo initialization *)
+          List.fold_left (fun acc -> function
+            | Ssa_api.Uninitialized -> acc
+            | Ssa_api.Write loc -> Loc.LocSet.add loc acc
+          ) acc write_locs
+    ) uses Loc.LocSet.empty in
+    Loc.LocSet.cardinal writes <= 1
+  with _ -> false
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)

@@ -107,8 +107,7 @@ val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
 val exists_checks: t -> ExistsCheck.t LocMap.t
 val exists_excuses: t -> ExistsCheck.t LocMap.t
-val dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t
-val use_def_map: t -> Loc.t LocMap.t
+val use_def: t -> Scope_api.info * Ssa_api.values
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -150,8 +149,7 @@ val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val set_unused_lint_suppressions: t -> Loc.LocSet.t -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
-val set_dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t -> unit
-val set_use_def_map: t -> Loc.t LocMap.t -> unit
+val set_use_def: t -> Scope_api.info * Ssa_api.values -> unit
 val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit

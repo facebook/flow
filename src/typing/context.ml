@@ -139,8 +139,7 @@ type local_t = {
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t LocMap.t;
 
-  mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable use_def_map : Loc.t LocMap.t;
+  mutable use_def : Scope_api.info * Ssa_api.values;
 }
 
 type cacheable_t = local_t
@@ -179,6 +178,8 @@ let metadata_of_options options =
     strict = false;
   } in
   { global_metadata; local_metadata; }
+
+let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, LocMap.empty
 
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
@@ -223,8 +224,7 @@ let make metadata file module_ref = {
     exists_checks = LocMap.empty;
     exists_excuses = LocMap.empty;
 
-    dep_map = Dep_mapper.DepMap.empty;
-    use_def_map = LocMap.empty;
+    use_def = empty_use_def;
   }
 }
 
@@ -302,8 +302,7 @@ let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
 let exists_checks cx = cx.local.exists_checks
 let exists_excuses cx = cx.local.exists_excuses
-let dep_map cx = cx.local.dep_map
-let use_def_map cx = cx.local.use_def_map
+let use_def cx = cx.local.use_def
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -384,10 +383,8 @@ let set_exists_checks cx exists_checks =
   cx.local.exists_checks <- exists_checks
 let set_exists_excuses cx exists_excuses =
   cx.local.exists_excuses <- exists_excuses
-let set_dep_map cx dep_map =
-  cx.local.dep_map <- dep_map
-let set_use_def_map cx use_def_map =
-  cx.local.use_def_map <- use_def_map
+let set_use_def cx use_def =
+  cx.local.use_def <- use_def
 let set_module_map cx module_map =
   cx.local.module_map <- module_map
 
@@ -398,8 +395,7 @@ let clear_intermediates cx =
   cx.local.all_unresolved <- IMap.empty;
   cx.local.exists_checks <- LocMap.empty;
   cx.local.exists_excuses <- LocMap.empty;
-  cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.use_def_map <- LocMap.empty;
+  cx.local.use_def <- empty_use_def;
   cx.local.require_map <- LocMap.empty
 
 
