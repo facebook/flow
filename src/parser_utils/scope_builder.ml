@@ -117,12 +117,15 @@ class scope_builder = object(this)
       env <- Env.mk_env (fun () -> this#next) old_env bindings;
       let node' = visit node in
       this#update_acc (fun acc ->
+        let defs = Env.defs env in
+        let locals = SMap.fold (fun _ def locals ->
+          List.fold_left (fun locals loc -> LocMap.add loc def locals) locals def.Def.locs
+        ) defs LocMap.empty in
         let locals, globals = List.fold_left (fun (locals, globals) (loc, x) ->
           match Env.get x env with
           | Some def -> LocMap.add loc def locals, globals
           | None -> locals, SSet.add x globals
-        ) (LocMap.empty, SSet.empty) uses in
-        let defs = Env.defs env in
+        ) (locals, SSet.empty) uses in
         let scopes = IMap.add child { Scope.lexical; parent; defs; locals; globals; } acc.scopes in
         { acc with scopes }
       );
