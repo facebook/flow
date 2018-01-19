@@ -9,6 +9,8 @@ type t =
   | Out_of_time
   (* Failed to kill a server *)
   | Kill_error
+  (* The Flow server appears unused so it died out of sadness *)
+  | Unused_server
   (* There is no server running and we were told not to start one *)
   | No_server_running
   (* Ran out of retries *)
@@ -71,6 +73,7 @@ let error_code = function
   | Type_error -> 2
   | Out_of_time -> 3
   | Kill_error -> 4
+  | Unused_server -> 5
   | No_server_running -> 6
   | Out_of_retries -> 7
   | Invalid_flowconfig -> 8
@@ -101,6 +104,7 @@ let error_type = function
   | 2 -> Type_error
   | 3 -> Out_of_time
   | 4 -> Kill_error
+  | 5 -> Unused_server
   | 6 -> No_server_running
   | 7 -> Out_of_retries
   | 8 -> Invalid_flowconfig
@@ -138,6 +142,7 @@ let to_string = function
   | Server_client_directory_mismatch -> "Server_client_directory_mismatch"
   | Out_of_shared_memory -> "Out_of_shared_memory"
   | Kill_error -> "Kill_error"
+  | Unused_server -> "Unused_server"
   | No_server_running -> "No_server_running"
   | Out_of_time -> "Out_of_time"
   | Out_of_retries -> "Out_of_retries"

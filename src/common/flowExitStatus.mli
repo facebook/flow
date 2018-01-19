@@ -4,6 +4,7 @@ type t =
   | Type_error
   | Out_of_time
   | Kill_error
+  | Unused_server
   | No_server_running
   | Out_of_retries
   | Invalid_flowconfig

@@ -243,6 +243,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Path_is_not_a_file (* Required a file but privided path was not a file *)
       | Server_client_directory_mismatch (* This is a weird one *)
       | Flowconfig_changed (* We could survive some config changes, but it's too hard to tell *)
+      | Unused_server (* The server appears unused for long enough that it decided to just die *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)
 
       (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
