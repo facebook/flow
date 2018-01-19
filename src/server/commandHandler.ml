@@ -70,7 +70,7 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
   Autocomplete_js.autocomplete_unset_hooks ();
   results, json_data_to_log
 
-let check_file ~options ~workers ~env ~force file_input =
+let check_file ~options ~workers ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
   match file_input with
   | File_input.FileName _ -> failwith "Not implemented"
@@ -86,7 +86,8 @@ let check_file ~options ~workers ~env ~force file_input =
       in
       if should_check then
         let file = File_key.SourceFile file in
-        let errors, warnings = Types_js.typecheck_contents ~options ~workers ~env content file in
+        let errors, warnings =
+          Types_js.typecheck_contents ~options ~workers ~env ~profiling content file in
         convert_errors ~errors ~warnings
       else
         ServerProt.Response.NOT_COVERED
@@ -360,7 +361,7 @@ let handle_ephemeral_unsafe
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
           } in
           ServerProt.Response.CHECK_FILE (
-            check_file ~options ~workers ~env ~force fn: ServerProt.Response.status_response
+            check_file ~options ~workers ~env ~force ~profiling fn
           ) |> respond;
           None
       | ServerProt.Request.COVERAGE (fn, force) ->

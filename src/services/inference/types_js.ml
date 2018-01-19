@@ -578,40 +578,10 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       (* should never happen *)
       None, errors, Errors.ErrorSet.empty, info
 
-(* typecheck_contents_with_profiling creates a new profiling object for use with typecheck_contents.
- * Eventually everyone should pass in their own profiling object, and this wrapper can be deleted *)
-let deprecated_typecheck_contents_with_profiling
-  ~options ~workers ~env ~check_syntax contents filename =
-  let should_print_summary = Options.should_profile options in
-  let profiling, (cx_opt, errors, warnings, info) =
-    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
-      typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents filename
-    end
-  in
-  profiling, cx_opt, errors, warnings, info
-
-let typecheck_contents ~options ~workers ~env contents filename =
-  let _profiling, _cx_opt, errors, warnings, _info =
-    deprecated_typecheck_contents_with_profiling
-      ~options ~workers ~env ~check_syntax:true contents filename in
+let typecheck_contents ~options ~workers ~env ~profiling contents filename =
+  let _cx_opt, errors, warnings, _info =
+    typecheck_contents_ ~options ~workers ~env ~check_syntax:true ~profiling contents filename in
   errors, warnings
-
-(* Like typecheck_contents_with_profiling, this function should be deleted once everyone calls
- * basic_check_contents directly with a running profiling object. *)
-let deprecated_basic_check_contents ~options ~workers ~env contents filename =
-  try
-    let profiling, cx_opt, _errors, _warnings, info =
-      deprecated_typecheck_contents_with_profiling
-        ~options ~workers ~env ~check_syntax:false contents filename in
-    let cx = match cx_opt with
-      | Some cx -> cx
-      | None -> failwith "Couldn't parse file" in
-    Ok (profiling, cx, info)
-  with exn ->
-    let e = spf "%s\n%s"
-      (Printexc.to_string exn)
-      (Printexc.get_backtrace ()) in
-    Error e
 
 let basic_check_contents ~options ~workers ~env ~profiling contents filename =
   try
