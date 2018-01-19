@@ -9,6 +9,10 @@ open Core_result
 open ServerEnv
 open Utils_js
 
+let extract_json_data = function
+| Ok (result, json_data) -> Ok result, json_data
+| Error (msg, json_data) -> Error msg, json_data
+
 let status_log errors =
   if Errors.ErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"
@@ -43,28 +47,27 @@ let get_status genv env client_root =
     convert_errors errors warnings
   end
 
-let autocomplete ~options ~workers ~env command_context file_input =
+let autocomplete ~options ~workers ~env ~profiling file_input =
   let path, content = match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) ->
         File_input.filename_of_file_input file_input, content
   in
   let state = Autocomplete_js.autocomplete_set_hooks () in
-  let results =
+  let results, json_data_to_log =
     let path = File_key.SourceFile path in
-    Types_js.deprecated_basic_check_contents ~options ~workers ~env content path
-    >>= fun (profiling, cx, info) ->
-      try_with begin fun () ->
-        AutocompleteService_js.autocomplete_get_results
-          profiling
-          command_context
-          cx
-          state
-          info
-      end
+    Types_js.basic_check_contents ~options ~workers ~env ~profiling content path
+    |> map_error ~f:(fun str -> str, None)
+    >>= (fun (cx, info) ->
+      Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+        try AutocompleteService_js.autocomplete_get_results cx state info
+        with exn -> Error (Printexc.to_string exn, None)
+      )
+    )
+    |> extract_json_data
   in
   Autocomplete_js.autocomplete_unset_hooks ();
-  results
+  results, json_data_to_log
 
 let check_file ~options ~workers ~env ~force file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -330,13 +333,13 @@ let handle_ephemeral_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let profiling, json_data =
-    Profiling_js.with_profiling ~should_print_summary begin fun _ ->
+    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
-          ServerProt.Response.AUTOCOMPLETE (
-            autocomplete ~options ~workers ~env client_logging_context fn
-          ) |> respond;
-          None
+          let result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
+          ServerProt.Response.AUTOCOMPLETE result
+          |> respond;
+          json_data
       | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
           let options = { options with Options.
             opt_verbose = verbose;
@@ -471,7 +474,7 @@ let handle_persistent genv env client_id msg =
   let client_logging_context = Persistent_connection.get_logging_context client in
   let should_print_summary = Options.should_profile genv.options in
   let profiling, (env, json_data) =
-    Profiling_js.with_profiling ~should_print_summary begin fun _ ->
+    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
       match msg with
       | Persistent_connection_prot.Subscribe ->
           let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings !env in
@@ -480,10 +483,10 @@ let handle_persistent genv env client_id msg =
           in
           { !env with connections = new_connections }, None
       | Persistent_connection_prot.Autocomplete (file_input, id) ->
-          let results = autocomplete ~options ~workers ~env client_logging_context file_input in
+          let results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
           let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
           Persistent_connection.send_message wrapped client;
-          !env, None
+          !env, json_data
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
 

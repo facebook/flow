@@ -32,11 +32,6 @@ let killed _ = ()
 let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
-let autocomplete_member_result
-    ~client_context:_
-    ~result_str:_
-    ~json_data:_
-    ~profiling:_ = ()
 let get_def_member_result
     ~client_context:_
     ~result_str:_

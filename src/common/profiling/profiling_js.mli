@@ -12,6 +12,7 @@ val with_profiling: should_print_summary:bool -> (running -> 'a) -> finished * '
 
 val start_timer: timer:string -> running -> unit
 val stop_timer: timer:string -> running -> unit
+val with_timer: timer:string -> f:(unit -> 'a) -> running -> 'a
 val get_finished_timer: timer:string -> running -> (float * float * float * float) option
 
 val sample_memory: metric:string -> value:float -> running -> unit

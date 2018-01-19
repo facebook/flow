@@ -400,6 +400,11 @@ let check_for_reserved_timer_name f ~timer profile =
 
 let start_timer = check_for_reserved_timer_name start_timer
 let stop_timer = check_for_reserved_timer_name stop_timer
+let with_timer ~timer ~f profiling =
+  start_timer ~timer profiling;
+  let ret = f () in
+  stop_timer ~timer profiling;
+  ret
 
 let get_finished_timer ~timer profile =
   let results = Timing.get_results !profile.timing in
