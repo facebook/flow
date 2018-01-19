@@ -42,15 +42,15 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
     let reasons = List.map Type.reason_of_t possible_ts in
     (loc, ty, reasons), Some json_data
 
-let dump_types ~options ~workers ~env file content =
+let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Type_printer.string_of_t in
 
-  Types_js.deprecated_basic_check_contents ~options ~workers ~env content file
-  >>| fun (_profiling, cx, _info) ->
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+  >>| fun (cx, _info) ->
     Query_types.dump_types printer cx
 
-let coverage ~options ~workers ~env ~force file content =
+let coverage ~options ~workers ~env ~profiling ~force file content =
   let should_check =
     if force then
       true
@@ -59,8 +59,8 @@ let coverage ~options ~workers ~env ~force file content =
         Parsing_service_js.(get_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.deprecated_basic_check_contents ~options ~workers ~env content file
-  >>| fun (_profiling, cx, _info) ->
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+  >>| fun (cx, _info) ->
     let types = Query_types.covered_types cx in
     if should_check then
       types
@@ -68,9 +68,9 @@ let coverage ~options ~workers ~env ~force file content =
       types |> List.map (fun (loc, _) -> (loc, false))
 
 
-let suggest ~options ~workers ~env file region content =
-  Types_js.deprecated_basic_check_contents ~options ~workers ~env content file
-  >>| fun (_profiling, cx, _info) ->
+let suggest ~options ~workers ~env ~profiling file region content =
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+  >>| fun (cx, _info) ->
     Query_types.fill_types cx
     |> List.sort Pervasives.compare
     |> match region with
@@ -86,4 +86,3 @@ let suggest ~options ~workers ~env file region content =
             (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
           )
       | _ -> assert false
-
