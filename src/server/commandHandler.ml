@@ -52,15 +52,17 @@ let autocomplete ~options ~workers ~env command_context file_input =
   let state = Autocomplete_js.autocomplete_set_hooks () in
   let results =
     let path = File_key.SourceFile path in
-    Types_js.basic_check_contents ~options ~workers ~env content path >>= fun (profiling, cx, info) ->
-    try_with begin fun () ->
-      AutocompleteService_js.autocomplete_get_results
-        profiling
-        command_context
-        cx
-        state
-        info
-    end in
+    Types_js.deprecated_basic_check_contents ~options ~workers ~env content path
+    >>= fun (profiling, cx, info) ->
+      try_with begin fun () ->
+        AutocompleteService_js.autocomplete_get_results
+          profiling
+          command_context
+          cx
+          state
+          info
+      end
+  in
   Autocomplete_js.autocomplete_unset_hooks ();
   results
 
@@ -252,15 +254,17 @@ let rec get_def ~options ~workers ~env command_context (file_input, line, col) =
   let state = GetDef_js.getdef_set_hooks loc in
   let result =
     File_input.content_of_file_input file_input >>= fun content ->
-    Types_js.basic_check_contents ~options ~workers ~env content file >>= fun (profiling, cx, _info) ->
-    try_with begin fun () ->
-      GetDef_js.getdef_get_result
-        profiling
-        command_context
-        ~options
-        cx
-        state
-    end in
+    Types_js.deprecated_basic_check_contents ~options ~workers ~env content file
+    >>= fun (profiling, cx, _info) ->
+      try_with begin fun () ->
+        GetDef_js.getdef_get_result
+          profiling
+          command_context
+          ~options
+          cx
+          state
+      end
+  in
   GetDef_js.getdef_unset_hooks ();
   result >>= function
     | GetDef_js.Done loc -> Ok loc

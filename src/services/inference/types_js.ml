@@ -488,116 +488,142 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
+let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents filename =
+  let errors, parse_result, info =
+    parse_contents ~options ~profiling ~check_syntax filename contents in
+
+  match parse_result with
+  | Parsing_service_js.Parse_ok (ast, file_sig) ->
+      (* override docblock info *)
+      let info =
+        let open Docblock in
+        let flow = match flow info with
+        (* If the file does not specify a @flow pragma, we still want to try
+          to infer something, but the file might be huge and unannotated,
+          which can cause performance issues (including non-termination).
+          To avoid this case, we infer the file using "weak mode." *)
+        | None -> OptInWeak
+        (* Respect @flow pragma *)
+        | Some OptIn -> OptIn
+        (* Respect @flow strict pragma *)
+        | Some OptInStrict -> OptInStrict
+        (* Respect @flow weak pragma *)
+        | Some OptInWeak -> OptInWeak
+        (* Respect @noflow, which `apply_docblock_overrides` does not by
+          default. Again, large files can cause non-termination, so
+          respecting this pragma gives programmers a way to tell Flow to
+          avoid inference on such files. *)
+        | Some OptOut -> OptInWeak
+        in
+        { info with flow = Some flow }
+      in
+
+      (* merge *)
+      let cx = with_timer ~options "MergeContents" profiling (fun () ->
+        let ensure_checked_dependencies =
+          ensure_checked_dependencies ~options ~profiling ~workers ~env
+        in
+        Merge_service.merge_contents_context
+          options filename ast info file_sig ~ensure_checked_dependencies
+      ) in
+
+      let errors = Context.errors cx in
+
+      (* Suppressions for errors in this file can come from dependencies *)
+      let suppressions =
+        let open ServerEnv in
+        let file_suppressions = Context.error_suppressions cx in
+        let { suppressions; _ } = !env.errors in
+        Error_suppressions.union_suppressions
+          (FilenameMap.add filename file_suppressions suppressions)
+      in
+
+      (* Severity cover info can come from dependencies *)
+      let severity_cover =
+        let open ServerEnv in
+        let file_severity_cover = Context.severity_cover cx in
+        let { severity_cover_set; _ } = !env.errors in
+        ExactCover.union_all
+          (FilenameMap.add filename file_severity_cover severity_cover_set)
+      in
+
+      (* Filter out suppressed errors *)
+      let errors, warnings, _, _ =
+        Error_suppressions.filter_suppressed_errors suppressions severity_cover errors in
+
+      let warnings = if Options.should_include_warnings options
+        then warnings
+        else Errors.ErrorSet.empty
+      in
+
+      Some cx, errors, warnings, info
+
+  | Parsing_service_js.Parse_fail fails ->
+      let errors = match fails with
+      | Parsing_service_js.Parse_error err ->
+          let err = Inference_utils.error_of_parse_error ~source_file:filename err in
+          Errors.ErrorSet.add err errors
+      | Parsing_service_js.Docblock_errors errs ->
+          List.fold_left (fun errors err ->
+            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+            Errors.ErrorSet.add err errors
+          ) errors errs
+      | Parsing_service_js.File_sig_error err ->
+          let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+          Errors.ErrorSet.add err errors
+      in
+      None, errors, Errors.ErrorSet.empty, info
+
+  | Parsing_service_js.Parse_skip
+     (Parsing_service_js.Skip_non_flow_file
+    | Parsing_service_js.Skip_resource_file) ->
+      (* should never happen *)
+      None, errors, Errors.ErrorSet.empty, info
+
+(* typecheck_contents_with_profiling creates a new profiling object for use with typecheck_contents.
+ * Eventually everyone should pass in their own profiling object, and this wrapper can be deleted *)
+let deprecated_typecheck_contents_with_profiling
+  ~options ~workers ~env ~check_syntax contents filename =
   let should_print_summary = Options.should_profile options in
   let profiling, (cx_opt, errors, warnings, info) =
     Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
-      let errors, parse_result, info =
-        parse_contents ~options ~profiling ~check_syntax filename contents in
-
-      match parse_result with
-      | Parsing_service_js.Parse_ok (ast, file_sig) ->
-          (* override docblock info *)
-          let info =
-            let open Docblock in
-            let flow = match flow info with
-            (* If the file does not specify a @flow pragma, we still want to try
-              to infer something, but the file might be huge and unannotated,
-              which can cause performance issues (including non-termination).
-              To avoid this case, we infer the file using "weak mode." *)
-            | None -> OptInWeak
-            (* Respect @flow pragma *)
-            | Some OptIn -> OptIn
-            (* Respect @flow strict pragma *)
-            | Some OptInStrict -> OptInStrict
-            (* Respect @flow weak pragma *)
-            | Some OptInWeak -> OptInWeak
-            (* Respect @noflow, which `apply_docblock_overrides` does not by
-              default. Again, large files can cause non-termination, so
-              respecting this pragma gives programmers a way to tell Flow to
-              avoid inference on such files. *)
-            | Some OptOut -> OptInWeak
-            in
-            { info with flow = Some flow }
-          in
-
-          (* merge *)
-          let cx = with_timer ~options "MergeContents" profiling (fun () ->
-            let ensure_checked_dependencies =
-              ensure_checked_dependencies ~options ~profiling ~workers ~env
-            in
-            Merge_service.merge_contents_context
-              options filename ast info file_sig ~ensure_checked_dependencies
-          ) in
-
-          let errors = Context.errors cx in
-
-          (* Suppressions for errors in this file can come from dependencies *)
-          let suppressions =
-            let open ServerEnv in
-            let file_suppressions = Context.error_suppressions cx in
-            let { suppressions; _ } = !env.errors in
-            Error_suppressions.union_suppressions
-              (FilenameMap.add filename file_suppressions suppressions)
-          in
-
-          (* Severity cover info can come from dependencies *)
-          let severity_cover =
-            let open ServerEnv in
-            let file_severity_cover = Context.severity_cover cx in
-            let { severity_cover_set; _ } = !env.errors in
-            ExactCover.union_all
-              (FilenameMap.add filename file_severity_cover severity_cover_set)
-          in
-
-          (* Filter out suppressed errors *)
-          let errors, warnings, _, _ =
-            Error_suppressions.filter_suppressed_errors suppressions severity_cover errors in
-
-          let warnings = if Options.should_include_warnings options
-            then warnings
-            else Errors.ErrorSet.empty
-          in
-
-          Some cx, errors, warnings, info
-
-      | Parsing_service_js.Parse_fail fails ->
-          let errors = match fails with
-          | Parsing_service_js.Parse_error err ->
-              let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-              Errors.ErrorSet.add err errors
-          | Parsing_service_js.Docblock_errors errs ->
-              List.fold_left (fun errors err ->
-                let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-                Errors.ErrorSet.add err errors
-              ) errors errs
-          | Parsing_service_js.File_sig_error err ->
-              let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-              Errors.ErrorSet.add err errors
-          in
-          None, errors, Errors.ErrorSet.empty, info
-
-      | Parsing_service_js.Parse_skip
-         (Parsing_service_js.Skip_non_flow_file
-        | Parsing_service_js.Skip_resource_file) ->
-          (* should never happen *)
-          None, errors, Errors.ErrorSet.empty, info
-    end in
+      typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents filename
+    end
+  in
   profiling, cx_opt, errors, warnings, info
 
 let typecheck_contents ~options ~workers ~env contents filename =
   let _profiling, _cx_opt, errors, warnings, _info =
-    typecheck_contents_ ~options ~workers ~env ~check_syntax:true contents filename in
+    deprecated_typecheck_contents_with_profiling
+      ~options ~workers ~env ~check_syntax:true contents filename in
   errors, warnings
 
-let basic_check_contents ~options ~workers ~env contents filename =
+(* Like typecheck_contents_with_profiling, this function should be deleted once everyone calls
+ * basic_check_contents directly with a running profiling object. *)
+let deprecated_basic_check_contents ~options ~workers ~env contents filename =
   try
     let profiling, cx_opt, _errors, _warnings, info =
-      typecheck_contents_ ~options ~workers ~env ~check_syntax:false contents filename in
+      deprecated_typecheck_contents_with_profiling
+        ~options ~workers ~env ~check_syntax:false contents filename in
     let cx = match cx_opt with
       | Some cx -> cx
       | None -> failwith "Couldn't parse file" in
     Ok (profiling, cx, info)
+  with exn ->
+    let e = spf "%s\n%s"
+      (Printexc.to_string exn)
+      (Printexc.get_backtrace ()) in
+    Error e
+
+let basic_check_contents ~options ~workers ~env ~profiling contents filename =
+  try
+    let cx_opt, _errors, _warnings, info =
+      typecheck_contents_
+        ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
+    let cx = match cx_opt with
+      | Some cx -> cx
+      | None -> failwith "Couldn't parse file" in
+    Ok (cx, info)
   with exn ->
     let e = spf "%s\n%s"
       (Printexc.to_string exn)
