@@ -10,6 +10,8 @@ type finished
 
 val with_profiling: should_print_summary:bool -> (running -> 'a) -> finished * 'a
 
+val with_timer_prefix: prefix:string -> f:(unit -> 'a) -> running -> 'a
+
 val start_timer: timer:string -> running -> unit
 val stop_timer: timer:string -> running -> unit
 val with_timer: timer:string -> f:(unit -> 'a) -> running -> 'a

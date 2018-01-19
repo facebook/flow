@@ -33,6 +33,8 @@ module Timing : sig
   val empty: t
   val start_timer: timer:string -> t -> t
   val stop_timer: timer:string -> t -> t
+  val push_timer_prefix: prefix:string -> t -> t
+  val pop_timer_prefix: t -> t
   val get_results: t -> result SMap.t
   val to_json: abridged:bool -> t -> Hh_json.json
 end = struct
@@ -49,9 +51,23 @@ end = struct
   type t = {
     running_timers: running_timer SMap.t;
     results: result SMap.t;
+    timer_prefix: string list;
   }
 
-  let empty = { running_timers = SMap.empty; results = SMap.empty }
+  let empty = { running_timers = SMap.empty; results = SMap.empty; timer_prefix = [] }
+
+  let with_prefix prefix timer =
+    match prefix with
+    | [] -> timer
+    | prefix::_ -> prefix ^ timer
+
+  let push_timer_prefix ~prefix timing =
+    { timing with timer_prefix = prefix::timing.timer_prefix }
+
+  let pop_timer_prefix timing =
+    match timing.timer_prefix with
+    | [] -> timing
+    | _::rest -> { timing with timer_prefix = rest }
 
   (* Returns the user cpu and system cpu times *)
   let times () = Unix.(
@@ -69,7 +85,8 @@ end = struct
     | Some time -> time in
     (worker_user_time, worker_system_time)
 
-  let start_timer ~timer { running_timers; results; } =
+  let start_timer ~timer { running_timers; results; timer_prefix } =
+    let timer = with_prefix timer_prefix timer in
     let wall_start = Unix.gettimeofday () in
     let (user_start, system_start) = times () in
     let (worker_user_start, worker_system_start) = worker_times () in
@@ -85,6 +102,7 @@ end = struct
     {
       running_timers = SMap.add timer running_timer running_timers;
       results;
+      timer_prefix;
     }
 
   let flow_start_time = Unix.gettimeofday ()
@@ -100,9 +118,10 @@ end = struct
       else cpu_busy /. (cpu_busy +. cpu_idle) in
     { cpu_user; cpu_nice_user; cpu_system; cpu_idle; cpu_usage }
 
-  let stop_timer ~timer { running_timers; results; } =
+  let stop_timer ~timer { running_timers; results; timer_prefix } =
+    let timer = with_prefix timer_prefix timer in
     match SMap.get timer running_timers with
-    | None -> { running_timers; results; }
+    | None -> { running_timers; results; timer_prefix }
     | Some running_timer ->
         let wall_end = Unix.gettimeofday () in
         let (user_end, system_end) = times () in
@@ -151,6 +170,7 @@ end = struct
         {
           running_timers = SMap.remove timer running_timers;
           results = SMap.add timer result results;
+          timer_prefix
         }
 
   let get_results { results; _; } = results
@@ -258,6 +278,12 @@ let empty = {
   timing = Timing.empty;
   memory = Memory.empty;
 }
+
+let with_timer_prefix ~prefix ~f profile =
+  profile := { !profile with timing = Timing.push_timer_prefix ~prefix !profile.timing };
+  let ret = f () in
+  profile := { !profile with timing = Timing.pop_timer_prefix !profile.timing };
+  ret
 
 let start_timer ~timer profile =
   profile := { !profile with timing = Timing.start_timer ~timer !profile.timing }

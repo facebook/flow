@@ -81,14 +81,14 @@ let getdef_require_pattern state loc =
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
-let getdef_get_result profiling client_logging_context ~options cx state =
+let getdef_get_result ~options cx state =
   Ok begin match state.getdef_type with
   | Some Gdloc loc ->
     if List.exists (fun range -> Loc.contains range loc) state.getdef_require_patterns
     then
       let { Loc.line; column; _ } = loc.Loc.start in
-      Chain (line, column)
-    else Done loc
+      Chain (line, column), None
+    else Done loc, None
   | Some Gdval v ->
     (* Use `possible_types_of_type` instead of `resolve_type` because we're
        actually interested in the location of the resolved types. *)
@@ -96,7 +96,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
     Done begin match ts with
     | [t] -> Type.def_loc_of_t t
     | _ -> Loc.none
-    end
+    end, None
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Members.extract cx this_t in
@@ -108,15 +108,11 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         | FailureAnyType -> "FAILURE_NO_COVERAGE", this
         | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 
-      let json_data = Hh_json.(JSON_Object [
+      let json_data_to_log = Hh_json.(JSON_Object [
         "type", Debug_js.json_of_t ~depth:3 cx t;
-        "gd_name", JSON_String name
+        "gd_name", JSON_String name;
+        "result", JSON_String result_str;
       ]) in
-      FlowEventLogger.get_def_member_result
-        ~client_context:client_logging_context
-        ~result_str
-        ~json_data
-        ~profiling;
 
       let command_result = Flow_js.Members.to_command_result member_result in
       Done begin match command_result with
@@ -130,7 +126,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
             end
         | None -> Loc.none
         end
-      end
+      end, Some json_data_to_log
   | Some Gdrequire ((source_loc, name), require_loc) ->
       let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
@@ -167,8 +163,8 @@ let getdef_get_result profiling client_logging_context ~options cx state =
           name
           (string_of_ctor module_t)
         )
-      )
-  | None -> Done Loc.none
+      ), None
+  | None -> Done Loc.none, None
   end
 
 let getdef_set_hooks pos =
