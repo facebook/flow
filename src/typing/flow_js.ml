@@ -10924,11 +10924,8 @@ and object_kit =
 
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
-         * source object.
-         *
-         * If we are using ReactConfigMerge then make the property optional
-         * instead of removing it entirely. *)
-        | (Sound | IgnoreExactAndOwn | ReactConfigMerge),
+         * source object. *)
+        | (Sound | IgnoreExactAndOwn),
           None, Some (t2, _), _ ->
           let reason = replace_reason_const (RUndefinedProperty k) r1 in
           rec_flow cx trace (VoidT.make reason, UseT (use_op, t2));
@@ -10975,8 +10972,13 @@ and object_kit =
          * the behavior of other object rest merge modes implemented in this
          * pattern match. *)
         | ReactConfigMerge,
-          Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _ ->
-          rec_flow_t cx trace (t1, optional t2);
+          Some (t1, _), Some (DefT (_, OptionalT t2), _), _ ->
+          (* We only test the subtyping relation of t1 and t2 if both t1 and t2
+           * are optional types. If t1 is required then t2 will always
+           * be overwritten. *)
+          (match t1 with
+          | DefT (_, OptionalT t1) -> rec_flow_t cx trace (t2, t1)
+          | _ -> ());
           Some (Field (None, t1, Positive))
         (* Using our same equation. Consider this case:
          *
@@ -10988,8 +10990,29 @@ and object_kit =
          * programs then {||}. *)
         | ReactConfigMerge,
           Some (t1, _), Some (t2, _), _ ->
-          rec_flow_t cx trace (t1, t2);
+          (* The DP type for p must be a subtype of the P type for p. *)
+          rec_flow_t cx trace (t2, t1);
           Some (Field (None, optional t1, Positive))
+        (* Consider this case:
+         *
+         *     {...{p}, ...C} = {}
+         *
+         * For C there will be no prop. However, if the props object is exact
+         * then we need to throw an error. *)
+        | ReactConfigMerge,
+          None, Some (_, _), _ ->
+          if flags1.exact then (
+            let use_op = Frame (PropertyCompatibility {
+              prop = Some k;
+              lower = r2;
+              upper = r1;
+              is_sentinel = false;
+            }, unknown_use) in
+            let r2 = replace_reason_const (RProperty (Some k)) r2 in
+            let err = FlowError.EPropNotFound ((r2, r1), use_op) in
+            add_output cx ~trace err
+          );
+          None
 
       ) props1 props2 in
       let dict = match dict1, dict2 with
