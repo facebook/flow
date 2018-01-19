@@ -95,17 +95,18 @@ let infer_type
     ~options
     ~workers
     ~env
-    client_context
+    ~profiling
     (file_input, line, col, verbose) =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input >>= fun content ->
   let options = { options with Options.opt_verbose = verbose } in
-  try_with begin fun () ->
-    Type_info_service.type_at_pos
-      ~options ~workers ~env ~client_context
-      file content line col
-  end
+  match File_input.content_of_file_input file_input with
+  | Error e -> Error e, None
+  | Ok content ->
+    try_with_json begin fun () ->
+      Type_info_service.type_at_pos ~options ~workers ~env ~profiling file content line col
+    end
+    |> extract_json_data
 
 let dump_types ~options ~workers ~env file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -334,7 +335,7 @@ let get_imports ~options module_names =
 
 
 let handle_ephemeral_unsafe
-  genv env (request_id, { ServerProt.Request.client_logging_context; command; }) =
+  genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
   let env = ref env in
   let respond msg =
     MonitorRPC.respond_to_request ~request_id ~response:msg
@@ -412,13 +413,10 @@ let handle_ephemeral_unsafe
           ) |> respond;
           None
       | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
-          ServerProt.Response.INFER_TYPE (
-            infer_type
-              ~options ~workers ~env
-              client_logging_context
-              (fn, line, char, verbose)
-          ) |> respond;
-          None
+          let result, json_data =
+            infer_type ~options ~workers ~env ~profiling (fn, line, char, verbose) in
+          ServerProt.Response.INFER_TYPE result |> respond;
+          json_data
       | ServerProt.Request.PORT (files) ->
           ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
           |> respond;
