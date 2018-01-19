@@ -249,8 +249,8 @@ let gen_flow_files ~options env files =
   in
   result
 
-let find_refs ~genv ~env (file_input, line, col, global) =
-  FindRefs_js.find_refs ~genv ~env ~file_input ~line ~col ~global
+let find_refs ~genv ~env ~profiling (file_input, line, col, global) =
+  FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
@@ -385,11 +385,9 @@ let handle_ephemeral_unsafe
           ) |> respond;
           None
       | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
-          ServerProt.Response.FIND_REFS (
-            find_refs
-              ~genv ~env (fn, line, char, global): ServerProt.Response.find_refs_response
-          ) |> respond;
-          None
+          let result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global) in
+          ServerProt.Response.FIND_REFS result |> respond;
+          json_data
       | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
           respond ServerProt.Response.FORCE_RECHECK;
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in

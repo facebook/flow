@@ -8,8 +8,9 @@
 val find_refs:
   genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
+  profiling: Profiling_js.running ->
   file_input: File_input.t ->
   line: int ->
   col: int ->
   global: bool ->
-  ServerProt.Response.find_refs_response
+  ServerProt.Response.find_refs_response * Hh_json.json option
