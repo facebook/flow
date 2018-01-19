@@ -563,6 +563,7 @@ module Options_flags = struct
     traces: int option;
     verbose: Verbose.t option;
     weak: bool;
+    merge_timeout: int;
   }
 end
 
@@ -585,7 +586,9 @@ let parse_lints_flag =
 let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
-    include_warnings flowconfig_flags verbose strip_root temp_dir quiet =
+    include_warnings flowconfig_flags verbose strip_root temp_dir quiet merge_timeout =
+    if merge_timeout < 0
+    then FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error);
     main { Options_flags.
       debug;
       profile;
@@ -601,6 +604,7 @@ let options_flags =
       strip_root;
       temp_dir;
       quiet;
+      merge_timeout;
    }
   in
   fun prev ->
@@ -629,6 +633,10 @@ let options_flags =
     |> strip_root_flag
     |> temp_dir_flag
     |> quiet_flag
+    |> flag "--merge-timeout" (required ~default:100 int)
+      ~doc:("The maximum time in seconds to attempt to typecheck a file or cycle of files. " ^
+        "0 means no timeout (default: 100)")
+      ~env:"FLOW_MERGE_TIMEOUT"
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -706,6 +714,10 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
+    opt_merge_timeout =
+      if options_flags.merge_timeout = 0
+      then None
+      else Some (float_of_int options_flags.merge_timeout);
   }
 
 let connect ~client_type server_flags root =
