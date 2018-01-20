@@ -7,9 +7,7 @@
 
 open Utils_js
 
-type element =
-| Skip of File_key.t
-| Component of File_key.t Nel.t
+type element = Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
 
@@ -28,8 +26,8 @@ val make :
 val join :
   (* intermediate result callback *)
   ('a merge_result Lazy.t -> unit) ->
-  (* merged, skipped *)
-  'a merge_result * File_key.t list->
+  (* merged *)
+  'a merge_result ->
   (* accumulator *)
   'a merge_result ->
   (* accumulated results *)

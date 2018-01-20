@@ -223,15 +223,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   ret
 
 let merge_strict_job ~job ~options merged elements =
-  List.fold_left (fun (merged, skipped) -> function
-    | Merge_stream.Skip file ->
-      (* Skip rechecking this file (because none of its dependencies changed).
-         We are going to reuse the existing signature for the file, so we must
-         be careful that such a signature actually exists! This holds because a
-         skipped file cannot be a direct dependency, so its dependencies cannot
-         change, which in particular means that it belongs to the same component,
-         although possibly with a different leader that has the signature. *)
-      (merged, file::skipped)
+  List.fold_left (fun merged -> function
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
@@ -244,7 +236,7 @@ let merge_strict_job ~job ~options merged elements =
       let merge_timeout = Options.merge_timeout options in
       let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
 
-      let merged = try with_async_logging_timer
+      try with_async_logging_timer
         ~interval
         ~on_timer:(fun run_time ->
           Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
@@ -289,9 +281,7 @@ let merge_strict_job ~job ~options merged elements =
         | _ -> EInternal (file_loc, MergeJobException exc)
         ) in
         (file, result) :: merged
-      in
-      merged, skipped
-  ) (merged, []) elements
+  ) merged elements
 
 (* make a map from component leaders to components *)
 let merge_runner ~job ~intermediate_result_callback ~options ~workers
