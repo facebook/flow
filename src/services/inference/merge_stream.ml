@@ -124,7 +124,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
       let result = take n |> List.map component in
       if result <> [] then begin
         let length = List.fold_left (fun acc element -> match element with
-          | Skip _ -> acc
+          | Skip f -> (Nel.length (FilenameMap.find_unsafe f !components)) + acc
           | Component files -> Nel.length files + acc) 0 result in
         MonitorRPC.status_update ServerStatus.(Merging_progress {
           finished = !files_merged_so_far;
@@ -174,6 +174,7 @@ let join result_callback =
         |> Nel.to_list
         |> FilenameSet.of_list
       in
-      Context_cache.revive_merge_batch fs
+      Context_cache.revive_merge_batch fs;
+      push leader_f false;
     ) skipped;
     List.rev_append merged merged_acc

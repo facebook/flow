@@ -266,13 +266,17 @@ let typecheck
    * However, due to laziness, it's possible that certain dependents or dependencies have not been
    * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
    * and add them to infer_input, unless they're already checked and in unchanged_checked
+   *
+   * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
+   * pass the dependencies, and let make_merge_input add dependent files as needed. This is
+   * important for recheck optimizations. In make_merge_input, we create the recheck map which
+   * indicates whether a given file needs to be rechecked. Dependent files only need to be rechecked
+   * if their dependencies change.
    *)
   let infer_input =
-    let infer_input = CheckedSet.add ~dependents:all_dependent_files infer_input in
-
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let roots = CheckedSet.all infer_input in
+    let roots = CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files infer_input) in
     let dependency_graph = with_timer ~options "CalcDepsTypecheck" profiling (fun () ->
       Dep_service.calc_dependency_graph workers parsed
     ) in
