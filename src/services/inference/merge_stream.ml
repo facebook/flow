@@ -41,6 +41,9 @@ let blocking = Hashtbl.create 0
 (* Counts the number of blocked leaders. *)
 let blocked = ref 0
 
+let total_number_of_files = ref 0
+let files_merged_so_far = ref 0
+
 (* For each leader, maps other leaders that are dependent on it. *)
 let dependents = ref FilenameMap.empty
 
@@ -62,13 +65,9 @@ let rec take n =
       stream := rest;
       x::(take (n-1))
 
-type element =
-| Skip of File_key.t
-| Component of File_key.t Nel.t
+type element = Component of File_key.t Nel.t
 
-let component (f, diff) =
-  if diff then Component (FilenameMap.find_unsafe f !components)
-  else Skip f
+let component f = Component (FilenameMap.find_unsafe f !components)
 
 (* leader_map is a map from files to leaders *)
 (* component_map is a map from leaders to components *)
@@ -77,9 +76,10 @@ let make dependency_graph leader_map component_map recheck_leader_map =
   components := component_map;
   to_recheck := recheck_leader_map;
 
-  let total_number_of_files =
-    FilenameMap.fold (fun _ files acc -> Nel.length files + acc) component_map 0 in
-  let files_merged_so_far = ref 0 in
+  total_number_of_files := FilenameMap.fold (fun _ files acc ->
+    Nel.length files + acc
+  ) component_map 0;
+  files_merged_so_far := 0;
 
   let leader f = FilenameMap.find_unsafe f leader_map in
   let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
@@ -102,7 +102,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
     Hashtbl.add blocking leader_f n;
     if n = 0
     then (* leader_f isn't blocked, add to stream *)
-      stream := (leader_f, true)::!stream
+      stream := leader_f::!stream
     else (* one more blocked *)
       incr blocked
   ) dependency_dag;
@@ -123,12 +123,12 @@ let make dependency_graph leader_map component_map recheck_leader_map =
       let n = min bucket_size jobs in
       let result = take n |> List.map component in
       if result <> [] then begin
-        let length = List.fold_left (fun acc element -> match element with
-          | Skip f -> (Nel.length (FilenameMap.find_unsafe f !components)) + acc
-          | Component files -> Nel.length files + acc) 0 result in
+        let length = List.fold_left (fun acc (Component files) ->
+          Nel.length files + acc
+        ) 0 result in
         MonitorRPC.status_update ServerStatus.(Merging_progress {
           finished = !files_merged_so_far;
-          total = Some total_number_of_files;
+          total = Some !total_number_of_files;
         });
         files_merged_so_far := !files_merged_so_far + length;
         MultiWorker.Job result
@@ -138,8 +138,10 @@ let make dependency_graph leader_map component_map recheck_leader_map =
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)
 let join result_callback =
-  let push leader_f diff =
-    FilenameSet.iter (fun dep_leader_f ->
+  (* Once a component is merged, unblock dependent components to make them
+   * available to workers. Accumulate list of skipped components. *)
+  let rec push skipped leader_f diff =
+    FilenameSet.fold (fun dep_leader_f skipped ->
       let n = (Hashtbl.find blocking dep_leader_f) - 1 in
       (* dep_leader blocked on one less *)
       Hashtbl.replace blocking dep_leader_f n;
@@ -147,14 +149,21 @@ let join result_callback =
       let recheck = diff || FilenameMap.find_unsafe dep_leader_f !to_recheck in
       to_recheck := FilenameMap.add dep_leader_f recheck !to_recheck;
       (* no more waiting, yay! *)
-      if n = 0 then
-        (* one less blocked; add dep_leader_f to stream *)
-        (decr blocked; stream := (dep_leader_f, recheck)::!stream)
-    ) (FilenameMap.find_unsafe leader_f !dependents)
+      if n = 0 then (
+        (* one less blocked; add dep_leader_f to stream if we need to recheck,
+           otherwise recursively unblock dependents *)
+        decr blocked;
+        if recheck
+        then (
+          stream := dep_leader_f::!stream;
+          skipped
+        ) else push (dep_leader_f::skipped) dep_leader_f false
+      ) else skipped
+    ) (FilenameMap.find_unsafe leader_f !dependents) skipped
   in
-  fun (merged, skipped) merged_acc ->
+  fun merged merged_acc ->
     let () = result_callback (lazy merged) in
-    List.iter (fun (leader_f, _) ->
+    let skipped = List.fold_left (fun skipped (leader_f, _) ->
       let diff = Context_cache.sig_hash_changed leader_f in
       let () =
         let fs =
@@ -166,15 +175,22 @@ let join result_callback =
         then Context_cache.remove_old_merge_batch fs
         else Context_cache.revive_merge_batch fs
       in
-      push leader_f diff;
-    ) merged;
-    List.iter (fun leader_f ->
+      push skipped leader_f diff
+    ) [] merged in
+    let skipped_length = List.fold_left (fun acc leader_f ->
       let fs =
         FilenameMap.find_unsafe leader_f !components
         |> Nel.to_list
         |> FilenameSet.of_list
       in
       Context_cache.revive_merge_batch fs;
-      push leader_f false;
-    ) skipped;
+      FilenameSet.cardinal fs + acc
+    ) 0 skipped in
+    if skipped_length > 0 then begin
+      files_merged_so_far := !files_merged_so_far + skipped_length;
+      MonitorRPC.status_update ServerStatus.(Merging_progress {
+        finished = !files_merged_so_far;
+        total = Some !total_number_of_files;
+      })
+    end;
     List.rev_append merged merged_acc
