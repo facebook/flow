@@ -26,7 +26,7 @@ let find_sig ~options file =
   | Some cx -> Context.from_cache ~options cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
-module SigHashHeap = SharedMem_js.WithCache (File_key) (struct
+module SigHashHeap = SharedMem_js.NoCache (File_key) (struct
   type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
@@ -51,14 +51,15 @@ let find_leader file =
 let add_merge_on_diff ~audit leader_cx component_files xx =
   let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
-    | Some xx_old -> File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
-    | None -> true in
-  if diff then begin
+  | None -> true
+  | Some xx_old ->
+    File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
+  in
+  if diff then (
     Nel.iter (fun f -> LeaderHeap.add f leader_f) component_files;
     add_sig_context ~audit leader_f leader_cx;
     SigHashHeap.add leader_f xx;
-  end;
-  diff
+  )
 
 let add_merge_on_exn ~audit ~options component =
   let leader_f = Nel.hd component in
@@ -77,6 +78,15 @@ let add_merge_on_exn ~audit ~options component =
   let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
   add_sig_context ~audit leader_f cx;
   SigHashHeap.add leader_f xx
+
+let sig_hash_changed f =
+  match SigHashHeap.get f with
+  | None -> false
+  | Some xx ->
+    match SigHashHeap.get_old f with
+    | None -> true
+    | Some xx_old ->
+      File_key.check_suffix f Files.flow_ext || xx <> xx_old
 
 let oldify_merge_batch files =
   LeaderHeap.oldify_batch files;

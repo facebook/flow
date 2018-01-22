@@ -28,9 +28,9 @@ val make :
 val join :
   (* intermediate result callback *)
   ('a merge_result Lazy.t -> unit) ->
-  (* merged, unchanged *)
-  'a merge_result * File_key.t list ->
-  (* accumulators *)
+  (* merged, skipped *)
+  'a merge_result * File_key.t list->
+  (* accumulator *)
   'a merge_result ->
   (* accumulated results *)
   'a merge_result

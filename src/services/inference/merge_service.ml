@@ -12,9 +12,9 @@ module Reqs = Merge_js.Reqs
 type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   options:Options.t ->
-  'a merge_results * File_key.t list ->
+  'a merge_results ->
   File_key.t Nel.t ->
-  'a merge_results * File_key.t list
+  'a merge_results
 
 type merge_strict_context_result = {
   cx: Context.t;
@@ -151,7 +151,7 @@ let merge_contents_context options file ast info file_sig ~ensure_checked_depend
   cx
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options (merged_acc, unchanged_acc) component =
+let merge_strict_component ~options merged_acc component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -185,11 +185,9 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
 
     Context.clear_intermediates cx;
 
-    let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
-      cx component md5 in
+    Context_cache.add_merge_on_diff ~audit:Expensive.ok cx component md5;
 
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
-    if diff then unchanged_acc else file :: unchanged_acc
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
   )
   else
     let errors = Errors.ErrorSet.empty in
@@ -198,8 +196,7 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
       ExactCover.file_cover file
         (Options.lint_severities options)
     in
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
-    unchanged_acc
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
@@ -225,8 +222,8 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~options ~job merged elements =
-  List.fold_left (fun (merged, unchanged) -> function
+let merge_strict_job ~job ~options merged elements =
+  List.fold_left (fun (merged, skipped) -> function
     | Merge_stream.Skip file ->
       (* Skip rechecking this file (because none of its dependencies changed).
          We are going to reuse the existing signature for the file, so we must
@@ -234,8 +231,7 @@ let merge_strict_job ~options ~job merged elements =
          skipped file cannot be a direct dependency, so its dependencies cannot
          change, which in particular means that it belongs to the same component,
          although possibly with a different leader that has the signature. *)
-      (* file was skipped, so its signature is definitely unchanged *)
-      (merged, file::unchanged)
+      (merged, file::skipped)
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
@@ -248,7 +244,7 @@ let merge_strict_job ~options ~job merged elements =
       let merge_timeout = Options.merge_timeout options in
       let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
 
-      try with_async_logging_timer
+      let merged = try with_async_logging_timer
         ~interval
         ~on_timer:(fun run_time ->
           Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
@@ -265,7 +261,7 @@ let merge_strict_job ~options ~job merged elements =
               Flow_server_profile.merge ~length ~merge_time ~leader)
             ~f:(fun () ->
               (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-              job ~options (merged, unchanged) component
+              job ~options merged component
             )
           )
       with
@@ -292,7 +288,9 @@ let merge_strict_job ~options ~job merged elements =
         | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
         | _ -> EInternal (file_loc, MergeJobException exc)
         ) in
-        ((file, result) :: merged), unchanged
+        (file, result) :: merged
+      in
+      merged, skipped
   ) (merged, []) elements
 
 (* make a map from component leaders to components *)

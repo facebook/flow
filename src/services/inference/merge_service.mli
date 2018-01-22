@@ -10,9 +10,9 @@ open Utils_js
 type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   options:Options.t ->
-  'a merge_results * File_key.t list ->
+  'a merge_results ->
   File_key.t Nel.t ->
-  'a merge_results * File_key.t list
+  'a merge_results
 
 type merge_strict_context_result = {
   cx: Context.t;
