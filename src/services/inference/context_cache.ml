@@ -15,14 +15,27 @@ module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
   let description = "SigContext"
 end)
 
+let master_sig: Context.cacheable_t option option ref = ref None
+
 let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
+  if cx_file = File_key.Builtins then master_sig := None;
   add_sig_context ~audit cx_file cx
 
 let find_sig ~options file =
-  match SigContextHeap.get file with
+  let cx_opt =
+    if file = File_key.Builtins then
+      match !master_sig with
+      | Some cx_opt -> cx_opt
+      | None ->
+        let cx_opt = SigContextHeap.get file in
+        master_sig := Some cx_opt;
+        cx_opt
+    else SigContextHeap.get file
+  in
+  match cx_opt with
   | Some cx -> Context.from_cache ~options cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
