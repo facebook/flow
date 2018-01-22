@@ -381,20 +381,27 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _ ->
       env
 
-  let rec check_and_run_loop env monitor_config
+  let rec check_and_run_loop ?(consecutive_throws=0) env monitor_config
       (socket: Unix.file_descr) =
-    let env = try check_and_run_loop_ env monitor_config socket with
+    let env, consecutive_throws =
+      try check_and_run_loop_ env monitor_config socket, 0 with
       | Unix.Unix_error (Unix.ECHILD, _, _) ->
         ignore (Hh_logger.log
           "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
         Exit_status.exit Exit_status.No_server_running
       | Exit_status.Exit_with _ as e -> raise e
       | e ->
+        if consecutive_throws > 500 then begin
+          Hh_logger.log "Too many consecutive exceptions.";
+          Hh_logger.log "Probably an uncaught exception being rethrown on each retry. Now Exiting.";
+          HackEventLogger.uncaught_exception e;
+          Exit_status.exit Exit_status.Uncaught_exception
+        end;
         Hh_logger.log "check_and_run_loop_ threw with exception: %s"
           (Printexc.to_string e);
-        env
+        env, consecutive_throws + 1
       in
-      check_and_run_loop env monitor_config socket
+      check_and_run_loop ~consecutive_throws env monitor_config socket
 
   and check_and_run_loop_ env monitor_config
       (socket: Unix.file_descr) =
