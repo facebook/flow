@@ -106,6 +106,11 @@ let oldify_merge_batch files =
   SigContextHeap.oldify_batch files;
   SigHashHeap.oldify_batch files
 
+let remove_merge_batch files =
+  LeaderHeap.remove_batch files;
+  SigContextHeap.remove_batch files;
+  SigHashHeap.remove_batch files
+
 let remove_old_merge_batch files =
   LeaderHeap.remove_old_batch files;
   SigContextHeap.remove_old_batch files;

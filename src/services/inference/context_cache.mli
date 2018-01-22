@@ -15,4 +15,5 @@ val add_merge_on_exn: (options:Options.t -> File_key.t Nel.t -> unit) Expensive.
 val sig_hash_changed: File_key.t -> bool
 val oldify_merge_batch: Utils_js.FilenameSet.t -> unit
 val revive_merge_batch: Utils_js.FilenameSet.t -> unit
+val remove_merge_batch: Utils_js.FilenameSet.t -> unit
 val remove_old_merge_batch: Utils_js.FilenameSet.t -> unit

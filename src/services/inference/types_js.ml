@@ -829,7 +829,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       decide whether to replace the existing mapping to m |-> N in NameHeap, and
       pessimistically assuming it might be, mark m "dirty."
 
-      Adding a file
+      Changing a file
       =============
 
       What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
@@ -884,7 +884,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
       Say it pointed to module OLD_M, now points to module NEW_M
 
-      * Is OLD_M the same as NEW_M? *(= delete the file, then add it back)*
+      * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
 
       1. need to repick providers for OLD_M *if OLD_M's current provider is this
       file*.
@@ -911,6 +911,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let old_modules = with_timer ~options "ModuleClearFiles" profiling (fun () ->
     Module_js.clear_files workers ~options new_or_changed_or_deleted
   ) in
+
+  (* remove sig context, leader heap, and sig hash entries for deleted files *)
+  Context_cache.remove_merge_batch deleted;
 
   let dependent_file_count = ref 0 in
 
