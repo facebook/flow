@@ -31,6 +31,6 @@ val join :
   (* merged, unchanged *)
   'a merge_result * File_key.t list ->
   (* accumulators *)
-  'a merge_result * File_key.t list ->
+  'a merge_result ->
   (* accumulated results *)
-  'a merge_result * File_key.t list
+  'a merge_result
