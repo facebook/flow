@@ -30,10 +30,6 @@ let is_php path =
   not (is_dot_file path) &&
   List.exists extensions (Filename.check_suffix path)
 
-let is_js path =
-  not (is_dot_file path) &&
-  Filename.check_suffix path ".js"
-
 (** Returns whether one of the ancestral directories of path has the given
  * name. *)
 let rec has_ancestor path ancestor_name =
