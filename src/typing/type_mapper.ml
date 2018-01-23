@@ -692,22 +692,22 @@ class ['a] t = object(self)
         let cont' = self#cont cx map_cx cont in
         if cont' == cont then t
         else MakeExactT (r, cont')
-    | CJSRequireT (r, t') ->
+    | CJSRequireT (r, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else CJSRequireT (r, t'')
-    | ImportModuleNsT (r, t') ->
+        else CJSRequireT (r, t'', is_strict)
+    | ImportModuleNsT (r, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImportModuleNsT (r, t'')
-    | ImportDefaultT (r, import, s, t') ->
+        else ImportModuleNsT (r, t'', is_strict)
+    | ImportDefaultT (r, import, s, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImportDefaultT (r, import, s, t'')
-    | ImportNamedT (r, import, s, t') ->
+        else ImportDefaultT (r, import, s, t'', is_strict)
+    | ImportNamedT (r, import, s, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImportNamedT (r, import, s, t'')
+        else ImportNamedT (r, import, s, t'', is_strict)
     | ImportTypeT (r, s, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

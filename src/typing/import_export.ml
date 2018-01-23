@@ -73,7 +73,7 @@ let require cx ((_, module_ref) as source) require_loc =
   let module_t = require_t_of_ref_unsafe cx source in
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in
   Tvar.mk_where cx reason (fun t ->
-    Flow.flow cx (module_t, CJSRequireT(reason, t))
+    Flow.flow cx (module_t, CJSRequireT(reason, t, Context.is_strict cx))
   )
 
 let import cx source import_loc =
@@ -84,7 +84,7 @@ let import_ns cx reason source import_loc =
   Type_inference_hooks_js.dispatch_import_hook cx source import_loc;
   let module_t = require_t_of_ref_unsafe cx source in
   Tvar.mk_where cx reason (fun t ->
-    Flow.flow cx (module_t, ImportModuleNsT(reason, t))
+    Flow.flow cx (module_t, ImportModuleNsT(reason, t, Context.is_strict cx))
   )
 
 let module_t_of_cx cx =

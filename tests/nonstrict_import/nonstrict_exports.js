@@ -9,6 +9,8 @@ const BarObj: BarType = {bar: 0};
 type BazType = {baz: boolean};
 const BazObj: BazType = {baz: true};
 
+export type S = string;
+
 export {FooObj};
 export {BazObj};
 

@@ -1,3 +1,7 @@
+Error: cycle_b.js:5
+  5: import type {N} from './cycle_a.js'; // Error
+                  ^ nonstrict-import: Dependencies of a strict module must also be strict!
+
 Error: imports.js:4
   4: import {FooObj} from './nonstrict_exports.js'; // Error
              ^^^^^^ nonstrict-import: Dependencies of a strict module must also be strict!
@@ -18,5 +22,13 @@ Error: imports.js:20
  20: import NonstrictLib from './nonstrict_lib.js'; // Error
             ^^^^^^^^^^^^ nonstrict-import: Dependencies of a strict module must also be strict!
 
+Error: imports.js:27
+ 27: import type {S} from './nonstrict_exports.js'; // Error
+                  ^ nonstrict-import: Dependencies of a strict module must also be strict!
 
-Found 5 errors
+Error: imports.js:31
+ 31: import typeof {FooObj as FooObjType} from './nonstrict_exports.js'; // Error
+                    ^^^^^^ nonstrict-import: Dependencies of a strict module must also be strict!
+
+
+Found 8 errors

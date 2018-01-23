@@ -492,11 +492,17 @@ module rec TypeTerm : sig
     (* exact ops *)
     | MakeExactT of reason * cont
 
-    (* Module import handling *)
-    | CJSRequireT of reason * t
-    | ImportModuleNsT of reason * t
-    | ImportDefaultT of reason * import_kind * (string * string) * t
-    | ImportNamedT of reason * import_kind * string * t
+    (**
+     * Module import handling
+     *
+     * Why do the following have a is_strict flag, when that's already present in the context
+     * local metadata? Because when checking cycles, during the merge we use the context of the
+     * "leader" module, and thus the is_strict flag in the context won't be accurate.
+     *)
+    | CJSRequireT of reason * t * bool (* is_strict *)
+    | ImportModuleNsT of reason * t * bool (* is_strict *)
+    | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
+    | ImportNamedT of reason * import_kind * string * t * bool (* is_strict *)
     | ImportTypeT of reason * string * t
     | ImportTypeofT of reason * string * t
     | AssertImportIsValueT of reason * string
@@ -1820,7 +1826,7 @@ end = struct
     | CallT (_, reason, _) -> reason
     | ChoiceKitUseT (reason, _) -> reason
     | CJSExtractNamedExportsT (reason, _, _) -> reason
-    | CJSRequireT (reason, _) -> reason
+    | CJSRequireT (reason, _, _) -> reason
     | ComparatorT (reason,_,_) -> reason
     | ConstructorT (_,reason,_,_) -> reason
     | CopyNamedExportsT (reason, _, _) -> reason
@@ -1844,9 +1850,9 @@ end = struct
     | IdxUnMaybeifyT (reason, _) -> reason
     | IdxUnwrap (reason, _) -> reason
     | ImplementsT (_, t) -> reason_of_t t
-    | ImportDefaultT (reason, _, _, _) -> reason
-    | ImportModuleNsT (reason, _) -> reason
-    | ImportNamedT (reason, _, _, _) -> reason
+    | ImportDefaultT (reason, _, _, _, _) -> reason
+    | ImportModuleNsT (reason, _, _) -> reason
+    | ImportNamedT (reason, _, _, _, _) -> reason
     | ImportTypeofT (reason, _, _) -> reason
     | ImportTypeT (reason, _, _) -> reason
     | IntersectionPreprocessKitT (reason, _) -> reason
@@ -1968,7 +1974,7 @@ end = struct
     | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
     | CJSExtractNamedExportsT (reason, exports, t2) ->
         CJSExtractNamedExportsT (f reason, exports, t2)
-    | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
+    | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
     | ComparatorT (reason, flip, t) -> ComparatorT (f reason, flip, t)
     | ConstructorT (use_op, reason, ts, t) -> ConstructorT (use_op, f reason, ts, t)
     | CopyNamedExportsT (reason, target_module_t, t_out) ->
@@ -1998,11 +2004,11 @@ end = struct
     | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
     | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
     | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
-    | ImportDefaultT (reason, import_kind, name, t) ->
-        ImportDefaultT (f reason, import_kind, name, t)
-    | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
-    | ImportNamedT (reason, import_kind, name, t) ->
-        ImportNamedT (f reason, import_kind, name, t)
+    | ImportDefaultT (reason, import_kind, name, t, is_strict) ->
+        ImportDefaultT (f reason, import_kind, name, t, is_strict)
+    | ImportModuleNsT (reason, t, is_strict) -> ImportModuleNsT (f reason, t, is_strict)
+    | ImportNamedT (reason, import_kind, name, t, is_strict) ->
+        ImportNamedT (f reason, import_kind, name, t, is_strict)
     | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
     | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
     | IntersectionPreprocessKitT (reason, tool) ->

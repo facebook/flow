@@ -22,6 +22,14 @@ import NonstrictLib from './nonstrict_lib.js'; // Error
 const CommonJSModule = require('CommonJSModule'); // Not an error
 import ESModule from 'ESModule'; // Not an error
 
+// Import type
+import type {N} from './strict_exports.js'; // Not an error
+import type {S} from './nonstrict_exports.js'; // Error
+
+// Import typeof
+import typeof {A as AType} from './strict_exports.js'; // Not an error
+import typeof {FooObj as FooObjType} from './nonstrict_exports.js'; // Error
+
 // Suppressed imports
 // flowlint nonstrict-import:off
 import {BazObj} from './nonstrict_exports.js'; // Error; Suppressed

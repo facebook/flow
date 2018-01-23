@@ -659,20 +659,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
 
-  | CJSRequireT (_, export) -> [
+  | CJSRequireT (_, export, _) -> [
       "export",
       _json_of_t json_cx export
     ]
-  | ImportModuleNsT (_, t) -> [
+  | ImportModuleNsT (_, t, _) -> [
       "t_out", _json_of_t json_cx t
     ]
-  | ImportDefaultT (_, import_kind, (local_name, module_name), t) -> [
+  | ImportDefaultT (_, import_kind, (local_name, module_name), t, _) -> [
       "import_kind", _json_of_import_kind import_kind;
       "local_name", JSON_String local_name;
       "module_name", JSON_String module_name;
       "t_out", _json_of_t json_cx t;
     ]
-  | ImportNamedT (_, import_kind, export_name, t) -> [
+  | ImportNamedT (_, import_kind, export_name, t, _) -> [
       "import_kind", _json_of_import_kind import_kind;
       "export_name", JSON_String export_name;
       "t_out", _json_of_t json_cx t;

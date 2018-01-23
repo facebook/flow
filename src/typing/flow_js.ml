@@ -481,8 +481,8 @@ let rec assume_ground cx ?(depth=1) ids t =
   | ReposLowerT (_, _, use_t) ->
     assume_ground cx ~depth:(depth + 1) ids use_t
 
-  | ImportModuleNsT (_, t)
-  | CJSRequireT (_, t)
+  | ImportModuleNsT (_, t, _)
+  | CJSRequireT (_, t, _)
   | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t)
 
@@ -1261,8 +1261,8 @@ let expect_proper_def t =
 let expect_proper_def_use t =
   lift_to_use expect_proper_def t
 
-let check_nonstrict_import cx trace imported_is_strict reason =
-  if (Context.is_strict cx) && (not imported_is_strict) then
+let check_nonstrict_import cx trace is_strict imported_is_strict reason =
+  if is_strict && (not imported_is_strict) then
     let loc = Reason.loc_of_reason reason in
     let message = FlowError.ENonstrictImport loc in
     add_output cx ~trace message
@@ -2007,8 +2007,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************************************)
 
     (* require('SomeModule') *)
-    | (ModuleT(_, exports, is_strict), CJSRequireT(reason, t)) ->
-      check_nonstrict_import cx trace is_strict reason;
+    | (ModuleT(_, exports, imported_is_strict), CJSRequireT(reason, t, is_strict)) ->
+      check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let cjs_exports = (
         match exports.cjs_export with
         | Some t ->
@@ -2027,8 +2027,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (cjs_exports, t)
 
     (* import * as X from 'SomeModule'; *)
-    | (ModuleT(_, exports, is_strict), ImportModuleNsT(reason, t)) ->
-      check_nonstrict_import cx trace is_strict reason;
+    | (ModuleT(_, exports, imported_is_strict), ImportModuleNsT(reason, t, is_strict)) ->
+      check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
       (* TODO this Field should probably have a location *)
       let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
@@ -2054,9 +2054,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | ModuleT(module_reason, exports, is_strict),
-      ImportDefaultT(reason, import_kind, (local_name, module_name), t) ->
-      check_nonstrict_import cx trace is_strict reason;
+    | ModuleT(module_reason, exports, imported_is_strict),
+      ImportDefaultT(reason, import_kind, (local_name, module_name), t, is_strict) ->
+      check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let export_t = match exports.cjs_export with
         | Some t -> t
         | None ->
@@ -2101,9 +2101,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (import_t, t)
 
     (* import {X} from 'SomeModule'; *)
-    | ModuleT(_, exports, is_strict),
-      ImportNamedT(reason, import_kind, export_name, t) ->
-        check_nonstrict_import cx trace is_strict reason;
+    | ModuleT(_, exports, imported_is_strict),
+      ImportNamedT(reason, import_kind, export_name, t, is_strict) ->
+        check_nonstrict_import cx trace is_strict imported_is_strict reason;
         (**
          * When importing from a CommonJS module, we shadow any potential named
          * exports called "default" with a pointer to the raw `module.exports`
@@ -2164,14 +2164,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* imports are `any`-typed when they are from (1) unchecked modules or (2)
        modules with `any`-typed exports *)
     | DefT (_, AnyObjT),
-        ( CJSRequireT(reason, t)
-        | ImportModuleNsT(reason, t)
-        | ImportDefaultT(reason, _, _, t)
-        | ImportNamedT(reason, _, _, t)
+        ( CJSRequireT(reason, t, _)
+        | ImportModuleNsT(reason, t, _)
+        | ImportDefaultT(reason, _, _, t, _)
+        | ImportNamedT(reason, _, _, t, _)
         ) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (lreason, AnyT), (CJSRequireT(reason, t) | ImportModuleNsT(reason, t)) ->
+    | DefT (lreason, AnyT), (CJSRequireT(reason, t, _) | ImportModuleNsT(reason, t, _)) ->
       let () = match desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed import
          * from an untyped module and an any-typed import from a nonexistent module. *)
@@ -2183,7 +2183,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (lreason, AnyT), ImportDefaultT(reason, import_kind, _, t) ->
+    | DefT (lreason, AnyT), ImportDefaultT(reason, import_kind, _, t, _) ->
       let () = match import_kind, desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed type import
          * from an untyped module and an any-typed import from a nonexistent module. *)
@@ -2199,7 +2199,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (lreason, AnyT), ImportNamedT(reason, import_kind, _, t) ->
+    | DefT (lreason, AnyT), ImportNamedT(reason, import_kind, _, t, _) ->
       let () = match import_kind, desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed type import
          * from an untyped module and an any-typed type import from a nonexistent module. *)

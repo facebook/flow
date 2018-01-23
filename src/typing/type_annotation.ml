@@ -349,7 +349,7 @@ let rec convert cx tparams_map = Ast.Type.(function
             Env.get_var_declared_type cx (internal_module_name value) loc
           in
           Tvar.mk_where cx reason (fun t ->
-            Flow.flow cx (remote_module_t, CJSRequireT(reason, t))
+            Flow.flow cx (remote_module_t, CJSRequireT(reason, t, Context.is_strict cx))
           )
       | _ ->
           error_type cx loc (FlowError.EExportsAnnot loc)

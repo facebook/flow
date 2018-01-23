@@ -423,10 +423,10 @@ class ['a] t = object(self)
 
   | MakeExactT (_, cont) -> self#cont cx acc cont
 
-  | CJSRequireT (_, t)
-  | ImportModuleNsT (_, t)
-  | ImportDefaultT (_, _, _, t)
-  | ImportNamedT (_, _, _, t)
+  | CJSRequireT (_, t, _)
+  | ImportModuleNsT (_, t, _)
+  | ImportDefaultT (_, _, _, t, _)
+  | ImportNamedT (_, _, _, t, _)
   | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t)
     -> self#type_ cx Negative acc t
