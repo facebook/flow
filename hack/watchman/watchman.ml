@@ -27,7 +27,6 @@ module Testing_common = struct
   let test_settings = {
     subscribe_mode = Some Defer_changes;
     init_timeout = 0;
-    sync_directory = "";
     expression_terms = [];
     root = Path.dummy_path;
   }
@@ -331,25 +330,6 @@ module Watchman_actual = struct
   (* Initialization, reinitialization, and crash-tracking. *)
   (****************************************************************************)
 
-  exception Watchman_sync_directory_error
-
-  let assert_sync_dir_exists path =
-    let stats = try Unix.stat path with
-      | Unix.Unix_error (Unix.ENOENT, _, _) ->
-        Hh_logger.log "Watchman sync directory doesn't exist: %s" path;
-        raise Watchman_sync_directory_error
-    in
-    let () = if stats.Unix.st_kind <> Unix.S_DIR then begin
-      Hh_logger.log "Watchman sync directory is not a directory: %s" path;
-      raise Watchman_sync_directory_error
-    end
-    else () in
-    try Unix.access path [Unix.R_OK; Unix.W_OK] with
-    | Unix.Unix_error (Unix.EACCES, _, _) ->
-      Hh_logger.log "Dont have read-write access to watchman sync directory: %s"
-        path;
-      raise Watchman_sync_directory_error
-
   let with_crash_record_exn root source f =
     try f ()
     with e ->
@@ -376,10 +356,9 @@ module Watchman_actual = struct
       |> project_bool
 
   let re_init ?prior_clockspec
-    { init_timeout; subscribe_mode; sync_directory; expression_terms; root } =
+    { init_timeout; subscribe_mode; expression_terms; root } =
     with_crash_record_opt root "init" @@ fun () ->
     let root_s = Path.to_string root in
-    assert_sync_dir_exists (Filename.concat root_s sync_directory);
     let conn = open_watchman_connection ~timeout:(float_of_int init_timeout) in
     let capabilities = exec ~conn
       (capability_check ~optional:[ flush_subscriptions_cmd ]
@@ -400,7 +379,6 @@ module Watchman_actual = struct
       settings = {
         init_timeout;
         subscribe_mode;
-        sync_directory;
         expression_terms;
         root;
       };

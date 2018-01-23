@@ -30,7 +30,6 @@ module Types = struct
     subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
-    sync_directory: string;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     root: Path.t;
