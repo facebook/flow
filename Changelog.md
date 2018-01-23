@@ -1,3 +1,33 @@
+### 0.64.0
+
+Likely to cause new Flow errors:
+
+* `event` is no longer recognized as a pre-declared global
+
+Notable bug fixes:
+
+* An optimization intended to reduce redundant work during rechecks never fired after recent changes.
+* The implementation of React.ElementConfig involved a subtyping rule going the wrong way.
+
+Performance improvements:
+
+* Typing info for files were retained in memory even after those files were deleted. This memory is
+  now reclaimed.
+* Dependency calculations that occur during initialization and every recheck are now faster.
+
+Misc:
+
+* Adds --merge-timeout server flag
+* Drops non-strict type args config
+* Fixes issue where flow-upgrade would not check .jsx files
+* Includes various fixes to docs
+
+Parser:
+
+* Includes thin bindings to allow interfacing with the parser from C++. A prebuilt libflowparser.a is available for Mac and Linux on the GitHub release.
+* [flow-parser-bin](https://www.npmjs.com/package/flow-parser-bin) is an experimental node.js extension that provides access to the native (OCaml) parser from JS. [flow-parser](https://www.npmjs.com/package/flow-parser) will be updated to delegate to flow-parser-bin if your platform supports it, and fall back on the slower compiled-to-JS implementation otherwise.
+* Trailing commas after a rest element in object patterns is now disallowed following the spec.
+
 ### 0.63.1
 
 Bug fix:
