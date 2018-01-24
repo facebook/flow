@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
+open Utils_js
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
@@ -146,7 +146,7 @@ val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
-val set_unused_lint_suppressions: t -> Loc.LocSet.t -> unit
+val set_unused_lint_suppressions: t -> LocSet.t -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
 val set_use_def: t -> Scope_api.info * Ssa_api.values -> unit

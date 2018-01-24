@@ -114,9 +114,3 @@ let make file line col =
     start = { line; column = col; offset = 0; };
     _end = { line; column = col + 1; offset = 0; };
   }
-
-
-module LocSet = Set.Make(struct
-  type nonrec t = t
-  let compare = compare
-end)

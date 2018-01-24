@@ -13,7 +13,7 @@ val check_once :
   Profiling_js.finished *
     Errors.ErrorSet.t * (* errors *)
     Errors.ErrorSet.t * (* warnings *)
-    (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
+    (Errors.error * Utils_js.LocSet.t) list (* suppressed errors *)
 
 val daemonize :
   log_file:string ->

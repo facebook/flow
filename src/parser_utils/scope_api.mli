@@ -7,7 +7,7 @@
 
 type scope = int
 type use = Loc.t
-type uses = Loc.LocSet.t
+type uses = Utils_js.LocSet.t
 module Def: sig
   type t = {
     locs: Loc.t list;

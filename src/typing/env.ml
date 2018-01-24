@@ -610,17 +610,17 @@ let promote_to_const_like cx loc =
     let uses = Scope_api.uses_of_use info loc in
     (* We consider a binding to be const-like if all reads point to the same
        write, modulo initialization. *)
-    let writes = Loc.LocSet.fold (fun use acc ->
+    let writes = LocSet.fold (fun use acc ->
       match LocMap.get use values with
         | None -> (* use is a write *) acc
         | Some write_locs -> (* use is a read *)
           (* collect writes pointed to by the read, modulo initialization *)
           List.fold_left (fun acc -> function
             | Ssa_api.Uninitialized -> acc
-            | Ssa_api.Write loc -> Loc.LocSet.add loc acc
+            | Ssa_api.Write loc -> LocSet.add loc acc
           ) acc write_locs
-    ) uses Loc.LocSet.empty in
-    Loc.LocSet.cardinal writes <= 1
+    ) uses LocSet.empty in
+    LocSet.cardinal writes <= 1
   with _ -> false
 
 (* helper - update var entry to reflect assignment/initialization *)

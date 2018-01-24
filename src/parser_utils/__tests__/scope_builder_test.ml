@@ -12,7 +12,7 @@ open Test_utils
 let mk_scope_builder_all_uses_test contents expected_all_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Loc.LocSet.elements @@ Scope_api.all_uses info in
+    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
     let printer = print_list Loc.to_string in
     assert_equal ~ctxt
       ~cmp:(eq printer)
@@ -24,7 +24,7 @@ let mk_scope_builder_all_uses_test contents expected_all_uses =
 let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_defs =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Loc.LocSet.elements @@ Scope_api.all_uses info in
+    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
     let defs = List.map (Scope_api.def_of_use info) all_uses in
     let locs_of_defs = List.map (
       fun { Scope_api.Def.locs; _ } -> locs
@@ -40,9 +40,9 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
 let mk_scope_builder_uses_of_all_uses_test contents expected_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Loc.LocSet.elements @@ Scope_api.all_uses info in
+    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
     let uses = List.map (fun use ->
-      Loc.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use
+      Utils_js.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use
     ) all_uses in
     let printer = print_list @@ (fun list ->
       Printf.sprintf "[%s]" (print_list Loc.to_string list)

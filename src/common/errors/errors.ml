@@ -784,7 +784,7 @@ module Json_output = struct
 
   let json_of_error_props
     ~strip_root ~json_of_message ~severity
-    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; trace; extra } =
+    ?(suppression_locs=Utils_js.LocSet.empty) { kind; messages; trace; extra } =
     let open Hh_json in
     let kind_str = match kind with
       | ParseError -> "parse"
@@ -798,7 +798,7 @@ module Json_output = struct
     in
     let severity_str = output_string_of_severity severity in
     let suppressions = suppression_locs
-    |> Loc.LocSet.elements
+    |> Utils_js.LocSet.elements
     |> List.map (fun loc ->
         JSON_Object [ "loc", Reason.json_of_loc ~strip_root loc]
       ) in
@@ -829,10 +829,10 @@ module Json_output = struct
     ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
-      |> List.map (fun err -> err, Loc.LocSet.empty) in
+      |> List.map (fun err -> err, Utils_js.LocSet.empty) in
     let warnings = warnings
       |> ErrorSet.elements
-      |> List.map (fun warn -> warn, Loc.LocSet.empty)
+      |> List.map (fun warn -> warn, Utils_js.LocSet.empty)
     in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (

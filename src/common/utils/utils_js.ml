@@ -25,6 +25,8 @@ let string_of_float_trunc x =
   else
     result
 
+module LocSet = Set.Make(Loc)
+
 module LocMap = MyMap.Make(Loc)
 
 module FilenameSet = Set.Make(File_key)

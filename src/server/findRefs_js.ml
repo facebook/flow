@@ -90,14 +90,14 @@ end = struct
     get_ast_result file_key content >>= fun (ast, _, _) ->
     let scope_info = Scope_builder.program ast in
     let all_uses = all_uses scope_info in
-    let matching_uses = Loc.LocSet.filter (fun use -> Loc.contains use loc) all_uses in
-    let num_matching_uses = Loc.LocSet.cardinal matching_uses in
+    let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
+    let num_matching_uses = LocSet.cardinal matching_uses in
     if num_matching_uses = 0 then Ok None
     else if num_matching_uses > 1 then Error "Multiple identifiers were unexpectedly matched"
     else
-      let use = Loc.LocSet.choose matching_uses in
+      let use = LocSet.choose matching_uses in
       let def = def_of_use scope_info use in
-      let sorted_locs = Loc.LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
+      let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
       let name = Def.(def.actual_name) in
       Ok (Some (name, sorted_locs))
 

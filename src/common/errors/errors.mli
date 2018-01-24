@@ -90,7 +90,7 @@ module Json_output : sig
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
     unit ->
@@ -98,7 +98,7 @@ module Json_output : sig
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
     ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
@@ -109,7 +109,7 @@ module Json_output : sig
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
     ?pretty:bool ->
     ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->

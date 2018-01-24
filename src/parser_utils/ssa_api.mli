@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
+open Utils_js
 
 type read_loc = Loc.t
 type write_loc =

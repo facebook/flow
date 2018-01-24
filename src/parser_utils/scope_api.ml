@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module LocSet = Utils_js.LocSet
 module LocMap = Utils_js.LocMap
 
 type scope = int
 type use = Loc.t
-type uses = Loc.LocSet.t
+type uses = LocSet.t
 
 module Def = struct
   type t = {
@@ -40,9 +41,9 @@ type info = {
 let all_uses { scopes; _ } =
   IMap.fold (fun _ scope acc ->
     LocMap.fold (fun use _ uses ->
-      Loc.LocSet.add use uses
+      LocSet.add use uses
     ) scope.Scope.locals acc
-  ) scopes Loc.LocSet.empty
+  ) scopes LocSet.empty
 
 let def_of_use { scopes; _ } use =
   let def_opt = IMap.fold (fun _ scope acc ->
@@ -62,16 +63,16 @@ let uses_of_def { scopes; _ } ?(exclude_def=false) def =
   IMap.fold (fun _ scope acc ->
     LocMap.fold (fun use def' uses ->
       if exclude_def && Def.mem_loc use def' then uses
-      else if Def.(def.locs = def'.locs) then Loc.LocSet.add use uses else uses
+      else if Def.(def.locs = def'.locs) then LocSet.add use uses else uses
     ) scope.Scope.locals acc
-  ) scopes Loc.LocSet.empty
+  ) scopes LocSet.empty
 
 let uses_of_use info ?exclude_def use =
   let def = def_of_use info use in
   uses_of_def info ?exclude_def def
 
 let def_is_unused info def =
-  Loc.LocSet.is_empty (uses_of_def info ~exclude_def:true def)
+  LocSet.is_empty (uses_of_def info ~exclude_def:true def)
 
 let scope info scope_id =
   try IMap.find_unsafe scope_id info.scopes with Not_found ->
