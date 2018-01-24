@@ -351,6 +351,13 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 		exit 1; \
 	fi
 
+dist/flow/flow$(EXE): build-flow
+	mkdir -p $(@D)
+	cp _build/src/flow.native $@
+
+dist/flow.zip: dist/flow/flow$(EXE)
+	cd dist && zip -r $(@F) flow/flow$(EXE)
+
 FORCE:
 
 .PHONY: all js build-flow build-flow-with-ocp build-flow-debug FORCE
