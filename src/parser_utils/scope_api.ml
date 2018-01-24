@@ -88,3 +88,51 @@ let rec fold_scope_chain info f scope_id acc =
   match s.Scope.parent with
   | Some parent_id -> fold_scope_chain info f parent_id acc
   | None -> acc
+
+let rev_scope_pointers scopes =
+  IMap.fold (fun id scope acc ->
+    match scope.Scope.parent with
+      | Some scope_id ->
+        let children' = match IMap.get scope_id acc with
+          | Some children -> children
+          | None -> []
+        in IMap.add scope_id (id::children') acc
+      | None -> acc
+  ) scopes IMap.empty
+
+let build_scope_tree info =
+  let scopes = info.scopes in
+  let children_map = rev_scope_pointers scopes in
+  let rec build_scope_tree scope_id =
+    let children = match IMap.get scope_id children_map with
+      | None -> []
+      | Some children_scope_ids -> List.rev_map build_scope_tree children_scope_ids in
+    Tree.Node (IMap.find scope_id scopes, children)
+  in build_scope_tree 0
+
+(* The bound variables B of a scope are the names defined in that scope.
+
+   The free variables F of the scope are the names in G + C + L - B, where:
+   * G contains the global names used in that scope
+   * L contains the local names used in that scope
+   * C contains the free variables of its children
+*)
+let rec compute_free_variables = function
+  | Tree.Node (scope, children) ->
+    let children' = List.map compute_free_variables children in
+    let free_children = List.fold_left (fun acc -> function
+      | Tree.Node ((_, free), _) -> SSet.union free acc
+    ) SSet.empty children' in
+
+    let bound = scope.Scope.defs in
+    let is_bound use_name = SMap.exists (fun def_name _ -> def_name = use_name) bound in
+    let free =
+      scope.Scope.globals |>
+      LocMap.fold (fun _loc use_def acc ->
+        let use_name = use_def.Def.actual_name in
+        if is_bound use_name then acc else SSet.add use_name acc
+      ) scope.Scope.locals |>
+      SSet.fold (fun use_name acc ->
+        if is_bound use_name then acc else SSet.add use_name acc
+      ) free_children
+    in Tree.Node ((bound, free), children')

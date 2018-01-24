@@ -39,3 +39,6 @@ val uses_of_use: info -> ?exclude_def:bool -> use -> uses
 val def_is_unused: info -> Def.t -> bool
 val is_local_use: info -> use -> bool
 val fold_scope_chain: info -> (scope -> Scope.t -> 'a -> 'a) -> scope -> 'a -> 'a
+
+val build_scope_tree: info -> Scope.t Tree.t
+val compute_free_variables: Scope.t Tree.t -> (Def.t SMap.t * SSet.t) Tree.t
