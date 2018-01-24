@@ -998,7 +998,6 @@ class mapper = object(this)
         if name == name' && typeAnnotation == typeAnnotation' then patt
         else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
       | Expression e ->
-        (* TODO: wtf is this? *)
         id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')

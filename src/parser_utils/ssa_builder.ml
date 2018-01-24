@@ -380,22 +380,55 @@ class ssa_builder = object(this)
   (* Order of evaluation matters *)
   method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
     let open Ast.Expression.Assignment in
-    let { operator = _; left; right } = expr in
-    ignore @@ this#expression right;
-    ignore @@ this#assignment_pattern left;
+    let { operator; left; right } = expr in
+    begin match operator with
+      | Assign ->
+        let open Ast.Pattern in
+        begin match left with
+        | _, (Identifier _ | Object _ | Array _) ->
+          (* given `x = e`, read e then write x *)
+          ignore @@ this#expression right;
+          ignore @@ this#assignment_pattern left
+        | _, Expression _ ->
+          (* given `o.x = e`, read o then read e *)
+          ignore @@ this#assignment_pattern left;
+          ignore @@ this#expression right
+        | _, Assignment _ -> failwith "unexpected AST node"
+        end
+      | _ ->
+        let open Ast.Pattern in
+        begin match left with
+          | _, Identifier { Identifier.name; _ } ->
+            (* given `x += e`, read x then read e then write x *)
+            ignore @@ this#identifier name;
+            ignore @@ this#expression right;
+            ignore @@ this#assignment_pattern left
+          | _, Expression _ ->
+            (* given `o.x += e`, read o then read e *)
+            ignore @@ this#assignment_pattern left;
+            ignore @@ this#expression right
+          | _, (Object _ | Array _ | Assignment _) -> failwith "unexpected AST node"
+        end
+    end;
     expr
 
   (* Order of evaluation matters *)
   method! variable_declarator ~kind (decl: Loc.t Ast.Statement.VariableDeclaration.Declarator.t) =
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (_loc, { id; init }) = decl in
-    (* `var x;` is not a write of `x` *)
-    begin match init with
-    | Some init ->
-      ignore @@ this#expression init;
-      ignore @@ this#variable_declarator_pattern ~kind id
-    | None ->
-      ()
+    let open Ast.Pattern in
+    begin match id with
+      | _, (Identifier _ | Object _ | Array _) ->
+        begin match init with
+          | Some init ->
+            (* given `var x = e`, read e then write x *)
+            ignore @@ this#expression init;
+            ignore @@ this#variable_declarator_pattern ~kind id
+          | None ->
+            (* `var x;` is not a write of `x` *)
+            ()
+        end
+      | _, (Expression _ | Assignment _) -> failwith "unexpected AST node"
     end;
     decl
 
@@ -403,10 +436,14 @@ class ssa_builder = object(this)
   method! update_expression (expr: Loc.t Ast.Expression.Update.t) =
     let open Ast.Expression.Update in
     let { argument; operator = _; prefix = _ } = expr in
-    ignore @@ this#expression argument;
     begin match argument with
-      | _, Ast.Expression.Identifier x -> ignore @@ this#pattern_identifier x
-      | _ -> ()
+      | _, Ast.Expression.Identifier x ->
+        (* given `x++`, read x then write x *)
+        ignore @@ this#identifier x;
+        ignore @@ this#pattern_identifier x
+      | _ ->
+        (* given `o.x++`, read o *)
+        ignore @@ this#expression argument
     end;
     expr
 
