@@ -863,8 +863,8 @@ Error: process/nextTick.js:26
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
  28: );
      ^ call of method `nextTick`
-1959:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. Too few arguments passed to. See lib: <BUILTINS>/node.js:1959
+1961:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ function type. Too few arguments passed to. See lib: <BUILTINS>/node.js:1961
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
@@ -874,47 +874,47 @@ Error: process/process.js:10
  10: process.emitWarning(); // error
      ^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  1931:   emitWarning(warning: string | Error): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931
+  1933:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
   Error:
    10: process.emitWarning(); // error
        ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
-  1931:   emitWarning(warning: string | Error): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931
+  1933:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
   Member 2:
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1932
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1934
   Error:
    10: process.emitWarning(); // error
        ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1932
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1934
   Member 3:
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1935
   Error:
    10: process.emitWarning(); // error
        ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1935
   Member 4:
           v-----------
-  1934:   emitWarning(
-  1935:     warning: string,
-  1936:     type: string,
+  1936:   emitWarning(
+  1937:     warning: string,
+  1938:     type: string,
   ...:
-  1939:   ): void;
-          ------^ function type. See lib: <BUILTINS>/node.js:1934
+  1941:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1936
   Error:
    10: process.emitWarning(); // error
        ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`. Too few arguments passed to
           v-----------
-  1934:   emitWarning(
-  1935:     warning: string,
-  1936:     type: string,
+  1936:   emitWarning(
+  1937:     warning: string,
+  1938:     type: string,
   ...:
-  1939:   ): void;
-          ------^ function type. See lib: <BUILTINS>/node.js:1934
+  1941:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1936
 
 Error: process/process.js:11
  11: process.emitWarning(42); // error
@@ -922,42 +922,42 @@ Error: process/process.js:11
  11: process.emitWarning(42); // error
      ^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  1931:   emitWarning(warning: string | Error): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1931
+  1933:   emitWarning(warning: string | Error): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
   Error:
    11: process.emitWarning(42); // error
                            ^^ number. This type is incompatible with the expected param type of
-  1931:   emitWarning(warning: string | Error): void;
-                               ^^^^^^ string. See lib: <BUILTINS>/node.js:1931
-  Member 2:
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1932
-  Error:
-   11: process.emitWarning(42); // error
-                           ^^ number. This type is incompatible with the expected param type of
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-                               ^^^^^^ string. See lib: <BUILTINS>/node.js:1932
-  Member 3:
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
-  Error:
-   11: process.emitWarning(42); // error
-                           ^^ number. This type is incompatible with the expected param type of
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+  1933:   emitWarning(warning: string | Error): void;
                                ^^^^^^ string. See lib: <BUILTINS>/node.js:1933
+  Member 2:
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1934
+  Error:
+   11: process.emitWarning(42); // error
+                           ^^ number. This type is incompatible with the expected param type of
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+                               ^^^^^^ string. See lib: <BUILTINS>/node.js:1934
+  Member 3:
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1935
+  Error:
+   11: process.emitWarning(42); // error
+                           ^^ number. This type is incompatible with the expected param type of
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+                               ^^^^^^ string. See lib: <BUILTINS>/node.js:1935
   Member 4:
           v-----------
-  1934:   emitWarning(
-  1935:     warning: string,
-  1936:     type: string,
+  1936:   emitWarning(
+  1937:     warning: string,
+  1938:     type: string,
   ...:
-  1939:   ): void;
-          ------^ function type. See lib: <BUILTINS>/node.js:1934
+  1941:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1936
   Error:
    11: process.emitWarning(42); // error
                            ^^ number. This type is incompatible with the expected param type of
-  1935:     warning: string,
-                     ^^^^^^ string. See lib: <BUILTINS>/node.js:1935
+  1937:     warning: string,
+                     ^^^^^^ string. See lib: <BUILTINS>/node.js:1937
 
 Error: process/process.js:12
  12: process.emitWarning("blah", 42); // error
@@ -965,34 +965,34 @@ Error: process/process.js:12
  12: process.emitWarning("blah", 42); // error
      ^^^^^^^^^^^^^^^^^^^ intersection
   Member 2:
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1932
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1934
   Error:
    12: process.emitWarning("blah", 42); // error
                                    ^^ number. This type is incompatible with the expected param type of
-  1932:   emitWarning(warning: string, typeOrCtor: string | Function): void;
-                                                   ^^^^^^ string. See lib: <BUILTINS>/node.js:1932
+  1934:   emitWarning(warning: string, typeOrCtor: string | Function): void;
+                                                   ^^^^^^ string. See lib: <BUILTINS>/node.js:1934
   Member 3:
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1935
   Error:
    12: process.emitWarning("blah", 42); // error
                                    ^^ number. This type is incompatible with the expected param type of
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+                                             ^^^^^^ string. See lib: <BUILTINS>/node.js:1935
   Member 4:
           v-----------
-  1934:   emitWarning(
-  1935:     warning: string,
-  1936:     type: string,
+  1936:   emitWarning(
+  1937:     warning: string,
+  1938:     type: string,
   ...:
-  1939:   ): void;
-          ------^ function type. See lib: <BUILTINS>/node.js:1934
+  1941:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1936
   Error:
    12: process.emitWarning("blah", 42); // error
                                    ^^ number. This type is incompatible with the expected param type of
-  1936:     type: string,
-                  ^^^^^^ string. See lib: <BUILTINS>/node.js:1936
+  1938:     type: string,
+                  ^^^^^^ string. See lib: <BUILTINS>/node.js:1938
 
 Error: process/process.js:13
  13: process.emitWarning("blah", "blah", 42); // error
@@ -1000,26 +1000,26 @@ Error: process/process.js:13
  13: process.emitWarning("blah", "blah", 42); // error
      ^^^^^^^^^^^^^^^^^^^ intersection
   Member 3:
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1935
   Error:
    13: process.emitWarning("blah", "blah", 42); // error
                                            ^^ number. This type is incompatible with the expected param type of
-  1933:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-                                                                 ^^^^^^ string. See lib: <BUILTINS>/node.js:1933
+  1935:   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+                                                                 ^^^^^^ string. See lib: <BUILTINS>/node.js:1935
   Member 4:
           v-----------
-  1934:   emitWarning(
-  1935:     warning: string,
-  1936:     type: string,
+  1936:   emitWarning(
+  1937:     warning: string,
+  1938:     type: string,
   ...:
-  1939:   ): void;
-          ------^ function type. See lib: <BUILTINS>/node.js:1934
+  1941:   ): void;
+          ------^ function type. See lib: <BUILTINS>/node.js:1936
   Error:
    13: process.emitWarning("blah", "blah", 42); // error
                                            ^^ number. This type is incompatible with the expected param type of
-  1937:     code: string,
-                  ^^^^^^ string. See lib: <BUILTINS>/node.js:1937
+  1939:     code: string,
+                  ^^^^^^ string. See lib: <BUILTINS>/node.js:1939
 
 Error: process/process.js:14
  14: (process.emitWarning("blah"): string); // error
