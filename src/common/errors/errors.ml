@@ -658,6 +658,18 @@ module Cli_output = struct
       else to_print in
     (to_print @ [default_style "\n"])
 
+  (* Simplified interface for use while debugging *)
+  let string_of_error error =
+    get_pretty_printed_error
+      ~stdin_file:None
+      ~strip_root:None
+      ~one_line:false
+      ~severity:Err
+      error
+    (* Extract just the strings, leaving behind the color info *)
+    |> List.map snd
+    |> String.concat ""
+
   let print_error_color
       ?(out_channel=stdout)
       ~stdin_file:stdin_file
