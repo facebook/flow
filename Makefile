@@ -92,7 +92,7 @@ MODULES=\
   src/services/port\
   src/services/type_info\
   src/third-party/lz4\
-  src/third-party/wtf8\
+  src/third-party/ocaml-vlq/src\
   src/typing\
   hack/dfind\
   hack/find\
