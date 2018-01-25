@@ -254,7 +254,15 @@ end = struct
           (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
            * are references or not. For now we'll leave them out. *)
           | UnsupportedType | AnyType -> None
-      end |> Result.all >>|
+      end
+      |> Result.all
+      |> Result.map_error ~f:(fun err ->
+          Printf.sprintf
+            "Encountered while finding refs in `%s`: %s"
+            (File_key.to_string file_key)
+            err
+        )
+      >>|
       List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] >>| fun refs ->
       if Loc.(def_loc.source = Some file_key) then
         (* Include the definition if it is in this file *)
