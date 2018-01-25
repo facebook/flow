@@ -50,6 +50,7 @@ module Opts = struct
     module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
+    merge_timeout: int option;
     munge_underscores: bool;
     module_file_exts: SSet.t;
     module_resource_exts: SSet.t;
@@ -148,6 +149,7 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
+    merge_timeout = Some 100;
     module_system = Options.Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -523,6 +525,16 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         Ok {opts with include_warnings = v;}
+      );
+    }
+
+    |> define_opt "merge_timeout" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        let merge_timeout = if v = 0 then None else Some v in
+        Ok {opts with merge_timeout}
       );
     }
 
@@ -981,6 +993,7 @@ let include_warnings c = c.options.Opts.include_warnings
 let log_file c = c.options.Opts.log_file
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers
+let merge_timeout c = c.options.Opts.merge_timeout
 let module_file_exts c = c.options.Opts.module_file_exts
 let module_name_mappers c = c.options.Opts.module_name_mappers
 let module_resource_exts c = c.options.Opts.module_resource_exts
