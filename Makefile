@@ -92,6 +92,7 @@ MODULES=\
   src/services/port\
   src/services/type_info\
   src/third-party/lz4\
+  src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
   hack/dfind\
