@@ -1,0 +1,18 @@
+Error: test.js:3
+  3: import C from 'C'; // Error - this module has neither a foo nor bar property
+                   ^^^ C. Required module not found
+
+Error: test.js:5
+  5: (A: empty); // Error: string ~> empty
+      ^ string. This type is incompatible with
+  5: (A: empty); // Error: string ~> empty
+         ^^^^^ empty
+
+Error: test.js:6
+  6: (B: empty); // Error: boolean ~> empty
+      ^ boolean. This type is incompatible with
+  6: (B: empty); // Error: boolean ~> empty
+         ^^^^^ empty
+
+
+Found 3 errors

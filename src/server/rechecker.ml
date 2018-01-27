@@ -34,7 +34,7 @@ let process_updates genv env updates =
     FlowExitStatus.(exit Flowconfig_changed)
   end;
 
-  let is_incompatible filename_str =
+  let is_incompatible ~options filename_str =
     let filename = File_key.JsonFile filename_str in
     let filename_set = FilenameSet.singleton filename in
     let ast_opt =
@@ -59,7 +59,7 @@ let process_updates genv env updates =
     in
     match ast_opt with
       | None -> true
-      | Some ast -> Module_js.package_incompatible filename_str ast
+      | Some ast -> Module_js.package_incompatible ~options filename_str ast
   in
 
   (* Die if a package.json changed in an incompatible way *)
@@ -68,7 +68,7 @@ let process_updates genv env updates =
       Files.is_included file_options f)
     && (Filename.basename f) = "package.json"
     && want f
-    && is_incompatible f
+    && is_incompatible ~options f
   ) updates in
   if not (SSet.is_empty incompatible_packages)
   then begin

@@ -105,9 +105,9 @@ val add_parsed_resolved_requires: (
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 
-val add_package: string -> Loc.t Ast.program -> unit
+val add_package: options:Options.t -> string -> Loc.t Ast.program -> unit
 
-val package_incompatible: string -> Loc.t Ast.program -> bool
+val package_incompatible: options:Options.t -> string -> Loc.t Ast.program -> bool
 
 (***************************************************)
 

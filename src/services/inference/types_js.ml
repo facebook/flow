@@ -606,7 +606,7 @@ let init_package_heap ~options ~profiling parsed =
       match filename with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
         let ast = Parsing_service_js.get_ast_unsafe filename in
-        Module_js.add_package str ast
+        Module_js.add_package ~options str ast
       | _ -> ()
     ) parsed;
   )

@@ -69,4 +69,12 @@ export default suite(({addFile, removeFile, exitCode, flowCmd}) => [
       .waitForServerToDie(2000)
       .serverRunning(true)
   ]).flowConfig('haste_flowconfig'),
+
+  test('node - When using main_fields, a change which resolves to '+
+    'the same main file should NOT kill the server', [
+    addFile('start.json', 'package.json'),
+    addFile('irrelevantChangeMainField.json', 'package.json')
+      .waitForServerToDie(2000)
+      .serverRunning(true)
+  ]).flowConfig('node_flowconfig_with_main_field'),
 ]);

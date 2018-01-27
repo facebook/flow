@@ -166,8 +166,8 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     let description = "ReversePackage"
   end)
 
-let add_package filename ast =
-  match Package_json.parse ast with
+let add_package ~options filename ast =
+  match Package_json.parse ~options ast with
   | Ok package ->
     PackageHeap.add filename package;
     begin match Package_json.name package with
@@ -178,8 +178,8 @@ let add_package filename ast =
   | Error parse_err ->
     assert_false (spf "%s: %s" filename parse_err)
 
-let package_incompatible filename ast =
-  match Package_json.parse ast with
+let package_incompatible ~options filename ast =
+  match Package_json.parse ~options ast with
   | Ok new_package ->
     begin match PackageHeap.get filename with
     | None -> true

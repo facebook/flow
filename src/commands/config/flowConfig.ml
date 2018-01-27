@@ -49,6 +49,7 @@ module Opts = struct
     include_warnings: bool;
     module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
+    node_main_fields: string list;
     node_resolver_dirnames: string list;
     merge_timeout: int option;
     munge_underscores: bool;
@@ -152,6 +153,7 @@ module Opts = struct
     merge_timeout = Some 100;
     module_system = Options.Node;
     module_name_mappers = [];
+    node_main_fields = ["main"];
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
     module_file_exts;
@@ -676,6 +678,18 @@ let parse_options config lines =
       });
     }
 
+    |> define_opt "module.system.node.main_field" {
+      initializer_ = INIT_FN (fun opts -> {
+        opts with node_main_fields = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        let node_main_fields = v::opts.node_main_fields in
+        Ok {opts with node_main_fields;}
+      );
+    }
+
     |> define_opt "module.system.node.resolve_dirname" {
       initializer_ = INIT_FN (fun opts -> {
         opts with node_resolver_dirnames = [];
@@ -1001,6 +1015,7 @@ let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
+let node_main_fields c = c.options.Opts.node_main_fields
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs

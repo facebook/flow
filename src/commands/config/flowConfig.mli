@@ -59,6 +59,7 @@ val module_resource_exts: config -> SSet.t
 val module_system: config -> Options.module_system
 val modules_are_use_strict: config -> bool
 val munge_underscores: config -> bool
+val node_main_fields: config -> string list
 val no_flowlib: config -> bool
 val node_resolver_dirnames: config -> string list
 val shm_dep_table_pow: config -> int
