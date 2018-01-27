@@ -279,7 +279,7 @@ function foo(x): string | number {
   if (isNumberOrString(x)) {
     return x + x;
   } else {
-  	return x.length; // no error, because Flow infers that x can only be an array
+    return x.length; // no error, because Flow infers that x can only be an array
   }
 }
 
