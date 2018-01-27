@@ -1726,7 +1726,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | ENonstrictImport loc ->
     mk_error
       ~kind:(LintError Lints.NonstrictImport)
-      [loc, ["Dependencies of a strict module must also be strict!"]]
+      [loc, ["Dependencies of a `@flow strict` module must also be `@flow strict`"]]
 
   | EUnclearType loc ->
     mk_error
