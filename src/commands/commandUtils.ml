@@ -1218,6 +1218,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_module = FlowConfig.module_system flowconfig;
       opt_munge_underscores =
         options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+      opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
       opt_temp_dir = temp_dir;
       opt_max_workers =
         Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)

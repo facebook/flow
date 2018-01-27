@@ -100,6 +100,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_no_saved_state: bool;
+  opt_node_main_fields: string list;
   opt_profile: bool;
   opt_quiet: bool;
   opt_recursion_limit: int;
@@ -196,6 +197,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_saved_state opts = opts.opt_no_saved_state
+
+let node_main_fields opts = opts.opt_node_main_fields
 
 let recursion_limit opts = opts.opt_recursion_limit
 

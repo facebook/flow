@@ -1236,7 +1236,7 @@ let init_package_heap ~options ~profiling ~reader parsed =
             match filename with
             | File_key.JsonFile str when Filename.basename str = "package.json" ->
               let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
-              let package = Package_json.parse ast in
+              let package = Package_json.parse ~options ast in
               Module_js.add_package str package;
               begin
                 match package with

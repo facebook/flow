@@ -109,7 +109,7 @@ val add_parsed_resolved_requires :
 val add_package : string -> Loc.t Package_json.t_or_error -> unit
 
 val package_incompatible :
-  reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
+  options:Options.t -> reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
 
 (***************************************************)
 

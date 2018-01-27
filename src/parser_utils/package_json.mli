@@ -15,4 +15,4 @@ val name : t -> string option
 
 val main : t -> string option
 
-val parse : (Loc.t, Loc.t) Flow_ast.program -> Loc.t t_or_error
+val parse : options:Options.t -> (Loc.t, Loc.t) Flow_ast.program -> Loc.t t_or_error
