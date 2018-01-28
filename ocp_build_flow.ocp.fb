@@ -255,6 +255,7 @@ begin library "flow-parser-utils"
   end
   requires = [
     "dtoa"
+    "flow-common"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
