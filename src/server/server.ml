@@ -44,15 +44,17 @@ let init ~focus_targets genv =
     let parsed, libs, libs_ok, errors =
       Types_js.init ~profiling ~workers options in
 
-    (* if any libs errored, we'll infer but not merge client code *)
-    let should_merge = libs_ok in
-
-    (* compute initial state *)
+    (* If any libs errored, skip typechecking and just show lib errors. Note
+     * that `init` above has done all parsing, not just lib parsing, resolved
+     * and committed modules, etc.
+     *
+     * Furthermore, if we're in lazy mode, we forego typechecking until later,
+     * when it proceeds on an as-needed basis. *)
     let checked, errors =
-      if Options.is_lazy_mode options then
+      if not libs_ok || Options.is_lazy_mode options then
         CheckedSet.empty, errors
       else
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
+        Types_js.full_check ~profiling ~workers ~focus_targets ~options parsed errors
     in
 
     sample_init_memory profiling;

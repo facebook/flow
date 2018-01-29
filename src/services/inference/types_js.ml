@@ -359,82 +359,76 @@ let typecheck
   in
 
   (* call supplied function to calculate closure of modules to merge *)
-  let merge_input =
+  let to_merge, recheck_map =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
       make_merge_input infer_input
     ) in
 
-  match merge_input with
-  | Some (to_merge, recheck_map) ->
-    (* to_merge is the union of inferred (newly inferred files) and the
-       transitive closure of all dependents.
+  (* to_merge is the union of inferred (newly inferred files) and the
+     transitive closure of all dependents.
 
-       recheck_map maps each file in to_merge to whether it should be rechecked
-       initially.
-    *)
-    Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
-    Hh_logger.info "Calculating dependencies";
-    MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
-    let dependency_graph, component_map =
-      calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge) in
+     recheck_map maps each file in to_merge to whether it should be rechecked
+     initially.
+  *)
+  Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
+  Hh_logger.info "Calculating dependencies";
+  MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
+  let dependency_graph, component_map =
+    calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge) in
 
-    Hh_logger.info "Merging";
-    let merge_errors, suppressions, severity_cover_set = try
-      let intermediate_result_callback results =
-        let errors = lazy (
-          List.map (fun (file, result) ->
-            match result with
-            | Ok (errors, suppressions, severity_cover) ->
-              file, errors, suppressions, severity_cover
-            | Error msg ->
-              let errors = error_set_of_merge_error file msg in
-              let suppressions = Error_suppressions.empty in
-              let severity_cover =
-                ExactCover.file_cover file
-                  (Options.lint_severities options)
-              in
-              file, errors, suppressions, severity_cover
-          ) (Lazy.force results)
-        ) in
-        send_errors_over_connection errors
-      in
-
-      let merge_errors, suppressions, severity_cover_set =
-        merge
-          ~intermediate_result_callback
-          ~options
-          ~profiling
-          ~workers
-          dependency_graph
-          component_map
-          recheck_map
-          (merge_errors, suppressions, severity_cover_set)
-      in
-      if Options.should_profile options
-      then with_timer ~options "PrintGCStats" profiling (fun () -> Gc.print_stat stderr);
-      Hh_logger.info "Done";
-      merge_errors, suppressions, severity_cover_set
-    with
-    (* Unrecoverable exceptions *)
-    | SharedMem_js.Out_of_shared_memory
-    | SharedMem_js.Heap_full
-    | SharedMem_js.Hash_table_full
-    | SharedMem_js.Dep_table_full as exn -> raise exn
-    (* A catch all suppression is probably a bad idea... *)
-    | exc when not Build_mode.dev ->
-        prerr_endline (Printexc.to_string exc);
-        merge_errors, suppressions, severity_cover_set
+  Hh_logger.info "Merging";
+  let merge_errors, suppressions, severity_cover_set = try
+    let intermediate_result_callback results =
+      let errors = lazy (
+        List.map (fun (file, result) ->
+          match result with
+          | Ok (errors, suppressions, severity_cover) ->
+            file, errors, suppressions, severity_cover
+          | Error msg ->
+            let errors = error_set_of_merge_error file msg in
+            let suppressions = Error_suppressions.empty in
+            let severity_cover =
+              ExactCover.file_cover file
+                (Options.lint_severities options)
+            in
+            file, errors, suppressions, severity_cover
+        ) (Lazy.force results)
+      ) in
+      send_errors_over_connection errors
     in
 
-    let checked = CheckedSet.union unchanged_checked to_merge in
-    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
+    let merge_errors, suppressions, severity_cover_set =
+      merge
+        ~intermediate_result_callback
+        ~options
+        ~profiling
+        ~workers
+        dependency_graph
+        component_map
+        recheck_map
+        (merge_errors, suppressions, severity_cover_set)
+    in
+    if Options.should_profile options
+    then with_timer ~options "PrintGCStats" profiling (fun () -> Gc.print_stat stderr);
+    Hh_logger.info "Done";
+    merge_errors, suppressions, severity_cover_set
+  with
+  (* Unrecoverable exceptions *)
+  | SharedMem_js.Out_of_shared_memory
+  | SharedMem_js.Heap_full
+  | SharedMem_js.Hash_table_full
+  | SharedMem_js.Dep_table_full as exn -> raise exn
+  (* A catch all suppression is probably a bad idea... *)
+  | exc when not Build_mode.dev ->
+      prerr_endline (Printexc.to_string exc);
+      merge_errors, suppressions, severity_cover_set
+  in
 
-    checked,
-    { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
+  let checked = CheckedSet.union unchanged_checked to_merge in
+  Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
 
-  | None ->
-    unchanged_checked,
-      { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
+  checked,
+  { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
@@ -465,12 +459,10 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
       ~parsed ~all_dependent_files
       ~persistent_connections
       ~make_merge_input:(fun inferred ->
-        Some (
-          inferred,
-          inferred |> CheckedSet.fold (fun map f ->
-            FilenameMap.add f true map
-          ) FilenameMap.empty
-        )
+        let recheck_map = CheckedSet.fold (fun map f ->
+          FilenameMap.add f true map
+        ) FilenameMap.empty inferred in
+        inferred, recheck_map
       )
     in
 
@@ -1068,7 +1060,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
           FilenameMap.add file (CheckedSet.mem file roots) recheck_map
       ) FilenameMap.empty in
 
-      Some (to_merge, recheck_map)
+      to_merge, recheck_map
     )
   in
 
@@ -1160,7 +1152,7 @@ let init ~profiling ~workers options =
 
   parsed, libs, libs_ok, errors
 
-let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
+let full_check ~profiling ~options ~workers ~focus_targets parsed errors =
   let infer_input = files_to_infer
     ~options ~workers ~focused:focus_targets ~profiling ~parsed in
   typecheck
@@ -1174,9 +1166,8 @@ let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed 
     ~all_dependent_files:FilenameSet.empty
     ~persistent_connections:None
     ~make_merge_input:(fun inferred ->
-      if not should_merge then None
-      else Some (inferred,
-        inferred |> CheckedSet.fold (fun map f ->
-          FilenameMap.add f true map
-        ) FilenameMap.empty)
+      let recheck_map = CheckedSet.fold (fun map f ->
+        FilenameMap.add f true map
+      ) FilenameMap.empty inferred in
+      inferred, recheck_map
     )
