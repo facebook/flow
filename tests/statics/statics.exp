@@ -22,10 +22,10 @@ Error: class_statics.js:9
   9: var x:number = C.x;
            ^^^^^^ number
 
-Error: class_statics.js:10
- 10: C.x = 0;
+Error: class_statics.js:11
+ 11: C.x = 0;
            ^ number. This type is incompatible with
- 10: C.x = 0;
+ 11: C.x = 0;
      ^^^ string
 
 Error: funstatics.js:5

@@ -1,7 +1,7 @@
-Error: c.js:5
-  5: c.foo();
+Error: c.js:6
+  6: c.foo();
        ^^^ property `foo`. Property not found in
-  5: c.foo();
+  6: c.foo();
      ^ object literal
 
 Error: object_assign.js:7

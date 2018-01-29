@@ -667,26 +667,26 @@ Error: super_member.js:13
  11:   test(): string {
                ^^^^^^ string
 
-Error: switch.js:8
-  8:       return text; // error, should return string
+Error: switch.js:10
+ 10:       return text; // error, should return string
                   ^^^^ number. This type is incompatible with the expected return type of
   3: function foo(text: string | number): string {
                                           ^^^^^^ string
 
-Error: switch.js:27
- 27:       return text[0]; // error, [0] on number
+Error: switch.js:34
+ 34:       return text[0]; // error, [0] on number
                   ^^^^^^^ computed property. Indexable signature not found in
- 27:       return text[0]; // error, [0] on number
+ 34:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
-Error: switch.js:37
- 37:       return text[0]; // error, [0] on number
+Error: switch.js:46
+ 46:       return text[0]; // error, [0] on number
                   ^^^^^^^ computed property. Indexable signature not found in
- 37:       return text[0]; // error, [0] on number
+ 46:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
-Error: switch.js:51
- 51:       return (text++) + '';
+Error: switch.js:62
+ 62:       return (text++) + '';
                    ^^^^ string. The operand of an arithmetic operation must be a number.
 
 Error: tagged_union.js:20
