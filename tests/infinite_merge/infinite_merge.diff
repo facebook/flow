@@ -1,0 +1,15 @@
+--- infinite_merge.exp	2018-01-29 18:30:35.000000000 +0300
++++ infinite_merge.out	2018-01-29 18:30:35.000000000 +0300
+@@ -0,0 +1,12 @@
++Error: index.js:3
++  3: import * as React from "react";
++                            ^^^^^^^ react. Required module not found
++
++Error: index.js:14
++ 14: const flatMap = (list, fn) => list.reduce((acc, d) => [...acc, ...fn(d)], []);
++                                        ^^^^^^ property `reduce`. Property not found in
++ 14: const flatMap = (list, fn) => list.reduce((acc, d) => [...acc, ...fn(d)], []);
++                                   ^^^^ $ReadOnlyArray
++
++
++Found 2 errors
