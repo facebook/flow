@@ -71,3 +71,16 @@ printf "Property declaration in an object type alias: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 5 4
 printf "Method call on an object type alias: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 9 4
+
+printf "Instance method on a superclass: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 3
+printf "Call of instance method on subclass which does not override: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 18 10
+printf "Instance method on a subclass which does override: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 10 3
+printf "Call of instance method on a subclass which does override: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 19 10
+printf "Definition of a method in a parameterized class: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 23 3
+printf "Call of an instance method on an upcasted class: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 29 15

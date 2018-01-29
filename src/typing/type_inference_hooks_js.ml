@@ -19,9 +19,9 @@ let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
-let method_decl_nop _ _ _ = ()
+let method_decl_nop _ _ _ _ = ()
 
-let prop_decl_nop _ _ _ = ()
+let prop_decl_nop _ _ _ _ = ()
 
 let require_pattern_nop _ = ()
 
@@ -100,11 +100,13 @@ type hook_state_t = {
 
   method_decl_hook:
      (Context.t ->
+      Type.t (* self *) ->
       string -> Loc.t ->
       unit);
 
   prop_decl_hook:
      (Context.t ->
+      Type.t (* self *) ->
       string -> Loc.t ->
       unit);
 
@@ -181,11 +183,11 @@ let dispatch_jsx_hook cx name loc this_t =
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
 
-let dispatch_method_decl_hook cx name loc =
-  !hook_state.method_decl_hook cx name loc
+let dispatch_method_decl_hook cx self name loc =
+  !hook_state.method_decl_hook cx self name loc
 
-let dispatch_prop_decl_hook cx name loc =
-  !hook_state.prop_decl_hook cx name loc
+let dispatch_prop_decl_hook cx self name loc =
+  !hook_state.prop_decl_hook cx self name loc
 
 let dispatch_require_pattern_hook loc =
   !hook_state.require_pattern_hook loc

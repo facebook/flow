@@ -180,9 +180,9 @@ end = struct
       end;
       ret
     in
-    let def_hook _ctxt name loc =
+    let def_hook _ctxt ty name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (`Def (loc, name))
+        prop_access_info := Some (`Def (ty, name))
     in
     Type_inference_hooks_js.set_member_hook (use_hook false);
     Type_inference_hooks_js.set_call_hook (use_hook ());
@@ -206,26 +206,52 @@ end = struct
     Type_inference_hooks_js.reset_hooks ()
 
   type def_loc =
-    | Found of Loc.t
+    (* We found at least one def loc. Superclass implementations are also included. The list is
+    ordered such that subclass implementations are first and superclass implementations are last. *)
+    | Found of Loc.t Nel.t
     (* This means it's a known type that we deliberately do not currently support. *)
     | UnsupportedType
     (* This means it's not well-typed, and could be anything *)
     | AnyType
 
-  (* Ok None indicates an expected case where no location was found, whereas an Error return indicates
-   * that something went wrong. *)
-  let extract_def_loc cx ty name : (def_loc, string) result =
-    let open Flow_js.Members in
+  let extract_instancet cx ty : (Type.t, string) result =
     let open Type in
     let resolved = Flow_js.resolve_type cx ty in
-    match Flow_js.Members.extract_type cx resolved with
-      | Success (DefT (_, InstanceT _)) as extracted_type ->
+    match resolved with
+      | ThisClassT (_, t)
+      | DefT (_, PolyT (_, ThisClassT (_, t), _)) -> Ok t
+      | _ ->
+        let type_string = string_of_ctor resolved in
+        Error ("Expected a class type to extract an instance type from, got " ^ type_string)
+
+  let rec extract_def_loc cx ty name : (def_loc, string) result =
+    let resolved = Flow_js.resolve_type cx ty in
+    extract_def_loc_resolved cx resolved name
+
+  and extract_def_loc_resolved cx ty name : (def_loc, string) result =
+    let open Flow_js.Members in
+    let open Type in
+    match Flow_js.Members.extract_type cx ty with
+      | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
           let members = Flow_js.Members.extract_members cx extracted_type in
           let command_result = Flow_js.Members.to_command_result members in
           command_result >>= fun map ->
           Result.of_option ~error:"Expected a property definition" (SMap.get name map) >>= fun (loc, _) ->
           Result.of_option ~error:"Expected a location associated with the definition" loc >>= fun loc ->
-          Ok (Found loc)
+          begin match extract_def_loc cx super name with
+            | Ok (Found lst) ->
+                (* Avoid duplicate entries. This can happen if a class does not override a method,
+                 * so the definition points to the method definition in the parent class. Then we
+                 * look at the parent class and find the same definition. *)
+                let lst =
+                  if Nel.hd lst = loc then
+                    lst
+                  else
+                    Nel.cons loc lst
+                in
+                Ok (Found lst)
+            | Ok _ | Error _ -> Ok (Found (Nel.one loc))
+          end
       | Success _
       | SuccessModule _
       | FailureNullishType
@@ -234,7 +260,7 @@ end = struct
       | FailureAnyType ->
           Ok AnyType
 
-  let find_refs_in_file options content file_key def_loc name =
+  let find_refs_in_file options content file_key def_locs name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
     set_get_refs_hook potential_refs name;
     let cx_result =
@@ -248,9 +274,15 @@ end = struct
       LocMap.bindings |>
       List.map begin fun (ref_loc, ty) ->
         extract_def_loc cx ty name >>| function
-          | Found loc when loc = def_loc ->
-              Some ref_loc
-          | Found _ -> None
+          | Found locs ->
+              (* Only take the first extracted def loc -- that is, the one for the actual definition
+               * and not overridden implementations, and compare it to the list of def locs we are
+               * interested in *)
+              let loc = Nel.hd locs in
+              if Nel.mem loc def_locs then
+                Some ref_loc
+              else
+                None
           (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
            * are references or not. For now we'll leave them out. *)
           | UnsupportedType | AnyType -> None
@@ -264,15 +296,15 @@ end = struct
         )
       >>|
       List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] >>| fun refs ->
-      if Loc.(def_loc.source = Some file_key) then
-        (* Include the definition if it is in this file *)
-        def_loc::refs
-      else
-        refs
+      let local_defs =
+        Nel.to_list def_locs
+        |> List.filter (fun loc -> loc.Loc.source = Some file_key)
+      in
+      local_defs @ refs
 
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
-    let get_def_info: unit -> ((Loc.t * string) option, string) result = fun () ->
+    let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result = fun () ->
       let props_access_info = ref None in
       set_def_loc_hook props_access_info loc;
       let cx_result =
@@ -288,21 +320,32 @@ end = struct
       cx_result >>= fun cx ->
       match !props_access_info with
         | None -> Ok None
-        | Some (`Def (loc, name)) -> Ok (Some (loc, name))
+        | Some (`Def (ty, name)) ->
+            (* We get the type of the class back here, so we need to extract the type of an instance *)
+            extract_instancet cx ty >>= fun ty ->
+            begin extract_def_loc_resolved cx ty name >>= function
+              | Found locs -> Ok (Some (locs, name))
+              | _ -> Error "Unexpectedly failed to extract definition from known type"
+            end
         | Some (`Use (ty, name)) ->
-            extract_def_loc cx ty name >>= fun loc ->
-            match loc with
-              | Found loc -> Ok (Some (loc, name))
+            begin extract_def_loc cx ty name >>= function
+              | Found locs -> Ok (Some (locs, name))
               | UnsupportedType
               | AnyType -> Ok None
+            end
     in
     get_def_info () >>= fun def_info_opt ->
     match def_info_opt with
       | None -> Ok None
-      | Some (def_loc, name) ->
+      | Some (def_locs, name) ->
           if global then
-            (* Start from the file where the symbol is defined, instead of the one where find-refs was called *)
-            Result.of_option Loc.(def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
+            (* Start from the file where the symbol is defined, instead of the one where find-refs
+             * was called. *)
+            (* Since the def_locs are ordered from sub-est class to super-est class, and the
+             * subclasses must depend on the superclasses, then we can safely take the super-est
+             * class location and consider that the root. *)
+            let last_def_loc = Nel.nth def_locs ((Nel.length def_locs) - 1) in
+            Result.of_option Loc.(last_def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
             File_key.to_path file_key >>= fun path ->
             env := begin
               Nel.one path
@@ -311,19 +354,19 @@ end = struct
             end;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput >>= fun content ->
-            find_refs_in_file options content file_key def_loc name >>= fun refs ->
+            find_refs_in_file options content file_key def_locs name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
             let external_refs_result =
               FilenameSet.elements all_deps |> List.map begin fun dep ->
                 File_key.to_path dep >>= fun path ->
                 File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
-                find_refs_in_file options content dep def_loc name
+                find_refs_in_file options content dep def_locs name
               end |> Result.all
             in
             external_refs_result >>= fun external_refs ->
             Ok (Some (name, List.concat (refs::external_refs)))
           else
-            find_refs_in_file options content file_key def_loc name >>= fun refs ->
+            find_refs_in_file options content file_key def_locs name >>= fun refs ->
             Ok (Some (name, refs))
 end
 
