@@ -42,15 +42,21 @@ Error: This.js:53
 
 Error: This.js:58
  58: (this: void);
-      ^^^^ global object. This type is incompatible with
- 58: (this: void);
-            ^^^^ undefined
+      ^^^^ Cannot cast global object to undefined because global object [1] is incompatible with undefined [2].
+  References:
+   58: (this: void);
+        ^^^^ [1]: global object
+   58: (this: void);
+              ^^^^ [2]: undefined
 
 Error: arrows.js:16
  16: (j: D); // error, since return type of bar is C, not the type of `this`
-      ^ C. This type is incompatible with
- 16: (j: D); // error, since return type of bar is C, not the type of `this`
-         ^ D
+      ^ Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2].
+  References:
+   16: (j: D); // error, since return type of bar is C, not the type of `this`
+        ^ [1]: `C`
+   16: (j: D); // error, since return type of bar is C, not the type of `this`
+           ^ [2]: `D`
 
 Error: arrows.js:24
  24:       super.foo(""); // find super method, error due to incorrect arg

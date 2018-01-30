@@ -1,14 +1,20 @@
 Error: b.js:11
  11: (o[A.FOO]: empty); // error: null ~> empty
-      ^^^^^^^^ null. This type is incompatible with
- 11: (o[A.FOO]: empty); // error: null ~> empty
-                ^^^^^ empty
+      ^^^^^^^^ Cannot cast computed property to empty because null [1] is incompatible with empty [2].
+  References:
+   11: (o[A.FOO]: empty); // error: null ~> empty
+        ^^^^^^^^ [1]: null
+   11: (o[A.FOO]: empty); // error: null ~> empty
+                  ^^^^^ [2]: empty
 
 Error: c.js:11
  11: (o[k]: empty); // error: null ~> empty
-      ^^^^ null. This type is incompatible with
- 11: (o[k]: empty); // error: null ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast computed property to empty because null [1] is incompatible with empty [2].
+  References:
+   11: (o[k]: empty); // error: null ~> empty
+        ^^^^ [1]: null
+   11: (o[k]: empty); // error: null ~> empty
+              ^^^^^ [2]: empty
 
 
 Found 2 errors

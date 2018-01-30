@@ -39,9 +39,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (Any: number);
-                ^^^ module \`any\`. This type is incompatible with
-            5: (Any: number);
-                     ^^^^^^ number
+                ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2].
+            References:
+              5: (Any: number);
+                  ^^^ [1]: module \`any\`
+              5: (Any: number);
+                       ^^^^^^ [2]: number
         `,
       )
       .because('Any should be { [key: string]: any }'),
@@ -62,9 +65,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: string);
-                ^^^ object type. This type is incompatible with
-            5: (obj: string);
-                     ^^^^^^ string
+                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
+            References:
+              5: (obj: string);
+                  ^^^ [1]: object type
+              5: (obj: string);
+                       ^^^^^^ [2]: string
         `,
       )
       .because('obj should have the type Object'),
@@ -77,9 +83,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: string);
-                ^^^ object type. This type is incompatible with
-            5: (obj: string);
-                     ^^^^^^ string
+                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
+            References:
+              5: (obj: string);
+                  ^^^ [1]: object type
+              5: (obj: string);
+                       ^^^^^^ [2]: string
         `,
       )
       .because('obj should have the type Object'),
@@ -94,9 +103,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: number);
-                ^^^ module \`object\`. This type is incompatible with
-            5: (obj: number);
-                     ^^^^^^ number
+                ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2].
+            References:
+              5: (obj: number);
+                  ^^^ [1]: module \`object\`
+              5: (obj: number);
+                       ^^^^^^ [2]: number
         `,
       )
       .because('obj should be { [key: string]: any }'),

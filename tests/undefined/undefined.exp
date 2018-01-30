@@ -6,27 +6,39 @@ Error: undefined.js:3
 
 Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
-          ^^^^ string. This type is incompatible with
-  7:     (name: boolean); // error, string or void
-                ^^^^^^^ boolean
+          ^^^^ Cannot cast `name` to boolean because string [1] is incompatible with boolean [2].
+  References:
+    7:     (name: boolean); // error, string or void
+            ^^^^ [1]: string
+    7:     (name: boolean); // error, string or void
+                  ^^^^^^^ [2]: boolean
 
 Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
-          ^^^^ undefined. This type is incompatible with
-  7:     (name: boolean); // error, string or void
-                ^^^^^^^ boolean
+          ^^^^ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
+  References:
+    7:     (name: boolean); // error, string or void
+            ^^^^ [1]: undefined
+    7:     (name: boolean); // error, string or void
+                  ^^^^^^^ [2]: boolean
 
 Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
-          ^^^^^^ string. This type is incompatible with
- 13:     (bar[x]: boolean); // error, string or void
-                  ^^^^^^^ boolean
+          ^^^^^^ Cannot cast computed property to boolean because string [1] is incompatible with boolean [2].
+  References:
+   13:     (bar[x]: boolean); // error, string or void
+            ^^^^^^ [1]: string
+   13:     (bar[x]: boolean); // error, string or void
+                    ^^^^^^^ [2]: boolean
 
 Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
-          ^^^^^^ undefined. This type is incompatible with
- 13:     (bar[x]: boolean); // error, string or void
-                  ^^^^^^^ boolean
+          ^^^^^^ Cannot cast computed property to boolean because undefined [1] is incompatible with boolean [2].
+  References:
+   13:     (bar[x]: boolean); // error, string or void
+            ^^^^^^ [1]: undefined
+   13:     (bar[x]: boolean); // error, string or void
+                    ^^^^^^^ [2]: boolean
 
 Error: undefined2.js:22
  22:       x[0]; // should error, could be void
@@ -36,9 +48,12 @@ Error: undefined2.js:22
 
 Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only
-          ^^^^^^ string. This type is incompatible with
- 29:     (bar[x]: boolean); // error, string only
-                  ^^^^^^^ boolean
+          ^^^^^^ Cannot cast computed property to boolean because string [1] is incompatible with boolean [2].
+  References:
+   29:     (bar[x]: boolean); // error, string only
+            ^^^^^^ [1]: string
+   29:     (bar[x]: boolean); // error, string only
+                    ^^^^^^^ [2]: boolean
 
 
 Found 7 errors

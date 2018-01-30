@@ -12,9 +12,12 @@ Error: encaps.js:6
 
 Error: encaps.js:16
  16: (s3.foo: number); // error: string ~> number
-      ^^^^^^ string. This type is incompatible with
- 16: (s3.foo: number); // error: string ~> number
-              ^^^^^^ number
+      ^^^^^^ Cannot cast property `foo` to number because string [1] is incompatible with number [2].
+  References:
+   16: (s3.foo: number); // error: string ~> number
+        ^^^^^^ [1]: string
+   16: (s3.foo: number); // error: string ~> number
+                ^^^^^^ [2]: number
 
 
 Found 3 errors

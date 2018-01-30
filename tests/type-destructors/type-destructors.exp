@@ -4,15 +4,21 @@ Error: element_type.js:1
 
 Error: element_type.js:7
   7: ('hello world': Arr_Elem);
-      ^^^^^^^^^^^^^ string. This type is incompatible with
-  7: ('hello world': Arr_Elem);
-                     ^^^^^^^^ number
+      ^^^^^^^^^^^^^ Cannot cast string to `Arr_Elem` because string [1] is incompatible with number [2].
+  References:
+    7: ('hello world': Arr_Elem);
+        ^^^^^^^^^^^^^ [1]: string
+    7: ('hello world': Arr_Elem);
+                       ^^^^^^^^ [2]: number
 
 Error: element_type.js:18
  18: ('hello world': Obj_Elem);
-      ^^^^^^^^^^^^^ string. This type is incompatible with
- 18: ('hello world': Obj_Elem);
-                     ^^^^^^^^ number
+      ^^^^^^^^^^^^^ Cannot cast string to `Obj_Elem` because string [1] is incompatible with number [2].
+  References:
+   18: ('hello world': Obj_Elem);
+        ^^^^^^^^^^^^^ [1]: string
+   18: ('hello world': Obj_Elem);
+                       ^^^^^^^^ [2]: number
 
 Error: errors.js:9
   9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
@@ -96,9 +102,12 @@ Error: non_maybe_type.js:5
 
 Error: non_maybe_type.js:10
  10: (0: $NonMaybeType<null>); // error
-      ^ number. This type is incompatible with
- 10: (0: $NonMaybeType<null>); // error
-         ^^^^^^^^^^^^^^^^^^^ empty
+      ^ Cannot cast number to `$NonMaybeType` because number [1] is incompatible with empty [2].
+  References:
+   10: (0: $NonMaybeType<null>); // error
+        ^ [1]: number
+   10: (0: $NonMaybeType<null>); // error
+           ^^^^^^^^^^^^^^^^^^^ [2]: empty
 
 Error: property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
@@ -106,9 +115,12 @@ Error: property_type.js:1
 
 Error: property_type.js:6
   6: (42: Obj_Prop_x);
-      ^^ number. This type is incompatible with
-  6: (42: Obj_Prop_x);
-          ^^^^^^^^^^ string
+      ^^ Cannot cast number to `Obj_Prop_x` because number [1] is incompatible with string [2].
+  References:
+    6: (42: Obj_Prop_x);
+        ^^ [1]: number
+    6: (42: Obj_Prop_x);
+            ^^^^^^^^^^ [2]: string
 
 Error: property_type.js:10
  10:   else return 0;
@@ -118,9 +130,12 @@ Error: property_type.js:10
 
 Error: tvar3.js:20
  20: (fn1(a): B); // Error: A ~> B
-      ^^^^^^ A. This type is incompatible with
- 20: (fn1(a): B); // Error: A ~> B
-              ^ B
+      ^^^^^^ Cannot cast call of `fn1` to `B` because `A` [1] is incompatible with `B` [2].
+  References:
+   20: (fn1(a): B); // Error: A ~> B
+        ^^^^^^ [1]: `A`
+   20: (fn1(a): B); // Error: A ~> B
+                ^ [2]: `B`
 
 Error: tvar3.js:21
  21: (fn2((a: A) => {}): B => void); // Error: B ~> A
@@ -135,9 +150,12 @@ Error: tvar3.js:21
 
 Error: tvar3.js:22
  22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-      ^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
- 22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-                            ^ C
+      ^^^^^^^^^^^^^^^^^^^^ Cannot cast call of `fn3` to `C` because `A` [1] is incompatible with `C` [2].
+  References:
+   22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
+        ^^^^^^^^^^^^^^^^^^^^ [1]: `A`
+   22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
+                              ^ [2]: `C`
 
 Error: tvar3.js:22
  22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
@@ -164,9 +182,12 @@ Error: tvar3.js:23
 
 Error: tvar3.js:25
  25: (fn5(a): B); // Error: A ~> B
-      ^^^^^^ A. This type is incompatible with
- 25: (fn5(a): B); // Error: A ~> B
-              ^ B
+      ^^^^^^ Cannot cast call of `fn5` to `B` because `A` [1] is incompatible with `B` [2].
+  References:
+   25: (fn5(a): B); // Error: A ~> B
+        ^^^^^^ [1]: `A`
+   25: (fn5(a): B); // Error: A ~> B
+                ^ [2]: `B`
 
 Error: tvar3.js:26
  26: (fn6((a: A) => {}): B => void); // Error: B ~> A
@@ -181,9 +202,12 @@ Error: tvar3.js:26
 
 Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-      ^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
- 27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-                            ^ C
+      ^^^^^^^^^^^^^^^^^^^^ Cannot cast call of `fn7` to `C` because `A` [1] is incompatible with `C` [2].
+  References:
+   27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
+        ^^^^^^^^^^^^^^^^^^^^ [1]: `A`
+   27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
+                              ^ [2]: `C`
 
 Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!

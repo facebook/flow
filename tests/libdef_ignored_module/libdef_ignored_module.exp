@@ -1,8 +1,11 @@
 Error: test.js:5
   5: (foo.bar : string); // error number ~> string
-      ^^^^^^^ number. This type is incompatible with
-  5: (foo.bar : string); // error number ~> string
-                ^^^^^^ string
+      ^^^^^^^ Cannot cast property `bar` to string because number [1] is incompatible with string [2].
+  References:
+    5: (foo.bar : string); // error number ~> string
+        ^^^^^^^ [1]: number
+    5: (foo.bar : string); // error number ~> string
+                  ^^^^^^ [2]: string
 
 
 Found 1 error

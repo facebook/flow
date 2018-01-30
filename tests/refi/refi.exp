@@ -57,45 +57,66 @@ Error: heap.js:105
 
 Error: heap.js:107
 107:     (x.y: string); // error, this got widened to a number
-          ^^^ number. This type is incompatible with
-107:     (x.y: string); // error, this got widened to a number
-               ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+  References:
+  107:     (x.y: string); // error, this got widened to a number
+            ^^^ [1]: number
+  107:     (x.y: string); // error, this got widened to a number
+                 ^^^^^^ [2]: string
 
 Error: heap.js:125
 125:     (x.y : string); // error, could also be boolean
-          ^^^ boolean. This type is incompatible with
-125:     (x.y : string); // error, could also be boolean
-                ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+  References:
+  125:     (x.y : string); // error, could also be boolean
+            ^^^ [1]: boolean
+  125:     (x.y : string); // error, could also be boolean
+                  ^^^^^^ [2]: string
 
 Error: heap.js:135
 135:     (x.y : boolean); // error, string
-          ^^^ string. This type is incompatible with
-135:     (x.y : boolean); // error, string
-                ^^^^^^^ boolean
+          ^^^ Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+  References:
+  135:     (x.y : boolean); // error, string
+            ^^^ [1]: string
+  135:     (x.y : boolean); // error, string
+                  ^^^^^^^ [2]: boolean
 
 Error: heap.js:146
 146:     (x.y : string); // error
-          ^^^ null. This type is incompatible with
-146:     (x.y : string); // error
-                ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because null [1] is incompatible with string [2].
+  References:
+  146:     (x.y : string); // error
+            ^^^ [1]: null
+  146:     (x.y : string); // error
+                  ^^^^^^ [2]: string
 
 Error: heap.js:159
 159:     (x.y : string); // error
-          ^^^ boolean. This type is incompatible with
-159:     (x.y : string); // error
-                ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+  References:
+  159:     (x.y : string); // error
+            ^^^ [1]: boolean
+  159:     (x.y : string); // error
+                  ^^^^^^ [2]: string
 
 Error: heap.js:172
 172:     (x.y : string); // error
-          ^^^ boolean. This type is incompatible with
-172:     (x.y : string); // error
-                ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+  References:
+  172:     (x.y : string); // error
+            ^^^ [1]: boolean
+  172:     (x.y : string); // error
+                  ^^^^^^ [2]: string
 
 Error: heap.js:172
 172:     (x.y : string); // error
-          ^^^ number. This type is incompatible with
-172:     (x.y : string); // error
-                ^^^^^^ string
+          ^^^ Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+  References:
+  172:     (x.y : string); // error
+            ^^^ [1]: number
+  172:     (x.y : string); // error
+                  ^^^^^^ [2]: string
 
 Error: heap.js:188
 188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
@@ -111,39 +132,57 @@ Error: heap.js:192
 
 Error: heap.js:193
 193:     (x: string & number);
-          ^ mixed. This type is incompatible with
-193:     (x: string & number);
-             ^^^^^^ string
+          ^ Cannot cast `x` to intersection type because mixed [1] is incompatible with number [2].
+  References:
+  193:     (x: string & number);
+            ^ [1]: mixed
+  193:     (x: string & number);
+                        ^^^^^^ [2]: number
 
 Error: heap.js:193
 193:     (x: string & number);
-          ^ mixed. This type is incompatible with
-193:     (x: string & number);
-                      ^^^^^^ number
+          ^ Cannot cast `x` to intersection type because mixed [1] is incompatible with string [2].
+  References:
+  193:     (x: string & number);
+            ^ [1]: mixed
+  193:     (x: string & number);
+               ^^^^^^ [2]: string
 
 Error: lex.js:6
   6:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
-  6:   (x : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
+  References:
+    6:   (x : string); // error: number ~> string
+          ^ [1]: number
+    6:   (x : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:15
  15:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 15:   (x : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
+  References:
+   15:   (x : string); // error: number ~> string
+          ^ [1]: number
+   15:   (x : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:25
  25:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 25:   (x : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
+  References:
+   25:   (x : string); // error: number ~> string
+          ^ [1]: number
+   25:   (x : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:35
  35:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 35:   (x : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
+  References:
+   35:   (x : string); // error: number ~> string
+          ^ [1]: number
+   35:   (x : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: local.js:5
   5:     var y : string = x;  // not ok

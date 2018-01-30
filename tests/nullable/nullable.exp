@@ -1,32 +1,47 @@
 Error: error.js:8
   8: ((any: ?number): number);
-            ^^^^^^^ null or undefined. This type is incompatible with
-  8: ((any: ?number): number);
-                      ^^^^^^ number
+            ^^^^^^^ Cannot cast nullable number to number because null or undefined [1] is incompatible with number [2].
+  References:
+    8: ((any: ?number): number);
+              ^^^^^^^ [1]: null or undefined
+    8: ((any: ?number): number);
+                        ^^^^^^ [2]: number
 
 Error: error.js:9
   9: ((any: ?number): null);
-            ^^^^^^^ null or undefined. This type is incompatible with
-  9: ((any: ?number): null);
-                      ^^^^ null
+            ^^^^^^^ Cannot cast nullable number to null because null or undefined [1] is incompatible with null [2].
+  References:
+    9: ((any: ?number): null);
+              ^^^^^^^ [1]: null or undefined
+    9: ((any: ?number): null);
+                        ^^^^ [2]: null
 
 Error: error.js:9
   9: ((any: ?number): null);
-             ^^^^^^ number. This type is incompatible with
-  9: ((any: ?number): null);
-                      ^^^^ null
+             ^^^^^^ Cannot cast nullable number to null because number [1] is incompatible with null [2].
+  References:
+    9: ((any: ?number): null);
+               ^^^^^^ [1]: number
+    9: ((any: ?number): null);
+                        ^^^^ [2]: null
 
 Error: error.js:10
  10: ((any: ?number): void);
-            ^^^^^^^ null or undefined. This type is incompatible with
- 10: ((any: ?number): void);
-                      ^^^^ undefined
+            ^^^^^^^ Cannot cast nullable number to undefined because null or undefined [1] is incompatible with undefined [2].
+  References:
+   10: ((any: ?number): void);
+              ^^^^^^^ [1]: null or undefined
+   10: ((any: ?number): void);
+                        ^^^^ [2]: undefined
 
 Error: error.js:10
  10: ((any: ?number): void);
-             ^^^^^^ number. This type is incompatible with
- 10: ((any: ?number): void);
-                      ^^^^ undefined
+             ^^^^^^ Cannot cast nullable number to undefined because number [1] is incompatible with undefined [2].
+  References:
+   10: ((any: ?number): void);
+               ^^^^^^ [1]: number
+   10: ((any: ?number): void);
+                        ^^^^ [2]: undefined
 
 Error: error.js:16
  16: ((any: ?number): number | null);
@@ -74,9 +89,12 @@ Error: error.js:17
 
 Error: maybe.js:5
   5: ((123: ?(?number)): ?string); // error (only num ~> string)
-               ^^^^^^ number. This type is incompatible with
-  5: ((123: ?(?number)): ?string); // error (only num ~> string)
-                          ^^^^^^ string
+               ^^^^^^ Cannot cast nullable number to nullable string because number [1] is incompatible with string [2].
+  References:
+    5: ((123: ?(?number)): ?string); // error (only num ~> string)
+                 ^^^^^^ [1]: number
+    5: ((123: ?(?number)): ?string); // error (only num ~> string)
+                            ^^^^^^ [2]: string
 
 Error: nullable.js:1
   1: function foo():string { return null; }

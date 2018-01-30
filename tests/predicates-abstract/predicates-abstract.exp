@@ -125,9 +125,12 @@ Error: sanity-refine.js:4
 
 Error: sanity-refine.js:8
   8: (b: string);
-      ^ mixed. This type is incompatible with
-  8: (b: string);
-         ^^^^^^ string
+      ^ Cannot cast `b` to string because mixed [1] is incompatible with string [2].
+  References:
+    8: (b: string);
+        ^ [1]: mixed
+    8: (b: string);
+           ^^^^^^ [2]: string
 
 Error: sanity-refine.js:19
  19: var e = refine3(c, d, e, is_string_and_number);
@@ -143,9 +146,12 @@ Error: sanity-refine.js:28
 
 Error: sanity-refine.js:30
  30: (e: number);
-      ^ mixed. This type is incompatible with
- 30: (e: number);
-         ^^^^^^ number
+      ^ Cannot cast `e` to number because mixed [1] is incompatible with number [2].
+  References:
+   30: (e: number);
+        ^ [1]: mixed
+   30: (e: number);
+           ^^^^^^ [2]: number
 
 
 Found 13 errors

@@ -1,14 +1,20 @@
 Error: keys.js:10
  10:   (123: $Keys<Object>); // Error: number -> keys of Object
-        ^^^ number. This type is incompatible with
- 10:   (123: $Keys<Object>); // Error: number -> keys of Object
-             ^^^^^^^^^^^^^ key set
+        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+  References:
+   10:   (123: $Keys<Object>); // Error: number -> keys of Object
+          ^^^ [1]: number
+   10:   (123: $Keys<Object>); // Error: number -> keys of Object
+               ^^^^^^^^^^^^^ [2]: key set
 
 Error: keys.js:21
  21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
-        ^^^ number. This type is incompatible with
- 21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
-             ^^^^^^^^^^^^^^ key set
+        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+  References:
+   21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+          ^^^ [1]: number
+   21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+               ^^^^^^^^^^^^^^ [2]: key set
 
 Error: keys.js:26
  26:   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
@@ -30,9 +36,12 @@ Error: keys.js:31
 
 Error: keys.js:33
  33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
-        ^^^ number. This type is incompatible with
- 33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
-             ^^^^^^^^^^^^^^^^^ key set
+        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+  References:
+   33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+          ^^^ [1]: number
+   33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+               ^^^^^^^^^^^^^^^^^ [2]: key set
 
 Error: keys.js:38
  38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
@@ -48,9 +57,12 @@ Error: keys.js:40
 
 Error: keys.js:44
  44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
-        ^^^ number. This type is incompatible with
- 44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
-             ^^^^^^^^^^^^^ key set
+        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+  References:
+   44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+          ^^^ [1]: number
+   44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+               ^^^^^^^^^^^^^ [2]: key set
 
 
 Found 9 errors

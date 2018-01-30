@@ -455,9 +455,12 @@ Error: union.js:18
 
 Error: union.js:21
  21: (42: B);
-      ^^ number. This type is incompatible with
- 20: type B = string | {p: string};
-              ^^^^^^ string
+      ^^ Cannot cast number to `B` because number [1] is incompatible with string [2].
+  References:
+   21: (42: B);
+        ^^ [1]: number
+   20: type B = string | {p: string};
+                ^^^^^^ [2]: string
 
 Error: union.js:22
  22: ({p: 42}: B);
@@ -536,9 +539,12 @@ Error: union.js:26
 
 Error: union.js:29
  29: (42: D);
-      ^^ number. This type is incompatible with
- 28: type D = string | {a: string} | {a: {b: string}};
-              ^^^^^^ string
+      ^^ Cannot cast number to `D` because number [1] is incompatible with string [2].
+  References:
+   29: (42: D);
+        ^^ [1]: number
+   28: type D = string | {a: string} | {a: {b: string}};
+                ^^^^^^ [2]: string
 
 Error: union.js:30
  30: ({a: 42}: D);
@@ -758,15 +764,21 @@ Error: union.js:49
 
 Error: union.js:52
  52: (42: G);
-      ^^ number. This type is incompatible with
- 51: type G = string | Z;
-              ^^^^^^ string
+      ^^ Cannot cast number to `G` because number [1] is incompatible with string [2].
+  References:
+   52: (42: G);
+        ^^ [1]: number
+   51: type G = string | Z;
+                ^^^^^^ [2]: string
 
 Error: union.js:53
  53: ({}: G);
-      ^^ object literal. This type is incompatible with
- 51: type G = string | Z;
-                       ^ Z
+      ^^ Cannot cast object literal to `G` because object literal [1] is incompatible with `Z` [2].
+  References:
+   53: ({}: G);
+        ^^ [1]: object literal
+   51: type G = string | Z;
+                         ^ [2]: `Z`
 
 Error: union.js:56
  56: ((new W(): W<number>): M);

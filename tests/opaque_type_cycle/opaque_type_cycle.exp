@@ -18,9 +18,12 @@ Error: test2.js:12
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                  ^ number. This type is incompatible with
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                     ^^^^^^^^ num
+                                                  ^ Cannot cast `x` to `y` because number [1] is incompatible with `num` [2].
+  References:
+    5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                    ^ [1]: number
+    5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                       ^^^^^^^^ [2]: `num`
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}

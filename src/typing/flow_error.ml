@@ -927,6 +927,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     extra, typecheck_msgs msg reasons
   in
 
+  let text = Friendly.text in
+  let ref = Friendly.ref in
+  let desc = Friendly.ref ~loc:false in
+
   (* Unwrap a use_op for the friendly error format. Takes the smallest location
    * where we found the error and a use_op which we will unwrap. *)
   let unwrap_use_ops_friendly =
@@ -935,6 +939,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       Option.value_map
       (match use_op with
       | Op UnknownUse -> Some (`UnknownRoot)
+
+      | Op Cast {lower; upper} ->
+        Some (`Root (lower, None,
+          [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
       | _ -> None
       )
@@ -1002,9 +1010,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
             (loc, capitalize final_message)
       )
   in
-
-  let text = Friendly.text in
-  let ref = Friendly.ref in
 
   let mk_incompatible_friendly_error lower upper use_op =
     let ((lower, upper), use_op) = dedupe_by_flip (lower, upper) use_op in

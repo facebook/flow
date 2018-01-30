@@ -1,32 +1,47 @@
 Error: lex.js:11
  11:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 11:   (b : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
+  References:
+   11:   (b : string); // error: number ~> string
+          ^ [1]: number
+   11:   (b : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:26
  26:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 26:   (b : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
+  References:
+   26:   (b : string); // error: number ~> string
+          ^ [1]: number
+   26:   (b : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:37
  37:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 37:   (b : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
+  References:
+   37:   (b : string); // error: number ~> string
+          ^ [1]: number
+   37:   (b : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: lex.js:48
  48:   (b : number); // error: string ~> number
-        ^ string. This type is incompatible with
- 48:   (b : number); // error: string ~> number
-            ^^^^^^ number
+        ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
+  References:
+   48:   (b : number); // error: string ~> number
+          ^ [1]: string
+   48:   (b : number); // error: string ~> number
+              ^^^^^^ [2]: number
 
 Error: lex.js:59
  59:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 59:   (b : string); // error: number ~> string
-            ^^^^^^ string
+        ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
+  References:
+   59:   (b : string); // error: number ~> string
+          ^ [1]: number
+   59:   (b : string); // error: number ~> string
+              ^^^^^^ [2]: string
 
 Error: locals.js:1
   1: var x:string = 0;

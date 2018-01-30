@@ -12,9 +12,12 @@ Error: dictionary.js:47
 
 Error: dictionary.js:58
  58:   (o.p: C); // error, C ~> B
-        ^^^ B. This type is incompatible with
- 58:   (o.p: C); // error, C ~> B
-             ^ C
+        ^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+   58:   (o.p: C); // error, C ~> B
+          ^^^ [1]: `B`
+   58:   (o.p: C); // error, C ~> B
+               ^ [2]: `C`
 
 Error: dictionary.js:66
  66:   o.prop = "err"; // error: string ~> number
@@ -27,9 +30,12 @@ Error: dictionary.js:66
 
 Error: dictionary.js:94
  94:   (o.toString(): boolean); // error: string ~> boolean
-        ^^^^^^^^^^^^ string. This type is incompatible with
- 94:   (o.toString(): boolean); // error: string ~> boolean
-                      ^^^^^^^ boolean
+        ^^^^^^^^^^^^ Cannot cast call of method `toString` to boolean because string [1] is incompatible with boolean [2].
+  References:
+   94:   (o.toString(): boolean); // error: string ~> boolean
+          ^^^^^^^^^^^^ [1]: string
+   94:   (o.toString(): boolean); // error: string ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: dictionary.js:110
 110:   let a: Array<{[k:string]:A}> = x; // error
@@ -65,9 +71,12 @@ Error: dictionary.js:115
 
 Error: dictionary.js:116
 116:   (x[0].p: C); // not true
-        ^^^^^^ B. This type is incompatible with
-116:   (x[0].p: C); // not true
-                ^ C
+        ^^^^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  116:   (x[0].p: C); // not true
+          ^^^^^^ [1]: `B`
+  116:   (x[0].p: C); // not true
+                  ^ [2]: `C`
 
 Error: dictionary.js:122
 122:   let a: {[k:string]:A} = x; // error
@@ -93,9 +102,12 @@ Error: dictionary.js:127
 
 Error: dictionary.js:128
 128:   (x.p: C); // not true
-        ^^^ B. This type is incompatible with
-128:   (x.p: C); // not true
-             ^ C
+        ^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  128:   (x.p: C); // not true
+          ^^^ [1]: `B`
+  128:   (x.p: C); // not true
+               ^ [2]: `C`
 
 Error: dictionary.js:138
                                v
@@ -233,9 +245,12 @@ Error: dictionary.js:180
 
 Error: dictionary.js:181
 181:   (x[0].p: C); // not true
-        ^^^^^^ B. This type is incompatible with
-181:   (x[0].p: C); // not true
-                ^ C
+        ^^^^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  181:   (x[0].p: C); // not true
+          ^^^^^^ [1]: `B`
+  181:   (x[0].p: C); // not true
+                  ^ [2]: `C`
 
 Error: dictionary.js:189
 189:   let a: Array<{[k:string]:A}> = xa; // error
@@ -271,9 +286,12 @@ Error: dictionary.js:194
 
 Error: dictionary.js:195
 195:   (xc[0].p: C); // not true
-        ^^^^^^^ B. This type is incompatible with
-195:   (xc[0].p: C); // not true
-                 ^ C
+        ^^^^^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  195:   (xc[0].p: C); // not true
+          ^^^^^^^ [1]: `B`
+  195:   (xc[0].p: C); // not true
+                   ^ [2]: `C`
 
 Error: dictionary.js:201
 201:   let a: {[k:string]:B, p:A} = x; // error: A ~> B
@@ -299,9 +317,12 @@ Error: dictionary.js:206
 
 Error: dictionary.js:207
 207:   (x.p: C); // not true
-        ^^^ B. This type is incompatible with
-207:   (x.p: C); // not true
-             ^ C
+        ^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  207:   (x.p: C); // not true
+          ^^^ [1]: `B`
+  207:   (x.p: C); // not true
+               ^ [2]: `C`
 
 Error: dictionary.js:215
 215:   let a: {[k:string]:A} = xa; // error
@@ -327,9 +348,12 @@ Error: dictionary.js:220
 
 Error: dictionary.js:221
 221:   (xc.p: C); // not true
-        ^^^^ B. This type is incompatible with
-221:   (xc.p: C); // not true
-              ^ C
+        ^^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  221:   (xc.p: C); // not true
+          ^^^^ [1]: `B`
+  221:   (xc.p: C); // not true
+                ^ [2]: `C`
 
 Error: dictionary.js:227
 227:   return x; // error: if allowed, could write {p:X,q:Y} into `x`
@@ -377,9 +401,12 @@ Error: dictionary.js:244
 
 Error: dictionary.js:245
 245:   (x.p: C); // not true
-        ^^^ B. This type is incompatible with
-245:   (x.p: C); // not true
-             ^ C
+        ^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  245:   (x.p: C); // not true
+          ^^^ [1]: `B`
+  245:   (x.p: C); // not true
+               ^ [2]: `C`
 
 Error: dictionary.js:251
 251:   let a: {[k:string]:A} = x; // error
@@ -405,9 +432,12 @@ Error: dictionary.js:256
 
 Error: dictionary.js:257
 257:   (x.p: C); // not true
-        ^^^ B. This type is incompatible with
-257:   (x.p: C); // not true
-             ^ C
+        ^^^ Cannot cast property `p` to `C` because `B` [1] is incompatible with `C` [2].
+  References:
+  257:   (x.p: C); // not true
+          ^^^ [1]: `B`
+  257:   (x.p: C); // not true
+               ^ [2]: `C`
 
 Error: dictionary.js:265
 265:   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
@@ -656,9 +686,12 @@ Error: incompatible.js:47
 
 Error: incompatible.js:55
  55:   (x.foo: string); // error
-        ^^^^^ number. This type is incompatible with
- 55:   (x.foo: string); // error
-               ^^^^^^ string
+        ^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+  References:
+   55:   (x.foo: string); // error
+          ^^^^^ [1]: number
+   55:   (x.foo: string); // error
+                 ^^^^^^ [2]: string
 
 Error: test.js:4
                                      v

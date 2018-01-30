@@ -32,15 +32,21 @@ Error: propagate.js:10
 
 Error: propagate.js:16
  16:     (x: boolean);
-          ^ mixed. This type is incompatible with
- 16:     (x: boolean);
-             ^^^^^^^ boolean
+          ^ Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
+  References:
+   16:     (x: boolean);
+            ^ [1]: mixed
+   16:     (x: boolean);
+               ^^^^^^^ [2]: boolean
 
 Error: propagate.js:23
  23:     (x: boolean);
-          ^ mixed. This type is incompatible with
- 23:     (x: boolean);
-             ^^^^^^^ boolean
+          ^ Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
+  References:
+   23:     (x: boolean);
+            ^ [1]: mixed
+   23:     (x: boolean);
+               ^^^^^^^ [2]: boolean
 
 
 Found 8 errors

@@ -1,8 +1,11 @@
 Error: test.js:7
   7: (foo(false): void); // error, boolean ~/~ undefined
-      ^^^^^^^^^^ boolean. This type is incompatible with
-  7: (foo(false): void); // error, boolean ~/~ undefined
-                  ^^^^ undefined
+      ^^^^^^^^^^ Cannot cast call of `foo` to undefined because boolean [1] is incompatible with undefined [2].
+  References:
+    7: (foo(false): void); // error, boolean ~/~ undefined
+        ^^^^^^^^^^ [1]: boolean
+    7: (foo(false): void); // error, boolean ~/~ undefined
+                    ^^^^ [2]: undefined
 
 
 Found 1 error

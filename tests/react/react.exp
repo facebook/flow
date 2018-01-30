@@ -11,15 +11,21 @@ Error: createElementRequiredProp_string.js:17
 
 Error: create_class.js:7
   7:     (this.props.foo: empty); // error: string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7:     (this.props.foo: empty); // error: string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+    7:     (this.props.foo: empty); // error: string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+    7:     (this.props.foo: empty); // error: string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:8
   8:     (this.props.bar: empty); // error: number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-  8:     (this.props.bar: empty); // error: number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+    8:     (this.props.bar: empty); // error: number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+    8:     (this.props.bar: empty); // error: number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:15
  15:     this.p = 0; // error: number ~> string
@@ -32,9 +38,12 @@ Error: create_class.js:15
 
 Error: create_class.js:48
  48:     (this.foo: string); // error: number ~> string
-          ^^^^^^^^ number. This type is incompatible with
- 48:     (this.foo: string); // error: number ~> string
-                    ^^^^^^ string
+          ^^^^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+  References:
+   48:     (this.foo: string); // error: number ~> string
+            ^^^^^^^^ [1]: number
+   48:     (this.foo: string); // error: number ~> string
+                      ^^^^^^ [2]: string
 
 Error: create_class.js:71
  71:     (this.mixins: mixed); // error: property `mixins` not found
@@ -56,75 +65,111 @@ Error: create_class.js:73
 
 Error: create_class.js:80
  80:     (this.q: empty); // error: number ~> empty
-          ^^^^^^ number. This type is incompatible with
- 80:     (this.q: empty); // error: number ~> empty
-                  ^^^^^ empty
+          ^^^^^^ Cannot cast property `q` to empty because number [1] is incompatible with empty [2].
+  References:
+   80:     (this.q: empty); // error: number ~> empty
+            ^^^^^^ [1]: number
+   80:     (this.q: empty); // error: number ~> empty
+                    ^^^^^ [2]: empty
 
 Error: create_class.js:104
 104:     (this.state.foo: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-104:     (this.state.foo: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+  104:     (this.state.foo: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+  104:     (this.state.foo: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:117
 117:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-117:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  117:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  117:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-118:     (this.state.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  118:     (this.state.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  118:     (this.state.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-133:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  133:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  133:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:137
 137:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-137:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  137:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  137:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:141
 141:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-141:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  141:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  141:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:142
 142:     (nextProps.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^ string. This type is incompatible with
-142:     (nextProps.foo: empty); // string ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  142:     (nextProps.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^ [1]: string
+  142:     (nextProps.foo: empty); // string ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:146
 146:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-146:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  146:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  146:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:147
 147:     (this.state.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-147:     (this.state.bar: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  147:     (this.state.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+  147:     (this.state.bar: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:148
 148:     (nextProps.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^ string. This type is incompatible with
-148:     (nextProps.foo: empty); // string ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  148:     (nextProps.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^ [1]: string
+  148:     (nextProps.foo: empty); // string ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:149
 149:     (nextState.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^ number. This type is incompatible with
-149:     (nextState.bar: empty); // number ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  149:     (nextState.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^ [1]: number
+  149:     (nextState.bar: empty); // number ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:150
 150:     return 0; // number ~> bool
@@ -134,63 +179,93 @@ Error: create_class.js:150
 
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-153:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  153:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  153:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:154
 154:     (this.state.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-154:     (this.state.bar: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  154:     (this.state.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+  154:     (this.state.bar: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:155
 155:     (nextProps.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^ string. This type is incompatible with
-155:     (nextProps.foo: empty); // string ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  155:     (nextProps.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^ [1]: string
+  155:     (nextProps.foo: empty); // string ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:156
 156:     (nextState.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^ number. This type is incompatible with
-156:     (nextState.bar: empty); // number ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  156:     (nextState.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^ [1]: number
+  156:     (nextState.bar: empty); // number ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:160
 160:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-160:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  160:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  160:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:161
 161:     (this.state.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-161:     (this.state.bar: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  161:     (this.state.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+  161:     (this.state.bar: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:162
 162:     (nextProps.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^ string. This type is incompatible with
-162:     (nextProps.foo: empty); // string ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  162:     (nextProps.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^ [1]: string
+  162:     (nextProps.foo: empty); // string ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:163
 163:     (nextState.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^ number. This type is incompatible with
-163:     (nextState.bar: empty); // number ~> empty
-                         ^^^^^ empty
+          ^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  163:     (nextState.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^ [1]: number
+  163:     (nextState.bar: empty); // number ~> empty
+                           ^^^^^ [2]: empty
 
 Error: create_class.js:167
 167:     (this.props.foo: empty); // string ~> empty
-          ^^^^^^^^^^^^^^ string. This type is incompatible with
-167:     (this.props.foo: empty); // string ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+  167:     (this.props.foo: empty); // string ~> empty
+            ^^^^^^^^^^^^^^ [1]: string
+  167:     (this.props.foo: empty); // string ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:168
 168:     (this.state.bar: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
-168:     (this.state.bar: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+  168:     (this.state.bar: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+  168:     (this.state.bar: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class.js:173
 173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
@@ -206,21 +281,30 @@ Error: create_class.js:174
 
 Error: create_class_initial_state_sealed.js:9
   9:     (this.state.q: empty); // number ~> empty
-          ^^^^^^^^^^^^ number. This type is incompatible with
-  9:     (this.state.q: empty); // number ~> empty
-                        ^^^^^ empty
+          ^^^^^^^^^^^^ Cannot cast property `q` to empty because number [1] is incompatible with empty [2].
+  References:
+    9:     (this.state.q: empty); // number ~> empty
+            ^^^^^^^^^^^^ [1]: number
+    9:     (this.state.q: empty); // number ~> empty
+                          ^^^^^ [2]: empty
 
 Error: create_class_initial_state_sealed.js:22
  22:     (this.state.q: empty); // number ~> empty
-          ^^^^^^^^^^^^ number. This type is incompatible with
- 22:     (this.state.q: empty); // number ~> empty
-                        ^^^^^ empty
+          ^^^^^^^^^^^^ Cannot cast property `q` to empty because number [1] is incompatible with empty [2].
+  References:
+   22:     (this.state.q: empty); // number ~> empty
+            ^^^^^^^^^^^^ [1]: number
+   22:     (this.state.q: empty); // number ~> empty
+                          ^^^^^ [2]: empty
 
 Error: create_class_initial_state_sealed.js:35
  35:     (this.state.q: empty); // number ~> empty
-          ^^^^^^^^^^^^ number. This type is incompatible with
- 35:     (this.state.q: empty); // number ~> empty
-                        ^^^^^ empty
+          ^^^^^^^^^^^^ Cannot cast property `q` to empty because number [1] is incompatible with empty [2].
+  References:
+   35:     (this.state.q: empty); // number ~> empty
+            ^^^^^^^^^^^^ [1]: number
+   35:     (this.state.q: empty); // number ~> empty
+                          ^^^^^ [2]: empty
 
 Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
@@ -246,9 +330,12 @@ Error: create_class_initial_state_sealed.js:48
 
 Error: create_class_initial_state_sealed.js:66
  66:     (this.state.baz: empty); // number ~> empty
-          ^^^^^^^^^^^^^^ number. This type is incompatible with
- 66:     (this.state.baz: empty); // number ~> empty
-                          ^^^^^ empty
+          ^^^^^^^^^^^^^^ Cannot cast property `baz` to empty because number [1] is incompatible with empty [2].
+  References:
+   66:     (this.state.baz: empty); // number ~> empty
+            ^^^^^^^^^^^^^^ [1]: number
+   66:     (this.state.baz: empty); // number ~> empty
+                            ^^^^^ [2]: empty
 
 Error: create_class_initial_state_sealed.js:81
  81:     this.setState({ baz: 0 }); // property `baz`  not found
@@ -274,39 +361,57 @@ Error: create_class_initial_state_sealed.js:84
 
 Error: create_class_statics_sealed.js:5
   5: (A.bar: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
-  5: (A.bar: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+    5: (A.bar: empty); // number ~> empty (inflow below)
+        ^^^^^ [1]: number
+    5: (A.bar: empty); // number ~> empty (inflow below)
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:12
  12: (B.foo: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 12: (B.foo: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+   12: (B.foo: empty); // number ~> empty
+        ^^^^^ [1]: number
+   12: (B.foo: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:13
  13: (B.bar: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
- 13: (B.bar: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+   13: (B.bar: empty); // number ~> empty (inflow below)
+        ^^^^^ [1]: number
+   13: (B.bar: empty); // number ~> empty (inflow below)
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:20
  20: (C.foo: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 20: (C.foo: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+   20: (C.foo: empty); // number ~> empty
+        ^^^^^ [1]: number
+   20: (C.foo: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:21
  21: (C.bar: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
- 21: (C.bar: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+   21: (C.bar: empty); // number ~> empty (inflow below)
+        ^^^^^ [1]: number
+   21: (C.bar: empty); // number ~> empty (inflow below)
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:28
  28: (D.foo: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 28: (D.foo: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+   28: (D.foo: empty); // number ~> empty
+        ^^^^^ [1]: number
+   28: (D.foo: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:29
  29: (D.bar: empty); // property `bar` not found
@@ -322,33 +427,48 @@ Error: create_class_statics_sealed.js:30
 
 Error: create_class_statics_sealed.js:39
  39: (E.foo: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 39: (E.foo: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+   39: (E.foo: empty); // number ~> empty
+        ^^^^^ [1]: number
+   39: (E.foo: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:40
  40: (E.bar: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 40: (E.bar: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+   40: (E.bar: empty); // number ~> empty
+        ^^^^^ [1]: number
+   40: (E.bar: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:41
  41: (E.baz: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
- 41: (E.baz: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `baz` to empty because number [1] is incompatible with empty [2].
+  References:
+   41: (E.baz: empty); // number ~> empty (inflow below)
+        ^^^^^ [1]: number
+   41: (E.baz: empty); // number ~> empty (inflow below)
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:51
  51: (F.foo: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 51: (F.foo: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+  References:
+   51: (F.foo: empty); // number ~> empty
+        ^^^^^ [1]: number
+   51: (F.foo: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:52
  52: (F.bar: empty); // number ~> empty
-      ^^^^^ number. This type is incompatible with
- 52: (F.bar: empty); // number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `bar` to empty because number [1] is incompatible with empty [2].
+  References:
+   52: (F.bar: empty); // number ~> empty
+        ^^^^^ [1]: number
+   52: (F.bar: empty); // number ~> empty
+               ^^^^^ [2]: empty
 
 Error: create_class_statics_sealed.js:53
  53: (F.baz: empty); // number ~> empty (inflow below)
@@ -1369,27 +1489,39 @@ Error: proptype_arrayOf.js:43
 
 Error: proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
-            ^^^^^^^^ string. This type is incompatible with
-  8:       (propName: empty); // error: propName is a string
-                      ^^^^^ empty
+            ^^^^^^^^ Cannot cast `propName` to empty because string [1] is incompatible with empty [2].
+  References:
+    8:       (propName: empty); // error: propName is a string
+              ^^^^^^^^ [1]: string
+    8:       (propName: empty); // error: propName is a string
+                        ^^^^^ [2]: empty
 
 Error: proptype_custom_validator.js:9
   9:       (componentName: empty); // error: componentName is a string
-            ^^^^^^^^^^^^^ string. This type is incompatible with
-  9:       (componentName: empty); // error: componentName is a string
-                           ^^^^^ empty
+            ^^^^^^^^^^^^^ Cannot cast `componentName` to empty because string [1] is incompatible with empty [2].
+  References:
+    9:       (componentName: empty); // error: componentName is a string
+              ^^^^^^^^^^^^^ [1]: string
+    9:       (componentName: empty); // error: componentName is a string
+                             ^^^^^ [2]: empty
 
 Error: proptype_custom_validator.js:10
  10:       (href: empty); // error: href is an optional string
-            ^^^^ string. This type is incompatible with
- 10:       (href: empty); // error: href is an optional string
-                  ^^^^^ empty
+            ^^^^ Cannot cast `href` to empty because string [1] is incompatible with empty [2].
+  References:
+   10:       (href: empty); // error: href is an optional string
+              ^^^^ [1]: string
+   10:       (href: empty); // error: href is an optional string
+                    ^^^^^ [2]: empty
 
 Error: proptype_custom_validator.js:10
  10:       (href: empty); // error: href is an optional string
-            ^^^^ undefined. This type is incompatible with
- 10:       (href: empty); // error: href is an optional string
-                  ^^^^^ empty
+            ^^^^ Cannot cast `href` to empty because undefined [1] is incompatible with empty [2].
+  References:
+   10:       (href: empty); // error: href is an optional string
+              ^^^^ [1]: undefined
+   10:       (href: empty); // error: href is an optional string
+                    ^^^^^ [2]: empty
 
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
@@ -2025,15 +2157,21 @@ Error: ref.js:12
 
 Error: ref.js:13
  13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
-                       ^^^ null. This type is incompatible with
- 13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
-                            ^^^ Foo
+                       ^^^ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
+  References:
+   13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+                         ^^^ [1]: null
+   13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+                              ^^^ [2]: `Foo`
 
 Error: ref.js:15
  15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                       ^^^ Foo. This type is incompatible with
- 15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                            ^^^ Bar
+                       ^^^ Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2].
+  References:
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                         ^^^ [1]: `Foo`
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                              ^^^ [2]: `Bar`
 
 Error: ref.js:23
  23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
@@ -2048,15 +2186,21 @@ Error: ref.js:23
 
 Error: ref.js:24
  24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
-                            ^^^ null. This type is incompatible with
- 24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
-                                 ^^^^^^^^ FooExact
+                            ^^^ Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact` [2].
+  References:
+   24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
+                              ^^^ [1]: null
+   24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
+                                   ^^^^^^^^ [2]: `FooExact`
 
 Error: ref.js:26
  26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
-                            ^^^ FooExact. This type is incompatible with
- 26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
-                                 ^^^ Bar
+                            ^^^ Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2].
+  References:
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                              ^^^ [1]: `FooExact`
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                   ^^^ [2]: `Bar`
 
 Error: render_callback.js:13
  13: ReactDOM.render(<Example/>, document.querySelector('#site'), () => {

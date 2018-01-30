@@ -4,45 +4,66 @@ Error: foo/bar/nested_test.js:10
 
 Error: foo/bar/nested_test.js:12
  12: (docblock.fun(): string);
-      ^^^^^^^^^^^^^^ number. This type is incompatible with
- 12: (docblock.fun(): string);
-                      ^^^^^^ string
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   12: (docblock.fun(): string);
+        ^^^^^^^^^^^^^^ [1]: number
+   12: (docblock.fun(): string);
+                        ^^^^^^ [2]: string
 
 Error: foo/bar/nested_test.js:13
  13: (min.fun(): string);
-      ^^^^^^^^^ number. This type is incompatible with
- 13: (min.fun(): string);
-                 ^^^^^^ string
+      ^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   13: (min.fun(): string);
+        ^^^^^^^^^ [1]: number
+   13: (min.fun(): string);
+                   ^^^^^^ [2]: string
 
 Error: foo/bar/nested_test.js:14
  14: (corge.fun(): string);
-      ^^^^^^^^^^^ number. This type is incompatible with
- 14: (corge.fun(): string);
-                   ^^^^^^ string
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   14: (corge.fun(): string);
+        ^^^^^^^^^^^ [1]: number
+   14: (corge.fun(): string);
+                     ^^^^^^ [2]: string
 
 Error: foo/bar/nested_test.js:15
  15: (SomeOtherModule.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 15: (SomeOtherModule.fun(): string);
-                             ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   15: (SomeOtherModule.fun(): string);
+        ^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   15: (SomeOtherModule.fun(): string);
+                               ^^^^^^ [2]: string
 
 Error: test.js:4
   4: (Implicit.fun(): string);
-      ^^^^^^^^^^^^^^ number. This type is incompatible with
-  4: (Implicit.fun(): string);
-                      ^^^^^^ string
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    4: (Implicit.fun(): string);
+        ^^^^^^^^^^^^^^ [1]: number
+    4: (Implicit.fun(): string);
+                        ^^^^^^ [2]: string
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  7: (ExplicitSameName.fun(): string);
-                              ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    7: (ExplicitSameName.fun(): string);
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+    7: (ExplicitSameName.fun(): string);
+                                ^^^^^^ [2]: string
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): string);
-                                   ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   10: (ExplicitDifferentName.fun(): string);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   10: (ExplicitDifferentName.fun(): string);
+                                     ^^^^^^ [2]: string
 
 
 Found 8 errors

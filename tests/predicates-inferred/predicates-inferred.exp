@@ -12,9 +12,12 @@ Error: sanity-multi-params.js:12
 
 Error: sanity-ordering.js:7
   7:   (obj.page: Object);
-        ^^^^^^^^ null or undefined. This type is incompatible with
-  7:   (obj.page: Object);
-                  ^^^^^^ object type
+        ^^^^^^^^ Cannot cast property `page` to object type because null or undefined [1] is incompatible with object type [2].
+  References:
+    7:   (obj.page: Object);
+          ^^^^^^^^ [1]: null or undefined
+    7:   (obj.page: Object);
+                    ^^^^^^ [2]: object type
 
 Error: sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});

@@ -33,9 +33,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ object type. This type is incompatible with
-            5: (css: string)
-                     ^^^^^^ string
+                ^^^ Cannot cast \`css\` to string because object type [1] is incompatible with string [2].
+            References:
+              5: (css: string)
+                  ^^^ [1]: object type
+              5: (css: string)
+                       ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -75,17 +78,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (png: number)
-                ^^^ string. This type is incompatible with
-            5: (png: number)
-                     ^^^^^^ number
-
-
-
-
-
-
-
-
+                ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2].
+            References:
+              5: (png: number)
+                  ^^^ [1]: string
+              5: (png: number)
+                       ^^^^^^ [2]: number
         `,
       ),
   ]),
@@ -98,9 +96,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ boolean. This type is incompatible with
-            5: (css: string)
-                     ^^^^^^ string
+                ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2].
+            References:
+              5: (css: string)
+                  ^^^ [1]: boolean
+              5: (css: string)
+                       ^^^^^^ [2]: string
         `,
       ),
   ]).flowConfig('_flowconfig_with_module_name_mapper'),

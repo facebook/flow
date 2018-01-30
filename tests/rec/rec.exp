@@ -11,27 +11,39 @@ Error: issue-598.js:7
 
 Error: test.js:6
   6: (p.x: string); // error
-      ^^^ number. This type is incompatible with
-  6: (p.x: string); // error
-           ^^^^^^ string
+      ^^^ Cannot cast property `x` to string because number [1] is incompatible with string [2].
+  References:
+    6: (p.x: string); // error
+        ^^^ [1]: number
+    6: (p.x: string); // error
+             ^^^^^^ [2]: string
 
 Error: test.js:9
   9: (pstar: number); // error, but limit potentially unbounded number of errors!
-      ^^^^^ P. This type is incompatible with
-  9: (pstar: number); // error, but limit potentially unbounded number of errors!
-             ^^^^^^ number
+      ^^^^^ Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
+  References:
+    9: (pstar: number); // error, but limit potentially unbounded number of errors!
+        ^^^^^ [1]: `P`
+    9: (pstar: number); // error, but limit potentially unbounded number of errors!
+               ^^^^^^ [2]: number
 
 Error: test.js:13
  13: (pstar.x: string); // error
-      ^^^^^^^ number. This type is incompatible with
- 13: (pstar.x: string); // error
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast property `x` to string because number [1] is incompatible with string [2].
+  References:
+   13: (pstar.x: string); // error
+        ^^^^^^^ [1]: number
+   13: (pstar.x: string); // error
+                 ^^^^^^ [2]: string
 
 Error: test.js:16
  16: (pstar.x: string); // error
-      ^^^^^^^ P. This type is incompatible with
- 16: (pstar.x: string); // error
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast property `x` to string because `P` [1] is incompatible with string [2].
+  References:
+   16: (pstar.x: string); // error
+        ^^^^^^^ [1]: `P`
+   16: (pstar.x: string); // error
+                 ^^^^^^ [2]: string
 
 Error: test2.js:30
  30: ((new C: C<number>): D<string>) // error: number ~/~ string

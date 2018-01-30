@@ -1,8 +1,11 @@
 Error: main.js:4
   4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)
-      ^^^^^^^ number. This type is incompatible with
-  4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast `<fbt/>` to string because number [1] is incompatible with string [2].
+  References:
+    4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+        ^^^^^^^ [1]: number
+    4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+                 ^^^^^^ [2]: string
 
 
 Found 1 error

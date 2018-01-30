@@ -160,9 +160,12 @@ Error: overload.js:32
 
 Error: test2.js:7
   7: (foo.bar('hmmm'): number); // error
-      ^^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: (foo.bar('hmmm'): number); // error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast call of method `bar` to number because string [1] is incompatible with number [2].
+  References:
+    7: (foo.bar('hmmm'): number); // error
+        ^^^^^^^^^^^^^^^ [1]: string
+    7: (foo.bar('hmmm'): number); // error
+                         ^^^^^^ [2]: number
 
 
 Found 13 errors

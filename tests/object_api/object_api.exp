@@ -17,33 +17,48 @@ Error: object_assign.js:7
 
 Error: object_create.js:12
  12: ({ foo: "foo" }: C);
-      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 12: ({ foo: "foo" }: C);
-                      ^ C
+      ^^^^^^^^^^^^^^ Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2].
+  References:
+   12: ({ foo: "foo" }: C);
+        ^^^^^^^^^^^^^^ [1]: object literal
+   12: ({ foo: "foo" }: C);
+                        ^ [2]: `C`
 
 Error: object_create.js:17
  17: (o: C);
-      ^ O. This type is incompatible with
- 17: (o: C);
-         ^ C
+      ^ Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2].
+  References:
+   17: (o: C);
+        ^ [1]: `O`
+   17: (o: C);
+           ^ [2]: `C`
 
 Error: object_keys.js:5
   5: (Object.keys(sealed): void); // error, Array<string>
-      ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-  5: (Object.keys(sealed): void); // error, Array<string>
-                           ^^^^ undefined
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast array type to undefined because array type [1] is incompatible with undefined [2].
+  References:
+    5: (Object.keys(sealed): void); // error, Array<string>
+        ^^^^^^^^^^^^^^^^^^^ [1]: array type
+    5: (Object.keys(sealed): void); // error, Array<string>
+                             ^^^^ [2]: undefined
 
 Error: object_keys.js:9
   9:   (k : number) // error: string ~> number
-        ^ string. This type is incompatible with
-  9:   (k : number) // error: string ~> number
-            ^^^^^^ number
+        ^ Cannot cast `k` to number because string [1] is incompatible with number [2].
+  References:
+    9:   (k : number) // error: string ~> number
+          ^ [1]: string
+    9:   (k : number) // error: string ~> number
+              ^^^^^^ [2]: number
 
 Error: object_keys.js:14
  14:   (k : number) // error: string ~> number
-        ^ string. This type is incompatible with
- 14:   (k : number) // error: string ~> number
-            ^^^^^^ number
+        ^ Cannot cast `k` to number because string [1] is incompatible with number [2].
+  References:
+   14:   (k : number) // error: string ~> number
+          ^ [1]: string
+   14:   (k : number) // error: string ~> number
+              ^^^^^^ [2]: number
 
 Error: object_keys.js:18
  18: (Object.keys(any): Array<number>); // error, Array<string>
@@ -260,21 +275,30 @@ Error: object_prototype.js:155
 
 Error: proto.js:3
   3: (o1_proto.toString: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-  3: (o1_proto.toString: empty); // error: function ~> empty
-                         ^^^^^ empty
+      ^^^^^^^^^^^^^^^^^ Cannot cast property `toString` to empty because function type [1] is incompatible with empty [2].
+  References:
+    3: (o1_proto.toString: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^^^^^ [1]: function type
+    3: (o1_proto.toString: empty); // error: function ~> empty
+                           ^^^^^ [2]: empty
 
 Error: proto.js:7
   7: (o2.__proto__.p: empty); // error: number ~> empty
-      ^^^^^^^^^^^^^^ number. This type is incompatible with
-  7: (o2.__proto__.p: empty); // error: number ~> empty
-                      ^^^^^ empty
+      ^^^^^^^^^^^^^^ Cannot cast property `p` to empty because number [1] is incompatible with empty [2].
+  References:
+    7: (o2.__proto__.p: empty); // error: number ~> empty
+        ^^^^^^^^^^^^^^ [1]: number
+    7: (o2.__proto__.p: empty); // error: number ~> empty
+                        ^^^^^ [2]: empty
 
 Error: proto.js:13
  13: (C1_proto.bind: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^ function type. This type is incompatible with
- 13: (C1_proto.bind: empty); // error: function ~> empty
-                     ^^^^^ empty
+      ^^^^^^^^^^^^^ Cannot cast property `bind` to empty because function type [1] is incompatible with empty [2].
+  References:
+   13: (C1_proto.bind: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^ [1]: function type
+   13: (C1_proto.bind: empty); // error: function ~> empty
+                       ^^^^^ [2]: empty
 
 Error: proto.js:17
  17: (inst1_proto.m: empty); // TODO error: function ~> empty

@@ -31,27 +31,36 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:17
                                                             17: (idx(obj1, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                            17: (idx(obj1, obj => obj.a.b.c): number);
-                                                                                              ^^^^^^ number
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              17: (idx(obj1, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                              17: (idx(obj1, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]: number
                                                          `,
                                                        ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?string);\n').newErrors(
-      `
-        test.js:20
-         20: (idx(obj1, obj => obj.a.b.c): ?string);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-         20: (idx(obj1, obj => obj.a.b.c): ?string);
-                                            ^^^^^^ string
-      `,
-    ),
+                                                          `
+                                                            test.js:20
+                                                             20: (idx(obj1, obj => obj.a.b.c): ?string);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to nullable string because number [1] is incompatible with string [2].
+                                                              References:
+                                                               20: (idx(obj1, obj => obj.a.b.c): ?string);
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+                                                               20: (idx(obj1, obj => obj.a.b.c): ?string);
+                                                                                                  ^^^^^^ [2]: string
+                                                          `,
+                                                        ),
     addCode('(idx(obj1, obj => obj["a"].b.c): number);\n').newErrors(
                                                             `
                                                               test.js:23
                                                                23: (idx(obj1, obj => obj["a"].b.c): number);
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                               23: (idx(obj1, obj => obj["a"].b.c): number);
-                                                                                                    ^^^^^^ number
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                References:
+                                                                 23: (idx(obj1, obj => obj["a"].b.c): number);
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                 23: (idx(obj1, obj => obj["a"].b.c): number);
+                                                                                                      ^^^^^^ [2]: number
                                                             `,
                                                           ),
     addCode('idx(obj1, obj => obj.notAProp);\n').newErrors(
@@ -76,9 +85,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:37
                                                             37: (idx(obj2, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                            37: (idx(obj2, obj => obj.a.b.c): number);
-                                                                                              ^^^^^^ number
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              37: (idx(obj2, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                              37: (idx(obj2, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]: number
                                                          `,
                                                        ),
     addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
@@ -87,9 +99,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:45
                                                             45: (idx(obj3, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                            45: (idx(obj3, obj => obj.a.b.c): number);
-                                                                                              ^^^^^^ number
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              45: (idx(obj3, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                              45: (idx(obj3, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]: number
                                                          `,
                                                        ),
     // Nested maybes/optionals should get unwrapped
@@ -108,9 +123,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:18
                                                             18: (idx(new Foo1(), o => o.a.b): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                            18: (idx(new Foo1(), o => o.a.b): number);
-                                                                                              ^^^^^^ number
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                                                ^^^^^^ [2]: number
                                                          `,
                                                        ),
     addCode('idx(new Foo1(), o => o.a = null);\n').newErrors(
@@ -141,9 +159,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                              `
                                                test.js:9
                                                  9: (idx(42, n => n): number);
-                                                     ^^^^^^^^^^^^^^^ null or undefined. This type is incompatible with
-                                                 9: (idx(42, n => n): number);
-                                                                      ^^^^^^ number
+                                                     ^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                 References:
+                                                   9: (idx(42, n => n): number);
+                                                       ^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                   9: (idx(42, n => n): number);
+                                                                        ^^^^^^ [2]: number
                                              `,
                                            ),
     addCode('idx(42, n => n.nope);\n').newErrors(

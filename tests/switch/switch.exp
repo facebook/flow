@@ -8,15 +8,21 @@ Error: switch.js:28
 
 Error: switch_default_fallthrough.js:16
  16:     (a : string); // error, string | number ~/> string
-          ^ number. This type is incompatible with
- 16:     (a : string); // error, string | number ~/> string
-              ^^^^^^ string
+          ^ Cannot cast `a` to string because number [1] is incompatible with string [2].
+  References:
+   16:     (a : string); // error, string | number ~/> string
+            ^ [1]: number
+   16:     (a : string); // error, string | number ~/> string
+                ^^^^^^ [2]: string
 
 Error: switch_default_fallthrough.js:17
  17:     (a : number); // error, string | number ~/> number
-          ^ string. This type is incompatible with
- 17:     (a : number); // error, string | number ~/> number
-              ^^^^^^ number
+          ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
+  References:
+   17:     (a : number); // error, string | number ~/> number
+            ^ [1]: string
+   17:     (a : number); // error, string | number ~/> number
+                ^^^^^^ [2]: number
 
 Error: switch_default_fallthrough.js:21
  21:     return b; // error, number ~/> string
@@ -26,27 +32,39 @@ Error: switch_default_fallthrough.js:21
 
 Error: switch_default_fallthrough.js:39
  39:     (a : string); // error, string | number ~/> string
-          ^ number. This type is incompatible with
- 39:     (a : string); // error, string | number ~/> string
-              ^^^^^^ string
+          ^ Cannot cast `a` to string because number [1] is incompatible with string [2].
+  References:
+   39:     (a : string); // error, string | number ~/> string
+            ^ [1]: number
+   39:     (a : string); // error, string | number ~/> string
+                ^^^^^^ [2]: string
 
 Error: switch_default_fallthrough.js:40
  40:     (a : number); // error, string | number ~/> number
-          ^ string. This type is incompatible with
- 40:     (a : number); // error, string | number ~/> number
-              ^^^^^^ number
+          ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
+  References:
+   40:     (a : number); // error, string | number ~/> number
+            ^ [1]: string
+   40:     (a : number); // error, string | number ~/> number
+                ^^^^^^ [2]: number
 
 Error: switch_default_fallthrough.js:43
  43:     (b : string); // error, string | number ~/> string
-          ^ number. This type is incompatible with
- 43:     (b : string); // error, string | number ~/> string
-              ^^^^^^ string
+          ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
+  References:
+   43:     (b : string); // error, string | number ~/> string
+            ^ [1]: number
+   43:     (b : string); // error, string | number ~/> string
+                ^^^^^^ [2]: string
 
 Error: switch_default_fallthrough.js:44
  44:     (b : number); // error, string | number ~/> number
-          ^ string. This type is incompatible with
- 44:     (b : number); // error, string | number ~/> number
-              ^^^^^^ number
+          ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
+  References:
+   44:     (b : number); // error, string | number ~/> number
+            ^ [1]: string
+   44:     (b : number); // error, string | number ~/> number
+                ^^^^^^ [2]: number
 
 Error: switch_default_fallthrough.js:46
  46:     return a+b; // error, string ~/> number

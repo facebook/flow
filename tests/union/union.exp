@@ -33,9 +33,12 @@ Error: union.js:9
 
 Error: yuge.js:23
  23:     ("": ErrorCode);  // also, error pos omits this line completely
-          ^^ string. This type is incompatible with
- 23:     ("": ErrorCode);  // also, error pos omits this line completely
-              ^^^^^^^^^ number enum
+          ^^ Cannot cast string to `ErrorCode` because string [1] is incompatible with number enum [2].
+  References:
+   23:     ("": ErrorCode);  // also, error pos omits this line completely
+            ^^ [1]: string
+   23:     ("": ErrorCode);  // also, error pos omits this line completely
+                ^^^^^^^^^ [2]: number enum
 
 
 Found 6 errors

@@ -6,9 +6,12 @@ Error: advanced_arrows.js:7
 
 Error: advanced_arrows.js:11
  11: (ident("hi"): number); // Error
-      ^^^^^^^^^^^ string. This type is incompatible with
- 11: (ident("hi"): number); // Error
-                   ^^^^^^ number
+      ^^^^^^^^^^^ Cannot cast call of `ident` to number because string [1] is incompatible with number [2].
+  References:
+   11: (ident("hi"): number); // Error
+        ^^^^^^^^^^^ [1]: string
+   11: (ident("hi"): number); // Error
+                     ^^^^^^ [2]: number
 
 Error: arrows.js:7
   7:     images = images.sort((a, b) => (a.width - b.width) + "");

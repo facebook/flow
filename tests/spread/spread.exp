@@ -35,9 +35,12 @@ Error: test6.js:10
 
 Error: test7.js:6
   6:     ({...x}: void); // error, Object
-          ^^^^^^ object literal. This type is incompatible with
-  6:     ({...x}: void); // error, Object
-                  ^^^^ undefined
+          ^^^^^^ Cannot cast object literal to undefined because object literal [1] is incompatible with undefined [2].
+  References:
+    6:     ({...x}: void); // error, Object
+            ^^^^^^ [1]: object literal
+    6:     ({...x}: void); // error, Object
+                    ^^^^ [2]: undefined
 
 Error: test8.js:7
   7: ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)

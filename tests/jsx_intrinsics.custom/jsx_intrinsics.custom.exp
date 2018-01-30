@@ -11,9 +11,12 @@ Error: main.js:6
 
 Error: main.js:9
   9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
-                                 ^^^^^^ number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `id` to number because string [1] is incompatible with number [2].
+  References:
+    9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+    9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+                                   ^^^^^^ [2]: number
 
 Error: strings.js:9
   9: <Div />; // This is fine

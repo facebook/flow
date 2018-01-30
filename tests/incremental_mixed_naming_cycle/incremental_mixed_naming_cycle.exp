@@ -1,76 +1,112 @@
 Error: a.js:6
   6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    6: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 Error: a.js:7
   7: (require('C'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('C'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `C` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('C'): void);
+        ^^^^^^^^^^^^ [1]: string
+    7: (require('C'): void);
+                      ^^^^ [2]: undefined
 
 Error: b.js:6
   6: (require('A'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('A'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `A` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('A'): void);
+        ^^^^^^^^^^^^ [1]: string
+    6: (require('A'): void);
+                      ^^^^ [2]: undefined
 
 Error: b.js:7
   7: (require('D'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('D'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `D` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('D'): void);
+        ^^^^^^^^^^^^ [1]: string
+    7: (require('D'): void);
+                      ^^^^ [2]: undefined
 
 Error: c.js:7
   7: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    7: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 Error: d.js:6
   6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    6: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 
 Found 6 errors
 Error: a.js:6
   6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    6: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 Error: a.js:7
   7: (require('C'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('C'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `C` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('C'): void);
+        ^^^^^^^^^^^^ [1]: string
+    7: (require('C'): void);
+                      ^^^^ [2]: undefined
 
 Error: b.js:6
   6: (require('A'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('A'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `A` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('A'): void);
+        ^^^^^^^^^^^^ [1]: string
+    6: (require('A'): void);
+                      ^^^^ [2]: undefined
 
 Error: b.js:7
   7: (require('D'): void);
-      ^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('D'): void);
-                    ^^^^ undefined
+      ^^^^^^^^^^^^ Cannot cast module `D` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('D'): void);
+        ^^^^^^^^^^^^ [1]: string
+    7: (require('D'): void);
+                      ^^^^ [2]: undefined
 
 Error: c.js:7
   7: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    7: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    7: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 Error: d.js:6
   6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  6: (require('./b'): void);
-                      ^^^^ undefined
+      ^^^^^^^^^^^^^^ Cannot cast module `./b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    6: (require('./b'): void);
+        ^^^^^^^^^^^^^^ [1]: string
+    6: (require('./b'): void);
+                        ^^^^ [2]: undefined
 
 
 Found 6 errors

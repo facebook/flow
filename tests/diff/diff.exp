@@ -60,9 +60,12 @@ Error: lower.js:21
 
 Error: lower.js:22
  22: (y.name: number); // Error -- should be string
-      ^^^^^^ string. This type is incompatible with
- 22: (y.name: number); // Error -- should be string
-              ^^^^^^ number
+      ^^^^^^ Cannot cast property `name` to number because string [1] is incompatible with number [2].
+  References:
+   22: (y.name: number); // Error -- should be string
+        ^^^^^^ [1]: string
+   22: (y.name: number); // Error -- should be string
+                ^^^^^^ [2]: number
 
 Error: lower.js:23
  23: y.bla; // Error -- key not found.

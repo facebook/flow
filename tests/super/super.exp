@@ -48,9 +48,12 @@ Error: super.js:10
 
 Error: super.js:14
  14:     (super.staticMethod('foo'): number); // error, string !~> number
-          ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
- 14:     (super.staticMethod('foo'): number); // error, string !~> number
-                                     ^^^^^^ number
+          ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `staticMethod` to number because string [1] is incompatible with number [2].
+  References:
+   14:     (super.staticMethod('foo'): number); // error, string !~> number
+            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+   14:     (super.staticMethod('foo'): number); // error, string !~> number
+                                       ^^^^^^ [2]: number
 
 Error: super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method

@@ -20,45 +20,66 @@ Error: test.js:8
 
 Error: test.js:13
  13: ((null: mixed): C); // Error: mixed ~> number
-             ^^^^^ mixed. This type is incompatible with
- 13: ((null: mixed): C); // Error: mixed ~> number
-                     ^ number
+             ^^^^^ Cannot cast mixed to `C` because mixed [1] is incompatible with number [2].
+  References:
+   13: ((null: mixed): C); // Error: mixed ~> number
+               ^^^^^ [1]: mixed
+   13: ((null: mixed): C); // Error: mixed ~> number
+                       ^ [2]: number
 
 Error: test.js:15
  15: (c: empty); // Error: number ~> empty
-      ^ number. This type is incompatible with
- 15: (c: empty); // Error: number ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
+  References:
+   15: (c: empty); // Error: number ~> empty
+        ^ [1]: number
+   15: (c: empty); // Error: number ~> empty
+           ^^^^^ [2]: empty
 
 Error: test.js:19
  19: (42: D); // Error: number ~> undefined
-      ^^ number. This type is incompatible with
- 19: (42: D); // Error: number ~> undefined
-          ^ undefined
+      ^^ Cannot cast number to `D` because number [1] is incompatible with undefined [2].
+  References:
+   19: (42: D); // Error: number ~> undefined
+        ^^ [1]: number
+   19: (42: D); // Error: number ~> undefined
+            ^ [2]: undefined
 
 Error: test.js:24
  24: ((null: mixed): E); // Error: mixed ~> number
-             ^^^^^ mixed. This type is incompatible with
- 24: ((null: mixed): E); // Error: mixed ~> number
-                     ^ number
+             ^^^^^ Cannot cast mixed to `E` because mixed [1] is incompatible with number [2].
+  References:
+   24: ((null: mixed): E); // Error: mixed ~> number
+               ^^^^^ [1]: mixed
+   24: ((null: mixed): E); // Error: mixed ~> number
+                       ^ [2]: number
 
 Error: test.js:26
  26: (e: empty); // Error: number ~> empty
-      ^ number. This type is incompatible with
- 26: (e: empty); // Error: number ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `e` to empty because number [1] is incompatible with empty [2].
+  References:
+   26: (e: empty); // Error: number ~> empty
+        ^ [1]: number
+   26: (e: empty); // Error: number ~> empty
+           ^^^^^ [2]: empty
 
 Error: test.js:31
  31: ((null: mixed): F); // Error: mixed ~> number
-             ^^^^^ mixed. This type is incompatible with
- 31: ((null: mixed): F); // Error: mixed ~> number
-                     ^ number
+             ^^^^^ Cannot cast mixed to `F` because mixed [1] is incompatible with number [2].
+  References:
+   31: ((null: mixed): F); // Error: mixed ~> number
+               ^^^^^ [1]: mixed
+   31: ((null: mixed): F); // Error: mixed ~> number
+                       ^ [2]: number
 
 Error: test.js:33
  33: (f: empty); // Error: number ~> empty
-      ^ number. This type is incompatible with
- 33: (f: empty); // Error: number ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `f` to empty because number [1] is incompatible with empty [2].
+  References:
+   33: (f: empty); // Error: number ~> empty
+        ^ [1]: number
+   33: (f: empty); // Error: number ~> empty
+           ^^^^^ [2]: empty
 
 Error: test.js:38
  38: ((null: mixed): G); // Error: mixed ~> number | string
@@ -124,21 +145,30 @@ Error: union.js:6
 
 Error: union.js:7
   7: (a: number); // Error: number | string ~> number
-      ^ string. This type is incompatible with
-  7: (a: number); // Error: number | string ~> number
-         ^^^^^^ number
+      ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
+  References:
+    7: (a: number); // Error: number | string ~> number
+        ^ [1]: string
+    7: (a: number); // Error: number | string ~> number
+           ^^^^^^ [2]: number
 
 Error: union.js:9
   9: (a: empty); // Error: number | string ~> empty
-      ^ number. This type is incompatible with
-  9: (a: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `a` to empty because number [1] is incompatible with empty [2].
+  References:
+    9: (a: empty); // Error: number | string ~> empty
+        ^ [1]: number
+    9: (a: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:9
   9: (a: empty); // Error: number | string ~> empty
-      ^ string. This type is incompatible with
-  9: (a: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `a` to empty because string [1] is incompatible with empty [2].
+  References:
+    9: (a: empty); // Error: number | string ~> empty
+        ^ [1]: string
+    9: (a: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:14
  14: ((null: mixed): B); // Error: mixed ~> number | string
@@ -164,21 +194,30 @@ Error: union.js:14
 
 Error: union.js:15
  15: (b: number); // Error: number | string ~> number
-      ^ string. This type is incompatible with
- 15: (b: number); // Error: number | string ~> number
-         ^^^^^^ number
+      ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
+  References:
+   15: (b: number); // Error: number | string ~> number
+        ^ [1]: string
+   15: (b: number); // Error: number | string ~> number
+           ^^^^^^ [2]: number
 
 Error: union.js:17
  17: (b: empty); // Error: number | string ~> empty
-      ^ number. This type is incompatible with
- 17: (b: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `b` to empty because number [1] is incompatible with empty [2].
+  References:
+   17: (b: empty); // Error: number | string ~> empty
+        ^ [1]: number
+   17: (b: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:17
  17: (b: empty); // Error: number | string ~> empty
-      ^ string. This type is incompatible with
- 17: (b: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `b` to empty because string [1] is incompatible with empty [2].
+  References:
+   17: (b: empty); // Error: number | string ~> empty
+        ^ [1]: string
+   17: (b: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:22
  22: ((null: mixed): C); // Error: mixed ~> number | string
@@ -204,21 +243,30 @@ Error: union.js:22
 
 Error: union.js:23
  23: (c: number); // Error: number | string ~> number
-      ^ string. This type is incompatible with
- 23: (c: number); // Error: number | string ~> number
-         ^^^^^^ number
+      ^ Cannot cast `c` to number because string [1] is incompatible with number [2].
+  References:
+   23: (c: number); // Error: number | string ~> number
+        ^ [1]: string
+   23: (c: number); // Error: number | string ~> number
+           ^^^^^^ [2]: number
 
 Error: union.js:25
  25: (c: empty); // Error: number | string ~> empty
-      ^ number. This type is incompatible with
- 25: (c: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
+  References:
+   25: (c: empty); // Error: number | string ~> empty
+        ^ [1]: number
+   25: (c: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:25
  25: (c: empty); // Error: number | string ~> empty
-      ^ string. This type is incompatible with
- 25: (c: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `c` to empty because string [1] is incompatible with empty [2].
+  References:
+   25: (c: empty); // Error: number | string ~> empty
+        ^ [1]: string
+   25: (c: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 
 Found 27 errors

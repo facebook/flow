@@ -113,9 +113,12 @@ Error: compatibility.js:27
 
 Error: conversion.js:10
  10: (Object(undefined): Number); // error
-      ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 10: (Object(undefined): Number); // error
-                         ^^^^^^ Number
+      ^^^^^^^^^^^^^^^^^ Cannot cast call of `Object` to `Number` because object type [1] is incompatible with `Number` [2].
+  References:
+   10: (Object(undefined): Number); // error
+        ^^^^^^^^^^^^^^^^^ [1]: object type
+   10: (Object(undefined): Number); // error
+                           ^^^^^^ [2]: `Number`
 
 Error: conversion.js:19
  19: (z.charAt(0): string);
@@ -137,15 +140,21 @@ Error: objects.js:5
 
 Error: objects.js:7
   7: (x.bar: boolean);     // error, string !~> boolean
-      ^^^^^ string. This type is incompatible with
-  7: (x.bar: boolean);     // error, string !~> boolean
-             ^^^^^^^ boolean
+      ^^^^^ Cannot cast property `bar` to boolean because string [1] is incompatible with boolean [2].
+  References:
+    7: (x.bar: boolean);     // error, string !~> boolean
+        ^^^^^ [1]: string
+    7: (x.bar: boolean);     // error, string !~> boolean
+               ^^^^^^^ [2]: boolean
 
 Error: objects.js:8
   8: (x['123'] : boolean); // error, string !~> boolean
-      ^^^^^^^^ string. This type is incompatible with
-  8: (x['123'] : boolean); // error, string !~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^ Cannot cast computed property to boolean because string [1] is incompatible with boolean [2].
+  References:
+    8: (x['123'] : boolean); // error, string !~> boolean
+        ^^^^^^^^ [1]: string
+    8: (x['123'] : boolean); // error, string !~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: objects.js:9
   9: x['123'] = false;     // error, boolean !~> string
@@ -179,9 +188,12 @@ Error: objects.js:16
 
 Error: objects.js:18
  18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-      ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-                           ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast computed property to string because function type [1] is incompatible with string [2].
+  References:
+   18: (y['hasOwnProperty']: string); // error, prototype method is not a string
+        ^^^^^^^^^^^^^^^^^^^ [1]: function type
+   18: (y['hasOwnProperty']: string); // error, prototype method is not a string
+                             ^^^^^^ [2]: string
 
 Error: unaliased_assign.js:20
  20:   glob = obj;    // error: subsequent assignment might make glob.x a number

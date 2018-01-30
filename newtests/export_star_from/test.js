@@ -16,13 +16,18 @@ export default suite(({addFile, addFiles, addCode}) => [
       (C: string);
     `).noNewErrors(),
 
-    addCode('(C: number);').newErrors(`
-      test.js:8
-        8: (C: number);
-            ^ string. This type is incompatible with
-        8: (C: number);
-               ^^^^^^ number
-    `),
+    addCode('(C: number);').newErrors(
+                             `
+                               test.js:8
+                                 8: (C: number);
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                 References:
+                                   8: (C: number);
+                                       ^ [1]: string
+                                   8: (C: number);
+                                          ^^^^^^ [2]: number
+                             `,
+                           ),
   ]),
 
   test('local exports override remote exports regardless of export order', [
@@ -34,12 +39,17 @@ export default suite(({addFile, addFiles, addCode}) => [
       (C: string);
     `).noNewErrors(),
 
-    addCode('(C: number);').newErrors(`
-      test.js:8
-        8: (C: number);
-            ^ string. This type is incompatible with
-        8: (C: number);
-               ^^^^^^ number
-    `),
+    addCode('(C: number);').newErrors(
+                             `
+                               test.js:8
+                                 8: (C: number);
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                 References:
+                                   8: (C: number);
+                                       ^ [1]: string
+                                   8: (C: number);
+                                          ^^^^^^ [2]: number
+                             `,
+                           ),
   ]),
 ]);

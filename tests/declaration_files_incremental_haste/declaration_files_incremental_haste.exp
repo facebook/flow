@@ -1,115 +1,169 @@
 ======Start off with the .js files but without the .flow file======
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Implementation. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Implementation`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Implementation. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Implementation`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Implementation. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Implementation`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Implementation. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Implementation`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -118,115 +172,169 @@ Found 6 errors
 ======Start off with the .js files and the .flow file======
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Implementation. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Implementation`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Implementation. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Implementation`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Implementation`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Implementation`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -235,21 +343,30 @@ Found 6 errors
 ======Start off without the .js files and with the .flow file======
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:3
   3: var Implicit = require('ImplicitProvidesModule');
@@ -257,73 +374,106 @@ Error: test.js:3
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:4
   4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
 Error: foo/bar/nested_test.js:7
   7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                      ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                        ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:8
   8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Declaration. This type is incompatible with
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                 ^^^^^^^ boolean
+      ^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^ [1]: `Declaration`
+    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ [2]: boolean
 
 Error: foo/bar/nested_test.js:9
   9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Declaration. This type is incompatible with
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ boolean
+      ^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^ [1]: `Declaration`
+    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                     ^^^^^^^ [2]: boolean
 
 Error: test.js:3
   3: var Implicit = require('ImplicitProvidesModule');
@@ -331,15 +481,21 @@ Error: test.js:3
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                              ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                ^^^^^^^ [2]: boolean
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                   ^^^^^^^ boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `fun` to boolean because `Declaration` [1] is incompatible with boolean [2].
+  References:
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Declaration`
+   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors

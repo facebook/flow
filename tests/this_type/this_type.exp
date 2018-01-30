@@ -124,9 +124,12 @@ Error: import.js:13
 
 Error: import.js:18
  18: (new B3().qux(0): string); // error
-      ^^^^^^^^^^^^^^^ number. This type is incompatible with
- 18: (new B3().qux(0): string); // error
-                       ^^^^^^ string
+      ^^^^^^^^^^^^^^^ Cannot cast call of method `qux` to string because number [1] is incompatible with string [2].
+  References:
+   18: (new B3().qux(0): string); // error
+        ^^^^^^^^^^^^^^^ [1]: number
+   18: (new B3().qux(0): string); // error
+                         ^^^^^^ [2]: string
 
 Error: import.js:21
  21: ((new B3().bar(): B3<string>): A2<number>); // error
@@ -141,9 +144,12 @@ Error: import.js:21
 
 Error: import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 22: ((new B3(): A2<number>).qux(0): string); // error
-                                     ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `qux` to string because number [1] is incompatible with string [2].
+  References:
+   22: ((new B3(): A2<number>).qux(0): string); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   22: ((new B3(): A2<number>).qux(0): string); // error
+                                       ^^^^^^ [2]: string
 
 Error: interface.js:1
   1: interface I { xs: Array<this>; }
@@ -157,33 +163,48 @@ Error: self.js:4
 
 Error: statics.js:17
  17: (A.make(): B); // error
-      ^^^^^^^^ A. This type is incompatible with
- 17: (A.make(): B); // error
-                ^ B
+      ^^^^^^^^ Cannot cast call of method `make` to `B` because `A` [1] is incompatible with `B` [2].
+  References:
+   17: (A.make(): B); // error
+        ^^^^^^^^ [1]: `A`
+   17: (A.make(): B); // error
+                  ^ [2]: `B`
 
 Error: test.js:23
  23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-      ^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-                           ^^^^^^^ Inherit
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `foo` to `Inherit` because `Base` [1] is incompatible with `Inherit` [2].
+  References:
+   23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+        ^^^^^^^^^^^^^^^^^^^ [1]: `Base`
+   23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+                             ^^^^^^^ [2]: `Inherit`
 
 Error: test.js:23
  23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-      ^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-                           ^^^^^^^ Inherit
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `foo` to `Inherit` because `Override` [1] is incompatible with `Inherit` [2].
+  References:
+   23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+        ^^^^^^^^^^^^^^^^^^^ [1]: `Override`
+   23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+                             ^^^^^^^ [2]: `Inherit`
 
 Error: test.js:29
  29: (new InheritOverride().bar_caller(): InheritOverride); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-                                          ^^^^^^^^^^^^^^^ InheritOverride
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `bar_caller` to `InheritOverride` because `Base` [1] is incompatible with `InheritOverride` [2].
+  References:
+   29: (new InheritOverride().bar_caller(): InheritOverride); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Base`
+   29: (new InheritOverride().bar_caller(): InheritOverride); // error
+                                            ^^^^^^^^^^^^^^^ [2]: `InheritOverride`
 
 Error: test.js:29
  29: (new InheritOverride().bar_caller(): InheritOverride); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-                                          ^^^^^^^^^^^^^^^ InheritOverride
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `bar_caller` to `InheritOverride` because `Override` [1] is incompatible with `InheritOverride` [2].
+  References:
+   29: (new InheritOverride().bar_caller(): InheritOverride); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Override`
+   29: (new InheritOverride().bar_caller(): InheritOverride); // error
+                                            ^^^^^^^^^^^^^^^ [2]: `InheritOverride`
 
 Error: test.js:41
  41:   corge(that: this) { }

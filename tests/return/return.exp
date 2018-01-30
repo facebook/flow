@@ -10,9 +10,12 @@ Error: function_return.js:23
 
 Error: void.js:12
  12: (f(true): void); // error: string ~> void
-      ^^^^^^^ string. This type is incompatible with
- 12: (f(true): void); // error: string ~> void
-               ^^^^ undefined
+      ^^^^^^^ Cannot cast call of `f` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   12: (f(true): void); // error: string ~> void
+        ^^^^^^^ [1]: string
+   12: (f(true): void); // error: string ~> void
+                 ^^^^ [2]: undefined
 
 
 Found 3 errors

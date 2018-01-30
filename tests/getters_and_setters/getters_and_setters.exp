@@ -145,9 +145,12 @@ Error: object.js:66
 
 Error: object.js:68
  68: (obj["stringLiteral"]: string); // err, num !~> string
-      ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 68: (obj["stringLiteral"]: string); // err, num !~> string
-                            ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^ Cannot cast computed property to string because number [1] is incompatible with string [2].
+  References:
+   68: (obj["stringLiteral"]: string); // err, num !~> string
+        ^^^^^^^^^^^^^^^^^^^^ [1]: number
+   68: (obj["stringLiteral"]: string); // err, num !~> string
+                              ^^^^^^ [2]: string
 
 Error: object.js:69
  69: obj["stringLiteral"] = "foo"; // err, string !~> num

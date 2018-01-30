@@ -57,18 +57,21 @@ Error: call.js:4
   4: (y: {(number): string});
       ^ object type. This type is incompatible with
   4: (y: {(number): string});
-         ^^^^^^^^^^^^^^^^^^ function prototype
-
-Error: call.js:4
-  4: (y: {(number): string});
-      ^ object type. This type is incompatible with
-  4: (y: {(number): string});
          ^^^^^^^^^^^^^^^^^^ object type
   Callable property is incompatible:
       4: (y: {(number): string});
              ^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
       4: (y: {(number): string});
           ^ object type
+
+Error: call.js:4
+  4: (y: {(number): string});
+      ^ Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2].
+  References:
+    4: (y: {(number): string});
+        ^ [1]: object type
+    4: (y: {(number): string});
+           ^^^^^^^^^^^^^^^^^^ [2]: function prototype
 
 Error: multiple.js:7
   7:       [k2: number]: number, // error: not supported (yet)

@@ -164,9 +164,12 @@ Error: identity.js:38
 
 Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
-      ^^^^^ number. This type is incompatible with
- 43: (foo.a: empty); // Error: number ~> empty
-             ^^^^^ empty
+      ^^^^^ Cannot cast property `a` to empty because number [1] is incompatible with empty [2].
+  References:
+   43: (foo.a: empty); // Error: number ~> empty
+        ^^^^^ [1]: number
+   43: (foo.a: empty); // Error: number ~> empty
+               ^^^^^ [2]: empty
 
 Error: identity.js:61
       v
@@ -341,21 +344,30 @@ Error: objmap.js:10
 
 Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string
-        ^^^^^ number. This type is incompatible with
- 16:   (o.foo: string); // error, number ~> string
-               ^^^^^^ string
+        ^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+  References:
+   16:   (o.foo: string); // error, number ~> string
+          ^^^^^ [1]: number
+   16:   (o.foo: string); // error, number ~> string
+                 ^^^^^^ [2]: string
 
 Error: optional.js:13
  13: (o3.b: Array<number | void>); // Error: void ~> array
-      ^^^^ undefined. This type is incompatible with
- 13: (o3.b: Array<number | void>); // Error: void ~> array
-            ^^^^^^^^^^^^^^^^^^^^ array type
+      ^^^^ Cannot cast property `b` to array type because undefined [1] is incompatible with array type [2].
+  References:
+   13: (o3.b: Array<number | void>); // Error: void ~> array
+        ^^^^ [1]: undefined
+   13: (o3.b: Array<number | void>); // Error: void ~> array
+              ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 Error: optional.js:17
  17: (o6.b: Array<number | void>); // Error: void ~> array
-      ^^^^ undefined. This type is incompatible with
- 17: (o6.b: Array<number | void>); // Error: void ~> array
-            ^^^^^^^^^^^^^^^^^^^^ array type
+      ^^^^ Cannot cast property `b` to array type because undefined [1] is incompatible with array type [2].
+  References:
+   17: (o6.b: Array<number | void>); // Error: void ~> array
+        ^^^^ [1]: undefined
+   17: (o6.b: Array<number | void>); // Error: void ~> array
+              ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 
 Found 23 errors

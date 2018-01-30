@@ -33,9 +33,12 @@ Error: declare_class.js:9
 
 Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
-      ^^^^^^ string. This type is incompatible with
- 12: (C.name: number); // error, it's a string
-              ^^^^^^ number
+      ^^^^^^ Cannot cast property `name` to number because string [1] is incompatible with number [2].
+  References:
+   12: (C.name: number); // error, it's a string
+        ^^^^^^ [1]: string
+   12: (C.name: number); // error, it's a string
+                ^^^^^^ [2]: number
 
 Error: declare_class.js:15
  15: new D(123); // error, number ~> string

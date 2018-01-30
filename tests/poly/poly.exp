@@ -45,9 +45,12 @@ Error: error.js:15
 
 Error: error.js:20
  20: (newVal4: string); // The error should point here.
-      ^^^^^^^ number. This type is incompatible with
- 20: (newVal4: string); // The error should point here.
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast `newVal4` to string because number [1] is incompatible with string [2].
+  References:
+   20: (newVal4: string); // The error should point here.
+        ^^^^^^^ [1]: number
+   20: (newVal4: string); // The error should point here.
+                 ^^^^^^ [2]: string
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();

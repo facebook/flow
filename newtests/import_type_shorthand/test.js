@@ -19,9 +19,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": T);
-                ^^^^^ string. This type is incompatible with
-            9: ("str": T);
-                       ^ number
+                ^^^^^ Cannot cast string to \`T\` because string [1] is incompatible with number [2].
+            References:
+              9: ("str": T);
+                  ^^^^^ [1]: string
+              9: ("str": T);
+                         ^ [2]: number
         `,
       ),
   ]),
@@ -38,9 +41,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": U);
-                ^^^^^ string. This type is incompatible with
-            9: ("str": U);
-                       ^ number
+                ^^^^^ Cannot cast string to \`U\` because string [1] is incompatible with number [2].
+            References:
+              9: ("str": U);
+                  ^^^^^ [1]: string
+              9: ("str": U);
+                         ^ [2]: number
         `,
       ),
   ]),
@@ -57,9 +63,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": C);
-                ^^^^^ string. This type is incompatible with
-            9: ("str": C);
-                       ^ statics of \`C\`
+                ^^^^^ Cannot cast string to \`C\` because string [1] is incompatible with statics of \`C\` [2].
+            References:
+              9: ("str": C);
+                  ^^^^^ [1]: string
+              9: ("str": C);
+                         ^ [2]: statics of \`C\`
         `,
       ),
   ]),
@@ -76,9 +85,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": CPrime);
-                ^^^^^ string. This type is incompatible with
-            9: ("str": CPrime);
-                       ^^^^^^ statics of \`C\`
+                ^^^^^ Cannot cast string to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
+            References:
+              9: ("str": CPrime);
+                  ^^^^^ [1]: string
+              9: ("str": CPrime);
+                         ^^^^^^ [2]: statics of \`C\`
         `,
       ),
   ]),

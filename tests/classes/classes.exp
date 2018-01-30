@@ -1,8 +1,11 @@
 Error: B.js:6
   6: (b.foo: number); // error, number !~> function
-      ^^^^^ function. This type is incompatible with
-  6: (b.foo: number); // error, number !~> function
-             ^^^^^^ number
+      ^^^^^ Cannot cast property `foo` to number because function [1] is incompatible with number [2].
+  References:
+    6: (b.foo: number); // error, number !~> function
+        ^^^^^ [1]: function
+    6: (b.foo: number); // error, number !~> function
+               ^^^^^^ [2]: number
 
 Error: C.js:3
   3: class C extends B {
@@ -22,9 +25,12 @@ Error: C.js:3
 
 Error: C.js:8
   8: (c.foo: number); // error, number !~> function
-      ^^^^^ function. This type is incompatible with
-  8: (c.foo: number); // error, number !~> function
-             ^^^^^^ number
+      ^^^^^ Cannot cast property `foo` to number because function [1] is incompatible with number [2].
+  References:
+    8: (c.foo: number); // error, number !~> function
+        ^^^^^ [1]: function
+    8: (c.foo: number); // error, number !~> function
+               ^^^^^^ [2]: number
 
 Error: D.js:3
   3: new E().x
@@ -127,21 +133,30 @@ Error: statics.js:10
 
 Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
-      ^ object type. This type is incompatible with
- 13: (o: Class<C>); // error, object type incompatible with class type
-         ^^^^^^^^ statics of `C`
+      ^ Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2].
+  References:
+   13: (o: Class<C>); // error, object type incompatible with class type
+        ^ [1]: object type
+   13: (o: Class<C>); // error, object type incompatible with class type
+           ^^^^^^^^ [2]: statics of `C`
 
 Error: statics.js:19
  19: (Dup1.x: empty); // function ~> empty
-      ^^^^^^ function. This type is incompatible with
- 19: (Dup1.x: empty); // function ~> empty
-              ^^^^^ empty
+      ^^^^^^ Cannot cast property `x` to empty because function [1] is incompatible with empty [2].
+  References:
+   19: (Dup1.x: empty); // function ~> empty
+        ^^^^^^ [1]: function
+   19: (Dup1.x: empty); // function ~> empty
+                ^^^^^ [2]: empty
 
 Error: statics.js:25
  25: (Dup2.x: empty); // string ~> empty
-      ^^^^^^ string. This type is incompatible with
- 25: (Dup2.x: empty); // string ~> empty
-              ^^^^^ empty
+      ^^^^^^ Cannot cast property `x` to empty because string [1] is incompatible with empty [2].
+  References:
+   25: (Dup2.x: empty); // string ~> empty
+        ^^^^^^ [1]: string
+   25: (Dup2.x: empty); // string ~> empty
+                ^^^^^ [2]: empty
 
 
 Found 19 errors

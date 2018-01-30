@@ -1,8 +1,11 @@
 Error: commonjs-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: commonjs-pascal.js:6
   6: ({}: React.Node); // Error
@@ -52,9 +55,12 @@ Error: commonjs-pascal.js:7
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: commonjs.js:6
   6: ({}: React.Node); // Error
@@ -104,9 +110,12 @@ Error: commonjs.js:7
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: es-default-pascal.js:6
   6: ({}: React.Node); // Error: Not in default export.
@@ -156,9 +165,12 @@ Error: es-default-pascal.js:7
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: es-default.js:5
   5: ('Hello, world!': React.Node); // Error: Not in default export.
@@ -195,9 +207,12 @@ Error: es-default.js:7
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: es-namespace-pascal.js:6
   6: ({}: React.Node); // Error
@@ -247,9 +262,12 @@ Error: es-namespace-pascal.js:7
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ statics of `React.Component`. This type is incompatible with
-  4: (React.Component: number); // Error
-                       ^^^^^^ number
+      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+  References:
+    4: (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+    4: (React.Component: number); // Error
+                         ^^^^^^ [2]: number
 
 Error: es-namespace.js:6
   6: ({}: React.Node); // Error

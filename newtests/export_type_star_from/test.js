@@ -19,9 +19,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                             `
                               test.js:8
                                 8: (42: aType)
-                                    ^^ number. This type is incompatible with
-                                8: (42: aType)
-                                        ^^^^^ string
+                                    ^^ Cannot cast number to \`aType\` because number [1] is incompatible with string [2].
+                                References:
+                                  8: (42: aType)
+                                      ^^ [1]: number
+                                  8: (42: aType)
+                                          ^^^^^ [2]: string
                             `,
                           ),
 
@@ -81,9 +84,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  `
                                    test.js:8
                                      8: ("asdf": aType);
-                                         ^^^^^^ string. This type is incompatible with
-                                     8: ("asdf": aType);
-                                                 ^^^^^ number
+                                         ^^^^^^ Cannot cast string to \`aType\` because string [1] is incompatible with number [2].
+                                     References:
+                                       8: ("asdf": aType);
+                                           ^^^^^^ [1]: string
+                                       8: ("asdf": aType);
+                                                   ^^^^^ [2]: number
                                  `,
                                ),
   ]),
@@ -101,9 +107,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  `
                                    test.js:8
                                      8: ("asdf": aType);
-                                         ^^^^^^ string. This type is incompatible with
-                                     8: ("asdf": aType);
-                                                 ^^^^^ number
+                                         ^^^^^^ Cannot cast string to \`aType\` because string [1] is incompatible with number [2].
+                                     References:
+                                       8: ("asdf": aType);
+                                           ^^^^^^ [1]: string
+                                       8: ("asdf": aType);
+                                                   ^^^^^ [2]: number
                                  `,
                                ),
   ]),

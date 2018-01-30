@@ -27,9 +27,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13:         (esmodule.pi: string);
-                        ^^^^^^^^^^^ number. This type is incompatible with
-           13:         (esmodule.pi: string);
-                                     ^^^^^^ string
+                        ^^^^^^^^^^^ Cannot cast property \`pi\` to string because number [1] is incompatible with string [2].
+            References:
+             13:         (esmodule.pi: string);
+                          ^^^^^^^^^^^ [1]: number
+             13:         (esmodule.pi: string);
+                                       ^^^^^^ [2]: string
 
           test.js:14
            14:         esmodule.default;
@@ -70,17 +73,26 @@ export default suite(({addFile, addFiles, addCode}) => [
         (cjsmodule.pi: string);
         (cjsmodule.default: number);
       }
-    `).newErrors(`
-      test.js:14
-       14:         (cjsmodule.pi: string);
-                    ^^^^^^^^^^^^ number. This type is incompatible with
-       14:         (cjsmodule.pi: string);
-                                  ^^^^^^ string
-      test.js:15
-       15:         (cjsmodule.default: number);
-                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       15:         (cjsmodule.default: number);
-                                       ^^^^^^ number
-    `),
+    `).newErrors(
+        `
+          test.js:14
+           14:         (cjsmodule.pi: string);
+                        ^^^^^^^^^^^^ Cannot cast property \`pi\` to string because number [1] is incompatible with string [2].
+            References:
+             14:         (cjsmodule.pi: string);
+                          ^^^^^^^^^^^^ [1]: number
+             14:         (cjsmodule.pi: string);
+                                        ^^^^^^ [2]: string
+
+          test.js:15
+           15:         (cjsmodule.default: number);
+                        ^^^^^^^^^^^^^^^^^ Cannot cast property \`default\` to number because object literal [1] is incompatible with number [2].
+            References:
+             15:         (cjsmodule.default: number);
+                          ^^^^^^^^^^^^^^^^^ [1]: object literal
+             15:         (cjsmodule.default: number);
+                                             ^^^^^^ [2]: number
+        `,
+      ),
   ]),
 ]);

@@ -20,9 +20,12 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:8
            8: (o.p: string);
-               ^^^ number. This type is incompatible with
-           8: (o.p: string);
-                    ^^^^^^ string
+               ^^^ Cannot cast property \`p\` to string because number [1] is incompatible with string [2].
+           References:
+             8: (o.p: string);
+                 ^^^ [1]: number
+             8: (o.p: string);
+                      ^^^^^^ [2]: string
        `,
      ),
   ]),
@@ -41,15 +44,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       (a.p: string);
-                      ^^^ boolean. This type is incompatible with
-            7:       (a.p: string);
-                           ^^^^^^ string
+                      ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+            References:
+              7:       (a.p: string);
+                        ^^^ [1]: boolean
+              7:       (a.p: string);
+                             ^^^^^^ [2]: string
 
           test.js:8
             8:       (b.p: number);
-                      ^^^ boolean. This type is incompatible with
-            8:       (b.p: number);
-                           ^^^^^^ number
+                      ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+            References:
+              8:       (b.p: number);
+                        ^^^ [1]: boolean
+              8:       (b.p: number);
+                             ^^^^^^ [2]: number
         `,
       ),
   ]),
@@ -70,9 +79,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ number. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+             12: (a.p: void);
+                  ^^^ [1]: number
+             12: (a.p: void);
+                       ^^^^ [2]: undefined
         `,
       ),
 
@@ -82,9 +94,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:14
            14: (b.p: void);
-                ^^^ string. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+             14: (b.p: void);
+                  ^^^ [1]: string
+             14: (b.p: void);
+                       ^^^^ [2]: undefined
         `,
       ),
 
@@ -94,27 +109,39 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ boolean. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because boolean [1] is incompatible with undefined [2].
+            References:
+             12: (a.p: void);
+                  ^^^ [1]: boolean
+             12: (a.p: void);
+                       ^^^^ [2]: undefined
 
           test.js:12
            12: (a.p: void);
-                ^^^ string. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+             12: (a.p: void);
+                  ^^^ [1]: string
+             12: (a.p: void);
+                       ^^^^ [2]: undefined
 
           test.js:14
            14: (b.p: void);
-                ^^^ boolean. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because boolean [1] is incompatible with undefined [2].
+            References:
+             14: (b.p: void);
+                  ^^^ [1]: boolean
+             14: (b.p: void);
+                       ^^^^ [2]: undefined
 
           test.js:14
            14: (b.p: void);
-                ^^^ number. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+             14: (b.p: void);
+                  ^^^ [1]: number
+             14: (b.p: void);
+                       ^^^^ [2]: undefined
         `,
       ),
   ]),
@@ -202,15 +229,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: number);
-                        ^^^ boolean. This type is incompatible with
-            7:         (o.p: number);
-                             ^^^^^^ number
+                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+            References:
+              7:         (o.p: number);
+                          ^^^ [1]: boolean
+              7:         (o.p: number);
+                               ^^^^^^ [2]: number
 
           test.js:9
             9:         (o.p: string);
-                        ^^^ boolean. This type is incompatible with
-            9:         (o.p: string);
-                             ^^^^^^ string
+                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+            References:
+              9:         (o.p: string);
+                          ^^^ [1]: boolean
+              9:         (o.p: string);
+                               ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -235,15 +268,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: void);
-                        ^^^ number. This type is incompatible with
-            7:         (o.p: void);
-                             ^^^^ undefined
+                        ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+              7:         (o.p: void);
+                          ^^^ [1]: number
+              7:         (o.p: void);
+                               ^^^^ [2]: undefined
 
           test.js:7
             7:         (o.p: void);
-                        ^^^ string. This type is incompatible with
-            7:         (o.p: void);
-                             ^^^^ undefined
+                        ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+              7:         (o.p: void);
+                          ^^^ [1]: string
+              7:         (o.p: void);
+                               ^^^^ [2]: undefined
         `,
       ),
   ]),
@@ -267,15 +306,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:         (a.p: number);
-                        ^^^ boolean. This type is incompatible with
-            9:         (a.p: number);
-                             ^^^^^^ number
+                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+            References:
+              9:         (a.p: number);
+                          ^^^ [1]: boolean
+              9:         (a.p: number);
+                               ^^^^^^ [2]: number
 
           test.js:11
            11:         (b.p: string);
-                        ^^^ boolean. This type is incompatible with
-           11:         (b.p: string);
-                             ^^^^^^ string
+                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+            References:
+             11:         (b.p: string);
+                          ^^^ [1]: boolean
+             11:         (b.p: string);
+                               ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -297,15 +342,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13: (o.p: void);
-                ^^^ number. This type is incompatible with
-           13: (o.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+             13: (o.p: void);
+                  ^^^ [1]: number
+             13: (o.p: void);
+                       ^^^^ [2]: undefined
 
           test.js:13
            13: (o.p: void);
-                ^^^ string. This type is incompatible with
-           13: (o.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+             13: (o.p: void);
+                  ^^^ [1]: string
+             13: (o.p: void);
+                       ^^^^ [2]: undefined
         `,
       ),
   ]),
@@ -330,15 +381,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13:         (o.p: number); // error: void ~> number
-                        ^^^ boolean. This type is incompatible with
-           13:         (o.p: number); // error: void ~> number
-                             ^^^^^^ number
+                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+            References:
+             13:         (o.p: number); // error: void ~> number
+                          ^^^ [1]: boolean
+             13:         (o.p: number); // error: void ~> number
+                               ^^^^^^ [2]: number
 
           test.js:15
            15:         (o.p: string); // error: void ~> string
-                        ^^^ boolean. This type is incompatible with
-           15:         (o.p: string); // error: void ~> string
-                             ^^^^^^ string
+                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+            References:
+             15:         (o.p: string); // error: void ~> string
+                          ^^^ [1]: boolean
+             15:         (o.p: string); // error: void ~> string
+                               ^^^^^^ [2]: string
         `,
       ),
   ]),

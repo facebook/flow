@@ -322,15 +322,21 @@ Error: test33.js:7
 
 Error: test33.js:8
   8: (bar(): string); // error: number ~> string
-      ^^^^^ number. This type is incompatible with
-  8: (bar(): string); // error: number ~> string
-             ^^^^^^ string
+      ^^^^^ Cannot cast call of `bar` to string because number [1] is incompatible with string [2].
+  References:
+    8: (bar(): string); // error: number ~> string
+        ^^^^^ [1]: number
+    8: (bar(): string); // error: number ~> string
+               ^^^^^^ [2]: string
 
 Error: test34.js:10
  10:     (x.foo: empty); // error: string ~> empty
-          ^^^^^ string. This type is incompatible with
- 10:     (x.foo: empty); // error: string ~> empty
-                 ^^^^^ empty
+          ^^^^^ Cannot cast property `foo` to empty because string [1] is incompatible with empty [2].
+  References:
+   10:     (x.foo: empty); // error: string ~> empty
+            ^^^^^ [1]: string
+   10:     (x.foo: empty); // error: string ~> empty
+                   ^^^^^ [2]: empty
 
 Error: test5.js:14
  14: fun(a1);

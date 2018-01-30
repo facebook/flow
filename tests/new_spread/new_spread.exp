@@ -171,21 +171,30 @@ Error: type.js:62
 
 Error: type.js:68
  68: (o8.p: T); // error: U ~> T
-      ^^^^ U. This type is incompatible with
- 68: (o8.p: T); // error: U ~> T
-            ^ T
+      ^^^^ Cannot cast property `p` to `T` because `U` [1] is incompatible with `T` [2].
+  References:
+   68: (o8.p: T); // error: U ~> T
+        ^^^^ [1]: `U`
+   68: (o8.p: T); // error: U ~> T
+              ^ [2]: `T`
 
 Error: type.js:69
  69: (o8.p: U); // error: T ~> U
-      ^^^^ T. This type is incompatible with
- 69: (o8.p: U); // error: T ~> U
-            ^ U
+      ^^^^ Cannot cast property `p` to `U` because `T` [1] is incompatible with `U` [2].
+  References:
+   69: (o8.p: U); // error: T ~> U
+        ^^^^ [1]: `T`
+   69: (o8.p: U); // error: T ~> U
+              ^ [2]: `U`
 
 Error: type.js:75
  75: (o9.p: T); // error: o9.p is optional
-      ^^^^ undefined. This type is incompatible with
- 75: (o9.p: T); // error: o9.p is optional
-            ^ T
+      ^^^^ Cannot cast property `p` to `T` because undefined [1] is incompatible with `T` [2].
+  References:
+   75: (o9.p: T); // error: o9.p is optional
+        ^^^^ [1]: undefined
+   75: (o9.p: T); // error: o9.p is optional
+              ^ [2]: `T`
 
 Error: type.js:101
 101: (o14: {p:T}); // error: `p` is optional
@@ -222,15 +231,21 @@ Error: type_contra.js:6
 
 Error: type_contra.js:7
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
-      ^^^^ property `p` of unknown type. This type is incompatible with
-  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
-            ^ T
+      ^^^^ Cannot cast property `p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
+  References:
+    7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+        ^^^^ [1]: property `p` of unknown type
+    7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+              ^ [2]: `T`
 
 Error: type_contra.js:7
   7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
-      ^^^^ undefined. This type is incompatible with
-  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
-            ^ T
+      ^^^^ Cannot cast property `p` to `T` because undefined [1] is incompatible with `T` [2].
+  References:
+    7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+        ^^^^ [1]: undefined
+    7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+              ^ [2]: `T`
 
 Error: type_contra.js:12
  12: (o2: {[string]:T}); // error: unknown ~> T
@@ -245,21 +260,30 @@ Error: type_contra.js:12
 
 Error: type_contra.js:13
  13: (o2.p: T); // errors: unknown ~> T
-      ^^^^ computed property of unknown type. This type is incompatible with
- 13: (o2.p: T); // errors: unknown ~> T
-            ^ T
+      ^^^^ Cannot cast property `p` to `T` because computed property of unknown type [1] is incompatible with `T` [2].
+  References:
+   13: (o2.p: T); // errors: unknown ~> T
+        ^^^^ [1]: computed property of unknown type
+   13: (o2.p: T); // errors: unknown ~> T
+              ^ [2]: `T`
 
 Error: type_empty.js:5
   5: (42: O); // Error: number ~> empty
-      ^^ number. This type is incompatible with
-  5: (42: O); // Error: number ~> empty
-          ^ empty
+      ^^ Cannot cast number to `O` because number [1] is incompatible with empty [2].
+  References:
+    5: (42: O); // Error: number ~> empty
+        ^^ [1]: number
+    5: (42: O); // Error: number ~> empty
+            ^ [2]: empty
 
 Error: type_empty.js:9
   9:   (x: number); // Error: mixed ~> number,
-        ^ object type. This type is incompatible with
-  9:   (x: number); // Error: mixed ~> number,
-           ^^^^^^ number
+        ^ Cannot cast `x` to number because object type [1] is incompatible with number [2].
+  References:
+    9:   (x: number); // Error: mixed ~> number,
+          ^ [1]: object type
+    9:   (x: number); // Error: mixed ~> number,
+             ^^^^^^ [2]: number
 
 Error: type_empty.js:14
  14:   fn({}); // Error: object ~> empty
@@ -302,51 +326,75 @@ Error: type_intersection.js:15
 
 Error: type_mixed.js:5
   5: (o1.someProp: empty); // Error: mixed ~> empty
-      ^^^^^^^^^^^ mixed. This type is incompatible with
-  5: (o1.someProp: empty); // Error: mixed ~> empty
-                   ^^^^^ empty
+      ^^^^^^^^^^^ Cannot cast property `someProp` to empty because mixed [1] is incompatible with empty [2].
+  References:
+    5: (o1.someProp: empty); // Error: mixed ~> empty
+        ^^^^^^^^^^^ [1]: mixed
+    5: (o1.someProp: empty); // Error: mixed ~> empty
+                     ^^^^^ [2]: empty
 
 Error: type_mixed.js:9
   9: (o2.someProp: empty); // Error: mixed ~> empty
-      ^^^^^^^^^^^ mixed. This type is incompatible with
-  9: (o2.someProp: empty); // Error: mixed ~> empty
-                   ^^^^^ empty
+      ^^^^^^^^^^^ Cannot cast property `someProp` to empty because mixed [1] is incompatible with empty [2].
+  References:
+    9: (o2.someProp: empty); // Error: mixed ~> empty
+        ^^^^^^^^^^^ [1]: mixed
+    9: (o2.someProp: empty); // Error: mixed ~> empty
+                     ^^^^^ [2]: empty
 
 Error: type_mixed.js:13
  13: (o3.a: empty); // Error: number ~> empty
-      ^^^^ number. This type is incompatible with
- 13: (o3.a: empty); // Error: number ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast property `a` to empty because number [1] is incompatible with empty [2].
+  References:
+   13: (o3.a: empty); // Error: number ~> empty
+        ^^^^ [1]: number
+   13: (o3.a: empty); // Error: number ~> empty
+              ^^^^^ [2]: empty
 
 Error: type_mixed.js:14
  14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-      ^^^^ mixed. This type is incompatible with
- 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast property `b` to empty because mixed [1] is incompatible with empty [2].
+  References:
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+        ^^^^ [1]: mixed
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+              ^^^^^ [2]: empty
 
 Error: type_mixed.js:14
  14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-      ^^^^ number. This type is incompatible with
- 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast property `b` to empty because number [1] is incompatible with empty [2].
+  References:
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+        ^^^^ [1]: number
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+              ^^^^^ [2]: empty
 
 Error: type_mixed.js:14
  14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-      ^^^^ undefined. This type is incompatible with
- 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast property `b` to empty because undefined [1] is incompatible with empty [2].
+  References:
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+        ^^^^ [1]: undefined
+   14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+              ^^^^^ [2]: empty
 
 Error: type_mixed.js:15
  15: (o3.c: empty); // Error: mixed ~> empty
-      ^^^^ mixed. This type is incompatible with
- 15: (o3.c: empty); // Error: mixed ~> empty
-            ^^^^^ empty
+      ^^^^ Cannot cast property `c` to empty because mixed [1] is incompatible with empty [2].
+  References:
+   15: (o3.c: empty); // Error: mixed ~> empty
+        ^^^^ [1]: mixed
+   15: (o3.c: empty); // Error: mixed ~> empty
+              ^^^^^ [2]: empty
 
 Error: type_mixed.js:18
  18:   (obj.someProp: empty); // Error: mixed ~> empty
-        ^^^^^^^^^^^^ O. This type is incompatible with
- 18:   (obj.someProp: empty); // Error: mixed ~> empty
-                      ^^^^^ empty
+        ^^^^^^^^^^^^ Cannot cast property `someProp` to empty because `O` [1] is incompatible with empty [2].
+  References:
+   18:   (obj.someProp: empty); // Error: mixed ~> empty
+          ^^^^^^^^^^^^ [1]: `O`
+   18:   (obj.someProp: empty); // Error: mixed ~> empty
+                        ^^^^^ [2]: empty
 
 Error: type_string.js:1
   1: type O1 = {..."foo"}; // error

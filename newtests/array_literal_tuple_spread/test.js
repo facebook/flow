@@ -112,9 +112,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: (ret: void);
-                ^^^ array type. This type is incompatible with
-           11: (ret: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`ret\` to undefined because array type [1] is incompatible with undefined [2].
+            References:
+             11: (ret: void);
+                  ^^^ [1]: array type
+             11: (ret: void);
+                       ^^^^ [2]: undefined
         `,
       )
       .because('The constant folding should turn the tuple into an array'),
@@ -146,9 +149,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: (ret: void);
-                ^^^ array literal. This type is incompatible with
-           11: (ret: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2].
+            References:
+             11: (ret: void);
+                  ^^^ [1]: array literal
+             11: (ret: void);
+                       ^^^^ [2]: undefined
         `,
       )
       .because('The constant folding should turn the tuple into an array'),

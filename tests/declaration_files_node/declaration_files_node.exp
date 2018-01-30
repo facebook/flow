@@ -1,56 +1,83 @@
 Error: test_absolute.js:5
   5: (B1.fun(): string); // Error number ~> string
-      ^^^^^^^^ number. This type is incompatible with
-  5: (B1.fun(): string); // Error number ~> string
-                ^^^^^^ string
+      ^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    5: (B1.fun(): string); // Error number ~> string
+        ^^^^^^^^ [1]: number
+    5: (B1.fun(): string); // Error number ~> string
+                  ^^^^^^ [2]: string
 
 Error: test_absolute.js:9
   9: (B2.fun(): string); // Error number ~> string
-      ^^^^^^^^ number. This type is incompatible with
-  9: (B2.fun(): string); // Error number ~> string
-                ^^^^^^ string
+      ^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    9: (B2.fun(): string); // Error number ~> string
+        ^^^^^^^^ [1]: number
+    9: (B2.fun(): string); // Error number ~> string
+                  ^^^^^^ [2]: string
 
 Error: test_absolute.js:12
  12: (C.fun(): string); // Error number ~> string
-      ^^^^^^^ number. This type is incompatible with
- 12: (C.fun(): string); // Error number ~> string
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   12: (C.fun(): string); // Error number ~> string
+        ^^^^^^^ [1]: number
+   12: (C.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]: string
 
 Error: test_absolute.js:15
  15: (D.fun(): string); // Error number ~> string
-      ^^^^^^^ number. This type is incompatible with
- 15: (D.fun(): string); // Error number ~> string
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   15: (D.fun(): string); // Error number ~> string
+        ^^^^^^^ [1]: number
+   15: (D.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]: string
 
 Error: test_absolute.js:18
  18: (E.fun(): string); // Error number ~> string
-      ^^^^^^^ number. This type is incompatible with
- 18: (E.fun(): string); // Error number ~> string
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   18: (E.fun(): string); // Error number ~> string
+        ^^^^^^^ [1]: number
+   18: (E.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]: string
 
 Error: test_absolute.js:21
  21: (F.fun(): string); // Error number ~> string
-      ^^^^^^^ number. This type is incompatible with
- 21: (F.fun(): string); // Error number ~> string
-               ^^^^^^ string
+      ^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+   21: (F.fun(): string); // Error number ~> string
+        ^^^^^^^ [1]: number
+   21: (F.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]: string
 
 Error: test_relative.js:5
   5: (A1.fun(): string); // Error number ~> string
-      ^^^^^^^^ number. This type is incompatible with
-  5: (A1.fun(): string); // Error number ~> string
-                ^^^^^^ string
+      ^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    5: (A1.fun(): string); // Error number ~> string
+        ^^^^^^^^ [1]: number
+    5: (A1.fun(): string); // Error number ~> string
+                  ^^^^^^ [2]: string
 
 Error: test_relative.js:9
   9: (A2.fun(): string); // Error number ~> string
-      ^^^^^^^^ number. This type is incompatible with
-  9: (A2.fun(): string); // Error number ~> string
-                ^^^^^^ string
+      ^^^^^^^^ Cannot cast call of method `fun` to string because number [1] is incompatible with string [2].
+  References:
+    9: (A2.fun(): string); // Error number ~> string
+        ^^^^^^^^ [1]: number
+    9: (A2.fun(): string); // Error number ~> string
+                  ^^^^^^ [2]: string
 
 Error: test_relative.js:13
  13: (CJS: number); // Error: string ~> number
-      ^^^ string. This type is incompatible with
- 13: (CJS: number); // Error: string ~> number
-           ^^^^^^ number
+      ^^^ Cannot cast `CJS` to number because string [1] is incompatible with number [2].
+  References:
+   13: (CJS: number); // Error: string ~> number
+        ^^^ [1]: string
+   13: (CJS: number); // Error: string ~> number
+             ^^^^^^ [2]: number
 
 
 Found 9 errors

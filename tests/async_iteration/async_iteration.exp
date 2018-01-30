@@ -6,9 +6,12 @@ Error: delegate_yield.js:3
 
 Error: delegate_yield.js:17
  17:     (x: void); // error: number ~> void
-          ^ number. This type is incompatible with
- 17:     (x: void); // error: number ~> void
-             ^^^^ undefined
+          ^ Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   17:     (x: void); // error: number ~> void
+            ^ [1]: number
+   17:     (x: void); // error: number ~> void
+               ^^^^ [2]: undefined
 
 Error: delegate_yield.js:25
  25:   var x: void = yield *inner(); // error: number ~> void
@@ -18,9 +21,12 @@ Error: delegate_yield.js:25
 
 Error: generator.js:23
  23:     (line: void); // error: string ~> void
-          ^^^^ string. This type is incompatible with
- 23:     (line: void); // error: string ~> void
-                ^^^^ undefined
+          ^^^^ Cannot cast `line` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   23:     (line: void); // error: string ~> void
+            ^^^^ [1]: string
+   23:     (line: void); // error: string ~> void
+                  ^^^^ [2]: undefined
 
 Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
@@ -42,21 +48,30 @@ Error: return.js:20
 
 Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
-          ^^^^^^^^^^^^ undefined. This type is incompatible with
- 20:     (result.value: string); // error: number | void ~> string
-                        ^^^^^^ string
+          ^^^^^^^^^^^^ Cannot cast property `value` to string because undefined [1] is incompatible with string [2].
+  References:
+   20:     (result.value: string); // error: number | void ~> string
+            ^^^^^^^^^^^^ [1]: undefined
+   20:     (result.value: string); // error: number | void ~> string
+                          ^^^^^^ [2]: string
 
 Error: throw.js:12
  12:       (value: void); // error: number ~> void
-            ^^^^^ number. This type is incompatible with
- 12:       (value: void); // error: number ~> void
-                   ^^^^ undefined
+            ^^^^^ Cannot cast `value` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   12:       (value: void); // error: number ~> void
+              ^^^^^ [1]: number
+   12:       (value: void); // error: number ~> void
+                     ^^^^ [2]: undefined
 
 Error: throw.js:29
  29:       (value: void); // error: number ~> void
-            ^^^^^ number. This type is incompatible with
- 29:       (value: void); // error: number ~> void
-                   ^^^^ undefined
+            ^^^^^ Cannot cast `value` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   29:       (value: void); // error: number ~> void
+              ^^^^^ [1]: number
+   29:       (value: void); // error: number ~> void
+                     ^^^^ [2]: undefined
 
 
 Found 10 errors

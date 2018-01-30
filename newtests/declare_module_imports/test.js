@@ -15,9 +15,12 @@ export default suite(({addFile, addFiles, addCode}) => [
                              `
                                test.js:7
                                  7: ("str": BT);
-                                     ^^^^^ string. This type is incompatible with
-                                 7: ("str": BT);
-                                            ^^ number
+                                     ^^^^^ Cannot cast string to \`BT\` because string [1] is incompatible with number [2].
+                                 References:
+                                   7: ("str": BT);
+                                       ^^^^^ [1]: string
+                                   7: ("str": BT);
+                                              ^^ [2]: number
                              `,
                            ),
   ]),
@@ -26,13 +29,18 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('import type BDefault from "B";').noNewErrors(),
     addCode('import BDefaultValue from "B";').noNewErrors(),
     addCode('(new BDefaultValue(): BDefault);').noNewErrors(),
-    addCode('(42: BDefault);').newErrors(`
-      test.js:9
-        9: (42: BDefault);
-            ^^ number. This type is incompatible with
-        9: (42: BDefault);
-                ^^^^^^^^ Def
-    `),
+    addCode('(42: BDefault);').newErrors(
+                                `
+                                  test.js:9
+                                    9: (42: BDefault);
+                                        ^^ Cannot cast number to \`BDefault\` because number [1] is incompatible with \`Def\` [2].
+                                    References:
+                                      9: (42: BDefault);
+                                          ^^ [1]: number
+                                      9: (42: BDefault);
+                                              ^^^^^^^^ [2]: \`Def\`
+                                `,
+                              ),
   ]),
   test('import between libdef files', [
     addFile('flow-typed/C.js'),

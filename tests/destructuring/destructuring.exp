@@ -1,38 +1,56 @@
 Error: array_rest.js:7
   7: (a: void); // error: number ~> void
-      ^ number. This type is incompatible with
-  7: (a: void); // error: number ~> void
-         ^^^^ undefined
+      ^ Cannot cast `a` to undefined because number [1] is incompatible with undefined [2].
+  References:
+    7: (a: void); // error: number ~> void
+        ^ [1]: number
+    7: (a: void); // error: number ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:8
   8: (b: void); // error: string ~> void
-      ^ string. This type is incompatible with
-  8: (b: void); // error: string ~> void
-         ^^^^ undefined
+      ^ Cannot cast `b` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    8: (b: void); // error: string ~> void
+        ^ [1]: string
+    8: (b: void); // error: string ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:9
   9: (c: void); // error: boolean ~> void
-      ^ boolean. This type is incompatible with
-  9: (c: void); // error: boolean ~> void
-         ^^^^ undefined
+      ^ Cannot cast `c` to undefined because boolean [1] is incompatible with undefined [2].
+  References:
+    9: (c: void); // error: boolean ~> void
+        ^ [1]: boolean
+    9: (c: void); // error: boolean ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
-      ^ boolean. This type is incompatible with
- 10: (d: void); // error: number|string|boolean ~> void
-         ^^^^ undefined
+      ^ Cannot cast `d` to undefined because boolean [1] is incompatible with undefined [2].
+  References:
+   10: (d: void); // error: number|string|boolean ~> void
+        ^ [1]: boolean
+   10: (d: void); // error: number|string|boolean ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
-      ^ number. This type is incompatible with
- 10: (d: void); // error: number|string|boolean ~> void
-         ^^^^ undefined
+      ^ Cannot cast `d` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   10: (d: void); // error: number|string|boolean ~> void
+        ^ [1]: number
+   10: (d: void); // error: number|string|boolean ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
-      ^ string. This type is incompatible with
- 10: (d: void); // error: number|string|boolean ~> void
-         ^^^^ undefined
+      ^ Cannot cast `d` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   10: (d: void); // error: number|string|boolean ~> void
+        ^ [1]: string
+   10: (d: void); // error: number|string|boolean ~> void
+           ^^^^ [2]: undefined
 
 Error: array_rest.js:12
  12: let [...e] = 0;
@@ -42,81 +60,120 @@ Error: array_rest.js:12
 
 Error: computed.js:2
   2: (val1: void); // error: string ~> void
-      ^^^^ string. This type is incompatible with
-  2: (val1: void); // error: string ~> void
-            ^^^^ undefined
+      ^^^^ Cannot cast `val1` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    2: (val1: void); // error: string ~> void
+        ^^^^ [1]: string
+    2: (val1: void); // error: string ~> void
+              ^^^^ [2]: undefined
 
 Error: computed.js:9
   9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
-      ^^^^^^^^^^ string. This type is incompatible with
-  9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
-                  ^^^^ undefined
+      ^^^^^^^^^^ Cannot cast property `key` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+        ^^^^^^^^^^ [1]: string
+    9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+                    ^^^^ [2]: undefined
 
 Error: defaults.js:9
   9:   (q:void);
-        ^ boolean. This type is incompatible with
-  9:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2].
+  References:
+    9:   (q:void);
+          ^ [1]: boolean
+    9:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:9
   9:   (q:void);
-        ^ null. This type is incompatible with
-  9:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
+  References:
+    9:   (q:void);
+          ^ [1]: null
+    9:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:9
   9:   (q:void);
-        ^ number. This type is incompatible with
-  9:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because number [1] is incompatible with undefined [2].
+  References:
+    9:   (q:void);
+          ^ [1]: number
+    9:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:9
   9:   (q:void);
-        ^ string. This type is incompatible with
-  9:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    9:   (q:void);
+          ^ [1]: string
+    9:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:23
  23:   (q:void);
-        ^ boolean. This type is incompatible with
- 23:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2].
+  References:
+   23:   (q:void);
+          ^ [1]: boolean
+   23:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:23
  23:   (q:void);
-        ^ null. This type is incompatible with
- 23:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
+  References:
+   23:   (q:void);
+          ^ [1]: null
+   23:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:23
  23:   (q:void);
-        ^ number. This type is incompatible with
- 23:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   23:   (q:void);
+          ^ [1]: number
+   23:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:23
  23:   (q:void);
-        ^ string. This type is incompatible with
- 23:   (q:void);
-          ^^^^ undefined
+        ^ Cannot cast `q` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   23:   (q:void);
+          ^ [1]: string
+   23:   (q:void);
+            ^^^^ [2]: undefined
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ null. This type is incompatible with
- 35:   (o.r:void);
-            ^^^^ undefined
+        ^^^ Cannot cast property `r` to undefined because null [1] is incompatible with undefined [2].
+  References:
+   35:   (o.r:void);
+          ^^^ [1]: null
+   35:   (o.r:void);
+              ^^^^ [2]: undefined
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ number. This type is incompatible with
- 35:   (o.r:void);
-            ^^^^ undefined
+        ^^^ Cannot cast property `r` to undefined because number [1] is incompatible with undefined [2].
+  References:
+   35:   (o.r:void);
+          ^^^ [1]: number
+   35:   (o.r:void);
+              ^^^^ [2]: undefined
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ string. This type is incompatible with
- 35:   (o.r:void);
-            ^^^^ undefined
+        ^^^ Cannot cast property `r` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   35:   (o.r:void);
+          ^^^ [1]: string
+   35:   (o.r:void);
+              ^^^^ [2]: undefined
 
 Error: defaults.js:43
  43:   p = true // error: boolean ~> string
@@ -138,9 +195,12 @@ Error: defaults.js:43
 
 Error: defaults.js:49
  49:   (p:void); // error: string ~> void
-        ^ string. This type is incompatible with
- 49:   (p:void); // error: string ~> void
-          ^^^^ undefined
+        ^ Cannot cast `p` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   49:   (p:void); // error: string ~> void
+          ^ [1]: string
+   49:   (p:void); // error: string ~> void
+            ^^^^ [2]: undefined
 
 Error: defaults.js:53
  53:   p = true // error: boolean ~> string
@@ -167,9 +227,12 @@ Error: defaults.js:56
 
 Error: defaults.js:59
  59: (p:void); // error: string ~> void
-      ^ string. This type is incompatible with
- 59: (p:void); // error: string ~> void
-        ^^^^ undefined
+      ^ Cannot cast `p` to undefined because string [1] is incompatible with undefined [2].
+  References:
+   59: (p:void); // error: string ~> void
+        ^ [1]: string
+   59: (p:void); // error: string ~> void
+          ^^^^ [2]: undefined
 
 Error: defaults.js:61
  61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
@@ -450,9 +513,12 @@ Error: object_rest.js:16
 
 Error: string_lit.js:2
   2: (val: void); // error: string ~> void
-      ^^^ string. This type is incompatible with
-  2: (val: void); // error: string ~> void
-           ^^^^ undefined
+      ^^^ Cannot cast `val` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    2: (val: void); // error: string ~> void
+        ^^^ [1]: string
+    2: (val: void); // error: string ~> void
+             ^^^^ [2]: undefined
 
 Error: unannotated.js:8
   8:   x.bar

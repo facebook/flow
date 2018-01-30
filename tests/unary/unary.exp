@@ -15,9 +15,12 @@ Error: unary.js:12
 
 Error: unary.js:19
  19: (-1: void); // error, number ~> void
-      ^^ number. This type is incompatible with
- 19: (-1: void); // error, number ~> void
-          ^^^^ undefined
+      ^^ Cannot cast number to undefined because number [1] is incompatible with undefined [2].
+  References:
+   19: (-1: void); // error, number ~> void
+        ^^ [1]: number
+   19: (-1: void); // error, number ~> void
+            ^^^^ [2]: undefined
 
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
