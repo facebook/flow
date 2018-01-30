@@ -832,6 +832,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
@@ -886,9 +889,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",
@@ -958,6 +958,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
@@ -1012,9 +1015,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",
@@ -1119,6 +1119,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
@@ -1173,9 +1176,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",

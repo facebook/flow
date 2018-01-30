@@ -28,6 +28,24 @@ type info_tree =
   | InfoLeaf of info list
   | InfoNode of info list * info_tree list
 
+module Friendly : sig
+  type message = message_feature list
+
+  and message_feature =
+    | Inline of message_inline list
+    | Reference of message_inline list * Loc.t
+
+  and message_inline =
+    | Text of string
+    | Code of string
+
+  val text: string -> message_feature
+  val code: string -> message_feature
+  val ref: ?loc:bool -> Reason.reason -> message_feature
+  val conjunction_concat: ?conjunction:string -> message list -> message
+  val capitalize: message -> message
+end
+
 (* error structure *)
 
 type error
@@ -37,6 +55,19 @@ val mk_error:
   ?trace_infos:info list ->
   ?extra:info_tree list ->
   info list ->
+  error
+
+val mk_friendly_error:
+  ?kind:error_kind ->
+  ?trace_infos:info list ->
+  (Loc.t * Friendly.message) ->
+  error
+
+val mk_friendly_error_with_root:
+  ?kind:error_kind ->
+  ?trace_infos:info list ->
+  (Loc.t * Friendly.message) ->
+  (Loc.t * Friendly.message) ->
   error
 
 val is_duplicate_provider_error: error -> bool

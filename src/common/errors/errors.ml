@@ -39,15 +39,191 @@ type info_tree =
   | InfoLeaf of info list
   | InfoNode of info list * info_tree list
 
-type error = {
-  kind: error_kind;
+type classic_error = {
   messages: message list;
-  trace: message list;
   extra: info_tree list
 }
 
-let is_duplicate_provider_error error =
-  error.kind = DuplicateProviderError
+(* Types and utilities for friendly errors. *)
+module Friendly = struct
+  open Reason
+
+  module RefMap = MyMap.Make(struct
+    type t = Loc.t * string
+    let compare (a_loc, a_str) (b_loc, b_str) =
+      match Loc.compare a_loc b_loc with
+      | 0 -> String.compare a_str b_str
+      | n -> n
+  end)
+
+  (* The error message format is designed to render well in all the environments
+   * which a Flow error message appears. This includes:
+   *
+   * - The CLI.
+   * - An IDE.
+   * - A CI job.
+   * - https://flow.org/try
+   *
+   * Some environments can render full blocks of code, like the CLI. Most
+   * environments work best with a sentence of text. Like an IDE or a CI job.
+   * So we optimize our error messages for a single, readable, sentence and
+   * enhance in environments with greater capabilities.
+   *
+   * Messages can have some inline styles. Such as inline code blocks. We also
+   * include references to location in code in our messages. This information
+   * is enhanced in more capable environments instead of degrading in less
+   * capable environments.
+   *
+   * The single message is split into two parts. A "root" and the rest of the
+   * message. If we have a root then some environments (such as the CLI) will
+   * merge errors with the same root cause into a single block.
+   *)
+  type t = {
+    root: error_root option;
+    loc: Loc.t;
+    message: message;
+  }
+
+  and error_root = {
+    root_loc: Loc.t;
+    root_message: message;
+  }
+
+  and message = message_feature list
+
+  and message_feature =
+    | Inline of message_inline list
+    | Reference of message_inline list * Loc.t
+
+  and message_inline =
+    | Text of string
+    | Code of string
+
+  (* This function was introduced into the OCaml standard library in 4.04.0. Not
+   * all of our tooling supports 4.04.0 yet, so we have a small
+   * equivalent implementation here. *)
+  let split_on_char c s =
+    let rec loop i c s =
+      try
+        let k = String.index_from s i c in
+        (String.sub s i (k - i))::(loop (k + 1) c s)
+      with
+        Not_found -> [String.sub s i (String.length s - i)]
+    in
+    loop 0 c s
+
+  (* Converts a string into a message_inline list. e.g.:
+   * "hello `world`" becomes: [Text "hello "; Code "world"].
+   *
+   * The inverse of string_of_message_inlines. *)
+  let message_inlines_of_string s =
+    List.mapi (fun i s ->
+      if i mod 2 = 0
+        then Text s
+        else Code s
+    ) (split_on_char '`' s)
+
+  (* Converts a message_inline list into a string. e.g.:
+   * [Text "hello "; Code "world"] becomes: "hello `world`"
+   *
+   * The inverse of message_inlines_of_string. *)
+  let string_of_message_inlines =
+    List.fold_left (fun message -> function
+    | Text text -> message ^ text
+    | Code text -> message ^ "`" ^ text ^ "`"
+    ) ""
+
+  (* Convenience functions for constructing friendly error messages. e.g.
+   *
+   *     [ref lower; text " is incompatible with "; ref upper]
+   *
+   * Is an example of an incompatibility error message. *)
+
+  let text s = Inline [Text s]
+  let code s = Inline [Code s]
+
+  let ref ?(loc=true) r =
+    let desc = string_of_desc (desc_of_reason ~unwrap:(is_scalar_reason r) r) in
+    let desc = message_inlines_of_string desc in
+    if loc then (
+      let loc = loc_of_reason r in
+      Reference (desc, loc)
+    ) else (
+      Inline desc
+    )
+
+  (* Concatenates a list of messages with a conjunction according to the "rules"
+   * of the English language. *)
+  let conjunction_concat ?(conjunction="and") = function
+  | [] -> []
+  | x::[] -> x
+  | x1::x2::[] -> x1 @ [Inline [Text (" " ^ conjunction ^ " ")]] @ x2
+  | xs ->
+    let rec loop = function
+    | []
+    | _::[] -> failwith "unreachable"
+    | x1::x2::[] -> x1 @ [Inline [Text (", " ^ conjunction ^ " ")]] @ x2
+    | x::xs -> x @ [Inline [Text ", "]] @ loop xs
+    in
+    loop xs
+
+  (* Capitalizes the first letter in the message. Does not capitalize code or
+   * text in references. *)
+  let capitalize = function
+  | [] -> []
+  | (Inline ((Text s)::xs))::message -> (Inline ((Text (String.capitalize_ascii s))::xs))::message
+  | message -> message
+
+  (* Converts our friendly error to a classic error message. *)
+  let to_classic { root; loc; message } =
+    (* Add our root to the message... *)
+    let message = match root with
+    | Some { root_message; _ } -> root_message @ [Inline [Text " "]] @ message
+    | None -> message
+    in
+    (* Turn the message into a string and create a map for all of our
+     * references... *)
+    let (message, references) =
+      List.fold_left (fun (message, references) -> function
+      (* Add inlines... *)
+      | Inline m -> (message ^ string_of_message_inlines m, references)
+      (* Add a reference and update our references map... *)
+      | Reference (inlines, loc) ->
+        (* Finish the reference string we add to our message. *)
+        let reference = string_of_message_inlines inlines in
+        (* If we already have this reference then re-use its n. Otherwise,
+         * create a new reference. *)
+        let (references, n) = match RefMap.get (loc, reference) references with
+        | Some n -> (references, n)
+        | None ->
+          let n = (RefMap.cardinal references) + 1 in
+          let references = RefMap.add (loc, reference) n references in
+          (references, n)
+        in
+        let reference = reference ^ " [" ^ string_of_int n ^ "]" in
+        (* Add the reference to our message. We're done! *)
+        (message ^ reference, references)
+      ) ("", RefMap.empty) message
+    in
+    {
+      messages = [BlameM (loc, message)];
+      extra =
+        (InfoLeaf [(Loc.none, ["References:"])])::
+        (references
+        |> RefMap.bindings
+        |> List.sort (fun (_, a) (_, b) -> a - b)
+        |> List.map (fun ((loc, reference), n) ->
+          InfoLeaf [(loc, ["[" ^ string_of_int n ^ "]: " ^ reference])]));
+    }
+end
+
+type error' =
+  | Classic of classic_error
+  | Friendly of Friendly.t
+
+type error = error_kind * message list * error'
+
+let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
 
 let info_to_messages = function
 | loc, [] -> [BlameM (loc, "")]
@@ -59,18 +235,44 @@ let infos_to_messages infos =
   List.concat (List.map info_to_messages infos)
 
 let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
+  let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
   let infos = match kind, infos with
     | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
       let prefix = (Lints.string_of_kind lint_kind) ^ ": " in
       (head_loc, (prefix ^ head_str)::head_tail)::tail
     | _ -> infos
   in
-  {
-    kind;
+  (kind, trace, Classic {
     messages = infos_to_messages infos;
-    trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages;
     extra
-  }
+  })
+
+let mk_friendly_error
+  ?(kind=InferError)
+  ?trace_infos
+  (loc, message)
+=
+  let open Friendly in
+  let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+  (kind, trace, Friendly {
+    root=None;
+    loc;
+    message;
+  })
+
+let mk_friendly_error_with_root
+  ?(kind=InferError)
+  ?trace_infos
+  (root_loc, root_message)
+  (loc, message)
+=
+  let open Friendly in
+  let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+  (kind, trace, Friendly {
+    root=Some { root_loc; root_message };
+    loc;
+    message;
+  })
 
 (*******************************)
 
@@ -209,13 +411,25 @@ let file_of_source source =
     | Some File_key.Builtins -> None
     | None -> None
 
-let loc_of_error (err: error) =
-  let { messages; _ } = err in
+let loc_of_classic_error { messages; _ } =
   match messages with
   | message :: _ ->
       let loc, _ = to_pp message in
       loc
   | _ -> Loc.none
+
+let loc_of_error ((_, _, err): error) =
+  let open Friendly in
+  match err with
+  | Classic err -> loc_of_classic_error err
+  | Friendly { loc; _ } -> loc
+
+let loc_of_error_for_compare ((_, _, err): error) =
+  let open Friendly in
+  match err with
+  | Classic err -> loc_of_classic_error err
+  | Friendly { root=Some {root_loc; _}; _ } -> root_loc
+  | Friendly { loc; _ } -> loc
 
 let locs_of_error =
   let locs_of_info_list = List.fold_left (fun acc (loc, _) -> loc::acc)
@@ -226,32 +440,40 @@ let locs_of_error =
 
   and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
 
-  in fun (err: error) ->
-    let { messages; extra; _ } = err in
-    let extra_locs = locs_of_extra [] extra in
-    List.fold_left (fun acc message ->
-      let loc, _ = to_pp message in
-      loc::acc
-    ) extra_locs messages
+  in fun ((_, _, err): error) ->
+    match err with
+    | Classic { messages; extra; _ } ->
+      let extra_locs = locs_of_extra [] extra in
+      List.fold_left (fun acc message ->
+        let loc, _ = to_pp message in
+        loc::acc
+      ) extra_locs messages
+    | Friendly { Friendly.loc; _ } -> [loc]
 
-let infos_of_error { messages; _ } =
-  let rev_infos = List.fold_left (
-    fun acc -> function
-    | BlameM (loc, str) -> (loc, [str]) :: acc
-    | CommentM str ->
-      match acc with
-      | (loc, strs) :: tail -> (loc, str :: strs) :: tail
-      | [] -> [Loc.none, [str]] (* shouldn't start with a comment *)
-    ) [] messages in
-  List.rev (List.map (fun (loc, strs) -> loc, List.rev strs) rev_infos)
+let infos_of_error (_, _, error) =
+  match error with
+  | Classic { messages; _ } ->
+    let rev_infos = List.fold_left (
+      fun acc -> function
+      | BlameM (loc, str) -> (loc, [str]) :: acc
+      | CommentM str ->
+        match acc with
+        | (loc, strs) :: tail -> (loc, str :: strs) :: tail
+        | [] -> [Loc.none, [str]] (* shouldn't start with a comment *)
+      ) [] messages in
+    List.rev (List.map (fun (loc, strs) -> loc, List.rev strs) rev_infos)
+  | Friendly _ -> []
 
-let extra_of_error { extra; _ } = extra
+let extra_of_error (_, _, error) =
+  match error with
+  | Classic { extra; _ } -> extra
+  | Friendly _ -> []
 
-let file_of_error err =
-  let loc = loc_of_error err in
+let file_of_classic_error err =
+  let loc = loc_of_classic_error err in
   file_of_source loc.Loc.source
 
-let kind_of_error err = err.kind
+let kind_of_error (kind, _, _) = kind
 
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
@@ -268,7 +490,13 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 )
 
 (* first reason's position, then second reason's position, etc.; if all
-   positions match then first message, then second message, etc. *)
+   positions match then first message, then second message, etc.
+
+   for friendly errors check the location, docs slug, and then message.
+
+   friendly errors go before classic errors when the kind is the same and the
+   friendly error's location is the same as the classic error's first
+   location. *)
 let compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
@@ -320,27 +548,52 @@ let compare =
         let k = compare_lists compare_info k1 k2 in
         if k = 0 then compare_lists compare_info_tree rest1 rest2 else k
   in
+  let compare_message_inline m1 m2 =
+    let open Friendly in
+    match m1, m2 with
+    | Text s1, Text s2 -> String.compare s1 s2
+    | Text _, Code _ -> 1
+    | Code _, Text _ -> -1
+    | Code s1, Code s2 -> String.compare s1 s2
+  in
+  let compare_message_feature m1 m2 =
+    let open Friendly in
+    match m1, m2 with
+    | Inline m1, Inline m2 -> compare_lists compare_message_inline m1 m2
+    | Inline _, Reference _ -> 1
+    | Reference _, Inline _ -> -1
+    | Reference (m1, loc1), Reference (m2, loc2) ->
+      let k = compare_lists compare_message_inline m1 m2 in
+      if k = 0 then Loc.compare loc1 loc2 else k
+  in
   fun err1 err2 ->
-    let {
-      kind = k1;
-      messages = ml1;
-      extra = extra1;
-      trace = _;
-    } = err1 in
-    let {
-      kind = k2;
-      messages = ml2;
-      extra = extra2;
-      trace = _;
-    } = err2 in
-    let loc1, loc2 = loc_of_error err1, loc_of_error err2 in
+    let open Friendly in
+    let loc1, loc2 = loc_of_error_for_compare err1, loc_of_error_for_compare err2 in
+    let (k1, _, err1), (k2, _, err2) = err1, err2 in
     let k = Loc.compare loc1 loc2 in
     if k = 0 then
       let k = kind_cmp k1 k2 in
-      if k = 0 then
+      if k = 0 then match err1, err2 with
+      | Friendly _, Classic _ -> 1
+      | Classic _, Friendly _ -> -1
+      | Classic { messages = ml1; extra = extra1 },
+        Classic { messages = ml2; extra = extra2 } ->
         let k = compare_lists compare_message ml1 ml2 in
         if k = 0 then compare_lists compare_info_tree extra1 extra2
         else k
+      | Friendly { root=Some _; _ }, Friendly { root=None; _ } -> -1
+      | Friendly { root=None; _ }, Friendly { root=Some _; _ } -> 1
+      | Friendly { root=Some { root_message=rm1; _ }; loc=loc1; message=m1 },
+        Friendly { root=Some { root_message=rm2; _ }; loc=loc2; message=m2 } ->
+        let k = compare_lists compare_message_feature rm1 rm2 in
+        if k = 0 then
+          let k = Loc.compare loc1 loc2 in
+          if k = 0 then compare_lists compare_message_feature m1 m2
+          else k
+        else k
+      | Friendly { root=None; message=m1; _ },
+        Friendly { root=None; message=m2; _ } ->
+        compare_lists compare_message_feature m1 m2
       else k
     else k
 
@@ -638,13 +891,13 @@ module Cli_output = struct
   let remove_newlines (color, text) =
     (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-  let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
-      ~severity (error : error) =
-    let { kind; messages; trace; extra } = error in
+  let get_prety_printed_classic_error ~stdin_file:stdin_file ~strip_root
+      ~one_line ~severity kind trace error =
+    let { messages; extra } = error in
     let messages = append_trace_reasons messages trace in
     let messages = merge_comments_into_blames messages in
     let header = print_error_header ~strip_root ~kind ~severity (List.hd messages) in
-    let main_file = match file_of_error error with
+    let main_file = match file_of_classic_error error with
       | Some filename -> filename
       | None -> "[No file]" in
     let formatted_messages = List.concat (List.map (
@@ -657,6 +910,18 @@ module Cli_output = struct
     let to_print = if one_line then List.map remove_newlines to_print
       else to_print in
     (to_print @ [default_style "\n"])
+
+  let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
+      ~severity ((kind, trace, error) : error) =
+    match error with
+    | Classic error ->
+      get_prety_printed_classic_error
+        ~stdin_file ~strip_root ~one_line ~severity
+        kind trace error
+    | Friendly error ->
+      get_prety_printed_classic_error
+        ~stdin_file ~strip_root ~one_line ~severity
+        kind trace (Friendly.to_classic error)
 
   (* Simplified interface for use while debugging *)
   let string_of_error error =
@@ -794,9 +1059,21 @@ module Json_output = struct
         ["children", JSON_Array kids]
     )
 
+  let json_of_classic_error_props ~json_of_message error =
+    let open Hh_json in
+    let { messages; extra } = error in
+    let props = [
+      "message", JSON_Array (List.map json_of_message messages);
+    ] in
+    (* add extra if present *)
+    if extra = [] then props
+    else
+      let extra = List.map (json_of_info_tree ~json_of_message) extra in
+      ("extra", JSON_Array extra) :: props
+
   let json_of_error_props
     ~strip_root ~json_of_message ~severity
-    ?(suppression_locs=Utils_js.LocSet.empty) { kind; messages; trace; extra } =
+    ?(suppression_locs=Utils_js.LocSet.empty) (kind, trace, error) =
     let open Hh_json in
     let kind_str = match kind with
       | ParseError -> "parse"
@@ -818,17 +1095,18 @@ module Json_output = struct
       "kind", JSON_String kind_str;
       "level", JSON_String severity_str;
       "suppressions", JSON_Array suppressions;
-      "message", JSON_Array (List.map json_of_message messages);
     ] in
+    props @
+    (* add the error type specific props *)
+    (match error with
+    | Classic error ->
+      json_of_classic_error_props ~json_of_message error
+    | Friendly error ->
+      json_of_classic_error_props ~json_of_message (Friendly.to_classic error)) @
     (* add trace if present *)
-    let props = match trace with [] -> props | _ ->
-      ("trace", JSON_Array (List.map json_of_message trace)) :: props
-    in
-    (* add extra if present *)
-    if extra = [] then props
-    else
-      let extra = List.map (json_of_info_tree ~json_of_message) extra in
-      ("extra", JSON_Array extra) :: props
+    match trace with
+    | [] -> []
+    | _ -> ["trace", JSON_Array (List.map json_of_message trace)]
 
   let json_of_error_with_context
     ~strip_root ~stdin_file ~severity (error, suppression_locs) =
@@ -913,8 +1191,8 @@ module Vim_emacs_output = struct
       let loc_str = string_of_loc ~strip_root loc in
       Printf.sprintf "%s%s%s" (endline loc_str) prefix (endline msg)
     in
-    let to_string ~strip_root prefix (error : error) : string =
-      let {messages; trace; _} = error in
+    let classic_to_string ~strip_root prefix trace error =
+      let {messages; _} = error in
       let messages = append_trace_reasons messages trace in
       let buf = Buffer.create 50 in
       (match messages with
@@ -926,6 +1204,13 @@ module Vim_emacs_output = struct
           end rest_of_error
       );
       Buffer.contents buf
+    in
+    let to_string ~strip_root prefix ((_, trace, error) : error) : string =
+      match error with
+      | Classic error ->
+        classic_to_string ~strip_root prefix trace error
+      | Friendly error ->
+        classic_to_string ~strip_root prefix trace (Friendly.to_classic error)
     in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl = []

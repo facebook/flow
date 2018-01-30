@@ -1,6 +1,9 @@
 {
   "errors":[
     {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
       "extra":[
         {
           "message":[
@@ -39,9 +42,6 @@
           ]
         }
       ],
-      "kind":"lint",
-      "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //appears as an error",
@@ -62,6 +62,9 @@
       ]
     },
     {
+      "kind":"lint",
+      "level":"warning",
+      "suppressions":[],
       "extra":[
         {
           "message":[
@@ -100,9 +103,6 @@
           ]
         }
       ],
-      "kind":"lint",
-      "level":"warning",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //appears as a warning",

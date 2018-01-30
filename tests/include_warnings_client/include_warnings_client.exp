@@ -36,6 +36,9 @@ JSON without --include-warnings
 {
   "errors":[
     {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
       "extra":[
         {
           "message":[
@@ -74,9 +77,6 @@ JSON without --include-warnings
           ]
         }
       ],
-      "kind":"lint",
-      "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //Error",
@@ -105,6 +105,9 @@ JSON with --include-warnings
 {
   "errors":[
     {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
       "extra":[
         {
           "message":[
@@ -143,9 +146,6 @@ JSON with --include-warnings
           ]
         }
       ],
-      "kind":"lint",
-      "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //Error",
@@ -166,6 +166,9 @@ JSON with --include-warnings
       ]
     },
     {
+      "kind":"lint",
+      "level":"warning",
+      "suppressions":[],
       "extra":[
         {
           "message":[
@@ -204,9 +207,6 @@ JSON with --include-warnings
           ]
         }
       ],
-      "kind":"lint",
-      "level":"warning",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //Warning",
