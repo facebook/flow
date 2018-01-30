@@ -18,9 +18,12 @@ inconsistent use of library definitions
 
 Error: declare_class.js:8
   8: C.x = "";
-           ^^ string. This type is incompatible with
-  8: C.x = "";
-     ^^^ number
+           ^^ string [1] is incompatible with number [2].
+  References:
+    8: C.x = "";
+             ^^ [1]: string
+    8: C.x = "";
+       ^^^ [2]: number
 
 Error: declare_class.js:9
   9: C.foo("");

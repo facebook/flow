@@ -6,9 +6,12 @@ Error: a.js:13
 
 Error: a.js:20
  20:     this.prop = prop;         // ERROR: we should not be assigning a string here
-                     ^^^^ string. This type is incompatible with
- 20:     this.prop = prop;         // ERROR: we should not be assigning a string here
-         ^^^^^^^^^ number
+                     ^^^^ string [1] is incompatible with number [2].
+  References:
+   20:     this.prop = prop;         // ERROR: we should not be assigning a string here
+                       ^^^^ [1]: string
+   20:     this.prop = prop;         // ERROR: we should not be assigning a string here
+           ^^^^^^^^^ [2]: number
 
 Error: a.js:21
  21:     this.m = () => {};        // ERORR: cannot assign method
@@ -30,9 +33,12 @@ Error: a.js:61
 
 Error: a.js:70
  70:     this.prop = "";           // ERROR
-                     ^^ string. This type is incompatible with
- 70:     this.prop = "";           // ERROR
-         ^^^^^^^^^ number
+                     ^^ string [1] is incompatible with number [2].
+  References:
+   70:     this.prop = "";           // ERROR
+                       ^^ [1]: string
+   70:     this.prop = "";           // ERROR
+           ^^^^^^^^^ [2]: number
 
 Error: a.js:74
  74: class G extends F {

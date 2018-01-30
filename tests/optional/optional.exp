@@ -1,14 +1,20 @@
 Error: generic.js:1
   1: function x<T>(x: T = 0) {}
-                          ^ number. This type is incompatible with
-  1: function x<T>(x: T = 0) {}
-                      ^ T
+                          ^ number [1] is incompatible with `T` [2].
+  References:
+    1: function x<T>(x: T = 0) {}
+                            ^ [1]: number
+    1: function x<T>(x: T = 0) {}
+                        ^ [2]: `T`
 
 Error: generic.js:4
   4:   x<T>(x: T = 0) {}
-                   ^ number. This type is incompatible with
-  4:   x<T>(x: T = 0) {}
-               ^ T
+                   ^ number [1] is incompatible with `T` [2].
+  References:
+    4:   x<T>(x: T = 0) {}
+                     ^ [1]: number
+    4:   x<T>(x: T = 0) {}
+                 ^ [2]: `T`
 
 Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }

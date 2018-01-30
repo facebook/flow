@@ -33,9 +33,12 @@ Error: test.js:9
 
 Error: test.js:13
  13:     B.x = 0; // error
-               ^ number. This type is incompatible with
- 13:     B.x = 0; // error
-         ^^^ string
+               ^ number [1] is incompatible with string [2].
+  References:
+   13:     B.x = 0; // error
+                 ^ [1]: number
+   13:     B.x = 0; // error
+           ^^^ [2]: string
 
 Error: test.js:15
  15:     B.foo(0); // error
@@ -45,9 +48,12 @@ Error: test.js:15
 
 Error: test.js:17
  17:     B.y = 0; // error
-               ^ number. This type is incompatible with
- 17:     B.y = 0; // error
-         ^^^ string
+               ^ number [1] is incompatible with string [2].
+  References:
+   17:     B.y = 0; // error
+                 ^ [1]: number
+   17:     B.y = 0; // error
+           ^^^ [2]: string
 
 Error: test.js:18
  18:     B.bar(0); // error

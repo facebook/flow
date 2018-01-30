@@ -149,9 +149,12 @@ Error: objects.js:8
 
 Error: objects.js:9
   9: x['123'] = false;     // error, boolean !~> string
-                ^^^^^ boolean. This type is incompatible with
-  9: x['123'] = false;     // error, boolean !~> string
-     ^^^^^^^^ string
+                ^^^^^ boolean [1] is incompatible with string [2].
+  References:
+    9: x['123'] = false;     // error, boolean !~> string
+                  ^^^^^ [1]: boolean
+    9: x['123'] = false;     // error, boolean !~> string
+       ^^^^^^^^ [2]: string
 
 Error: objects.js:12
  12: (x[`foo`]: string);   // error, key doesn't exist
@@ -161,9 +164,12 @@ Error: objects.js:12
 
 Error: objects.js:15
  15: y['foo'] = 123; // error, number !~> string
-                ^^^ number. This type is incompatible with
- 15: y['foo'] = 123; // error, number !~> string
-     ^^^^^^^^ string
+                ^^^ number [1] is incompatible with string [2].
+  References:
+   15: y['foo'] = 123; // error, number !~> string
+                  ^^^ [1]: number
+   15: y['foo'] = 123; // error, number !~> string
+       ^^^^^^^^ [2]: string
 
 Error: objects.js:16
  16: y['bar'] = 'abc'; // error, property not found

@@ -934,7 +934,8 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     let rec loop loc frames use_op =
       Option.value_map
       (match use_op with
-      (* TODO: Actual cases *)
+      | Op UnknownUse -> Some (`UnknownRoot)
+
       | _ -> None
       )
       ~default:None
@@ -1739,7 +1740,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
-    (match (mk_incompatible_friendly_error l_reason u_reason unknown_use) with
+    (match (mk_incompatible_friendly_error l_reason u_reason use_op) with
     | Some error -> error
     | None ->
       let ((l_reason, u_reason), use_op) =

@@ -26,9 +26,12 @@ Error: class.js:45
 
 Error: class.js:53
  53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-                                    ^^^^^^^ string. This type is incompatible with
- 53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+                                    ^^^^^^^ string [1] is incompatible with number [2].
+  References:
+   53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]: string
+   53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: number
 
 Error: class.js:55
  55: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -44,9 +47,12 @@ Error: class.js:57
 
 Error: class.js:58
  58: foo.propOverriddenWithSetter = 123; // Error number ~> string
-                                    ^^^ number. This type is incompatible with
- 58: foo.propOverriddenWithSetter = 123; // Error number ~> string
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                    ^^^ number [1] is incompatible with string [2].
+  References:
+   58: foo.propOverriddenWithSetter = 123; // Error number ~> string
+                                      ^^^ [1]: number
+   58: foo.propOverriddenWithSetter = 123; // Error number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string
 
 Error: declare_class.js:37
  37: var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
@@ -56,9 +62,12 @@ Error: declare_class.js:37
 
 Error: declare_class.js:42
  42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-                                    ^^^^^^^ string. This type is incompatible with
- 42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+                                    ^^^^^^^ string [1] is incompatible with number [2].
+  References:
+   42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]: string
+   42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: number
 
 Error: declare_class.js:44
  44: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -74,9 +83,12 @@ Error: declare_class.js:46
 
 Error: declare_class.js:47
  47: foo.propOverriddenWithSetter = 123; // Error number ~> string
-                                    ^^^ number. This type is incompatible with
- 47: foo.propOverriddenWithSetter = 123; // Error number ~> string
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                    ^^^ number [1] is incompatible with string [2].
+  References:
+   47: foo.propOverriddenWithSetter = 123; // Error number ~> string
+                                      ^^^ [1]: number
+   47: foo.propOverriddenWithSetter = 123; // Error number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string
 
 Error: object.js:15
  15:   set goodSetterNoAnnotation(x) { z = x; },
@@ -106,9 +118,12 @@ Error: object.js:48
 
 Error: object.js:55
  55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
-                                    ^^^^^^^ string. This type is incompatible with
- 55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+                                    ^^^^^^^ string [1] is incompatible with number [2].
+  References:
+   55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]: string
+   55: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: number
 
 Error: object.js:57
  57: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -136,9 +151,12 @@ Error: object.js:68
 
 Error: object.js:69
  69: obj["stringLiteral"] = "foo"; // err, string !~> num
-                            ^^^^^ string. This type is incompatible with
- 69: obj["stringLiteral"] = "foo"; // err, string !~> num
-     ^^^^^^^^^^^^^^^^^^^^ number
+                            ^^^^^ string [1] is incompatible with number [2].
+  References:
+   69: obj["stringLiteral"] = "foo"; // err, string !~> num
+                              ^^^^^ [1]: string
+   69: obj["stringLiteral"] = "foo"; // err, string !~> num
+       ^^^^^^^^^^^^^^^^^^^^ [2]: number
 
 Error: object_type.js:36
  36:   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
@@ -148,9 +166,12 @@ Error: object_type.js:36
 
 Error: object_type.js:41
  41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
-                                      ^^^^^^^ string. This type is incompatible with
- 41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+                                      ^^^^^^^ string [1] is incompatible with number [2].
+  References:
+   41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                        ^^^^^^^ [1]: string
+   41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: number
 
 Error: object_type.js:43
  43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number

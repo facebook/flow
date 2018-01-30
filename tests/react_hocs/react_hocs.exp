@@ -66,9 +66,12 @@ Error: Good.js:17
 
 Error: Good.js:18
  18:     qux,
-         ^^^ string. This type is incompatible with
-  9:   qux: number,
-            ^^^^^^ number
+         ^^^ string [1] is incompatible with number [2].
+  References:
+   18:     qux,
+           ^^^ [1]: string
+    9:   qux: number,
+              ^^^^^^ [2]: number
 
 
 Found 7 errors

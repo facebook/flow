@@ -293,9 +293,12 @@ Error: test.js:134
 
 Error: test.js:144
 144:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-143:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  144:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  143:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:148
 148: <Class_ManyProps />; // Error: There are no props.
@@ -469,9 +472,12 @@ Error: test.js:196
 
 Error: test.js:206
 206:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-205:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  206:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  205:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:210
 210: <ClassExact_ManyProps />; // Error: There are no props.
@@ -773,9 +779,12 @@ Error: test.js:264
 
 Error: test.js:268
 268:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-267:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  268:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  267:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:272
 272: <ClassPure_ManyProps />; // Error: There are no props.
@@ -949,9 +958,12 @@ Error: test.js:320
 
 Error: test.js:330
 330:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-329:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  330:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  329:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:334
 334: <Function_ManyProps />; // Error: There are no props.
@@ -1125,9 +1137,12 @@ Error: test.js:382
 
 Error: test.js:392
 392:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-391:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  392:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  391:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:396
 396: <FunctionExact_ManyProps />; // Error: There are no props.
@@ -1429,9 +1444,12 @@ Error: test.js:450
 
 Error: test.js:454
 454:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-453:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  454:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  453:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:458
 458: <Abstract_ManyProps />; // Error: There are no props.
@@ -1605,9 +1623,12 @@ Error: test.js:506
 
 Error: test.js:516
 516:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-515:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  516:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  515:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:521
 521: <AbstractExact_ManyProps />; // Error: There are no props.
@@ -1909,9 +1930,12 @@ Error: test.js:575
 
 Error: test.js:579
 579:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-578:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  579:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  578:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:583
 583: <Member_ManyProps.prop />; // Error: There are no props.
@@ -2085,9 +2109,12 @@ Error: test.js:631
 
 Error: test.js:641
 641:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-640:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  641:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  640:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:645
 645: <EnhancedClass_ManyProps />; // Error: There are no props.
@@ -2261,9 +2288,12 @@ Error: test.js:693
 
 Error: test.js:703
 703:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-702:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  703:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  702:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:707
 707: <EnhancedFunction_ManyProps />; // Error: There are no props.
@@ -2437,9 +2467,12 @@ Error: test.js:755
 
 Error: test.js:765
 765:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                          ^^^^^^^ null or undefined. This type is incompatible with
-764:   number={42}
-               ^^ number
+                                                          ^^^^^^^ null or undefined [1] is incompatible with number [2].
+  References:
+  765:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                            ^^^^^^^ [1]: null or undefined
+  764:   number={42}
+                 ^^ [2]: number
 
 Error: test.js:780
 780: <Legacy_OptionalProps />; // Error: `foo` is required.

@@ -382,6 +382,7 @@ let rec string_of_desc = function
   | RVoid -> "undefined"
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
+  | RStringLit "" -> "empty string literal"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
@@ -481,6 +482,7 @@ let rec string_of_desc = function
   | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
+  | RPropertyIsAString "" -> "empty string"
   | RPropertyIsAString x -> spf "string `%s`" x
   | RMissingProperty (Some x) -> spf "property `%s` does not exist" x
   | RMissingProperty None -> "computed property does not exist"

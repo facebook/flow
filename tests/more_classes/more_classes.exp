@@ -1,8 +1,11 @@
 Error: Bar.js:15
  15:     new Qux().w = "?";
-                       ^^^ string. This type is incompatible with
- 15:     new Qux().w = "?";
-         ^^^^^^^^^^^ number
+                       ^^^ string [1] is incompatible with number [2].
+  References:
+   15:     new Qux().w = "?";
+                         ^^^ [1]: string
+   15:     new Qux().w = "?";
+           ^^^^^^^^^^^ [2]: number
 
 Error: Foo.js:7
   7: class Foo extends Qux {

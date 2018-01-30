@@ -677,7 +677,7 @@ predicates.js - y (refined obj): {
   "type":"(unknown)",
   "reasons":[
     {
-      "desc":"object with property `FOO` that matches string literal ``",
+      "desc":"object with property `FOO` that matches empty string literal",
       "loc":{
         "source":"predicates.js",
         "type":"SourceFile",

@@ -2433,7 +2433,7 @@
     "type":"{FOO: string}",
     "reasons":[
       {
-        "desc":"object with property `FOO` that matches string literal ``",
+        "desc":"object with property `FOO` that matches empty string literal",
         "loc":{
           "source":"predicates.js",
           "type":"SourceFile",

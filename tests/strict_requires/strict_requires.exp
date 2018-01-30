@@ -12,9 +12,12 @@ Error: D.js:4
 
 Error: D.js:5
   5: C.A = false;
-           ^^^^^ boolean. This type is incompatible with
-  5: C.A = false;
-     ^^^ number
+           ^^^^^ boolean [1] is incompatible with number [2].
+  References:
+    5: C.A = false;
+             ^^^^^ [1]: boolean
+    5: C.A = false;
+       ^^^ [2]: number
 
 
 Found 3 errors

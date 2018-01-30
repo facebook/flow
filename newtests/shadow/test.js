@@ -171,9 +171,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: proto.p = 0;
-                         ^ number. This type is incompatible with
-            9: proto.p = 0;
-               ^^^^^^^ string
+                         ^ number [1] is incompatible with string [2].
+            References:
+              9: proto.p = 0;
+                           ^ [1]: number
+              9: proto.p = 0;
+                 ^^^^^^^ [2]: string
         `,
       ),
   ]),

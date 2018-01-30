@@ -15,9 +15,12 @@ Error: test.js:2
 
 Error: test.js:7
   7: o1.qux; // error: qux not found
-     ^^^^^^ string `qux`. This type is incompatible with
-  2: var o1: {[key: Key1]: number} = {
-                    ^^^^ string enum
+     ^^^^^^ string `qux` [1] is incompatible with string enum [2].
+  References:
+    7: o1.qux; // error: qux not found
+       ^^^^^^ [1]: string `qux`
+    2: var o1: {[key: Key1]: number} = {
+                      ^^^^ [2]: string enum
 
 Error: test.js:14
  14: o2.qux; // error: qux not found

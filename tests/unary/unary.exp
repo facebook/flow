@@ -6,9 +6,12 @@ Error: unary.js:8
 
 Error: unary.js:12
  12:   return ~y;  // error, we don't allow coercion here
-               ^ string. This type is incompatible with
- 12:   return ~y;  // error, we don't allow coercion here
-              ^^ number
+               ^ string [1] is incompatible with number [2].
+  References:
+   12:   return ~y;  // error, we don't allow coercion here
+                 ^ [1]: string
+   12:   return ~y;  // error, we don't allow coercion here
+                ^^ [2]: number
 
 Error: unary.js:19
  19: (-1: void); // error, number ~> void

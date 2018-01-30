@@ -1,8 +1,11 @@
 Error: test.js:3
   3: N.x = M(N.x);
-           ^^^^^^ string. This type is incompatible with
-  3: N.x = M(N.x);
-     ^^^ number
+           ^^^^^^ string [1] is incompatible with number [2].
+  References:
+    3: N.x = M(N.x);
+             ^^^^^^ [1]: string
+    3: N.x = M(N.x);
+       ^^^ [2]: number
 
 Error: test.js:3
   3: N.x = M(N.x);
@@ -12,9 +15,12 @@ Error: test.js:3
 
 Error: test.js:5
   5: N.y = P(N.y);
-           ^^^^^^ string. This type is incompatible with
-  5: N.y = P(N.y);
-     ^^^ number
+           ^^^^^^ string [1] is incompatible with number [2].
+  References:
+    5: N.y = P(N.y);
+             ^^^^^^ [1]: string
+    5: N.y = P(N.y);
+       ^^^ [2]: number
 
 Error: test.js:5
   5: N.y = P(N.y);
@@ -24,9 +30,12 @@ Error: test.js:5
 
 Error: test.js:7
   7: N.z = Q(N.z);
-           ^^^^^^ string. This type is incompatible with
-  7: N.z = Q(N.z);
-     ^^^ number
+           ^^^^^^ string [1] is incompatible with number [2].
+  References:
+    7: N.z = Q(N.z);
+             ^^^^^^ [1]: string
+    7: N.z = Q(N.z);
+       ^^^ [2]: number
 
 Error: test.js:7
   7: N.z = Q(N.z);

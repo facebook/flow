@@ -1,8 +1,11 @@
 Error: class_method_default_parameters.js:17
  17:     h(i: number = this.b) { // error
-                       ^^^^^^ string. This type is incompatible with
- 17:     h(i: number = this.b) { // error
-              ^^^^^^ number
+                       ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   17:     h(i: number = this.b) { // error
+                         ^^^^^^ [1]: string
+   17:     h(i: number = this.b) { // error
+                ^^^^^^ [2]: number
 
 
 Found 1 error

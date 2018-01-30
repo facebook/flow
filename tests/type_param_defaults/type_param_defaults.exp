@@ -114,15 +114,21 @@ Error: classes.js:47
 
 Error: classes.js:49
  49: class E<S: string, T: number = S> {} // Error: string ~> number
-                ^^^^^^ string. This type is incompatible with
- 49: class E<S: string, T: number = S> {} // Error: string ~> number
-                           ^^^^^^ number
+                ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   49: class E<S: string, T: number = S> {} // Error: string ~> number
+                  ^^^^^^ [1]: string
+   49: class E<S: string, T: number = S> {} // Error: string ~> number
+                             ^^^^^^ [2]: number
 
 Error: classes.js:50
  50: class F<S: string, T: S = number> {} // Error: number ~> string
-                               ^^^^^^ number. This type is incompatible with
- 50: class F<S: string, T: S = number> {} // Error: number ~> string
-                ^^^^^^ string
+                               ^^^^^^ number [1] is incompatible with string [2].
+  References:
+   50: class F<S: string, T: S = number> {} // Error: number ~> string
+                                 ^^^^^^ [1]: number
+   50: class F<S: string, T: S = number> {} // Error: number ~> string
+                  ^^^^^^ [2]: string
 
 Error: classes.js:56
  56: (g_default.p: boolean); // Error string ~> boolean

@@ -120,15 +120,21 @@ Error: defaults.js:35
 
 Error: defaults.js:43
  43:   p = true // error: boolean ~> string
-       ^ number. This type is incompatible with
- 43:   p = true // error: boolean ~> string
-       ^ string
+       ^ number [1] is incompatible with string [2].
+  References:
+   43:   p = true // error: boolean ~> string
+         ^ [1]: number
+   43:   p = true // error: boolean ~> string
+         ^ [2]: string
 
 Error: defaults.js:43
  43:   p = true // error: boolean ~> string
-           ^^^^ boolean. This type is incompatible with
- 43:   p = true // error: boolean ~> string
-       ^ string
+           ^^^^ boolean [1] is incompatible with string [2].
+  References:
+   43:   p = true // error: boolean ~> string
+             ^^^^ [1]: boolean
+   43:   p = true // error: boolean ~> string
+         ^ [2]: string
 
 Error: defaults.js:49
  49:   (p:void); // error: string ~> void
@@ -191,15 +197,21 @@ Error: defaults.js:64
 
 Error: defaults.js:75
  75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
-                            ^ number. This type is incompatible with
- 75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
-                            ^ string
+                            ^ number [1] is incompatible with string [2].
+  References:
+   75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
+                              ^ [1]: number
+   75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
+                              ^ [2]: string
 
 Error: defaults.js:76
  76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
-                              ^ number. This type is incompatible with
- 76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
-                              ^ string
+                              ^ number [1] is incompatible with string [2].
+  References:
+   76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
+                                ^ [1]: number
+   76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
+                                ^ [2]: string
 
 Error: defaults.js:77
  77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
@@ -225,15 +237,21 @@ Error: defaults.js:77
 
 Error: defaults.js:80
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ boolean. This type is incompatible with
- 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ number
+                               ^ boolean [1] is incompatible with number [2].
+  References:
+   80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                 ^ [1]: boolean
+   80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                 ^ [2]: number
 
 Error: defaults.js:80
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ string. This type is incompatible with
- 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                               ^ number
+                               ^ string [1] is incompatible with number [2].
+  References:
+   80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                 ^ [1]: string
+   80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                 ^ [2]: number
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];

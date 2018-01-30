@@ -243,39 +243,57 @@ Error: function.js:43
 
 Error: function.js:48
  48:     x.length = 'foo'; // error, it's a number
-                    ^^^^^ string. This type is incompatible with
- 48:     x.length = 'foo'; // error, it's a number
-         ^^^^^^^^ number
+                    ^^^^^ string [1] is incompatible with number [2].
+  References:
+   48:     x.length = 'foo'; // error, it's a number
+                      ^^^^^ [1]: string
+   48:     x.length = 'foo'; // error, it's a number
+           ^^^^^^^^ [2]: number
 
 Error: function.js:49
  49:     y.length = 'foo'; // error, it's a number
-                    ^^^^^ string. This type is incompatible with
- 49:     y.length = 'foo'; // error, it's a number
-         ^^^^^^^^ number
+                    ^^^^^ string [1] is incompatible with number [2].
+  References:
+   49:     y.length = 'foo'; // error, it's a number
+                      ^^^^^ [1]: string
+   49:     y.length = 'foo'; // error, it's a number
+           ^^^^^^^^ [2]: number
 
 Error: function.js:50
  50:     z.length = 'foo'; // error, it's a number
-                    ^^^^^ string. This type is incompatible with
- 50:     z.length = 'foo'; // error, it's a number
-         ^^^^^^^^ number
+                    ^^^^^ string [1] is incompatible with number [2].
+  References:
+   50:     z.length = 'foo'; // error, it's a number
+                      ^^^^^ [1]: string
+   50:     z.length = 'foo'; // error, it's a number
+           ^^^^^^^^ [2]: number
 
 Error: function.js:52
  52:     x.name = 123; // error, it's a string
-                  ^^^ number. This type is incompatible with
- 52:     x.name = 123; // error, it's a string
-         ^^^^^^ string
+                  ^^^ number [1] is incompatible with string [2].
+  References:
+   52:     x.name = 123; // error, it's a string
+                    ^^^ [1]: number
+   52:     x.name = 123; // error, it's a string
+           ^^^^^^ [2]: string
 
 Error: function.js:53
  53:     y.name = 123; // error, it's a string
-                  ^^^ number. This type is incompatible with
- 53:     y.name = 123; // error, it's a string
-         ^^^^^^ string
+                  ^^^ number [1] is incompatible with string [2].
+  References:
+   53:     y.name = 123; // error, it's a string
+                    ^^^ [1]: number
+   53:     y.name = 123; // error, it's a string
+           ^^^^^^ [2]: string
 
 Error: function.js:54
  54:     z.name = 123; // error, it's a string
-                  ^^^ number. This type is incompatible with
- 54:     z.name = 123; // error, it's a string
-         ^^^^^^ string
+                  ^^^ number [1] is incompatible with string [2].
+  References:
+   54:     z.name = 123; // error, it's a string
+                    ^^^ [1]: number
+   54:     z.name = 123; // error, it's a string
+           ^^^^^^ [2]: string
 
 Error: rest.js:36
  36:   return xs.pop(); // Error - no bound on T
@@ -285,9 +303,12 @@ Error: rest.js:36
 
 Error: rest.js:38
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                          ^^^^^ Rest params are always arrays. This type is incompatible with
- 38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                              ^ string
+                                          ^^^^^ Rest params are always arrays [1] is incompatible with string [2].
+  References:
+   38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
+                                            ^^^^^ [1]: Rest params are always arrays
+   38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
+                                                ^ [2]: string
 
 Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty

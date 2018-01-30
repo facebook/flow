@@ -6,9 +6,12 @@ Error: keyvalue.js:5
 
 Error: keyvalue.js:5
   5:     (x[""]: number);
-          ^^^^^ string ``. This type is incompatible with
-  4:   function(x: { [key: number]: string }) {
-                           ^^^^^^ number
+          ^^^^^ empty string [1] is incompatible with number [2].
+  References:
+    5:     (x[""]: number);
+            ^^^^^ [1]: empty string
+    4:   function(x: { [key: number]: string }) {
+                             ^^^^^^ [2]: number
 
 
 Found 2 errors

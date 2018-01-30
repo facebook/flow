@@ -6,9 +6,12 @@ Error: value.js:3
 
 Error: value.js:6
   6: table["x"] = "hello";
-                  ^^^^^^^ string. This type is incompatible with
-  6: table["x"] = "hello";
-     ^^^^^^^^^^ number
+                  ^^^^^^^ string [1] is incompatible with number [2].
+  References:
+    6: table["x"] = "hello";
+                    ^^^^^^^ [1]: string
+    6: table["x"] = "hello";
+       ^^^^^^^^^^ [2]: number
 
 
 Found 2 errors

@@ -1,14 +1,20 @@
 Error: base_class.js:9
   9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                  ^^^^^^ string. This type is incompatible with
-  9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                         ^^^^^^ number
+                                                  ^^^^^^ string [1] is incompatible with number [2].
+  References:
+    9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                    ^^^^^^ [1]: string
+    9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                           ^^^^^^ [2]: number
 
 Error: base_class.js:16
  16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                         ^^^^^^ string. This type is incompatible with
- 16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                ^^^^^^ number
+                                                         ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                           ^^^^^^ [1]: string
+   16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                  ^^^^^^ [2]: number
 
 Error: base_class.js:33
  33: (o.annotatedField: string); // Error: number ~> string
@@ -72,27 +78,39 @@ Error: base_class.js:72
 
 Error: derived_class.js:9
   9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                       ^^^^^^ string. This type is incompatible with
-  9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                              ^^^^^^ number
+                                                       ^^^^^^ string [1] is incompatible with number [2].
+  References:
+    9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                         ^^^^^^ [1]: string
+    9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                ^^^^^^ [2]: number
 
 Error: derived_class.js:16
  16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                              ^^^^^^ string. This type is incompatible with
- 16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                     ^^^^^^ number
+                                                              ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                                ^^^^^^ [1]: string
+   16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                       ^^^^^^ [2]: number
 
 Error: derived_class.js:28
  28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                        ^^^^^^ string. This type is incompatible with
- 28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                               ^^^^^^ number
+                                                        ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                          ^^^^^^ [1]: string
+   28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                 ^^^^^^ [2]: number
 
 Error: derived_class.js:35
  35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                               ^^^^^^ string. This type is incompatible with
- 35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                      ^^^^^^ number
+                                                               ^^^^^^ string [1] is incompatible with number [2].
+  References:
+   35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                                 ^^^^^^ [1]: string
+   35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                        ^^^^^^ [2]: number
 
 Error: derived_class.js:61
  61: (o.base_annotatedField: string); // Error: number ~> string
@@ -240,15 +258,21 @@ Error: generic_class.js:18
 
 Error: generic_class.js:26
  26:   invalid: T = 42; // Error: number ~> Generic<T>
-                    ^^ number. This type is incompatible with
- 26:   invalid: T = 42; // Error: number ~> Generic<T>
-                ^ T
+                    ^^ number [1] is incompatible with `T` [2].
+  References:
+   26:   invalid: T = 42; // Error: number ~> Generic<T>
+                      ^^ [1]: number
+   26:   invalid: T = 42; // Error: number ~> Generic<T>
+                  ^ [2]: `T`
 
 Error: generic_class.js:29
  29:   static invalid: T = 42; // Error: number ~> Generic<T>
-                           ^^ number. This type is incompatible with
- 29:   static invalid: T = 42; // Error: number ~> Generic<T>
-                       ^ T
+                           ^^ number [1] is incompatible with `T` [2].
+  References:
+   29:   static invalid: T = 42; // Error: number ~> Generic<T>
+                             ^^ [1]: number
+   29:   static invalid: T = 42; // Error: number ~> Generic<T>
+                         ^ [2]: `T`
 
 Error: scoping.js:24
  24: (new Foo().outer: string); // Error: number ~> string
