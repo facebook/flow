@@ -302,6 +302,26 @@ end = struct
       in
       local_defs @ refs
 
+  let find_external_refs genv all_deps def_locs name =
+    let {options; workers} = genv in
+    let dep_list: File_key.t list = FilenameSet.elements all_deps in
+    let node_modules_containers = !Files.node_modules_containers in
+    let result: (Loc.t list, string) result list list = MultiWorker.call workers
+      ~job: begin fun _acc deps ->
+        (* Yay for global mutable state *)
+        Files.node_modules_containers := node_modules_containers;
+        deps |> List.map begin fun dep ->
+          File_key.to_path dep >>= fun path ->
+          File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
+          find_refs_in_file options content dep def_locs name
+        end
+      end
+      ~merge: (fun refs acc -> refs::acc)
+      ~neutral: []
+      ~next: (MultiWorker.next workers dep_list)
+    in
+    List.concat result |> Result.all
+
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
     let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result = fun () ->
@@ -356,15 +376,8 @@ end = struct
             File_input.content_of_file_input fileinput >>= fun content ->
             find_refs_in_file options content file_key def_locs name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
-            let external_refs_result =
-              FilenameSet.elements all_deps |> List.map begin fun dep ->
-                File_key.to_path dep >>= fun path ->
-                File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
-                find_refs_in_file options content dep def_locs name
-              end |> Result.all
-            in
-            external_refs_result >>= fun external_refs ->
-            Ok (Some (name, List.concat (refs::external_refs)))
+            find_external_refs genv all_deps def_locs name >>| fun external_refs ->
+            Some (name, List.concat (refs::external_refs))
           else
             find_refs_in_file options content file_key def_locs name >>= fun refs ->
             Ok (Some (name, refs))
