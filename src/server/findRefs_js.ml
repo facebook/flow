@@ -238,20 +238,25 @@ end = struct
     >>= begin fun map -> match SMap.get name map with
       | None -> Ok NoDefFound
       | Some (None, _) -> Error "Expected a location associated with the definition"
-      | Some (Some loc, _) -> begin match extract_def_loc cx super name with
-        | Ok (Found lst) ->
-            (* Avoid duplicate entries. This can happen if a class does not override a method,
-             * so the definition points to the method definition in the parent class. Then we
-             * look at the parent class and find the same definition. *)
-            let lst =
-              if Nel.hd lst = loc then
-                lst
-              else
-                Nel.cons loc lst
-            in
-            Ok (Found lst)
-        | Ok _ | Error _ -> Ok (Found (Nel.one loc))
-      end
+      | Some (Some loc, _) ->
+        extract_def_loc cx super name
+        >>| begin function
+          | Found lst ->
+              (* Avoid duplicate entries. This can happen if a class does not override a method,
+               * so the definition points to the method definition in the parent class. Then we
+               * look at the parent class and find the same definition. *)
+              let lst =
+                if Nel.hd lst = loc then
+                  lst
+                else
+                  Nel.cons loc lst
+              in
+              Found lst
+          (* If the superclass does not have a definition for this method, or it is for some reason
+           * not a class type, or we don't know its type, just return the location we already know
+           * about. *)
+          | NoDefFound | UnsupportedType | AnyType -> Found (Nel.one loc)
+        end
     end
 
   and extract_def_loc_resolved cx ty name : (def_loc, string) result =
