@@ -544,7 +544,7 @@ let is_useless_op op_reason error_reason =
   | RMethodCall _ -> reasons_overlap op_reason error_reason
   | _ -> false
 
-let rec error_of_msg ~trace_reasons ~source_file =
+let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   let open Errors in
 
   let mk_info reason extras =
@@ -683,7 +683,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   let speculation_extras branches =
     List.map (fun (i, r, msg) ->
-      let err = error_of_msg ~trace_reasons:[] ~source_file msg in
+      let err = error_of_msg ~friendly:false ~trace_reasons:[] ~source_file msg in
       let header_infos = [
         Loc.none, [spf "Member %d:" (i + 1)];
         info_of_reason r;
@@ -700,6 +700,25 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ) branches
   in
 
+  (* Flip the lower/upper reasons of a frame_use_op. *)
+  let flip_frame = function
+  | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
+  | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
+  | FunRestParam c -> FunRestParam {lower = c.upper; upper = c.lower}
+  | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
+  | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
+  | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
+  | ReactConfigCheck -> ReactConfigCheck
+  | TupleElementCompatibility c ->
+    TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
+  | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
+  | TypeParamBound _
+  | FunMissingArg _
+  | ImplicitTypeParam _
+  | UnifyFlip
+    as use_op -> use_op
+  in
+
   (* Unification produces two errors. One for both sides. For example,
    * {p: number} ~> {p: string} errors on both number ~> string and
    * string ~> number. Showing both errors to our user is often redundant.
@@ -707,24 +726,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
    * error identical to one we've produced before. These two errors will be
    * deduped in our ErrorSet. *)
   let dedupe_by_flip =
-    (* Flip the lower/upper reasons of a frame_use_op. *)
-    let flip_frame = function
-    | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
-    | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
-    | FunRestParam c -> FunRestParam {lower = c.upper; upper = c.lower}
-    | FunReturn c -> FunReturn {lower = c.upper; upper = c.lower}
-    | IndexerKeyCompatibility c -> IndexerKeyCompatibility {lower = c.upper; upper = c.lower}
-    | PropertyCompatibility c -> PropertyCompatibility {c with lower = c.upper; upper = c.lower}
-    | ReactConfigCheck -> ReactConfigCheck
-    | TupleElementCompatibility c ->
-      TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
-    | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
-    | TypeParamBound _
-    | FunMissingArg _
-    | ImplicitTypeParam _
-    | UnifyFlip
-      as use_op -> use_op
-    in
     (* Loop over through the use_op chain. *)
     let rec loop = function
     (* Roots don't flip. *)
@@ -736,6 +737,42 @@ let rec error_of_msg ~trace_reasons ~source_file =
     (* If we are in flip mode then flip our frame. *)
     | Frame (frame, use_op) ->
       let (flip, use_op) = loop use_op in
+      if flip
+        then (true, Frame (flip_frame frame, use_op))
+        else (false, Frame (frame, use_op))
+    in
+    fun (lower, upper) use_op ->
+      let (flip, use_op) = loop use_op in
+      if flip
+        then ((upper, lower), use_op)
+        else ((lower, upper), use_op)
+  in
+
+  (* In friendly error messages, we always want to point to a value as the
+   * primary location. Or an annotation on a value. Normally, values are found
+   * in the lower bound. However, in contravariant positions this flips. In this
+   * function we normalize the lower/upper variables in use_ops so that lower
+   * always points to the value. Example:
+   *
+   *     ((x: number) => {}: (x: string) => void);
+   *
+   * We want to point to number. However, number is in the upper position since
+   * number => void ~> string => void flips arguments to string ~> number. This
+   * function flips contravariant positions like function arguments back. *)
+  let flip_contravariant =
+    (* Is this frame part of a contravariant position? *)
+    let is_contravariant = function
+    | FunParam _, Frame (FunCompatibility _, _) -> true
+    | FunRestParam _, Frame (FunCompatibility _, _) -> true
+    | _ -> false
+    in
+    (* Loop through the use_op and flip the contravariants. *)
+    let rec loop = function
+    | Op _ as use_op -> (false, use_op)
+    (* If the frame is contravariant then flip. *)
+    | Frame (frame, use_op) ->
+      let (flip, use_op) = loop use_op in
+      let flip = if is_contravariant (frame, use_op) then not flip else flip in
       if flip
         then (true, Frame (flip_frame frame, use_op))
         else (false, Frame (frame, use_op))
@@ -890,6 +927,91 @@ let rec error_of_msg ~trace_reasons ~source_file =
     extra, typecheck_msgs msg reasons
   in
 
+  (* Unwrap a use_op for the friendly error format. Takes the smallest location
+   * where we found the error and a use_op which we will unwrap. *)
+  let unwrap_use_ops_friendly =
+    let open Friendly in
+    let rec loop loc frames use_op =
+      Option.value_map
+      (match use_op with
+      (* TODO: Actual cases *)
+      | _ -> None
+      )
+      ~default:None
+      ~f:(function
+      (* Skip this use_op and go to the next one. *)
+      | `Next use_op -> loop loc frames use_op
+      (* Add our frame message and reposition the location if appropriate. *)
+      | `Frame (frame_reason, use_op, frame) ->
+        (* If our current loc is inside our frame_loc then use our current loc
+         * since it is the smallest possible loc in our frame_loc. *)
+        let frame_loc = loc_of_reason frame_reason in
+        let frame_contains_loc = Loc.contains frame_loc loc in
+        let loc = if frame_contains_loc then loc else frame_loc in
+        (* Add our frame and recurse with the next use_op. *)
+        let (all_frames, local_frames) = frames in
+        let frames = (frame::all_frames,
+          if frame_contains_loc then local_frames else frame::local_frames) in
+        loop loc frames use_op
+      (* We don't know what our root is! Return what we do know. *)
+      | `UnknownRoot ->
+        let (_, local_frames) = frames in
+        Some (None, loc, local_frames)
+      (* Finish up be returning our root location, root message, primary loc,
+       * and frames. *)
+      | `Root (root_reason, root_specific_reason, root_message) ->
+        (* If our current loc is inside our root_loc then use our current loc
+         * since it is the smallest possible loc in our root_loc. *)
+        let root_loc = loc_of_reason root_reason in
+        let root_specific_loc = Option.map root_specific_reason loc_of_reason in
+        let loc = if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0
+          then loc
+          else Option.value root_specific_loc ~default:root_loc
+        in
+        (* Return our root loc and message in addition to the true primary loc
+         * and frames. *)
+        let (all_frames, _) = frames in
+        Some (Some (root_loc, root_message), loc, all_frames)
+      )
+    in
+    fun loc use_op message ->
+      (* If friendly errors are not turned on then never return a friendly error
+       * from this function. *)
+      if not friendly then None else
+      Option.map (loop loc ([], []) use_op) (fun (root, loc, frames) ->
+        (* Construct the message... *)
+        let final_message =
+          match frames with
+          (* If we have no path then it is just the message we were passed. *)
+          | [] -> message
+          (* Otherwise add the path in sentence format. *)
+          | frames ->
+            (Inline [Text "in "])::(conjunction_concat ~conjunction:"and then" frames) @
+            (if List.length frames > 2 then [Inline [Text "; "]] else [Inline [Text ", "]]) @
+            message
+        in
+        (* Construct the error and return! *)
+        match root with
+        | Some (root_loc, root_message) ->
+          mk_friendly_error_with_root ~trace_infos
+            (root_loc, root_message @ [Inline [Text " because"]])
+            (loc, final_message)
+        | None ->
+          mk_friendly_error ~trace_infos
+            (loc, capitalize final_message)
+      )
+  in
+
+  let text = Friendly.text in
+  let ref = Friendly.ref in
+
+  let mk_incompatible_friendly_error lower upper use_op =
+    let ((lower, upper), use_op) = dedupe_by_flip (lower, upper) use_op in
+    let ((lower, upper), use_op) = flip_contravariant (lower, upper) use_op in
+    unwrap_use_ops_friendly (loc_of_reason lower) use_op
+      [ref lower; text " is incompatible with "; ref upper; text "."]
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, lower_kind);
@@ -909,10 +1031,18 @@ let rec error_of_msg ~trace_reasons ~source_file =
         typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
       )
 
-  | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
+  | EIncompatibleDefs { reason_lower; reason_upper; extras=[] } ->
+    (match (mk_incompatible_friendly_error reason_lower reason_upper unknown_use) with
+    | Some error -> error
+    | None ->
       let reasons = ordered_reasons (reason_lower, reason_upper) in
-      let extra = speculation_extras extras in
-      typecheck_error ~extra "This type is incompatible with" reasons
+      typecheck_error "This type is incompatible with" reasons
+    )
+
+  | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
+    let reasons = ordered_reasons (reason_lower, reason_upper) in
+    let extra = speculation_extras extras in
+    typecheck_error ~extra "This type is incompatible with" reasons
 
   | EIncompatibleProp { reason_prop; reason_obj; special; use_op } ->
       let reasons = (reason_prop, reason_obj) in
@@ -1609,12 +1739,16 @@ let rec error_of_msg ~trace_reasons ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
+    (match (mk_incompatible_friendly_error l_reason u_reason unknown_use) with
+    | Some error -> error
+    | None ->
       let ((l_reason, u_reason), use_op) =
         dedupe_by_flip (l_reason, u_reason) use_op in
       let extra, msgs =
         let msg = "This type is incompatible with" in
         unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
