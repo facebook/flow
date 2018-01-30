@@ -209,6 +209,9 @@ end = struct
     (* We found at least one def loc. Superclass implementations are also included. The list is
     ordered such that subclass implementations are first and superclass implementations are last. *)
     | Found of Loc.t Nel.t
+    (* This means we resolved the receiver type but did not find the definition. If this happens
+     * there must be a type error (which may be suppresssed) *)
+    | NoDefFound
     (* This means it's a known type that we deliberately do not currently support. *)
     | UnsupportedType
     (* This means it's not well-typed, and could be anything *)
@@ -228,30 +231,35 @@ end = struct
     let resolved = Flow_js.resolve_type cx ty in
     extract_def_loc_resolved cx resolved name
 
+  and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, string) result =
+    extracted_type
+    |> Flow_js.Members.extract_members cx
+    |> Flow_js.Members.to_command_result
+    >>= begin fun map -> match SMap.get name map with
+      | None -> Ok NoDefFound
+      | Some (None, _) -> Error "Expected a location associated with the definition"
+      | Some (Some loc, _) -> begin match extract_def_loc cx super name with
+        | Ok (Found lst) ->
+            (* Avoid duplicate entries. This can happen if a class does not override a method,
+             * so the definition points to the method definition in the parent class. Then we
+             * look at the parent class and find the same definition. *)
+            let lst =
+              if Nel.hd lst = loc then
+                lst
+              else
+                Nel.cons loc lst
+            in
+            Ok (Found lst)
+        | Ok _ | Error _ -> Ok (Found (Nel.one loc))
+      end
+    end
+
   and extract_def_loc_resolved cx ty name : (def_loc, string) result =
     let open Flow_js.Members in
     let open Type in
     match Flow_js.Members.extract_type cx ty with
       | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
-          let members = Flow_js.Members.extract_members cx extracted_type in
-          let command_result = Flow_js.Members.to_command_result members in
-          command_result >>= fun map ->
-          Result.of_option ~error:"Expected a property definition" (SMap.get name map) >>= fun (loc, _) ->
-          Result.of_option ~error:"Expected a location associated with the definition" loc >>= fun loc ->
-          begin match extract_def_loc cx super name with
-            | Ok (Found lst) ->
-                (* Avoid duplicate entries. This can happen if a class does not override a method,
-                 * so the definition points to the method definition in the parent class. Then we
-                 * look at the parent class and find the same definition. *)
-                let lst =
-                  if Nel.hd lst = loc then
-                    lst
-                  else
-                    Nel.cons loc lst
-                in
-                Ok (Found lst)
-            | Ok _ | Error _ -> Ok (Found (Nel.one loc))
-          end
+          extract_def_loc_from_instancet cx extracted_type super name
       | Success _
       | SuccessModule _
       | FailureNullishType
@@ -285,7 +293,7 @@ end = struct
                 None
           (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
            * are references or not. For now we'll leave them out. *)
-          | UnsupportedType | AnyType -> None
+          | NoDefFound | UnsupportedType | AnyType -> None
       end
       |> Result.all
       |> Result.map_error ~f:(fun err ->
@@ -350,6 +358,7 @@ end = struct
         | Some (`Use (ty, name)) ->
             begin extract_def_loc cx ty name >>= function
               | Found locs -> Ok (Some (locs, name))
+              | NoDefFound
               | UnsupportedType
               | AnyType -> Ok None
             end
