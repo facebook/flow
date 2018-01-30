@@ -5,6 +5,21 @@ layout: guide
 If you're using [Atom](https://atom.io) you have a bunch of options to
 integrate Flow into your code base.
 
+## Recommended <a class="toc" id="toc-recommended" href="#toc-recommended"></a>
+
+### Atom IDE + Flow <a class="toc" id="toc-atom-ide-flow" href="#toc-atom-ide-flow"></a>
+
+Using [Atom IDE](https://ide.atom.io/) is the recommended way to integrate Flow
+with Atom. Install the [atom-ide-ui](https://github.com/facebook-atom/atom-ide-ui)
+and [ide-flowtype](https://github.com/flowtype/ide-flowtype) packages.
+
+```sh
+apm install atom-ide-ui
+apm install ide-flowtype
+```
+
+## Alternatives <a class="toc" id="toc-alternatives" href="#toc-alternatives"></a>
+
 ### Nuclide <a class="toc" id="toc-nuclide" href="#toc-nuclide"></a>
 
 ```sh
