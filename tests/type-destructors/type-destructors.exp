@@ -14,6 +14,18 @@ Error: element_type.js:18
  18: ('hello world': Obj_Elem);
                      ^^^^^^^^ number
 
+Error: errors.js:9
+  9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
+                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property cannot be accessed on possibly null value
+ 25: fn3(null); // We should get an error on this line.
+         ^^^^ null
+
+Error: errors.js:10
+ 10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
+                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property cannot be accessed on possibly null value
+ 28: fn4(null)(); // We should get an error on this line.
+         ^^^^ null
+
 Error: errors.js:12
  12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
               ^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
@@ -36,28 +48,44 @@ Error: errors.js:18
  18: fn1({x: 42}); // We should get an error on this line.
          ^^^^^^^ object literal
 
-Error: errors.js:20
- 20: fn2({x: 42})(); // We should get an error on this line.
+Error: errors.js:19
+ 19: fn1(null); // We should get an error on this line.
+     ^^^^^^^^^ call of `fn1`
+  7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
+                                    ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
+ 19: fn1(null); // We should get an error on this line.
+         ^^^^ null
+
+Error: errors.js:21
+ 21: fn2({x: 42})(); // We should get an error on this line.
      ^^^^^^^^^^^^ call of `fn2`
   8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
                                                      ^^^ property `p`. Property not found in
- 20: fn2({x: 42})(); // We should get an error on this line.
+ 21: fn2({x: 42})(); // We should get an error on this line.
          ^^^^^^^ object literal
 
 Error: errors.js:22
- 22: fn3({x: 42}); // We should get an error on this line.
+ 22: fn2(null)(); // We should get an error on this line.
+     ^^^^^^^^^ call of `fn2`
+  8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
+                                     ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
+ 22: fn2(null)(); // We should get an error on this line.
+         ^^^^ null
+
+Error: errors.js:24
+ 24: fn3({x: 42}); // We should get an error on this line.
      ^^^^^^^^^^^^ call of `fn3`
   9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 22: fn3({x: 42}); // We should get an error on this line.
+ 24: fn3({x: 42}); // We should get an error on this line.
          ^^^^^^^ object literal
 
-Error: errors.js:24
- 24: fn4({x: 42})(); // We should get an error on this line.
+Error: errors.js:27
+ 27: fn4({x: 42})(); // We should get an error on this line.
      ^^^^^^^^^^^^ call of `fn4`
  10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
                                      ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 24: fn4({x: 42})(); // We should get an error on this line.
+ 27: fn4({x: 42})(); // We should get an error on this line.
          ^^^^^^^ object literal
 
 Error: non_maybe_type.js:5
@@ -322,4 +350,4 @@ Error: union.js:10
                  ^^^^^^^^^^^^^^^^^^^^^ number
 
 
-Found 38 errors
+Found 42 errors

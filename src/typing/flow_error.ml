@@ -25,6 +25,7 @@ type error_message =
   | EIncompatible of {
       lower: reason * lower_kind option;
       upper: reason * upper_kind;
+      use_op: use_op option;
       extras: (int * Reason.t * error_message) list;
     }
   | EIncompatibleDefs of {
@@ -254,7 +255,7 @@ and upper_kind =
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
   | IncompatibleObjSealT
-  | IncompatibleArrRestT of use_op
+  | IncompatibleArrRestT
   | IncompatibleSuperT
   | IncompatibleMixinT
   | IncompatibleSpecializeT
@@ -273,6 +274,10 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* A utility function for getting and updating the use_op in error messages. *)
 let util_use_op_of_msg nope util = function
+| EIncompatible {use_op; lower; upper; extras} ->
+  Option.value_map use_op ~default:nope ~f:(fun use_op ->
+    util use_op (fun use_op ->
+      EIncompatible {use_op=Some use_op; lower; upper; extras}))
 | EIncompatibleProp {use_op; reason_prop; reason_obj; special} ->
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
@@ -293,7 +298,6 @@ let util_use_op_of_msg nope util = function
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
-| EIncompatible {lower=_; upper=_; extras=_}
 | EIncompatibleDefs {reason_lower=_; reason_upper=_; extras=_}
 | EIncompatibleGetProp {reason_prop=_; reason_obj=_; special=_}
 | EIncompatibleSetProp {reason_prop=_; reason_obj=_; special=_}
@@ -590,7 +594,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | IncompatibleObjAssignFromT -> "Expected object instead of"
     | IncompatibleObjRestT -> "Expected object instead of"
     | IncompatibleObjSealT -> "Expected object instead of"
-    | IncompatibleArrRestT _ -> "Expected array instead of"
+    | IncompatibleArrRestT -> "Expected array instead of"
     | IncompatibleSuperT -> "Cannot inherit"
     | IncompatibleMixinT -> "Expected class instead of"
     | IncompatibleSpecializeT -> "Expected polymorphic type instead of"
@@ -890,15 +894,15 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EIncompatible {
       lower = (reason_lower, lower_kind);
       upper = (reason_upper, upper_kind);
+      use_op;
       extras;
     } ->
-      (match upper_kind with
-      | IncompatibleArrRestT use_op
-        ->
+      (match use_op with
+      | Some use_op ->
         let extra = speculation_extras extras in
         let extra, msgs =
           let msg = err_msg_use lower_kind upper_kind in
-          unwrap_use_ops ((reason_upper, reason_lower), extra, msg) use_op in
+          unwrap_use_ops ~force:true ((reason_upper, reason_lower), extra, msg) use_op in
         typecheck_error_with_core_infos ~extra msgs
       | _ ->
         let extra = speculation_extras extras in

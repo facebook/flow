@@ -24,7 +24,7 @@ Error: instanceof.js:85
  85:     x[0] = 123; // error
          ^^^^ assignment of computed property/element. Computed property/element cannot be assigned on
  85:     x[0] = 123; // error
-         ^ number
+         ^^^^ number
 
 
 Found 5 errors

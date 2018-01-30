@@ -711,7 +711,7 @@ module Cache = struct
            effect on type checking. However, recursively nested use ops can pose
            non-termination problems. To ensure proper caching, we hash use ops
            to just their top-level structure. *)
-        let u = mod_op_of_use_t (function
+        let u = mod_use_op_of_use_t (function
         | Frame (frame, use_op) when use_op <> unknown_use -> Frame (frame, unknown_use)
         | use_op -> use_op) u in
         let found = FlowSet.cache (l, u) cache in
@@ -1396,7 +1396,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (OpenT(r, tvar), t2) ->
       let t2 = match desc_of_reason r with
       | RTypeParam (_, _, loc) ->
-        mod_op_of_use_t (fun op -> Frame (ImplicitTypeParam loc, op)) t2
+        mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam loc, op)) t2
       | _ -> t2
       in
 
@@ -6191,6 +6191,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EIncompatible {
         lower = (reason_of_t l, flow_error_kind_of_lower l);
         upper = (reason_of_use_t u, flow_error_kind_of_upper u);
+        use_op = use_op_of_use_t u;
         extras = [];
       })
   )
@@ -6219,7 +6220,7 @@ and flow_error_kind_of_upper = function
   | ObjAssignFromT _ -> FlowError.IncompatibleObjAssignFromT
   | ObjRestT _ -> FlowError.IncompatibleObjRestT
   | ObjSealT _ -> FlowError.IncompatibleObjSealT
-  | ArrRestT (use_op, _, _, _) -> FlowError.IncompatibleArrRestT use_op
+  | ArrRestT _ -> FlowError.IncompatibleArrRestT
   | SuperT _ -> FlowError.IncompatibleSuperT
   | MixinT _ -> FlowError.IncompatibleMixinT
   | SpecializeT _ -> FlowError.IncompatibleSpecializeT
@@ -8033,6 +8034,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
               Flow_error.EIncompatible {
                 lower = (reason_lower, Some Flow_error.Incompatible_intersection);
                 upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
+                use_op = use_op_of_use_t upper;
                 extras = branches;
               }
         in
@@ -8171,7 +8173,7 @@ and fire_actions cx trace spec = List.iter (function
       rec_flow cx trace (l, u)
     | UnionCases (use_op, _, _) ->
       rec_flow cx trace (l,
-        mod_op_of_use_t (replace_unknown_root_use_op use_op) u)
+        mod_use_op_of_use_t (replace_unknown_root_use_op use_op) u)
     )
   | _, Speculation.Action.Unify (use_op, t1, t2) -> (match spec with
     | IntersectionCases (_, _) ->
@@ -8981,7 +8983,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 (*******************************************************************)
 
 and flow_use_op op1 u =
-  mod_op_of_use_t (fun op2 ->
+  mod_use_op_of_use_t (fun op2 ->
     let alt = fold_use_op
       (function
         (* If the root of the previous use_op is UnknownUse and our alternate

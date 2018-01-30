@@ -2327,7 +2327,7 @@ let dump_flow_error =
   | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
   | IncompatibleObjRestT -> "IncompatibleObjRestT"
   | IncompatibleObjSealT -> "IncompatibleObjSealT"
-  | IncompatibleArrRestT _ -> "IncompatibleArrRestT"
+  | IncompatibleArrRestT -> "IncompatibleArrRestT"
   | IncompatibleSuperT -> "IncompatibleSuperT"
   | IncompatibleMixinT -> "IncompatibleMixinT"
   | IncompatibleSpecializeT -> "IncompatibleSpecializeT"
@@ -2347,12 +2347,16 @@ let dump_flow_error =
     | EIncompatible {
         lower = (reason_lower, _lower_kind);
         upper = (reason_upper, upper_kind);
+        use_op;
         extras = _;
       } ->
-        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); extras = _ }"
+        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; extras = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
           (dump_upper_kind upper_kind)
+          (match use_op with
+          | None -> "None"
+          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
     | EIncompatibleDefs { reason_lower; reason_upper; extras = _ } ->
         spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
           (dump_reason cx reason_lower)

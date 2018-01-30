@@ -16,9 +16,13 @@ type B = P<{}>;
 (null: B); // We should get an error on this line.
 
 fn1({x: 42}); // We should get an error on this line.
+fn1(null); // We should get an error on this line.
 
 fn2({x: 42})(); // We should get an error on this line.
+fn2(null)(); // We should get an error on this line.
 
 fn3({x: 42}); // We should get an error on this line.
+fn3(null); // We should get an error on this line.
 
 fn4({x: 42})(); // We should get an error on this line.
+fn4(null)(); // We should get an error on this line.

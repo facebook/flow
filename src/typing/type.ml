@@ -1757,7 +1757,8 @@ and TypeUtil : sig
   val mod_reason_of_defer_use_t: (reason -> reason) -> TypeTerm.defer_use_t -> TypeTerm.defer_use_t
   val mod_reason_of_use_t: (reason -> reason) -> TypeTerm.use_t -> TypeTerm.use_t
 
-  val mod_op_of_use_t: (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
+  val use_op_of_use_t: TypeTerm.use_t -> TypeTerm.use_op option
+  val mod_use_op_of_use_t: (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
 
   val reasonless_compare: TypeTerm.t -> TypeTerm.t -> int
   val reasonless_eq: TypeTerm.t -> TypeTerm.t -> bool
@@ -2062,38 +2063,118 @@ end = struct
         ConcretizeTypeAppsT (use_op, t1, (t2, ts2, f r2), targs)
     | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
-  let rec mod_op_of_use_t f u =
-    let util op make =
-      let op' = f op in
-      if op' == op then u else make op'
-    in
-    match u with
-    | UseT (op, t) -> util op (fun op -> UseT (op, t))
-    | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
-    | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
-    | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
-    | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
-    | SetPrivatePropT (op, r, s, c, b, t, tp) -> util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
-    | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
-    | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
-    | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
-    | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
-    | ReposLowerT (r, d, u2) ->
-      let u2' = mod_op_of_use_t f u2 in
-      if u2' == u2 then u else ReposLowerT (r, d, u2')
-    | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
-    | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
-    | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
-    | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
-    | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
-    | TypeAppVarianceCheckT (op, r1, r2, ts) ->
-      util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
-    | ConcretizeTypeAppsT (op, x1, x2, b) -> util op (fun op -> ConcretizeTypeAppsT (op, x1, x2, b))
-    | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
-    | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
-    | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
-    | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
-    | _ -> u
+  let rec util_use_op_of_use_t: 'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
+  fun nope util u -> let util = util u in match u with
+  | UseT (op, t) -> util op (fun op -> UseT (op, t))
+  | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
+  | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
+  | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
+  | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
+  | SetPrivatePropT (op, r, s, c, b, t, tp) ->
+    util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
+  | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
+  | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
+  | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
+  | ReposLowerT (r, d, u2) as u ->
+    let result = util_use_op_of_use_t
+      (fun _ -> None)
+      (fun _ op make -> Some (op, make))
+      u2 in
+    (match result with
+    | None -> nope u
+    | Some (op, make) ->
+      util op (fun op -> ReposLowerT (r, d, make op))
+    )
+  | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
+  | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
+  | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
+  | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
+  | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
+  | TypeAppVarianceCheckT (op, r1, r2, ts) ->
+    util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
+  | ConcretizeTypeAppsT (op, x1, x2, b) -> util op (fun op -> ConcretizeTypeAppsT (op, x1, x2, b))
+  | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
+  | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
+  | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
+  | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
+  | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
+  | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
+  | TestPropT (_, _, _)
+  | CallElemT (_, _, _, _)
+  | GetStaticsT (_, _)
+  | GetProtoT (_, _)
+  | SetProtoT (_, _)
+  | MixinT (_, _)
+  | ToStringT (_, _)
+  | AdderT (_, _, _, _)
+  | ComparatorT (_, _, _)
+  | UnaryMinusT (_, _)
+  | AssertArithmeticOperandT (_)
+  | AssertBinaryInLHST (_)
+  | AssertBinaryInRHST (_)
+  | AssertForInRHST (_)
+  | AssertRestParamT (_)
+  | PredicateT (_, _)
+  | GuardT (_, _, _)
+  | EqT (_, _, _)
+  | AndT (_, _, _)
+  | OrT (_, _, _)
+  | NotT (_, _)
+  | ThisSpecializeT (_, _, _)
+  | VarianceCheckT (_, _, _)
+  | LookupT (_, _, _, _, _)
+  | ObjAssignToT (_, _, _, _)
+  | ObjAssignFromT (_, _, _, _)
+  | ObjFreezeT (_, _)
+  | ObjRestT (_, _, _)
+  | ObjSealT (_, _)
+  | ObjTestProtoT (_, _)
+  | ObjTestT (_, _, _)
+  | UnifyT (_, _)
+  | BecomeT (_, _)
+  | GetKeysT (_, _)
+  | HasOwnPropT (_, _)
+  | GetValuesT (_, _)
+  | MakeExactT (_, _)
+  | CJSRequireT (_, _, _)
+  | ImportModuleNsT (_, _, _)
+  | ImportDefaultT (_, _, _, _, _)
+  | ImportNamedT (_, _, _, _, _)
+  | ImportTypeT (_, _, _)
+  | ImportTypeofT (_, _, _)
+  | AssertImportIsValueT (_, _)
+  | CJSExtractNamedExportsT (_, _, _)
+  | CopyNamedExportsT (_, _, _)
+  | CopyTypeExportsT (_, _, _)
+  | ExportNamedT (_, _, _, _)
+  | ExportTypeT (_, _, _, _, _)
+  | MapTypeT (_, _, _)
+  | ChoiceKitUseT (_, _)
+  | IntersectionPreprocessKitT (_, _)
+  | DebugPrintT (_)
+  | DebugSleepT (_)
+  | SentinelPropTestT (_, _, _, _, _, _)
+  | IdxUnwrap (_, _)
+  | IdxUnMaybeifyT (_, _)
+  | CallLatentPredT (_, _, _, _, _)
+  | CallOpenPredT (_, _, _, _, _)
+  | SubstOnPredT (_, _, _)
+  | RefineT (_, _, _)
+  | CondT (_, _, _)
+    -> nope u
+
+  let use_op_of_use_t =
+    util_use_op_of_use_t
+      (fun _ -> None)
+      (fun _ op _ -> Some op)
+
+  let mod_use_op_of_use_t f =
+    util_use_op_of_use_t
+      (fun u -> u)
+      (fun u op make ->
+        let op' = f op in
+        if op' == op then u else make op')
 
   (* type comparison mod reason *)
   let reasonless_compare =
