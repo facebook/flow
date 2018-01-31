@@ -23,8 +23,8 @@ Check out [tool_test_example](https://github.com/facebook/flow/blob/master/newte
 The only way to create a `Suite` is to call the `suite()` function. The `suite()` function takes a callback, like so
 
 ```JavaScript
-import {suite} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite} from '../../packages/flow-dev-tools/src/test/Tester';
+import type TestStep from '../../packages/flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 ```
 
@@ -35,8 +35,8 @@ export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 The only way to create a `Test` is to call the `test()` function. The `test()` function takes a test name and a list of `TestStep`s, like so
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
+import type TestStep from '../../packages/flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [
   test('My first test, [ < List of TestSteps > ]'),
 ]);
@@ -47,8 +47,8 @@ export default suite((emptyTestStep: TestStep) => [
 A `TestStep` is made up of 0 or more actions and 0 or more assertions. The `emptyTestStep` passed to `suite()`'s callback is a `TestStep` with 0 actions and 0 assertions. `TestStep`s are immutable, so when you call `emptyTestStep.addFile('foo.js')` you get back a new `TestStep` with 1 action and 0 assertions. So a test looks like
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
+import type TestStep from '../../packages/flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [
   test('My first test', [ 
     emptyTestStep
@@ -64,7 +64,7 @@ export default suite((emptyTestStep: TestStep) => [
 More concisely, this can be written
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
 export default suite(({addCode}) => [
   test('My first test', [ 
     addCode('var x = 123')

@@ -57,17 +57,17 @@ async function transformDir(
 }
 
 /**
- * Copies the tsrc directory over, transforming all the .js files
+ * Copies the src directory over, transforming all the .js files
  */
 async function transformTool(args: Args): Promise<void> {
   const source = resolve(__dirname, "..");
-  const dest = join(args.dest, "tsrc");
+  const dest = join(args.dest, "src");
   await transformDir(source, dest, (file) => extname(file.name) == ".js");
 
   await writeFile(
     join(args.dest, "tool"),
 `#!/usr/bin/env node
-require("./tsrc/main.js").run();
+require("./src/main.js").run();
 `,
   { mode: 0o777},
   );

@@ -45,6 +45,6 @@
     ]
   },
   "scripts": {
-    "test": "make test"
+    "test": "make -C ../.. test"
   }
 }

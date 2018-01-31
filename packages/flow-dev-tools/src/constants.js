@@ -2,7 +2,8 @@
 
 import {resolve} from 'path';
 
-
+const TOOL_ROOT = resolve(__dirname, "../");
+const FLOW_ROOT = resolve(__dirname, "../../../");
 export const defaultTestsDirName = "newtests";
 
 // This is where we look for tests to run and where we put newly converted
@@ -11,15 +12,14 @@ export function getTestsDir(relative_to?: string) {
   if (relative_to !== undefined) {
     return resolve(relative_to, defaultTestsDirName);
   } else {
-    return resolve(__dirname, "../", defaultTestsDirName);
+    return resolve(FLOW_ROOT, defaultTestsDirName);
   }
 }
 
 export const binOptions: Array<string> = [
-  resolve(__dirname, "../bin/flow"), // Open source build
-  resolve(__dirname, "../bin/flow.exe"), // Open source windows build
-  resolve(__dirname, "../../buck-out/gen/flow/flow/flow"), // Buck
-  resolve(__dirname, "../../_bin/flow/flow"), // Fbmake
+  resolve(FLOW_ROOT, "bin/flow"), // Open source build
+  resolve(FLOW_ROOT, "bin/flow.exe"), // Open source windows build
+  resolve(FLOW_ROOT, "../buck-out/gen/flow/flow/flow"), // Buck
 ];
 
 export const defaultFlowConfigName = "_flowconfig";

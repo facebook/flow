@@ -3,7 +3,7 @@
  * @lint-ignore-every LINEWRAP1
  */
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('X ~> A', [

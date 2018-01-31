@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
 
 // A suite is a function. It takes an empty step and returns a list of tests.
 // For convinience, it's nice to destructure the empty test, since you almost

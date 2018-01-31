@@ -1,6 +1,4 @@
-#!/usr/bin/env node
+#!/bin/sh
 
-/* @flow */
-
-require("babel-register");
-require("./tsrc/main.js").run();
+DIR=$( cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P )
+exec "$DIR/packages/flow-dev-tools/bin/tool" "$@"
