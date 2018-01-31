@@ -405,7 +405,6 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
-    val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_opaque_ids = IMap.empty
@@ -444,16 +443,13 @@ module ContextOptimizer = struct
       let { reduced_property_maps; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let stable_id = Properties.Map.find_unsafe id stable_propmap_ids in
-        SigHash.add_int sig_hash stable_id;
+        let () = SigHash.add_int sig_hash (id :> int) in
         quotient
       else
         let pmap = Context.find_props cx id in
-        SigHash.add_props_map sig_hash pmap;
+        let () = SigHash.add_props_map sig_hash pmap in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
-        let stable_id = self#fresh_stable_id in
-        stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
         super#props cx pole { quotient with reduced_property_maps } id
 
     method! exports cx pole quotient id =
