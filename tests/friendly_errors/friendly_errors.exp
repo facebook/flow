@@ -34,6 +34,15 @@ Error: desc-class-properties.js:19
    19:     (this.#c: number); // Error: string ~> number
                      ^^^^^^ [2]: number
 
+Error: indexer-key-compatibility.js:7
+  7: (o: {[k: string]: any});
+      ^ Cannot cast `o` to object type because in the indexer property's key, number [1] is incompatible with string [2].
+  References:
+    6: declare var o: {[k: number]: any};
+                           ^^^^^^ [1]: number
+    7: (o: {[k: string]: any});
+                ^^^^^^ [2]: string
+
 Error: loc-primary.js:8
   8: (a1: A); // Error: string ~> number. We should point to a1.
       ^^ Cannot cast `a1` to `A` because in property `p`, number [1] is incompatible with string [2].
@@ -350,4 +359,4 @@ Error: order.js:10
                     ^^^^^ [2]: empty
 
 
-Found 39 errors
+Found 40 errors
