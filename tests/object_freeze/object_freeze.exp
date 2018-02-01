@@ -42,14 +42,12 @@ Error: object_freeze.js:14
 
 Error: object_freeze.js:20
  20: var xx : { x: number } = Object.freeze({ x: "error" })
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ frozen object literal. This type is incompatible with
- 20: var xx : { x: number } = Object.freeze({ x: "error" })
-              ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     20: var xx : { x: number } = Object.freeze({ x: "error" })
-                                                     ^^^^^^^ string. This type is incompatible with
-     20: var xx : { x: number } = Object.freeze({ x: "error" })
-                       ^^^^^^ number
+                                                 ^^^^^^^ Cannot assign `Object.freeze(...)` to `xx` because in property `x`, string [1] is incompatible with number [2].
+  References:
+   20: var xx : { x: number } = Object.freeze({ x: "error" })
+                                                   ^^^^^^^ [1]: string
+   20: var xx : { x: number } = Object.freeze({ x: "error" })
+                     ^^^^^^ [2]: number
 
 
 Found 8 errors

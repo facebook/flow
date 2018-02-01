@@ -17,14 +17,12 @@ Error: test.js:7
 
 Error: test.js:19
  19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                                    ^^^^^^ number. This type is incompatible with
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                  ^^^^^^ string
+                                                                                ^^^^^^ Cannot assign object literal to `o7` because in property `y`, number [1] is incompatible with string [2].
+  References:
+   19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                                                                  ^^^^^^ [1]: number
+   19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                ^^^^^^ [2]: string
 
 
 Found 3 errors

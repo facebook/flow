@@ -1,13 +1,11 @@
 Error: annot.js:4
   4: var bar: (str:number, i:number)=> string = foo;
-                                                ^^^ function. This type is incompatible with
-  4: var bar: (str:number, i:number)=> string = foo;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  The first parameter is incompatible:
-      4: var bar: (str:number, i:number)=> string = foo;
-                       ^^^^^^ number. This type is incompatible with
-      1: function foo(str:string, i:number):string {
-                          ^^^^^^ string
+                                                ^^^ Cannot assign `foo` to `bar` because in the first argument, string [1] is incompatible with number [2].
+  References:
+    1: function foo(str:string, i:number):string {
+                        ^^^^^^ [1]: string
+    4: var bar: (str:number, i:number)=> string = foo;
+                     ^^^^^^ [2]: number
 
 Error: annot.js:6
   6: var qux = function(str:string, i:number):number { return foo(str,i); }
@@ -20,44 +18,38 @@ Error: annot.js:8
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `i` is incompatible:
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                                      ^^^^^ string. This type is incompatible with
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                 ^^^^^^ number
-
-Error: annot.js:8
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `j` is incompatible:
       8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `j`. Property not found in
       8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
 
+Error: annot.js:8
+  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                                  ^^^^^ Cannot assign object literal to `obj` because in property `i`, string [1] is incompatible with number [2].
+  References:
+    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                                    ^^^^^ [1]: string
+    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                               ^^^^^^ [2]: number
+
 Error: annot.js:10
  10: var arr: Array<number> = [1,2,"..."];
-                              ^^^^^^^^^^^ array literal. Has some incompatible type argument with
- 10: var arr: Array<number> = [1,2,"..."];
-              ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     10: var arr: Array<number> = [1,2,"..."];
-                                       ^^^^^ string. This type is incompatible with
-     10: var arr: Array<number> = [1,2,"..."];
-                        ^^^^^^ number
+                                   ^^^^^ Cannot assign array literal to `arr` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   10: var arr: Array<number> = [1,2,"..."];
+                                     ^^^^^ [1]: string
+   10: var arr: Array<number> = [1,2,"..."];
+                      ^^^^^^ [2]: number
 
 Error: annot.js:13
  13: var array: number[] = [1,2,"..."];
-                           ^^^^^^^^^^^ array literal. Has some incompatible type argument with
- 13: var array: number[] = [1,2,"..."];
-                ^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     13: var array: number[] = [1,2,"..."];
-                                    ^^^^^ string. This type is incompatible with
-     13: var array: number[] = [1,2,"..."];
-                    ^^^^^^ number
+                                ^^^^^ Cannot assign array literal to `array` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   13: var array: number[] = [1,2,"..."];
+                                  ^^^^^ [1]: string
+   13: var array: number[] = [1,2,"..."];
+                  ^^^^^^ [2]: number
 
 Error: annot.js:27
  27: var test_obj: ObjType = { 'bar-foo': '23' };
@@ -72,9 +64,12 @@ Error: annot.js:27
 
 Error: annot.js:31
  31:   n = "hey"; // error
-           ^^^^^ string. This type is incompatible with
- 30: function param_anno(n:number):void {
-                           ^^^^^^ number
+           ^^^^^ Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2].
+  References:
+   31:   n = "hey"; // error
+             ^^^^^ [1]: string
+   30: function param_anno(n:number):void {
+                             ^^^^^^ [2]: number
 
 Error: annot.js:45
                          v-------------------------------
@@ -109,15 +104,21 @@ Error: annot.js:45
 
 Error: annot.js:55
  55: var toz : null = 3;
-                      ^ number. This type is incompatible with
- 55: var toz : null = 3;
-               ^^^^ null
+                      ^ Cannot assign `3` to `toz` because number [1] is incompatible with null [2].
+  References:
+   55: var toz : null = 3;
+                        ^ [1]: number
+   55: var toz : null = 3;
+                 ^^^^ [2]: null
 
 Error: forward_ref.js:1
   1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                                    ^^^^ null. This type is incompatible with
-  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                          ^^^^^^^ MyClass
+                                    ^^^^ Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2].
+  References:
+    1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                                      ^^^^ [1]: null
+    1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                            ^^^^^^^ [2]: `MyClass`
 
 Error: forward_ref.js:4
   4:   return null; // forward ref ok, null ~> class error

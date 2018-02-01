@@ -8,7 +8,8 @@
 val destructuring :
   Context.t ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
-  f:(Loc.t ->
+  f:(use_op:Type.use_op ->
+    Loc.t ->
     string ->
     Loc.t Ast.Expression.t Default.t option ->
     Type.t -> unit) ->

@@ -1,8 +1,11 @@
 Error: test.js:3
   3:     var y: string = x; // error
-                         ^ number. This type is incompatible with
-  3:     var y: string = x; // error
-                ^^^^^^ string
+                         ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+  References:
+    1: function foo<T: number>(x: T): T {
+                                  ^ [1]: number
+    3:     var y: string = x; // error
+                  ^^^^^^ [2]: string
 
 Error: test.js:9
   9:         return x; // error, since T: number and U: number does not imply U: T
@@ -12,34 +15,30 @@ Error: test.js:9
 
 Error: test.js:13
  13:         var y: string = x; // error
-                             ^ number. This type is incompatible with
- 13:         var y: string = x; // error
-                    ^^^^^^ string
+                             ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+  References:
+   11:     qux<U: T>(x: U): T {
+                        ^ [1]: number
+   13:         var y: string = x; // error
+                      ^^^^^^ [2]: string
 
 Error: test.js:22
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                        ^^^^^ C. Has some incompatible type argument with
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
-            ^^^^^^^^^ C
-  Type argument `T` is incompatible:
-     22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                  ^^^^^^ string. This type is incompatible with
-      7: class C<T: number> {
-                    ^^^^^^ number
-
-Error: test.js:22
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                        ^^^^^ new `C`
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
-              ^^^^^^ string. This type is incompatible with the bound on type parameter `T`:
-  7: class C<T: number> {
-                ^^^^^^ number
+                        ^^^^^ Cannot assign `new C()` to `c` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   22: var c: C<string> = new C; // error, since T = string is incompatible with number
+                ^^^^^^ [1]: string
+    7: class C<T: number> {
+                  ^^^^^^ [2]: number
 
 Error: test.js:23
  23: var q: number = c.qux(0);
-                     ^^^^^^^^ string. This type is incompatible with
- 23: var q: number = c.qux(0);
-            ^^^^^^ number
+                     ^^^^^^^^ Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with number [2].
+  References:
+   22: var c: C<string> = new C; // error, since T = string is incompatible with number
+                ^^^^^^ [1]: string
+   23: var q: number = c.qux(0);
+              ^^^^^^ [2]: number
 
 Error: test.js:23
  23: var q: number = c.qux(0);
@@ -60,4 +59,4 @@ Error: test.js:23
                 ^^^^^^ [2]: string
 
 
-Found 8 errors
+Found 7 errors

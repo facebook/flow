@@ -33,15 +33,18 @@ Error: importtest.js:31
 
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
-                ^^^ number. This type is incompatible with
- 38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
-                       ^^^^^^^^^ SuperType
-
-Error: importtest.js:39
- 39:     return x++; // Error number ~> SuperType
                 ^^^ number. This type is incompatible with the expected return type of
  38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
                                    ^^^^^^^^^ SuperType
+
+Error: importtest.js:39
+ 39:     return x++; // Error number ~> SuperType
+                ^^^ Cannot assign number to `x` because number [1] is incompatible with `SuperType` [2].
+  References:
+   39:     return x++; // Error number ~> SuperType
+                  ^^^ [1]: number
+   38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                         ^^^^^^^^^ [2]: `SuperType`
 
 Error: importtest.js:52
  52:     return x + y;

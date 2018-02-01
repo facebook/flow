@@ -30,15 +30,21 @@ Error: test6.js:2
 
 Error: test7.js:2
   2: var x: string = obj['m'](); // error, number ~> string
-                     ^^^^^^^^^^ number. This type is incompatible with
-  2: var x: string = obj['m'](); // error, number ~> string
-            ^^^^^^ string
+                     ^^^^^^^^^^ Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2].
+  References:
+    1: var obj = {x: 0, m() { return this.x }}
+                     ^ [1]: number
+    2: var x: string = obj['m'](); // error, number ~> string
+              ^^^^^^ [2]: string
 
 Error: test7.js:5
   5: var y: string = arr[0](); // error: number ~> string
-                     ^^^^^^^^ number. This type is incompatible with
-  5: var y: string = arr[0](); // error: number ~> string
-            ^^^^^^ string
+                     ^^^^^^^^ Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2].
+  References:
+  275:     length: number;
+                   ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:275
+    5: var y: string = arr[0](); // error: number ~> string
+              ^^^^^^ [2]: string
 
 
 Found 7 errors

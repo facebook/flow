@@ -1,8 +1,11 @@
 Error: date.js:2
   2: var x:string = d.getTime();
-                    ^^^^^^^^^^^ number. This type is incompatible with
-  2: var x:string = d.getTime();
-           ^^^^^^ string
+                    ^^^^^^^^^^^ Cannot assign `d.getTime()` to `x` because number [1] is incompatible with string [2].
+  References:
+  378:     getTime(): number;
+                      ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:378
+    2: var x:string = d.getTime();
+             ^^^^^^ [2]: string
 
 Error: date.js:18
  18: new Date({});

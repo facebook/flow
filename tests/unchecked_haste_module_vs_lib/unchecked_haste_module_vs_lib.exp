@@ -1,8 +1,11 @@
 Error: test.js:13
  13: var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 13: var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
-            ^^^^^^ string
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `buffer.INSPECT_MAX_BYTES` to `x` because number [1] is incompatible with string [2].
+  References:
+   12: export var INSPECT_MAX_BYTES = 0;
+                                      ^ [1]: number. See: buffer.js:12
+   13: var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
+              ^^^^^^ [2]: string
 
 
 Found 1 error

@@ -91,10 +91,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -115,40 +187,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -171,10 +209,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -195,40 +305,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -255,10 +331,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -279,40 +427,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -330,9 +444,12 @@ export default suite(({
         `
           Error: test.js:3
             3: var x: string = 123
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              3: var x: string = 123
+                                 ^^^ [1]: number
+              3: var x: string = 123
+                        ^^^^^^ [2]: string
 
 
           Found 1 error
@@ -346,9 +463,12 @@ export default suite(({
         `
           test.js:5
             5: var anotherError: bool = 123
-                                        ^^^ number. This type is incompatible with
-            5: var anotherError: bool = 123
-                                 ^^^^ boolean
+                                        ^^^ Cannot assign \`123\` to \`anotherError\` because number [1] is incompatible with boolean [2].
+            References:
+              5: var anotherError: bool = 123
+                                          ^^^ [1]: number
+              5: var anotherError: bool = 123
+                                   ^^^^ [2]: boolean
         `,
       )
       .because('Changes are still noticed'),
@@ -434,10 +554,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 31,
+                                "offset": 51
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 33,
+                                "offset": 54
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 31,
+                            "end": 33
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 22,
+                                "offset": 42
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 27,
+                                "offset": 48
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 22,
+                            "end": 27
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var dependencyError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `dependencyError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "dependency.js",
@@ -458,40 +650,6 @@ export default suite(({
                         "endline": 3,
                         "start": 31,
                         "end": 33
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var dependencyError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "dependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 22,
-                            "offset": 42
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 27,
-                            "offset": 48
-                          }
-                        },
-                        "path": "dependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 22,
-                        "end": 27
                       }
                     ]
                   }
@@ -510,10 +668,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 28,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 30,
+                                "offset": 70
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 28,
+                            "end": 30
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 24,
+                                "offset": 64
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 19,
+                            "end": 24
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var focusedError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `focusedError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focused.js",
@@ -534,40 +764,6 @@ export default suite(({
                         "endline": 3,
                         "start": 28,
                         "end": 30
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var focusedError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focused.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 19,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 24,
-                            "offset": 64
-                          }
-                        },
-                        "path": "focused.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 19,
-                        "end": 24
                       }
                     ]
                   }
@@ -590,10 +786,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 31,
+                                "offset": 51
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 33,
+                                "offset": 54
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 31,
+                            "end": 33
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 22,
+                                "offset": 42
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 27,
+                                "offset": 48
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 22,
+                            "end": 27
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var dependencyError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `dependencyError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "dependency.js",
@@ -614,40 +882,6 @@ export default suite(({
                         "endline": 3,
                         "start": 31,
                         "end": 33
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var dependencyError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "dependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 22,
-                            "offset": 42
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 27,
-                            "offset": 48
-                          }
-                        },
-                        "path": "dependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 22,
-                        "end": 27
                       }
                     ]
                   },
@@ -655,10 +889,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 28,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 30,
+                                "offset": 70
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 28,
+                            "end": 30
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 24,
+                                "offset": 64
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 19,
+                            "end": 24
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var focusedError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `focusedError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focused.js",
@@ -679,40 +985,6 @@ export default suite(({
                         "endline": 3,
                         "start": 28,
                         "end": 30
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var focusedError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focused.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 19,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 24,
-                            "offset": 64
-                          }
-                        },
-                        "path": "focused.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 19,
-                        "end": 24
                       }
                     ]
                   }
@@ -731,15 +1003,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -752,9 +1030,12 @@ export default suite(({
         `
           dependent.js:3
             3: var dependentError: string = 123;
-                                            ^^^ number. This type is incompatible with
-            3: var dependentError: string = 123;
-                                   ^^^^^^ string
+                                            ^^^ Cannot assign \`123\` to \`dependentError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependentError: string = 123;
+                                              ^^^ [1]: number
+              3: var dependentError: string = 123;
+                                     ^^^^^^ [2]: string
         `,
       )
       .because('Adding a new dependency will correctly recheck that dependency'),
@@ -817,10 +1098,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -841,40 +1194,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -897,10 +1216,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -921,40 +1312,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -977,10 +1334,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -1001,40 +1430,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1057,10 +1452,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -1081,40 +1548,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1129,9 +1562,12 @@ export default suite(({
         `
           errors.js:2
             2: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            2: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              2: var x: string = 123;
+                                 ^^^ [1]: number
+              2: var x: string = 123;
+                        ^^^^^^ [2]: string
         `,
       )
       .because('File is open and has @flow so we should get the error'),
@@ -1190,9 +1626,12 @@ export default suite(({
         `
           errors.js:2
             2: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            2: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              2: var x: string = 123;
+                                 ^^^ [1]: number
+              2: var x: string = 123;
+                        ^^^^^^ [2]: string
         `,
       )
       .because('Reverting back to @flow should show the error again'),
@@ -1277,10 +1716,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 41
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 35
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focusedWithCyclicDependency.js",
@@ -1301,40 +1812,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focusedWithCyclicDependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 29
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 35
-                          }
-                        },
-                        "path": "focusedWithCyclicDependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1357,10 +1834,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 41
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 35
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focusedWithCyclicDependency.js",
@@ -1381,40 +1930,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focusedWithCyclicDependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 29
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 35
-                          }
-                        },
-                        "path": "focusedWithCyclicDependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1430,9 +1945,12 @@ export default suite(({
         `
           Error: focusedWithCyclicDependency.js:3
             3: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              3: var x: string = 123;
+                                 ^^^ [1]: number
+              3: var x: string = 123;
+                        ^^^^^^ [2]: string
 
 
           Found 1 error
@@ -1475,9 +1993,12 @@ export default suite(({
         `
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 1 error
@@ -1490,9 +2011,12 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
 
           Found 1 error
@@ -1548,15 +2072,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1574,9 +2104,12 @@ export default suite(({
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1590,15 +2123,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1650,15 +2189,21 @@ export default suite(({
         `
           dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
         `,
       )
       .because('Other dependent is a dependent of a dependency, so is not checked'),
@@ -1671,21 +2216,30 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
           Error: otherDependent.js:3
             3: var otherDependentError: string = 123;
-                                                 ^^^ number. This type is incompatible with
-            3: var otherDependentError: string = 123;
-                                        ^^^^^^ string
+                                                 ^^^ Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
+            References:
+              3: var otherDependentError: string = 123;
+                                                   ^^^ [1]: number
+              3: var otherDependentError: string = 123;
+                                          ^^^^^^ [2]: string
 
 
           Found 3 errors
@@ -1738,15 +2292,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1760,15 +2320,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1821,15 +2387,21 @@ export default suite(({
         `
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
 
           Found 2 errors
@@ -1843,21 +2415,30 @@ export default suite(({
 
           Error: dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]: number
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]: string
 
           Error: focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]: number
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]: string
 
           Error: otherDependent.js:3
             3: var otherDependentError: string = 123;
-                                                 ^^^ number. This type is incompatible with
-            3: var otherDependentError: string = 123;
-                                        ^^^^^^ string
+                                                 ^^^ Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
+            References:
+              3: var otherDependentError: string = 123;
+                                                   ^^^ [1]: number
+              3: var otherDependentError: string = 123;
+                                          ^^^^^^ [2]: string
 
 
           Found 3 errors

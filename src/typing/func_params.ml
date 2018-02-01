@@ -58,7 +58,7 @@ let mk cx type_params_map ~expr func =
       let default = Option.map default Default.expr in
       let rev_bindings = ref [] in
       let defaults = ref params.defaults in
-      destructuring cx ~expr t None default pattern ~f:(fun loc name default t ->
+      destructuring cx ~expr t None default pattern ~f:(fun ~use_op:_ loc name default t ->
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->

@@ -299,14 +299,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: const arr: Array<number> = [..."hello"];
-                                          ^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-            3: const arr: Array<number> = [..."hello"];
-                          ^^^^^^^^^^^^^ array type
-            Type argument \`T\` is incompatible:
-              288:     @@iterator(): Iterator<string>;
-                                              ^^^^^^ string. This type is incompatible with. See lib: [LIB] core.js:288
-                3: const arr: Array<number> = [..."hello"];
-                                    ^^^^^^ number
+                                          ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
+            References:
+            288:     @@iterator(): Iterator<string>;
+                                            ^^^^^^ [1]: string. See lib: [LIB] core.js:288
+              3: const arr: Array<number> = [..."hello"];
+                                  ^^^^^^ [2]: number
         `,
       )
       .because('String is an Iterable<string>'),
@@ -321,14 +319,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       const arr: Array<number> = [...foo()];
-                                                ^^^^^^^^^^ array literal. Has some incompatible type argument with
-            7:       const arr: Array<number> = [...foo()];
-                                ^^^^^^^^^^^^^ array type
-            Type argument \`T\` is incompatible:
-                4:       function *foo(): Generator<string, void, void> {
-                                                    ^^^^^^ string. This type is incompatible with
-                7:       const arr: Array<number> = [...foo()];
-                                          ^^^^^^ number
+                                                ^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
+            References:
+              4:       function *foo(): Generator<string, void, void> {
+                                                  ^^^^^^ [1]: string
+              7:       const arr: Array<number> = [...foo()];
+                                        ^^^^^^ [2]: number
         `,
       )
       .because('Generators are iterables too!'),

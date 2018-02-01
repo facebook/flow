@@ -1,41 +1,38 @@
 Error: client.js:3
   3: var bar: string = ns.foo
-                       ^^^^^^ number. This type is incompatible with
-  3: var bar: string = ns.foo
-              ^^^^^^ string
+                       ^^^^^^ Cannot assign `ns.foo` to `bar` because number [1] is incompatible with string [2].
+  References:
+   17: module.exports = { foo: ("": number) };
+                                    ^^^^^^ [1]: number. See: namespace.js:17
+    3: var bar: string = ns.foo
+                ^^^^^^ [2]: string
 
 Error: namespace.js:3
   3: var f: T = function(x:string): void { }
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  3: var f: T = function(x:string): void { }
-            ^ T
-  The first parameter is incompatible:
-      2: type T = (x:number) => void;
-                     ^^^^^^ number. This type is incompatible with
-      3: var f: T = function(x:string): void { }
-                               ^^^^^^ string
+                           ^^^^^^ Cannot assign function to `f` because in the first argument, string [1] is incompatible with number [2].
+  References:
+    3: var f: T = function(x:string): void { }
+                             ^^^^^^ [1]: string
+    2: type T = (x:number) => void;
+                   ^^^^^^ [2]: number
 
 Error: namespace.js:11
  11: var y:number = bar(0, x => "");
-                    ^^^^^^^^^^^^^^^ string. This type is incompatible with
- 11: var y:number = bar(0, x => "");
-           ^^^^^^ number
+                    ^^^^^^^^^^^^^^^ Cannot assign `bar(...)` to `y` because string [1] is incompatible with number [2].
+  References:
+   11: var y:number = bar(0, x => "");
+                                  ^^ [1]: string
+   11: var y:number = bar(0, x => "");
+             ^^^^^^ [2]: number
 
 Error: namespace.js:15
  15: var s2:Seq = [[""]];
-                  ^^^^^^ array literal. Has some incompatible type argument with
- 13: type Seq = number | Array<Seq>;
-                         ^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     15: var s2:Seq = [[""]];
-                       ^^^^ array literal. Has some incompatible type argument with
-     13: type Seq = number | Array<Seq>;
-                             ^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         15: var s2:Seq = [[""]];
-                            ^^ string. This type is incompatible with
-         13: type Seq = number | Array<Seq>;
-                        ^^^^^^ number
+                    ^^ Cannot assign array literal to `s2` because in type argument `T` and then type argument `T`, string [1] is incompatible with number [2].
+  References:
+   15: var s2:Seq = [[""]];
+                      ^^ [1]: string
+   13: type Seq = number | Array<Seq>;
+                  ^^^^^^ [2]: number
 
 Error: namespace.js:17
  17: module.exports = { foo: ("": number) };

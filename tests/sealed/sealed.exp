@@ -1,20 +1,29 @@
 Error: proto.js:3
   3: var x:number = o.x;
-                    ^^^ string. This type is incompatible with
-  3: var x:number = o.x;
-           ^^^^^^ number
+                    ^^^ Cannot assign `o.x` to `x` because string [1] is incompatible with number [2].
+  References:
+    8: o.x = "...";
+             ^^^^^ [1]: string
+    3: var x:number = o.x;
+             ^^^^^^ [2]: number
 
 Error: proto.js:7
   7: var y:number = o.m();
-                    ^^^^^ boolean. This type is incompatible with
-  7: var y:number = o.m();
-           ^^^^^^ number
+                    ^^^^^ Cannot assign `o.m()` to `y` because boolean [1] is incompatible with number [2].
+  References:
+   10: Foo.prototype = { m: function() { return false; } }
+                                                ^^^^^ [1]: boolean
+    7: var y:number = o.m();
+             ^^^^^^ [2]: number
 
 Error: proto.js:7
   7: var y:number = o.m();
-                    ^^^^^ string. This type is incompatible with
-  7: var y:number = o.m();
-           ^^^^^^ number
+                    ^^^^^ Cannot assign `o.m()` to `y` because string [1] is incompatible with number [2].
+  References:
+    8: o.x = "...";
+             ^^^^^ [1]: string
+    7: var y:number = o.m();
+             ^^^^^^ [2]: number
 
 Error: sealed.js:3
   3: o.z = 0;

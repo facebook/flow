@@ -45,9 +45,12 @@ Error: lex.js:59
 
 Error: locals.js:1
   1: var x:string = 0;
-                    ^ number. This type is incompatible with
-  1: var x:string = 0;
-           ^^^^^^ string
+                    ^ Cannot assign `0` to `x` because number [1] is incompatible with string [2].
+  References:
+    1: var x:string = 0;
+                      ^ [1]: number
+    1: var x:string = 0;
+             ^^^^^^ [2]: string
 
 Error: locals.js:2
   2: var x:number = 1;
@@ -60,9 +63,12 @@ Error: locals.js:2
 
 Error: locals.js:2
   2: var x:number = 1;
-                    ^ number. This type is incompatible with
-  1: var x:string = 0;
-           ^^^^^^ string
+                    ^ Cannot assign `1` to `x` because number [1] is incompatible with string [2].
+  References:
+    2: var x:number = 1;
+                      ^ [1]: number
+    1: var x:string = 0;
+             ^^^^^^ [2]: string
 
 Error: locals.js:12
  12:         var x: bool = true;

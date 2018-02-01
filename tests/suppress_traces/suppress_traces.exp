@@ -1,8 +1,6 @@
 Error: traces.js:15
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ number. This type is incompatible with
- 15: var a: string = foo('hi'); // error number ~> string
-            ^^^^^^ string
+                     ^^^^^^^^^ Cannot assign `foo(...)` to `a` because number [1] is incompatible with string [2].
 Trace:
 * path 1:
  15: var a: string = foo('hi'); // error number ~> string
@@ -55,6 +53,11 @@ Trace:
                      ^^^ OpenT [`foo`]
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> CallT [call of `foo`]
+  References:
+    9: function bar(): number { return 5; }
+                       ^^^^^^ [1]: number
+   15: var a: string = foo('hi'); // error number ~> string
+              ^^^^^^ [2]: string
 
 Warning: traces.js:8
   8: // $FlowFixMe - Error unused suppression

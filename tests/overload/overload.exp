@@ -34,9 +34,12 @@ Error: overload.js:7
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: var x1: number = "".match(0)[0];
-             ^^^^^^ number
+                      ^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
+  References:
+  301:     match(regexp: string | RegExp): ?Array<string>;
+                                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
+    7: var x1: number = "".match(0)[0];
+               ^^^^^^ [2]: number
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
@@ -61,15 +64,21 @@ Error: overload.js:8
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  8: var x2: number = "".match(/pattern/)[0];
-             ^^^^^^ number
+                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
+  References:
+  301:     match(regexp: string | RegExp): ?Array<string>;
+                                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
+    8: var x2: number = "".match(/pattern/)[0];
+               ^^^^^^ [2]: number
 
 Error: overload.js:10
  10: var x4: number = "".split(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
- 10: var x4: number = "".split(/pattern/)[0];
-             ^^^^^^ number
+                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
+  References:
+  309:     split(separator?: string | RegExp, limit?: number): Array<string>;
+                                                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:309
+   10: var x4: number = "".split(/pattern/)[0];
+               ^^^^^^ [2]: number
 
 Error: overload.js:24
  24: a.foo(true); // error, function cannot be called on intersection type

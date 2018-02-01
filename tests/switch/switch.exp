@@ -74,15 +74,21 @@ Error: switch_default_fallthrough.js:46
 
 Error: trailing_cases.js:23
  23:   var y:number = x; // error, number | string ~/> number
-                      ^ string. This type is incompatible with
- 23:   var y:number = x; // error, number | string ~/> number
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
+  References:
+   19:     x = "2";
+               ^^^ [1]: string
+   23:   var y:number = x; // error, number | string ~/> number
+               ^^^^^^ [2]: number
 
 Error: trailing_cases.js:39
  39:   var y:number = x; // error, number | uninitialized ~/> number
-                      ^ possibly uninitialized variable. This type is incompatible with
- 39:   var y:number = x; // error, number | uninitialized ~/> number
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   27:   var x;
+             ^ [1]: possibly uninitialized variable
+   39:   var y:number = x; // error, number | uninitialized ~/> number
+               ^^^^^^ [2]: number
 
 
 Found 12 errors

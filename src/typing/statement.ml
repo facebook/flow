@@ -75,7 +75,7 @@ let rec variable_decl cx entry = Ast.Statement.(
         Anno.mk_type_annotation cx SMap.empty r in
       bind cx pattern_name t loc;
       let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
-      destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
+      destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->
@@ -452,7 +452,11 @@ and statement cx = Ast.Statement.(
     let reason = DescFormat.instance_reason name name_loc in
     let class_sig = Iface_sig.of_declare_class cx reason decl in
     let t = interface_helper cx loc class_sig in
-    Env.init_var ~has_anno:false cx name t loc
+    let use_op = Op (AssignVar {
+      var = Some (mk_reason (RIdentifier name) loc);
+      init = reason_of_t t;
+    }) in
+    Env.init_var ~has_anno:false cx ~use_op name t loc
   in
 
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
@@ -1350,7 +1354,12 @@ and statement cx = Ast.Statement.(
               name; _
             }) ->
               let name = ident_name name in
-              ignore Env.(set_var cx name (StrT.at loc) loc)
+              let t = StrT.at loc in
+              let use_op = Op (AssignVar {
+                var = Some (mk_reason (RIdentifier name) loc);
+                init = reason_of_t t;
+              }) in
+              ignore Env.(set_var cx ~use_op name t loc)
 
           | _ ->
               Flow.add_output cx Flow_error.(EInternal (loc, ForInLHS))
@@ -1424,7 +1433,11 @@ and statement cx = Ast.Statement.(
               name; _
             }) ->
               let name = ident_name name in
-              ignore Env.(set_var cx name element_tvar loc)
+              let use_op = Op (AssignVar {
+                var = Some (mk_reason (RIdentifier name) loc);
+                init = reason_of_t element_tvar;
+              }) in
+              ignore Env.(set_var cx ~use_op name element_tvar loc)
 
           | _ ->
               Flow.add_output cx Flow_error.(EInternal (loc, ForOfLHS))
@@ -1479,7 +1492,11 @@ and statement cx = Ast.Statement.(
       (match id with
       | Some(id_loc, name) ->
         Type_table.set_info (Context.type_table cx) id_loc fn_type;
-        Env.init_fun cx name fn_type loc
+        let use_op = Op (AssignVar {
+          var = Some (mk_reason (RIdentifier name) loc);
+          init = reason_of_t fn_type
+        }) in
+        Env.init_fun cx ~use_op name fn_type loc
       | None -> ())
 
   | (loc, DeclareVariable { DeclareVariable.
@@ -1516,6 +1533,10 @@ and statement cx = Ast.Statement.(
       Env.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
+        ~use_op:(Op (AssignVar {
+          var = Some (mk_reason (RIdentifier name) name_loc);
+          init = reason_of_t class_t;
+        }))
         name
         ~has_anno:false
         class_t
@@ -2335,12 +2356,21 @@ and variable cx kind
              *)
             declare_var cx name id_loc;
             let rhs = Flow.reposition cx rhs_loc rhs in
-            init_var cx name ~has_anno rhs id_loc
+            let use_op = Op (AssignVar {
+              var = Some (mk_reason (RIdentifier name) id_loc);
+              init = mk_expression_reason expr;
+            }) in
+            init_var cx ~use_op name ~has_anno rhs id_loc
           | None ->
             match if_uninitialized with
             | Some f ->
-              if not optional
-              then init_var cx name ~has_anno (f loc) id_loc
+              if not optional then
+                let t = f loc in
+                let use_op = Op (AssignVar {
+                  var = Some (mk_reason (RIdentifier name) id_loc);
+                  init = reason_of_t t;
+                }) in
+                init_var cx ~use_op name ~has_anno t id_loc
             | None ->
               if has_anno
               then Env.pseudo_init_declared_type cx name id_loc
@@ -2351,22 +2381,27 @@ and variable cx kind
         let pattern_name = internal_pattern_name loc in
         let typeAnnotation = type_of_pattern id in
         let has_anno = not (typeAnnotation = None) in
-        let t = match init with
-          | Some expr -> expression cx expr
+        let (t, init_reason) = match init with
+          | Some expr -> (expression cx expr, mk_expression_reason expr)
           | None -> (
-            match if_uninitialized with
+            let t = match if_uninitialized with
             | Some f -> f loc
-            | None -> VoidT.at loc
+            | None -> VoidT.at loc in
+            (t, reason_of_t t)
           )
         in
-        init_var cx pattern_name ~has_anno t loc;
-        destructuring cx ~expr:expression ~f:(fun loc name default t ->
+        let use_op = Op (AssignVar {
+          var = None;
+          init = init_reason;
+        }) in
+        init_var cx ~use_op pattern_name ~has_anno t loc;
+        destructuring cx ~expr:expression ~f:(fun ~use_op loc name default t ->
           let reason = mk_reason (RIdentifier name) loc in
           Option.iter default (fun d ->
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
-          init_var cx name ~has_anno t loc
+          init_var cx ~use_op name ~has_anno t loc
         ) t init None id
 )
 
@@ -3300,7 +3335,11 @@ and update cx loc expr = Ast.Expression.Update.(
   | _, Ast.Expression.Identifier (id_loc, name) ->
     Flow.flow cx (identifier cx name id_loc, AssertArithmeticOperandT reason);
     (* enforce state-based guards for binding update, e.g., const *)
-    ignore (Env.set_var cx name result_t id_loc)
+    let use_op = Op (AssignVar {
+      var = Some (mk_reason (RIdentifier name) id_loc);
+      init = reason_of_t result_t;
+    }) in
+    ignore (Env.set_var cx ~use_op name result_t id_loc)
   | expr ->
     Flow.flow cx (expression cx expr, AssertArithmeticOperandT reason)
   );
@@ -3561,7 +3600,11 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        ignore Env.(set_var cx name result_t id_loc)
+        let use_op = Op (AssignVar {
+          var = Some (mk_reason (RIdentifier name) id_loc);
+          init = reason;
+        }) in
+        ignore Env.(set_var cx ~use_op name result_t id_loc)
       | _ -> ()
       );
       lhs_t
@@ -3591,7 +3634,12 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        ignore Env.(set_var cx name (NumT.at loc) id_loc)
+        let t = NumT.at loc in
+        let use_op = Op (AssignVar {
+          var = Some (mk_reason (RIdentifier name) id_loc);
+          init = reason_of_t t;
+        }) in
+        ignore Env.(set_var cx ~use_op name t id_loc)
       | _ -> ()
       );
       lhs_t
@@ -4751,7 +4799,7 @@ and define_internal cx reason x =
   let ix = internal_name x in
   let loc = loc_of_reason reason in
   let opt = Env.get_var_declared_type cx ix loc in
-  ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) loc)
+  ignore Env.(set_var cx ~use_op:unknown_use ix (Flow.filter_optional cx reason opt) loc)
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx loc func =

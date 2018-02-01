@@ -28,15 +28,21 @@ Error: update.js:12
 
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
-         ^^^ number. This type is incompatible with
- 11:   function(y: string) {
-                   ^^^^^^ string
+         ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
+  References:
+   12:     y++; // error, we don't allow coercion here
+           ^^^ [1]: number
+   11:   function(y: string) {
+                     ^^^^^^ [2]: string
 
 Error: update.js:14
  14:     y++; // error, but you still can't write a number to a string
-         ^^^ number. This type is incompatible with
- 11:   function(y: string) {
-                   ^^^^^^ string
+         ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
+  References:
+   14:     y++; // error, but you still can't write a number to a string
+           ^^^ [1]: number
+   11:   function(y: string) {
+                     ^^^^^^ [2]: string
 
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
@@ -44,15 +50,21 @@ Error: update.js:18
 
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
-         ^^^ number. This type is incompatible with
- 17:   function(y: string) {
-                   ^^^^^^ string
+         ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
+  References:
+   18:     y--; // error, we don't allow coercion here
+           ^^^ [1]: number
+   17:   function(y: string) {
+                     ^^^^^^ [2]: string
 
 Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
-         ^^^ number. This type is incompatible with
- 21:   function(y: string) {
-                   ^^^^^^ string
+         ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
+  References:
+   22:     ++y; // error, we don't allow coercion here
+           ^^^ [1]: number
+   21:   function(y: string) {
+                     ^^^^^^ [2]: string
 
 Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
@@ -60,9 +72,12 @@ Error: update.js:22
 
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here
-         ^^^ number. This type is incompatible with
- 25:   function(y: string) {
-                   ^^^^^^ string
+         ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
+  References:
+   26:     --y; // error, we don't allow coercion here
+           ^^^ [1]: number
+   25:   function(y: string) {
+                     ^^^^^^ [2]: string
 
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here

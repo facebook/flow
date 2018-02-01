@@ -85,18 +85,19 @@ val declare_let: Context.t -> string -> Loc.t -> unit
 val declare_implicit_let: Entry.let_binding_kind -> Context.t -> string ->
   Loc.t -> unit
 
-val init_var: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
-val init_let: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_var: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_let: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
 val init_implicit_let:
   Entry.let_binding_kind
     -> Context.t
+    -> use_op:Type.use_op
     -> string
     -> has_anno:bool
     -> Type.t
     -> Loc.t
     -> unit
-val init_fun: Context.t -> string -> Type.t -> Loc.t -> unit
-val init_const: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_fun: Context.t -> use_op:Type.use_op -> string -> Type.t -> Loc.t -> unit
+val init_const: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
 val init_type: Context.t -> string -> Type.t -> Loc.t -> unit
 
 val pseudo_init_declared_type: Context.t -> string -> Loc.t -> unit
@@ -148,7 +149,7 @@ val var_ref:
   Loc.t ->
   Type.t
 
-val set_var: Context.t -> string -> Type.t -> Loc.t ->
+val set_var: Context.t -> use_op:Type.use_op -> string -> Type.t -> Loc.t ->
   Changeset.EntryRef.t option
 
 val set_internal_var: Context.t -> string -> Type.t -> Loc.t ->

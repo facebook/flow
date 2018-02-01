@@ -1,14 +1,20 @@
 Error: class_static.js:9
   9: var x: number = C.bar();
-                     ^^^^^^^ string. This type is incompatible with
-  9: var x: number = C.bar();
-            ^^^^^^ number
+                     ^^^^^^^ Cannot assign `C.bar()` to `x` because string [1] is incompatible with number [2].
+  References:
+    6:     static bar(): string { return ""; }
+                         ^^^^^^ [1]: string
+    9: var x: number = C.bar();
+              ^^^^^^ [2]: number
 
 Error: class_static.js:10
  10: var y: number = C.foo();
-                     ^^^^^^^ string. This type is incompatible with
- 10: var y: number = C.foo();
-            ^^^^^^ number
+                     ^^^^^^^ Cannot assign `C.foo()` to `y` because string [1] is incompatible with number [2].
+  References:
+    2:     static foo(): string { return ""; }
+                         ^^^^^^ [1]: string
+   10: var y: number = C.foo();
+              ^^^^^^ [2]: number
 
 
 Found 2 errors

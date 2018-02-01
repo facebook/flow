@@ -6,53 +6,48 @@ Error: array_lib.js:5
 
 Error: array_lib.js:8
   8: var d: number = b[0];
-                     ^^^^ string. This type is incompatible with
-  8: var d: number = b[0];
-            ^^^^^^ number
+                     ^^^^ Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2].
+  References:
+    5: var b = a.map(function (x) { foo(x); return "" + x; });
+                                                   ^^^^^^ [1]: string
+    8: var d: number = b[0];
+              ^^^^^^ [2]: number
 
 Error: array_lib.js:10
  10: var e:Array<string> = a.reverse();
-                           ^^^^^^^^^^^ array type. Has some incompatible type argument with
- 10: var e:Array<string> = a.reverse();
-           ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-      4: var a = [0];
-                  ^ number. This type is incompatible with
-     10: var e:Array<string> = a.reverse();
-                     ^^^^^^ string
+                           ^^^^^^^^^^^ Cannot assign `a.reverse()` to `e` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+    4: var a = [0];
+                ^ [1]: number
+   10: var e:Array<string> = a.reverse();
+                   ^^^^^^ [2]: string
 
 Error: array_lib.js:21
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-            ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                         ^^^ string. This type is incompatible with
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                      ^^^^^^ number
+                                     ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                       ^^^ [1]: string
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]: number
 
 Error: array_lib.js:21
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-            ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                              ^^^ string. This type is incompatible with
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                      ^^^^^^ number
+                                          ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                            ^^^ [1]: string
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]: number
 
 Error: array_lib.js:21
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-            ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                                   ^^^ string. This type is incompatible with
-     21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                      ^^^^^^ number
+                                               ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                                 ^^^ [1]: string
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]: number
 
 Error: array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number

@@ -12,9 +12,12 @@ Error: This.js:29
 
 Error: This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-                ^^^^^^ string
+                         ^^^^^^^^^^^^^^^^^ Cannot assign `f1.bind(...)()` to `f1_2` because number [1] is incompatible with string [2].
+  References:
+   28: function f1() : number {
+                       ^^^^^^ [1]: number
+   33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                  ^^^^^^ [2]: string
 
 Error: This.js:41
  41:   return this.x
@@ -36,9 +39,12 @@ Error: This.js:49
 
 Error: This.js:53
  53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
-                ^^^^^^ string
+                         ^^^^^^^^^^^^^^^^^ Cannot assign `f2.bind(...)()` to `f2_2` because number [1] is incompatible with string [2].
+  References:
+   47: function f2() : number {
+                       ^^^^^^ [1]: number
+   53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                  ^^^^^^ [2]: string
 
 Error: This.js:58
  58: (this: void);

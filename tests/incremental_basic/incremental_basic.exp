@@ -1,44 +1,62 @@
 Error: a.js:2
   2: var a: string = 0;
-                     ^ number. This type is incompatible with
-  2: var a: string = 0;
-            ^^^^^^ string
+                     ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+  References:
+    2: var a: string = 0;
+                       ^ [1]: number
+    2: var a: string = 0;
+              ^^^^^^ [2]: string
 
 Error: b.js:3
   3: var b: number = a;
-                     ^ string. This type is incompatible with
-  3: var b: number = a;
-            ^^^^^^ number
+                     ^ Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+  References:
+    2: var a: string = 0;
+              ^^^^^^ [1]: string. See: a.js:2
+    3: var b: number = a;
+              ^^^^^^ [2]: number
 
 Error: c.js:3
   3: var c: string = b;
-                     ^ number. This type is incompatible with
-  3: var c: string = b;
-            ^^^^^^ string
+                     ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+  References:
+    3: var b: number = a;
+              ^^^^^^ [1]: number. See: b.js:3
+    3: var c: string = b;
+              ^^^^^^ [2]: string
 
 
 Found 3 errors
 Error: a.js:2
   2: var a: string = 0;
-                     ^ number. This type is incompatible with
-  2: var a: string = 0;
-            ^^^^^^ string
+                     ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+  References:
+    2: var a: string = 0;
+                       ^ [1]: number
+    2: var a: string = 0;
+              ^^^^^^ [2]: string
 
 
 Found 1 error
 Error: c.js:3
   3: var c: string = b;
-                     ^ number. This type is incompatible with
-  3: var c: string = b;
-            ^^^^^^ string
+                     ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+  References:
+    2: var a = 0;
+               ^ [1]: number. See: a.js:2
+    3: var c: string = b;
+              ^^^^^^ [2]: string
 
 
 Found 1 error
 Error: c.js:3
   3: var c: string = b;
-                     ^ number. This type is incompatible with
-  3: var c: string = b;
-            ^^^^^^ string
+                     ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+  References:
+    3: var b: number = a;
+              ^^^^^^ [1]: number. See: b.js:3
+    3: var c: string = b;
+              ^^^^^^ [2]: string
 
 
 Found 1 error

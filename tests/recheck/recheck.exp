@@ -111,9 +111,12 @@ Found 1 error
 Test d:
 Error: d2.js:4
   4: export var y: A = x;
-                       ^ B. This type is incompatible with
-  4: export var y: A = x;
-                   ^ A
+                       ^ Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
+  References:
+    5: export var x = new B;
+                      ^^^^^ [1]: `B`. See: d1.js:5
+    4: export var y: A = x;
+                     ^ [2]: `A`
 
 
 Found 1 error

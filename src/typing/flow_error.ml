@@ -942,6 +942,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       (match use_op with
       | Op UnknownUse -> Some (`UnknownRoot)
 
+      | Op (AssignVar {var; init}) ->
+        Some (`Root (init, None, match var with
+        | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
+        | None -> [text "Cannot assign "; desc init; text " to variable"]))
+
       | Op Cast {lower; upper} ->
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))

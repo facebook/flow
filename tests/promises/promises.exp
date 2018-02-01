@@ -71,99 +71,147 @@ Error: all.js:27
 
 Error: promise.js:16
  16:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 16:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+   11:   resolve(0);
+                 ^ [1]: number
+   16:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:25
  25:     var b: string = num; // Error: number ~> string
-                         ^^^ number. This type is incompatible with
- 25:     var b: string = num; // Error: number ~> string
-                ^^^^^^ string
+                         ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+   20: new Promise((resolve, reject) => resolve(0))
+                                                ^ [1]: number
+   25:     var b: string = num; // Error: number ~> string
+                  ^^^^^^ [2]: string
 
 Error: promise.js:35
  35:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 35:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+   31:     resolve(0);
+                   ^ [1]: number
+   35:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:47
  47:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 47:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+   42:       resolve(0);
+                     ^ [1]: number
+   47:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:63
  63:   var c: string = numOrStr; // Error: number|string -> string
-                       ^^^^^^^^ number. This type is incompatible with
- 63:   var c: string = numOrStr; // Error: number|string -> string
-              ^^^^^^ string
+                       ^^^^^^^^ Cannot assign `numOrStr` to `c` because number [1] is incompatible with string [2].
+  References:
+   53:     resolve(42);
+                   ^^ [1]: number
+   63:   var c: string = numOrStr; // Error: number|string -> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:117
 117:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-117:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+  115: Promise.resolve(0).then(function(num) {
+                       ^ [1]: number
+  117:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:123
 123:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-123:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+  121: Promise.resolve(Promise.resolve(0)).then(function(num) {
+                                       ^ [1]: number
+  123:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:129
 129:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-129:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+                       ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+  127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
+                                                       ^ [1]: number
+  129:   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]: string
 
 Error: promise.js:161
 161:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-161:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  158:   .then(function(num) { return 'asdf'; })
+                                      ^^^^^^ [1]: string
+  161:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:169
 169:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-169:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  166:   .then(function(num) { return Promise.resolve('asdf'); })
+                                                      ^^^^^^ [1]: string
+  169:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:177
 177:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-177:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
+                                                                      ^^^^^^ [1]: string
+  177:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:201
 201:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-201:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  198:   .catch(function(num) { return 'asdf'; })
+                                       ^^^^^^ [1]: string
+  201:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:209
 209:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-209:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  206:   .catch(function(num) { return Promise.resolve('asdf'); })
+                                                       ^^^^^^ [1]: string
+  209:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:217
 217:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-217:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+                         ^^^ Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+  References:
+  214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
+                                                                       ^^^^^^ [1]: string
+  217:     var b: number = str; // Error: string ~> number
+                  ^^^^^^ [2]: number
 
 Error: promise.js:225
 225:     var b: string = num; // Error: string ~> number
-                         ^^^ number. This type is incompatible with
-225:     var b: string = num; // Error: string ~> number
-                ^^^^^^ string
+                         ^^^ Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+  References:
+  221: Promise.resolve(0)
+                       ^ [1]: number
+  225:     var b: string = num; // Error: string ~> number
+                  ^^^^^^ [2]: string
 
 Error: promise.js:225
 225:     var b: string = num; // Error: string ~> number
-                         ^^^ undefined. This type is incompatible with
-225:     var b: string = num; // Error: string ~> number
-                ^^^^^^ string
+                         ^^^ Cannot assign `num` to `b` because undefined [1] is incompatible with string [2].
+  References:
+  222:   .catch(function(err) {})
+                             ^ [1]: undefined
+  225:     var b: string = num; // Error: string ~> number
+                  ^^^^^^ [2]: string
 
 Error: resolve_global.js:35
  35:   return Promise.resolve(0);

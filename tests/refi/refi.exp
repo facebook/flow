@@ -1,50 +1,74 @@
 Error: bound.js:9
   9:     var y : string = x;  // not ok
-                          ^ null or undefined. This type is incompatible with
-  9:     var y : string = x;  // not ok
-                 ^^^^^^ string
+                          ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+    4: var x : ?string = "xxx";
+               ^^^^^^^ [1]: null or undefined
+    9:     var y : string = x;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: bound.js:47
  47:     var y : string = x;  // not ok
-                          ^ null or undefined. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
+                          ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+    4: var x : ?string = "xxx";
+               ^^^^^^^ [1]: null or undefined
+   47:     var y : string = x;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: bound.js:53
  53:       var y : string = x;  // not ok
-                            ^ null or undefined. This type is incompatible with
- 53:       var y : string = x;  // not ok
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+    4: var x : ?string = "xxx";
+               ^^^^^^^ [1]: null or undefined
+   53:       var y : string = x;  // not ok
+                     ^^^^^^ [2]: string
 
 Error: heap.js:5
   5:     var y : string = x.p;  // not ok
-                          ^^^ null or undefined. This type is incompatible with
-  5:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
+                          ^^^ Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+    4:     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]: null or undefined
+    5:     var y : string = x.p;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: heap.js:40
  40:       var y : string = x.p;  // not ok
-                            ^^^ null or undefined. This type is incompatible with
- 40:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
+                            ^^^ Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+   37:     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]: null or undefined
+   40:       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]: string
 
 Error: heap.js:48
  48:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 48:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
+                            ^^^ Cannot assign `x.p` to `y` because null [1] is incompatible with string [2].
+  References:
+   47:       x.p = null;
+                   ^^^^ [1]: null
+   48:       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]: string
 
 Error: heap.js:55
  55:     var y : string = x.p;  // not ok
-                          ^^^ null or undefined. This type is incompatible with
- 55:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
+                          ^^^ Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+   53:     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]: null or undefined
+   55:     var y : string = x.p;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: heap.js:62
  62:       var y : string = x.p;  // not ok
-                            ^^^ null or undefined. This type is incompatible with
- 62:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
+                            ^^^ Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+   59:     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]: null or undefined
+   62:       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]: string
 
 Error: heap.js:105
 105:       x.y = 123; // error
@@ -213,21 +237,30 @@ Error: lex.js:35
 
 Error: local.js:5
   5:     var y : string = x;  // not ok
-                          ^ null or undefined. This type is incompatible with
-  5:     var y : string = x;  // not ok
-                 ^^^^^^ string
+                          ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+    4:     var x : ?string = "xxx";
+                   ^^^^^^^ [1]: null or undefined
+    5:     var y : string = x;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: local.js:47
  47:     var y : string = x;  // not ok
-                          ^ null or undefined. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
+                          ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+   45:     var x : ?string = "xxx";
+                   ^^^^^^^ [1]: null or undefined
+   47:     var y : string = x;  // not ok
+                   ^^^^^^ [2]: string
 
 Error: local.js:54
  54:       var y : string = x;  // not ok
-                            ^ null or undefined. This type is incompatible with
- 54:       var y : string = x;  // not ok
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+  References:
+   51:     var x : ?string = "xxx";
+                   ^^^^^^^ [1]: null or undefined
+   54:       var y : string = x;  // not ok
+                     ^^^^^^ [2]: string
 
 Error: null_tests.js:150
 150:       return super.p;  // not ok

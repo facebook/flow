@@ -18,9 +18,12 @@ Error: generic.js:4
 
 Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }
-                                     ^ undefined. This type is incompatible with
-  5: function f<T:*>(x:T,y?:T) { x = y }
-                       ^ T
+                                     ^ Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2].
+  References:
+    5: function f<T:*>(x:T,y?:T) { x = y }
+                              ^ [1]: undefined
+    5: function f<T:*>(x:T,y?:T) { x = y }
+                         ^ [2]: `T`
 
 Error: nullable.js:17
  17:     x.y++; // should error
@@ -80,14 +83,12 @@ Error: optional.js:7
 
 Error: optional_param2.js:7
   7: var j:I<number> = i.map(id => id);
-                       ^^^^^^^^^^^^^^^ I. Has some incompatible type argument with
-  7: var j:I<number> = i.map(id => id);
-           ^^^^^^^^^ I
-  Type argument `V` is incompatible:
-      7: var j:I<number> = i.map(id => id);
-                                       ^^ undefined. This type is incompatible with
-      7: var j:I<number> = i.map(id => id);
-                 ^^^^^^ number
+                                   ^^ Cannot assign `i.map(...)` to `j` because in type argument `V`, undefined [1] is incompatible with number [2].
+  References:
+    3:         mapper: (value?: V) => M
+                                ^ [1]: undefined
+    7: var j:I<number> = i.map(id => id);
+               ^^^^^^ [2]: number
 
 Error: optional_param4.js:12
  12: foo(true); // ERROR boolean ~> number

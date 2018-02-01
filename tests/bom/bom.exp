@@ -15,27 +15,39 @@ Error: FormData.js:6
 
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ File. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
+                       ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `d` because `File` [1] is incompatible with string [2].
+  References:
+  325:     get(name: string): ?FormDataEntryValue;
+                               ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:325
+   14: const d: string = a.get('foo'); // incorrect
+                ^^^^^^ [2]: string
 
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ null or undefined. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
+                       ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `d` because null or undefined [1] is incompatible with string [2].
+  References:
+  325:     get(name: string): ?FormDataEntryValue;
+                              ^^^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/bom.js:325
+   14: const d: string = a.get('foo'); // incorrect
+                ^^^^^^ [2]: string
 
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ null or undefined. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
+                     ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `e` because null or undefined [1] is incompatible with `Blob` [2].
+  References:
+  325:     get(name: string): ?FormDataEntryValue;
+                              ^^^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/bom.js:325
+   15: const e: Blob = a.get('foo'); // incorrect
+                ^^^^ [2]: `Blob`
 
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ string. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
+                     ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `e` because string [1] is incompatible with `Blob` [2].
+  References:
+  325:     get(name: string): ?FormDataEntryValue;
+                               ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:325
+   15: const e: Blob = a.get('foo'); // incorrect
+                ^^^^ [2]: `Blob`
 
 Error: FormData.js:17
  17: a.get(2); // incorrect
@@ -45,25 +57,21 @@ Error: FormData.js:17
 
 Error: FormData.js:21
  21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                               ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-    319: type FormDataEntryValue = string | File
-                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
-     21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                         ^^^^^^ number
+                                               ^^^^^^^^^^^^^^^ Cannot assign `a.getAll(...)` to `a2` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+  319: type FormDataEntryValue = string | File
+                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:319
+   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                       ^^^^^^ [2]: number
 
 Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                             ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-    319: type FormDataEntryValue = string | File
-                                            ^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
-     22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                  ^^^^ Blob
+                                             ^^^^^^^^^^^^^^^ Cannot assign `a.getAll(...)` to `a3` because in type argument `T`, `File` [1] is incompatible with `Blob` [2].
+  References:
+  319: type FormDataEntryValue = string | File
+                                          ^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:319
+   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                ^^^^ [2]: `Blob`
 
 Error: FormData.js:23
  23: a.getAll(23); // incorrect
@@ -283,161 +291,165 @@ Error: FormData.js:52
 
 Error: FormData.js:56
  56: for (let x: number of a.keys()) {} // incorrect
-                           ^^^^^^^^ string. This type is incompatible with
- 56: for (let x: number of a.keys()) {} // incorrect
-                 ^^^^^^ number
+                           ^^^^^^^^ Cannot assign `x` to `x` because string [1] is incompatible with number [2].
+  References:
+  338:     keys(): Iterator<string>;
+                            ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:338
+   56: for (let x: number of a.keys()) {} // incorrect
+                   ^^^^^^ [2]: number
 
 Error: FormData.js:64
  64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                        ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    319: type FormDataEntryValue = string | File
-                                            ^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
-     64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                   ^^^^ Blob
+                                                        ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with `Blob` [2].
+  References:
+  319: type FormDataEntryValue = string | File
+                                          ^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:319
+   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                 ^^^^ [2]: `Blob`
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-               ^ string. This type is incompatible with
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-               ^ number
+               ^ Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                         ^^^^^^ [2]: number
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                  ^ File. This type is incompatible with
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                  ^ string
+                  ^ Cannot assign element 1 to `y` because `File` [1] is incompatible with string [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: string
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The first tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                  ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                           ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 0, string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                         ^^^^^^ [2]: number
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                   ^^^^^^ string
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with string [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: string
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ File. This type is incompatible with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number
+                  ^ Cannot assign element 1 to `y` because `File` [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ string. This type is incompatible with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number
+                  ^ Cannot assign element 1 to `y` because string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    319: type FormDataEntryValue = string | File
-                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
-     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
+  References:
+  319: type FormDataEntryValue = string | File
+                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:319
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-               ^ string. This type is incompatible with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-               ^ number
+               ^ Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                         ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ File. This type is incompatible with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number
+                  ^ Cannot assign element 1 to `y` because `File` [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ string. This type is incompatible with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number
+                  ^ Cannot assign element 1 to `y` because string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The first tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                  ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                           ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 0, string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                         ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    319: type FormDataEntryValue = string | File
-                                   ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:319
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ File. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
+  References:
+  319: type FormDataEntryValue = string | File
+                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:319
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                          ^^^^^^^^^^^ tuple type. Has some incompatible tuple element with
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                      ^^^^^^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-    340:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:340
-     67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                   ^^^^^^ number
+                                          ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
+  References:
+  340:     entries(): Iterator<[string, FormDataEntryValue]>;
+                                        ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ [2]: number
 
 Error: MutationObserver.js:10
  10: new MutationObserver(); // incorrect

@@ -63,36 +63,30 @@ Error: class_shapes.js:22
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `a` is incompatible:
-     27:   a: number;  // conflicts with cast to Foo
-              ^^^^^^ number. This type is incompatible with
-      4:   a: string;    // exists in TestClass
-              ^^^^^^ string
+                   ^ Cannot assign `z` to `w` because in property `a`, number [1] is incompatible with string [2].
+  References:
+   27:   a: number;  // conflicts with cast to Foo
+            ^^^^^^ [1]: number
+    4:   a: string;    // exists in TestClass
+            ^^^^^^ [2]: string
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `b` is incompatible:
-     31:   b: number;  // conflicts with cast to Foo
-              ^^^^^^ number. This type is incompatible with
-      5:   b: string;    // doesn't exist
-              ^^^^^^ string
+                   ^ Cannot assign `z` to `w` because in property `b`, number [1] is incompatible with string [2].
+  References:
+   31:   b: number;  // conflicts with cast to Foo
+            ^^^^^^ [1]: number
+    5:   b: string;    // doesn't exist
+            ^^^^^^ [2]: string
 
 Error: class_shapes.js:35
  35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ Foo
-  Property `c` is incompatible:
-     28:   c: ?number; // conflicts with cast to Foo
-               ^^^^^^ number. This type is incompatible with
-      6:   c?: ?string;  // exists in TestClass, optional
-                ^^^^^^ string
+                   ^ Cannot assign `z` to `w` because in property `c`, number [1] is incompatible with string [2].
+  References:
+   28:   c: ?number; // conflicts with cast to Foo
+             ^^^^^^ [1]: number
+    6:   c?: ?string;  // exists in TestClass, optional
+              ^^^^^^ [2]: string
 
 Error: expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
@@ -104,15 +98,21 @@ Error: expr.js:17
 
 Error: expr.js:29
  29: var alias1: Alias = new _Alias(); // error: bad pun
-                         ^^^^^^^^^^^^ Alias. This type is incompatible with
- 29: var alias1: Alias = new _Alias(); // error: bad pun
-                 ^^^^^ Alias
+                         ^^^^^^^^^^^^ Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible with `Alias` [2].
+  References:
+   29: var alias1: Alias = new _Alias(); // error: bad pun
+                           ^^^^^^^^^^^^ [1]: `Alias`
+   29: var alias1: Alias = new _Alias(); // error: bad pun
+                   ^^^^^ [2]: `Alias`
 
 Error: expr.js:30
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                         ^^^^^^^^^^^^^^^^ Alias. This type is incompatible with
- 30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                 ^^^^^ Alias
+                         ^^^^^^^^^^^^^^^^ Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible with `Alias` [2].
+  References:
+   25:   static factory(): Alias {
+                           ^^^^^ [1]: `Alias`
+   30: var alias2: Alias = _Alias.factory(); // error: bad pun
+                   ^^^^^ [2]: `Alias`
 
 Error: loc.js:5
   5: class Foo {} // error, shadows type Foo

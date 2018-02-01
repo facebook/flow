@@ -22,14 +22,12 @@ Error: builtin.js:12
 
 Error: class.js:22
  22: var testInstance2: IHasXNumber = new ClassWithXString(); // Error wrong type
-                                      ^^^^^^^^^^^^^^^^^^^^^^ ClassWithXString. This type is incompatible with
- 22: var testInstance2: IHasXNumber = new ClassWithXString(); // Error wrong type
-                        ^^^^^^^^^^^ IHasXNumber
-  Property `x` is incompatible:
-      6:   x: string;
-              ^^^^^^ string. This type is incompatible with
-     14:   x: number;
-              ^^^^^^ number
+                                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `new ClassWithXString()` to `testInstance2` because in property `x`, string [1] is incompatible with number [2].
+  References:
+    6:   x: string;
+            ^^^^^^ [1]: string
+   14:   x: number;
+            ^^^^^^ [2]: number
 
 Error: class.js:23
  23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
@@ -44,14 +42,12 @@ Error: class.js:23
 
 Error: obj.js:10
  10: var propTest2: IHasXString = { x: 123 }; // Error string != number
-                                  ^^^^^^^^^^ object literal. This type is incompatible with
- 10: var propTest2: IHasXString = { x: 123 }; // Error string != number
-                    ^^^^^^^^^^^ IHasXString
-  Property `x` is incompatible:
-     10: var propTest2: IHasXString = { x: 123 }; // Error string != number
-                                           ^^^ number. This type is incompatible with
-      6:   x: string;
-              ^^^^^^ string
+                                       ^^^ Cannot assign object literal to `propTest2` because in property `x`, number [1] is incompatible with string [2].
+  References:
+   10: var propTest2: IHasXString = { x: 123 }; // Error string != number
+                                         ^^^ [1]: number
+    6:   x: string;
+            ^^^^^^ [2]: string
 
 Error: obj.js:11
  11: var propTest3: IHasXString = {}; // Property not found
@@ -86,14 +82,12 @@ Error: optional.js:10
 
 Error: optional.js:12
  12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
-                              ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
-                ^^^^^^^^^^^ HasOptional
-  Property `b` is incompatible:
-     12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
-                                                   ^^^^ boolean. This type is incompatible with
-      5:   b?: number,
-               ^^^^^^ number
+                                               ^^^^ Cannot assign object literal to `test3` because in property `b`, boolean [1] is incompatible with number [2].
+  References:
+   12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
+                                                 ^^^^ [1]: boolean
+    5:   b?: number,
+             ^^^^^^ [2]: number
 
 
 Found 9 errors

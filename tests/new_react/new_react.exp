@@ -62,9 +62,12 @@ Error: classes.js:7
 
 Error: classes.js:15
  15:     var _: string = this.props.x;
-                         ^^^^^^^^^^^^ number. This type is incompatible with
- 15:     var _: string = this.props.x;
-                ^^^^^^ string
+                         ^^^^^^^^^^^^ Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2].
+  References:
+    4: type Props = { x: number };
+                         ^^^^^^ [1]: number
+   15:     var _: string = this.props.x;
+                  ^^^^^^ [2]: string
 
 Error: classes.js:20
  20:     this.state = { y: "" };
@@ -88,30 +91,11 @@ Error: classes.js:38
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ React.Element. This type is incompatible with
- 39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     39: var foo: $jsx<number> = <Foo/>;
-                                  ^^^ statics of `Foo`. This type is incompatible with
-     39: var foo: $jsx<number> = <Foo/>;
-                       ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ `Foo` element
+                             ^^^^^^ `<Foo />`
 159:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ `Foo` element
- 39: var foo: $jsx<number> = <Foo/>;
-                   ^^^^^^ number. This type is incompatible with the bound on type parameter `ElementType`:
-149:   | string
-         ^^^^^^ string. See lib: <BUILTINS>/react.js:149
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
@@ -123,6 +107,24 @@ Error: classes.js:39
                                            ^^^^^ property `x`. Property not found in
      39: var foo: $jsx<number> = <Foo/>;
                                  ^^^^^^ props
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ Cannot assign `<Foo />` to `foo` because in type argument `ElementType`, number [1] is incompatible with string [2].
+  References:
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [1]: number
+  149:   | string
+           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                              ^^^ Cannot assign `<Foo />` to `foo` because in property `type`, statics of `Foo` [1] is incompatible with number [2].
+  References:
+    7: class Foo extends React.Component<Props, State> {
+             ^^^ [1]: statics of `Foo`
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [2]: number
 
 Error: classes.js:43
                      v------------------
@@ -196,36 +198,20 @@ Error: classes.js:43
 
 Error: classes.js:57
  57:     var _: string = this.props.x;
-                         ^^^^^^^^^^^^ number. This type is incompatible with
- 57:     var _: string = this.props.x;
-                ^^^^^^ string
+                         ^^^^^^^^^^^^ Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2].
+  References:
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [1]: number. See lib: <BUILTINS>/react.js:294
+   57:     var _: string = this.props.x;
+                  ^^^^^^ [2]: string
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ React.Element. This type is incompatible with
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                         ^^^^^^^^^ statics of React component. This type is incompatible with
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                              ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ `FooLegacy` element
+                                    ^^^^^^^^^^^^ `<FooLegacy />`
 159:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ `FooLegacy` element
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                          ^^^^^^ number. This type is incompatible with the bound on type parameter `ElementType`:
-149:   | string
-         ^^^^^^ string. See lib: <BUILTINS>/react.js:149
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -250,6 +236,29 @@ Error: classes.js:79
      79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                         ^^^^^^^^^^^^ props
 
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ Cannot assign `<FooLegacy />` to `foo_legacy` because in type argument `ElementType`, number [1] is incompatible with string [2].
+  References:
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [1]: number
+  149:   | string
+           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                     ^^^^^^^^^ Cannot assign `<FooLegacy />` to `foo_legacy` because in property `type`, statics of React component [1] is incompatible with number [2].
+  References:
+                       v------------------
+   43: var FooLegacy = React.createClass({
+   44:   is_mounted: (undefined: ?boolean),
+   45: 
+  ...:
+   76: });
+       -^ [1]: statics of React component
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [2]: number
+
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
@@ -263,33 +272,53 @@ Error: import-react.js:16
 
 Error: new_react.js:17
  17:         var foo: string = this.state;
-                               ^^^^^^^^^^ null. This type is incompatible with
- 17:         var foo: string = this.state;
-                      ^^^^^^ string
+                               ^^^^^^^^^^ Cannot assign `this.state` to `foo` because null [1] is incompatible with string [2].
+  References:
+   15:     getInitialState() { return null; },
+                                      ^^^^ [1]: null
+   17:         var foo: string = this.state;
+                        ^^^^^^ [2]: string
 
 Error: new_react.js:18
  18:         var bar: string = this.props;
-                               ^^^^^^^^^^ propTypes of React component. This type is incompatible with
- 18:         var bar: string = this.props;
-                      ^^^^^^ string
+                               ^^^^^^^^^^ Cannot assign `this.props` to `bar` because propTypes of React component [1] is incompatible with string [2].
+  References:
+                      v
+    5:     propTypes: {
+    6:         x: React.PropTypes.string.isRequired,
+    7:         y: React.PropTypes.array,
+    8:         z: React.PropTypes.number
+    9:     },
+           ^ [1]: propTypes of React component
+   18:         var bar: string = this.props;
+                        ^^^^^^ [2]: string
 
 Error: new_react.js:19
  19:         var qux: string = this.props.z;
-                               ^^^^^^^^^^^^ number. This type is incompatible with
- 19:         var qux: string = this.props.z;
-                      ^^^^^^ string
+                               ^^^^^^^^^^^^ Cannot assign `this.props.z` to `qux` because number [1] is incompatible with string [2].
+  References:
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [1]: number. See lib: <BUILTINS>/react.js:294
+   19:         var qux: string = this.props.z;
+                        ^^^^^^ [2]: string
 
 Error: new_react.js:19
  19:         var qux: string = this.props.z;
-                               ^^^^^^^^^^^^ undefined. This type is incompatible with
- 19:         var qux: string = this.props.z;
-                      ^^^^^^ string
+                               ^^^^^^^^^^^^ Cannot assign `this.props.z` to `qux` because undefined [1] is incompatible with string [2].
+  References:
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [1]: undefined. See lib: <BUILTINS>/react.js:294
+   19:         var qux: string = this.props.z;
+                        ^^^^^^ [2]: string
 
 Error: new_react.js:20
  20:         var w:number = this.props.x;
-                            ^^^^^^^^^^^^ string. This type is incompatible with
- 20:         var w:number = this.props.x;
-                   ^^^^^^ number
+                            ^^^^^^^^^^^^ Cannot assign `this.props.x` to `w` because string [1] is incompatible with number [2].
+  References:
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [1]: string. See lib: <BUILTINS>/react.js:296
+   20:         var w:number = this.props.x;
+                     ^^^^^^ [2]: number
 
 Error: new_react.js:21
  21:         this.props.y[0];
@@ -336,21 +365,30 @@ Error: new_react.js:30
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
-                     ^^^^^^^^^^^^^ null or undefined. This type is incompatible with
- 32: var x: number = C.displayName;
-            ^^^^^^ number
+                     ^^^^^^^^^^^^^ Cannot assign `C.displayName` to `x` because null or undefined [1] is incompatible with number [2].
+  References:
+   73:   static displayName?: ?string;
+                              ^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/react.js:73
+   32: var x: number = C.displayName;
+              ^^^^^^ [2]: number
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
-                     ^^^^^^^^^^^^^ string. This type is incompatible with
- 32: var x: number = C.displayName;
-            ^^^^^^ number
+                     ^^^^^^^^^^^^^ Cannot assign `C.displayName` to `x` because string [1] is incompatible with number [2].
+  References:
+   73:   static displayName?: ?string;
+                               ^^^^^^ [1]: string. See lib: <BUILTINS>/react.js:73
+   32: var x: number = C.displayName;
+              ^^^^^^ [2]: number
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
-                     ^^^^^^^^^^^^^ undefined. This type is incompatible with
- 32: var x: number = C.displayName;
-            ^^^^^^ number
+                     ^^^^^^^^^^^^^ Cannot assign `C.displayName` to `x` because undefined [1] is incompatible with number [2].
+  References:
+   73:   static displayName?: ?string;
+                              ^^^^^^^ [1]: undefined. See lib: <BUILTINS>/react.js:73
+   32: var x: number = C.displayName;
+              ^^^^^^ [2]: number
 
 Error: propTypes.js:13
      v---------------
@@ -420,15 +458,21 @@ Error: propTypes.js:18
 
 Error: props.js:14
  14:         var a: number = this.props.x; // error
-                             ^^^^^^^^^^^^ string. This type is incompatible with
- 14:         var a: number = this.props.x; // error
-                    ^^^^^^ number
+                             ^^^^^^^^^^^^ Cannot assign `this.props.x` to `a` because string [1] is incompatible with number [2].
+  References:
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [1]: string. See lib: <BUILTINS>/react.js:296
+   14:         var a: number = this.props.x; // error
+                      ^^^^^^ [2]: number
 
 Error: props.js:14
  14:         var a: number = this.props.x; // error
-                             ^^^^^^^^^^^^ undefined. This type is incompatible with
- 14:         var a: number = this.props.x; // error
-                    ^^^^^^ number
+                             ^^^^^^^^^^^^ Cannot assign `this.props.x` to `a` because undefined [1] is incompatible with number [2].
+  References:
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [1]: undefined. See lib: <BUILTINS>/react.js:296
+   14:         var a: number = this.props.x; // error
+                      ^^^^^^ [2]: number
 
 Error: props.js:15
  15:         var b: string = this.props.y; // error
@@ -438,15 +482,21 @@ Error: props.js:15
 
 Error: props.js:16
  16:         var c: string = this.props.z; // error
-                             ^^^^^^^^^^^^ number. This type is incompatible with
- 16:         var c: string = this.props.z; // error
-                    ^^^^^^ string
+                             ^^^^^^^^^^^^ Cannot assign `this.props.z` to `c` because number [1] is incompatible with string [2].
+  References:
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [1]: number. See lib: <BUILTINS>/react.js:294
+   16:         var c: string = this.props.z; // error
+                      ^^^^^^ [2]: string
 
 Error: props.js:16
  16:         var c: string = this.props.z; // error
-                             ^^^^^^^^^^^^ undefined. This type is incompatible with
- 16:         var c: string = this.props.z; // error
-                    ^^^^^^ string
+                             ^^^^^^^^^^^^ Cannot assign `this.props.z` to `c` because undefined [1] is incompatible with string [2].
+  References:
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [1]: undefined. See lib: <BUILTINS>/react.js:294
+   16:         var c: string = this.props.z; // error
+                      ^^^^^^ [2]: string
 
 Error: props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
@@ -504,9 +554,12 @@ Error: props.js:27
 
 Error: props2.js:14
  14:         var s: string = this.state.bar;
-                             ^^^^^^^^^^^^^^ number. This type is incompatible with
- 14:         var s: string = this.state.bar;
-                    ^^^^^^ string
+                             ^^^^^^^^^^^^^^ Cannot assign `this.state.bar` to `s` because number [1] is incompatible with string [2].
+  References:
+    9:     getInitialState: function(): { bar: number } {
+                                               ^^^^^^ [1]: number
+   14:         var s: string = this.state.bar;
+                      ^^^^^^ [2]: string
 
 Error: props2.js:15
  15:         return <C {...this.state} foo = {0} />;
@@ -592,9 +645,12 @@ Error: state.js:19
 
 Error: state3.js:11
  11:         var a: number = this.state.x; // error
-                             ^^^^^^^^^^^^ string. This type is incompatible with
- 11:         var a: number = this.state.x; // error
-                    ^^^^^^ number
+                             ^^^^^^^^^^^^ Cannot assign `this.state.x` to `a` because string [1] is incompatible with number [2].
+  References:
+    4:     getInitialState: function(): { x: string; } {
+                                             ^^^^^^ [1]: string
+   11:         var a: number = this.state.x; // error
+                      ^^^^^^ [2]: number
 
 Error: state3.js:14
  14:             x: false // error

@@ -1,8 +1,11 @@
 Error: object_is.js:20
  20: var b: string = Object.is('a', 'a');
-                     ^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
- 20: var b: string = Object.is('a', 'a');
-            ^^^^^^ string
+                     ^^^^^^^^^^^^^^^^^^^ Cannot assign `Object.is(...)` to `b` because boolean [1] is incompatible with string [2].
+  References:
+   41:     static is(a: any, b: any): boolean;
+                                      ^^^^^^^ [1]: boolean. See lib: <BUILTINS>/core.js:41
+   20: var b: string = Object.is('a', 'a');
+              ^^^^^^ [2]: string
 
 Error: object_is.js:22
  22: var d: boolean = Object.is('a', 'b', 'c'); // Error - 'c' is unused

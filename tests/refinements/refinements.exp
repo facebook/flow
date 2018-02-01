@@ -4,6 +4,15 @@ Error: assignment.js:16
  15: function bar0(x : Bar) {
                        ^^^ Bar
 
+Error: assignment.js:16
+ 16:   while (x = x.parent) { // can't assign x to ?Bar
+                  ^^^^^^^^ Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2].
+  References:
+   11:   parent: ?Bar;
+                 ^^^^ [1]: null or undefined
+   15: function bar0(x : Bar) {
+                         ^^^ [2]: `Bar`
+
 Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ property `parent`. Property cannot be accessed on possibly null value
@@ -185,51 +194,75 @@ Error: hasOwnProperty.js:9
 
 Error: heap_defassign.js:10
  10:     var x: number = obj.p;      // error, obj.p : number | string
-                         ^^^^^ string. This type is incompatible with
- 10:     var x: number = obj.p;      // error, obj.p : number | string
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   10:     var x: number = obj.p;      // error, obj.p : number | string
+                  ^^^^^^ [2]: number
 
 Error: heap_defassign.js:16
  16:     var x: number = obj.p;      // error, obj.p : number | string
-                         ^^^^^ string. This type is incompatible with
- 16:     var x: number = obj.p;      // error, obj.p : number | string
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   16:     var x: number = obj.p;      // error, obj.p : number | string
+                  ^^^^^^ [2]: number
 
 Error: heap_defassign.js:22
  22:     var x: number = obj.p;      // error, obj.p : number | string
-                         ^^^^^ string. This type is incompatible with
- 22:     var x: number = obj.p;      // error, obj.p : number | string
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   22:     var x: number = obj.p;      // error, obj.p : number | string
+                  ^^^^^^ [2]: number
 
 Error: heap_defassign.js:30
  30:     var y: number = obj.p;      // error, obj.p : number | string
-                         ^^^^^ string. This type is incompatible with
- 30:     var y: number = obj.p;      // error, obj.p : number | string
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   30:     var y: number = obj.p;      // error, obj.p : number | string
+                  ^^^^^^ [2]: number
 
 Error: heap_defassign.js:38
  38:     var y: number = obj.p;      // error, obj.p : number | string
-                         ^^^^^ string. This type is incompatible with
- 38:     var y: number = obj.p;      // error, obj.p : number | string
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   38:     var y: number = obj.p;      // error, obj.p : number | string
+                  ^^^^^^ [2]: number
 
 Error: heap_defassign.js:62
  62:         var y: number = obj.p;  // error, string ~/~ number
-                             ^^^^^ string. This type is incompatible with
- 62:         var y: number = obj.p;  // error, string ~/~ number
-                    ^^^^^^ number
+                             ^^^^^ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
+  References:
+   53:         obj.p = 'hey';
+                       ^^^^^ [1]: string
+   62:         var y: number = obj.p;  // error, string ~/~ number
+                      ^^^^^^ [2]: number
 
 Error: heap_defassign.js:65
  65:     var z:string = obj.p;       // error, number ~/~ string
-                        ^^^^^ number. This type is incompatible with
- 65:     var z:string = obj.p;       // error, number ~/~ string
-               ^^^^^^ string
+                        ^^^^^ Cannot assign `obj.p` to `z` because number [1] is incompatible with string [2].
+  References:
+   63:         obj.p = 42;
+                       ^^ [1]: number
+   65:     var z:string = obj.p;       // error, number ~/~ string
+                 ^^^^^^ [2]: string
 
 Error: heap_defassign.js:73
  73:     var z: number = obj.p;      // error, (number | string) ~/~ number
-                         ^^^^^ string. This type is incompatible with
- 73:     var z: number = obj.p;      // error, (number | string) ~/~ number
-                ^^^^^^ number
+                         ^^^^^ Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2].
+  References:
+    3: type Obj = { p: number | string }
+                                ^^^^^^ [1]: string
+   73:     var z: number = obj.p;      // error, (number | string) ~/~ number
+                  ^^^^^^ [2]: number
 
 Error: missing-property-cond.js:11
  11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
@@ -392,6 +425,15 @@ Error: not.js:5
   3: function foo(x: ?bool) {
                       ^^^^ boolean
 
+Error: not.js:5
+  5:     x++; // should error for null, void and bool (false)
+         ^^^ Cannot assign number to `x` because number [1] is incompatible with boolean [2].
+  References:
+    5:     x++; // should error for null, void and bool (false)
+           ^^^ [1]: number
+    3: function foo(x: ?bool) {
+                        ^^^^ [2]: boolean
+
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
@@ -552,75 +594,120 @@ Error: property.js:71
 
 Error: refinements.js:4
   4:         var y:string = x;
-                            ^ number. This type is incompatible with
-  4:         var y:string = x;
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+  References:
+    2:     var x = b? 0 : null;
+                      ^ [1]: number
+    4:         var y:string = x;
+                     ^^^^^^ [2]: string
 
 Error: refinements.js:7
   7:     var z:string = x;
-                        ^ boolean. This type is incompatible with
-  7:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because boolean [1] is incompatible with string [2].
+  References:
+    5:         x = false;
+                   ^^^^^ [1]: boolean
+    7:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:7
   7:     var z:string = x;
-                        ^ null. This type is incompatible with
-  7:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because null [1] is incompatible with string [2].
+  References:
+    2:     var x = b? 0 : null;
+                          ^^^^ [1]: null
+    7:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:13
  13:         var y:string = x;
-                            ^ null. This type is incompatible with
- 13:         var y:string = x;
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because null [1] is incompatible with string [2].
+  References:
+   11:     var x = b? 0 : null;
+                          ^^^^ [1]: null
+   13:         var y:string = x;
+                     ^^^^^^ [2]: string
 
 Error: refinements.js:13
  13:         var y:string = x;
-                            ^ number. This type is incompatible with
- 13:         var y:string = x;
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+  References:
+   11:     var x = b? 0 : null;
+                      ^ [1]: number
+   13:         var y:string = x;
+                     ^^^^^^ [2]: string
 
 Error: refinements.js:16
  16:     var z:string = x;
-                        ^ boolean. This type is incompatible with
- 16:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because boolean [1] is incompatible with string [2].
+  References:
+   14:         x = false;
+                   ^^^^^ [1]: boolean
+   16:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:33
  33:         var y:number = x;
-                            ^ string. This type is incompatible with
+                            ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
+  References:
+   24:         x = "hello";
+                   ^^^^^^^ [1]: string
+   33:         var y:number = x;
+                     ^^^^^^ [2]: number
+
+Error: refinements.js:33
  33:         var y:number = x;
-                   ^^^^^^ number
+                            ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
+  References:
+   27:         x = "hello";
+                   ^^^^^^^ [1]: string
+   33:         var y:number = x;
+                     ^^^^^^ [2]: number
 
 Error: refinements.js:36
  36:     var z:string = x;
-                        ^ number. This type is incompatible with
- 36:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because number [1] is incompatible with string [2].
+  References:
+   34:         x = 42;
+                   ^^ [1]: number
+   36:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:43
  43:         var y:string = x;
-                            ^ number. This type is incompatible with
- 43:         var y:string = x;
-                   ^^^^^^ string
+                            ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+  References:
+   40:     for (var x = b? 0 : null;
+                           ^ [1]: number
+   43:         var y:string = x;
+                     ^^^^^^ [2]: string
 
 Error: refinements.js:45
  45:     var z:string = x;
-                        ^ boolean. This type is incompatible with
- 45:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because boolean [1] is incompatible with string [2].
+  References:
+   42:          x = false) {
+                    ^^^^^ [1]: boolean
+   45:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:45
  45:     var z:string = x;
-                        ^ null. This type is incompatible with
- 45:     var z:string = x;
-               ^^^^^^ string
+                        ^ Cannot assign `x` to `z` because null [1] is incompatible with string [2].
+  References:
+   40:     for (var x = b? 0 : null;
+                               ^^^^ [1]: null
+   45:     var z:string = x;
+                 ^^^^^^ [2]: string
 
 Error: refinements.js:54
  54:     var z:number = x;
-                        ^ boolean. This type is incompatible with
- 54:     var z:number = x;
-               ^^^^^^ number
+                        ^ Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
+  References:
+   50:     var x = false;
+                   ^^^^^ [1]: boolean
+   54:     var z:number = x;
+                 ^^^^^^ [2]: number
 
 Error: string.js:8
   8:       (x: void); // error
@@ -1198,4 +1285,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 190 errors
+Found 193 errors

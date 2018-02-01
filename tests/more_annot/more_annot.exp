@@ -1,8 +1,11 @@
 Error: client_object.js:3
   3: var a:number = o.w.z.y;
-                    ^^^^^^^ string. This type is incompatible with
-  3: var a:number = o.w.z.y;
-           ^^^^^^ number
+                    ^^^^^^^ Cannot assign `o.w.z.y` to `a` because string [1] is incompatible with number [2].
+  References:
+    1: var o1 = { x: 0, y: "" };
+                           ^^ [1]: string. See: object.js:1
+    3: var a:number = o.w.z.y;
+             ^^^^^^ [2]: number
 
 
 Found 1 error

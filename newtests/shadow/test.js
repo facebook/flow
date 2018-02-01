@@ -157,14 +157,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Object.create. This type is incompatible with
-            8: var o: {p: string} = Object.create(proto);
-                      ^^^^^^^^^^^ object type
-            Property \`p\` is incompatible:
-                5:       proto.p = 0;
-                                   ^ number. This type is incompatible with
-                8: var o: {p: string} = Object.create(proto);
-                              ^^^^^^ string
+                                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because in property \`p\`, number [1] is incompatible with string [2].
+            References:
+              5:       proto.p = 0;
+                                 ^ [1]: number
+              8: var o: {p: string} = Object.create(proto);
+                            ^^^^^^ [2]: string
         `,
       ),
   ]),

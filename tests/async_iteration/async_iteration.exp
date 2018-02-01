@@ -1,8 +1,11 @@
 Error: delegate_yield.js:3
   3:     var x: void = yield; // error: number ~> void
-                       ^^^^^ number. This type is incompatible with
-  3:     var x: void = yield; // error: number ~> void
-                ^^^^ undefined
+                       ^^^^^ Cannot assign `yield` to `x` because number [1] is incompatible with undefined [2].
+  References:
+    7: delegate_next().next(0);
+                            ^ [1]: number
+    3:     var x: void = yield; // error: number ~> void
+                  ^^^^ [2]: undefined
 
 Error: delegate_yield.js:17
  17:     (x: void); // error: number ~> void
@@ -15,9 +18,12 @@ Error: delegate_yield.js:17
 
 Error: delegate_yield.js:25
  25:   var x: void = yield *inner(); // error: number ~> void
-                     ^^^^^^^^^^^^^^ number. This type is incompatible with
- 25:   var x: void = yield *inner(); // error: number ~> void
-              ^^^^ undefined
+                     ^^^^^^^^^^^^^^ Cannot assign `yield* inner()` to `x` because number [1] is incompatible with undefined [2].
+  References:
+   23:     return 0;
+                  ^ [1]: number
+   25:   var x: void = yield *inner(); // error: number ~> void
+                ^^^^ [2]: undefined
 
 Error: generator.js:23
  23:     (line: void); // error: string ~> void

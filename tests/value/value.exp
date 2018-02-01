@@ -1,8 +1,11 @@
 Error: value.js:3
   3: var y:string = o["x"];
-                    ^^^^^^ number. This type is incompatible with
-  3: var y:string = o["x"];
-           ^^^^^^ string
+                    ^^^^^^ Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2].
+  References:
+    2: o["x"] = 4;
+                ^ [1]: number
+    3: var y:string = o["x"];
+             ^^^^^^ [2]: string
 
 Error: value.js:6
   6: table["x"] = "hello";

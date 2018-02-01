@@ -52,19 +52,21 @@ Error: error.js:20
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
-                   ^^^^^^^ new `C`
- 19: a.meth(42); // Error: number ~> Middle
-            ^^ number. This type is incompatible with the bound on type parameter `T`:
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
+                   ^^^^^^^ Cannot assign `new C()` to `a` because in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
+  References:
+   20: a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [1]: `Base`
+    7: class C<T: Middle> {
+                  ^^^^^^ [2]: `Middle`
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
-                   ^^^^^^^ new `C`
- 20: a.meth(new Base()); // Error: Base ~> Middle
-            ^^^^^^^^^^ Base. This type is incompatible with the bound on type parameter `T`:
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
+                   ^^^^^^^ Cannot assign `new C()` to `a` because in type argument `T`, number [1] is incompatible with `Middle` [2].
+  References:
+   19: a.meth(42); // Error: number ~> Middle
+              ^^ [1]: number
+    7: class C<T: Middle> {
+                  ^^^^^^ [2]: `Middle`
 
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
@@ -101,20 +103,30 @@ Error: phantom.js:15
 
 Error: poly.js:17
  17: var x:string = foo.x;
-                    ^^^^^ number. This type is incompatible with
+                    ^^^^^ Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
+  References:
+   16: var foo = new Foo(0);
+                         ^ [1]: number
+   17: var x:string = foo.x;
+             ^^^^^^ [2]: string
+
+Error: poly.js:17
  17: var x:string = foo.x;
-           ^^^^^^ string
+                    ^^^^^ Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
+  References:
+   18: var z:Foo<number> = Q.bar(foo,"");
+                 ^^^^^^ [1]: number
+   17: var x:string = foo.x;
+             ^^^^^^ [2]: string
 
 Error: poly.js:18
  18: var z:Foo<number> = Q.bar(foo,"");
-                         ^^^^^^^^^^^^^ Foo. Has some incompatible type argument with
- 18: var z:Foo<number> = Q.bar(foo,"");
-           ^^^^^^^^^^^ Foo
-  Type argument `T` is incompatible:
-     18: var z:Foo<number> = Q.bar(foo,"");
-                                       ^^ string. This type is incompatible with
-     18: var z:Foo<number> = Q.bar(foo,"");
-                   ^^^^^^ number
+                                   ^^ Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   18: var z:Foo<number> = Q.bar(foo,"");
+                                     ^^ [1]: string
+   18: var z:Foo<number> = Q.bar(foo,"");
+                 ^^^^^^ [2]: number
 
 Error: test.js:7
   7: class D extends C {
@@ -149,4 +161,4 @@ Error: test.js:7
                              ^ X
 
 
-Found 16 errors
+Found 17 errors

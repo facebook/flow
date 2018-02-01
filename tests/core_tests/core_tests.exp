@@ -18,25 +18,21 @@ Error: map.js:23
 
 Error: map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ Map. Has some incompatible type argument with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                ^^^^^^^^^^^^^^^^^^^ Map
-  Type argument `K` is incompatible:
-     24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                    ^^^^^ string. This type is incompatible with
-     24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                        ^^^^^^ number
+                                                ^^^^^ Cannot assign `new Map(...)` to `y` because in type argument `K`, string [1] is incompatible with number [2].
+  References:
+   24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                  ^^^^^ [1]: string
+   24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                      ^^^^^^ [2]: number
 
 Error: map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ Map. Has some incompatible type argument with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                ^^^^^^^^^^^^^^^^^^^ Map
-  Type argument `V` is incompatible:
-     24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                           ^^^ number. This type is incompatible with
-     24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                ^^^^^^ string
+                                                       ^^^ Cannot assign `new Map(...)` to `y` because in type argument `V`, number [1] is incompatible with string [2].
+  References:
+   24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                         ^^^ [1]: number
+   24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                              ^^^^^^ [2]: string
 
 Error: map.js:29
  29:     (x.get('foo'): boolean); // error, string | void

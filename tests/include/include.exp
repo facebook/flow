@@ -1,8 +1,11 @@
 Error: ../foo/batman/baz.js:3
   3: var x: number = "not a number" // Error string ~> number
-                     ^^^^^^^^^^^^^^ string. This type is incompatible with
-  3: var x: number = "not a number" // Error string ~> number
-            ^^^^^^ number
+                     ^^^^^^^^^^^^^^ Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2].
+  References:
+    3: var x: number = "not a number" // Error string ~> number
+                       ^^^^^^^^^^^^^^ [1]: string
+    3: var x: number = "not a number" // Error string ~> number
+              ^^^^^^ [2]: number
 
 Error: ../included/test.js:1
   1: (123: string);

@@ -222,26 +222,21 @@ Error: defaults.js:49
 
 Error: defaults.js:53
  53:   p = true // error: boolean ~> string
-           ^^^^ boolean. This type is incompatible with
- 53:   p = true // error: boolean ~> string
-       ^ string
+       ^ Cannot assign `{...}.p` to `p` because boolean [1] is incompatible with string [2].
+  References:
+   53:   p = true // error: boolean ~> string
+             ^^^^ [1]: boolean
+   55:   p: string
+            ^^^^^^ [2]: string
 
-Error: defaults.js:56
-         v
- 56: } = {
+Error: defaults.js:57
  57:   p: 0 // error: number ~> string
- 58: };
-     ^ object literal. This type is incompatible with
-        v
- 54: }: {
- 55:   p: string
- 56: } = {
-     ^ object type
-  Property `p` is incompatible:
-     57:   p: 0 // error: number ~> string
-              ^ number. This type is incompatible with
-     55:   p: string
-              ^^^^^^ string
+          ^ Cannot assign object literal to variable because in property `p`, number [1] is incompatible with string [2].
+  References:
+   57:   p: 0 // error: number ~> string
+            ^ [1]: number
+   55:   p: string
+            ^^^^^^ [2]: string
 
 Error: defaults.js:59
  59: (p:void); // error: string ~> void
@@ -336,21 +331,30 @@ Error: defaults.js:80
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
-       ^^ number. This type is incompatible with
-  1: declare var a:string;
-                   ^^^^^^ string
+       ^^ Cannot assign `[...][0].a1` to `a` because number [1] is incompatible with string [2].
+  References:
+    4: [{a1:a, b},c] = [{a1:0, b:1},2];
+                            ^ [1]: number
+    1: declare var a:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
-             ^ number. This type is incompatible with
-  2: declare var b:string;
-                   ^^^^^^ string
+             ^ Cannot assign `[...][0].b` to `b` because number [1] is incompatible with string [2].
+  References:
+    4: [{a1:a, b},c] = [{a1:0, b:1},2];
+                                 ^ [1]: number
+    2: declare var b:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
-                ^ number. This type is incompatible with
-  3: declare var c:string;
-                   ^^^^^^ string
+                ^ Cannot assign `[...][1]` to `c` because number [1] is incompatible with string [2].
+  References:
+    4: [{a1:a, b},c] = [{a1:0, b:1},2];
+                                    ^ [1]: number
+    3: declare var c:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:10
  10: ({n: obj.x} = {n:3});
@@ -362,9 +366,12 @@ Error: destructuring.js:11
 
 Error: destructuring.js:14
  14:     a = p;
-             ^ number. This type is incompatible with
-  1: declare var a:string;
-                   ^^^^^^ string
+             ^ Cannot assign `p` to `a` because number [1] is incompatible with string [2].
+  References:
+   18: foo({p:0, z:[1,2]});
+              ^ [1]: number
+    1: declare var a:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:15
  15:     b = z;
@@ -372,27 +379,39 @@ Error: destructuring.js:15
 
 Error: destructuring.js:16
  16:     c = r;
-             ^ number. This type is incompatible with
-  3: declare var c:string;
-                   ^^^^^^ string
+             ^ Cannot assign `r` to `c` because number [1] is incompatible with string [2].
+  References:
+   18: foo({p:0, z:[1,2]});
+                    ^ [1]: number
+    3: declare var c:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
-      ^ number. This type is incompatible with
-  1: declare var a:string;
-                   ^^^^^^ string
+      ^ Cannot assign `[...][0]` to `a` because number [1] is incompatible with string [2].
+  References:
+   20: [a,,b,...c] = [0,1,true,3];
+                      ^ [1]: number
+    1: declare var a:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
-         ^ boolean. This type is incompatible with
-  2: declare var b:string;
-                   ^^^^^^ string
+         ^ Cannot assign `[...][2]` to `b` because boolean [1] is incompatible with string [2].
+  References:
+   20: [a,,b,...c] = [0,1,true,3];
+                          ^^^^ [1]: boolean
+    2: declare var b:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
-           ^^^^ c. This type is incompatible with
-  3: declare var c:string;
-                   ^^^^^^ string
+                   ^^^^^^^^^^^^ Cannot assign array literal to `c` because `c` [1] is incompatible with string [2].
+  References:
+   20: [a,,b,...c] = [0,1,true,3];
+             ^^^^ [1]: `c`
+    3: declare var c:string;
+                     ^^^^^^ [2]: string
 
 Error: destructuring.js:23
  23:     var o:{x: string; y: number;} = z;
@@ -436,14 +455,12 @@ Error: destructuring.js:33
 
 Error: destructuring.js:35
  35: var {n}:{n: number} = {n: ""}
-                           ^^^^^^^ object literal. This type is incompatible with
- 35: var {n}:{n: number} = {n: ""}
-             ^^^^^^^^^^^ object type
-  Property `n` is incompatible:
-     35: var {n}:{n: number} = {n: ""}
-                                   ^^ string. This type is incompatible with
-     35: var {n}:{n: number} = {n: ""}
-                     ^^^^^^ number
+                               ^^ Cannot assign object literal to variable because in property `n`, string [1] is incompatible with number [2].
+  References:
+   35: var {n}:{n: number} = {n: ""}
+                                 ^^ [1]: string
+   35: var {n}:{n: number} = {n: ""}
+                   ^^^^^^ [2]: number
 
 Error: destructuring.js:38
  38:   var {foo} = {bar: 123}; // error on foo
@@ -471,27 +488,39 @@ Error: destructuring.js:46
 
 Error: destructuring.js:64
  64: var bp1_err: string = baseprop1; // Error: number ~> string
-                           ^^^^^^^^^ number. This type is incompatible with
- 64: var bp1_err: string = baseprop1; // Error: number ~> string
-                  ^^^^^^ string
+                           ^^^^^^^^^ Cannot assign `baseprop1` to `bp1_err` because number [1] is incompatible with string [2].
+  References:
+   52:   baseprop1: number;
+                    ^^^^^^ [1]: number
+   64: var bp1_err: string = baseprop1; // Error: number ~> string
+                    ^^^^^^ [2]: string
 
 Error: destructuring.js:66
  66: var bp2_err: string = others.baseprop2; // Error: number ~> string
-                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 66: var bp2_err: string = others.baseprop2; // Error: number ~> string
-                  ^^^^^^ string
+                           ^^^^^^^^^^^^^^^^ Cannot assign `others.baseprop2` to `bp2_err` because number [1] is incompatible with string [2].
+  References:
+   53:   baseprop2: number;
+                    ^^^^^^ [1]: number
+   66: var bp2_err: string = others.baseprop2; // Error: number ~> string
+                    ^^^^^^ [2]: string
 
 Error: destructuring.js:69
  69: var cp1_err: string = childprop1; // Error: number ~> string
-                           ^^^^^^^^^^ number. This type is incompatible with
- 69: var cp1_err: string = childprop1; // Error: number ~> string
-                  ^^^^^^ string
+                           ^^^^^^^^^^ Cannot assign `childprop1` to `cp1_err` because number [1] is incompatible with string [2].
+  References:
+   57:   childprop1: number;
+                     ^^^^^^ [1]: number
+   69: var cp1_err: string = childprop1; // Error: number ~> string
+                    ^^^^^^ [2]: string
 
 Error: destructuring.js:71
  71: var cp2_err: string = others.childprop2; // Error: number ~> string
-                           ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 71: var cp2_err: string = others.childprop2; // Error: number ~> string
-                  ^^^^^^ string
+                           ^^^^^^^^^^^^^^^^^ Cannot assign `others.childprop2` to `cp2_err` because number [1] is incompatible with string [2].
+  References:
+   58:   childprop2: number;
+                     ^^^^^^ [1]: number
+   71: var cp2_err: string = others.childprop2; // Error: number ~> string
+                    ^^^^^^ [2]: string
 
 Error: destructuring_init.js:1
   1: var {foo};

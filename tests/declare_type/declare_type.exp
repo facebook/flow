@@ -1,8 +1,11 @@
 Error: import_declare_type.js:11
  11: var k2: baz = "shab"; // Error: string to int
-                   ^^^^^^ string. This type is incompatible with
- 11: var k2: baz = "shab"; // Error: string to int
-             ^^^ number
+                   ^^^^^^ Cannot assign `"shab"` to `k2` because string [1] is incompatible with number [2].
+  References:
+   11: var k2: baz = "shab"; // Error: string to int
+                     ^^^^^^ [1]: string
+   11: var k2: baz = "shab"; // Error: string to int
+               ^^^ [2]: number
 
 Error: import_declare_type.js:26
  26: ({toz:3} : Foo); // error : {toz : number} ~> string

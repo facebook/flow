@@ -195,21 +195,30 @@ Error: function.js:21
 
 Error: function.js:29
  29:   var a: number = x; // Error
-                       ^ function type. This type is incompatible with
- 29:   var a: number = x; // Error
-              ^^^^^^ number
+                       ^ Cannot assign `x` to `a` because function type [1] is incompatible with number [2].
+  References:
+   28: function bad(x: Function, y: Object): void {
+                       ^^^^^^^^ [1]: function type
+   29:   var a: number = x; // Error
+                ^^^^^^ [2]: number
 
 Error: function.js:30
  30:   var b: string = x; // Error
-                       ^ function type. This type is incompatible with
- 30:   var b: string = x; // Error
-              ^^^^^^ string
+                       ^ Cannot assign `x` to `b` because function type [1] is incompatible with string [2].
+  References:
+   28: function bad(x: Function, y: Object): void {
+                       ^^^^^^^^ [1]: function type
+   30:   var b: string = x; // Error
+                ^^^^^^ [2]: string
 
 Error: function.js:31
  31:   var c: Function = y; // Object is not a Function
-                         ^ object type. This type is incompatible with
- 31:   var c: Function = y; // Object is not a Function
-              ^^^^^^^^ function type
+                         ^ Cannot assign `y` to `c` because object type [1] is incompatible with function type [2].
+  References:
+   28: function bad(x: Function, y: Object): void {
+                                    ^^^^^^ [1]: object type
+   31:   var c: Function = y; // Object is not a Function
+                ^^^^^^^^ [2]: function type
 
 Error: function.js:37
  37:     (x.length: void); // error, it's a number

@@ -31,33 +31,30 @@ Error: A.js:29
 
 Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-              ^^^^^^^^^^^^^^^^^^^ function type
-  The return is incompatible:
-      5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                                                ^^^^^^ string. This type is incompatible with
-      5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                               ^^^^^^ number
+                                                            ^^^^^^ Cannot assign function to `b` because in the return value, string [1] is incompatible with number [2].
+  References:
+    5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                                              ^^^^^^ [1]: string
+    5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                             ^^^^^^ [2]: number
 
 Error: B.js:8
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-              ^^^^^^^^^^^^^^^^^^^ function type
-  The first parameter is incompatible:
-      8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                      ^^^^^^ string. This type is incompatible with
-      8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                                       ^^^^^^ number
+                                                   ^^^^^^ Cannot assign function to `c` because in the first argument, number [1] is incompatible with string [2].
+  References:
+    8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                                     ^^^^^^ [1]: number
+    8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                    ^^^^^^ [2]: string
 
 Error: B.js:11
  11: var d: { (): string } = function (x: number): string { return "hi"; };
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
- 11: var d: { (): string } = function (x: number): string { return "hi"; };
-              ^^^^^^^^^^ function type. Too few arguments passed to
- 11: var d: { (): string } = function (x: number): string { return "hi"; };
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign function to `d` because function [1] requires another argument from function type [2].
+  References:
+   11: var d: { (): string } = function (x: number): string { return "hi"; };
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+   11: var d: { (): string } = function (x: number): string { return "hi"; };
+                ^^^^^^^^^^ [2]: function type
 
 Error: C.js:7
   7: function b(x: { (z: number): string }): (z: number) => number {
@@ -111,11 +108,12 @@ Error: C.js:33
 
 Error: D.js:12
  12:   function (x: number): string { return "hi"; };
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
- 11: var c: { (): string; (x: number): string } =
-              ^^^^^^^^^^ function type. Too few arguments passed to
- 12:   function (x: number): string { return "hi"; };
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign function to `c` because function [1] requires another argument from function type [2].
+  References:
+   12:   function (x: number): string { return "hi"; };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+   11: var c: { (): string; (x: number): string } =
+                ^^^^^^^^^^ [2]: function type
 
 Error: D.js:20
  20: function e(x: { (): string; (x: number): string }): () => number {
@@ -141,14 +139,12 @@ Error: E.js:2
 
 Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"
-                                      ^^^^^^^^^^^ function. This type is incompatible with
-  6: var b: { (x: number): number } = (x) => "hi"
-              ^^^^^^^^^^^^^^^^^^^ function type
-  The return is incompatible:
-      6: var b: { (x: number): number } = (x) => "hi"
-                                                 ^^^^ string. This type is incompatible with
-      6: var b: { (x: number): number } = (x) => "hi"
-                               ^^^^^^ number
+                                             ^^^^ Cannot assign function to `b` because in the return value, string [1] is incompatible with number [2].
+  References:
+    6: var b: { (x: number): number } = (x) => "hi"
+                                               ^^^^ [1]: string
+    6: var b: { (x: number): number } = (x) => "hi"
+                             ^^^^^^ [2]: number
 
 Error: F.js:9
   9: var c: { (x: string): string } = (x) => x.toFixed()

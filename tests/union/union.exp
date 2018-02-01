@@ -6,9 +6,12 @@ Error: issue-198.js:9
 
 Error: issue-324.js:8
   8: foostr = barstr;
-              ^^^^^^ Bar. This type is incompatible with
-  5: var foostr: Foo | string = new Foo();
-                 ^^^ Foo
+              ^^^^^^ Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with `Foo` [2].
+  References:
+    6: var barstr: Bar | string = new Bar();
+                   ^^^ [1]: `Bar`
+    5: var foostr: Foo | string = new Foo();
+                   ^^^ [2]: `Foo`
 
 Error: union.js:2
   2: bar(0);
@@ -21,9 +24,12 @@ Error: union.js:2
 
 Error: union.js:8
   8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
-                 ^^^^^^^ D. This type is incompatible with
-  8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
-             ^ C
+                 ^^^^^^^ Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2].
+  References:
+    8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+                   ^^^^^^^ [1]: `D`
+    8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+               ^ [2]: `C`
 
 Error: union.js:9
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?

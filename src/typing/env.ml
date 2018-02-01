@@ -625,7 +625,7 @@ let promote_to_const_like cx loc =
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
-let init_value_entry kind cx name ~has_anno specific loc =
+let init_value_entry kind cx ~use_op name ~has_anno specific loc =
   if not (is_excluded name)
   then Entry.(
     let scope, entry = find_entry cx name loc in
@@ -637,12 +637,6 @@ let init_value_entry kind cx name ~has_anno specific loc =
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.change_var (scope.id, name, Changeset.Write);
       if specific != v.general then (
-        let use_op = Op (AssignVar {
-          var = if is_internal_name name
-            then None
-            else Some (mk_reason (RIdentifier name) loc);
-          init = reason_of_t specific;
-        }) in
         Flow_js.flow cx (specific, UseT (use_op, v.general));
       );
       (* note that annotation supercedes specific initializer type *)
@@ -877,7 +871,7 @@ let get_refinement cx key loc =
   | _ -> None
 
 (* helper: update let or var entry *)
-let update_var ?(track_ref=false) op cx name specific loc =
+let update_var ?(track_ref=false) op cx ~use_op name specific loc =
   let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
     (Entry.entry_loc entry) loc;
@@ -891,14 +885,8 @@ let update_var ?(track_ref=false) op cx name specific loc =
     let change = scope.id, name, op in
     Changeset.change_var change;
     let use_op = match op with
-    | Changeset.Write ->
-      Op (AssignVar {
-        var = if is_internal_name name
-          then None
-          else Some (mk_reason (RIdentifier name) loc);
-        init = reason_of_t specific;
-      })
-    | Changeset.Refine -> Op (Internal Refinement)
+    | Changeset.Write -> use_op
+    | Changeset.Refine -> use_op
     | Changeset.Read -> unknown_use (* this is impossible *)
     in
     Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v));
@@ -935,10 +923,10 @@ let update_var ?(track_ref=false) op cx name specific loc =
 let set_var = update_var ~track_ref:true Changeset.Write
 
 let set_internal_var cx name t loc =
-  update_var ~track_ref:false Changeset.Write cx (internal_name name) t loc
+  update_var ~track_ref:false Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
 
 (* update var by refinement test *)
-let refine_var = update_var Changeset.Refine
+let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
 
 (* set const's specific type to reflect a refinement test (internal) *)
 let refine_const cx name specific loc =

@@ -13,9 +13,12 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           test.js:3
             3: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              3: var x: string = 123;
+                                 ^^^ [1]: number
+              3: var x: string = 123;
+                        ^^^^^^ [2]: string
         `,
       ),
     ideStart()
@@ -35,10 +38,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -59,40 +134,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -123,10 +164,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]: boolean",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -147,40 +260,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   }
@@ -195,9 +274,12 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           existingError.js:1
             1: var existingError: number = true;
-                                           ^^^^ boolean. This type is incompatible with
-            1: var existingError: number = true;
-                                  ^^^^^^ number
+                                           ^^^^ Cannot assign \`true\` to \`existingError\` because boolean [1] is incompatible with number [2].
+            References:
+              1: var existingError: number = true;
+                                             ^^^^ [1]: boolean
+              1: var existingError: number = true;
+                                    ^^^^^^ [2]: number
         `,
       ),
     addCode('var notAnError: number = 123;')
@@ -222,10 +304,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]: boolean",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -246,40 +400,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   }
@@ -306,10 +426,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]: boolean",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -330,40 +522,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   }
@@ -393,10 +551,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 24,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 26,
+                                "offset": 70
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 24,
+                            "end": 26
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 15,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 20,
+                                "offset": 64
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 15,
+                            "end": 20
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var newError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `newError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -417,40 +647,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 5,
                         "start": 24,
                         "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
                       }
                     ]
                   }
@@ -473,10 +669,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]: boolean",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -497,40 +765,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   },
@@ -538,10 +772,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 24,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 26,
+                                "offset": 70
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 24,
+                            "end": 26
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 15,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 20,
+                                "offset": 64
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 15,
+                            "end": 20
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var newError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `newError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -562,40 +868,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 5,
                         "start": 24,
                         "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
                       }
                     ]
                   }
@@ -622,10 +894,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]: boolean",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -646,40 +990,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   },
@@ -687,10 +997,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[1]: number",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 24,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 26,
+                                "offset": 70
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 24,
+                            "end": 26
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[2]: string",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 15,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 20,
+                                "offset": 64
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 15,
+                            "end": 20
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var newError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `newError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -711,40 +1093,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 5,
                         "start": 24,
                         "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
                       }
                     ]
                   }
@@ -1247,9 +1595,12 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           test.js:5
             5: var y: string = 123
-                               ^^^ number. This type is incompatible with
-            5: var y: string = 123
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`y\` because number [1] is incompatible with string [2].
+            References:
+              5: var y: string = 123
+                                 ^^^ [1]: number
+              5: var y: string = 123
+                        ^^^^^^ [2]: string
         `,
       )
       .because('Stopping the flow ide command used to kill the server accidentally'),

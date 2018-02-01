@@ -1,26 +1,38 @@
 Error: requireLazy.js:8
   8:   var num2: number = A.stringValueA; // Error: string ~> number
-                          ^^^^^^^^^^^^^^ string. This type is incompatible with
-  8:   var num2: number = A.stringValueA; // Error: string ~> number
-                 ^^^^^^ number
+                          ^^^^^^^^^^^^^^ Cannot assign `A.stringValueA` to `num2` because string [1] is incompatible with number [2].
+  References:
+    8:   stringValueA: "someString"
+                       ^^^^^^^^^^^^ [1]: string. See: A.js:8
+    8:   var num2: number = A.stringValueA; // Error: string ~> number
+                   ^^^^^^ [2]: number
 
 Error: requireLazy.js:9
   9:   var str2: string = A.numberValueA; // Error: number ~> string
-                          ^^^^^^^^^^^^^^ number. This type is incompatible with
-  9:   var str2: string = A.numberValueA; // Error: number ~> string
-                 ^^^^^^ string
+                          ^^^^^^^^^^^^^^ Cannot assign `A.numberValueA` to `str2` because number [1] is incompatible with string [2].
+  References:
+    7:   numberValueA: 1,
+                       ^ [1]: number. See: A.js:7
+    9:   var str2: string = A.numberValueA; // Error: number ~> string
+                   ^^^^^^ [2]: string
 
 Error: requireLazy.js:13
  13:   var num4: number = B.stringValueB; // Error: string ~> number
-                          ^^^^^^^^^^^^^^ string. This type is incompatible with
- 13:   var num4: number = B.stringValueB; // Error: string ~> number
-                 ^^^^^^ number
+                          ^^^^^^^^^^^^^^ Cannot assign `B.stringValueB` to `num4` because string [1] is incompatible with number [2].
+  References:
+    8:   stringValueB: "someString"
+                       ^^^^^^^^^^^^ [1]: string. See: B.js:8
+   13:   var num4: number = B.stringValueB; // Error: string ~> number
+                   ^^^^^^ [2]: number
 
 Error: requireLazy.js:14
  14:   var str4: string = B.numberValueB; // Error: number ~> string
-                          ^^^^^^^^^^^^^^ number. This type is incompatible with
- 14:   var str4: string = B.numberValueB; // Error: number ~> string
-                 ^^^^^^ string
+                          ^^^^^^^^^^^^^^ Cannot assign `B.numberValueB` to `str4` because number [1] is incompatible with string [2].
+  References:
+    7:   numberValueB: 1,
+                       ^ [1]: number. See: B.js:7
+   14:   var str4: string = B.numberValueB; // Error: number ~> string
+                   ^^^^^^ [2]: string
 
 Error: requireLazy.js:17
  17: var notA: Object = A;

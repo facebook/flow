@@ -1,24 +1,20 @@
 Error: fetch.js:12
  12: const b: Promise<string> = fetch(myRequest); // incorrect
-                                ^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
- 12: const b: Promise<string> = fetch(myRequest); // incorrect
-              ^^^^^^^^^^^^^^^ Promise
-  Type argument `R` is incompatible:
-    1002: declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
-                                                                                     ^^^^^^^^ Response. This type is incompatible with. See lib: <BUILTINS>/bom.js:1002
-     12: const b: Promise<string> = fetch(myRequest); // incorrect
-                          ^^^^^^ string
+                                ^^^^^^^^^^^^^^^^ Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` [1] is incompatible with string [2].
+  References:
+  1002: declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+                                                                                   ^^^^^^^^ [1]: `Response`. See lib: <BUILTINS>/bom.js:1002
+   12: const b: Promise<string> = fetch(myRequest); // incorrect
+                        ^^^^^^ [2]: string
 
 Error: fetch.js:25
  25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-                              ^^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
- 25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-              ^^^^^^^^^^^^^ Promise
-  Type argument `R` is incompatible:
-     25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-                          ^^^^ Blob. This type is incompatible with
-    1002: declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
-                                                                                     ^^^^^^^^ Response. See lib: <BUILTINS>/bom.js:1002
+                              ^^^^^^^^^^^^^^^^^^ Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` [1] is incompatible with `Response` [2].
+  References:
+   25: const d: Promise<Blob> = fetch('image.png'); // incorrect
+                        ^^^^ [1]: `Blob`
+  1002: declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+                                                                                   ^^^^^^^^ [2]: `Response`. See lib: <BUILTINS>/bom.js:1002
 
 Error: headers.js:3
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
@@ -106,15 +102,21 @@ Error: headers.js:13
 
 Error: headers.js:15
  15: const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
- 15: const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
-              ^^^^^^^ Headers
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with `Headers` [2].
+  References:
+  887:     append(name: string, value: string): void;
+                                                ^^^^ [1]: undefined. See lib: <BUILTINS>/bom.js:887
+   15: const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
+                ^^^^^^^ [2]: `Headers`
 
 Error: headers.js:18
  18: const h: number = e.get('Content-Type'); // not correct
-                       ^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
- 18: const h: number = e.get('Content-Type'); // not correct
-              ^^^^^^ number
+                       ^^^^^^^^^^^^^^^^^^^^^ Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+  References:
+  891:     get(name: string): string;
+                              ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:891
+   18: const h: number = e.get('Content-Type'); // not correct
+                ^^^^^^ [2]: number
 
 Error: headers.js:28
  28: e.getAll('content-type'); // incorrect
@@ -529,15 +531,21 @@ Error: urlsearchparams.js:13
 
 Error: urlsearchparams.js:15
  15: const f: URLSearchParams = e.append('key1', 'value1'); // not correct
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
- 15: const f: URLSearchParams = e.append('key1', 'value1'); // not correct
-              ^^^^^^^^^^^^^^^ URLSearchParams
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with `URLSearchParams` [2].
+  References:
+  901:     append(name: string, value: string): void;
+                                                ^^^^ [1]: undefined. See lib: <BUILTINS>/bom.js:901
+   15: const f: URLSearchParams = e.append('key1', 'value1'); // not correct
+                ^^^^^^^^^^^^^^^ [2]: `URLSearchParams`
 
 Error: urlsearchparams.js:18
  18: const h: number = e.get('key1'); // not correct
-                       ^^^^^^^^^^^^^ string. This type is incompatible with
- 18: const h: number = e.get('key1'); // not correct
-              ^^^^^^ number
+                       ^^^^^^^^^^^^^ Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+  References:
+  905:     get(name: string): string;
+                              ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:905
+   18: const h: number = e.get('key1'); // not correct
+                ^^^^^^ [2]: number
 
 
 Found 45 errors

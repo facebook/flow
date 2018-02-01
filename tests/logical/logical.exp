@@ -122,6 +122,15 @@ Error: logical.js:329
 
 Error: logical.js:348
 348:         y = y || true; // expected a number
+                      ^^^^ Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2].
+  References:
+  348:         y = y || true; // expected a number
+                        ^^^^ [1]: boolean
+  346: function logical11b(y: number): number {
+                              ^^^^^^ [2]: number
+
+Error: logical.js:348
+348:         y = y || true; // expected a number
                       ^^^^ boolean. This type is incompatible with
 346: function logical11b(y: number): number {
                             ^^^^^^ number
@@ -131,6 +140,15 @@ Error: logical.js:363
                 ^ boolean. This type is incompatible with the expected return type of
 356: function logical12a(): number {
                             ^^^^^^ number
+
+Error: logical.js:371
+371:         y = y && true; // expected a number
+                      ^^^^ Cannot assign `y && true` to `y` because boolean [1] is incompatible with number [2].
+  References:
+  371:         y = y && true; // expected a number
+                        ^^^^ [1]: boolean
+  369: function logical12b(y: number): number {
+                              ^^^^^^ [2]: number
 
 Error: logical.js:371
 371:         y = y && true; // expected a number
@@ -277,4 +295,4 @@ Error: logical.js:513
                                                         ^^^^^^^ boolean
 
 
-Found 26 errors
+Found 28 errors

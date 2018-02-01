@@ -1,14 +1,20 @@
 Error: qualified.js:4
   4: var x:M.C = 0;
-                 ^ number. This type is incompatible with
-  4: var x:M.C = 0;
-           ^^^ C
+                 ^ Cannot assign `0` to `x` because number [1] is incompatible with `C` [2].
+  References:
+    4: var x:M.C = 0;
+                   ^ [1]: number
+    4: var x:M.C = 0;
+             ^^^ [2]: `C`
 
 Error: qualified.js:12
  12: var b: bar = 'asdf'; // Error: string ~> number
-                  ^^^^^^ string. This type is incompatible with
- 12: var b: bar = 'asdf'; // Error: string ~> number
-            ^^^ number
+                  ^^^^^^ Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
+  References:
+   12: var b: bar = 'asdf'; // Error: string ~> number
+                    ^^^^^^ [1]: string
+   12: var b: bar = 'asdf'; // Error: string ~> number
+              ^^^ [2]: number
 
 
 Found 2 errors

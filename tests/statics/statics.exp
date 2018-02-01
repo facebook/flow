@@ -18,9 +18,12 @@ Error: class_statics.js:7
 
 Error: class_statics.js:9
   9: var x:number = C.x;
-                    ^^^ string. This type is incompatible with
-  9: var x:number = C.x;
-           ^^^^^^ number
+                    ^^^ Cannot assign `C.x` to `x` because string [1] is incompatible with number [2].
+  References:
+    3:   static x:string;
+                  ^^^^^^ [1]: string
+    9: var x:number = C.x;
+             ^^^^^^ [2]: number
 
 Error: class_statics.js:10
  10: C.x = 0;
@@ -33,9 +36,12 @@ Error: class_statics.js:10
 
 Error: funstatics.js:5
   5: var x:string = new C().f();
-                    ^^^^^^^^^^^ number. This type is incompatible with
-  5: var x:string = new C().f();
-           ^^^^^^ string
+                    ^^^^^^^^^^^ Cannot assign `new C().f()` to `x` because number [1] is incompatible with string [2].
+  References:
+    2: C.prototype.f = function() { return C.g(0); }
+                                               ^ [1]: number
+    5: var x:string = new C().f();
+             ^^^^^^ [2]: string
 
 
 Found 6 errors

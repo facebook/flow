@@ -1241,9 +1241,12 @@ Error: hoc5.js:49
 
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
-                     ^^^^^^^^^^^^^^^^^^^^^ React.Component. This type is incompatible with
-  7: var b: number = new react.Component(); // Error: ReactComponent ~> number
-            ^^^^^^ number
+                     ^^^^^^^^^^^^^^^^^^^^^ Cannot assign `new react.Component()` to `b` because `React.Component` [1] is incompatible with number [2].
+  References:
+    7: var b: number = new react.Component(); // Error: ReactComponent ~> number
+                       ^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Component`
+    7: var b: number = new react.Component(); // Error: ReactComponent ~> number
+              ^^^^^^ [2]: number
 
 Error: intersection_component_error.js:12
  12: <MyComponent />;

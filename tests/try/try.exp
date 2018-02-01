@@ -1,50 +1,74 @@
 Error: init.js:34
  34:     var y:number = x; // error
-                        ^ possibly uninitialized variable. This type is incompatible with
- 34:     var y:number = x; // error
-               ^^^^^^ number
+                        ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   32:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+   34:     var y:number = x; // error
+                 ^^^^^^ [2]: number
 
 Error: init.js:44
  44:     var y:number = x; // error
-                        ^ possibly uninitialized variable. This type is incompatible with
- 44:     var y:number = x; // error
-               ^^^^^^ number
+                        ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   42:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+   44:     var y:number = x; // error
+                 ^^^^^^ [2]: number
 
 Error: init.js:54
  54:     var y:number = x; // error
-                        ^ possibly uninitialized variable. This type is incompatible with
- 54:     var y:number = x; // error
-               ^^^^^^ number
+                        ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   52:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+   54:     var y:number = x; // error
+                 ^^^^^^ [2]: number
 
 Error: init.js:66
  66:     var y:number = x; // error
-                        ^ possibly uninitialized variable. This type is incompatible with
- 66:     var y:number = x; // error
-               ^^^^^^ number
+                        ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   61:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+   66:     var y:number = x; // error
+                 ^^^^^^ [2]: number
 
 Error: init.js:118
 118:   var y:number = x; // error
-                      ^ uninitialized variable. This type is incompatible with
-118:   var y:number = x; // error
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
+  References:
+  120:     var x:number = 0;
+               ^ [1]: uninitialized variable
+  118:   var y:number = x; // error
+               ^^^^^^ [2]: number
 
 Error: init.js:131
 131:   var y:number = x; // error
-                      ^ possibly uninitialized variable. This type is incompatible with
-131:   var y:number = x; // error
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+  128:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+  131:   var y:number = x; // error
+               ^^^^^^ [2]: number
 
 Error: init.js:140
 140:   var y:number = x; // error
-                      ^ possibly uninitialized variable. This type is incompatible with
-140:   var y:number = x; // error
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+  138:     var x:number = 0;
+               ^ [1]: possibly uninitialized variable
+  140:   var y:number = x; // error
+               ^^^^^^ [2]: number
 
 Error: init.js:153
 153:   var y:number = x; // error
-                      ^ possibly uninitialized variable. This type is incompatible with
-153:   var y:number = x; // error
-             ^^^^^^ number
+                      ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+  146:     var x:number;
+               ^ [1]: possibly uninitialized variable
+  153:   var y:number = x; // error
+               ^^^^^^ [2]: number
 
 Error: return.js:28
  28:   return "bar"; // unreachable

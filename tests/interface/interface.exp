@@ -1,13 +1,11 @@
 Error: fun.js:5
   5: var f0: F = () => 0; // error: number ~> void
-                 ^^^^^^^ function. This type is incompatible with
-  2:   (): void;
-       ^^^^^^^^ function type
-  The return is incompatible:
-      5: var f0: F = () => 0; // error: number ~> void
-                           ^ number. This type is incompatible with
-      2:   (): void;
-               ^^^^ undefined
+                       ^ Cannot assign function to `f0` because in the return value, number [1] is incompatible with undefined [2].
+  References:
+    5: var f0: F = () => 0; // error: number ~> void
+                         ^ [1]: number
+    2:   (): void;
+             ^^^^ [2]: undefined
 
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
@@ -15,9 +13,12 @@ Error: indexer.js:9
 
 Error: interface.js:3
   3: var x: string = new C().x;
-                     ^^^^^^^^^ number. This type is incompatible with
-  3: var x: string = new C().x;
-            ^^^^^^ string
+                     ^^^^^^^^^ Cannot assign `new C().x` to `x` because number [1] is incompatible with string [2].
+  References:
+    1: declare class C { x: number; }
+                            ^^^^^^ [1]: number
+    3: var x: string = new C().x;
+              ^^^^^^ [2]: string
 
 Error: interface.js:7
   7: var i = new I(); // error
@@ -33,14 +34,12 @@ Error: interface.js:10
 
 Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
-                ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  3: interface J extends I, I_ { }
-                            ^^ I_
-  Property `x` is incompatible:
-      6: var k: K = { x: "", y: "" }; // error: x should be number
-                         ^^ string. This type is incompatible with
-      2: interface I_ { x: number }
-                           ^^^^^^ number
+                     ^^ Cannot assign object literal to `k` because in property `x`, string [1] is incompatible with number [2].
+  References:
+    6: var k: K = { x: "", y: "" }; // error: x should be number
+                       ^^ [1]: string
+    2: interface I_ { x: number }
+                         ^^^^^^ [2]: number
 
 Error: test.js:7
   7: (k.x: string); // error: x is number
@@ -53,25 +52,21 @@ Error: test.js:7
 
 Error: test.js:17
  17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 13: interface A_<X> { x: X }
-               ^^ A_
-  Property `x` is incompatible:
-     17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                 ^^ string. This type is incompatible with
-     17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                  ^^^^^^ number
+                             ^^ Cannot assign object literal to `e` because in property `x`, string [1] is incompatible with number [2].
+  References:
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                               ^^ [1]: string
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [2]: number
 
 Error: test.js:17
  17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 14: interface B<Z> extends A<string>, A_<Z> { z: Z }
-               ^ B
-  Property `z` is incompatible:
-     17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                               ^^ string. This type is incompatible with
-     17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                  ^^^^^^ number
+                                           ^^ Cannot assign object literal to `e` because in property `z`, string [1] is incompatible with number [2].
+  References:
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                             ^^ [1]: string
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [2]: number
 
 Error: test.js:18
  18: (e.x: string); // error: x is number

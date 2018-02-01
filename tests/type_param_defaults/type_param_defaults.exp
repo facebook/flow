@@ -36,22 +36,12 @@ Error: classes.js:23
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                               ^^^^^^^^^^ C. Has some incompatible type argument with
- 27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                   ^^^^^^^^^ C
-  Type argument `T` is incompatible:
-     27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                         ^^^^^^ number. This type is incompatible with
-     25: class C<T: ?string = string> extends A<T> {}
-                     ^^^^^^ string
-
-Error: classes.js:27
- 27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                               ^^^^^^^^^^ new `C`
- 27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                     ^^^^^^ number. This type is incompatible with the bound on type parameter `T`:
- 25: class C<T: ?string = string> extends A<T> {}
-                 ^^^^^^ string
+                               ^^^^^^^^^^ Cannot assign `new C(...)` to `c_number` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                       ^^^^^^ [1]: number
+   25: class C<T: ?string = string> extends A<T> {}
+                   ^^^^^^ [2]: string
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
@@ -100,14 +90,12 @@ Error: classes.js:41
 
 Error: classes.js:42
  42: var d_star: D<*> = new D(10); // error, number ~> string
-                        ^^^^^^^^^ D. Has some incompatible type argument with
- 42: var d_star: D<*> = new D(10); // error, number ~> string
-                 ^^^^ D
-  Type argument `T` is incompatible:
-     42: var d_star: D<*> = new D(10); // error, number ~> string
-                                  ^^ number. This type is incompatible with
-     36: class D<S, T = string> extends A<T> {}
-                        ^^^^^^ string
+                              ^^ Cannot assign `new D(...)` to `d_star` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   42: var d_star: D<*> = new D(10); // error, number ~> string
+                                ^^ [1]: number
+   36: class D<S, T = string> extends A<T> {}
+                      ^^^^^^ [2]: string
 
 Error: classes.js:44
  44: (d_number.p: boolean); // Error number ~> boolean
@@ -178,22 +166,12 @@ Error: classes.js:58
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                               ^^^^^^^^^^ I. Has some incompatible type argument with
- 62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                   ^^^^^^^^^ I
-  Type argument `T` is incompatible:
-     62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                         ^^^^^^ number. This type is incompatible with
-     60: class I<T: ?string = *> extends A<T> {}
-                     ^^^^^^ string
-
-Error: classes.js:62
- 62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                               ^^^^^^^^^^ new `I`
- 62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                     ^^^^^^ number. This type is incompatible with the bound on type parameter `T`:
- 60: class I<T: ?string = *> extends A<T> {}
-                 ^^^^^^ string
+                               ^^^^^^^^^^ Cannot assign `new I(...)` to `i_number` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                       ^^^^^^ [1]: number
+   60: class I<T: ?string = *> extends A<T> {}
+                   ^^^^^^ [2]: string
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
@@ -202,4 +180,4 @@ Error: classes.js:62
                  ^^^^^^ string
 
 
-Found 24 errors
+Found 22 errors

@@ -13,9 +13,12 @@ No errors!
 Modify data.json:
 Error: test.js:5
   5: var x: number = data.x;
-                     ^^^^^^ string. This type is incompatible with
-  5: var x: number = data.x;
-            ^^^^^^ number
+                     ^^^^^^ Cannot assign `data.x` to `x` because string [1] is incompatible with number [2].
+  References:
+    2:   x: "",
+            ^^ [1]: string. See: data.json:2
+    5: var x: number = data.x;
+              ^^^^^^ [2]: number
 
 
 Found 1 error
