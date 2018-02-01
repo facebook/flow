@@ -12,7 +12,7 @@ Error: test.js:37
 
 Error: test.js:49
  49:         (this.#p : number); // Error, #p is a string not a number
-              ^^^^^^^ Cannot cast property `#p` to number because string [1] is incompatible with number [2].
+              ^^^^^^^ Cannot cast `this.#p` to number because string [1] is incompatible with number [2].
   References:
    49:         (this.#p : number); // Error, #p is a string not a number
                 ^^^^^^^ [1]: string
@@ -30,7 +30,7 @@ Error: test.js:51
 
 Error: test.js:53
  53:         (x.#p : string) // Error, here #p is a number not a string
-              ^^^^ Cannot cast property `#p` to string because number [1] is incompatible with string [2].
+              ^^^^ Cannot cast `x.#p` to string because number [1] is incompatible with string [2].
   References:
    53:         (x.#p : string) // Error, here #p is a number not a string
                 ^^^^ [1]: number
@@ -39,7 +39,7 @@ Error: test.js:53
 
 Error: test.js:65
  65:       (this.#p : number); // Error #p is null or undefined
-            ^^^^^^^ Cannot cast refined property `#p` to number because null or undefined [1] is incompatible with number [2].
+            ^^^^^^^ Cannot cast `this.#p` to number because null or undefined [1] is incompatible with number [2].
   References:
    65:       (this.#p : number); // Error #p is null or undefined
               ^^^^^^^ [1]: null or undefined

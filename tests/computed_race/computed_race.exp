@@ -1,6 +1,6 @@
 Error: b.js:11
  11: (o[A.FOO]: empty); // error: null ~> empty
-      ^^^^^^^^ Cannot cast computed property to empty because null [1] is incompatible with empty [2].
+      ^^^^^^^^ Cannot cast `o[A.FOO]` to empty because null [1] is incompatible with empty [2].
   References:
    11: (o[A.FOO]: empty); // error: null ~> empty
         ^^^^^^^^ [1]: null
@@ -9,7 +9,7 @@ Error: b.js:11
 
 Error: c.js:11
  11: (o[k]: empty); // error: null ~> empty
-      ^^^^ Cannot cast computed property to empty because null [1] is incompatible with empty [2].
+      ^^^^ Cannot cast `o[k]` to empty because null [1] is incompatible with empty [2].
   References:
    11: (o[k]: empty); // error: null ~> empty
         ^^^^ [1]: null

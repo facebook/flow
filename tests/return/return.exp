@@ -10,7 +10,7 @@ Error: function_return.js:23
 
 Error: void.js:12
  12: (f(true): void); // error: string ~> void
-      ^^^^^^^ Cannot cast call of `f` to undefined because string [1] is incompatible with undefined [2].
+      ^^^^^^^ Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2].
   References:
    12: (f(true): void); // error: string ~> void
         ^^^^^^^ [1]: string

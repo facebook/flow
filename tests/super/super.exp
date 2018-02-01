@@ -48,7 +48,7 @@ Error: super.js:10
 
 Error: super.js:14
  14:     (super.staticMethod('foo'): number); // error, string !~> number
-          ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `staticMethod` to number because string [1] is incompatible with number [2].
+          ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2].
   References:
    14:     (super.staticMethod('foo'): number); // error, string !~> number
             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string

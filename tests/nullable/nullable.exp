@@ -1,6 +1,6 @@
 Error: error.js:8
   8: ((any: ?number): number);
-            ^^^^^^^ Cannot cast nullable number to number because null or undefined [1] is incompatible with number [2].
+            ^^^^^^^ Cannot cast `any` to number because null or undefined [1] is incompatible with number [2].
   References:
     8: ((any: ?number): number);
               ^^^^^^^ [1]: null or undefined
@@ -9,7 +9,7 @@ Error: error.js:8
 
 Error: error.js:9
   9: ((any: ?number): null);
-            ^^^^^^^ Cannot cast nullable number to null because null or undefined [1] is incompatible with null [2].
+            ^^^^^^^ Cannot cast `any` to null because null or undefined [1] is incompatible with null [2].
   References:
     9: ((any: ?number): null);
               ^^^^^^^ [1]: null or undefined
@@ -18,7 +18,7 @@ Error: error.js:9
 
 Error: error.js:9
   9: ((any: ?number): null);
-             ^^^^^^ Cannot cast nullable number to null because number [1] is incompatible with null [2].
+             ^^^^^^ Cannot cast `any` to null because number [1] is incompatible with null [2].
   References:
     9: ((any: ?number): null);
                ^^^^^^ [1]: number
@@ -27,7 +27,7 @@ Error: error.js:9
 
 Error: error.js:10
  10: ((any: ?number): void);
-            ^^^^^^^ Cannot cast nullable number to undefined because null or undefined [1] is incompatible with undefined [2].
+            ^^^^^^^ Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2].
   References:
    10: ((any: ?number): void);
               ^^^^^^^ [1]: null or undefined
@@ -36,7 +36,7 @@ Error: error.js:10
 
 Error: error.js:10
  10: ((any: ?number): void);
-             ^^^^^^ Cannot cast nullable number to undefined because number [1] is incompatible with undefined [2].
+             ^^^^^^ Cannot cast `any` to undefined because number [1] is incompatible with undefined [2].
   References:
    10: ((any: ?number): void);
                ^^^^^^ [1]: number
@@ -89,7 +89,7 @@ Error: error.js:17
 
 Error: maybe.js:5
   5: ((123: ?(?number)): ?string); // error (only num ~> string)
-               ^^^^^^ Cannot cast nullable number to nullable string because number [1] is incompatible with string [2].
+               ^^^^^^ Cannot cast `123` to nullable string because number [1] is incompatible with string [2].
   References:
     5: ((123: ?(?number)): ?string); // error (only num ~> string)
                  ^^^^^^ [1]: number

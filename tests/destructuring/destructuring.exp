@@ -69,7 +69,7 @@ Error: computed.js:2
 
 Error: computed.js:9
   9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
-      ^^^^^^^^^^ Cannot cast property `key` to undefined because string [1] is incompatible with undefined [2].
+      ^^^^^^^^^^ Cannot cast `spread.key` to undefined because string [1] is incompatible with undefined [2].
   References:
     9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
         ^^^^^^^^^^ [1]: string
@@ -150,7 +150,7 @@ Error: defaults.js:23
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ Cannot cast property `r` to undefined because null [1] is incompatible with undefined [2].
+        ^^^ Cannot cast `o.r` to undefined because null [1] is incompatible with undefined [2].
   References:
    35:   (o.r:void);
           ^^^ [1]: null
@@ -159,7 +159,7 @@ Error: defaults.js:35
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ Cannot cast property `r` to undefined because number [1] is incompatible with undefined [2].
+        ^^^ Cannot cast `o.r` to undefined because number [1] is incompatible with undefined [2].
   References:
    35:   (o.r:void);
           ^^^ [1]: number
@@ -168,7 +168,7 @@ Error: defaults.js:35
 
 Error: defaults.js:35
  35:   (o.r:void);
-        ^^^ Cannot cast property `r` to undefined because string [1] is incompatible with undefined [2].
+        ^^^ Cannot cast `o.r` to undefined because string [1] is incompatible with undefined [2].
   References:
    35:   (o.r:void);
           ^^^ [1]: string

@@ -31,7 +31,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:17
                                                             17: (idx(obj1, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               17: (idx(obj1, obj => obj.a.b.c): number);
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
@@ -43,7 +43,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                           `
                                                             test.js:20
                                                              20: (idx(obj1, obj => obj.a.b.c): ?string);
-                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to nullable string because number [1] is incompatible with string [2].
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to nullable string because number [1] is incompatible with string [2].
                                                               References:
                                                                20: (idx(obj1, obj => obj.a.b.c): ?string);
                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -55,7 +55,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                             `
                                                               test.js:23
                                                                23: (idx(obj1, obj => obj["a"].b.c): number);
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                                 References:
                                                                  23: (idx(obj1, obj => obj["a"].b.c): number);
                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
@@ -85,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:37
                                                             37: (idx(obj2, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               37: (idx(obj2, obj => obj.a.b.c): number);
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
@@ -99,7 +99,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:45
                                                             45: (idx(obj3, obj => obj.a.b.c): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               45: (idx(obj3, obj => obj.a.b.c): number);
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
@@ -123,7 +123,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                          `
                                                            test.js:18
                                                             18: (idx(new Foo1(), o => o.a.b): number);
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               18: (idx(new Foo1(), o => o.a.b): number);
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
@@ -159,7 +159,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                              `
                                                test.js:9
                                                  9: (idx(42, n => n): number);
-                                                     ^^^^^^^^^^^^^^^ Cannot cast call of \`idx\` to number because null or undefined [1] is incompatible with number [2].
+                                                     ^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                  References:
                                                    9: (idx(42, n => n): number);
                                                        ^^^^^^^^^^^^^^^ [1]: null or undefined

@@ -1,6 +1,6 @@
 Error: template.js:5
   5: (`baz`: number); // error
-      ^^^^^ Cannot cast string to number because string [1] is incompatible with number [2].
+      ^^^^^ Cannot cast template string to number because string [1] is incompatible with number [2].
   References:
     5: (`baz`: number); // error
         ^^^^^ [1]: string

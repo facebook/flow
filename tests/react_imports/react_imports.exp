@@ -1,6 +1,6 @@
 Error: commonjs-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
@@ -55,7 +55,7 @@ Error: commonjs-pascal.js:7
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
@@ -110,7 +110,7 @@ Error: commonjs.js:7
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
@@ -165,7 +165,7 @@ Error: es-default-pascal.js:7
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
@@ -207,7 +207,7 @@ Error: es-default.js:7
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
@@ -262,7 +262,7 @@ Error: es-namespace-pascal.js:7
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
     4: (React.Component: number); // Error
         ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`

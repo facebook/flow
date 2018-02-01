@@ -365,7 +365,7 @@ Error: mixed.js:89
 
 Error: mixed.js:97
  97:       (x['foo']: string); // error, mixed
-            ^^^^^^^^ Cannot cast computed property to string because mixed [1] is incompatible with string [2].
+            ^^^^^^^^ Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2].
   References:
    97:       (x['foo']: string); // error, mixed
               ^^^^^^^^ [1]: mixed
@@ -736,7 +736,7 @@ Error: tagged_union.js:35
 
 Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
-          ^^^^^ Cannot cast property `raw` to union type because string literal `Maybe` [1] is incompatible with string enum [2].
+          ^^^^^ Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with string enum [2].
   References:
    40:     (x.raw: 'Yes' | 'No'); // 2 errors:
             ^^^^^ [1]: string literal `Maybe`
@@ -757,7 +757,7 @@ Error: tagged_union.js:72
 
 Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
-            ^^^^^^^^^^ Cannot cast refined property `kindTypo` to string because number literal `1` [1] is incompatible with string [2].
+            ^^^^^^^^^^ Cannot cast `x.kindTypo` to string because number literal `1` [1] is incompatible with string [2].
   References:
    89:       (x.kindTypo: string); // typos can't be used, though
               ^^^^^^^^^^ [1]: number literal `1`
@@ -784,7 +784,7 @@ Error: tagged_union.js:102
 
 Error: tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
-            ^^^^^^^^ Cannot cast refined property `legnth` to string because number literal `0` [1] is incompatible with string [2].
+            ^^^^^^^^ Cannot cast `x.legnth` to string because number literal `0` [1] is incompatible with string [2].
   References:
   113:       (x.legnth: string); // error: number literal 0 !~> string
               ^^^^^^^^ [1]: number literal `0`
@@ -793,7 +793,7 @@ Error: tagged_union.js:113
 
 Error: tagged_union.js:118
 118:       (y.legnth: string); // error: number literal 0 !~> string
-            ^^^^^^^^ Cannot cast refined property `legnth` to string because number literal `0` [1] is incompatible with string [2].
+            ^^^^^^^^ Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2].
   References:
   118:       (y.legnth: string); // error: number literal 0 !~> string
               ^^^^^^^^ [1]: number literal `0`
@@ -802,7 +802,7 @@ Error: tagged_union.js:118
 
 Error: tagged_union.js:123
 123:       (z.toStirng: string); // error: number literal 0 !~> string
-            ^^^^^^^^^^ Cannot cast refined property `toStirng` to string because number literal `0` [1] is incompatible with string [2].
+            ^^^^^^^^^^ Cannot cast `z.toStirng` to string because number literal `0` [1] is incompatible with string [2].
   References:
   123:       (z.toStirng: string); // error: number literal 0 !~> string
               ^^^^^^^^^^ [1]: number literal `0`
@@ -811,7 +811,7 @@ Error: tagged_union.js:123
 
 Error: tagged_union.js:128
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
-            ^^^^^^^^^ Cannot cast refined property `valeuOf` to string because number literal `0` [1] is incompatible with string [2].
+            ^^^^^^^^^ Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2].
   References:
   128:       (q.valeuOf: string); // error: number literal 0 !~> string
               ^^^^^^^^^ [1]: number literal `0`
@@ -838,7 +838,7 @@ Error: tagged_union.js:152
 
 Error: tagged_union.js:156
 156:       (x.badStr: empty); // error: 'bad' !~> empty
-            ^^^^^^^^ Cannot cast refined property `badStr` to empty because string literal `bad` [1] is incompatible with empty [2].
+            ^^^^^^^^ Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2].
   References:
   156:       (x.badStr: empty); // error: 'bad' !~> empty
               ^^^^^^^^ [1]: string literal `bad`
@@ -847,7 +847,7 @@ Error: tagged_union.js:156
 
 Error: tagged_union.js:159
 159:       (x.badNum: empty); // error: 123 !~> empty
-            ^^^^^^^^ Cannot cast refined property `badNum` to empty because number literal `123` [1] is incompatible with empty [2].
+            ^^^^^^^^ Cannot cast `x.badNum` to empty because number literal `123` [1] is incompatible with empty [2].
   References:
   159:       (x.badNum: empty); // error: 123 !~> empty
               ^^^^^^^^ [1]: number literal `123`
@@ -856,7 +856,7 @@ Error: tagged_union.js:159
 
 Error: tagged_union.js:162
 162:       (x.badBool: empty); // error: true !~> empty
-            ^^^^^^^^^ Cannot cast refined property `badBool` to empty because boolean literal `true` [1] is incompatible with empty [2].
+            ^^^^^^^^^ Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2].
   References:
   162:       (x.badBool: empty); // error: true !~> empty
               ^^^^^^^^^ [1]: boolean literal `true`

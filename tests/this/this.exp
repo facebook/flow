@@ -42,7 +42,7 @@ Error: This.js:53
 
 Error: This.js:58
  58: (this: void);
-      ^^^^ Cannot cast global object to undefined because global object [1] is incompatible with undefined [2].
+      ^^^^ Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2].
   References:
    58: (this: void);
         ^^^^ [1]: global object

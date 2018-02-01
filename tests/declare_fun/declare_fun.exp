@@ -1,6 +1,6 @@
 Error: test.js:7
   7: (foo(false): void); // error, boolean ~/~ undefined
-      ^^^^^^^^^^ Cannot cast call of `foo` to undefined because boolean [1] is incompatible with undefined [2].
+      ^^^^^^^^^^ Cannot cast `foo(...)` to undefined because boolean [1] is incompatible with undefined [2].
   References:
     7: (foo(false): void); // error, boolean ~/~ undefined
         ^^^^^^^^^^ [1]: boolean

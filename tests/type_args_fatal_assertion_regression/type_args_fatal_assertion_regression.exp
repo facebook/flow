@@ -6,7 +6,7 @@ Error: test.js:10
 
 Error: test.js:12
  12: (42: empty); // Error: number ~> empty
-      ^^ Cannot cast number to empty because number [1] is incompatible with empty [2].
+      ^^ Cannot cast `42` to empty because number [1] is incompatible with empty [2].
   References:
    12: (42: empty); // Error: number ~> empty
         ^^ [1]: number

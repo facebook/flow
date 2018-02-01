@@ -19,7 +19,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                             `
                               test.js:8
                                 8: (42: aType)
-                                    ^^ Cannot cast number to \`aType\` because number [1] is incompatible with string [2].
+                                    ^^ Cannot cast \`42\` to \`aType\` because number [1] is incompatible with string [2].
                                 References:
                                   8: (42: aType)
                                       ^^ [1]: number
@@ -84,7 +84,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  `
                                    test.js:8
                                      8: ("asdf": aType);
-                                         ^^^^^^ Cannot cast string to \`aType\` because string [1] is incompatible with number [2].
+                                         ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
                                      References:
                                        8: ("asdf": aType);
                                            ^^^^^^ [1]: string
@@ -107,7 +107,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  `
                                    test.js:8
                                      8: ("asdf": aType);
-                                         ^^^^^^ Cannot cast string to \`aType\` because string [1] is incompatible with number [2].
+                                         ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
                                      References:
                                        8: ("asdf": aType);
                                            ^^^^^^ [1]: string

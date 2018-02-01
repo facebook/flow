@@ -214,7 +214,7 @@ Error: generators.js:128
 
 Error: refi.js:5
   5:   (x.a: string); // error
-        ^^^ Cannot cast property `a` to string because undefined [1] is incompatible with string [2].
+        ^^^ Cannot cast `x.a` to string because undefined [1] is incompatible with string [2].
   References:
     5:   (x.a: string); // error
           ^^^ [1]: undefined
@@ -223,7 +223,7 @@ Error: refi.js:5
 
 Error: refi.js:22
  22:   (x.a: string); // error
-        ^^^ Cannot cast property `a` to string because undefined [1] is incompatible with string [2].
+        ^^^ Cannot cast `x.a` to string because undefined [1] is incompatible with string [2].
   References:
    22:   (x.a: string); // error
           ^^^ [1]: undefined
@@ -250,7 +250,7 @@ Error: return.js:20
 
 Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `value` to string because undefined [1] is incompatible with string [2].
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `refuse_return_result.value` to string because undefined [1] is incompatible with string [2].
   References:
    20:   (refuse_return_result.value: string); // error: number | void ~> string
           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined

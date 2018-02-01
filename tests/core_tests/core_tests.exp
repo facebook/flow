@@ -70,7 +70,7 @@ Error: map.js:29
 
 Error: map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
-          ^^^^^^^^^^^^ Cannot cast call of method `get` to boolean because undefined [1] is incompatible with boolean [2].
+          ^^^^^^^^^^^^ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2].
   References:
    29:     (x.get('foo'): boolean); // error, string | void
             ^^^^^^^^^^^^ [1]: undefined

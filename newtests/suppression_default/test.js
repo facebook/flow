@@ -27,7 +27,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:10
            10:       ('a': number);
-                      ^^^ Cannot cast string to number because string [1] is incompatible with number [2].
+                      ^^^ Cannot cast \`'a'\` to number because string [1] is incompatible with number [2].
             References:
              10:       ('a': number);
                         ^^^ [1]: string

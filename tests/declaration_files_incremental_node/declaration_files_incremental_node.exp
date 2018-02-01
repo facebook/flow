@@ -1,7 +1,7 @@
 ======Start off with the .js files but without the .flow file======
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -10,7 +10,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -19,7 +19,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -28,7 +28,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -37,7 +37,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -46,7 +46,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -55,7 +55,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -64,7 +64,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -73,7 +73,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -82,7 +82,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -91,7 +91,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -100,7 +100,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -109,7 +109,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Implementation`
@@ -120,7 +120,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -129,7 +129,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -138,7 +138,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -147,7 +147,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -156,7 +156,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -165,7 +165,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -174,7 +174,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -183,7 +183,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -192,7 +192,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -201,7 +201,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -210,7 +210,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -219,7 +219,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -228,7 +228,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`
@@ -239,7 +239,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -248,7 +248,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -257,7 +257,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -266,7 +266,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -275,7 +275,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -284,7 +284,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -293,7 +293,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -302,7 +302,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -311,7 +311,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -320,7 +320,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -329,7 +329,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -338,7 +338,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -347,7 +347,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Implementation`
@@ -361,7 +361,7 @@ Found 13 errors
 ======Start off with the .js files and the .flow file======
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -370,7 +370,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -379,7 +379,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -388,7 +388,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -397,7 +397,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -406,7 +406,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -415,7 +415,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -424,7 +424,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -433,7 +433,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -442,7 +442,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -451,7 +451,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -460,7 +460,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -469,7 +469,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`
@@ -480,7 +480,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -489,7 +489,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -498,7 +498,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -507,7 +507,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -516,7 +516,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -525,7 +525,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -534,7 +534,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -543,7 +543,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Implementation`
@@ -552,7 +552,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -561,7 +561,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -570,7 +570,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -579,7 +579,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Implementation`
@@ -588,7 +588,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Implementation` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Implementation`
@@ -599,7 +599,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -608,7 +608,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -617,7 +617,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -626,7 +626,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -635,7 +635,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -644,7 +644,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -653,7 +653,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -662,7 +662,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -671,7 +671,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -680,7 +680,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -689,7 +689,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -698,7 +698,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -707,7 +707,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`
@@ -721,7 +721,7 @@ Found 13 errors
 ======Start off without the .js files and with the .flow file======
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -730,7 +730,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -739,7 +739,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -748,7 +748,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -757,7 +757,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -766,7 +766,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -775,7 +775,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -784,7 +784,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -793,7 +793,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -802,7 +802,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -811,7 +811,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -820,7 +820,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -829,7 +829,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`
@@ -840,7 +840,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -849,7 +849,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -858,7 +858,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -867,7 +867,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -876,7 +876,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -885,7 +885,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -894,7 +894,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -903,7 +903,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -912,7 +912,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -921,7 +921,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -930,7 +930,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -939,7 +939,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -948,7 +948,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`
@@ -959,7 +959,7 @@ Error: test_relative.js:3
 Found 13 errors
 Error: test_absolute.js:5
   5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -968,7 +968,7 @@ Error: test_absolute.js:5
 
 Error: test_absolute.js:9
   9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -977,7 +977,7 @@ Error: test_absolute.js:9
 
 Error: test_absolute.js:12
  12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -986,7 +986,7 @@ Error: test_absolute.js:12
 
 Error: test_absolute.js:15
  15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -995,7 +995,7 @@ Error: test_absolute.js:15
 
 Error: test_absolute.js:18
  18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1004,7 +1004,7 @@ Error: test_absolute.js:18
 
 Error: test_absolute.js:21
  21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1013,7 +1013,7 @@ Error: test_absolute.js:21
 
 Error: test_absolute.js:25
  25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -1022,7 +1022,7 @@ Error: test_absolute.js:25
 
 Error: test_absolute.js:29
  29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^^ [1]: `Definition`
@@ -1031,7 +1031,7 @@ Error: test_absolute.js:29
 
 Error: test_absolute.js:32
  32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1040,7 +1040,7 @@ Error: test_absolute.js:32
 
 Error: test_absolute.js:35
  35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1049,7 +1049,7 @@ Error: test_absolute.js:35
 
 Error: test_absolute.js:38
  38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1058,7 +1058,7 @@ Error: test_absolute.js:38
 
 Error: test_absolute.js:41
  41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^ Cannot cast call of method `fun` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
    41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
         ^^^^^^^ [1]: `Definition`
@@ -1067,7 +1067,7 @@ Error: test_absolute.js:41
 
 Error: test_relative.js:3
   3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
-      ^^^^^ Cannot cast call of `foo` to boolean because `Definition` [1] is incompatible with boolean [2].
+      ^^^^^ Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
   References:
     3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
         ^^^^^ [1]: `Definition`

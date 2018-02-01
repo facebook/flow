@@ -30,7 +30,7 @@ Error: test.js:8
 
 Error: test.js:13
  13: (nv.x[0]: string); // error
-      ^^^^^^^ Cannot cast computed property to string because number [1] is incompatible with string [2].
+      ^^^^^^^ Cannot cast `nv.x[0]` to string because number [1] is incompatible with string [2].
   References:
    13: (nv.x[0]: string); // error
         ^^^^^^^ [1]: number
@@ -39,7 +39,7 @@ Error: test.js:13
 
 Error: test.js:14
  14: (nv.foo()[0]: string); // error
-      ^^^^^^^^^^^ Cannot cast computed property to string because number [1] is incompatible with string [2].
+      ^^^^^^^^^^^ Cannot cast `nv.foo()[0]` to string because number [1] is incompatible with string [2].
   References:
    14: (nv.foo()[0]: string); // error
         ^^^^^^^^^^^ [1]: number

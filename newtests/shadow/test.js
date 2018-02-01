@@ -20,7 +20,7 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:8
            8: (o.p: string);
-               ^^^ Cannot cast property \`p\` to string because number [1] is incompatible with string [2].
+               ^^^ Cannot cast \`o.p\` to string because number [1] is incompatible with string [2].
            References:
              8: (o.p: string);
                  ^^^ [1]: number
@@ -44,7 +44,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       (a.p: string);
-                      ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+                      ^^^ Cannot cast \`a.p\` to string because boolean [1] is incompatible with string [2].
             References:
               7:       (a.p: string);
                         ^^^ [1]: boolean
@@ -53,7 +53,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (b.p: number);
-                      ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+                      ^^^ Cannot cast \`b.p\` to number because boolean [1] is incompatible with number [2].
             References:
               8:       (b.p: number);
                         ^^^ [1]: boolean
@@ -79,7 +79,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`a.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
              12: (a.p: void);
                   ^^^ [1]: number
@@ -94,7 +94,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:14
            14: (b.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`b.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
              14: (b.p: void);
                   ^^^ [1]: string
@@ -109,7 +109,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because boolean [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
              12: (a.p: void);
                   ^^^ [1]: boolean
@@ -118,7 +118,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:12
            12: (a.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`a.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
              12: (a.p: void);
                   ^^^ [1]: string
@@ -127,7 +127,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:14
            14: (b.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because boolean [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
              14: (b.p: void);
                   ^^^ [1]: boolean
@@ -136,7 +136,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:14
            14: (b.p: void);
-                ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+                ^^^ Cannot cast \`b.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
              14: (b.p: void);
                   ^^^ [1]: number
@@ -229,7 +229,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: number);
-                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+                        ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
               7:         (o.p: number);
                           ^^^ [1]: boolean
@@ -238,7 +238,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:9
             9:         (o.p: string);
-                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+                        ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
               9:         (o.p: string);
                           ^^^ [1]: boolean
@@ -268,7 +268,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: void);
-                        ^^^ Cannot cast property \`p\` to undefined because number [1] is incompatible with undefined [2].
+                        ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
               7:         (o.p: void);
                           ^^^ [1]: number
@@ -277,7 +277,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:7
             7:         (o.p: void);
-                        ^^^ Cannot cast property \`p\` to undefined because string [1] is incompatible with undefined [2].
+                        ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
               7:         (o.p: void);
                           ^^^ [1]: string
@@ -306,7 +306,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:         (a.p: number);
-                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+                        ^^^ Cannot cast \`a.p\` to number because boolean [1] is incompatible with number [2].
             References:
               9:         (a.p: number);
                           ^^^ [1]: boolean
@@ -315,7 +315,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:11
            11:         (b.p: string);
-                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+                        ^^^ Cannot cast \`b.p\` to string because boolean [1] is incompatible with string [2].
             References:
              11:         (b.p: string);
                           ^^^ [1]: boolean
@@ -381,7 +381,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13:         (o.p: number); // error: void ~> number
-                        ^^^ Cannot cast property \`p\` to number because boolean [1] is incompatible with number [2].
+                        ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
              13:         (o.p: number); // error: void ~> number
                           ^^^ [1]: boolean
@@ -390,7 +390,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:15
            15:         (o.p: string); // error: void ~> string
-                        ^^^ Cannot cast property \`p\` to string because boolean [1] is incompatible with string [2].
+                        ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
              15:         (o.p: string); // error: void ~> string
                           ^^^ [1]: boolean

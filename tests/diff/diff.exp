@@ -60,7 +60,7 @@ Error: lower.js:21
 
 Error: lower.js:22
  22: (y.name: number); // Error -- should be string
-      ^^^^^^ Cannot cast property `name` to number because string [1] is incompatible with number [2].
+      ^^^^^^ Cannot cast `y.name` to number because string [1] is incompatible with number [2].
   References:
    22: (y.name: number); // Error -- should be string
         ^^^^^^ [1]: string

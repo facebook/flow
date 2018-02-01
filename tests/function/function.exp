@@ -44,7 +44,7 @@ Error: apply.js:25
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `apply` to undefined because number [1] is incompatible with undefined [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `test.call.apply(...)` to undefined because number [1] is incompatible with undefined [2].
   References:
    32: (test.call.apply(test, [0, 123, 'foo']): void);
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -210,7 +210,7 @@ Error: function.js:31
 
 Error: function.js:37
  37:     (x.length: void); // error, it's a number
-          ^^^^^^^^ Cannot cast property `length` to undefined because number [1] is incompatible with undefined [2].
+          ^^^^^^^^ Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2].
   References:
    37:     (x.length: void); // error, it's a number
             ^^^^^^^^ [1]: number
@@ -219,7 +219,7 @@ Error: function.js:37
 
 Error: function.js:38
  38:     (y.length: void); // error, it's a number
-          ^^^^^^^^ Cannot cast property `length` to undefined because number [1] is incompatible with undefined [2].
+          ^^^^^^^^ Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2].
   References:
    38:     (y.length: void); // error, it's a number
             ^^^^^^^^ [1]: number
@@ -228,7 +228,7 @@ Error: function.js:38
 
 Error: function.js:39
  39:     (z.length: void); // error, it's a number
-          ^^^^^^^^ Cannot cast property `length` to undefined because number [1] is incompatible with undefined [2].
+          ^^^^^^^^ Cannot cast `z.length` to undefined because number [1] is incompatible with undefined [2].
   References:
    39:     (z.length: void); // error, it's a number
             ^^^^^^^^ [1]: number
@@ -237,7 +237,7 @@ Error: function.js:39
 
 Error: function.js:41
  41:     (x.name: void); // error, it's a string
-          ^^^^^^ Cannot cast property `name` to undefined because string [1] is incompatible with undefined [2].
+          ^^^^^^ Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2].
   References:
    41:     (x.name: void); // error, it's a string
             ^^^^^^ [1]: string
@@ -246,7 +246,7 @@ Error: function.js:41
 
 Error: function.js:42
  42:     (y.name: void); // error, it's a string
-          ^^^^^^ Cannot cast property `name` to undefined because string [1] is incompatible with undefined [2].
+          ^^^^^^ Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2].
   References:
    42:     (y.name: void); // error, it's a string
             ^^^^^^ [1]: string
@@ -255,7 +255,7 @@ Error: function.js:42
 
 Error: function.js:43
  43:     (z.name: void); // error, it's a string
-          ^^^^^^ Cannot cast property `name` to undefined because string [1] is incompatible with undefined [2].
+          ^^^^^^ Cannot cast `z.name` to undefined because string [1] is incompatible with undefined [2].
   References:
    43:     (z.name: void); // error, it's a string
             ^^^^^^ [1]: string
@@ -333,7 +333,7 @@ Error: rest.js:38
 
 Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
-      ^^^^^^^^^^^^ Cannot cast call of `empty_rest` to empty because rest parameter array of call of `empty_rest` [1] is incompatible with empty [2].
+      ^^^^^^^^^^^^ Cannot cast `empty_rest()` to empty because rest parameter array of call of `empty_rest` [1] is incompatible with empty [2].
   References:
    53: (empty_rest(): empty); // Error Array ~> empty
         ^^^^^^^^^^^^ [1]: rest parameter array of call of `empty_rest`
@@ -381,7 +381,7 @@ Error: rest_type.js:20
 
 Error: rest_type.js:31
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
-                          ^^^ Cannot cast call of `f` to empty because rest parameter array of call of `f` [1] is incompatible with empty [2].
+                          ^^^ Cannot cast `f()` to empty because rest parameter array of call of `f` [1] is incompatible with empty [2].
   References:
    31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
                             ^^^ [1]: rest parameter array of call of `f`

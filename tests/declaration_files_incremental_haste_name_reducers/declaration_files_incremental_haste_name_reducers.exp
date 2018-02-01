@@ -1,7 +1,7 @@
 ======Start off with the .js files but without the .flow file======
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `AImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `AImplementation`
@@ -10,7 +10,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestImplementation`
@@ -21,7 +21,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -30,7 +30,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`
@@ -41,7 +41,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `AImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `AImplementation`
@@ -50,7 +50,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestImplementation`
@@ -64,7 +64,7 @@ Found 2 errors
 ======Start off with the .js files and the .flow file======
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -73,7 +73,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`
@@ -84,7 +84,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `AImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `AImplementation`
@@ -93,7 +93,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestImplementation`
@@ -104,7 +104,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -113,7 +113,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`
@@ -127,7 +127,7 @@ Found 2 errors
 ======Start off without the .js files and with the .flow file======
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -136,7 +136,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`
@@ -147,7 +147,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -156,7 +156,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`
@@ -167,7 +167,7 @@ Error: index.js:7
 Found 2 errors
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-      ^^^^^^^ Cannot cast call of method `foo` to boolean because `ADefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
         ^^^^^^^ [1]: `ADefinition`
@@ -176,7 +176,7 @@ Error: index.js:4
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-      ^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
         ^^^^^^^^^^ [1]: `TestDefinition`

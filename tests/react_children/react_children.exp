@@ -277,7 +277,7 @@ Error: fun.js:37
 
 Error: fun.js:40
  40:     (data.bar: string); // Error: `bar` is a number.
-          ^^^^^^^^ Cannot cast property `bar` to string because number [1] is incompatible with string [2].
+          ^^^^^^^^ Cannot cast `data.bar` to string because number [1] is incompatible with string [2].
   References:
    40:     (data.bar: string); // Error: `bar` is a number.
             ^^^^^^^^ [1]: number

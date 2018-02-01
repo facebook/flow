@@ -90,6 +90,7 @@ type reason_desc =
   | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
+  | RTemplateString
   | RUnknownString
   | RStringEnum
   | RNumberEnum
@@ -151,6 +152,7 @@ type reason_desc =
   | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string
+  | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
   | RPolyTest of reason_desc
@@ -422,6 +424,7 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RAnyObject -> "any object"
   | RAnyFunction -> "any function"
+  | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | RStringEnum -> "string enum"
   | RNumberEnum -> "number enum"
@@ -496,6 +499,7 @@ let rec string_of_desc = function
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RNamedImportedType m -> spf "Named import from module `%s`" m
+  | RCode x -> "`" ^ x ^ "`"
   | RCustom x -> x
   | RPolyType (RStatics d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
@@ -706,6 +710,255 @@ module ReasonMap = MyMap.Make(struct
   let compare = Pervasives.compare
 end)
 
+(* Creates a description string for an arbitrary expression. This description
+ * will be used to describe some code in error messages which are designed to be
+ * human readable.
+ *
+ * We want to keep these descriptions *short* so we omit a lot of information in
+ * places where expressions may often go recursive. For instance, object and
+ * array literals are abbreviated as [...] and {...} respectively.
+ *
+ * The wrap argument provides a rough heuristic for when wrapping is necessary.
+ * We set wrap to true when we need to append something to the final expression.
+ * Then expressions which need to be wrapped will call do_wrap. e.g.
+ *
+ *     (1 + 2).p
+ *     o.p
+ *     o[1 + 2]
+ *
+ * In the first example we need to wrap 1 + 2 to correctly print the property
+ * access. However, we don't need to wrap o in o.p. In o[1 + 2] we don't need to
+ * wrap 1 + 2 since it is already wrapped in a sense. *)
+let rec code_desc_of_expression ~wrap (_, x) =
+let do_wrap = if wrap then (fun s -> "(" ^ s ^ ")") else (fun s -> s) in
+Ast.Expression.(match x with
+| Array { Array.elements = []; _ } -> "[]"
+| Array _ -> "[...]"
+| ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression ((_, Object _) as e); _ } ->
+  do_wrap ("(...) => (" ^ code_desc_of_expression ~wrap:false e ^ ")")
+| ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression e; _ } ->
+  do_wrap ("(...) => " ^ code_desc_of_expression ~wrap:false e)
+| ArrowFunction _ ->
+  do_wrap "(...) => { ... }"
+| Assignment { Assignment.left; operator; right } ->
+  let left = code_desc_of_pattern left in
+  let right = code_desc_of_expression ~wrap:false right in
+  let operator = Assignment.(match operator with
+  | Assign -> "="
+  | PlusAssign -> "+="
+  | MinusAssign -> "-="
+  | MultAssign -> "*="
+  | ExpAssign -> "**="
+  | DivAssign -> "/="
+  | ModAssign -> "%="
+  | LShiftAssign -> "<<="
+  | RShiftAssign -> ">>="
+  | RShift3Assign -> ">>>="
+  | BitOrAssign -> "|="
+  | BitXorAssign -> "^="
+  | BitAndAssign -> "&="
+  ) in
+  do_wrap (left ^ " " ^ operator ^ " " ^ right)
+| Binary { Binary.operator; left; right } ->
+  do_wrap (code_desc_of_operation left (`Binary operator) right)
+| Call { Call.callee; arguments = [] } ->
+  (code_desc_of_expression ~wrap:true callee) ^ "()"
+| Call { Call.callee; arguments = _ } ->
+  (code_desc_of_expression ~wrap:true callee) ^ "(...)"
+| Class _ -> "class { ... }"
+| Conditional { Conditional.test; consequent; alternate } ->
+  let wrap_test = match test with _, Conditional _ -> true | _ -> false in
+  do_wrap (
+    (code_desc_of_expression ~wrap:wrap_test test) ^ " ? " ^
+    (code_desc_of_expression ~wrap:false consequent) ^ " : " ^
+    (code_desc_of_expression ~wrap:false alternate)
+  )
+| Function _ -> "function () { ... }"
+| Identifier (_, x) -> x
+| Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
+| JSXElement x -> code_desc_of_jsx_element x
+| JSXFragment _ -> "<>...</>"
+| Ast.Expression.Literal x -> code_desc_of_literal x
+| Logical { Logical.operator; left; right } ->
+  do_wrap (code_desc_of_operation left (`Logical operator) right)
+| Member { Member._object; property; computed = _ } -> Member.(
+  let o = code_desc_of_expression ~wrap:true _object in
+  o ^ (match property with
+  | PropertyIdentifier (_, x) -> "." ^ x
+  | PropertyPrivateName (_, (_, x)) -> ".#" ^ x
+  | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
+  ))
+| MetaProperty { MetaProperty.meta = (_, o); property = (_, p) } -> o ^ "." ^ p
+| New { New.callee; arguments = [] } ->
+  "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "()"
+| New { New.callee; arguments = _ } ->
+  "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "(...)"
+| Object _ -> "{...}"
+| Sequence { Sequence.expressions } ->
+  code_desc_of_expression ~wrap (List.hd (List.rev expressions))
+| Super -> "super"
+| TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
+| TemplateLiteral _ -> "`...`"
+| This -> "this"
+| TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
+| Unary { Unary.operator; prefix; argument } ->
+  let x = code_desc_of_expression ~wrap:true argument in
+  let op = Unary.(match operator with
+  | Minus -> "-"
+  | Plus -> "+"
+  | Not -> "!"
+  | BitNot -> "~"
+  | Typeof -> "typeof "
+  | Void -> "void "
+  | Delete -> "delete "
+  | Await -> "await "
+  ) in
+  do_wrap (if prefix then op ^ x else x ^ op)
+| Update { Update.operator; prefix; argument } ->
+  let x = code_desc_of_expression ~wrap:true argument in
+  let op = Update.(match operator with
+  | Increment -> "++"
+  | Decrement -> "--"
+  ) in
+  do_wrap (if prefix then op ^ x else x ^ op)
+| Yield { Yield.argument = Some x; delegate = false } ->
+  do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
+| Yield { Yield.argument = Some x; delegate = true } ->
+  do_wrap ("yield* " ^ code_desc_of_expression ~wrap:false x)
+| Yield { Yield.argument = None; delegate = false } -> "yield"
+| Yield { Yield.argument = None; delegate = true } -> "yield*"
+
+(* TODO *)
+| Comprehension _
+| Generator _
+  -> do_wrap "..."
+)
+
+and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
+| Object _ -> "{...}"
+| Array _ -> "[...]"
+| Assignment { Assignment.left; right } ->
+  code_desc_of_pattern left ^ " = " ^ code_desc_of_expression ~wrap:false right
+| Identifier { Identifier.name = (_, name); _ } -> name
+| Expression x -> code_desc_of_expression ~wrap:false x
+)
+
+(* Implementation of operator flattening logic lifted from Prettier:
+ * https://github.com/prettier/prettier/blob/dd78f31aaf5b4522b780f13194d57308e5fdf53b/src/common/util.js#L328-L399 *)
+and code_desc_of_operation = Ast.Expression.(
+  let string_of_operator = Binary.(function
+  | `Binary op -> (match op with
+    | Equal -> "=="
+    | NotEqual -> "!="
+    | StrictEqual -> "==="
+    | StrictNotEqual -> "!=="
+    | LessThan -> "<"
+    | LessThanEqual -> "<="
+    | GreaterThan -> ">"
+    | GreaterThanEqual -> ">="
+    | LShift -> "<<"
+    | RShift -> ">>"
+    | RShift3 -> ">>>"
+    | Plus -> "+"
+    | Minus -> "-"
+    | Mult -> "*"
+    | Exp -> "**"
+    | Div -> "/"
+    | Mod -> "%"
+    | BitOr -> "|"
+    | Xor -> "^"
+    | BitAnd -> "&"
+    | In -> "in"
+    | Instanceof -> "instanceof")
+  | `Logical op -> (match op with
+    | Logical.Or -> "||"
+    | Logical.And -> "&&")
+  ) in
+  let should_flatten = Binary.(
+    let precedence = function
+    | `Logical Logical.Or -> 0
+    | `Logical Logical.And -> 1
+    | `Binary BitOr -> 2
+    | `Binary Xor -> 3
+    | `Binary BitAnd -> 4
+    | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
+    | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) -> 6
+    | `Binary (LShift | RShift | RShift3) -> 7
+    | `Binary (Plus | Minus) -> 8
+    | `Binary (Mult | Div | Mod) -> 9
+    | `Binary Exp -> 10
+    in
+    let equality = function
+    | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> true
+    | _ -> false
+    in
+    let multiplicative = function
+    | `Binary (Mult | Div | Mod) -> true
+    | _ -> false
+    in
+    let bitshift = function
+    | `Binary (LShift | RShift | RShift3) -> true
+    | _ -> false
+    in
+    fun a b ->
+      if precedence a <> precedence b then
+        false
+      else if a = `Binary Exp then
+        false
+      else if equality a && equality b then
+        false
+      else if (a = `Binary Mod && multiplicative b) || (b = `Binary Mod && multiplicative a) then
+        false
+      else if bitshift a && bitshift b then
+        false
+      else
+        true
+  ) in
+  fun left op right ->
+    let wrap_left = match left with
+    | _, Binary { Binary.operator; _ } -> not (should_flatten op (`Binary operator))
+    | _, Logical { Logical.operator; _ } -> not (should_flatten op (`Logical operator))
+    | _ -> true
+    in
+    let left = code_desc_of_expression ~wrap:wrap_left left in
+    let right = code_desc_of_expression ~wrap:true right in
+    let op = string_of_operator op in
+    left ^ " " ^ op ^ " " ^ right
+)
+
+and code_desc_of_jsx_element x = Ast.JSX.(match (snd x.openingElement).Opening.name with
+| Identifier (_, { Identifier.name }) -> "<" ^ name ^ " />"
+| NamespacedName (_, { NamespacedName.namespace = (_, { Identifier.name = a });
+    name = (_, { Identifier.name = b }) }) ->
+  "<" ^ a ^ ":" ^ b ^ " />"
+| MemberExpression x ->
+  let rec loop = function
+  | (_, { MemberExpression._object = MemberExpression.Identifier (_, { Identifier.name = a });
+      property = (_, { Identifier.name = b }) }) ->
+    a ^ "." ^ b
+  | (_, { MemberExpression._object = MemberExpression.MemberExpression a;
+      property = (_, { Identifier.name = b }) }) ->
+    loop a ^ "." ^ b
+  in
+  "<" ^ loop x ^ " />"
+)
+
+and code_desc_of_literal x = Ast.(match x.Literal.value with
+| Literal.String x when String.length x > 16 -> "'" ^ String.sub x 0 10 ^ "...'"
+| _ -> x.Literal.raw
+)
+
+let rec mk_expression_reason = Ast.Expression.(function
+| (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
+| (loc, Object _) -> mk_reason RObjectLit loc
+| (loc, Array _) -> mk_reason RArrayLit loc
+| (loc, ArrowFunction f) -> func_reason f loc
+| (loc, Function f) -> func_reason f loc
+| (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
+| (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
+| (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
+)
+
 (* Is this the reason of a scalar type? true if the type *cannot* recursively
  * hold any other types. For example, number is a scalar but an object like
  * {p: number} is not. *)
@@ -720,6 +973,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RNumberLit _
 | RBooleanLit _
 | RJSXText
+| RTemplateString
 | RUnknownString
 | RStringEnum
 | RNumberEnum
@@ -813,6 +1067,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RFieldInitializer _
 | RUntypedModule _
 | RNamedImportedType _
+| RCode _
 | RCustom _
 | RPolyType _
 | RPolyTest _
@@ -899,6 +1154,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RLogical _
 | RAnyObject
 | RAnyFunction
+| RTemplateString
 | RUnknownString
 | RStringEnum
 | RNumberEnum
@@ -960,6 +1216,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RFieldInitializer _
 | RUntypedModule _
 | RNamedImportedType _
+| RCode _
 | RCustom _
 | RPolyType _
 | RPolyTest _

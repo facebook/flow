@@ -38,7 +38,7 @@ Error: test2.js:7
 
 Error: test2.js:9
   9: (new D: D); // error, new D is an object, D not in proto chain
-      ^^^^^ Cannot cast new `D` to `D` because object type [1] is incompatible with `D` [2].
+      ^^^^^ Cannot cast `new D()` to `D` because object type [1] is incompatible with `D` [2].
   References:
     9: (new D: D); // error, new D is an object, D not in proto chain
         ^^^^^ [1]: object type

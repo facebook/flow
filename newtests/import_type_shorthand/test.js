@@ -19,7 +19,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": T);
-                ^^^^^ Cannot cast string to \`T\` because string [1] is incompatible with number [2].
+                ^^^^^ Cannot cast \`"str"\` to \`T\` because string [1] is incompatible with number [2].
             References:
               9: ("str": T);
                   ^^^^^ [1]: string
@@ -41,7 +41,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": U);
-                ^^^^^ Cannot cast string to \`U\` because string [1] is incompatible with number [2].
+                ^^^^^ Cannot cast \`"str"\` to \`U\` because string [1] is incompatible with number [2].
             References:
               9: ("str": U);
                   ^^^^^ [1]: string
@@ -63,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": C);
-                ^^^^^ Cannot cast string to \`C\` because string [1] is incompatible with statics of \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with statics of \`C\` [2].
             References:
               9: ("str": C);
                   ^^^^^ [1]: string
@@ -85,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": CPrime);
-                ^^^^^ Cannot cast string to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
             References:
               9: ("str": CPrime);
                   ^^^^^ [1]: string

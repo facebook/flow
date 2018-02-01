@@ -4,7 +4,7 @@ Error: element_type.js:1
 
 Error: element_type.js:7
   7: ('hello world': Arr_Elem);
-      ^^^^^^^^^^^^^ Cannot cast string to `Arr_Elem` because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^ Cannot cast `'hello world'` to `Arr_Elem` because string [1] is incompatible with number [2].
   References:
     7: ('hello world': Arr_Elem);
         ^^^^^^^^^^^^^ [1]: string
@@ -13,7 +13,7 @@ Error: element_type.js:7
 
 Error: element_type.js:18
  18: ('hello world': Obj_Elem);
-      ^^^^^^^^^^^^^ Cannot cast string to `Obj_Elem` because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^ Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2].
   References:
    18: ('hello world': Obj_Elem);
         ^^^^^^^^^^^^^ [1]: string
@@ -102,7 +102,7 @@ Error: non_maybe_type.js:5
 
 Error: non_maybe_type.js:10
  10: (0: $NonMaybeType<null>); // error
-      ^ Cannot cast number to `$NonMaybeType` because number [1] is incompatible with empty [2].
+      ^ Cannot cast `0` to `$NonMaybeType` because number [1] is incompatible with empty [2].
   References:
    10: (0: $NonMaybeType<null>); // error
         ^ [1]: number
@@ -115,7 +115,7 @@ Error: property_type.js:1
 
 Error: property_type.js:6
   6: (42: Obj_Prop_x);
-      ^^ Cannot cast number to `Obj_Prop_x` because number [1] is incompatible with string [2].
+      ^^ Cannot cast `42` to `Obj_Prop_x` because number [1] is incompatible with string [2].
   References:
     6: (42: Obj_Prop_x);
         ^^ [1]: number
@@ -130,7 +130,7 @@ Error: property_type.js:10
 
 Error: tvar3.js:20
  20: (fn1(a): B); // Error: A ~> B
-      ^^^^^^ Cannot cast call of `fn1` to `B` because `A` [1] is incompatible with `B` [2].
+      ^^^^^^ Cannot cast `fn1(...)` to `B` because `A` [1] is incompatible with `B` [2].
   References:
    20: (fn1(a): B); // Error: A ~> B
         ^^^^^^ [1]: `A`
@@ -150,7 +150,7 @@ Error: tvar3.js:21
 
 Error: tvar3.js:22
  22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-      ^^^^^^^^^^^^^^^^^^^^ Cannot cast call of `fn3` to `C` because `A` [1] is incompatible with `C` [2].
+      ^^^^^^^^^^^^^^^^^^^^ Cannot cast `fn3(...)` to `C` because `A` [1] is incompatible with `C` [2].
   References:
    22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
         ^^^^^^^^^^^^^^^^^^^^ [1]: `A`
@@ -182,7 +182,7 @@ Error: tvar3.js:23
 
 Error: tvar3.js:25
  25: (fn5(a): B); // Error: A ~> B
-      ^^^^^^ Cannot cast call of `fn5` to `B` because `A` [1] is incompatible with `B` [2].
+      ^^^^^^ Cannot cast `fn5(...)` to `B` because `A` [1] is incompatible with `B` [2].
   References:
    25: (fn5(a): B); // Error: A ~> B
         ^^^^^^ [1]: `A`
@@ -202,7 +202,7 @@ Error: tvar3.js:26
 
 Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-      ^^^^^^^^^^^^^^^^^^^^ Cannot cast call of `fn7` to `C` because `A` [1] is incompatible with `C` [2].
+      ^^^^^^^^^^^^^^^^^^^^ Cannot cast `fn7(...)` to `C` because `A` [1] is incompatible with `C` [2].
   References:
    27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
         ^^^^^^^^^^^^^^^^^^^^ [1]: `A`

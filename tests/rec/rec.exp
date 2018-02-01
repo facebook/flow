@@ -11,7 +11,7 @@ Error: issue-598.js:7
 
 Error: test.js:6
   6: (p.x: string); // error
-      ^^^ Cannot cast property `x` to string because number [1] is incompatible with string [2].
+      ^^^ Cannot cast `p.x` to string because number [1] is incompatible with string [2].
   References:
     6: (p.x: string); // error
         ^^^ [1]: number
@@ -29,7 +29,7 @@ Error: test.js:9
 
 Error: test.js:13
  13: (pstar.x: string); // error
-      ^^^^^^^ Cannot cast property `x` to string because number [1] is incompatible with string [2].
+      ^^^^^^^ Cannot cast `pstar.x` to string because number [1] is incompatible with string [2].
   References:
    13: (pstar.x: string); // error
         ^^^^^^^ [1]: number
@@ -38,7 +38,7 @@ Error: test.js:13
 
 Error: test.js:16
  16: (pstar.x: string); // error
-      ^^^^^^^ Cannot cast property `x` to string because `P` [1] is incompatible with string [2].
+      ^^^^^^^ Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
   References:
    16: (pstar.x: string); // error
         ^^^^^^^ [1]: `P`

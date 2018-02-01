@@ -6,7 +6,7 @@ Error: Arrays.js:10
 
 Error: numeric_elem.js:7
   7: (arr[day]: string); // error: number ~> string
-      ^^^^^^^^ Cannot cast computed property to string because number [1] is incompatible with string [2].
+      ^^^^^^^^ Cannot cast `arr[day]` to string because number [1] is incompatible with string [2].
   References:
     7: (arr[day]: string); // error: number ~> string
         ^^^^^^^^ [1]: number

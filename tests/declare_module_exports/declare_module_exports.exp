@@ -18,7 +18,7 @@ Error: main.js:8
 
 Error: main.js:12
  12: (42: str2); // Error: number ~> string
-      ^^ Cannot cast number to `str2` because number [1] is incompatible with string [2].
+      ^^ Cannot cast `42` to `str2` because number [1] is incompatible with string [2].
   References:
    12: (42: str2); // Error: number ~> string
         ^^ [1]: number

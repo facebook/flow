@@ -2452,7 +2452,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       in Type_table.set (Context.type_table cx) loc t;
       let infer_t = expression cx e in
       let use_op = Op (Cast {
-        lower = reason_of_t infer_t;
+        lower = mk_expression_reason e;
         upper = reason_of_t t;
       }) in
       Flow.flow cx (infer_t, UseT (use_op, t));

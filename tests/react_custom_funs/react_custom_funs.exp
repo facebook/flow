@@ -43,7 +43,7 @@ Error: clone_element.js:24
 
 Error: clone_element.js:28
  28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `type` to statics of `B` because `A` [1] is incompatible with `B` [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).type` to statics of `B` because `A` [1] is incompatible with `B` [2].
   References:
    28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `A`
@@ -58,7 +58,7 @@ Error: clone_element.js:30
 
 Error: clone_element.js:31
  31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
   References:
    31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -67,7 +67,7 @@ Error: clone_element.js:31
 
 Error: clone_element.js:34
  34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
   References:
    34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -359,7 +359,7 @@ Error: create_element.js:33
 
 Error: create_element.js:38
  38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
    38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -368,7 +368,7 @@ Error: create_element.js:38
 
 Error: create_element.js:40
  40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
    40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -1300,7 +1300,7 @@ Error: create_element.js:216
 
 Error: create_element.js:221
 221: (React.createElement(M).type: typeof N); // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `type` to statics of `N` because `M` [1] is incompatible with `N` [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).type` to statics of `N` because `M` [1] is incompatible with `N` [2].
   References:
   221: (React.createElement(M).type: typeof N); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `M`
@@ -1449,7 +1449,7 @@ Error: create_factory.js:33
 
 Error: create_factory.js:38
  38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `aFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
    38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -1458,7 +1458,7 @@ Error: create_factory.js:38
 
 Error: create_factory.js:39
  39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `foo` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `bFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
    39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
@@ -2358,7 +2358,7 @@ Error: create_factory.js:212
 
 Error: create_factory.js:218
 218: (mFactory().type: typeof N); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast property `type` to statics of `N` because `M` [1] is incompatible with `N` [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `mFactory().type` to statics of `N` because `M` [1] is incompatible with `N` [2].
   References:
   218: (mFactory().type: typeof N); // Error
         ^^^^^^^^^^^^^^^ [1]: `M`

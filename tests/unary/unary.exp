@@ -15,7 +15,7 @@ Error: unary.js:12
 
 Error: unary.js:19
  19: (-1: void); // error, number ~> void
-      ^^ Cannot cast number to undefined because number [1] is incompatible with undefined [2].
+      ^^ Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2].
   References:
    19: (-1: void); // error, number ~> void
         ^^ [1]: number

@@ -86,7 +86,7 @@ Error: apply.js:40
 
 Error: jsx.js:30
  30: (<AcceptsWhatever />: number); // Error string ~> number
-      ^^^^^^^^^^^^^^^^^^^ Cannot cast `JSX(...)` to number because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast `<AcceptsWhatever />` to number because string [1] is incompatible with number [2].
   References:
    30: (<AcceptsWhatever />: number); // Error string ~> number
         ^^^^^^^^^^^^^^^^^^^ [1]: string
@@ -95,7 +95,7 @@ Error: jsx.js:30
 
 Error: jsx.js:31
  31: (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `JSX(...)` to number because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `<AcceptsWhatever />` to number because string [1] is incompatible with number [2].
   References:
    31: (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
@@ -120,7 +120,7 @@ Error: jsx.js:34
 
 Error: jsx.js:35
  35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `JSX(...)` to number because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `<ExpectsProps />` to number because string [1] is incompatible with number [2].
   References:
    35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string

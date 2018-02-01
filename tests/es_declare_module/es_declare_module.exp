@@ -40,7 +40,7 @@ Error: es_declare_module.js:15
 
 Error: es_declare_module.js:18
  18: ('asdf': numType); // Error: string ~> number
-      ^^^^^^ Cannot cast string to `numType` because string [1] is incompatible with number [2].
+      ^^^^^^ Cannot cast `'asdf'` to `numType` because string [1] is incompatible with number [2].
   References:
    18: ('asdf': numType); // Error: string ~> number
         ^^^^^^ [1]: string
@@ -71,7 +71,7 @@ Error: es_declare_module.js:27
 
 Error: es_declare_module.js:32
  32: (42: C); // Error: number ~> C
-      ^^ Cannot cast number to `C` because number [1] is incompatible with `C` [2].
+      ^^ Cannot cast `42` to `C` because number [1] is incompatible with `C` [2].
   References:
    32: (42: C); // Error: number ~> C
         ^^ [1]: number
@@ -80,7 +80,7 @@ Error: es_declare_module.js:32
 
 Error: es_declare_module.js:34
  34: (42: CType); // Error: number ~> CType
-      ^^ Cannot cast number to `CType` because number [1] is incompatible with `C` [2].
+      ^^ Cannot cast `42` to `CType` because number [1] is incompatible with `C` [2].
   References:
    34: (42: CType); // Error: number ~> CType
         ^^ [1]: number
@@ -93,7 +93,7 @@ Error: es_declare_module.js:36
 
 Error: es_declare_module.js:39
  39: ('asdf': T2); // Error: string ~> number
-      ^^^^^^ Cannot cast string to `T2` because string [1] is incompatible with number [2].
+      ^^^^^^ Cannot cast `'asdf'` to `T2` because string [1] is incompatible with number [2].
   References:
    39: ('asdf': T2); // Error: string ~> number
         ^^^^^^ [1]: string

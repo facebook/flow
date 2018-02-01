@@ -22,7 +22,7 @@ Error: a2.js:5
 
 Error: a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ Cannot cast `five` + `five` to string because number [1] is incompatible with string [2].
+      ^^^^^^^^^^^ Cannot cast `five + five` to string because number [1] is incompatible with string [2].
   References:
     5: (five + five: string);
         ^^^^^^^^^^^ [1]: number
@@ -45,7 +45,7 @@ Error: a2.js:5
 
 Error: a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ Cannot cast `five` + `five` to string because number [1] is incompatible with string [2].
+      ^^^^^^^^^^^ Cannot cast `five + five` to string because number [1] is incompatible with string [2].
   References:
     5: (five + five: string);
         ^^^^^^^^^^^ [1]: number
@@ -58,7 +58,7 @@ Found 3 errors
 Test b:
 Error: b3.js:5
   5: (new D: C);
-      ^^^^^ Cannot cast new `D` to `C` because `D` [1] is incompatible with `C` [2].
+      ^^^^^ Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
   References:
     5: (new D: C);
         ^^^^^ [1]: `D`

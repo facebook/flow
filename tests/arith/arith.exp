@@ -106,7 +106,7 @@ Error: Arith.js:81
 
 Error: Arith.js:88
  88:     (x + z: empty); // error, string ~> empty
-          ^^^^^ Cannot cast `x` + `z` to empty because string [1] is incompatible with empty [2].
+          ^^^^^ Cannot cast `x + z` to empty because string [1] is incompatible with empty [2].
   References:
    88:     (x + z: empty); // error, string ~> empty
             ^^^^^ [1]: string
@@ -115,7 +115,7 @@ Error: Arith.js:88
 
 Error: Arith.js:89
  89:     (z + x: empty); // error, string ~> empty
-          ^^^^^ Cannot cast `z` + `x` to empty because string [1] is incompatible with empty [2].
+          ^^^^^ Cannot cast `z + x` to empty because string [1] is incompatible with empty [2].
   References:
    89:     (z + x: empty); // error, string ~> empty
             ^^^^^ [1]: string

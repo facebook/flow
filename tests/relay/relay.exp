@@ -1,6 +1,6 @@
 Error: Profile.js:19
  19:     (this.props.foo: empty); // Error: number ~> empty
-          ^^^^^^^^^^^^^^ Cannot cast property `foo` to empty because number [1] is incompatible with empty [2].
+          ^^^^^^^^^^^^^^ Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2].
   References:
    19:     (this.props.foo: empty); // Error: number ~> empty
             ^^^^^^^^^^^^^^ [1]: number
@@ -9,7 +9,7 @@ Error: Profile.js:19
 
 Error: Profile.js:20
  20:     (this.props.user.id: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^ Cannot cast property `id` to empty because string [1] is incompatible with empty [2].
+          ^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2].
   References:
    20:     (this.props.user.id: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^ [1]: string
@@ -18,7 +18,7 @@ Error: Profile.js:20
 
 Error: Profile.js:21
  21:     (this.props.user.name: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^^^ Cannot cast property `name` to empty because string [1] is incompatible with empty [2].
+          ^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2].
   References:
    21:     (this.props.user.name: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^ [1]: string
@@ -27,7 +27,7 @@ Error: Profile.js:21
 
 Error: Profile.js:22
  22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast property `id` to empty because string [1] is incompatible with empty [2].
+          ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2].
   References:
    22:     (this.props.user.pic.id: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^^^ [1]: string
@@ -47,7 +47,7 @@ Error: Profile.js:23
 
 Error: ProfilePic.js:17
  17:     (this.props.image.url: empty); // Error: string ~> empty
-          ^^^^^^^^^^^^^^^^^^^^ Cannot cast property `url` to empty because string [1] is incompatible with empty [2].
+          ^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2].
   References:
    17:     (this.props.image.url: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^ [1]: string

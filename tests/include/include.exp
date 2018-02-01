@@ -6,7 +6,7 @@ Error: ../foo/batman/baz.js:3
 
 Error: ../included/test.js:1
   1: (123: string);
-      ^^^ Cannot cast number to string because number [1] is incompatible with string [2].
+      ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
   References:
     1: (123: string);
         ^^^ [1]: number

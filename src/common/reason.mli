@@ -42,6 +42,7 @@ type reason_desc =
   | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
+  | RTemplateString
   | RUnknownString
   | RStringEnum
   | RNumberEnum
@@ -103,6 +104,7 @@ type reason_desc =
   | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string
+  | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
   | RPolyTest of reason_desc
@@ -223,3 +225,5 @@ val repos_reason: Loc.t -> reason -> reason
 val do_patch: string list -> (int * int * string) list -> string
 
 module ReasonMap : MyMap.S with type key = reason
+
+val mk_expression_reason: Loc.t Ast.Expression.t -> reason

@@ -164,7 +164,7 @@ Error: identity.js:38
 
 Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
-      ^^^^^ Cannot cast property `a` to empty because number [1] is incompatible with empty [2].
+      ^^^^^ Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2].
   References:
    43: (foo.a: empty); // Error: number ~> empty
         ^^^^^ [1]: number
@@ -344,7 +344,7 @@ Error: objmap.js:10
 
 Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string
-        ^^^^^ Cannot cast property `foo` to string because number [1] is incompatible with string [2].
+        ^^^^^ Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
   References:
    16:   (o.foo: string); // error, number ~> string
           ^^^^^ [1]: number
@@ -353,7 +353,7 @@ Error: objmap.js:16
 
 Error: optional.js:13
  13: (o3.b: Array<number | void>); // Error: void ~> array
-      ^^^^ Cannot cast property `b` to array type because undefined [1] is incompatible with array type [2].
+      ^^^^ Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
   References:
    13: (o3.b: Array<number | void>); // Error: void ~> array
         ^^^^ [1]: undefined
@@ -362,7 +362,7 @@ Error: optional.js:13
 
 Error: optional.js:17
  17: (o6.b: Array<number | void>); // Error: void ~> array
-      ^^^^ Cannot cast property `b` to array type because undefined [1] is incompatible with array type [2].
+      ^^^^ Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2].
   References:
    17: (o6.b: Array<number | void>); // Error: void ~> array
         ^^^^ [1]: undefined

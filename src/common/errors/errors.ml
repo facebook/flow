@@ -143,8 +143,11 @@ module Friendly = struct
   let code s = Inline [Code s]
 
   let ref ?(loc=true) r =
-    let desc = string_of_desc (desc_of_reason ~unwrap:(is_scalar_reason r) r) in
-    let desc = message_inlines_of_string desc in
+    let desc = desc_of_reason ~unwrap:(is_scalar_reason r) r in
+    let desc = match desc with
+    | RCode code -> [Code code]
+    | _ -> message_inlines_of_string (string_of_desc desc)
+    in
     if loc then (
       let loc = loc_of_reason r in
       Reference (desc, loc)

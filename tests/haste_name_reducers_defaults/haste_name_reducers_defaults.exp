@@ -9,7 +9,7 @@ Error: Module1.js:5
 
 Error: index.js:3
   3: (require('Module1'): boolean);
-      ^^^^^^^^^^^^^^^^^^ Cannot cast module `Module1` to boolean because `Test` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with boolean [2].
   References:
     3: (require('Module1'): boolean);
         ^^^^^^^^^^^^^^^^^^ [1]: `Test`
@@ -18,7 +18,7 @@ Error: index.js:3
 
 Error: index.js:4
   4: (require('Module2').foo(): boolean);
-      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast call of method `foo` to boolean because `Test2` [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible with boolean [2].
   References:
     4: (require('Module2').foo(): boolean);
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Test2`

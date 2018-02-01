@@ -1,6 +1,6 @@
 Error: keys.js:10
  10:   (123: $Keys<Object>); // Error: number -> keys of Object
-        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+        ^^^ Cannot cast `123` to key set because number [1] is incompatible with key set [2].
   References:
    10:   (123: $Keys<Object>); // Error: number -> keys of Object
           ^^^ [1]: number
@@ -9,7 +9,7 @@ Error: keys.js:10
 
 Error: keys.js:21
  21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
-        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+        ^^^ Cannot cast `123` to key set because number [1] is incompatible with key set [2].
   References:
    21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
           ^^^ [1]: number
@@ -36,7 +36,7 @@ Error: keys.js:31
 
 Error: keys.js:33
  33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
-        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+        ^^^ Cannot cast `123` to key set because number [1] is incompatible with key set [2].
   References:
    33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
           ^^^ [1]: number
@@ -57,7 +57,7 @@ Error: keys.js:40
 
 Error: keys.js:44
  44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
-        ^^^ Cannot cast number to key set because number [1] is incompatible with key set [2].
+        ^^^ Cannot cast `123` to key set because number [1] is incompatible with key set [2].
   References:
    44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
           ^^^ [1]: number

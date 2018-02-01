@@ -455,7 +455,7 @@ Error: union.js:18
 
 Error: union.js:21
  21: (42: B);
-      ^^ Cannot cast number to `B` because number [1] is incompatible with string [2].
+      ^^ Cannot cast `42` to `B` because number [1] is incompatible with string [2].
   References:
    21: (42: B);
         ^^ [1]: number
@@ -539,7 +539,7 @@ Error: union.js:26
 
 Error: union.js:29
  29: (42: D);
-      ^^ Cannot cast number to `D` because number [1] is incompatible with string [2].
+      ^^ Cannot cast `42` to `D` because number [1] is incompatible with string [2].
   References:
    29: (42: D);
         ^^ [1]: number
@@ -764,7 +764,7 @@ Error: union.js:49
 
 Error: union.js:52
  52: (42: G);
-      ^^ Cannot cast number to `G` because number [1] is incompatible with string [2].
+      ^^ Cannot cast `42` to `G` because number [1] is incompatible with string [2].
   References:
    52: (42: G);
         ^^ [1]: number

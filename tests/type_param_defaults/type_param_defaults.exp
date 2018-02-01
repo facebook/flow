@@ -1,6 +1,6 @@
 Error: classes.js:19
  19: (b_number.p: boolean); // Error number ~> boolean
-      ^^^^^^^^^^ Cannot cast property `p` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `b_number.p` to boolean because number [1] is incompatible with boolean [2].
   References:
    19: (b_number.p: boolean); // Error number ~> boolean
         ^^^^^^^^^^ [1]: number
@@ -9,7 +9,7 @@ Error: classes.js:19
 
 Error: classes.js:20
  20: (b_void.p: boolean); // Error void ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because undefined [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boolean [2].
   References:
    20: (b_void.p: boolean); // Error void ~> boolean
         ^^^^^^^^ [1]: undefined
@@ -18,7 +18,7 @@ Error: classes.js:20
 
 Error: classes.js:21
  21: (b_default.p: boolean); // Error string ~> boolean
-      ^^^^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^ Cannot cast `b_default.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    21: (b_default.p: boolean); // Error string ~> boolean
         ^^^^^^^^^^^ [1]: string
@@ -27,7 +27,7 @@ Error: classes.js:21
 
 Error: classes.js:23
  23: (b_star.p: boolean); // Error number ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `b_star.p` to boolean because number [1] is incompatible with boolean [2].
   References:
    23: (b_star.p: boolean); // Error number ~> boolean
         ^^^^^^^^ [1]: number
@@ -61,7 +61,7 @@ Error: classes.js:27
 
 Error: classes.js:32
  32: (c_void.p: boolean); // Error void ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because undefined [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boolean [2].
   References:
    32: (c_void.p: boolean); // Error void ~> boolean
         ^^^^^^^^ [1]: undefined
@@ -70,7 +70,7 @@ Error: classes.js:32
 
 Error: classes.js:33
  33: (c_default.p: boolean); // Error string ~> boolean
-      ^^^^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^ Cannot cast `c_default.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    33: (c_default.p: boolean); // Error string ~> boolean
         ^^^^^^^^^^^ [1]: string
@@ -79,7 +79,7 @@ Error: classes.js:33
 
 Error: classes.js:34
  34: (c_star.p: boolean); // Error string ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `c_star.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    34: (c_star.p: boolean); // Error string ~> boolean
         ^^^^^^^^ [1]: string
@@ -111,7 +111,7 @@ Error: classes.js:42
 
 Error: classes.js:44
  44: (d_number.p: boolean); // Error number ~> boolean
-      ^^^^^^^^^^ Cannot cast property `p` to boolean because number [1] is incompatible with boolean [2].
+      ^^^^^^^^^^ Cannot cast `d_number.p` to boolean because number [1] is incompatible with boolean [2].
   References:
    44: (d_number.p: boolean); // Error number ~> boolean
         ^^^^^^^^^^ [1]: number
@@ -120,7 +120,7 @@ Error: classes.js:44
 
 Error: classes.js:45
  45: (d_void.p: boolean); // Error void ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because undefined [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boolean [2].
   References:
    45: (d_void.p: boolean); // Error void ~> boolean
         ^^^^^^^^ [1]: undefined
@@ -129,7 +129,7 @@ Error: classes.js:45
 
 Error: classes.js:46
  46: (d_default.p: boolean); // Error string ~> boolean
-      ^^^^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^ Cannot cast `d_default.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    46: (d_default.p: boolean); // Error string ~> boolean
         ^^^^^^^^^^^ [1]: string
@@ -138,7 +138,7 @@ Error: classes.js:46
 
 Error: classes.js:47
  47: (d_star.p: boolean); // Error number ~> boolean
-      ^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^ Cannot cast `d_star.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    47: (d_star.p: boolean); // Error number ~> boolean
         ^^^^^^^^ [1]: string
@@ -165,7 +165,7 @@ Error: classes.js:50
 
 Error: classes.js:56
  56: (g_default.p: boolean); // Error string ~> boolean
-      ^^^^^^^^^^^ Cannot cast property `p` to boolean because string [1] is incompatible with boolean [2].
+      ^^^^^^^^^^^ Cannot cast `g_default.p` to boolean because string [1] is incompatible with boolean [2].
   References:
    56: (g_default.p: boolean); // Error string ~> boolean
         ^^^^^^^^^^^ [1]: string

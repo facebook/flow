@@ -6,7 +6,7 @@ Error: advanced_arrows.js:7
 
 Error: advanced_arrows.js:11
  11: (ident("hi"): number); // Error
-      ^^^^^^^^^^^ Cannot cast call of `ident` to number because string [1] is incompatible with number [2].
+      ^^^^^^^^^^^ Cannot cast `ident(...)` to number because string [1] is incompatible with number [2].
   References:
    11: (ident("hi"): number); // Error
         ^^^^^^^^^^^ [1]: string

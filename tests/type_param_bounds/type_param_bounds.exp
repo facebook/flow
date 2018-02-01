@@ -1,6 +1,6 @@
 Error: type_param_bounds.js:4
   4: (true: X<string>);
-      ^^^^ boolean
+      ^^^^ true
   4: (true: X<string>);
               ^^^^^^ string. This type is incompatible with the bound on type parameter `T`:
   3: type X<T: number> = bool;

@@ -35,7 +35,7 @@ Error: object_create.js:17
 
 Error: object_keys.js:5
   5: (Object.keys(sealed): void); // error, Array<string>
-      ^^^^^^^^^^^^^^^^^^^ Cannot cast array type to undefined because array type [1] is incompatible with undefined [2].
+      ^^^^^^^^^^^^^^^^^^^ Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
   References:
     5: (Object.keys(sealed): void); // error, Array<string>
         ^^^^^^^^^^^^^^^^^^^ [1]: array type
@@ -275,7 +275,7 @@ Error: object_prototype.js:155
 
 Error: proto.js:3
   3: (o1_proto.toString: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^^^^^ Cannot cast property `toString` to empty because function type [1] is incompatible with empty [2].
+      ^^^^^^^^^^^^^^^^^ Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2].
   References:
     3: (o1_proto.toString: empty); // error: function ~> empty
         ^^^^^^^^^^^^^^^^^ [1]: function type
@@ -284,7 +284,7 @@ Error: proto.js:3
 
 Error: proto.js:7
   7: (o2.__proto__.p: empty); // error: number ~> empty
-      ^^^^^^^^^^^^^^ Cannot cast property `p` to empty because number [1] is incompatible with empty [2].
+      ^^^^^^^^^^^^^^ Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2].
   References:
     7: (o2.__proto__.p: empty); // error: number ~> empty
         ^^^^^^^^^^^^^^ [1]: number
@@ -293,7 +293,7 @@ Error: proto.js:7
 
 Error: proto.js:13
  13: (C1_proto.bind: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^ Cannot cast property `bind` to empty because function type [1] is incompatible with empty [2].
+      ^^^^^^^^^^^^^ Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible with empty [2].
   References:
    13: (C1_proto.bind: empty); // error: function ~> empty
         ^^^^^^^^^^^^^ [1]: function type

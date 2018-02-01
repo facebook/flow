@@ -27,7 +27,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13:         (esmodule.pi: string);
-                        ^^^^^^^^^^^ Cannot cast property \`pi\` to string because number [1] is incompatible with string [2].
+                        ^^^^^^^^^^^ Cannot cast \`esmodule.pi\` to string because number [1] is incompatible with string [2].
             References:
              13:         (esmodule.pi: string);
                           ^^^^^^^^^^^ [1]: number
@@ -77,7 +77,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:14
            14:         (cjsmodule.pi: string);
-                        ^^^^^^^^^^^^ Cannot cast property \`pi\` to string because number [1] is incompatible with string [2].
+                        ^^^^^^^^^^^^ Cannot cast \`cjsmodule.pi\` to string because number [1] is incompatible with string [2].
             References:
              14:         (cjsmodule.pi: string);
                           ^^^^^^^^^^^^ [1]: number
@@ -86,7 +86,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:15
            15:         (cjsmodule.default: number);
-                        ^^^^^^^^^^^^^^^^^ Cannot cast property \`default\` to number because object literal [1] is incompatible with number [2].
+                        ^^^^^^^^^^^^^^^^^ Cannot cast \`cjsmodule.default\` to number because object literal [1] is incompatible with number [2].
             References:
              15:         (cjsmodule.default: number);
                           ^^^^^^^^^^^^^^^^^ [1]: object literal

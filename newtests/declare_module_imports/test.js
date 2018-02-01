@@ -15,7 +15,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                              `
                                test.js:7
                                  7: ("str": BT);
-                                     ^^^^^ Cannot cast string to \`BT\` because string [1] is incompatible with number [2].
+                                     ^^^^^ Cannot cast \`"str"\` to \`BT\` because string [1] is incompatible with number [2].
                                  References:
                                    7: ("str": BT);
                                        ^^^^^ [1]: string
@@ -33,7 +33,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                 `
                                   test.js:9
                                     9: (42: BDefault);
-                                        ^^ Cannot cast number to \`BDefault\` because number [1] is incompatible with \`Def\` [2].
+                                        ^^ Cannot cast \`42\` to \`BDefault\` because number [1] is incompatible with \`Def\` [2].
                                     References:
                                       9: (42: BDefault);
                                           ^^ [1]: number
