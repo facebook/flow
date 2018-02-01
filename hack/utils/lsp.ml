@@ -41,6 +41,9 @@
  *   entirely.
 *)
 
+type lsp_id =
+  | NumberId of int
+  | StringId of string
 
 type documentUri = string
 
@@ -212,7 +215,7 @@ module CancelRequest = struct
   type params = cancelParams
 
   and cancelParams = {
-    id: string;  (* the request id to cancel *)
+    id: lsp_id;  (* the request id to cancel *)
   }
 end
 
@@ -358,7 +361,6 @@ end
 
 (* Shutdown request, method="shutdown" *)
 module Shutdown = struct
-  type result = unit
 end
 
 (* Exit notification, method="exit" *)
@@ -573,7 +575,7 @@ end
 
 
 (* Document Highlights request, method="textDocument/documentHighlight" *)
-module DocumentHighlights = struct
+module DocumentHighlight = struct
   type params = TextDocumentPositionParams.t
 
   and result = documentHighlight list
@@ -687,6 +689,8 @@ module ShowMessageRequest = struct
 
   and params = showMessageRequestParams
 
+  and result = messageActionItem option
+
   and showMessageRequestParams = {
     type_: MessageType.t;
     message: string;
@@ -746,3 +750,84 @@ module Error = struct
   (* Defined by the protocol. *)
   exception RequestCancelled of string (* -32800 *)
 end
+
+
+(**
+ * Here are gathered-up ADTs for all the messages we handle
+*)
+
+type lsp_request =
+  | InitializeRequest of Initialize.params
+  | ShutdownRequest
+  | HoverRequest of Hover.params
+  | DefinitionRequest of Definition.params
+  | CompletionRequest of Completion.params
+  | CompletionItemResolveRequest of CompletionItemResolve.params
+  | WorkspaceSymbolRequest of WorkspaceSymbol.params
+  | DocumentSymbolRequest of DocumentSymbol.params
+  | FindReferencesRequest of FindReferences.params
+  | DocumentHighlightRequest of DocumentHighlight.params
+  | TypeCoverageRequest of TypeCoverage.params
+  | DocumentFormattingRequest of DocumentFormatting.params
+  | DocumentRangeFormattingRequest of DocumentRangeFormatting.params
+  | DocumentOnTypeFormattingRequest of DocumentOnTypeFormatting.params
+  | ShowMessageRequestRequest of ShowMessageRequest.params
+  | RageRequest
+
+type lsp_result =
+  | InitializeResult of Initialize.result
+  | ShutdownResult
+  | HoverResult of Hover.result
+  | DefinitionResult of Definition.result
+  | CompletionResult of Completion.result
+  | CompletionItemResolveResult of CompletionItemResolve.result
+  | WorkspaceSymbolResult of WorkspaceSymbol.result
+  | DocumentSymbolResult of DocumentSymbol.result
+  | FindReferencesResult of FindReferences.result
+  | DocumentHighlightResult of DocumentHighlight.result
+  | TypeCoverageResult of TypeCoverage.result
+  | DocumentFormattingResult of DocumentFormatting.result
+  | DocumentRangeFormattingResult of DocumentRangeFormatting.result
+  | DocumentOnTypeFormattingResult of DocumentOnTypeFormatting.result
+  | ShowMessageRequestResult of ShowMessageRequest.result
+  | RageResult of Rage.result
+  | ErrorResult of exn * string
+
+type lsp_notification =
+  | ExitNotification
+  | CancelRequestNotification of CancelRequest.params
+  | PublishDiagnosticsNotification of PublishDiagnostics.params
+  | DidOpenNotification of DidOpen.params
+  | DidCloseNotification of DidClose.params
+  | DidSaveNotification of DidSave.params
+  | DidChangeNotification of DidChange.params
+  | LogMessageNotification of LogMessage.params
+  | ShowMessageNotification of ShowMessage.params
+  | ProgressNotification of Progress.params
+  | ActionRequiredNotification of ActionRequired.params
+
+type lsp_message =
+  | RequestMessage of lsp_id * lsp_request
+  | ResponseMessage of lsp_id * lsp_result
+  | NotificationMessage of lsp_notification
+
+type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
+
+and 'a lsp_error_handler = (exn * string) -> 'a -> 'a
+
+and 'a lsp_result_handler =
+  | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
+
+module IdKey = struct
+  type t = lsp_id
+
+  let compare (x: t) (y:t) =
+    match x, y with
+    | NumberId x, NumberId y -> x - y
+    | NumberId _, StringId _ -> -1
+    | StringId x, StringId y -> String.compare x y
+    | StringId _, NumberId _ -> 1
+end
+
+module IdSet = Set.Make (IdKey)
+module IdMap = MyMap.Make (IdKey)
