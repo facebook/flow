@@ -960,6 +960,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]))
 
+      | Frame (FunParam {n; lower; _}, use_op) ->
+        Some (`Frame (lower, use_op,
+          [text "the "; text (Utils_js.ordinal n); text " argument"]))
+
       | Frame (PropertyCompatibility {prop=None | Some "$key" | Some "$value"; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
           [text "the indexer property"]))
@@ -989,6 +993,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Frame (lower, use_op,
           [text "property "; code
             (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props)]))
+
+      | Frame (FunCompatibility _, use_op)
+        -> Some (`Next use_op)
 
       | _ -> None
       )

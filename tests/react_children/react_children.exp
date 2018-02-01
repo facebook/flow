@@ -11,14 +11,12 @@ Error: api.js:11
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-228:       fn: (child: $NonMaybeType<T>, index: number) => U,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:228
-  The first parameter is incompatible:
-    228:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:228
-     11: na(Children.map(a, (x: string) => (x: string))); // Error
-                                ^^^^^^ string
+                            ^^^^^^ Cannot call `Children.map` with function bound to `fn` because in the first argument, string [1] is incompatible with number [2].
+  References:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                              ^^^^^^ [1]: string
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ [2]: number
 
 Error: api.js:12
  12: sa(Children.map(a, (x: number) => (x: number))); // Error

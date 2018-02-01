@@ -139,14 +139,12 @@ Error: test4.js:2
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
-                 ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-  6:   bar(f: (x: number) => void): void;
-              ^^^^^^^^^^^^^^^^^^^ function type
-  The first parameter is incompatible:
-      6:   bar(f: (x: number) => void): void;
-                      ^^^^^^ number. This type is incompatible with
-      9: new C().bar((x: string) => { }); // error, number ~/~> string
-                         ^^^^^^ string
+                     ^^^^^^ Cannot call `new C().bar` with function bound to `f` because in the first argument, string [1] is incompatible with number [2].
+  References:
+    9: new C().bar((x: string) => { }); // error, number ~/~> string
+                       ^^^^^^ [1]: string
+    6:   bar(f: (x: number) => void): void;
+                    ^^^^^^ [2]: number
 
 
 Found 17 errors

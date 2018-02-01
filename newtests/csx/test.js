@@ -63,14 +63,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ props. This type is incompatible with
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-          Property \`x\` is incompatible:
-              7:       <Bar x={23} />;
-                               ^^ number. This type is incompatible with
-              5:       type Props = {|x: string|};
-                                         ^^^^^^ string
+                           ^^ number [1] is incompatible with string [2].
+          References:
+            7:       <Bar x={23} />;
+                             ^^ [1]: number
+            5:       type Props = {|x: string|};
+                                       ^^^^^^ [2]: string
       `,
     ),
   ]),
@@ -228,14 +226,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-          Property \`x\` is incompatible:
-              7:       const params = {x: 23};
-                                          ^^ number. This type is incompatible with
-              5:       type Props = {|x: string|};
-                                         ^^^^^^ string
+                   ^^^^^^^^^^^^^^^^^^^ In property \`x\`, number [1] is incompatible with string [2].
+          References:
+            7:       const params = {x: 23};
+                                        ^^ [1]: number
+            5:       type Props = {|x: string|};
+                                       ^^^^^^ [2]: string
       `,
     ),
   ]),

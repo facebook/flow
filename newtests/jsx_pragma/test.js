@@ -116,15 +116,21 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar />;
-                    ^^^ number. This type is incompatible with
-          6:       function Foo(x: string) {}
-                                   ^^^^^^ string
+                    ^^^ number [1] is incompatible with string [2].
+          References:
+            5:       const Bar = 123;
+                                 ^^^ [1]: number
+            6:       function Foo(x: string) {}
+                                     ^^^^^^ [2]: string
 
         test.js:12
          12:         <Bar />;
-                      ^^^ number. This type is incompatible with
-         11:         const Foo = (y: boolean) => {};
-                                     ^^^^^^^ boolean
+                      ^^^ number [1] is incompatible with boolean [2].
+          References:
+            5:       const Bar = 123;
+                                 ^^^ [1]: number
+           11:         const Foo = (y: boolean) => {};
+                                       ^^^^^^^ [2]: boolean
       `,
     ),
   ]),
@@ -139,14 +145,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar x={123} />;
-                     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-            5:       function Foo(elem: number, props: { x: string }) {}
-                                                       ^^^^^^^^^^^^^ object type
-            Property \`x\` is incompatible:
-                8:       <Bar x={123} />;
-                                 ^^^ number. This type is incompatible with
-                5:       function Foo(elem: number, props: { x: string }) {}
-                                                                ^^^^^^ string
+                             ^^^ number [1] is incompatible with string [2].
+            References:
+              8:       <Bar x={123} />;
+                               ^^^ [1]: number
+              5:       function Foo(elem: number, props: { x: string }) {}
+                                                              ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -161,9 +165,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar />;
-                     ^^^^^^^ null. This type is incompatible with
-            5:       function Foo(elem: number, props: { x: string }) {}
-                                                       ^^^^^^^^^^^^^ object type
+                     ^^^^^^^ null [1] is incompatible with object type [2].
+            References:
+              8:       <Bar />;
+                       ^^^^^^^ [1]: null
+              5:       function Foo(elem: number, props: { x: string }) {}
+                                                         ^^^^^^^^^^^^^ [2]: object type
         `,
       ),
   ]),
@@ -178,15 +185,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                           ^^^^ boolean. This type is incompatible with
-            5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
-                                                                     ^^^^^^ number
+                           ^^^^ boolean [1] is incompatible with number [2].
+            References:
+              8:       <Bar>{true}{/regex/}</Bar>
+                             ^^^^ [1]: boolean
+              5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
+                                                                       ^^^^^^ [2]: number
 
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                                 ^^^^^^^ RegExp. This type is incompatible with
-            5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
-                                                                                     ^^^^^^ string
+                                 ^^^^^^^ \`RegExp\` [1] is incompatible with string [2].
+            References:
+              8:       <Bar>{true}{/regex/}</Bar>
+                                   ^^^^^^^ [1]: \`RegExp\`
+              5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
+                                                                                       ^^^^^^ [2]: string
         `,
       ),
   ]).flowConfig("_flowconfig_with_flowlib"),
@@ -201,25 +214,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-            5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-            Property \`key\` is incompatible:
-                7:       <Bar key="hi" ref="bye" />;
-                                  ^^^^ string. This type is incompatible with
-                5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                                 ^^^^^^^ boolean
+                              ^^^^ string [1] is incompatible with boolean [2].
+            References:
+              7:       <Bar key="hi" ref="bye" />;
+                                ^^^^ [1]: string
+              5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                               ^^^^^^^ [2]: boolean
 
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-            5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-            Property \`ref\` is incompatible:
-                7:       <Bar key="hi" ref="bye" />;
-                                           ^^^^^ string. This type is incompatible with
-                5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                                               ^^^^^^ number
+                                       ^^^^^ string [1] is incompatible with number [2].
+            References:
+              7:       <Bar key="hi" ref="bye" />;
+                                         ^^^^^ [1]: string
+              5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                                             ^^^^^^ [2]: number
         `,
       ),
   ]),
@@ -377,9 +386,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:16
            16:       <Bar> {true}
-                            ^^^^ boolean. This type is incompatible with
-            9:         child2: "should be true",
-                               ^^^^^^^^^^^^^^^^ string literal \`should be true\`
+                            ^^^^ boolean [1] is incompatible with string literal \`should be true\` [2].
+            References:
+             16:       <Bar> {true}
+                              ^^^^ [1]: boolean
+              9:         child2: "should be true",
+                                 ^^^^^^^^^^^^^^^^ [2]: string literal \`should be true\`
 
           test.js:17
            17:       {''} </Bar>;

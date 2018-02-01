@@ -679,16 +679,12 @@ Error: state6.js:36
 
 Error: state6.js:41
  41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                             ^^^^^^^^^^^^^ StateUpdater3
- 11: type StateUpdater3 = {(number): number, foo: number, bar: number};
-                           ^^^^^^^^^^^^^^^^ function type. This type is incompatible with the expected param type of
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-  The first parameter is incompatible:
-     13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                   ^^^^^ State. This type is incompatible with
-     11: type StateUpdater3 = {(number): number, foo: number, bar: number};
-                                ^^^^^^ number
+                        ^^^^^^^^^^^^^^^^^^ Cannot call `this.setState` with `any` bound to `partialState` because in the first argument, number [1] is incompatible with `State` [2].
+  References:
+   11: type StateUpdater3 = {(number): number, foo: number, bar: number};
+                              ^^^^^^ [1]: number
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ [2]: `State`
 
 Error: state6.js:47
  47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.

@@ -146,97 +146,23 @@ Error: path2d.js:9
   1418:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                           ^^^^^^ number. See lib: <BUILTINS>/dom.js:1418
 
-Error: registerElement.js:48
-                                                    v
- 48:     document.registerElement('custom-element', {
- 49:       prototype: {
- 50:         attributeChangedCallback(
-...:
- 56:     });
-         ^ object literal. This type is incompatible with the expected param type of
-725:   registerElement(type: string, options?: ElementRegistrationOptions): any;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ ElementRegistrationOptions. See lib: <BUILTINS>/dom.js:725
-  Property `prototype` is incompatible:
-                          v
-     49:       prototype: {
-     50:         attributeChangedCallback(
-     51:           localName: string,
-    ...:
-     55:       },
-               ^ object literal. This type is incompatible with
-                        v
-    528:   +prototype?: {
-    529:     // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
-    530:     +createdCallback?: () => mixed;
-    ...:
-    555:   };
-           ^ object type. See lib: <BUILTINS>/dom.js:528
-      Property `attributeChangedCallback` is incompatible:
-                                             v
-         50:         attributeChangedCallback(
-         51:           localName: string,
-         52:           oldVal: string, // Error: This might be null
-         53:           newVal: string, // Error: This might be null
-         54:           namespace: string) {}
-                       -----------------^ function. This type is incompatible with
-                  v
-        535:     ((
-        536:       attributeLocalName: string,
-        537:       oldAttributeValue: null,
-        ...:
-        540:     ) => mixed) &
-                 ---------^ function type. See lib: <BUILTINS>/dom.js:535
-          The second parameter is incompatible:
-            537:       oldAttributeValue: null,
-                                          ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:537
-             52:           oldVal: string, // Error: This might be null
-                                   ^^^^^^ string
+Error: registerElement.js:52
+ 52:           oldVal: string, // Error: This might be null
+                       ^^^^^^ Cannot call `document.registerElement` with object literal bound to `options` because in property `prototype.attributeChangedCallback` and then the second argument, string [1] is incompatible with null [2].
+  References:
+   52:           oldVal: string, // Error: This might be null
+                         ^^^^^^ [1]: string
+  537:       oldAttributeValue: null,
+                                ^^^^ [2]: null. See lib: <BUILTINS>/dom.js:537
 
-Error: registerElement.js:48
-                                                    v
- 48:     document.registerElement('custom-element', {
- 49:       prototype: {
- 50:         attributeChangedCallback(
-...:
- 56:     });
-         ^ object literal. This type is incompatible with the expected param type of
-725:   registerElement(type: string, options?: ElementRegistrationOptions): any;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ ElementRegistrationOptions. See lib: <BUILTINS>/dom.js:725
-  Property `prototype` is incompatible:
-                          v
-     49:       prototype: {
-     50:         attributeChangedCallback(
-     51:           localName: string,
-    ...:
-     55:       },
-               ^ object literal. This type is incompatible with
-                        v
-    528:   +prototype?: {
-    529:     // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
-    530:     +createdCallback?: () => mixed;
-    ...:
-    555:   };
-           ^ object type. See lib: <BUILTINS>/dom.js:528
-      Property `attributeChangedCallback` is incompatible:
-                                             v
-         50:         attributeChangedCallback(
-         51:           localName: string,
-         52:           oldVal: string, // Error: This might be null
-         53:           newVal: string, // Error: This might be null
-         54:           namespace: string) {}
-                       -----------------^ function. This type is incompatible with
-                  v
-        549:     ((
-        550:       attributeLocalName: string,
-        551:       oldAttributeValue: string,
-        ...:
-        554:     ) => mixed);
-                 ---------^ function type. See lib: <BUILTINS>/dom.js:549
-          The third parameter is incompatible:
-            552:       newAttributeValue: null,
-                                          ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:552
-             53:           newVal: string, // Error: This might be null
-                                   ^^^^^^ string
+Error: registerElement.js:53
+ 53:           newVal: string, // Error: This might be null
+                       ^^^^^^ Cannot call `document.registerElement` with object literal bound to `options` because in property `prototype.attributeChangedCallback` and then the third argument, string [1] is incompatible with null [2].
+  References:
+   53:           newVal: string, // Error: This might be null
+                         ^^^^^^ [1]: string
+  552:       newAttributeValue: null,
+                                ^^^^ [2]: null. See lib: <BUILTINS>/dom.js:552
 
 Error: traversal.js:29
  29:     document.createNodeIterator({}); // invalid
