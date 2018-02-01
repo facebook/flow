@@ -2469,11 +2469,6 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           n
-    | EFunCallThis (reason1, reason2, reason_call) ->
-        spf "EFunCallThis (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (dump_reason cx reason_call)
     | EAddition (reason1, reason2) ->
         spf "EAddition (%s, %s)"
           (dump_reason cx reason1)

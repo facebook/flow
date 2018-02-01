@@ -78,7 +78,6 @@ type error_message =
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of reason * reason * int
-  | EFunCallThis of reason * reason * reason
   | EAddition of (reason * reason)
   | EAdditionMixed of reason
   | ECoercion of (reason * reason)
@@ -314,7 +313,6 @@ let util_use_op_of_msg nope util = function
 | EStrictLookupFailed (_, _, _, None)
 | EPrivateLookupFailed (_, _)
 | EFunCallParam (_, _, _)
-| EFunCallThis (_, _, _)
 | EAddition (_, _)
 | EAdditionMixed (_)
 | ECoercion (_, _)
@@ -499,7 +497,6 @@ let score_of_msg msg =
     | EAddition (rl, ru)
     | ECoercion (rl, ru)
     | EFunCallParam (rl, ru, _)
-    | EFunCallThis (rl, ru, _)
     | EIncompatibleWithExact ((rl, ru), _)
       -> Some (rl, ru)
     | _
@@ -1430,14 +1427,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           "This type is incompatible with the expected param type of"
       in
       typecheck_error msg (r1, r2)
-
-  | EFunCallThis (lreason, ureason, reason_call) ->
-      let msg = "This function call's `this` type is incompatible with" in
-      let extra = [InfoLeaf ([
-        Loc.none, ["The call's `this` type is:"];
-        info_of_reason (lreason);
-      ])] in
-      typecheck_error msg ~extra (reason_call, ureason)
 
   | EAddition reasons ->
       typecheck_error "This type cannot be added to" reasons

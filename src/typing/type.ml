@@ -301,7 +301,6 @@ module rec TypeTerm : sig
       }
     | FunReturnStatement of { value: reason }
     | FunImplicitReturn of { fn: reason; upper: reason }
-    | FunCallThis of reason
     | GeneratorYield of { value: reason }
     | GetProperty of reason
     | Internal of internal_use_op
@@ -2489,7 +2488,6 @@ let loc_of_root_use_op = function
   -> loc_of_reason op
 | Addition
 | Coercion
-| FunCallThis _
 | ReactGetIntrinsic _
 | Internal _
 | UnknownUse
@@ -2606,7 +2604,6 @@ let string_of_root_use_op = function
 | Coercion -> "Coercion"
 | FunCall _ -> "FunCall"
 | FunCallMethod _ -> "FunCallMethod"
-| FunCallThis _ -> "FunCallThis"
 | FunImplicitReturn _ -> "FunImplicitReturn"
 | FunReturnStatement _ -> "FunReturnStatement"
 | GeneratorYield _ -> "GeneratorYield"

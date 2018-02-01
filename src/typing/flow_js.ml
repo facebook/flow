@@ -3948,7 +3948,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
           call_closure_t = call_scope_id; call_strict_arity})
       ->
-      rec_flow cx trace (o2, UseT (Op (FunCallThis reason_callsite), o1));
+      rec_flow cx trace (o2, UseT (use_op, o1));
       if call_strict_arity
       then multiflow_call cx trace ~use_op reason_callsite tins2 ft
       else multiflow_subtype cx trace ~use_op reason_callsite tins2 ft;
@@ -6197,10 +6197,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Frame (FunParam {n; _}, Op (FunCall _ | FunCallMethod _)), u) ->
       add_output cx ~trace
         (FlowError.EFunCallParam (reason_of_t l, reason_of_t u, n))
-
-    | _, UseT (Op (FunCallThis reason_call), u) ->
-      add_output cx ~trace
-        (FlowError.EFunCallThis (reason_of_t l, reason_of_t u, reason_call))
 
     | _, UseT (use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
