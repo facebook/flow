@@ -8,13 +8,24 @@
 module Prot = Persistent_connection_prot
 
 type single_client = {
+  is_lsp: bool;
   logging_context: FlowEventLogger.logging_context;
   subscribed: bool;
   opened_files: SSet.t;
   client_id: Persistent_connection_prot.client_id;
+  lsp_initialize_params: Lsp.Initialize.params option;
 }
 
 type t = single_client list
+
+let to_string (clients: t) : string =
+  let client_to_string (client: single_client) : string =
+    Printf.sprintf "{id:%d opened:%d subscribed:%B context:%f}"
+      client.client_id (SSet.cardinal client.opened_files)
+      client.subscribed client.logging_context.FlowEventLogger.start_time
+  in
+  let clients_str = List.map client_to_string clients in
+  Printf.sprintf "[%s]" (String.concat ", " clients_str)
 
 let empty = []
 
@@ -65,13 +76,15 @@ let send_single_start_recheck client =
 let send_single_end_recheck client =
   send_message (Prot.EndRecheck) client
 
-let add_client clients client_id logging_context =
+let add_client clients client_id logging_context lsp =
   let new_client =
     {
+      is_lsp = (lsp <> None);
       logging_context;
       subscribed = false;
       opened_files = SSet.empty;
       client_id;
+      lsp_initialize_params = lsp;
     }
   in
   Hh_logger.info "Adding new persistent connection #%d" new_client.client_id;

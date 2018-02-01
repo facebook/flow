@@ -300,6 +300,7 @@ begin library "flow-monitor"
     "flow-monitor-utils"
     "flow-server"
     "flow-server-protocol"
+    "hh-utils-lsp"
     "lwt"
     "lwt.unix"
   ]
@@ -406,6 +407,7 @@ begin library "flow-server-protocol"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-lsp"
     "hh-utils-sys"
   ]
 end
@@ -446,6 +448,7 @@ begin library "flow-server"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "hh-utils-lsp"
     "tp-core"
   ]
 end
@@ -496,6 +499,7 @@ begin library "flow-persistent-connection"
     "flow-server-utils"
     "flow-services-autocomplete"
     "hh-utils"
+    "hh-utils-lsp"
   ]
 end
 

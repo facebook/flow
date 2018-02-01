@@ -123,9 +123,9 @@ let process_message genv env request =
   match request with
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.handle_ephemeral genv env (request_id, command)
-  | MonitorProt.NewPersistentConnection (client_id, logging_context) ->
+  | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
     { env with
-      connections = Persistent_connection.add_client env.connections client_id logging_context
+      connections = Persistent_connection.add_client env.connections client_id logging_context lsp
     }
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
     CommandHandler.handle_persistent genv env client_id request

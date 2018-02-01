@@ -12,10 +12,14 @@ type t
 
 type single_client
 
+val to_string: t -> string
+
 val empty: t
 
-val add_client: t -> Prot.client_id -> FlowEventLogger.logging_context -> t
-val remove_client: t -> Prot.client_id -> t
+val add_client:
+  t -> Prot.client_id -> FlowEventLogger.logging_context -> Lsp.Initialize.params option -> t
+val remove_client:
+  t -> Prot.client_id -> t
 
 (* Send updates to all clients that are subscribed *)
 val update_clients:

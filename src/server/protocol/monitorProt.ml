@@ -18,7 +18,8 @@ type monitor_to_server_message =
 (* A request from an ephemeral socket connection. It expects a response *)
 | Request of request_id * ServerProt.Request.command_with_context
 (* A notification that there is a new persistent socket connection *)
-| NewPersistentConnection of PersistentProt.client_id * FlowEventLogger.logging_context
+| NewPersistentConnection of
+  PersistentProt.client_id * FlowEventLogger.logging_context * Lsp.Initialize.params option
 (* A request from a persistent socket connection. It does not expect a response *)
 | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request
 (* A notification that a persistent socket connection is dead *)

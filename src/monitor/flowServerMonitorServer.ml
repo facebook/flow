@@ -26,10 +26,22 @@ module Logger = FlowServerMonitorLogger
 module PersistentProt = Persistent_connection_prot
 
 type command =
-| Write_ephemeral_request of ServerProt.Request.command_with_context * EphemeralConnection.t
-| Write_persistent_request of PersistentProt.client_id * PersistentProt.request
-| Notify_new_persistent_connection of PersistentProt.client_id * FlowEventLogger.logging_context
-| Notify_dead_persistent_connection of PersistentProt.client_id
+| Write_ephemeral_request of {
+    request: ServerProt.Request.command_with_context;
+    client: EphemeralConnection.t;
+  }
+| Write_persistent_request of {
+    client_id: PersistentProt.client_id;
+    request: PersistentProt.request;
+  }
+| Notify_new_persistent_connection of {
+    client_id: PersistentProt.client_id;
+    logging_context: FlowEventLogger.logging_context;
+    lsp: Lsp.Initialize.params option;
+  }
+| Notify_dead_persistent_connection of {
+    client_id: PersistentProt.client_id;
+  }
 
 (* The long-lived stream of requests *)
 let command_stream, push_to_command_stream = Lwt_stream.create ()
@@ -93,7 +105,7 @@ end = struct
     let main conn =
       Lwt_stream.next command_stream
       >>= (function
-        | Write_ephemeral_request (request, client) ->
+        | Write_ephemeral_request { request; client; } ->
           if not (EphemeralConnection.is_closed client)
           then begin
             RequestMap.add ~request ~client
@@ -105,13 +117,13 @@ end = struct
             Logger.debug "Skipping request from a dead ephemeral connection";
             Lwt.return conn
           end
-        | Write_persistent_request (client_id, request) ->
+        | Write_persistent_request { client_id; request; } ->
           let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
           Lwt.return (send_request ~msg conn)
-        | Notify_new_persistent_connection (client_id, logging_context) ->
-          let msg = MonitorProt.NewPersistentConnection (client_id, logging_context) in
+        | Notify_new_persistent_connection { client_id; logging_context; lsp; } ->
+          let msg = MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) in
           Lwt.return (send_request ~msg conn)
-        | Notify_dead_persistent_connection (client_id) ->
+        | Notify_dead_persistent_connection { client_id; } ->
           let () = PersistentConnectionMap.remove ~client_id in
           let msg = MonitorProt.DeadPersistentConnection client_id in
           Lwt.return (send_request ~msg conn)
@@ -353,7 +365,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
   let requeue_stalled_requests () =
     RequestMap.remove_all ()
     >>= Lwt_list.iter_p (fun (request, client) ->
-      Lwt.return (push_to_command_stream (Some (Write_ephemeral_request (request, client))))
+      Lwt.return (push_to_command_stream (Some (Write_ephemeral_request {request; client;})))
     )
 
   let main monitor_options =
@@ -373,18 +385,22 @@ let send_request ~client ~request =
   Logger.debug
     "Adding request (%s) to the command stream"
     (ServerProt.Request.to_string request.ServerProt.Request.command);
-  push_to_command_stream (Some (Write_ephemeral_request (request, client)))
+  push_to_command_stream
+    (Some (Write_ephemeral_request {request; client;}))
 
 let send_persistent_request ~client_id ~request =
   Logger.debug
     "Adding request (%s) to the command stream"
     (PersistentProt.string_of_request request);
-  push_to_command_stream (Some (Write_persistent_request (client_id, request)))
+  push_to_command_stream
+    (Some (Write_persistent_request {client_id; request;}))
 
-let notify_new_persistent_connection ~client_id ~logging_context =
+let notify_new_persistent_connection ~client_id ~logging_context ~lsp =
   Logger.debug "Adding notification that there's a new persistent client #%d" client_id;
-  push_to_command_stream (Some (Notify_new_persistent_connection (client_id, logging_context)))
+  push_to_command_stream
+    (Some (Notify_new_persistent_connection {client_id; logging_context; lsp;}))
 
 let notify_dead_persistent_connection ~client_id =
   Logger.debug "Adding notification that persistent client #%d died" client_id;
-  push_to_command_stream (Some (Notify_dead_persistent_connection client_id))
+  push_to_command_stream
+    (Some (Notify_dead_persistent_connection {client_id;}))

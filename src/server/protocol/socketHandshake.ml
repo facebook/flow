@@ -17,6 +17,7 @@ let build_revision = match Build_id.build_revision with
 type client_type =
 | Ephemeral (* A new ephemeral client (one that sends a request, gets a response and disconnects) *)
 | Persistent of FlowEventLogger.logging_context (* A new persistent client *)
+| PersistentLsp of FlowEventLogger.logging_context * Lsp.Initialize.params
 | StabbityStabStab (* A flow stop that wants the Flow server to die *)
 
 type client_to_monitor = {
