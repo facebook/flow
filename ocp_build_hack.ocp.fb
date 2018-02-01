@@ -246,10 +246,72 @@ begin library "hh-utils-json"
   files = [
     "hh_json.mli"
     "hh_json.ml"
+    "hh_json_helpers.ml"
   ]
   requires += [
     "tp-core"
     "hh-utils-collections"
+  ]
+end
+
+begin library "hh-utils-filecontent"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "file_content.mli"
+    "file_content.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-fileurl"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "file_url.mli"
+    "file_url.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "hh-utils-string"
+  ]
+end
+
+begin library "hh-utils-jsonrpc"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "jsonrpc.mli"
+    "jsonrpc.ml"
+  ]
+  requires += [
+  "hh-utils"
+  "hh-utils-core"
+  "tp-core"
+  "hh-utils-collections"
+  "hh-utils-json"
+  "hh-utils-sys"
+  ]
+end
+
+begin library "hh-utils-lsp"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "lsp.ml"
+    "lsp_fmt.ml"
+    "lsp_helpers.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "hh-utils-fileurl"
+    "hh-utils-jsonrpc"
+    "tp-core"
+    "hh-utils-collections"
+    "hh-utils-json"
   ]
 end
 
