@@ -6,14 +6,12 @@ Error: buffer/buffer.js:57
 
 Error: child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                     ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-267:     options?: child_process$execSyncOpts
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ child_process$execSyncOpts. See lib: <BUILTINS>/node.js:267
-  Property `timeout` is incompatible:
-      8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                   ^^^^^ string. This type is incompatible with
-    149:   timeout?: number;
-                     ^^^^^^ number. See lib: <BUILTINS>/node.js:149
+                               ^^^^^ Cannot call `execSync` with object literal bound to `options` because in property `timeout`, string [1] is incompatible with number [2].
+  References:
+    8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                                 ^^^^^ [1]: string
+  149:   timeout?: number;
+                   ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:149
 
 Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -44,9 +42,12 @@ Error: crypto/crypto.js:12
 
 Error: crypto/crypto.js:16
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
-                    ^^^ number. This type is incompatible with the expected param type of
-1479:     chunk: Buffer | string,
-                          ^^^^^^ string. See lib: <BUILTINS>/node.js:1479
+                    ^^^ Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incompatible with string [2].
+  References:
+   16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                      ^^^ [1]: number
+  1479:     chunk: Buffer | string,
+                            ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1479
 
 Error: crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -937,7 +938,7 @@ Error: process/nextTick.js:26
  26: process.nextTick(
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
  28: );
-     ^ call of method `nextTick`
+     ^ process.nextTick(...)
 1961:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                           ^^^^^^^^^^^^^^^ function type. Too few arguments passed to. See lib: <BUILTINS>/node.js:1961
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments

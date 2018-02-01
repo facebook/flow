@@ -116,13 +116,13 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar />;
-                    ^^^ number. This type is incompatible with the expected param type of
+                    ^^^ number. This type is incompatible with
           6:       function Foo(x: string) {}
                                    ^^^^^^ string
 
         test.js:12
          12:         <Bar />;
-                      ^^^ number. This type is incompatible with the expected param type of
+                      ^^^ number. This type is incompatible with
          11:         const Foo = (y: boolean) => {};
                                      ^^^^^^^ boolean
       `,
@@ -139,7 +139,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar x={123} />;
-                     ^^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^ props. This type is incompatible with
             5:       function Foo(elem: number, props: { x: string }) {}
                                                        ^^^^^^^^^^^^^ object type
             Property \`x\` is incompatible:
@@ -161,7 +161,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar />;
-                     ^^^^^^^ null. This type is incompatible with the expected param type of
+                     ^^^^^^^ null. This type is incompatible with
             5:       function Foo(elem: number, props: { x: string }) {}
                                                        ^^^^^^^^^^^^^ object type
         `,
@@ -178,13 +178,13 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                           ^^^^ boolean. This type is incompatible with the expected param type of
+                           ^^^^ boolean. This type is incompatible with
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                      ^^^^^^ number
 
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                                 ^^^^^^^ RegExp. This type is incompatible with the expected param type of
+                                 ^^^^^^^ RegExp. This type is incompatible with
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                                      ^^^^^^ string
         `,
@@ -201,7 +201,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
             Property \`key\` is incompatible:
@@ -212,7 +212,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
             Property \`ref\` is incompatible:
@@ -252,7 +252,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^ props. This type is incompatible with
             5:       function Foo(elem: number, props: {x: string}) {}
                                                        ^^^^^^^^^^^ object type
             Property \`x\` is incompatible:
@@ -377,7 +377,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:16
            16:       <Bar> {true}
-                            ^^^^ boolean. This type is incompatible with the expected param type of
+                            ^^^^ boolean. This type is incompatible with
             9:         child2: "should be true",
                                ^^^^^^^^^^^^^^^^ string literal \`should be true\`
 

@@ -40,9 +40,12 @@ Error: overload.js:7
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                               ^ number. This type is incompatible with the expected param type of
-301:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^ string. See lib: <BUILTINS>/core.js:301
+                               ^ Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
+  References:
+    7: var x1: number = "".match(0)[0];
+                                 ^ [1]: number
+  301:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:301
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];

@@ -5333,6 +5333,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | FunProtoCallT _,
       CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      (* Drop the first argument in the use_op. *)
+      let use_op = match use_op with
+      | Op FunCall {op; fn; args = _ :: args} -> Op (FunCall {op; fn; args})
+      | Op FunCallMethod {op; fn; prop; args = _ :: args} -> Op (FunCallMethod {op; fn; prop; args})
+      | _ -> use_op
+      in
       begin match call_args_tlist with
       (* func.call() *)
       | [] ->
@@ -5362,6 +5368,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* resolves the arguments... *)
     | FunProtoApplyT _,
         CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      (* Drop the specific AST derived argument reasons. Our new arguments come
+       * from arbitrary positions in the array. *)
+      let use_op = match use_op with
+      | Op FunCall {op; fn; args = _} -> Op (FunCall {op; fn; args = []})
+      | Op FunCallMethod {op; fn; prop; args = _} -> Op (FunCallMethod {op; fn; prop; args = []})
+      | _ -> use_op
+      in
       begin match call_args_tlist with
       (* func.apply() *)
       | [] ->
@@ -9656,7 +9669,7 @@ and multiflow_partial =
     (* No more arguments *)
     | ([], _) -> [], arglist, parlist
 
-    | (tin::tins, (_, tout)::touts) ->
+    | (tin::tins, (name, tout)::touts) ->
       (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
          through a `ReposLowerT` to make sure that the concrete type points at
          the arg's location. however, if `tin` is an implicit type argument
@@ -9667,6 +9680,7 @@ and multiflow_partial =
       let tout =
         let use_op = Frame (FunParam {
           n;
+          name;
           lower=(reason_of_t tin);
           upper=(reason_of_t tout);
         }, use_op) in
@@ -10541,6 +10555,13 @@ and react_kit cx trace ~use_op reason_op l u =
 
 and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
+    (* Drop the specific argument reasons since run_compose will emit CallTs
+     * with completely unrelated argument reasons. *)
+    let use_op = match use_op with
+    | Op FunCall {op; fn; args = _} -> Op (FunCall {op; fn; args = []})
+    | Op FunCallMethod {op; fn; prop; args = _} -> Op (FunCallMethod {op; fn; prop; args = []})
+    | _ -> use_op
+    in
     let tin = Tvar.mk cx reason_op in
     let tvar = Tvar.mk cx reason_op in
     run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;

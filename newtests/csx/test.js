@@ -63,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^^^^^^^^^^ props. This type is incompatible with
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
           Property \`x\` is incompatible:
@@ -138,7 +138,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...arr}</Foo>;
-                   ^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^ props. This type is incompatible with
           6:       function Foo(props: Props) {}
                                        ^^^^^ Props
           Property \`children\` is incompatible:
@@ -228,7 +228,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
           Property \`x\` is incompatible:
@@ -292,7 +292,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>Test</Bar>
-                   ^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^ props. This type is incompatible with
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
           Property \`children\` is incompatible:
@@ -316,7 +316,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                   ^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^ props. This type is incompatible with
           6:       function Foo(props: FooProps) {}
                                        ^^^^^^^^ FooProps
           Property \`children\` is incompatible:
@@ -366,7 +366,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>{42}</Bar>
-                   ^^^^^ props. This type is incompatible with the expected param type of
+                   ^^^^^ props. This type is incompatible with
           6:       function Bar(props: Props) {}
                                        ^^^^^ Props
           Property \`children\` is incompatible:

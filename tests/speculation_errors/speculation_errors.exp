@@ -28,14 +28,12 @@ Error: intersection-function.js:23
 
 Error: intersection-function.js:24
  24: b({p: 42});
-       ^^^^^^^ object literal. This type is incompatible with the expected param type of
- 22: declare function b(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     24: b({p: 42});
-               ^^ number. This type is incompatible with
-     22: declare function b(x: {p: string}): void;
-                                   ^^^^^^ string
+           ^^ Cannot call `b` with object literal bound to `x` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   24: b({p: 42});
+             ^^ [1]: number
+   22: declare function b(x: {p: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:30
  30: c(42);
@@ -109,30 +107,21 @@ Error: intersection-function.js:36
 
 Error: intersection-function.js:37
  37: d({a: 42});
-       ^^^^^^^ object literal. This type is incompatible with the expected param type of
- 34: declare function d(x: {a: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     37: d({a: 42});
-               ^^ number. This type is incompatible with
-     34: declare function d(x: {a: string}): void;
-                                   ^^^^^^ string
+           ^^ Cannot call `d` with object literal bound to `x` because in property `a`, number [1] is incompatible with string [2].
+  References:
+   37: d({a: 42});
+             ^^ [1]: number
+   34: declare function d(x: {a: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:38
  38: d({a: {b: 42}});
-       ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 35: declare function d(x: {a: {b: string}}): void;
-                           ^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     38: d({a: {b: 42}});
-               ^^^^^^^ object literal. This type is incompatible with
-     35: declare function d(x: {a: {b: string}}): void;
-                                   ^^^^^^^^^^^ object type
-      Property `b` is incompatible:
-         38: d({a: {b: 42}});
-                       ^^ number. This type is incompatible with
-         35: declare function d(x: {a: {b: string}}): void;
-                                           ^^^^^^ string
+               ^^ Cannot call `d` with object literal bound to `x` because in property `a.b`, number [1] is incompatible with string [2].
+  References:
+   38: d({a: {b: 42}});
+                 ^^ [1]: number
+   35: declare function d(x: {a: {b: string}}): void;
+                                     ^^^^^^ [2]: string
 
 Error: intersection-function.js:42
  42: e(42);
@@ -158,14 +147,12 @@ Error: intersection-function.js:42
 
 Error: intersection-function.js:44
  44: e(new Y());
-       ^^^^^^^ Y. This type is incompatible with the expected param type of
- 41: declare function e(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10:   p: number;
-              ^^^^^^ number. This type is incompatible with
-     41: declare function e(x: {p: string}): void;
-                                   ^^^^^^ string
+       ^^^^^^^ Cannot call `e` with `new Y()` bound to `x` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   10:   p: number;
+            ^^^^^^ [1]: number
+   41: declare function e(x: {p: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:45
  45: e(new Z());
@@ -196,14 +183,12 @@ Error: intersection-function.js:45
 
 Error: intersection-function.js:46
  46: e({p: true});
-       ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 41: declare function e(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     46: e({p: true});
-               ^^^^ boolean. This type is incompatible with
-     41: declare function e(x: {p: string}): void;
-                                   ^^^^^^ string
+           ^^^^ Cannot call `e` with object literal bound to `x` because in property `p`, boolean [1] is incompatible with string [2].
+  References:
+   46: e({p: true});
+             ^^^^ [1]: boolean
+   41: declare function e(x: {p: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:51
  51: f(42);
@@ -237,14 +222,12 @@ Error: intersection-function.js:51
 
 Error: intersection-function.js:52
  52: f({p: 42});
-       ^^^^^^^ object literal. This type is incompatible with the expected param type of
- 48: declare function f(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     52: f({p: 42});
-               ^^ number. This type is incompatible with
-     48: declare function f(x: {p: string}): void;
-                                   ^^^^^^ string
+           ^^ Cannot call `f` with object literal bound to `x` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   52: f({p: 42});
+             ^^ [1]: number
+   48: declare function f(x: {p: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:53
  53: f({});
@@ -259,14 +242,12 @@ Error: intersection-function.js:53
 
 Error: intersection-function.js:54
  54: f(new Y());
-       ^^^^^^^ Y. This type is incompatible with the expected param type of
- 48: declare function f(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10:   p: number;
-              ^^^^^^ number. This type is incompatible with
-     48: declare function f(x: {p: string}): void;
-                                   ^^^^^^ string
+       ^^^^^^^ Cannot call `f` with `new Y()` bound to `x` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   10:   p: number;
+            ^^^^^^ [1]: number
+   48: declare function f(x: {p: string}): void;
+                                 ^^^^^^ [2]: string
 
 Error: intersection-function.js:55
  55: f(new Z());
@@ -331,9 +312,12 @@ Error: intersection-function.js:63
 
 Error: intersection-function.js:64
  64: g({});
-       ^^ object literal. This type is incompatible with the expected param type of
- 62: declare function g(x: Z): void;
-                           ^ Z
+       ^^ Cannot call `g` with object literal bound to `x` because object literal [1] is incompatible with `Z` [2].
+  References:
+   64: g({});
+         ^^ [1]: object literal
+   62: declare function g(x: Z): void;
+                             ^ [2]: `Z`
 
 Error: intersection-function.js:68
  68: h(1, 2, 3);
@@ -355,14 +339,12 @@ Error: intersection-function.js:76
 
 Error: intersection-function.js:80
  80: k(1, {p: 2});
-          ^^^^^^ object literal. This type is incompatible with the expected param type of
- 78: declare function k(a: number, b: {p: string}): void;
-                                      ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     80: k(1, {p: 2});
-                  ^ number. This type is incompatible with
-     78: declare function k(a: number, b: {p: string}): void;
-                                              ^^^^^^ string
+              ^ Cannot call `k` with object literal bound to `b` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   80: k(1, {p: 2});
+                ^ [1]: number
+   78: declare function k(a: number, b: {p: string}): void;
+                                            ^^^^^^ [2]: string
 
 Error: intersection-function.js:84
  84: m((new W(): W<number>));

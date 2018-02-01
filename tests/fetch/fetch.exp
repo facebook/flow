@@ -126,113 +126,93 @@ Error: request.js:2
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `cache` is incompatible:
-    982:     cache: CacheType;
-                    ^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:982
-    931:     cache?: CacheType;
-                     ^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:931
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `cache`, string enum [1] is incompatible with undefined [2].
+  References:
+  982:     cache: CacheType;
+                  ^^^^^^^^^ [1]: string enum. See lib: <BUILTINS>/bom.js:982
+  931:     cache?: CacheType;
+                   ^^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:931
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `credentials` is incompatible:
-    983:     credentials: CredentialsType;
-                          ^^^^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:983
-    932:     credentials?: CredentialsType;
-                           ^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:932
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `credentials`, string enum [1] is incompatible with undefined [2].
+  References:
+  983:     credentials: CredentialsType;
+                        ^^^^^^^^^^^^^^^ [1]: string enum. See lib: <BUILTINS>/bom.js:983
+  932:     credentials?: CredentialsType;
+                         ^^^^^^^^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:932
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `headers` is incompatible:
-    984:     headers: Headers;
-                      ^^^^^^^ Headers. This type is incompatible with. See lib: <BUILTINS>/bom.js:984
-    933:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:933
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `headers`, `Headers` [1] is incompatible with object type [2].
+  References:
+  984:     headers: Headers;
+                    ^^^^^^^ [1]: `Headers`. See lib: <BUILTINS>/bom.js:984
+  933:     headers?: HeadersInit;
+                     ^^^^^^^^^^^ [2]: object type. See lib: <BUILTINS>/bom.js:933
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `headers` is incompatible:
-    984:     headers: Headers;
-                      ^^^^^^^ Headers. This type is incompatible with. See lib: <BUILTINS>/bom.js:984
-    933:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:933
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `headers`, `Headers` [1] is incompatible with undefined [2].
+  References:
+  984:     headers: Headers;
+                    ^^^^^^^ [1]: `Headers`. See lib: <BUILTINS>/bom.js:984
+  933:     headers?: HeadersInit;
+                     ^^^^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:933
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `integrity` is incompatible:
-    985:     integrity: string;
-                        ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:985
-    934:     integrity?: string;
-                         ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:934
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `integrity`, string [1] is incompatible with undefined [2].
+  References:
+  985:     integrity: string;
+                      ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:985
+  934:     integrity?: string;
+                       ^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:934
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `method` is incompatible:
-    986:     method: string;
-                     ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:986
-    936:     method?: string;
-                      ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:936
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `method`, string [1] is incompatible with undefined [2].
+  References:
+  986:     method: string;
+                   ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:986
+  936:     method?: string;
+                    ^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:936
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `mode` is incompatible:
-    987:     mode: ModeType;
-                   ^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:987
-    937:     mode?: ModeType;
-                    ^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:937
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `mode`, string enum [1] is incompatible with undefined [2].
+  References:
+  987:     mode: ModeType;
+                 ^^^^^^^^ [1]: string enum. See lib: <BUILTINS>/bom.js:987
+  937:     mode?: ModeType;
+                  ^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:937
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `redirect` is incompatible:
-    988:     redirect: RedirectType;
-                       ^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:988
-    938:     redirect?: RedirectType;
-                        ^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:938
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `redirect`, string enum [1] is incompatible with undefined [2].
+  References:
+  988:     redirect: RedirectType;
+                     ^^^^^^^^^^^^ [1]: string enum. See lib: <BUILTINS>/bom.js:988
+  938:     redirect?: RedirectType;
+                      ^^^^^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:938
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `referrerPolicy` is incompatible:
-    990:     referrerPolicy: ReferrerPolicyType;
-                             ^^^^^^^^^^^^^^^^^^ string enum. This type is incompatible with. See lib: <BUILTINS>/bom.js:990
-    940:     referrerPolicy?: ReferrerPolicyType;
-                              ^^^^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:940
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `referrer`, string [1] is incompatible with undefined [2].
+  References:
+  989:     referrer: string;
+                     ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:989
+  939:     referrer?: string;
+                      ^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:939
 
 Error: request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `referrer` is incompatible:
-    989:     referrer: string;
-                       ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:989
-    939:     referrer?: string;
-                        ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:939
+                                       ^ Cannot call `Request` with `c` bound to `init` because in property `referrerPolicy`, string enum [1] is incompatible with undefined [2].
+  References:
+  990:     referrerPolicy: ReferrerPolicyType;
+                           ^^^^^^^^^^^^^^^^^^ [1]: string enum. See lib: <BUILTINS>/bom.js:990
+  940:     referrerPolicy?: ReferrerPolicyType;
+                            ^^^^^^^^^^^^^^^^^^ [2]: undefined. See lib: <BUILTINS>/bom.js:940
 
 Error: request.js:8
   8: const f: Request = new Request({}) // incorrect
@@ -312,36 +292,30 @@ Error: request.js:54
 
 Error: request.js:63
  63: new Request('/', { method: null }); // incorrect
-                      ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `method` is incompatible:
-     63: new Request('/', { method: null }); // incorrect
-                                    ^^^^ null. This type is incompatible with
-    936:     method?: string;
-                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:936
+                                ^^^^ Cannot call `Request` with object literal bound to `init` because in property `method`, null [1] is incompatible with string [2].
+  References:
+   63: new Request('/', { method: null }); // incorrect
+                                  ^^^^ [1]: null
+  936:     method?: string;
+                    ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:936
 
 Error: response.js:8
   8: new Response("", { status: "404" }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-951:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
-                                               ^^^^^^^^^^^^^^^ ResponseOptions. See lib: <BUILTINS>/bom.js:951
-  Property `status` is incompatible:
-      8: new Response("", { status: "404" }); // incorrect
-                                    ^^^^^ string. This type is incompatible with
-    945:     status?: number;
-                      ^^^^^^ number. See lib: <BUILTINS>/bom.js:945
+                                ^^^^^ Cannot call `Response` with object literal bound to `init` because in property `status`, string [1] is incompatible with number [2].
+  References:
+    8: new Response("", { status: "404" }); // incorrect
+                                  ^^^^^ [1]: string
+  945:     status?: number;
+                    ^^^^^^ [2]: number. See lib: <BUILTINS>/bom.js:945
 
 Error: response.js:9
   9: new Response("", { status: null }); // incorrect
-                      ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-951:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
-                                               ^^^^^^^^^^^^^^^ ResponseOptions. See lib: <BUILTINS>/bom.js:951
-  Property `status` is incompatible:
-      9: new Response("", { status: null }); // incorrect
-                                    ^^^^ null. This type is incompatible with
-    945:     status?: number;
-                      ^^^^^^ number. See lib: <BUILTINS>/bom.js:945
+                                ^^^^ Cannot call `Response` with object literal bound to `init` because in property `status`, null [1] is incompatible with number [2].
+  References:
+    9: new Response("", { status: null }); // incorrect
+                                  ^^^^ [1]: null
+  945:     status?: number;
+                    ^^^^^^ [2]: number. See lib: <BUILTINS>/bom.js:945
 
 Error: response.js:11
                                                       v

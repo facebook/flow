@@ -288,8 +288,17 @@ module rec TypeTerm : sig
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
     | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
     | Coercion
-    | FunCall of { op: reason; fn: reason }
-    | FunCallMethod of { op: reason; fn: reason; prop: reason }
+    | FunCall of {
+        op: reason;
+        fn: reason;
+        args: reason list;
+      }
+    | FunCallMethod of {
+        op: reason;
+        fn: reason;
+        prop: reason;
+        args: reason list;
+      }
     | FunReturnStatement
     | FunImplicitReturn
     | FunCallThis of reason
@@ -303,7 +312,7 @@ module rec TypeTerm : sig
   and frame_use_op =
     | FunCompatibility of { lower: reason; upper: reason }
     | FunMissingArg of reason * reason
-    | FunParam of { n: int; lower: reason; upper: reason }
+    | FunParam of { n: int; name: string option; lower: reason; upper: reason }
     | FunRestParam of { lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
     | ImplicitTypeParam of Loc.t

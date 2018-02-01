@@ -141,7 +141,7 @@ Error: spread.js:21
  21: (compose(
  22:   ...fns3, // Error: Cannot get p on number
  23: )(x1): empty); // Error: number ~> empty and object ~> empty
-     ^ call of `compose`
+     ^ compose(...)
   6: declare var fns3: Array<<O>(O) => $PropertyType<O, 'p'>>;
                                        ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  22:   ...fns3, // Error: Cannot get p on number

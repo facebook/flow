@@ -2416,7 +2416,7 @@ and this_ cx loc = Ast.Expression.(
 and super_ cx loc =
   Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
+and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e with
 
   | Ast.Expression.Literal lit ->
       literal cx loc lit
@@ -2639,7 +2639,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
         let callback_expr_t = expression cx callback_expr in
         let reason = mk_reason (RCustom "requireLazy() callback") loc in
-        let _ = func_call cx reason callback_expr_t module_tvars in
+        let use_op = Op (FunCall {
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason callback_expr;
+          args = [];
+        }) in
+        let _ = func_call cx reason ~use_op callback_expr_t module_tvars in
 
         NullT.at loc
 
@@ -2692,10 +2697,16 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | New { New.callee; arguments } ->
       let class_ = expression cx callee in
       let argts = List.map (expression_or_spread cx) arguments in
-      new_call cx loc class_ argts
+      let reason = mk_reason (RConstructorCall (desc_of_t class_)) loc in
+      let use_op = Op (FunCall {
+        op = mk_expression_reason ex;
+        fn = mk_expression_reason callee;
+        args = mk_initial_arguments_reason arguments;
+      }) in
+      new_call cx reason ~use_op class_ argts
 
   | Call {
-      Call.callee = (_, Member {
+      Call.callee = (callee_loc, Member {
         Member._object = (_, Identifier (_, "Object") as obj);
         property = Member.PropertyIdentifier (prop_loc, name);
         _
@@ -2703,14 +2714,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       let obj_t = expression cx obj in
-      static_method_call_Object cx loc prop_loc expr obj_t name arguments
+      static_method_call_Object cx loc callee_loc prop_loc expr obj_t name arguments
 
   | Call {
-      Call.callee = callee_loc, Member {
+      Call.callee = (callee_loc, Member {
         Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc, name);
         _
-      };
+      }) as callee;
       arguments
     } ->
       let reason = mk_reason (RMethodCall (Some name)) loc in
@@ -2723,9 +2734,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Tvar.mk_where cx reason (fun t ->
         let funtype = mk_methodcalltype super argts t in
         let use_op = Op (FunCallMethod {
-          op=reason;
-          fn=mk_reason (RMethod (Some name)) callee_loc;
-          prop=reason_prop;
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason callee;
+          prop = reason_prop;
+          args = mk_initial_arguments_reason arguments;
         }) in
         let prop_t = Tvar.mk cx reason_prop in
         Type_table.set_info (Context.type_table cx) ploc prop_t;
@@ -2750,7 +2762,13 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | Member.PropertyPrivateName (prop_loc, (_, name))
       | Member.PropertyIdentifier (prop_loc, name) ->
         let reason_call = mk_reason (RMethodCall (Some name)) loc in
-        method_call cx reason_call prop_loc (callee, ot, name) argts
+        let use_op = Op (FunCallMethod {
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason callee;
+          prop = mk_reason (RProperty (Some name)) prop_loc;
+          args = mk_initial_arguments_reason arguments;
+        }) in
+        method_call cx reason_call ~use_op prop_loc (callee, ot, name) argts
       | Member.PropertyExpression expr ->
         let reason_call = mk_reason (RMethodCall None) loc in
         let reason_lookup = mk_reason (RProperty None) lookup_loc in
@@ -2763,7 +2781,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         ))
 
   | Call {
-      Call.callee = ploc, Super;
+      Call.callee = (ploc, Super) as callee;
       arguments
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2781,8 +2799,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let funtype = mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
         let use_op = Op (FunCall {
-          op=reason;
-          fn=mk_reason RSuper ploc;
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason callee;
+          args = mk_initial_arguments_reason arguments;
         }) in
         Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
 
@@ -2823,7 +2842,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
       let argts =
         List.map (expression_or_spread cx) arguments in
-      func_call cx reason f argts
+      let use_op = Op (FunCall {
+        op = mk_expression_reason ex;
+        fn = mk_expression_reason callee;
+        args = mk_initial_arguments_reason arguments;
+      }) in
+      func_call cx reason ~use_op f argts
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason RConditional loc in
@@ -2915,14 +2939,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Tvar.mk cx reason in
-      let ft = mk_functioncalltype reason
+      let args =
         [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
-          SpreadArg (AnyT.why reason) ]
-        ret
-      in
+          SpreadArg (AnyT.why reason) ] in
+      let ft = mk_functioncalltype reason args ret in
       let use_op = Op (FunCall {
-        op=reason;
-        fn=reason_of_t t;
+        op = mk_expression_reason ex;
+        fn = mk_expression_reason tag;
+        args = [];
       }) in
       Flow.flow cx (t, CallT (use_op, reason, ft));
       ret
@@ -3090,11 +3114,20 @@ and predicated_call_expression cx (loc, callee, arguments) =
    - the returned type
 *)
 and predicated_call_expression_ cx loc callee arguments =
+  let args = arguments |> List.map (function
+    | Ast.Expression.Expression e -> e
+    | _ -> Utils_js.assert_false "No spreads should reach here"
+  ) in
   let f = expression cx callee in
   let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-  let argts = List.map (expression cx) arguments in
-  let argks = List.map Refinement.key arguments in
-  let t = func_call cx reason f (List.map (fun e -> Arg e) argts) in
+  let argts = List.map (expression cx) args in
+  let argks = List.map Refinement.key args in
+  let use_op = Op (FunCall {
+    op = reason;
+    fn = mk_expression_reason callee;
+    args = mk_initial_arguments_reason arguments;
+  }) in
+  let t = func_call cx reason ~use_op f (List.map (fun e -> Arg e) argts) in
   (f, argks, argts, t)
 
 (* We assume that constructor functions return void
@@ -3103,29 +3136,20 @@ and predicated_call_expression_ cx loc callee arguments =
    If construction functions return non-void values (e.g., functions),
    then those values are returned by constructions.
 *)
-and new_call cx tok class_ argts =
-  let reason = mk_reason (RConstructorCall (desc_of_t class_)) tok in
+and new_call cx reason ~use_op class_ argts =
   Tvar.mk_where cx reason (fun t ->
-    let use_op = Op (FunCall {
-      op=reason;
-      fn=reason_of_t class_;
-    }) in
     Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
   )
 
-and func_call cx reason ?(call_strict_arity=true) func_t argts =
+and func_call cx reason ~use_op ?(call_strict_arity=true) func_t argts =
   Env.havoc_heap_refinements ();
   Tvar.mk_where cx reason (fun t ->
     let frame = Env.peek_frame () in
     let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
-    let use_op = Op (FunCall {
-      op=reason;
-      fn=reason_of_t func_t;
-    }) in
     Flow.flow cx (func_t, CallT (use_op, reason, app))
   )
 
-and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
+and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr (loc_of_reason reason) with
@@ -3141,11 +3165,6 @@ and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
         let frame = Env.peek_frame () in
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
-        let use_op = if not use_op then unknown_use else (Op (FunCall {
-          op=reason;
-          fn=reason_of_t f;
-        })) in
-        Type_table.set_info (Context.type_table cx) prop_loc f;
         Flow.flow cx (f, CallT (use_op, reason, app));
       )
   | None ->
@@ -3158,11 +3177,6 @@ and method_call cx reason ?(use_op=true) ?(call_strict_arity=true) prop_loc
         let app =
           mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
-        let use_op = if not use_op then unknown_use else (Op (FunCallMethod {
-          op=reason;
-          fn=mk_reason (RMethod (Some name)) (Loc.btwn expr_loc prop_loc);
-          prop=reason_prop;
-        })) in
         let prop_t = Tvar.mk cx reason_prop in
         Type_table.set_info (Context.type_table cx) prop_loc prop_t;
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app, Some prop_t))
@@ -3270,7 +3284,12 @@ and unary cx loc = Ast.Expression.Unary.(function
     let reason = mk_reason (RCustom "await") loc in
     let await = Flow.get_builtin cx "$await" reason in
     let arg = expression cx argument in
-    func_call cx reason await [Arg arg]
+    let use_op = Op (FunCall {
+      op = reason;
+      fn = reason_of_t await;
+      args = [mk_expression_reason argument];
+    }) in
+    func_call cx reason ~use_op await [Arg arg]
 )
 
 (* numeric pre/post inc/dec *)
@@ -3914,15 +3933,18 @@ and jsx_desugar cx name component_t props attributes children locs =
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr loc_opening _object in
-          method_call cx reason ~call_strict_arity:false prop_loc
+          let use_op = unknown_use in (* TODO *)
+          method_call cx reason ~use_op ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr loc_opening jsx_expr in
-          func_call cx reason ~call_strict_arity:false f argts
+          let use_op = unknown_use in (* TODO *)
+          func_call cx reason ~use_op ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
       let reason = mk_reason (RJSXFunctionCall name) loc_opening in
-      func_call cx reason ~call_strict_arity:false component_t [Arg props]
+      let use_op = unknown_use in (* TODO *)
+      func_call cx reason ~use_op ~call_strict_arity:false component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
@@ -4497,12 +4519,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       if List.exists is_spread arguments then
         empty_result (expression cx e)
       else
-        let exp_args = arguments |> List.map (function
-          | Expression e -> e
-          | _ -> Utils_js.assert_false "No spreads should reach here"
-        ) in
         let fun_t, keys, arg_ts, ret_t =
-          predicated_call_expression cx (loc, c, exp_args) in
+          predicated_call_expression cx (loc, c, arguments) in
         let args_with_offset = ListUtils.zipi keys arg_ts in
         let emp_pred_map = empty_result ret_t in
         List.fold_left (fun pred_map arg_info -> match arg_info with
@@ -4551,9 +4569,9 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   )
 
 (* TODO: switch to TypeScript specification of Object *)
-and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
+and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m args_ =
   let open Ast.Expression in
-  let reason = mk_reason (RCustom (spf "Object.%s" m)) loc in
+  let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
     let proto =
@@ -4663,13 +4681,19 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     ) in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc ~use_op:false (expr, obj_t, m) [Arg arg_t]
+    method_call cx reason prop_loc ~use_op:unknown_use (expr, obj_t, m) [Arg arg_t]
 
   (* TODO *)
   | (_, args) ->
     let argts = List.map (expression_or_spread cx) args in
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) argts
+    let use_op = Op (FunCallMethod {
+      op = reason;
+      fn = mk_reason (RMethod (Some m)) callee_loc;
+      prop = mk_reason (RProperty (Some m)) prop_loc;
+      args = mk_initial_arguments_reason args;
+    }) in
+    method_call cx reason ~use_op prop_loc (expr, obj_t, m) argts
 
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
@@ -4865,3 +4889,9 @@ and post_assignment_havoc ~private_ name expr lhs_loc t =
     ignore Env.(set_expr key lhs_loc t t)
   | None ->
     ()
+
+and mk_initial_arguments_reason = Ast.Expression.(function
+| [] -> []
+| Expression x :: args -> mk_expression_reason x :: mk_initial_arguments_reason args
+| Spread _ :: _ -> []
+)

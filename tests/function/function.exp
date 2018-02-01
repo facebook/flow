@@ -36,7 +36,7 @@ Error: apply.js:22
 
 Error: apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ test.apply(...)
 288:     @@iterator(): Iterator<string>;
                                 ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:288
   1: function test(a: string, b: number): number {
@@ -367,7 +367,7 @@ Error: rest_type.js:15
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ call of `f`
+       ^^^^^^^^^^ f(...)
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                   ^^^^^^ string. Expected array instead of
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(

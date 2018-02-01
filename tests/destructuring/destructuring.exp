@@ -418,25 +418,21 @@ Error: destructuring.js:28
 
 Error: destructuring.js:31
  31: qux({a:""});
-         ^^^^^^ object literal. This type is incompatible with the expected param type of
- 30: function qux(_: {a:number}) { }
-                     ^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     31: qux({a:""});
-                ^^ string. This type is incompatible with
-     30: function qux(_: {a:number}) { }
-                            ^^^^^^ number
+            ^^ Cannot call `qux` with object literal bound to `_` because in property `a`, string [1] is incompatible with number [2].
+  References:
+   31: qux({a:""});
+              ^^ [1]: string
+   30: function qux(_: {a:number}) { }
+                          ^^^^^^ [2]: number
 
 Error: destructuring.js:33
  33: corge({b:0});
-           ^^^^^ object literal. This type is incompatible with the expected param type of
- 32: function corge({b}: {b:string}) { }
-                         ^^^^^^^^^^ object type
-  Property `b` is incompatible:
-     33: corge({b:0});
-                  ^ number. This type is incompatible with
-     32: function corge({b}: {b:string}) { }
-                                ^^^^^^ string
+              ^ Cannot call `corge` with object literal bound to the first parameter because in property `b`, number [1] is incompatible with string [2].
+  References:
+   33: corge({b:0});
+                ^ [1]: number
+   32: function corge({b}: {b:string}) { }
+                              ^^^^^^ [2]: string
 
 Error: destructuring.js:35
  35: var {n}:{n: number} = {n: ""}

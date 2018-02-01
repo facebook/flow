@@ -944,6 +944,16 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
+      | Frame (FunParam {n; name; lower = lower'; _},
+          Op (FunCall {args; fn; _} | FunCallMethod {args; fn; _})) ->
+        let lower = if List.length args > n - 1 then List.nth args (n - 1) else lower' in
+        let param = match name with
+        | Some name -> code name
+        | None -> text (spf "the %s parameter" (Utils_js.ordinal n))
+        in
+        Some (`Root (lower, None,
+          [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]))
+
       | Frame (PropertyCompatibility {prop=None | Some "$key" | Some "$value"; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
           [text "the indexer property"]))

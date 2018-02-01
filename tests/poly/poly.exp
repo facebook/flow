@@ -76,9 +76,12 @@ Error: implicit_bounded_instantiation.js:19
 
 Error: implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle
-            ^^^^^^^^^^ Base. This type is incompatible with the expected param type of
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
+            ^^^^^^^^^^ Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is incompatible with `Middle` [2].
+  References:
+   20: a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [1]: `Base`
+    7: class C<T: Middle> {
+                  ^^^^^^ [2]: `Middle`
 
 Error: phantom.js:7
   7: (a: B); // Error

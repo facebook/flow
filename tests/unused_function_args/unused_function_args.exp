@@ -24,7 +24,7 @@ Error: test.js:7
 
 Error: test.js:9
   9: foo(...args); // 2 errors
-     ^^^^^^^^^^^^ call of `foo`
+     ^^^^^^^^^^^^ foo(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -32,7 +32,7 @@ Error: test.js:9
 
 Error: test.js:9
   9: foo(...args); // 2 errors
-     ^^^^^^^^^^^^ call of `foo`
+     ^^^^^^^^^^^^ foo(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -52,7 +52,7 @@ Error: test.js:11
 
 Error: test.js:12
  12: foo.call(null, ...args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+     ^^^^^^^^^^^^^^^^^^^^^^^ foo.call(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -60,7 +60,7 @@ Error: test.js:12
 
 Error: test.js:12
  12: foo.call(null, ...args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+     ^^^^^^^^^^^^^^^^^^^^^^^ foo.call(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -68,7 +68,7 @@ Error: test.js:12
 
 Error: test.js:13
  13: foo.call(null, 1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ foo.call(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -76,7 +76,7 @@ Error: test.js:13
 
 Error: test.js:13
  13: foo.call(null, 1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ foo.call(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -108,7 +108,7 @@ Error: test.js:15
 
 Error: test.js:16
  16: foo.apply(null, args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+     ^^^^^^^^^^^^^^^^^^^^^ foo.apply(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -116,7 +116,7 @@ Error: test.js:16
 
 Error: test.js:16
  16: foo.apply(null, args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+     ^^^^^^^^^^^^^^^^^^^^^ foo.apply(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -136,7 +136,7 @@ Error: test.js:18
 
 Error: test.js:19
  19: foo.bind(null, ...args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+     ^^^^^^^^^^^^^^^^^^^^^^^ foo.bind(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -144,7 +144,7 @@ Error: test.js:19
 
 Error: test.js:19
  19: foo.bind(null, ...args); // 2 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+     ^^^^^^^^^^^^^^^^^^^^^^^ foo.bind(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -152,7 +152,7 @@ Error: test.js:19
 
 Error: test.js:20
  20: foo.bind(null, 1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ foo.bind(...)
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -160,7 +160,7 @@ Error: test.js:20
 
 Error: test.js:20
  20: foo.bind(null, 1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ foo.bind(...)
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -192,7 +192,7 @@ Error: test.js:22
 
 Error: test.js:23
  23: new foo(...args); // 2 errors
-     ^^^^^^^^^^^^^^^^ new `foo`
+     ^^^^^^^^^^^^^^^^ `new foo(...)`
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -200,7 +200,7 @@ Error: test.js:23
 
 Error: test.js:23
  23: new foo(...args); // 2 errors
-     ^^^^^^^^^^^^^^^^ new `foo`
+     ^^^^^^^^^^^^^^^^ `new foo(...)`
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -208,7 +208,7 @@ Error: test.js:23
 
 Error: test.js:24
  24: new foo(1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^ new `foo`
+     ^^^^^^^^^^^^^^^^^^^^^^ `new foo(...)`
   2: const args = [3, 4];
                    ^ unused function argument. No arguments are expected by
   1: function foo() {}
@@ -216,7 +216,7 @@ Error: test.js:24
 
 Error: test.js:24
  24: new foo(1, 2, ...args); // 4 errors
-     ^^^^^^^^^^^^^^^^^^^^^^ new `foo`
+     ^^^^^^^^^^^^^^^^^^^^^^ `new foo(...)`
   2: const args = [3, 4];
                       ^ unused function argument. No arguments are expected by
   1: function foo() {}

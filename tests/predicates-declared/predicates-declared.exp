@@ -34,9 +34,12 @@ Error: sanity-is-string-bug.js:13
 
 Error: sanity-parameter-mismatch.js:10
  10: foo(3, 3);
-            ^ number. This type is incompatible with the expected param type of
-  7:   types: string | Array<string>
-              ^^^^^^ string
+            ^ Cannot call `foo` with `3` bound to `types` because number [1] is incompatible with string [2].
+  References:
+   10: foo(3, 3);
+              ^ [1]: number
+    7:   types: string | Array<string>
+                ^^^^^^ [2]: string
 
 Error: sanity-pred-with-body.js:6
   6: function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here

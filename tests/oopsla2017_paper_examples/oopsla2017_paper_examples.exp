@@ -29,14 +29,12 @@ Error: example6.js:9
 
 Error: example7.js:14
  14: stringIsString({ type: "string", val: 0 }); // error
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  6:   | { type: "string", val: string }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `val` is incompatible:
-     14: stringIsString({ type: "string", val: 0 }); // error
-                                               ^ number. This type is incompatible with
-      6:   | { type: "string", val: string }
-                                    ^^^^^^ string
+                                           ^ Cannot call `stringIsString` with object literal bound to `x` because in property `val`, number [1] is incompatible with string [2].
+  References:
+   14: stringIsString({ type: "string", val: 0 }); // error
+                                             ^ [1]: number
+    6:   | { type: "string", val: string }
+                                  ^^^^^^ [2]: string
 
 
 Found 4 errors

@@ -48,7 +48,7 @@ Error: errors.js:16
 
 Error: errors.js:18
  18: fn1({x: 42}); // We should get an error on this line.
-     ^^^^^^^^^^^^ call of `fn1`
+     ^^^^^^^^^^^^ fn1(...)
   7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
                                                     ^^^ property `p`. Property not found in
  18: fn1({x: 42}); // We should get an error on this line.
@@ -56,7 +56,7 @@ Error: errors.js:18
 
 Error: errors.js:19
  19: fn1(null); // We should get an error on this line.
-     ^^^^^^^^^ call of `fn1`
+     ^^^^^^^^^ fn1(...)
   7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
                                     ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
  19: fn1(null); // We should get an error on this line.
@@ -64,7 +64,7 @@ Error: errors.js:19
 
 Error: errors.js:21
  21: fn2({x: 42})(); // We should get an error on this line.
-     ^^^^^^^^^^^^ call of `fn2`
+     ^^^^^^^^^^^^ fn2(...)
   8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
                                                      ^^^ property `p`. Property not found in
  21: fn2({x: 42})(); // We should get an error on this line.
@@ -72,7 +72,7 @@ Error: errors.js:21
 
 Error: errors.js:22
  22: fn2(null)(); // We should get an error on this line.
-     ^^^^^^^^^ call of `fn2`
+     ^^^^^^^^^ fn2(...)
   8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
                                      ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
  22: fn2(null)(); // We should get an error on this line.
@@ -80,7 +80,7 @@ Error: errors.js:22
 
 Error: errors.js:24
  24: fn3({x: 42}); // We should get an error on this line.
-     ^^^^^^^^^^^^ call of `fn3`
+     ^^^^^^^^^^^^ fn3(...)
   9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  24: fn3({x: 42}); // We should get an error on this line.
@@ -88,7 +88,7 @@ Error: errors.js:24
 
 Error: errors.js:27
  27: fn4({x: 42})(); // We should get an error on this line.
-     ^^^^^^^^^^^^ call of `fn4`
+     ^^^^^^^^^^^^ fn4(...)
  10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
                                      ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  27: fn4({x: 42})(); // We should get an error on this line.
@@ -256,7 +256,7 @@ Error: tvar3.js:28
 
 Error: tvar4.js:24
  24: fn1({p: 42}, (x: {}) => {});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `fn1`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ fn1(...)
   3: function fn1<T: {p: any}>(a: T, b: T => void): $PropertyType<T, 'p'> {
                                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  24: fn1({p: 42}, (x: {}) => {});
@@ -264,7 +264,7 @@ Error: tvar4.js:24
 
 Error: tvar4.js:25
  25: fn2({p: 42}, (x: {}) => {})('foo');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of `fn2`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ fn2(...)
   8: function fn2<T: {p: any}>(a: T, b: T => void): ($PropertyType<T, 'p'>) => void {
                                                      ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  25: fn2({p: 42}, (x: {}) => {})('foo');
@@ -272,14 +272,12 @@ Error: tvar4.js:25
 
 Error: tvar4.js:33
  33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
-                                              ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 27: function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
-                                               ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
-                                                        ^^ number. This type is incompatible with
-     33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
-                       ^^^^^^ string
+                                                    ^^ Cannot call `fn3(...)` with object literal bound to the first parameter because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
+                                                      ^^ [1]: number
+   33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
+                     ^^^^^^ [2]: string
 
 Error: tvar4.js:38
  38: fn3((x: {foo: number}) => {})({foo: 42});
@@ -301,7 +299,7 @@ Error: tvar4.js:47
 
 Error: tvar4.js:51
  51: fn4((x: {}) => {})(42);
-     ^^^^^^^^^^^^^^^^^^ call of `fn4`
+     ^^^^^^^^^^^^^^^^^^ fn4(...)
  40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
                                                  ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
  51: fn4((x: {}) => {})(42);

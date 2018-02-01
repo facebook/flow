@@ -6,9 +6,12 @@ Error: FormData.js:5
 
 Error: FormData.js:6
   6: new FormData(document.createElement('input')); // incorrect
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with the expected param type of
-322:     constructor(form?: HTMLFormElement): void;
-                            ^^^^^^^^^^^^^^^ HTMLFormElement. See lib: <BUILTINS>/bom.js:322
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `FormData` with `document.createElement(...)` bound to `form` because `HTMLInputElement` [1] is incompatible with `HTMLFormElement` [2].
+  References:
+  587:   createElement(tagName: 'input'): HTMLInputElement;
+                                          ^^^^^^^^^^^^^^^^ [1]: `HTMLInputElement`. See lib: <BUILTINS>/dom.js:587
+  322:     constructor(form?: HTMLFormElement): void;
+                              ^^^^^^^^^^^^^^^ [2]: `HTMLFormElement`. See lib: <BUILTINS>/bom.js:322
 
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
@@ -575,19 +578,12 @@ Error: MutationObserver.js:22
 
 Error: MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-                                                                        v
-360: declare type MutationObserverInit = MutationObserverInitRequired & {
-361:     subtree?: boolean;
-362:     attributeOldValue?: boolean;
-...:
-365: }
-     ^ object type. See lib: <BUILTINS>/bom.js:360
-  Property `attributeFilter` is incompatible:
-     23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
-                                                             ^^^^ boolean. This type is incompatible with
-    364:     attributeFilter?: Array<string>;
-                               ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:364
+                                                         ^^^^ Cannot call `o.observe` with object literal bound to `options` because in property `attributeFilter`, boolean [1] is incompatible with array type [2].
+  References:
+   23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
+                                                           ^^^^ [1]: boolean
+  364:     attributeFilter?: Array<string>;
+                             ^^^^^^^^^^^^^ [2]: array type. See lib: <BUILTINS>/bom.js:364
 
 
 Found 49 errors
