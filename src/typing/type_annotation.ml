@@ -88,7 +88,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Nullable t ->
     let t = convert cx tparams_map t in
-    let reason = mk_reason (RMaybe (desc_of_t t)) loc in
+    let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) loc) in
     DefT (reason, MaybeT t)
 
 | loc, Union (t0, t1, ts) ->

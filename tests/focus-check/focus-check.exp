@@ -5,8 +5,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -39,8 +39,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -86,8 +86,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -99,8 +99,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -112,8 +112,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -125,8 +125,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -166,8 +166,8 @@ Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
   References:
-    3: (require('./b'): number);
-        ^^^^^^^^^^^^^^ [1]: string
+    3: module.exports = "";
+                        ^^ [1]: string. See: b.js:3
     3: (require('./b'): number);
                         ^^^^^^ [2]: number
 
@@ -185,8 +185,8 @@ Error: other_root/other_root_dependent.js:5
   5: (foo: string); // Error
       ^^^ Cannot cast `foo` to string because number [1] is incompatible with string [2].
   References:
-    5: (foo: string); // Error
-        ^^^ [1]: number
+    5: export default 123;
+                      ^^^ [1]: number. See: other_root/other_root_file.js:5
     5: (foo: string); // Error
              ^^^^^^ [2]: string
 

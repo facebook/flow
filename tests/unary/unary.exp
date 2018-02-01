@@ -8,8 +8,8 @@ Error: unary.js:12
  12:   return ~y;  // error, we don't allow coercion here
                ^ string [1] is incompatible with number [2].
   References:
-   12:   return ~y;  // error, we don't allow coercion here
-                 ^ [1]: string
+   11: function x3(y: string) {
+                      ^^^^^^ [1]: string
    12:   return ~y;  // error, we don't allow coercion here
                 ^^ [2]: number
 

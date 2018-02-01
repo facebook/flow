@@ -2,8 +2,8 @@ Error: es_declare_module.js:6
   6: (num1: string); // Error: number ~> string
       ^^^^ Cannot cast `num1` to string because number [1] is incompatible with string [2].
   References:
-    6: (num1: string); // Error: number ~> string
-        ^^^^ [1]: number
+    2:   declare var num1: number;
+                           ^^^^^^ [1]: number. See lib: flow-typed/declares.js:2
     6: (num1: string); // Error: number ~> string
               ^^^^^^ [2]: string
 
@@ -11,8 +11,8 @@ Error: es_declare_module.js:8
   8: (str1: number); // Error: string ~> number
       ^^^^ Cannot cast `str1` to number because string [1] is incompatible with number [2].
   References:
-    8: (str1: number); // Error: string ~> number
-        ^^^^ [1]: string
+    3:   declare var str1: string;
+                           ^^^^^^ [1]: string. See lib: flow-typed/declares.js:3
     8: (str1: number); // Error: string ~> number
               ^^^^^^ [2]: number
 
@@ -20,8 +20,12 @@ Error: es_declare_module.js:10
  10: (CJS_Named: number); // Error: Module ~> number
       ^^^^^^^^^ Cannot cast `CJS_Named` to number because module `CJS_Named` [1] is incompatible with number [2].
   References:
-   10: (CJS_Named: number); // Error: Module ~> number
-        ^^^^^^^^^ [1]: module `CJS_Named`
+       v---------------------------
+    1: declare module "CJS_Named" {
+    2:   declare var num1: number;
+    3:   declare var str1: string;
+    4: }
+       ^ [1]: module `CJS_Named`. See lib: flow-typed/declares.js:1
    10: (CJS_Named: number); // Error: Module ~> number
                    ^^^^^^ [2]: number
 
@@ -33,8 +37,8 @@ Error: es_declare_module.js:15
  15: (numExport: string); // Error: number ~> string
       ^^^^^^^^^ Cannot cast `numExport` to string because number [1] is incompatible with string [2].
   References:
-   15: (numExport: string); // Error: number ~> string
-        ^^^^^^^^^ [1]: number
+   10:     numExport: number,
+                      ^^^^^^ [1]: number. See lib: flow-typed/declares.js:10
    15: (numExport: string); // Error: number ~> string
                    ^^^^^^ [2]: string
 
@@ -55,8 +59,8 @@ Error: es_declare_module.js:23
  23: (str3: number); // Error: string ~> number
       ^^^^ Cannot cast `str3` to number because string [1] is incompatible with number [2].
   References:
-   23: (str3: number); // Error: string ~> number
-        ^^^^ [1]: string
+   15:   declare var strHidden: string;
+                                ^^^^^^ [1]: string. See lib: flow-typed/declares.js:15
    23: (str3: number); // Error: string ~> number
               ^^^^^^ [2]: number
 
@@ -64,8 +68,8 @@ Error: es_declare_module.js:27
  27: (num3: string); // Error: number ~> string
       ^^^^ Cannot cast `num3` to string because number [1] is incompatible with string [2].
   References:
-   27: (num3: string); // Error: number ~> string
-        ^^^^ [1]: number
+   17:   declare export var num3: number;
+                                  ^^^^^^ [1]: number. See lib: flow-typed/declares.js:17
    27: (num3: string); // Error: number ~> string
               ^^^^^^ [2]: string
 

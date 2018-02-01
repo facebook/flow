@@ -324,8 +324,8 @@ Error: test33.js:8
   8: (bar(): string); // error: number ~> string
       ^^^^^ Cannot cast `bar()` to string because number [1] is incompatible with string [2].
   References:
-    8: (bar(): string); // error: number ~> string
-        ^^^^^ [1]: number
+    6: function bar() { return 0 }
+                               ^ [1]: number
     8: (bar(): string); // error: number ~> string
                ^^^^^^ [2]: string
 
@@ -333,8 +333,8 @@ Error: test34.js:10
  10:     (x.foo: empty); // error: string ~> empty
           ^^^^^ Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
   References:
-   10:     (x.foo: empty); // error: string ~> empty
-            ^^^^^ [1]: string
+   16: type A = {| foo: string |};
+                        ^^^^^^ [1]: string
    10:     (x.foo: empty); // error: string ~> empty
                    ^^^^^ [2]: empty
 

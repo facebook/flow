@@ -2,8 +2,8 @@ Error: annot.js:3
   3: (o.p: empty); // error: number ~> empty
       ^^^ Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
   References:
-    3: (o.p: empty); // error: number ~> empty
-        ^^^ [1]: number
+    1: type O = {p: number, __proto__: {q: string}};
+                    ^^^^^^ [1]: number
     3: (o.p: empty); // error: number ~> empty
              ^^^^^ [2]: empty
 
@@ -11,8 +11,8 @@ Error: annot.js:4
   4: (o.q: empty); // error: string ~> empty
       ^^^ Cannot cast `o.q` to empty because string [1] is incompatible with empty [2].
   References:
-    4: (o.q: empty); // error: string ~> empty
-        ^^^ [1]: string
+    1: type O = {p: number, __proto__: {q: string}};
+                                           ^^^^^^ [1]: string
     4: (o.q: empty); // error: string ~> empty
              ^^^^^ [2]: empty
 
@@ -59,8 +59,8 @@ Error: annot.js:16
  16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `o_optional.__proto__` to empty because object type [1] is incompatible with empty [2].
   References:
-   16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]: object type
+   13: type O_optional = { __proto__?: { q: 0 } };
+                                       ^^^^^^^^ [1]: object type
    16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
                               ^^^^^ [2]: empty
 
@@ -68,8 +68,8 @@ Error: annot.js:16
  16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `o_optional.__proto__` to empty because undefined [1] is incompatible with empty [2].
   References:
-   16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]: undefined
+   13: type O_optional = { __proto__?: { q: 0 } };
+                                       ^^^^^^^^ [1]: undefined
    16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
                               ^^^^^ [2]: empty
 
@@ -83,8 +83,8 @@ Error: annot.js:22
  22: (o_variance.__proto__: empty); // error: object type ~> empty
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `o_variance.__proto__` to empty because object type [1] is incompatible with empty [2].
   References:
-   22: (o_variance.__proto__: empty); // error: object type ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]: object type
+   19: type O_variance = { +__proto__: { q: 0 } };
+                                       ^^^^^^^^ [1]: object type
    22: (o_variance.__proto__: empty); // error: object type ~> empty
                               ^^^^^ [2]: empty
 
@@ -98,8 +98,8 @@ Error: annot.js:28
  28: (o_callable.__proto__: empty); // error: object type ~> empty
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `o_callable.__proto__` to empty because object type [1] is incompatible with empty [2].
   References:
-   28: (o_callable.__proto__: empty); // error: object type ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]: object type
+   25: type O_callable = { (): void, __proto__: {} };
+                                                ^^ [1]: object type
    28: (o_callable.__proto__: empty); // error: object type ~> empty
                               ^^^^^ [2]: empty
 
@@ -107,8 +107,8 @@ Error: annot.js:33
  33: (o_method.__proto__: empty); // error: function ~> empty
       ^^^^^^^^^^^^^^^^^^ Cannot cast `o_method.__proto__` to empty because function type [1] is incompatible with empty [2].
   References:
-   33: (o_method.__proto__: empty); // error: function ~> empty
-        ^^^^^^^^^^^^^^^^^^ [1]: function type
+   31: type O_method = { __proto__(): void };
+                         ^^^^^^^^^^^^^^^^^ [1]: function type
    33: (o_method.__proto__: empty); // error: function ~> empty
                             ^^^^^ [2]: empty
 
@@ -116,8 +116,8 @@ Error: annot.js:37
  37: (o_loop.p: empty); // error: number ~> empty
       ^^^^^^^^ Cannot cast `o_loop.p` to empty because number literal `0` [1] is incompatible with empty [2].
   References:
-   37: (o_loop.p: empty); // error: number ~> empty
-        ^^^^^^^^ [1]: number literal `0`
+   35: type O_loop = { p: 0, __proto__: O_loop };
+                          ^ [1]: number literal `0`
    37: (o_loop.p: empty); // error: number ~> empty
                   ^^^^^ [2]: empty
 
@@ -129,8 +129,8 @@ Error: literal.js:2
   2: (o.p: empty); // error: number ~> empty
       ^^^ Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
   References:
-    2: (o.p: empty); // error: number ~> empty
-        ^^^ [1]: number
+    1: var o = { p: 0, __proto__: { q: 1 } };
+                    ^ [1]: number
     2: (o.p: empty); // error: number ~> empty
              ^^^^^ [2]: empty
 
@@ -138,8 +138,8 @@ Error: literal.js:3
   3: (o.q: empty); // error: number ~> empty
       ^^^ Cannot cast `o.q` to empty because number [1] is incompatible with empty [2].
   References:
-    3: (o.q: empty); // error: number ~> empty
-        ^^^ [1]: number
+    1: var o = { p: 0, __proto__: { q: 1 } };
+                                       ^ [1]: number
     3: (o.q: empty); // error: number ~> empty
              ^^^^^ [2]: empty
 
@@ -159,8 +159,8 @@ Error: literal.js:13
  13: (o_method.__proto__: empty); // error: function ~> empty
       ^^^^^^^^^^^^^^^^^^ Cannot cast `o_method.__proto__` to empty because function [1] is incompatible with empty [2].
   References:
-   13: (o_method.__proto__: empty); // error: function ~> empty
-        ^^^^^^^^^^^^^^^^^^ [1]: function
+   12: var o_method = { __proto__() {} };
+                                 ^^ [1]: function
    13: (o_method.__proto__: empty); // error: function ~> empty
                             ^^^^^ [2]: empty
 
@@ -178,8 +178,8 @@ Error: literal.js:21
  21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `o_computed.__proto__` to empty because object literal [1] is incompatible with empty [2].
   References:
-   21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+   20: var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
+                        ^^^^^^^^^^^^^^^^^^^^ [1]: object literal
    21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
                               ^^^^^ [2]: empty
 
@@ -191,8 +191,8 @@ Error: literal.js:24
  24: (o_loop.p: empty); // error: number ~> empty
       ^^^^^^^^ Cannot cast `o_loop.p` to empty because number [1] is incompatible with empty [2].
   References:
-   24: (o_loop.p: empty); // error: number ~> empty
-        ^^^^^^^^ [1]: number
+   23: var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                         ^ [1]: number
    24: (o_loop.p: empty); // error: number ~> empty
                   ^^^^^ [2]: empty
 
@@ -216,8 +216,8 @@ Error: null.js:13
  13: (o_shadow.p: string);
       ^^^^^^^^^^ Cannot cast `o_shadow.p` to string because number [1] is incompatible with string [2].
   References:
-   13: (o_shadow.p: string);
-        ^^^^^^^^^^ [1]: number
+   14: o_shadow.p = 0; // error: number ~> string
+                    ^ [1]: number
    13: (o_shadow.p: string);
                     ^^^^^^ [2]: string
 
@@ -225,8 +225,8 @@ Error: null.js:18
  18:   (o_nonstrict.p: empty); // error: mixed ~> empty
         ^^^^^^^^^^^^^ Cannot cast `o_nonstrict.p` to empty because property `p` of unknown type [1] is incompatible with empty [2].
   References:
-   18:   (o_nonstrict.p: empty); // error: mixed ~> empty
-          ^^^^^^^^^^^^^ [1]: property `p` of unknown type
+   17: if (o_nonstrict.p) {
+           ^^^^^^^^^^^^^ [1]: property `p` of unknown type
    18:   (o_nonstrict.p: empty); // error: mixed ~> empty
                          ^^^^^ [2]: empty
 

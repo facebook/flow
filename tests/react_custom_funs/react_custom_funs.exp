@@ -45,8 +45,8 @@ Error: clone_element.js:28
  28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).type` to statics of `B` because `A` [1] is incompatible with `B` [2].
   References:
-   28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `A`
+   16: declare var a: Element<Class<A>>;
+                                    ^ [1]: `A`
    28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
                                           ^ [2]: `B`
 
@@ -60,8 +60,8 @@ Error: clone_element.js:31
  31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
   References:
-   31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+    8: class A extends React.Component<{foo: number}, void> {}
+                                             ^^^^^^ [1]: number
    31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
                                          ^^^^^^ [2]: string
 
@@ -69,8 +69,8 @@ Error: clone_element.js:34
  34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
   References:
-   34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+    9: class B extends React.Component<{foo: number, bar: number}, void> {}
+                                             ^^^^^^ [1]: number
    34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
                                          ^^^^^^ [2]: string
 
@@ -361,8 +361,8 @@ Error: create_element.js:38
  38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
-   38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   15: class A extends React.Component<{foo: number, bar: number}> {}
+                                             ^^^^^^ [1]: number
    38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
                                                             ^^^^^^^ [2]: boolean
 
@@ -370,8 +370,8 @@ Error: create_element.js:40
  40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
-   40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   16: function B(props: {foo: number, bar: number}) {}
+                               ^^^^^^ [1]: number
    40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
                                                             ^^^^^^^ [2]: boolean
 
@@ -1302,8 +1302,8 @@ Error: create_element.js:221
 221: (React.createElement(M).type: typeof N); // Error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).type` to `typeof N` because `M` [1] is incompatible with `N` [2].
   References:
-  221: (React.createElement(M).type: typeof N); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `M`
+  218: class M extends React.Component<{}> {}
+             ^ [1]: `M`
   219: class N extends React.Component<{}> {}
              ^ [2]: `N`
 
@@ -1451,8 +1451,8 @@ Error: create_factory.js:38
  38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `aFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
-   38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   12: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                             ^^^^^^ [1]: number
    38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
                                               ^^^^^^^ [2]: boolean
 
@@ -1460,8 +1460,8 @@ Error: create_factory.js:39
  39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `bFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
   References:
-   39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+   13: function B(props: {foo: number, bar: number}) {}
+                               ^^^^^^ [1]: number
    39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
                                               ^^^^^^^ [2]: boolean
 
@@ -2360,8 +2360,8 @@ Error: create_factory.js:218
 218: (mFactory().type: typeof N); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `mFactory().type` to `typeof N` because `M` [1] is incompatible with `N` [2].
   References:
-  218: (mFactory().type: typeof N); // Error
-        ^^^^^^^^^^^^^^^ [1]: `M`
+  214: class M extends React.Component<{}> {}
+             ^ [1]: `M`
   215: class N extends React.Component<{}> {}
              ^ [2]: `N`
 

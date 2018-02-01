@@ -53,8 +53,8 @@ Error: arrows.js:16
  16: (j: D); // error, since return type of bar is C, not the type of `this`
       ^ Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2].
   References:
-   16: (j: D); // error, since return type of bar is C, not the type of `this`
-        ^ [1]: `C`
+    1: class C {
+             ^ [1]: `C`
    16: (j: D); // error, since return type of bar is C, not the type of `this`
            ^ [2]: `D`
 

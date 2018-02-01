@@ -2,8 +2,8 @@ Error: test.js:3
   3: N.x = M(N.x);
            ^^^^^^ string [1] is incompatible with number [2].
   References:
-    3: N.x = M(N.x);
-             ^^^^^^ [1]: string
+    2:     declare module.exports: (x: string) => string;
+                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
     3: N.x = M(N.x);
        ^^^ [2]: number
 
@@ -17,8 +17,8 @@ Error: test.js:5
   5: N.y = P(N.y);
            ^^^^^^ string [1] is incompatible with number [2].
   References:
-    5: N.y = P(N.y);
-             ^^^^^^ [1]: string
+    2:     declare module.exports: (x: string) => string;
+                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
     5: N.y = P(N.y);
        ^^^ [2]: number
 
@@ -32,8 +32,8 @@ Error: test.js:7
   7: N.z = Q(N.z);
            ^^^^^^ string [1] is incompatible with number [2].
   References:
-    7: N.z = Q(N.z);
-             ^^^^^^ [1]: string
+    2:     declare module.exports: (x: string) => string;
+                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
     7: N.z = Q(N.z);
        ^^^ [2]: number
 

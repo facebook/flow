@@ -2,8 +2,8 @@ Error: keyvalue.js:5
   5:     (x[""]: number);
           ^^^^^ Cannot cast `x[""]` to number because string [1] is incompatible with number [2].
   References:
-    5:     (x[""]: number);
-            ^^^^^ [1]: string
+    4:   function(x: { [key: number]: string }) {
+                                      ^^^^^^ [1]: string
     5:     (x[""]: number);
                    ^^^^^^ [2]: number
 

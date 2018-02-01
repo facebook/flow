@@ -114,8 +114,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            11: (ret: void);
                 ^^^ Cannot cast \`ret\` to undefined because array type [1] is incompatible with undefined [2].
             References:
-             11: (ret: void);
-                  ^^^ [1]: array type
+              4:       function foo<T: Array<*>>(arr: T) {
+                                                      ^ [1]: array type
              11: (ret: void);
                        ^^^^ [2]: undefined
         `,
@@ -151,8 +151,17 @@ export default suite(({addFile, addFiles, addCode}) => [
            11: (ret: void);
                 ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2].
             References:
+              6:         return foo([...arr, 1]);
+                                    ^^^^^^^^^^^ [1]: array literal
              11: (ret: void);
-                  ^^^ [1]: array literal
+                       ^^^^ [2]: undefined
+
+          test.js:11
+           11: (ret: void);
+                ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2].
+            References:
+              8:       const ret = foo([1]);
+                                       ^^^ [1]: array literal
              11: (ret: void);
                        ^^^^ [2]: undefined
         `,

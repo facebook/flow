@@ -2,8 +2,8 @@ Error: test.js:18
  18: ((new Foo).x: number); // error: Qux wins
       ^^^^^^^^^^^ Cannot cast `new Foo().x` to number because string [1] is incompatible with number [2].
   References:
-   18: ((new Foo).x: number); // error: Qux wins
-        ^^^^^^^^^^^ [1]: string
+    1: declare class Foo extends Qux<string> mixins Bar<number> {
+                                     ^^^^^^ [1]: string
    18: ((new Foo).x: number); // error: Qux wins
                      ^^^^^^ [2]: number
 
@@ -11,8 +11,8 @@ Error: test.js:19
  19: ((new Foo).y: string); // error: Bar wins
       ^^^^^^^^^^^ Cannot cast `new Foo().y` to string because number [1] is incompatible with string [2].
   References:
-   19: ((new Foo).y: string); // error: Bar wins
-        ^^^^^^^^^^^ [1]: number
+    1: declare class Foo extends Qux<string> mixins Bar<number> {
+                                                        ^^^^^^ [1]: number
    19: ((new Foo).y: string); // error: Bar wins
                      ^^^^^^ [2]: string
 
@@ -20,8 +20,8 @@ Error: test.js:20
  20: ((new Foo).z: number); // error: Qux wins
       ^^^^^^^^^^^ Cannot cast `new Foo().z` to number because string [1] is incompatible with number [2].
   References:
-   20: ((new Foo).z: number); // error: Qux wins
-        ^^^^^^^^^^^ [1]: string
+    1: declare class Foo extends Qux<string> mixins Bar<number> {
+                                     ^^^^^^ [1]: string
    20: ((new Foo).z: number); // error: Qux wins
                      ^^^^^^ [2]: number
 

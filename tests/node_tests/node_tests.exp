@@ -19,8 +19,8 @@ Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because `Buffer` [1] is incompatible with number [2].
   References:
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-              ^^^^^^^^^^^ [1]: `Buffer`
+  1428:   read(size?: number): ?(string | Buffer);
+                                          ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:1428
    12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                            ^^^^^^ [2]: number
 
@@ -28,8 +28,8 @@ Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because null or undefined [1] is incompatible with number [2].
   References:
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-              ^^^^^^^^^^^ [1]: null or undefined
+  1428:   read(size?: number): ?(string | Buffer);
+                               ^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/node.js:1428
    12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                            ^^^^^^ [2]: number
 
@@ -37,8 +37,8 @@ Error: crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because string [1] is incompatible with number [2].
   References:
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-              ^^^^^^^^^^^ [1]: string
+  1428:   read(size?: number): ?(string | Buffer);
+                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1428
    12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                            ^^^^^^ [2]: number
 
@@ -68,8 +68,8 @@ Error: crypto/crypto.js:36
  36:     (hmac.digest('hex'): void); // 1 error
           ^^^^^^^^^^^^^^^^^^ Cannot cast `hmac.digest(...)` to undefined because string [1] is incompatible with undefined [2].
   References:
-   36:     (hmac.digest('hex'): void); // 1 error
-            ^^^^^^^^^^^^^^^^^^ [1]: string
+  438:   digest(encoding: 'hex' | 'latin1' | 'binary' | 'base64'): string;
+                                                                   ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:438
    36:     (hmac.digest('hex'): void); // 1 error
                                 ^^^^ [2]: undefined
 
@@ -77,8 +77,8 @@ Error: crypto/crypto.js:37
  37:     (hmac.digest(): void); // 1 error
           ^^^^^^^^^^^^^ Cannot cast `hmac.digest()` to undefined because `Buffer` [1] is incompatible with undefined [2].
   References:
-   37:     (hmac.digest(): void); // 1 error
-            ^^^^^^^^^^^^^ [1]: `Buffer`
+  440:   digest(encoding: void): Buffer;
+                                 ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:440
    37:     (hmac.digest(): void); // 1 error
                            ^^^^ [2]: undefined
 
@@ -116,8 +116,8 @@ Error: fs/fs.js:28
  28: (fs.readFileSync("file.exp") : string); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to string because `Buffer` [1] is incompatible with string [2].
   References:
-   28: (fs.readFileSync("file.exp") : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Buffer`
+  921:   ): Buffer;
+            ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:921
    28: (fs.readFileSync("file.exp") : string); // error
                                       ^^^^^^ [2]: string
 
@@ -125,8 +125,8 @@ Error: fs/fs.js:31
  31: (fs.readFileSync("file.exp", "blah") : Buffer); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to `Buffer` because string [1] is incompatible with `Buffer` [2].
   References:
-   31: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+  925:   ): string;
+            ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:925
    31: (fs.readFileSync("file.exp", "blah") : Buffer); // error
                                               ^^^^^^ [2]: `Buffer`
 
@@ -134,8 +134,8 @@ Error: fs/fs.js:34
  34: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to `Buffer` because string [1] is incompatible with `Buffer` [2].
   References:
-   34: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+  926:   declare function readFileSync(path: string | Buffer | URL | number, options: { encoding: string, flag?: string }): string;
+                                                                                                                            ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:926
    34: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
                                                             ^^^^^^ [2]: `Buffer`
 
@@ -143,8 +143,8 @@ Error: fs/fs.js:37
  37: (fs.readFileSync("file.exp", {}) : string); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to string because `Buffer` [1] is incompatible with string [2].
   References:
-   37: (fs.readFileSync("file.exp", {}) : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `Buffer`
+  927:   declare function readFileSync(path: string | Buffer | URL | number, options: { encoding?: void, flag?: string }): Buffer;
+                                                                                                                           ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:927
    37: (fs.readFileSync("file.exp", {}) : string); // error
                                           ^^^^^^ [2]: string
 
@@ -780,8 +780,11 @@ Error: json_file/test.js:4
   4: (data.foo: void); // error, should be object literal
       ^^^^^^^^ Cannot cast `data.foo` to undefined because object literal [1] is incompatible with undefined [2].
   References:
-    4: (data.foo: void); // error, should be object literal
-        ^^^^^^^^ [1]: object literal
+                v
+    2:   "foo": {
+    3:     "bar": true
+    4:   },
+         ^ [1]: object literal. See: json_file/package/index.json:2
     4: (data.foo: void); // error, should be object literal
                   ^^^^ [2]: undefined
 
@@ -789,8 +792,8 @@ Error: json_file/test.js:5
   5: (data.foo.bar: void); // error, should be boolean
       ^^^^^^^^^^^^ Cannot cast `data.foo.bar` to undefined because boolean [1] is incompatible with undefined [2].
   References:
-    5: (data.foo.bar: void); // error, should be boolean
-        ^^^^^^^^^^^^ [1]: boolean
+    3:     "bar": true
+                  ^^^^ [1]: boolean. See: json_file/package/index.json:3
     5: (data.foo.bar: void); // error, should be boolean
                       ^^^^ [2]: undefined
 
@@ -798,8 +801,8 @@ Error: json_file/test.js:6
   6: (data.abc: boolean); // error, should be ?string
       ^^^^^^^^ Cannot cast `data.abc` to boolean because null or undefined [1] is incompatible with boolean [2].
   References:
-    6: (data.abc: boolean); // error, should be ?string
-        ^^^^^^^^ [1]: null or undefined
+    6:   "abc": (null: ?string)
+                       ^^^^^^^ [1]: null or undefined. See: json_file/package/index.json:6
     6: (data.abc: boolean); // error, should be ?string
                   ^^^^^^^ [2]: boolean
 
@@ -807,8 +810,8 @@ Error: json_file/test.js:6
   6: (data.abc: boolean); // error, should be ?string
       ^^^^^^^^ Cannot cast `data.abc` to boolean because string [1] is incompatible with boolean [2].
   References:
-    6: (data.abc: boolean); // error, should be ?string
-        ^^^^^^^^ [1]: string
+    6:   "abc": (null: ?string)
+                        ^^^^^^ [1]: string. See: json_file/package/index.json:6
     6: (data.abc: boolean); // error, should be ?string
                   ^^^^^^^ [2]: boolean
 
@@ -816,8 +819,8 @@ Error: json_file/test.js:9
   9: (data2.baz: void); // error, should be string
       ^^^^^^^^^ Cannot cast `data2.baz` to undefined because string [1] is incompatible with undefined [2].
   References:
-    9: (data2.baz: void); // error, should be string
-        ^^^^^^^^^ [1]: string
+    5:   "baz": "hello world",
+                ^^^^^^^^^^^^^ [1]: string. See: json_file/package/index.json:5
     9: (data2.baz: void); // error, should be string
                    ^^^^ [2]: undefined
 
@@ -825,8 +828,8 @@ Error: json_file/test.js:12
  12: (data3.foo: void); // error, should be number (not string! index.js wins)
       ^^^^^^^^^ Cannot cast `data3.foo` to undefined because number [1] is incompatible with undefined [2].
   References:
-   12: (data3.foo: void); // error, should be number (not string! index.js wins)
-        ^^^^^^^^^ [1]: number
+    4:   foo: 123
+              ^^^ [1]: number. See: json_file/package2/index.js:4
    12: (data3.foo: void); // error, should be number (not string! index.js wins)
                    ^^^^ [2]: undefined
 
@@ -834,8 +837,8 @@ Error: json_file/test.js:16
  16: (data4: void); // error, should be Array<number>
       ^^^^^ Cannot cast `data4` to undefined because array literal [1] is incompatible with undefined [2].
   References:
-   16: (data4: void); // error, should be Array<number>
-        ^^^^^ [1]: array literal
+    1: [1, 2]
+       ^^^^^^ [1]: array literal. See: json_file/json_array.json:1
    16: (data4: void); // error, should be Array<number>
                ^^^^ [2]: undefined
 
@@ -843,8 +846,8 @@ Error: json_file/test.js:18
  18: (require('./json_string'): void); // error, should be string
       ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
   References:
-   18: (require('./json_string'): void); // error, should be string
-        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+    1: "foo"
+       ^^^^^ [1]: string. See: json_file/json_string.json:1
    18: (require('./json_string'): void); // error, should be string
                                   ^^^^ [2]: undefined
 
@@ -852,8 +855,8 @@ Error: json_file/test.js:19
  19: (require('./json_number'): void); // error, should be number
       ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because number [1] is incompatible with undefined [2].
   References:
-   19: (require('./json_number'): void); // error, should be number
-        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+    1: 1
+       ^ [1]: number. See: json_file/json_number.json:1
    19: (require('./json_number'): void); // error, should be number
                                   ^^^^ [2]: undefined
 
@@ -861,8 +864,8 @@ Error: json_file/test.js:20
  20: (require('./json_true'): void); // error, should be true
       ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because boolean [1] is incompatible with undefined [2].
   References:
-   20: (require('./json_true'): void); // error, should be true
-        ^^^^^^^^^^^^^^^^^^^^^^ [1]: boolean
+    1: true
+       ^^^^ [1]: boolean. See: json_file/json_true.json:1
    20: (require('./json_true'): void); // error, should be true
                                 ^^^^ [2]: undefined
 
@@ -870,8 +873,8 @@ Error: json_file/test.js:21
  21: (require('./json_false'): void); // error, should be false
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because boolean [1] is incompatible with undefined [2].
   References:
-   21: (require('./json_false'): void); // error, should be false
-        ^^^^^^^^^^^^^^^^^^^^^^^ [1]: boolean
+    1: false
+       ^^^^^ [1]: boolean. See: json_file/json_false.json:1
    21: (require('./json_false'): void); // error, should be false
                                  ^^^^ [2]: undefined
 
@@ -879,8 +882,8 @@ Error: json_file/test.js:22
  22: (require('./json_null'): void); // error, should be null
       ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because null [1] is incompatible with undefined [2].
   References:
-   22: (require('./json_null'): void); // error, should be null
-        ^^^^^^^^^^^^^^^^^^^^^^ [1]: null
+    1: null
+       ^^^^ [1]: null. See: json_file/json_null.json:1
    22: (require('./json_null'): void); // error, should be null
                                 ^^^^ [2]: undefined
 
@@ -888,8 +891,8 @@ Error: os/userInfo.js:7
   7: (u1.username: Buffer); // error
       ^^^^^^^^^^^ Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `Buffer` [2].
   References:
-    7: (u1.username: Buffer); // error
-        ^^^^^^^^^^^ [1]: string
+  1295:   username: string,
+                    ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1295
     7: (u1.username: Buffer); // error
                      ^^^^^^ [2]: `Buffer`
 
@@ -897,8 +900,8 @@ Error: os/userInfo.js:11
  11: (u2.username: Buffer); // error
       ^^^^^^^^^^^ Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `Buffer` [2].
   References:
-   11: (u2.username: Buffer); // error
-        ^^^^^^^^^^^ [1]: string
+  1295:   username: string,
+                    ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1295
    11: (u2.username: Buffer); // error
                      ^^^^^^ [2]: `Buffer`
 
@@ -906,8 +909,8 @@ Error: os/userInfo.js:14
  14: (u3.username: string); // error
       ^^^^^^^^^^^ Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with string [2].
   References:
-   14: (u3.username: string); // error
-        ^^^^^^^^^^^ [1]: `Buffer`
+  1287:   username: Buffer,
+                    ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:1287
    14: (u3.username: string); // error
                      ^^^^^^ [2]: string
 
@@ -1097,8 +1100,8 @@ Error: process/process.js:14
  14: (process.emitWarning("blah"): string); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incompatible with string [2].
   References:
-   14: (process.emitWarning("blah"): string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
+  1933:   emitWarning(warning: string | Error): void;
+                                                ^^^^ [1]: undefined. See lib: <BUILTINS>/node.js:1933
    14: (process.emitWarning("blah"): string); // error
                                      ^^^^^^ [2]: string
 

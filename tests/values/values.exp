@@ -76,8 +76,8 @@ Error: classes.js:36
   References:
    36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
         ^^^^ [1]: string
-   36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
-              ^^^^^^^^^^^^^^^^ [2]: number
+   10:   a: number;
+            ^^^^^^ [2]: number
 
 Error: classes.js:39
  39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
@@ -85,8 +85,8 @@ Error: classes.js:39
   References:
    39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
          ^^^^^^^^ [1]: function
-   39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
-                    ^^^^^^^^^^^^^^^^ [2]: number
+   10:   a: number;
+            ^^^^^^ [2]: number
 
 Error: classes.js:41
  41: (true: $Values<OneProp>); // Error: There is no property with the type of
@@ -94,8 +94,8 @@ Error: classes.js:41
   References:
    41: (true: $Values<OneProp>); // Error: There is no property with the type of
         ^^^^ [1]: boolean
-   41: (true: $Values<OneProp>); // Error: There is no property with the type of
-              ^^^^^^^^^^^^^^^^ [2]: number
+   10:   a: number;
+            ^^^^^^ [2]: number
 
 Error: classes.js:46
  46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
@@ -163,8 +163,8 @@ Error: classes.js:51
   References:
    51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
         ^^^^ [1]: string
-   51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
-              ^^^^^^^^^^^^^^ [2]: number
+   24: class Child extends Parent { b: number; }
+                                       ^^^^^^ [2]: number
 
 Error: classes.js:54
  54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
@@ -172,8 +172,8 @@ Error: classes.js:54
   References:
    54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
          ^^^^^^^^ [1]: function
-   54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
-                    ^^^^^^^^^^^^^^ [2]: number
+   24: class Child extends Parent { b: number; }
+                                       ^^^^^^ [2]: number
 
 Error: classes.js:56
  56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
@@ -181,8 +181,8 @@ Error: classes.js:56
   References:
    56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
         ^^^^ [1]: boolean
-   56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
-              ^^^^^^^^^^^^^^ [2]: number
+   24: class Child extends Parent { b: number; }
+                                       ^^^^^^ [2]: number
 
 Error: non_object.js:3
   3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no

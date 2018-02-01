@@ -2,8 +2,8 @@ Error: all.js:13
  13:   (a: number);  // Error: string ~> number
         ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
   References:
-   13:   (a: number);  // Error: string ~> number
-          ^ [1]: string
+    3: declare var pstr: Promise<string>;
+                                 ^^^^^^ [1]: string
    13:   (a: number);  // Error: string ~> number
              ^^^^^^ [2]: number
 
@@ -11,8 +11,8 @@ Error: all.js:14
  14:   (b: boolean); // Error: number ~> boolean
         ^ Cannot cast `b` to boolean because number [1] is incompatible with boolean [2].
   References:
-   14:   (b: boolean); // Error: number ~> boolean
-          ^ [1]: number
+    4: declare var pnum: Promise<number>;
+                                 ^^^^^^ [1]: number
    14:   (b: boolean); // Error: number ~> boolean
              ^^^^^^^ [2]: boolean
 
@@ -20,8 +20,8 @@ Error: all.js:15
  15:   (c: string);  // Error: boolean ~> string
         ^ Cannot cast `c` to string because boolean [1] is incompatible with string [2].
   References:
-   15:   (c: string);  // Error: boolean ~> string
-          ^ [1]: boolean
+    9:   true, // non-Promise values passed through
+         ^^^^ [1]: boolean
    15:   (c: string);  // Error: boolean ~> string
              ^^^^^^ [2]: string
 
@@ -29,8 +29,8 @@ Error: all.js:19
  19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
           ^ Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2].
   References:
-   19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^ [1]: boolean
+    9:   true, // non-Promise values passed through
+         ^^^^ [1]: boolean
    19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]: undefined
 
@@ -38,8 +38,8 @@ Error: all.js:19
  19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
           ^ Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
   References:
-   19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^ [1]: number
+    4: declare var pnum: Promise<number>;
+                                 ^^^^^^ [1]: number
    19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]: undefined
 
@@ -47,8 +47,8 @@ Error: all.js:19
  19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
           ^ Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
   References:
-   19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^ [1]: string
+    3: declare var pstr: Promise<string>;
+                                 ^^^^^^ [1]: string
    19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]: undefined
 

@@ -3,8 +3,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `AImplementation`
+    4: export function foo(): AImplementation { return new AImplementation(); }
+                              ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -12,8 +12,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestImplementation`
+    2: export function foo(): TestImplementation { return new TestImplementation(); }
+                              ^^^^^^^^^^^^^^^^^^ [1]: `TestImplementation`. See: node_modules/test/Test.js:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -23,8 +23,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -32,8 +32,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -43,8 +43,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `AImplementation`
+    4: export function foo(): AImplementation { return new AImplementation(); }
+                              ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -52,8 +52,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestImplementation`
+    2: export function foo(): TestImplementation { return new TestImplementation(); }
+                              ^^^^^^^^^^^^^^^^^^ [1]: `TestImplementation`. See: node_modules/test/Test.js:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -66,8 +66,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -75,8 +75,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -86,8 +86,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `AImplementation`
+    4: export function foo(): AImplementation { return new AImplementation(); }
+                              ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -95,8 +95,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestImplementation` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestImplementation`
+    2: export function foo(): TestImplementation { return new TestImplementation(); }
+                              ^^^^^^^^^^^^^^^^^^ [1]: `TestImplementation`. See: node_modules/test/Test.js:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -106,8 +106,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -115,8 +115,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -129,8 +129,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -138,8 +138,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -149,8 +149,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -158,8 +158,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 
@@ -169,8 +169,8 @@ Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
   References:
-    4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
-        ^^^^^^^ [1]: `ADefinition`
+    2: declare export function foo(): ADefinition;
+                                      ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
 
@@ -178,8 +178,8 @@ Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
       ^^^^^^^^^^ Cannot cast `test.foo()` to boolean because `TestDefinition` [1] is incompatible with boolean [2].
   References:
-    7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
-        ^^^^^^^^^^ [1]: `TestDefinition`
+    2: declare export function foo(): TestDefinition;
+                                      ^^^^^^^^^^^^^^ [1]: `TestDefinition`. See: node_modules/test/Test.js.flow:2
     7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
                     ^^^^^^^ [2]: boolean
 

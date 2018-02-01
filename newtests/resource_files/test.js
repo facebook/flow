@@ -35,8 +35,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (css: string)
                 ^^^ Cannot cast \`css\` to string because object type [1] is incompatible with string [2].
             References:
-              5: (css: string)
-                  ^^^ [1]: object type
+              3: const css = require('./foo.css');
+                                     ^^^^^^^^^^^ [1]: object type
               5: (css: string)
                        ^^^^^^ [2]: string
         `,
@@ -80,8 +80,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (png: number)
                 ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2].
             References:
-              5: (png: number)
-                  ^^^ [1]: string
+              3: const png = require('./bar.png');
+                                     ^^^^^^^^^^^ [1]: string
               5: (png: number)
                        ^^^^^^ [2]: number
         `,
@@ -98,8 +98,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (css: string)
                 ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2].
             References:
-              5: (css: string)
-                  ^^^ [1]: boolean
+              2: declare module.exports: boolean;
+                                         ^^^^^^^ [1]: boolean. See: cssMock.js:2
               5: (css: string)
                        ^^^^^^ [2]: string
         `,

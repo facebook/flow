@@ -35,8 +35,8 @@ Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
       ^^^^^^ Cannot cast `C.name` to number because string [1] is incompatible with number [2].
   References:
-   12: (C.name: number); // error, it's a string
-        ^^^^^^ [1]: string
+    1: declare class C {
+                     ^ [1]: string
    12: (C.name: number); // error, it's a string
                 ^^^^^^ [2]: number
 

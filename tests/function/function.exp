@@ -46,8 +46,8 @@ Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `test.call.apply(...)` to undefined because number [1] is incompatible with undefined [2].
   References:
-   32: (test.call.apply(test, [0, 123, 'foo']): void);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+    1: function test(a: string, b: number): number {
+                                            ^^^^^^ [1]: number
    32: (test.call.apply(test, [0, 123, 'foo']): void);
                                                 ^^^^ [2]: undefined
 
@@ -212,8 +212,8 @@ Error: function.js:37
  37:     (x.length: void); // error, it's a number
           ^^^^^^^^ Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2].
   References:
-   37:     (x.length: void); // error, it's a number
-            ^^^^^^^^ [1]: number
+   99:     length: number;
+                   ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:99
    37:     (x.length: void); // error, it's a number
                       ^^^^ [2]: undefined
 
@@ -221,8 +221,8 @@ Error: function.js:38
  38:     (y.length: void); // error, it's a number
           ^^^^^^^^ Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2].
   References:
-   38:     (y.length: void); // error, it's a number
-            ^^^^^^^^ [1]: number
+   99:     length: number;
+                   ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:99
    38:     (y.length: void); // error, it's a number
                       ^^^^ [2]: undefined
 
@@ -230,8 +230,8 @@ Error: function.js:39
  39:     (z.length: void); // error, it's a number
           ^^^^^^^^ Cannot cast `z.length` to undefined because number [1] is incompatible with undefined [2].
   References:
-   39:     (z.length: void); // error, it's a number
-            ^^^^^^^^ [1]: number
+   99:     length: number;
+                   ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:99
    39:     (z.length: void); // error, it's a number
                       ^^^^ [2]: undefined
 
@@ -239,8 +239,8 @@ Error: function.js:41
  41:     (x.name: void); // error, it's a string
           ^^^^^^ Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2].
   References:
-   41:     (x.name: void); // error, it's a string
-            ^^^^^^ [1]: string
+  100:     name: string;
+                 ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:100
    41:     (x.name: void); // error, it's a string
                     ^^^^ [2]: undefined
 
@@ -248,8 +248,8 @@ Error: function.js:42
  42:     (y.name: void); // error, it's a string
           ^^^^^^ Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2].
   References:
-   42:     (y.name: void); // error, it's a string
-            ^^^^^^ [1]: string
+  100:     name: string;
+                 ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:100
    42:     (y.name: void); // error, it's a string
                     ^^^^ [2]: undefined
 
@@ -257,8 +257,8 @@ Error: function.js:43
  43:     (z.name: void); // error, it's a string
           ^^^^^^ Cannot cast `z.name` to undefined because string [1] is incompatible with undefined [2].
   References:
-   43:     (z.name: void); // error, it's a string
-            ^^^^^^ [1]: string
+  100:     name: string;
+                 ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:100
    43:     (z.name: void); // error, it's a string
                     ^^^^ [2]: undefined
 

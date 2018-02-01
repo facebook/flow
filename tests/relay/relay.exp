@@ -2,8 +2,8 @@ Error: Profile.js:19
  19:     (this.props.foo: empty); // Error: number ~> empty
           ^^^^^^^^^^^^^^ Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2].
   References:
-   19:     (this.props.foo: empty); // Error: number ~> empty
-            ^^^^^^^^^^^^^^ [1]: number
+   14:   foo: number,
+              ^^^^^^ [1]: number
    19:     (this.props.foo: empty); // Error: number ~> empty
                             ^^^^^ [2]: empty
 
@@ -11,8 +11,8 @@ Error: Profile.js:20
  20:     (this.props.user.id: empty); // Error: string ~> empty
           ^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2].
   References:
-   20:     (this.props.user.id: empty); // Error: string ~> empty
-            ^^^^^^^^^^^^^^^^^^ [1]: string
+   15:     +id: string,
+                ^^^^^^ [1]: string. See: Profile.graphql.js:15
    20:     (this.props.user.id: empty); // Error: string ~> empty
                                 ^^^^^ [2]: empty
 
@@ -20,8 +20,8 @@ Error: Profile.js:21
  21:     (this.props.user.name: empty); // Error: string ~> empty
           ^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2].
   References:
-   21:     (this.props.user.name: empty); // Error: string ~> empty
-            ^^^^^^^^^^^^^^^^^^^^ [1]: string
+   16:     +name: string,
+                  ^^^^^^ [1]: string. See: Profile.graphql.js:16
    21:     (this.props.user.name: empty); // Error: string ~> empty
                                   ^^^^^ [2]: empty
 
@@ -29,8 +29,8 @@ Error: Profile.js:22
  22:     (this.props.user.pic.id: empty); // Error: string ~> empty
           ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2].
   References:
-   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
-            ^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+   18:       +id: string,
+                  ^^^^^^ [1]: string. See: Profile.graphql.js:18
    22:     (this.props.user.pic.id: empty); // Error: string ~> empty
                                     ^^^^^ [2]: empty
 
@@ -49,8 +49,8 @@ Error: ProfilePic.js:17
  17:     (this.props.image.url: empty); // Error: string ~> empty
           ^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2].
   References:
-   17:     (this.props.image.url: empty); // Error: string ~> empty
-            ^^^^^^^^^^^^^^^^^^^^ [1]: string
+   14:     +url: string,
+                 ^^^^^^ [1]: string. See: ProfilePic.graphql.js:14
    17:     (this.props.image.url: empty); // Error: string ~> empty
                                   ^^^^^ [2]: empty
 

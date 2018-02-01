@@ -11,8 +11,8 @@ Error: class.js:15
  15:       (b : string); // error: number ~> string
             ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
   References:
-   15:       (b : string); // error: number ~> string
-              ^ [1]: number
+    7:   *stmt_next(): Generator<void, void, number> {
+                                             ^^^^^^ [1]: number
    15:       (b : string); // error: number ~> string
                   ^^^^^^ [2]: string
 
@@ -49,8 +49,8 @@ Error: class.js:98
  98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                              ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
   References:
-   98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
-                                               ^ [1]: number
+   28:     var x: boolean = yield 0; // error: number ~> boolean
+                                  ^ [1]: number
    98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                    ^^^^^^ [2]: string
 
@@ -58,8 +58,8 @@ Error: class.js:104
 104:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2].
   References:
-  104:   (infer_stmt_next : boolean) // error: string ~> boolean
-          ^^^^^^^^^^^^^^^ [1]: string
+   29:     return "";
+                  ^^ [1]: string
   104:   (infer_stmt_next : boolean) // error: string ~> boolean
                             ^^^^^^^ [2]: boolean
 
@@ -67,8 +67,8 @@ Error: class.js:122
 122:   (x : number) // error: string ~> number
         ^ Cannot cast `x` to number because string [1] is incompatible with number [2].
   References:
-  122:   (x : number) // error: string ~> number
-          ^ [1]: string
+   56:       yield "";
+                   ^^ [1]: string
   122:   (x : number) // error: string ~> number
               ^^^^^^ [2]: number
 
@@ -82,8 +82,8 @@ Error: class.js:128
 128:   (x : string) // error: number ~> string
         ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
   References:
-  128:   (x : string) // error: number ~> string
-          ^ [1]: number
+   75:   *delegate_yield_iterable(xs: Array<number>) {
+                                            ^^^^^^ [1]: number
   128:   (x : string) // error: number ~> string
               ^^^^^^ [2]: string
 
@@ -97,8 +97,8 @@ Error: class_failure.js:12
  12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                              ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
   References:
-   12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
-                                               ^ [1]: number
+    5:     var x: boolean = yield 0; // error: number ~> boolean
+                                  ^ [1]: number
    12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                    ^^^^^^ [2]: string
 
@@ -106,8 +106,8 @@ Error: class_failure.js:19
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2].
   References:
-   19:   (infer_stmt_next : boolean) // error: string ~> boolean
-          ^^^^^^^^^^^^^^^ [1]: string
+    6:     return "";
+                  ^^ [1]: string
    19:   (infer_stmt_next : boolean) // error: string ~> boolean
                             ^^^^^^^ [2]: boolean
 
@@ -124,8 +124,8 @@ Error: generators.js:14
  14:     (b : string); // error: number ~> string
           ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
   References:
-   14:     (b : string); // error: number ~> string
-            ^ [1]: number
+    6: function *stmt_next(): Generator<void, void, number> {
+                                                    ^^^^^^ [1]: number
    14:     (b : string); // error: number ~> string
                 ^^^^^^ [2]: string
 
@@ -150,8 +150,8 @@ Error: generators.js:30
  30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
                                     ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
   References:
-   30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
-                                      ^ [1]: number
+   27:   var x: boolean = yield 0;
+                                ^ [1]: number
    30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
                                           ^^^^^^ [2]: string
 
@@ -159,8 +159,8 @@ Error: generators.js:35
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2].
   References:
-   35:   (infer_stmt_next : boolean) // error: string ~> boolean
-          ^^^^^^^^^^^^^^^ [1]: string
+   28:   return "";
+                ^^ [1]: string
    35:   (infer_stmt_next : boolean) // error: string ~> boolean
                             ^^^^^^^ [2]: boolean
 
@@ -174,8 +174,8 @@ Error: generators.js:79
  79:   (x : number) // error: string ~> number
         ^ Cannot cast `x` to number because string [1] is incompatible with number [2].
   References:
-   79:   (x : number) // error: string ~> number
-          ^ [1]: string
+   73:     yield "";
+                 ^^ [1]: string
    79:   (x : number) // error: string ~> number
               ^^^^^^ [2]: number
 
@@ -195,8 +195,8 @@ Error: generators.js:100
 100:   (x : string) // error: number ~> string
         ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
   References:
-  100:   (x : string) // error: number ~> string
-          ^ [1]: number
+   96: function *delegate_yield_iterable(xs: Array<number>) {
+                                                   ^^^^^^ [1]: number
   100:   (x : string) // error: number ~> string
               ^^^^^^ [2]: string
 
@@ -216,8 +216,8 @@ Error: refi.js:5
   5:   (x.a: string); // error
         ^^^ Cannot cast `x.a` to string because undefined [1] is incompatible with string [2].
   References:
-    5:   (x.a: string); // error
-          ^^^ [1]: undefined
+    1: function *a(x: {a: void | string}): Generator<void, void, void> {
+                          ^^^^ [1]: undefined
     5:   (x.a: string); // error
                ^^^^^^ [2]: string
 
@@ -225,8 +225,8 @@ Error: refi.js:22
  22:   (x.a: string); // error
         ^^^ Cannot cast `x.a` to string because undefined [1] is incompatible with string [2].
   References:
-   22:   (x.a: string); // error
-          ^^^ [1]: undefined
+   17: function *c(x: {a: void | string}): Generator<void, void, void> {
+                          ^^^^ [1]: undefined
    22:   (x.a: string); // error
                ^^^^^^ [2]: string
 
@@ -252,8 +252,8 @@ Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `refuse_return_result.value` to string because undefined [1] is incompatible with string [2].
   References:
-   20:   (refuse_return_result.value: string); // error: number | void ~> string
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
+  493:   | { done: true, +value?: Return }
+                                  ^^^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:493
    20:   (refuse_return_result.value: string); // error: number | void ~> string
                                       ^^^^^^ [2]: string
 
@@ -261,8 +261,8 @@ Error: throw.js:11
  11:   (catch_return_value : string); // error: number ~> string
         ^^^^^^^^^^^^^^^^^^ Cannot cast `catch_return_value` to string because number [1] is incompatible with string [2].
   References:
-   11:   (catch_return_value : string); // error: number ~> string
-          ^^^^^^^^^^^^^^^^^^ [1]: number
+    3:     yield 0;
+                 ^ [1]: number
    11:   (catch_return_value : string); // error: number ~> string
                                ^^^^^^ [2]: string
 
@@ -270,8 +270,8 @@ Error: throw.js:24
  24:   (yield_return_value: string); // error: number ~> string
         ^^^^^^^^^^^^^^^^^^ Cannot cast `yield_return_value` to string because number [1] is incompatible with string [2].
   References:
-   24:   (yield_return_value: string); // error: number ~> string
-          ^^^^^^^^^^^^^^^^^^ [1]: number
+   16:     yield 0;
+                 ^ [1]: number
    24:   (yield_return_value: string); // error: number ~> string
                               ^^^^^^ [2]: string
 

@@ -74,8 +74,8 @@ Error: const.js:21
  21: (foo: number); // error: string ~> number
       ^^^ Cannot cast `foo` to number because string [1] is incompatible with number [2].
   References:
-   21: (foo: number); // error: string ~> number
-        ^^^ [1]: string
+   19: const { foo } = { foo: "foo" }
+                              ^^^^^ [1]: string
    21: (foo: number); // error: string ~> number
              ^^^^^^ [2]: number
 
@@ -83,8 +83,8 @@ Error: const.js:22
  22: (bar: number); // error: string ~> number
       ^^^ Cannot cast `bar` to number because string [1] is incompatible with number [2].
   References:
-   22: (bar: number); // error: string ~> number
-        ^^^ [1]: string
+   20: const [ bar ] = ["bar"];
+                        ^^^^^ [1]: string
    22: (bar: number); // error: string ~> number
              ^^^^^^ [2]: number
 
@@ -92,8 +92,8 @@ Error: const.js:26
  26:   (baz: number); // error: string ~> number
         ^^^ Cannot cast `baz` to number because string [1] is incompatible with number [2].
   References:
-   26:   (baz: number); // error: string ~> number
-          ^^^ [1]: string
+   24: declare var bazzes: { baz: string }[];
+                                  ^^^^^^ [1]: string
    26:   (baz: number); // error: string ~> number
                ^^^^^^ [2]: number
 

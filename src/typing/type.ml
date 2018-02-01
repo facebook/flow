@@ -1007,7 +1007,7 @@ module rec TypeTerm : sig
   and choice_use_tool =
   | FullyResolveType of ident
   | TryFlow of int * spec
-  | EvalDestructor of int * defer_use_t * t_out
+  | EvalDestructor of reason * int * bool * defer_use_t * t_out
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
@@ -2216,8 +2216,8 @@ end
 
 module Primitive (P: PrimitiveType) = struct
   let desc = P.desc
-  let at tok = P.make (mk_reason desc tok)
-  let why reason = P.make (replace_reason_const desc reason)
+  let at tok = P.make (annot_reason (mk_reason desc tok))
+  let why reason = P.make (replace_reason_const ~keep_def_loc:true desc reason)
   let make = P.make
 end
 

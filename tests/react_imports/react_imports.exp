@@ -2,8 +2,8 @@ Error: commonjs-pascal.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 
@@ -57,8 +57,8 @@ Error: commonjs.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 
@@ -112,8 +112,8 @@ Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 
@@ -167,8 +167,8 @@ Error: es-default.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 
@@ -209,8 +209,8 @@ Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 
@@ -264,8 +264,8 @@ Error: es-namespace.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
   References:
-    4: (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`
+   26: declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]: statics of `React.Component`. See lib: <BUILTINS>/react.js:26
     4: (React.Component: number); // Error
                          ^^^^^^ [2]: number
 

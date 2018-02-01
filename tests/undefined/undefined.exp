@@ -8,8 +8,8 @@ Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ Cannot cast `name` to boolean because string [1] is incompatible with boolean [2].
   References:
-    7:     (name: boolean); // error, string or void
-            ^^^^ [1]: string
+    6:     var name = id ? 'John' : undefined;
+                           ^^^^^^ [1]: string
     7:     (name: boolean); // error, string or void
                   ^^^^^^^ [2]: boolean
 
@@ -17,8 +17,8 @@ Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
   References:
-    7:     (name: boolean); // error, string or void
-            ^^^^ [1]: undefined
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
     7:     (name: boolean); // error, string or void
                   ^^^^^^^ [2]: boolean
 
@@ -26,8 +26,8 @@ Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
           ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
   References:
-   13:     (bar[x]: boolean); // error, string or void
-            ^^^^^^ [1]: string
+   11:       'bar',
+             ^^^^^ [1]: string
    13:     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]: boolean
 
@@ -35,8 +35,8 @@ Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
           ^^^^^^ Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2].
   References:
-   13:     (bar[x]: boolean); // error, string or void
-            ^^^^^^ [1]: undefined
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
    13:     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]: boolean
 
@@ -50,10 +50,19 @@ Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only
           ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
   References:
+   17:     var undefined = 'foo';
+                           ^^^^^ [1]: string
    29:     (bar[x]: boolean); // error, string only
-            ^^^^^^ [1]: string
+                    ^^^^^^^ [2]: boolean
+
+Error: undefined2.js:29
+ 29:     (bar[x]: boolean); // error, string only
+          ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+  References:
+   27:       'bar',
+             ^^^^^ [1]: string
    29:     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]: boolean
 
 
-Found 7 errors
+Found 8 errors

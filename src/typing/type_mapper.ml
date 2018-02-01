@@ -1111,11 +1111,11 @@ class ['a] t = object(self)
         let spec' = self#spec cx map_cx spec in
         if spec' == spec then t
         else TryFlow (i, spec')
-    | EvalDestructor (id, d, tout) ->
+    | EvalDestructor (r, id, u, d, tout) ->
         let d' = self#defer_use_type cx map_cx d in
         let tout' = self#type_ cx map_cx tout in
         if d' == d && tout' == tout then t
-        else EvalDestructor (id, d', tout')
+        else EvalDestructor (r, id, u, d', tout')
 
   method resolve_spread cx map_cx ({rrt_resolved; rrt_unresolved; rrt_resolve_to} as t)=
     let rrt_resolved' = ListUtils.ident_map (self#resolved_param cx map_cx) rrt_resolved in

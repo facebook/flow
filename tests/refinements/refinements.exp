@@ -367,8 +367,8 @@ Error: mixed.js:97
  97:       (x['foo']: string); // error, mixed
             ^^^^^^^^ Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2].
   References:
-   97:       (x['foo']: string); // error, mixed
-              ^^^^^^^^ [1]: mixed
+   93: function obj2(x: mixed) {
+                        ^^^^^ [1]: mixed
    97:       (x['foo']: string); // error, mixed
                         ^^^^^^ [2]: string
 
@@ -446,8 +446,8 @@ Error: number.js:8
   8:       (x: void); // error
             ^ Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2].
   References:
-    8:       (x: void); // error
-              ^ [1]: number literal `0`
+    6:   function(x: number) {
+                     ^^^^^^ [1]: number literal `0`
     8:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -467,8 +467,8 @@ Error: number.js:17
  17:     (x: void); // error
           ^ Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
   References:
-   17:     (x: void); // error
-            ^ [1]: number
+   13:   function(x: number) {
+                     ^^^^^^ [1]: number
    17:     (x: void); // error
                ^^^^ [2]: undefined
 
@@ -494,8 +494,17 @@ Error: number.js:51
  51:       (x: void); // error
             ^ Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2].
   References:
+   48:   function(x: 0 | 1) {
+                     ^ [1]: number literal `0`
    51:       (x: void); // error
-              ^ [1]: number literal `0`
+                 ^^^^ [2]: undefined
+
+Error: number.js:51
+ 51:       (x: void); // error
+            ^ Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2].
+  References:
+   49:     if (x === 0) {
+                     ^ [1]: number literal `0`
    51:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -503,8 +512,17 @@ Error: number.js:55
  55:       (x: void); // error
             ^ Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2].
   References:
+   48:   function(x: 0 | 1) {
+                         ^ [1]: number literal `1`
    55:       (x: void); // error
-              ^ [1]: number literal `1`
+                 ^^^^ [2]: undefined
+
+Error: number.js:55
+ 55:       (x: void); // error
+            ^ Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2].
+  References:
+   53:     if (x === 1) {
+                     ^ [1]: number literal `1`
    55:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -608,8 +626,8 @@ Error: string.js:8
   8:       (x: void); // error
             ^ Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2].
   References:
-    8:       (x: void); // error
-              ^ [1]: string literal `foo`
+    6:   function(x: string) {
+                     ^^^^^^ [1]: string literal `foo`
     8:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -629,8 +647,8 @@ Error: string.js:17
  17:     (x: void); // error
           ^ Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
   References:
-   17:     (x: void); // error
-            ^ [1]: string
+   13:   function(x: string) {
+                     ^^^^^^ [1]: string
    17:     (x: void); // error
                ^^^^ [2]: undefined
 
@@ -656,8 +674,17 @@ Error: string.js:51
  51:       (x: void); // error
             ^ Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2].
   References:
+   48:   function(x: 'foo' | 'bar') {
+                     ^^^^^ [1]: string literal `foo`
    51:       (x: void); // error
-              ^ [1]: string literal `foo`
+                 ^^^^ [2]: undefined
+
+Error: string.js:51
+ 51:       (x: void); // error
+            ^ Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2].
+  References:
+   49:     if (x === 'foo') {
+                     ^^^^^ [1]: string literal `foo`
    51:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -665,8 +692,17 @@ Error: string.js:55
  55:       (x: void); // error
             ^ Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2].
   References:
+   48:   function(x: 'foo' | 'bar') {
+                             ^^^^^ [1]: string literal `bar`
    55:       (x: void); // error
-              ^ [1]: string literal `bar`
+                 ^^^^ [2]: undefined
+
+Error: string.js:55
+ 55:       (x: void); // error
+            ^ Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2].
+  References:
+   53:     if (x === 'bar') {
+                     ^^^^^ [1]: string literal `bar`
    55:       (x: void); // error
                  ^^^^ [2]: undefined
 
@@ -738,8 +774,8 @@ Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
           ^^^^^ Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with string enum [2].
   References:
-   40:     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^^^^^ [1]: string literal `Maybe`
+   29: type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
+                                                        ^^^^^^^ [1]: string literal `Maybe`
    40:     (x.raw: 'Yes' | 'No'); // 2 errors:
                    ^^^^^^^^^^^^ [2]: string enum
 
@@ -759,8 +795,8 @@ Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
             ^^^^^^^^^^ Cannot cast `x.kindTypo` to string because number literal `1` [1] is incompatible with string [2].
   References:
-   89:       (x.kindTypo: string); // typos can't be used, though
-              ^^^^^^^^^^ [1]: number literal `1`
+   88:     if (x.kindTypo === 1) { // typos are allowed to be tested
+               ^^^^^^^^^^ [1]: number literal `1`
    89:       (x.kindTypo: string); // typos can't be used, though
                           ^^^^^^ [2]: string
 
@@ -786,8 +822,8 @@ Error: tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
             ^^^^^^^^ Cannot cast `x.legnth` to string because number literal `0` [1] is incompatible with string [2].
   References:
-  113:       (x.legnth: string); // error: number literal 0 !~> string
-              ^^^^^^^^ [1]: number literal `0`
+  111:     if (x.legnth === 0) { // typos are allowed to be tested
+               ^^^^^^^^ [1]: number literal `0`
   113:       (x.legnth: string); // error: number literal 0 !~> string
                         ^^^^^^ [2]: string
 
@@ -795,8 +831,8 @@ Error: tagged_union.js:118
 118:       (y.legnth: string); // error: number literal 0 !~> string
             ^^^^^^^^ Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2].
   References:
-  118:       (y.legnth: string); // error: number literal 0 !~> string
-              ^^^^^^^^ [1]: number literal `0`
+  116:     if (y.legnth === 0) { // typos are allowed to be tested
+               ^^^^^^^^ [1]: number literal `0`
   118:       (y.legnth: string); // error: number literal 0 !~> string
                         ^^^^^^ [2]: string
 
@@ -804,8 +840,8 @@ Error: tagged_union.js:123
 123:       (z.toStirng: string); // error: number literal 0 !~> string
             ^^^^^^^^^^ Cannot cast `z.toStirng` to string because number literal `0` [1] is incompatible with string [2].
   References:
-  123:       (z.toStirng: string); // error: number literal 0 !~> string
-              ^^^^^^^^^^ [1]: number literal `0`
+  121:     if (z.toStirng === 0) { // typos are allowed to be tested
+               ^^^^^^^^^^ [1]: number literal `0`
   123:       (z.toStirng: string); // error: number literal 0 !~> string
                           ^^^^^^ [2]: string
 
@@ -813,8 +849,8 @@ Error: tagged_union.js:128
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
             ^^^^^^^^^ Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2].
   References:
-  128:       (q.valeuOf: string); // error: number literal 0 !~> string
-              ^^^^^^^^^ [1]: number literal `0`
+  126:     if (q.valeuOf === 0) { // typos are allowed to be tested
+               ^^^^^^^^^ [1]: number literal `0`
   128:       (q.valeuOf: string); // error: number literal 0 !~> string
                          ^^^^^^ [2]: string
 
@@ -840,8 +876,8 @@ Error: tagged_union.js:156
 156:       (x.badStr: empty); // error: 'bad' !~> empty
             ^^^^^^^^ Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2].
   References:
-  156:       (x.badStr: empty); // error: 'bad' !~> empty
-              ^^^^^^^^ [1]: string literal `bad`
+  155:     if (x.badStr === 'bad') {
+               ^^^^^^^^ [1]: string literal `bad`
   156:       (x.badStr: empty); // error: 'bad' !~> empty
                         ^^^^^ [2]: empty
 
@@ -849,8 +885,8 @@ Error: tagged_union.js:159
 159:       (x.badNum: empty); // error: 123 !~> empty
             ^^^^^^^^ Cannot cast `x.badNum` to empty because number literal `123` [1] is incompatible with empty [2].
   References:
-  159:       (x.badNum: empty); // error: 123 !~> empty
-              ^^^^^^^^ [1]: number literal `123`
+  158:     if (x.badNum === 123) {
+               ^^^^^^^^ [1]: number literal `123`
   159:       (x.badNum: empty); // error: 123 !~> empty
                         ^^^^^ [2]: empty
 
@@ -858,8 +894,8 @@ Error: tagged_union.js:162
 162:       (x.badBool: empty); // error: true !~> empty
             ^^^^^^^^^ Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2].
   References:
-  162:       (x.badBool: empty); // error: true !~> empty
-              ^^^^^^^^^ [1]: boolean literal `true`
+  161:     if (x.badBool === true) {
+               ^^^^^^^^^ [1]: boolean literal `true`
   162:       (x.badBool: empty); // error: true !~> empty
                          ^^^^^ [2]: empty
 
@@ -1061,8 +1097,8 @@ Error: typeof.js:69
  69:     (Foo: empty); // error, Foo is a class
           ^^^ Cannot cast `Foo` to empty because statics of `Foo` [1] is incompatible with empty [2].
   References:
-   69:     (Foo: empty); // error, Foo is a class
-            ^^^ [1]: statics of `Foo`
+   67:   class Foo {}
+               ^^^ [1]: statics of `Foo`
    69:     (Foo: empty); // error, Foo is a class
                  ^^^^^ [2]: empty
 
@@ -1070,8 +1106,8 @@ Error: typeof.js:77
  77:     (x: empty); // error
           ^ Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2].
   References:
-   77:     (x: empty); // error
-            ^ [1]: `Foo`
+   75:   let x = new Foo();
+                 ^^^^^^^^^ [1]: `Foo`
    77:     (x: empty); // error
                ^^^^^ [2]: empty
 
@@ -1162,4 +1198,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 186 errors
+Found 190 errors

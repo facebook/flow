@@ -53,8 +53,8 @@ Error: method_shadow.js:51
  51:         this.x = x; // err, m's T != H's T
                       ^ `T` [1] is incompatible with `T` [2].
   References:
-   51:         this.x = x; // err, m's T != H's T
-                        ^ [1]: `T`
+   50:     m<T>(x:T) {
+                  ^ [1]: `T`
    51:         this.x = x; // err, m's T != H's T
                ^^^^^^ [2]: `T`
 

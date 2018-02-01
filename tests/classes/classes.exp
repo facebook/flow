@@ -2,8 +2,8 @@ Error: B.js:6
   6: (b.foo: number); // error, number !~> function
       ^^^^^ Cannot cast `b.foo` to number because function [1] is incompatible with number [2].
   References:
-    6: (b.foo: number); // error, number !~> function
-        ^^^^^ [1]: function
+    2:   foo(x:number):void { }
+         ^^^^^^^^^^^^^^^^^^^^^^ [1]: function. See: A.js:2
     6: (b.foo: number); // error, number !~> function
                ^^^^^^ [2]: number
 
@@ -27,8 +27,8 @@ Error: C.js:8
   8: (c.foo: number); // error, number !~> function
       ^^^^^ Cannot cast `c.foo` to number because function [1] is incompatible with number [2].
   References:
-    8: (c.foo: number); // error, number !~> function
-        ^^^^^ [1]: function
+    4:   foo(x:string):void { }
+         ^^^^^^^^^^^^^^^^^^^^^^ [1]: function
     8: (c.foo: number); // error, number !~> function
                ^^^^^^ [2]: number
 
@@ -135,8 +135,8 @@ Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2].
   References:
-   13: (o: Class<C>); // error, object type incompatible with class type
-        ^ [1]: object type
+   12: declare var o: {p:number};
+                      ^^^^^^^^^^ [1]: object type
    13: (o: Class<C>); // error, object type incompatible with class type
            ^^^^^^^^ [2]: statics of `C`
 
@@ -144,8 +144,8 @@ Error: statics.js:19
  19: (Dup1.x: empty); // function ~> empty
       ^^^^^^ Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2].
   References:
-   19: (Dup1.x: empty); // function ~> empty
-        ^^^^^^ [1]: function
+   17:   static x() {}
+         ^^^^^^^^^^^^^ [1]: function
    19: (Dup1.x: empty); // function ~> empty
                 ^^^^^ [2]: empty
 
@@ -153,8 +153,8 @@ Error: statics.js:25
  25: (Dup2.x: empty); // string ~> empty
       ^^^^^^ Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2].
   References:
-   25: (Dup2.x: empty); // string ~> empty
-        ^^^^^^ [1]: string
+   23:   static x: string;
+                   ^^^^^^ [1]: string
    25: (Dup2.x: empty); // string ~> empty
                 ^^^^^ [2]: empty
 

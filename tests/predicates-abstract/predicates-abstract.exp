@@ -127,8 +127,8 @@ Error: sanity-refine.js:8
   8: (b: string);
       ^ Cannot cast `b` to string because mixed [1] is incompatible with string [2].
   References:
-    8: (b: string);
-        ^ [1]: mixed
+    6: declare var a: mixed;
+                      ^^^^^ [1]: mixed
     8: (b: string);
            ^^^^^^ [2]: string
 
@@ -148,8 +148,8 @@ Error: sanity-refine.js:30
  30: (e: number);
       ^ Cannot cast `e` to number because mixed [1] is incompatible with number [2].
   References:
-   30: (e: number);
-        ^ [1]: mixed
+    6: declare var a: mixed;
+                      ^^^^^ [1]: mixed
    30: (e: number);
            ^^^^^^ [2]: number
 

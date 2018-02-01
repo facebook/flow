@@ -13,8 +13,8 @@ Error: main.js:9
   9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `<div />.props.id` to number because string [1] is incompatible with number [2].
   References:
-    9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+    4:   div: $JSXIntrinsic<{id: string}>,
+                                 ^^^^^^ [1]: string. See lib: lib/jsx.js:4
     9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
                                    ^^^^^^ [2]: number
 

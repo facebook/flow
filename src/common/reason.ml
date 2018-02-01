@@ -205,6 +205,7 @@ type reason = {
   desc: reason_desc;
   loc: Loc.t;
   def_loc_opt: Loc.t option;
+  annot_loc_opt: Loc.t option;
 }
 
 type t = reason
@@ -330,21 +331,22 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc def_loc_opt = {
+let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt = {
   test_id;
   derivable = false;
   desc;
   loc;
   def_loc_opt;
+  annot_loc_opt;
 }
 
 (* The current test_id is included in every new reason. *)
 let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current()) desc loc None
+  mk_reason_with_test_id (TestID.current ()) desc loc None None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
-  mk_reason_with_test_id None desc Loc.none None
+  mk_reason_with_test_id None desc Loc.none None None
 
 let func_reason {Ast.Function.async; generator; _} =
   let func_desc = match async, generator with
@@ -362,6 +364,9 @@ let def_loc_of_reason r =
   match r.def_loc_opt with
   | Some loc -> loc
   | None -> loc_of_reason r
+
+let annot_loc_of_reason r =
+  r.annot_loc_opt
 
 let function_desc_prefix = function
   | RAsync -> "async "
@@ -693,19 +698,34 @@ let reasons_overlap r1 r2 =
 
 (* returns reason with new description and position of original *)
 let replace_reason f r =
-  mk_reason (f (desc_of_reason ~unwrap:false r)) (loc_of_reason r)
+  mk_reason_with_test_id
+    (TestID.current ())
+    (f (desc_of_reason ~unwrap:false r))
+    (loc_of_reason r)
+    None
+    (annot_loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
-  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
-  mk_reason_with_test_id r.test_id desc (loc_of_reason r) def_loc_opt
+  let (def_loc_opt, annot_loc_opt) = if keep_def_loc
+    then (r.def_loc_opt, r.annot_loc_opt)
+    else (None, None)
+  in
+  mk_reason_with_test_id r.test_id desc r.loc def_loc_opt annot_loc_opt
 
 (* returns reason with new location and description of original *)
-let repos_reason loc reason =
+let repos_reason loc ?annot_loc reason =
   let def_loc_opt =
     let def_loc = def_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
-  mk_reason_with_test_id reason.test_id (desc_of_reason ~unwrap:false reason) loc def_loc_opt
+  let annot_loc_opt = match annot_loc with
+  | Some annot_loc -> Some annot_loc
+  | None -> reason.annot_loc_opt
+  in
+  mk_reason_with_test_id reason.test_id reason.desc loc def_loc_opt annot_loc_opt
+
+let annot_reason reason =
+  {reason with annot_loc_opt = Some reason.loc}
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

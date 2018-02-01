@@ -808,7 +808,7 @@ class ['a] t = object(self)
     acc
   | TryFlow (_, spec) ->
     self#try_flow_spec cx acc spec
-  | EvalDestructor (id, d, tout) ->
+  | EvalDestructor (_, id, _, d, tout) ->
     let acc = self#tvar cx pole_TODO acc r id in
     let acc = self#defer_use_type cx acc d in
     let acc = self#type_ cx pole_TODO acc tout in

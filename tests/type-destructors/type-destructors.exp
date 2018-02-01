@@ -107,7 +107,7 @@ Error: non_maybe_type.js:10
    10: (0: $NonMaybeType<null>); // error
         ^ [1]: number
    10: (0: $NonMaybeType<null>); // error
-           ^^^^^^^^^^^^^^^^^^^ [2]: empty
+                         ^^^^ [2]: empty
 
 Error: property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
@@ -132,8 +132,8 @@ Error: tvar3.js:20
  20: (fn1(a): B); // Error: A ~> B
       ^^^^^^ Cannot cast `fn1(...)` to `B` because `A` [1] is incompatible with `B` [2].
   References:
-   20: (fn1(a): B); // Error: A ~> B
-        ^^^^^^ [1]: `A`
+    6: declare var a: A;
+                      ^ [1]: `A`
    20: (fn1(a): B); // Error: A ~> B
                 ^ [2]: `B`
 
@@ -152,8 +152,8 @@ Error: tvar3.js:22
  22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `fn3(...)` to `C` because `A` [1] is incompatible with `C` [2].
   References:
-   22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-        ^^^^^^^^^^^^^^^^^^^^ [1]: `A`
+    6: declare var a: A;
+                      ^ [1]: `A`
    22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
                               ^ [2]: `C`
 
@@ -184,8 +184,8 @@ Error: tvar3.js:25
  25: (fn5(a): B); // Error: A ~> B
       ^^^^^^ Cannot cast `fn5(...)` to `B` because `A` [1] is incompatible with `B` [2].
   References:
-   25: (fn5(a): B); // Error: A ~> B
-        ^^^^^^ [1]: `A`
+    6: declare var a: A;
+                      ^ [1]: `A`
    25: (fn5(a): B); // Error: A ~> B
                 ^ [2]: `B`
 
@@ -204,8 +204,8 @@ Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `fn7(...)` to `C` because `A` [1] is incompatible with `C` [2].
   References:
-   27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-        ^^^^^^^^^^^^^^^^^^^^ [1]: `A`
+    6: declare var a: A;
+                      ^ [1]: `A`
    27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
                               ^ [2]: `C`
 

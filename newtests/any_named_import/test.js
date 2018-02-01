@@ -41,8 +41,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (Any: number);
                 ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2].
             References:
-              5: (Any: number);
-                  ^^^ [1]: module \`any\`
+              3: import * as Any from "any";
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module \`any\`
               5: (Any: number);
                        ^^^^^^ [2]: number
         `,
@@ -67,8 +67,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (obj: string);
                 ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
             References:
-              5: (obj: string);
-                  ^^^ [1]: object type
+              6:   declare module.exports: Object;
+                                           ^^^^^^ [1]: object type. See lib: [LIB] flow-typed/lib.js:6
               5: (obj: string);
                        ^^^^^^ [2]: string
         `,
@@ -85,8 +85,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (obj: string);
                 ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
             References:
-              5: (obj: string);
-                  ^^^ [1]: object type
+              6:   declare module.exports: Object;
+                                           ^^^^^^ [1]: object type. See lib: [LIB] flow-typed/lib.js:6
               5: (obj: string);
                        ^^^^^^ [2]: string
         `,
@@ -105,8 +105,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             5: (obj: number);
                 ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2].
             References:
-              5: (obj: number);
-                  ^^^ [1]: module \`object\`
+              3: import * as obj from "object";
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module \`object\`
               5: (obj: number);
                        ^^^^^^ [2]: number
         `,

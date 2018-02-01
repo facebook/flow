@@ -68,8 +68,8 @@ Error: call.js:4
   4: (y: {(number): string});
       ^ Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2].
   References:
-    4: (y: {(number): string});
-        ^ [1]: object type
+    3: declare var y: {[string]: boolean};
+                      ^^^^^^^^^^^^^^^^^^^ [1]: object type
     4: (y: {(number): string});
            ^^^^^^^^^^^^^^^^^^ [2]: function prototype
 

@@ -22,7 +22,7 @@ val tvar_with_constraint: Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 
-val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:Loc.t -> Type.t -> Type.t
 
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t

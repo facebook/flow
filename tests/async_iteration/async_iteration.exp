@@ -8,8 +8,8 @@ Error: delegate_yield.js:17
  17:     (x: void); // error: number ~> void
           ^ Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
   References:
-   17:     (x: void); // error: number ~> void
-            ^ [1]: number
+   11:     yield 0;
+                 ^ [1]: number
    17:     (x: void); // error: number ~> void
                ^^^^ [2]: undefined
 
@@ -23,8 +23,8 @@ Error: generator.js:23
  23:     (line: void); // error: string ~> void
           ^^^^ Cannot cast `line` to undefined because string [1] is incompatible with undefined [2].
   References:
-   23:     (line: void); // error: string ~> void
-            ^^^^ [1]: string
+    2:   readLine(): Promise<string>;
+                             ^^^^^^ [1]: string
    23:     (line: void); // error: string ~> void
                   ^^^^ [2]: undefined
 
@@ -50,8 +50,8 @@ Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
           ^^^^^^^^^^^^ Cannot cast `result.value` to string because undefined [1] is incompatible with string [2].
   References:
-   20:     (result.value: string); // error: number | void ~> string
-            ^^^^^^^^^^^^ [1]: undefined
+  493:   | { done: true, +value?: Return }
+                                  ^^^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:493
    20:     (result.value: string); // error: number | void ~> string
                           ^^^^^^ [2]: string
 
@@ -59,8 +59,8 @@ Error: throw.js:12
  12:       (value: void); // error: number ~> void
             ^^^^^ Cannot cast `value` to undefined because number [1] is incompatible with undefined [2].
   References:
-   12:       (value: void); // error: number ~> void
-              ^^^^^ [1]: number
+    3:     yield 0;
+                 ^ [1]: number
    12:       (value: void); // error: number ~> void
                      ^^^^ [2]: undefined
 
@@ -68,8 +68,8 @@ Error: throw.js:29
  29:       (value: void); // error: number ~> void
             ^^^^^ Cannot cast `value` to undefined because number [1] is incompatible with undefined [2].
   References:
-   29:       (value: void); // error: number ~> void
-              ^^^^^ [1]: number
+   19:     yield 0;
+                 ^ [1]: number
    29:       (value: void); // error: number ~> void
                      ^^^^ [2]: undefined
 

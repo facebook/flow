@@ -2,8 +2,8 @@ Error: basic.js:6
   6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
   References:
-    6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+  144:     toString(radix?: number): string;
+                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
     6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
                                         ^^^^^ [2]: empty
 
@@ -11,8 +11,8 @@ Error: basic.js:8
   8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2].
   References:
-    8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+  144:     toString(radix?: number): string;
+                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
     8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
                                                ^^^^^ [2]: empty
 
@@ -24,12 +24,8 @@ Error: basic.js:10
  13: )(42): empty); // Error: number ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
   References:
-        v-------
-   10: (compose(
    11:   n => n * 5, // Error: string cannot be multiplied.
-   12:   n => n.toString(),
-   13: )(42): empty); // Error: number ~> empty
-       ----^ [1]: number
+              ^^^^^ [1]: number
    13: )(42): empty); // Error: number ~> empty
               ^^^^^ [2]: empty
 
@@ -45,12 +41,8 @@ Error: basic.js:15
  18: )(42): empty); // Error: string ~> empty
      ----^ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2].
   References:
-        v--------------
-   15: (composeReverse(
-   16:   n => n * 5, // OK
-   17:   n => n.toString(),
-   18: )(42): empty); // Error: string ~> empty
-       ----^ [1]: string
+  144:     toString(radix?: number): string;
+                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
    18: )(42): empty); // Error: string ~> empty
               ^^^^^ [2]: empty
 
@@ -67,11 +59,20 @@ Error: spread.js:8
  10: )(42): empty); // Error: number ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
   References:
-        v-------
-    8: (compose(
-    9:   ...fns1,
+    4: declare var fns1: Array<(number) => number>;
+                                           ^^^^^^ [1]: number
    10: )(42): empty); // Error: number ~> empty
-       ----^ [1]: number
+              ^^^^^ [2]: empty
+
+Error: spread.js:8
+      v-------
+  8: (compose(
+  9:   ...fns1,
+ 10: )(42): empty); // Error: number ~> empty
+     ----^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
+  References:
+   10: )(42): empty); // Error: number ~> empty
+         ^^ [1]: number
    10: )(42): empty); // Error: number ~> empty
               ^^^^^ [2]: empty
 
@@ -82,11 +83,8 @@ Error: spread.js:12
  14: )('foo'): empty); // Error: string ~> empty and number ~> empty
      -------^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
   References:
-        v-------
-   12: (compose(
-   13:   ...fns1, // Error: string ~> number
-   14: )('foo'): empty); // Error: string ~> empty and number ~> empty
-       -------^ [1]: number
+    4: declare var fns1: Array<(number) => number>;
+                                           ^^^^^^ [1]: number
    14: )('foo'): empty); // Error: string ~> empty and number ~> empty
                  ^^^^^ [2]: empty
 
@@ -97,11 +95,8 @@ Error: spread.js:12
  14: )('foo'): empty); // Error: string ~> empty and number ~> empty
      -------^ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
   References:
-        v-------
-   12: (compose(
-   13:   ...fns1, // Error: string ~> number
    14: )('foo'): empty); // Error: string ~> empty and number ~> empty
-       -------^ [1]: string
+         ^^^^^ [1]: string
    14: )('foo'): empty); // Error: string ~> empty and number ~> empty
                  ^^^^^ [2]: empty
 
@@ -118,11 +113,8 @@ Error: spread.js:16
  18: )(42): empty); // Error: number ~> empty and string ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
   References:
-        v-------
-   16: (compose(
-   17:   ...fns2, // Error: string ~> number
    18: )(42): empty); // Error: number ~> empty and string ~> empty
-       ----^ [1]: number
+         ^^ [1]: number
    18: )(42): empty); // Error: number ~> empty and string ~> empty
               ^^^^^ [2]: empty
 
@@ -133,11 +125,8 @@ Error: spread.js:16
  18: )(42): empty); // Error: number ~> empty and string ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
   References:
-        v-------
-   16: (compose(
-   17:   ...fns2, // Error: string ~> number
-   18: )(42): empty); // Error: number ~> empty and string ~> empty
-       ----^ [1]: string
+    5: declare var fns2: Array<(number) => string>;
+                                           ^^^^^^ [1]: string
    18: )(42): empty); // Error: number ~> empty and string ~> empty
               ^^^^^ [2]: empty
 
@@ -165,11 +154,8 @@ Error: spread.js:21
  23: )(x1): empty); // Error: number ~> empty and object ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2].
   References:
-        v-------
-   21: (compose(
-   22:   ...fns3, // Error: Cannot get p on number
-   23: )(x1): empty); // Error: number ~> empty and object ~> empty
-       ----^ [1]: number
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                                      ^^ [1]: number
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
 
@@ -180,11 +166,44 @@ Error: spread.js:21
  23: )(x1): empty); // Error: number ~> empty and object ~> empty
      ----^ Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
   References:
-        v-------
-   21: (compose(
-   22:   ...fns3, // Error: Cannot get p on number
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
-       ----^ [1]: object literal
+              ^^^^^ [2]: empty
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ----^ Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+  References:
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+   23: )(x1): empty); // Error: number ~> empty and object ~> empty
+              ^^^^^ [2]: empty
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ----^ Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+  References:
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                            ^^^^^^^^^^^^^^^^ [1]: object literal
+   23: )(x1): empty); // Error: number ~> empty and object ~> empty
+              ^^^^^ [2]: empty
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ----^ Cannot cast `compose(...)(...)` to empty because object literal [1] is incompatible with empty [2].
+  References:
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                                 ^^^^^^^^^ [1]: object literal
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
 
@@ -195,13 +214,22 @@ Error: spread.js:27
  29: ))(x2): empty); // Error: object ~> empty
      -----^ Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2].
   References:
-        v--------
-   27: ((compose(
-   28:   ...fns3,
+   25: type X2 = { p: X2 };
+                      ^^ [1]: `X2`
    29: ))(x2): empty); // Error: object ~> empty
-       -----^ [1]: `X2`
+               ^^^^^ [2]: empty
+
+Error: spread.js:27
+      v--------
+ 27: ((compose(
+ 28:   ...fns3,
+ 29: ))(x2): empty); // Error: object ~> empty
+     -----^ Cannot cast `compose(...)(...)` to empty because `X2` [1] is incompatible with empty [2].
+  References:
+   26: declare var x2: X2;
+                       ^^ [1]: `X2`
    29: ))(x2): empty); // Error: object ~> empty
                ^^^^^ [2]: empty
 
 
-Found 17 errors
+Found 22 errors

@@ -2,7 +2,7 @@ Error: A.js:13
  13: A.x = A.y;
            ^^^ string [1] is incompatible with boolean [2].
   References:
-   13: A.x = A.y;
+   12: A.y = "?";
              ^^^ [1]: string
    13: A.x = A.y;
        ^^^ [2]: boolean

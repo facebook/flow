@@ -475,19 +475,11 @@
           "start":{"line":17,"column":50,"offset":443},
           "end":{"line":17,"column":50,"offset":444}
         },
-        "path":"test.js",
-        "line":17,
-        "endline":17,
-        "start":50,
-        "end":50
-      },
-      {
-        "desc":"null or undefined",
-        "loc":{
+        "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":17,
@@ -503,6 +495,32 @@
           "start":{"line":17,"column":50,"offset":443},
           "end":{"line":17,"column":50,"offset":444}
         },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
+        },
+        "path":"test.js",
+        "line":17,
+        "endline":17,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"null or undefined",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":50,"offset":443},
+          "end":{"line":17,"column":50,"offset":444}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
+        },
         "path":"test.js",
         "line":17,
         "endline":17,
@@ -517,19 +535,11 @@
           "start":{"line":16,"column":50,"offset":388},
           "end":{"line":16,"column":50,"offset":389}
         },
-        "path":"test.js",
-        "line":16,
-        "endline":16,
-        "start":50,
-        "end":50
-      },
-      {
-        "desc":"null or undefined",
-        "loc":{
+        "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":16,
@@ -545,6 +555,32 @@
           "start":{"line":16,"column":50,"offset":388},
           "end":{"line":16,"column":50,"offset":389}
         },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
+        },
+        "path":"test.js",
+        "line":16,
+        "endline":16,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"null or undefined",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":50,"offset":388},
+          "end":{"line":16,"column":50,"offset":389}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
+        },
         "path":"test.js",
         "line":16,
         "endline":16,
@@ -559,19 +595,11 @@
           "start":{"line":15,"column":50,"offset":333},
           "end":{"line":15,"column":50,"offset":334}
         },
-        "path":"test.js",
-        "line":15,
-        "endline":15,
-        "start":50,
-        "end":50
-      },
-      {
-        "desc":"null or undefined",
-        "loc":{
+        "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":15,
@@ -587,6 +615,32 @@
           "start":{"line":15,"column":50,"offset":333},
           "end":{"line":15,"column":50,"offset":334}
         },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
+        },
+        "path":"test.js",
+        "line":15,
+        "endline":15,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"null or undefined",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":50,"offset":333},
+          "end":{"line":15,"column":50,"offset":334}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
+        },
         "path":"test.js",
         "line":15,
         "endline":15,
@@ -601,19 +655,11 @@
           "start":{"line":14,"column":50,"offset":278},
           "end":{"line":14,"column":50,"offset":279}
         },
-        "path":"test.js",
-        "line":14,
-        "endline":14,
-        "start":50,
-        "end":50
-      },
-      {
-        "desc":"null or undefined",
-        "loc":{
+        "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":14,
@@ -628,6 +674,32 @@
           "type":"SourceFile",
           "start":{"line":14,"column":50,"offset":278},
           "end":{"line":14,"column":50,"offset":279}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
+        },
+        "path":"test.js",
+        "line":14,
+        "endline":14,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"null or undefined",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":50,"offset":278},
+          "end":{"line":14,"column":50,"offset":279}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":14,
@@ -643,6 +715,32 @@
           "start":{"line":17,"column":50,"offset":443},
           "end":{"line":17,"column":50,"offset":444}
         },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":17,"offset":410},
+          "end":{"line":17,"column":22,"offset":416}
+        },
+        "path":"test.js",
+        "line":17,
+        "endline":17,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":50,"offset":443},
+          "end":{"line":17,"column":50,"offset":444}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
+        },
         "path":"test.js",
         "line":17,
         "endline":17,
@@ -656,6 +754,32 @@
           "type":"SourceFile",
           "start":{"line":16,"column":50,"offset":388},
           "end":{"line":16,"column":50,"offset":389}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":17,"offset":355},
+          "end":{"line":16,"column":22,"offset":361}
+        },
+        "path":"test.js",
+        "line":16,
+        "endline":16,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":50,"offset":388},
+          "end":{"line":16,"column":50,"offset":389}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":16,
@@ -671,6 +795,32 @@
           "start":{"line":15,"column":50,"offset":333},
           "end":{"line":15,"column":50,"offset":334}
         },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":17,"offset":300},
+          "end":{"line":15,"column":22,"offset":306}
+        },
+        "path":"test.js",
+        "line":15,
+        "endline":15,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":50,"offset":333},
+          "end":{"line":15,"column":50,"offset":334}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
+        },
         "path":"test.js",
         "line":15,
         "endline":15,
@@ -684,6 +834,32 @@
           "type":"SourceFile",
           "start":{"line":14,"column":50,"offset":278},
           "end":{"line":14,"column":50,"offset":279}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":17,"offset":245},
+          "end":{"line":14,"column":22,"offset":251}
+        },
+        "path":"test.js",
+        "line":14,
+        "endline":14,
+        "start":50,
+        "end":50
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":50,"offset":278},
+          "end":{"line":14,"column":50,"offset":279}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":14,
@@ -893,8 +1069,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -913,8 +1089,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -933,8 +1109,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -953,8 +1129,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -973,8 +1149,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -993,8 +1169,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -1013,8 +1189,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":12,
@@ -1033,8 +1209,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":12,
@@ -1053,8 +1229,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":12,
@@ -1073,8 +1249,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,
@@ -1093,8 +1269,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,
@@ -1113,8 +1289,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,
@@ -1133,8 +1309,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":17,"offset":410},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -1153,8 +1329,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -1173,8 +1349,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":16,"column":17,"offset":355},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -1193,8 +1369,88 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
+        },
+        "path":"test.js",
+        "line":12,
+        "endline":12,
+        "start":32,
+        "end":34
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":12,"column":32,"offset":196},
+          "end":{"line":12,"column":34,"offset":199}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":17,"offset":300},
+          "end":{"line":15,"column":22,"offset":306}
+        },
+        "path":"test.js",
+        "line":12,
+        "endline":12,
+        "start":32,
+        "end":34
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":12,"column":32,"offset":196},
+          "end":{"line":12,"column":34,"offset":199}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
+        },
+        "path":"test.js",
+        "line":12,
+        "endline":12,
+        "start":32,
+        "end":34
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":12,"column":32,"offset":196},
+          "end":{"line":12,"column":34,"offset":199}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":17,"offset":245},
+          "end":{"line":14,"column":22,"offset":251}
+        },
+        "path":"test.js",
+        "line":12,
+        "endline":12,
+        "start":32,
+        "end":34
+      },
+      {
+        "desc":"empty",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":12,"column":32,"offset":196},
+          "end":{"line":12,"column":34,"offset":199}
+        },
+        "def_loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,
@@ -1375,8 +1631,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -1395,8 +1651,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":17,"column":50,"offset":443},
-          "end":{"line":17,"column":50,"offset":444}
+          "start":{"line":17,"column":16,"offset":409},
+          "end":{"line":17,"column":22,"offset":416}
         },
         "path":"test.js",
         "line":12,
@@ -1415,8 +1671,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -1435,8 +1691,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":16,"column":50,"offset":388},
-          "end":{"line":16,"column":50,"offset":389}
+          "start":{"line":16,"column":16,"offset":354},
+          "end":{"line":16,"column":22,"offset":361}
         },
         "path":"test.js",
         "line":12,
@@ -1455,8 +1711,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":12,
@@ -1475,8 +1731,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":15,"column":50,"offset":333},
-          "end":{"line":15,"column":50,"offset":334}
+          "start":{"line":15,"column":16,"offset":299},
+          "end":{"line":15,"column":22,"offset":306}
         },
         "path":"test.js",
         "line":12,
@@ -1495,8 +1751,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,
@@ -1515,8 +1771,8 @@
         "def_loc":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":14,"column":50,"offset":278},
-          "end":{"line":14,"column":50,"offset":279}
+          "start":{"line":14,"column":16,"offset":244},
+          "end":{"line":14,"column":22,"offset":251}
         },
         "path":"test.js",
         "line":12,

@@ -28,8 +28,8 @@ Error: object_create.js:17
  17: (o: C);
       ^ Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2].
   References:
-   17: (o: C);
-        ^ [1]: `O`
+   16: declare var o: O;
+                      ^ [1]: `O`
    17: (o: C);
            ^ [2]: `C`
 
@@ -46,8 +46,8 @@ Error: object_keys.js:9
   9:   (k : number) // error: string ~> number
         ^ Cannot cast `k` to number because string [1] is incompatible with number [2].
   References:
-    9:   (k : number) // error: string ~> number
-          ^ [1]: string
+    8: Object.keys(unsealed).forEach(k => {
+       ^^^^^^^^^^^^^^^^^^^^^ [1]: string
     9:   (k : number) // error: string ~> number
               ^^^^^^ [2]: number
 
@@ -55,8 +55,8 @@ Error: object_keys.js:14
  14:   (k : number) // error: string ~> number
         ^ Cannot cast `k` to number because string [1] is incompatible with number [2].
   References:
-   14:   (k : number) // error: string ~> number
-          ^ [1]: string
+   13: Object.keys(dict).forEach(k => {
+       ^^^^^^^^^^^^^^^^^ [1]: string
    14:   (k : number) // error: string ~> number
               ^^^^^^ [2]: number
 
@@ -277,8 +277,8 @@ Error: proto.js:3
   3: (o1_proto.toString: empty); // error: function ~> empty
       ^^^^^^^^^^^^^^^^^ Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2].
   References:
-    3: (o1_proto.toString: empty); // error: function ~> empty
-        ^^^^^^^^^^^^^^^^^ [1]: function type
+   54:     toString(): string;
+           ^^^^^^^^^^^^^^^^^^ [1]: function type. See lib: <BUILTINS>/core.js:54
     3: (o1_proto.toString: empty); // error: function ~> empty
                            ^^^^^ [2]: empty
 
@@ -286,8 +286,8 @@ Error: proto.js:7
   7: (o2.__proto__.p: empty); // error: number ~> empty
       ^^^^^^^^^^^^^^ Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2].
   References:
-    7: (o2.__proto__.p: empty); // error: number ~> empty
-        ^^^^^^^^^^^^^^ [1]: number
+    5: var o2 = Object.create({p:0});
+                                 ^ [1]: number
     7: (o2.__proto__.p: empty); // error: number ~> empty
                         ^^^^^ [2]: empty
 

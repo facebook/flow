@@ -9,7 +9,7 @@ Error: advanced_arrows.js:11
       ^^^^^^^^^^^ Cannot cast `ident(...)` to number because string [1] is incompatible with number [2].
   References:
    11: (ident("hi"): number); // Error
-        ^^^^^^^^^^^ [1]: string
+              ^^^^ [1]: string
    11: (ident("hi"): number); // Error
                      ^^^^^^ [2]: number
 

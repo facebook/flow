@@ -13,8 +13,8 @@ Error: test.js:6
   6: (p.x: string); // error
       ^^^ Cannot cast `p.x` to string because number [1] is incompatible with string [2].
   References:
-    6: (p.x: string); // error
-        ^^^ [1]: number
+    5: var p: P<number> = new P;
+                ^^^^^^ [1]: number
     6: (p.x: string); // error
              ^^^^^^ [2]: string
 
@@ -31,8 +31,8 @@ Error: test.js:13
  13: (pstar.x: string); // error
       ^^^^^^^ Cannot cast `pstar.x` to string because number [1] is incompatible with string [2].
   References:
-   13: (pstar.x: string); // error
-        ^^^^^^^ [1]: number
+    5: var p: P<number> = new P;
+                ^^^^^^ [1]: number
    13: (pstar.x: string); // error
                  ^^^^^^ [2]: string
 

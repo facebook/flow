@@ -115,8 +115,8 @@ Error: conversion.js:10
  10: (Object(undefined): Number); // error
       ^^^^^^^^^^^^^^^^^ Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2].
   References:
-   10: (Object(undefined): Number); // error
-        ^^^^^^^^^^^^^^^^^ [1]: object type
+   26:     static (o: ?void): {[key: any]: any};
+                              ^^^^^^^^^^^^^^^^^ [1]: object type. See lib: <BUILTINS>/core.js:26
    10: (Object(undefined): Number); // error
                            ^^^^^^ [2]: `Number`
 
@@ -142,8 +142,8 @@ Error: objects.js:7
   7: (x.bar: boolean);     // error, string !~> boolean
       ^^^^^ Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2].
   References:
-    7: (x.bar: boolean);     // error, string !~> boolean
-        ^^^^^ [1]: string
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                                    ^^^^^^ [1]: string
     7: (x.bar: boolean);     // error, string !~> boolean
                ^^^^^^^ [2]: boolean
 
@@ -151,8 +151,8 @@ Error: objects.js:8
   8: (x['123'] : boolean); // error, string !~> boolean
       ^^^^^^^^ Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2].
   References:
-    8: (x['123'] : boolean); // error, string !~> boolean
-        ^^^^^^^^ [1]: string
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                       ^^^^^^ [1]: string
     8: (x['123'] : boolean); // error, string !~> boolean
                    ^^^^^^^ [2]: boolean
 
@@ -190,8 +190,8 @@ Error: objects.js:18
  18: (y['hasOwnProperty']: string); // error, prototype method is not a string
       ^^^^^^^^^^^^^^^^^^^ Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompatible with string [2].
   References:
-   18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-        ^^^^^^^^^^^^^^^^^^^ [1]: function type
+   50:     hasOwnProperty(prop: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function type. See lib: <BUILTINS>/core.js:50
    18: (y['hasOwnProperty']: string); // error, prototype method is not a string
                              ^^^^^^ [2]: string
 

@@ -45,8 +45,8 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                              20: (idx(obj1, obj => obj.a.b.c): ?string);
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to nullable string because number [1] is incompatible with string [2].
                                                               References:
-                                                               20: (idx(obj1, obj => obj.a.b.c): ?string);
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: number
+                                                                6: declare var obj1: {a: ?{b: {c: number}}};
+                                                                                                  ^^^^^^ [1]: number
                                                                20: (idx(obj1, obj => obj.a.b.c): ?string);
                                                                                                   ^^^^^^ [2]: string
                                                           `,
@@ -121,6 +121,15 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(idx(new Foo1(), o => o.a.b): ?number);\n').noNewErrors(),
     addCode('(idx(new Foo1(), o => o.a.b): number);\n').newErrors(
                                                          `
+                                                           test.js:18
+                                                            18: (idx(new Foo1(), o => o.a.b): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                               6: class Foo1 { a: ?Foo1; b: ?number; }
+                                                                                            ^^^^^^^ [1]: null or undefined
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                                                ^^^^^^ [2]: number
+
                                                            test.js:18
                                                             18: (idx(new Foo1(), o => o.a.b): number);
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].

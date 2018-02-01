@@ -46,8 +46,8 @@ Error: test.js:7
   7: (k.x: string); // error: x is number
       ^^^ Cannot cast `k.x` to string because number [1] is incompatible with string [2].
   References:
-    7: (k.x: string); // error: x is number
-        ^^^ [1]: number
+    2: interface I_ { x: number }
+                         ^^^^^^ [1]: number
     7: (k.x: string); // error: x is number
              ^^^^^^ [2]: string
 
@@ -77,8 +77,8 @@ Error: test.js:18
  18: (e.x: string); // error: x is number
       ^^^ Cannot cast `e.x` to string because number [1] is incompatible with string [2].
   References:
-   18: (e.x: string); // error: x is number
-        ^^^ [1]: number
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [1]: number
    18: (e.x: string); // error: x is number
              ^^^^^^ [2]: string
 
@@ -86,8 +86,8 @@ Error: test.js:20
  20: (e.z: string); // error: z is number
       ^^^ Cannot cast `e.z` to string because number [1] is incompatible with string [2].
   References:
-   20: (e.z: string); // error: z is number
-        ^^^ [1]: number
+   17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [1]: number
    20: (e.z: string); // error: z is number
              ^^^^^^ [2]: string
 
@@ -112,8 +112,8 @@ Error: test3.js:5
   5:   (k.x: number); // error: x is string in K
         ^^^ Cannot cast `k.x` to number because string [1] is incompatible with number [2].
   References:
-    5:   (k.x: number); // error: x is string in K
-          ^^^ [1]: string
+    3: interface K extends I, J { x: string } // error: x is number in I
+                                     ^^^^^^ [1]: string
     5:   (k.x: number); // error: x is string in K
                ^^^^^^ [2]: number
 
@@ -121,8 +121,8 @@ Error: test3.js:6
   6:   (k.y: number); // error: y is string in I
         ^^^ Cannot cast `k.y` to number because string [1] is incompatible with number [2].
   References:
-    6:   (k.y: number); // error: y is string in I
-          ^^^ [1]: string
+    1: interface I { x: number, y : string }
+                                    ^^^^^^ [1]: string
     6:   (k.y: number); // error: y is string in I
                ^^^^^^ [2]: number
 

@@ -22,8 +22,8 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  8: (C: number);
                                      ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
                                  References:
-                                   8: (C: number);
-                                       ^ [1]: string
+                                   3: export const C = "asdf";
+                                                       ^^^^^^ [1]: string. See: local_override1.js:3
                                    8: (C: number);
                                           ^^^^^^ [2]: number
                              `,
@@ -45,8 +45,8 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  8: (C: number);
                                      ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
                                  References:
-                                   8: (C: number);
-                                       ^ [1]: string
+                                   4: export const C = "asdf";
+                                                       ^^^^^^ [1]: string. See: local_override2.js:4
                                    8: (C: number);
                                           ^^^^^^ [2]: number
                              `,

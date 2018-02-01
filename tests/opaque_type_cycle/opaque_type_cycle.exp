@@ -21,9 +21,9 @@ Error: test3.js:5
                                                   ^ Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2].
   References:
     5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                    ^ [1]: number
-    5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                       ^^^^^^^^ [2]: `num`
+                               ^^^^^^ [1]: number
+    4: export var y: num = 3;
+                     ^^^ [2]: `num`. See: cycle.js:4
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}

@@ -147,8 +147,8 @@ Error: object.js:68
  68: (obj["stringLiteral"]: string); // err, num !~> string
       ^^^^^^^^^^^^^^^^^^^^ Cannot cast `obj["stringLiteral"]` to string because number [1] is incompatible with string [2].
   References:
-   68: (obj["stringLiteral"]: string); // err, num !~> string
-        ^^^^^^^^^^^^^^^^^^^^ [1]: number
+   38:   get "stringLiteral"(): number { return 4; },
+                                ^^^^^^ [1]: number
    68: (obj["stringLiteral"]: string); // err, num !~> string
                               ^^^^^^ [2]: string
 

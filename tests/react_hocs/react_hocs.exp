@@ -68,8 +68,8 @@ Error: Good.js:18
  18:     qux,
          ^^^ string [1] is incompatible with number [2].
   References:
-   18:     qux,
-           ^^^ [1]: string
+   11: <Good foo={1} buz={2} qux="nope" />; // Error: string ~> number
+                                 ^^^^^^ [1]: string. See: Good_use.js:11
     9:   qux: number,
               ^^^^^^ [2]: number
 

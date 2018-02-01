@@ -72,8 +72,8 @@ Error: map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2].
   References:
-   29:     (x.get('foo'): boolean); // error, string | void
-            ^^^^^^^^^^^^ [1]: undefined
+  547:     get(key: K): V | void;
+                            ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:547
    29:     (x.get('foo'): boolean); // error, string | void
                           ^^^^^^^ [2]: boolean
 

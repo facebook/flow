@@ -50,8 +50,8 @@ Error: super.js:14
  14:     (super.staticMethod('foo'): number); // error, string !~> number
           ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2].
   References:
-   14:     (super.staticMethod('foo'): number); // error, string !~> number
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string
+    4:   static staticMethod(x:string): string { return x; }
+                                        ^^^^^^ [1]: string
    14:     (super.staticMethod('foo'): number); // error, string !~> number
                                        ^^^^^^ [2]: number
 

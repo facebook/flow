@@ -26,10 +26,10 @@ Error: union.js:9
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ `D` [1] is incompatible with `C` [2].
   References:
-    9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                         ^ [1]: `D`
-    9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                         ^ [2]: `C`
+    5: class D { }
+             ^ [1]: `D`
+    4: class C { }
+             ^ [2]: `C`
 
 Error: yuge.js:23
  23:     ("": ErrorCode);  // also, error pos omits this line completely

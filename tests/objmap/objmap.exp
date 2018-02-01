@@ -166,8 +166,8 @@ Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
       ^^^^^ Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2].
   References:
-   43: (foo.a: empty); // Error: number ~> empty
-        ^^^^^ [1]: number
+    7:     a: number,
+              ^^^^^^ [1]: number
    43: (foo.a: empty); // Error: number ~> empty
                ^^^^^ [2]: empty
 
@@ -346,8 +346,8 @@ Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string
         ^^^^^ Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
   References:
-   16:   (o.foo: string); // error, number ~> string
-          ^^^^^ [1]: number
+   13:   foo: Promise.resolve(0),
+                              ^ [1]: number
    16:   (o.foo: string); // error, number ~> string
                  ^^^^^^ [2]: string
 
@@ -355,8 +355,8 @@ Error: optional.js:13
  13: (o3.b: Array<number | void>); // Error: void ~> array
       ^^^^ Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
   References:
-   13: (o3.b: Array<number | void>); // Error: void ~> array
-        ^^^^ [1]: undefined
+    5: declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
    13: (o3.b: Array<number | void>); // Error: void ~> array
               ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
@@ -364,8 +364,8 @@ Error: optional.js:17
  17: (o6.b: Array<number | void>); // Error: void ~> array
       ^^^^ Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2].
   References:
-   17: (o6.b: Array<number | void>); // Error: void ~> array
-        ^^^^ [1]: undefined
+    9: declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
    17: (o6.b: Array<number | void>); // Error: void ~> array
               ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 

@@ -32,8 +32,8 @@ Error: test.js:13
  13: (nv.x[0]: string); // error
       ^^^^^^^ Cannot cast `nv.x[0]` to string because number [1] is incompatible with string [2].
   References:
-   13: (nv.x[0]: string); // error
-        ^^^^^^^ [1]: number
+   12: nv.x = [0];
+               ^ [1]: number
    13: (nv.x[0]: string); // error
                  ^^^^^^ [2]: string
 
@@ -41,8 +41,8 @@ Error: test.js:14
  14: (nv.foo()[0]: string); // error
       ^^^^^^^^^^^ Cannot cast `nv.foo()[0]` to string because number [1] is incompatible with string [2].
   References:
-   14: (nv.foo()[0]: string); // error
-        ^^^^^^^^^^^ [1]: number
+   12: nv.x = [0];
+               ^ [1]: number
    14: (nv.foo()[0]: string); // error
                      ^^^^^^ [2]: string
 

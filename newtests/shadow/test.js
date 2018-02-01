@@ -22,8 +22,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            8: (o.p: string);
                ^^^ Cannot cast \`o.p\` to string because number [1] is incompatible with string [2].
            References:
-             8: (o.p: string);
-                 ^^^ [1]: number
+            10: proto.p = 0;
+                          ^ [1]: number
              8: (o.p: string);
                       ^^^^^^ [2]: string
        `,
@@ -46,8 +46,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:       (a.p: string);
                       ^^^ Cannot cast \`a.p\` to string because boolean [1] is incompatible with string [2].
             References:
-              7:       (a.p: string);
-                        ^^^ [1]: boolean
+             11: proto.p = true;
+                           ^^^^ [1]: boolean
               7:       (a.p: string);
                              ^^^^^^ [2]: string
 
@@ -55,8 +55,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             8:       (b.p: number);
                       ^^^ Cannot cast \`b.p\` to number because boolean [1] is incompatible with number [2].
             References:
-              8:       (b.p: number);
-                        ^^^ [1]: boolean
+             11: proto.p = true;
+                           ^^^^ [1]: boolean
               8:       (b.p: number);
                              ^^^^^^ [2]: number
         `,
@@ -81,8 +81,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            12: (a.p: void);
                 ^^^ Cannot cast \`a.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
-             12: (a.p: void);
-                  ^^^ [1]: number
+              7:       a.p = 0;
+                             ^ [1]: number
              12: (a.p: void);
                        ^^^^ [2]: undefined
         `,
@@ -96,8 +96,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            14: (b.p: void);
                 ^^^ Cannot cast \`b.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
-             14: (b.p: void);
-                  ^^^ [1]: string
+              8:       b.p = "";
+                             ^^ [1]: string
              14: (b.p: void);
                        ^^^^ [2]: undefined
         `,
@@ -111,8 +111,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            12: (a.p: void);
                 ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
-             12: (a.p: void);
-                  ^^^ [1]: boolean
+             16: proto.p = true;
+                           ^^^^ [1]: boolean
              12: (a.p: void);
                        ^^^^ [2]: undefined
 
@@ -120,8 +120,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            12: (a.p: void);
                 ^^^ Cannot cast \`a.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
-             12: (a.p: void);
-                  ^^^ [1]: string
+              8:       b.p = "";
+                             ^^ [1]: string
              12: (a.p: void);
                        ^^^^ [2]: undefined
 
@@ -129,8 +129,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            14: (b.p: void);
                 ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
-             14: (b.p: void);
-                  ^^^ [1]: boolean
+             16: proto.p = true;
+                           ^^^^ [1]: boolean
              14: (b.p: void);
                        ^^^^ [2]: undefined
 
@@ -138,8 +138,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            14: (b.p: void);
                 ^^^ Cannot cast \`b.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
-             14: (b.p: void);
-                  ^^^ [1]: number
+              7:       a.p = 0;
+                             ^ [1]: number
              14: (b.p: void);
                        ^^^^ [2]: undefined
         `,
@@ -231,8 +231,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:         (o.p: number);
                         ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
-              7:         (o.p: number);
-                          ^^^ [1]: boolean
+             13: o.p = true;
+                       ^^^^ [1]: boolean
               7:         (o.p: number);
                                ^^^^^^ [2]: number
 
@@ -240,8 +240,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             9:         (o.p: string);
                         ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
-              9:         (o.p: string);
-                          ^^^ [1]: boolean
+             13: o.p = true;
+                       ^^^^ [1]: boolean
               9:         (o.p: string);
                                ^^^^^^ [2]: string
         `,
@@ -270,8 +270,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:         (o.p: void);
                         ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
-              7:         (o.p: void);
-                          ^^^ [1]: number
+             13:         o.p = 0;
+                               ^ [1]: number
               7:         (o.p: void);
                                ^^^^ [2]: undefined
 
@@ -279,8 +279,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:         (o.p: void);
                         ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
-              7:         (o.p: void);
-                          ^^^ [1]: string
+             15:         o.p = "";
+                               ^^ [1]: string
               7:         (o.p: void);
                                ^^^^ [2]: undefined
         `,
@@ -308,8 +308,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             9:         (a.p: number);
                         ^^^ Cannot cast \`a.p\` to number because boolean [1] is incompatible with number [2].
             References:
-              9:         (a.p: number);
-                          ^^^ [1]: boolean
+             15: proto.p = true;
+                           ^^^^ [1]: boolean
               9:         (a.p: number);
                                ^^^^^^ [2]: number
 
@@ -317,8 +317,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            11:         (b.p: string);
                         ^^^ Cannot cast \`b.p\` to string because boolean [1] is incompatible with string [2].
             References:
-             11:         (b.p: string);
-                          ^^^ [1]: boolean
+             15: proto.p = true;
+                           ^^^^ [1]: boolean
              11:         (b.p: string);
                                ^^^^^^ [2]: string
         `,
@@ -344,8 +344,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            13: (o.p: void);
                 ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
-             13: (o.p: void);
-                  ^^^ [1]: number
+              7:         o.p = 0;
+                               ^ [1]: number
              13: (o.p: void);
                        ^^^^ [2]: undefined
 
@@ -353,8 +353,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            13: (o.p: void);
                 ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
-             13: (o.p: void);
-                  ^^^ [1]: string
+              9:         o.p = "";
+                               ^^ [1]: string
              13: (o.p: void);
                        ^^^^ [2]: undefined
         `,
@@ -383,8 +383,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            13:         (o.p: number); // error: void ~> number
                         ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
-             13:         (o.p: number); // error: void ~> number
-                          ^^^ [1]: boolean
+              7:         o.p = true;
+                               ^^^^ [1]: boolean
              13:         (o.p: number); // error: void ~> number
                                ^^^^^^ [2]: number
 
@@ -392,8 +392,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            15:         (o.p: string); // error: void ~> string
                         ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
-             15:         (o.p: string); // error: void ~> string
-                          ^^^ [1]: boolean
+              7:         o.p = true;
+                               ^^^^ [1]: boolean
              15:         (o.p: string); // error: void ~> string
                                ^^^^^^ [2]: string
         `,

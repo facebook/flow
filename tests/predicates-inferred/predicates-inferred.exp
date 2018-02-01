@@ -14,8 +14,8 @@ Error: sanity-ordering.js:7
   7:   (obj.page: Object);
         ^^^^^^^^ Cannot cast `obj.page` to object type because null or undefined [1] is incompatible with object type [2].
   References:
-    7:   (obj.page: Object);
-          ^^^^^^^^ [1]: null or undefined
+    4: declare var obj: { page: ?Object; };
+                                ^^^^^^^ [1]: null or undefined
     7:   (obj.page: Object);
                     ^^^^^^ [2]: object type
 

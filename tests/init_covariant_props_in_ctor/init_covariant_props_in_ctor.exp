@@ -8,8 +8,8 @@ Error: a.js:20
  20:     this.prop = prop;         // ERROR: we should not be assigning a string here
                      ^^^^ string [1] is incompatible with number [2].
   References:
-   20:     this.prop = prop;         // ERROR: we should not be assigning a string here
-                       ^^^^ [1]: string
+   19:   constructor(prop: string) {
+                           ^^^^^^ [1]: string
    20:     this.prop = prop;         // ERROR: we should not be assigning a string here
            ^^^^^^^^^ [2]: number
 
