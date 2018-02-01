@@ -163,15 +163,17 @@ let rec convert cx tparams_map = Ast.Type.(function
   mk_singleton_boolean loc value
 
 (* TODO *)
-| loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
-       { Generic.Identifier.qualification; id; }); typeParameters } ->
+| loc, Generic { Generic.id = (Generic.Identifier.Qualified (qid_loc,
+       { Generic.Identifier.qualification; id; }) as qid); typeParameters } ->
 
   let m = convert_qualification cx "type-annotation" qualification in
   let id_loc, name = id in
   let reason = mk_reason (RType name) loc in
+  let id_reason = mk_reason (RType name) id_loc in
   let t = Tvar.mk_where cx reason (fun t ->
     Type_table.set_info (Context.type_table cx) id_loc t;
-    Flow.flow cx (m, GetPropT (unknown_use, reason, Named (reason, name), t));
+    let use_op = Op (GetProperty (mk_reason (RType (qualified_name qid)) qid_loc)) in
+    Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
   ) in
   let typeParameters = extract_type_param_instantiations typeParameters in
   mk_nominal_type cx reason tparams_map (t, typeParameters)
@@ -865,9 +867,11 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let id_loc, name = id in
     let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
     let reason = mk_reason desc loc in
+    let id_reason = mk_reason desc id_loc in
     Tvar.mk_where cx reason (fun t ->
       Type_table.set_info (Context.type_table cx) id_loc t;
-      Flow.flow cx (m, GetPropT (unknown_use, reason, Named (reason, name), t));
+      let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
+      Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
     )
 
   | Unqualified (loc, name) ->
