@@ -917,37 +917,43 @@ and statement cx = Ast.Statement.(
          * expression type is itself a Promise<T>, ensure we still return
          * a Promise<T> via Promise.resolve. *)
         let reason = mk_reason (RCustom "async return") loc in
-        Flow.get_builtin_typeapp cx reason "Promise" [
+        let t' = Flow.get_builtin_typeapp cx reason "Promise" [
           Tvar.mk_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
             let callt = mk_functioncalltype reason [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (unknown_use, reason, callt))
           )
-        ]
+        ] in
+        Flow.reposition cx ~desc:(desc_of_t t) loc t'
       | Scope.Generator ->
         (* Convert the return expression's type R to Generator<Y,R,N>, where
          * Y and R are internals, installed earlier. *)
         let reason = mk_reason (RCustom "generator return") loc in
-        Flow.get_builtin_typeapp cx reason "Generator" [
+        let t' = Flow.get_builtin_typeapp cx reason "Generator" [
           Env.get_internal_var cx "yield" loc;
           Tvar.mk_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
           Env.get_internal_var cx "next" loc
-        ]
+        ] in
+        Flow.reposition cx ~desc:(desc_of_t t) loc t'
       | Scope.AsyncGenerator ->
         let reason = mk_reason (RCustom "async generator return") loc in
-        Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
+        let t' = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
           Env.get_internal_var cx "yield" loc;
           Tvar.mk_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
           Env.get_internal_var cx "next" loc
-        ]
+        ] in
+        Flow.reposition cx ~desc:(desc_of_t t) loc t'
       | _ -> t
       in
-      Flow.flow cx (t, UseT (Op FunReturnStatement, ret));
+      let use_op = Op (FunReturnStatement {
+        value = Option.value_map argument ~default:(reason_of_t t) ~f:mk_expression_reason;
+      }) in
+      Flow.flow cx (t, UseT (use_op, ret));
       Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Return
 
@@ -4486,7 +4492,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
          then discard the result. currently MethodT does not update type_table
          properly. *)
       let obj_t = expression cx o in
-      let reason = mk_reason (RCustom "Array.isArray") callee_loc in
+      let reason = mk_reason (RCustom "`Array.isArray(...)`") callee_loc in
       let fn_t = Tvar.mk_where cx reason (fun t ->
         let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
         let use_op = Op (GetProperty prop_reason) in
@@ -4505,12 +4511,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* test1 && test2 *)
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
-      let reason = mk_reason (RCustom "&&") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
       let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc map1 xts1
-        (fun () -> predicates_of_condition cx right)
-      in
+        (fun () -> predicates_of_condition cx right) in
+      let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       (
         Tvar.mk_where cx reason (fun t ->
           Flow.flow cx (t1, AndT (reason, t2, t));
@@ -4523,12 +4528,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* test1 || test2 *)
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let () = check_default_pattern cx left right in
-      let reason = mk_reason (RCustom "||") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
       let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc not_map1 xts1
-        (fun () -> predicates_of_condition cx right)
-      in
+        (fun () -> predicates_of_condition cx right) in
+      let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       (
         Tvar.mk_where cx reason (fun t ->
           Flow.flow cx (t1, OrT (reason, t2, t));

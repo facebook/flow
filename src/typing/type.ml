@@ -299,7 +299,7 @@ module rec TypeTerm : sig
         prop: reason;
         args: reason list;
       }
-    | FunReturnStatement
+    | FunReturnStatement of { value: reason }
     | FunImplicitReturn
     | FunCallThis of reason
     | GetProperty of reason
@@ -2479,6 +2479,7 @@ let loc_of_root_use_op = function
 | ClassImplementsCheck {def=op; _}
 | FunCall {op; _}
 | FunCallMethod {op; _}
+| FunReturnStatement {value=op}
 | GetProperty op
 | ReactCreateElementCall {op; _}
 | SetProperty op
@@ -2487,7 +2488,6 @@ let loc_of_root_use_op = function
 | Coercion
 | FunCallThis _
 | FunImplicitReturn
-| FunReturnStatement
 | ReactGetIntrinsic _
 | Internal _
 | UnknownUse
@@ -2606,7 +2606,7 @@ let string_of_root_use_op = function
 | FunCallMethod _ -> "FunCallMethod"
 | FunCallThis _ -> "FunCallThis"
 | FunImplicitReturn -> "FunImplicitReturn"
-| FunReturnStatement -> "FunReturnStatement"
+| FunReturnStatement _ -> "FunReturnStatement"
 | GetProperty _ -> "GetProperty"
 | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
 | ReactCreateElementCall _ -> "ReactCreateElementCall"

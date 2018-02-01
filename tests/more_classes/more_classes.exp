@@ -44,9 +44,12 @@ Error: Foo.js:16
 
 Error: Foo.js:18
  18:     return v.bar(z,u);
-                ^^^^^^^^^^ string. This type is incompatible with the expected return type of
- 13:   foo(y:string,z):number {
-                       ^^^^^^ number
+                ^^^^^^^^^^ Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
+  References:
+   14:   bar(z:string,u:string):string {
+                                ^^^^^^ [1]: string. See: Bar.js:14
+   13:   foo(y:string,z):number {
+                         ^^^^^^ [2]: number
 
 Error: Foo.js:18
  18:     return v.bar(z,u);

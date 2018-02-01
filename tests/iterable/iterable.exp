@@ -18,24 +18,12 @@ Error: array.js:8
 
 Error: caching_bug.js:21
  21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                                   ^ array type. This type is incompatible with the expected return type of
- 21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                         ^^^^^^^^^^^^^^^^ $Iterable
-  Property `@@iterator` is incompatible:
-    197:     @@iterator(): Iterator<T>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:197
-    503:     @@iterator(): $Iterator<Yield,Return,Next>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      The return is incompatible:
-        197:     @@iterator(): Iterator<T>;
-                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:197
-        503:     @@iterator(): $Iterator<Yield,Return,Next>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
-          Type argument `Yield` is incompatible:
-             21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                           ^^^^^^ number. This type is incompatible with
-             21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                              ^^^^^^ string
+                                                                                   ^ Cannot return `x` because in property `@@iterator`, the return value, and then type argument `Yield`; number [1] is incompatible with string [2].
+  References:
+   21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                 ^^^^^^ [1]: number
+   21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                                    ^^^^^^ [2]: string
 
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
@@ -61,45 +49,21 @@ Error: iterator_result.js:25
 
 Error: map.js:14
  14:   return map;
-              ^^^ Map. This type is incompatible with the expected return type of
- 13: function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                  ^^^^^^^^^^^^^^^^ $Iterable
-  Property `@@iterator` is incompatible:
-    541:     @@iterator(): Iterator<[K, V]>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:541
-    503:     @@iterator(): $Iterator<Yield,Return,Next>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      The return is incompatible:
-        541:     @@iterator(): Iterator<[K, V]>;
-                               ^^^^^^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:541
-        503:     @@iterator(): $Iterator<Yield,Return,Next>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
-          Type argument `Yield` is incompatible:
-            541:     @@iterator(): Iterator<[K, V]>;
-                                            ^^^^^^ tuple type. This type is incompatible with. See lib: <BUILTINS>/core.js:541
-             13: function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                                       ^^^^^^ string
+              ^^^ Cannot return `map` because in property `@@iterator`, the return value, and then type argument `Yield`; tuple type [1] is incompatible with string [2].
+  References:
+  541:     @@iterator(): Iterator<[K, V]>;
+                                  ^^^^^^ [1]: tuple type. See lib: <BUILTINS>/core.js:541
+   13: function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                             ^^^^^^ [2]: string
 
 Error: set.js:14
  14:   return set;
-              ^^^ Set. This type is incompatible with the expected return type of
- 13: function setTest4(set: Set<string>): Iterable<number> {
-                                          ^^^^^^^^^^^^^^^^ $Iterable
-  Property `@@iterator` is incompatible:
-    566:     @@iterator(): Iterator<T>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with. See lib: <BUILTINS>/core.js:566
-    503:     @@iterator(): $Iterator<Yield,Return,Next>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:503
-      The return is incompatible:
-        566:     @@iterator(): Iterator<T>;
-                               ^^^^^^^^^^^ $Iterator. Has some incompatible type argument with. See lib: <BUILTINS>/core.js:566
-        503:     @@iterator(): $Iterator<Yield,Return,Next>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $Iterator. See lib: <BUILTINS>/core.js:503
-          Type argument `Yield` is incompatible:
-             13: function setTest4(set: Set<string>): Iterable<number> {
-                                            ^^^^^^ string. This type is incompatible with
-             13: function setTest4(set: Set<string>): Iterable<number> {
-                                                               ^^^^^^ number
+              ^^^ Cannot return `set` because in property `@@iterator`, the return value, and then type argument `Yield`; string [1] is incompatible with number [2].
+  References:
+   13: function setTest4(set: Set<string>): Iterable<number> {
+                                  ^^^^^^ [1]: string
+   13: function setTest4(set: Set<string>): Iterable<number> {
+                                                     ^^^^^^ [2]: number
 
 Error: string.js:5
   5: ("hi": Iterable<number>); // Error - string is a Iterable<string>

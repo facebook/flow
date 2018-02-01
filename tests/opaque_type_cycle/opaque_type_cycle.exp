@@ -1,20 +1,29 @@
 Error: test2.js:4
   4:     return x; // Error: number ~> ID
-                ^ number. This type is incompatible with the expected return type of
-  3: export function hide(x: number) : ID {
-                                       ^^ ID
+                ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
+  References:
+    3: export function hide(x: number) : ID {
+                               ^^^^^^ [1]: number
+    3: export function hide(x: number) : ID {
+                                         ^^ [2]: `ID`
 
 Error: test2.js:8
   8:     return show(x); // Error: number ~> ID
-                ^^^^^^^ number. This type is incompatible with the expected return type of
-  7: function bad(x: ID) : ID {
-                           ^^ ID
+                ^^^^^^^ Cannot return `show(...)` because number [1] is incompatible with `ID` [2].
+  References:
+    4: export function show(x: ID) : number {
+                                     ^^^^^^ [1]: number. See: test1.js:4
+    7: function bad(x: ID) : ID {
+                             ^^ [2]: `ID`
 
 Error: test2.js:12
  12:     return opaquify(x); // Error: ID ~> number
-                ^^^^^^^^^^^ ID. This type is incompatible with the expected return type of
- 11: function bad2(x: number): number {
-                               ^^^^^^ number
+                ^^^^^^^^^^^ Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2].
+  References:
+    8: export function opaquify(x: number) : ID {
+                                             ^^ [1]: `ID`. See: test1.js:8
+   11: function bad2(x: number): number {
+                                 ^^^^^^ [2]: number
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
@@ -27,9 +36,12 @@ Error: test3.js:5
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                                        ^ number. This type is incompatible with the expected return type of
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                      ^^^^^^^^ num
+                                                                        ^ Cannot return `x` because number [1] is incompatible with `num` [2].
+  References:
+    5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                               ^^^^^^ [1]: number
+    4: export var y: num = 3;
+                     ^^^ [2]: `num`. See: cycle.js:4
 
 
 Found 5 errors

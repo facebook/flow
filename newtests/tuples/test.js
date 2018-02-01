@@ -32,14 +32,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:22
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                                ^^^ read-only array type. This type is incompatible with the expected return type of
-           22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                      ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-            Type argument \`T\` is incompatible:
-               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                ^^^^^^ number. This type is incompatible with
-               22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                         ^^^^^^ string
+                                                                                ^^^ Cannot return \`tup\` because in type argument \`T\`, number [1] is incompatible with string [2].
+            References:
+             22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                              ^^^^^^ [1]: number
+             22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                                       ^^^^^^ [2]: string
         `,
       ),
 
@@ -49,9 +47,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:26
            26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
-                                                                                          ^^^ read-only array type. This type is incompatible with the expected return type of
-           26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
-                                                                         ^^^^^^^^^^^^^ array type
+                                                                                          ^^^ Cannot return \`tup\` because read-only array type [1] is incompatible with array type [2].
+            References:
+             26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
+                                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]: read-only array type
+             26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
+                                                                           ^^^^^^^^^^^^^ [2]: array type
         `,
       ),
 
@@ -74,9 +75,12 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:3
            3: function foo(x: [1,2]): string { return x.length; }
-                                                      ^^^^^^^^ number. This type is incompatible with the expected return type of
-           3: function foo(x: [1,2]): string { return x.length; }
-                                      ^^^^^^ string
+                                                      ^^^^^^^^ Cannot return \`x.length\` because number [1] is incompatible with string [2].
+           References:
+           235:     +length: number;
+                             ^^^^^^ [1]: number. See lib: [LIB] core.js:235
+             3: function foo(x: [1,2]): string { return x.length; }
+                                        ^^^^^^ [2]: string
        `,
      ),
   ]),
@@ -167,9 +171,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:3
             3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^^^^ undefined (out of bounds tuple access). This type is incompatible with the expected return type of
-            3: function foo(x: [1,2]): number { return x[2]; }
-                                       ^^^^^^ number
+                                                       ^^^^ Cannot return \`x[2]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
+            References:
+              3: function foo(x: [1,2]): number { return x[2]; }
+                                                         ^^^^ [1]: undefined (out of bounds tuple access)
+              3: function foo(x: [1,2]): number { return x[2]; }
+                                         ^^^^^^ [2]: number
         `,
       )
       .because('Out of bounds access causes an error and results in void'),
@@ -184,9 +191,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^^^^^ undefined (out of bounds tuple access). This type is incompatible with the expected return type of
-            5: function foo(x: [1,2]): number { return x[-1]; }
-                                       ^^^^^^ number
+                                                       ^^^^^ Cannot return \`x[-1]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
+            References:
+              5: function foo(x: [1,2]): number { return x[-1]; }
+                                                         ^^^^^ [1]: undefined (out of bounds tuple access)
+              5: function foo(x: [1,2]): number { return x[-1]; }
+                                         ^^^^^^ [2]: number
         `,
       ),
   ]),
@@ -202,9 +212,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:3
             3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ undefined (out of bounds tuple access). This type is incompatible with the expected return type of
-            3: function foo(x: [1]): string { return x[2]; }
-                                     ^^^^^^ string
+                                                     ^^^^ Cannot return \`x[2]\` because undefined (out of bounds tuple access) [1] is incompatible with string [2].
+            References:
+              3: function foo(x: [1]): string { return x[2]; }
+                                                       ^^^^ [1]: undefined (out of bounds tuple access)
+              3: function foo(x: [1]): string { return x[2]; }
+                                       ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -214,9 +227,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1], y: number): string { return x[y]; }
-                                                                ^^^^ number literal \`1\`. This type is incompatible with the expected return type of
-            3: function foo(x: [1], y: number): string { return x[y]; }
-                                                ^^^^^^ string
+                                                                ^^^^ Cannot return \`x[y]\` because number literal \`1\` [1] is incompatible with string [2].
+            References:
+              3: function foo(x: [1], y: number): string { return x[y]; }
+                                  ^ [1]: number literal \`1\`
+              3: function foo(x: [1], y: number): string { return x[y]; }
+                                                  ^^^^^^ [2]: string
         `,
       ),
   ]),
@@ -264,9 +280,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function foo(arr: [1,2]): Array<number> { return arr; }
-                                                                      ^^^ tuple type. This type is incompatible with the expected return type of
-            4:       function foo(arr: [1,2]): Array<number> { return arr; }
-                                               ^^^^^^^^^^^^^ array type
+                                                                      ^^^ Cannot return \`arr\` because tuple type [1] is incompatible with array type [2].
+            References:
+              4:       function foo(arr: [1,2]): Array<number> { return arr; }
+                                         ^^^^^ [1]: tuple type
+              4:       function foo(arr: [1,2]): Array<number> { return arr; }
+                                                 ^^^^^^^^^^^^^ [2]: array type
         `,
       ).because('Tuples are subtypes of arrays'),
   ]),
@@ -324,25 +343,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return arr;
-                              ^^^ array type. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                       ^^^^^^ tuple type
-            The first tuple element is incompatible:
-                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                            ^ number literal \`1\`
+                              ^^^ Cannot return \`arr\` because in index 0, string [1] is incompatible with number literal \`1\` [2].
+            References:
+              4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                               ^^^^^^ [1]: string
+              4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                          ^ [2]: number literal \`1\`
 
           test.js:5
             5:         return arr;
-                              ^^^ array type. This type is incompatible with the expected return type of
-            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                       ^^^^^^ tuple type
-            The second tuple element is incompatible:
-                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-                4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
-                                                                                               ^ number literal \`2\`
+                              ^^^ Cannot return \`arr\` because in index 1, string [1] is incompatible with number literal \`2\` [2].
+            References:
+              4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                               ^^^^^^ [1]: string
+              4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                                             ^ [2]: number literal \`2\`
         `,
       ),
   ]),
@@ -355,25 +370,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return arr;
-                              ^^^ tuple type. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-            The first tuple element is incompatible:
-                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                            ^^^^^^ number. This type is incompatible with
-                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                              ^^^ Cannot return \`arr\` because in index 0, number [1] is incompatible with string [2].
+            References:
+              4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                          ^^^^^^ [1]: number
+              4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                                                                  ^^^^^^ [2]: string
 
           test.js:5
             5:         return arr;
-                              ^^^ tuple type. This type is incompatible with the expected return type of
-            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-            The second tuple element is incompatible:
-                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                    ^^^^^^ number. This type is incompatible with
-                4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
-                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                              ^^^ Cannot return \`arr\` because in index 1, number [1] is incompatible with string [2].
+            References:
+              4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                  ^^^^^^ [1]: number
+              4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                                                                  ^^^^^^ [2]: string
         `,
       ),
    ]),
@@ -433,9 +444,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:6
             6:           return tup[3];
-                                ^^^^^^ undefined (out of bounds tuple access). This type is incompatible with the expected return type of
-            4:       function foo(tup: ?[number, number]): number {
-                                                           ^^^^^^ number
+                                ^^^^^^ Cannot return \`tup[3]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
+            References:
+              6:           return tup[3];
+                                  ^^^^^^ [1]: undefined (out of bounds tuple access)
+              4:       function foo(tup: ?[number, number]): number {
+                                                             ^^^^^^ [2]: number
         `,
       ),
   ]),

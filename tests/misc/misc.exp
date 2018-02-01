@@ -27,9 +27,12 @@ Error: C.js:10
 
 Error: D.js:6
   6: function g():string { return this.i; }
-                                  ^^^^^^ boolean. This type is incompatible with the expected return type of
-  6: function g():string { return this.i; }
-                  ^^^^^^ string
+                                  ^^^^^^ Cannot return `this.i` because boolean [1] is incompatible with string [2].
+  References:
+    9: o.i = true;
+             ^^^^ [1]: boolean
+    6: function g():string { return this.i; }
+                    ^^^^^^ [2]: string
 
 Error: D.js:12
  12: f(i);
@@ -49,9 +52,12 @@ Error: F.js:1
 
 Error: F.js:5
   5:   return x.length;
-              ^^^^^^^^ number. This type is incompatible with the expected return type of
-  4: function foo(x: Array<number>): string {
-                                     ^^^^^^ string
+              ^^^^^^^^ Cannot return `x.length` because number [1] is incompatible with string [2].
+  References:
+  275:     length: number;
+                   ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:275
+    4: function foo(x: Array<number>): string {
+                                       ^^^^^^ [2]: string
 
 Error: G.js:2
   2: a.length = 123;

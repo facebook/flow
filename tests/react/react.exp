@@ -173,9 +173,12 @@ Error: create_class.js:149
 
 Error: create_class.js:150
 150:     return 0; // number ~> bool
-                ^ number. This type is incompatible with the expected return type of
- 55:   ): boolean;
-          ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:55
+                ^ Cannot return `0` because number [1] is incompatible with boolean [2].
+  References:
+  150:     return 0; // number ~> bool
+                  ^ [1]: number
+   55:   ): boolean;
+            ^^^^^^^ [2]: boolean. See lib: <BUILTINS>/react.js:55
 
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
@@ -1388,9 +1391,12 @@ Error: proptype_custom_validator.js:10
 
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
-                      ^^^^^ mixed. This type is incompatible with the expected return type of
-268:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:268
+                      ^^^^^ Cannot return `0` because mixed [1] is incompatible with `Error` [2].
+  References:
+   11:       return (0: mixed); // error: should return ?Error
+                        ^^^^^ [1]: mixed
+  268:   href?: string) => ?Error;
+                            ^^^^^ [2]: `Error`. See lib: <BUILTINS>/react.js:268
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />

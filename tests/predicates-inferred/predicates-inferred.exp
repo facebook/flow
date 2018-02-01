@@ -1,8 +1,11 @@
 Error: sanity-multi-params.js:10
  10:     return x;
-                ^ array type. This type is incompatible with the expected return type of
-  8: function foo(x: string | Array<string>): string {
-                                              ^^^^^^ string
+                ^ Cannot return `x` because array type [1] is incompatible with string [2].
+  References:
+    8: function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]: array type
+    8: function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]: string
 
 Error: sanity-multi-params.js:12
  12:     return x.join();
@@ -33,9 +36,12 @@ Error: sanity-ordering.js:15
 
 Error: sanity-unbound-var.js:13
  13:     return x;
-                ^ array type. This type is incompatible with the expected return type of
- 11: function foo(x: string | Array<string>): string {
-                                              ^^^^^^ string
+                ^ Cannot return `x` because array type [1] is incompatible with string [2].
+  References:
+   11: function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]: array type
+   11: function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]: string
 
 Error: sanity-unbound-var.js:15
  15:     return x.join();

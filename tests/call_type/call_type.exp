@@ -1,14 +1,20 @@
 Error: intersection.js:10
  10: function foo(x: X): A { return x; } // error
-                                    ^ B. This type is incompatible with the expected return type of
- 10: function foo(x: X): A { return x; } // error
-                         ^ A
+                                    ^ Cannot return `x` because `B` [1] is incompatible with `A` [2].
+  References:
+   10: function foo(x: X): A { return x; } // error
+                       ^ [1]: `B`
+   10: function foo(x: X): A { return x; } // error
+                           ^ [2]: `A`
 
 Error: intersection.js:11
  11: function bar(x: X): B { return x; } // error
-                                    ^ A. This type is incompatible with the expected return type of
- 11: function bar(x: X): B { return x; } // error
-                         ^ B
+                                    ^ Cannot return `x` because `A` [1] is incompatible with `B` [2].
+  References:
+   11: function bar(x: X): B { return x; } // error
+                       ^ [1]: `A`
+   11: function bar(x: X): B { return x; } // error
+                           ^ [2]: `B`
 
 Error: test.js:7
   7: type A = $Call; // Error: one or more arguments are required.

@@ -9,9 +9,12 @@ Error: importtest.js:7
 
 Error: importtest.js:10
  10:     return x;
-                ^ number. This type is incompatible with the expected return type of
-  9: function bad1(x: number) : ID { // Error: number ~> ID
-                                ^^ ID
+                ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
+  References:
+    9: function bad1(x: number) : ID { // Error: number ~> ID
+                        ^^^^^^ [1]: number
+    9: function bad1(x: number) : ID { // Error: number ~> ID
+                                  ^^ [2]: `ID`
 
 Error: importtest.js:14
  14:     return Test.hide(x); // Error: ID ~> number
@@ -21,15 +24,21 @@ Error: importtest.js:14
 
 Error: importtest.js:18
  18:     return x; // Error: ID ~> ID2
-                ^ ID. This type is incompatible with the expected return type of
- 17: function bad3(x: ID) : ID2 {
-                            ^^^ number
+                ^ Cannot return `x` because `ID` [1] is incompatible with number [2].
+  References:
+   17: function bad3(x: ID) : ID2 {
+                        ^^ [1]: `ID`
+   17: function bad3(x: ID) : ID2 {
+                              ^^^ [2]: number
 
 Error: importtest.js:22
  22:     return x;
-                ^ number. This type is incompatible with the expected return type of
- 21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
-                             ^^ ID
+                ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
+  References:
+   21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+                        ^^^ [1]: number
+   21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+                               ^^ [2]: `ID`
 
 Error: test.js:17
  17: ("hello": MyNum) // Error: string ~> number

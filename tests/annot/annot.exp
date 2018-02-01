@@ -9,9 +9,12 @@ Error: annot.js:4
 
 Error: annot.js:6
   6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                                              ^^^^^^^^^^ string. This type is incompatible with the expected return type of
-  6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                              ^^^^^^ number
+                                                              ^^^^^^^^^^ Cannot return `foo(...)` because string [1] is incompatible with number [2].
+  References:
+    1: function foo(str:string, i:number):string {
+                                          ^^^^^^ [1]: string
+    6: var qux = function(str:string, i:number):number { return foo(str,i); }
+                                                ^^^^^^ [2]: number
 
 Error: annot.js:8
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
@@ -122,9 +125,12 @@ Error: forward_ref.js:1
 
 Error: forward_ref.js:4
   4:   return null; // forward ref ok, null ~> class error
-              ^^^^ null. This type is incompatible with the expected return type of
-  3: function bar(): MyClass {
-                     ^^^^^^^ MyClass
+              ^^^^ Cannot return `null` because null [1] is incompatible with `MyClass` [2].
+  References:
+    4:   return null; // forward ref ok, null ~> class error
+                ^^^^ [1]: null
+    3: function bar(): MyClass {
+                       ^^^^^^^ [2]: `MyClass`
 
 
 Found 12 errors

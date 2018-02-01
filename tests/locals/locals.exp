@@ -146,9 +146,12 @@ Error: locals.js:14
 
 Error: locals.js:22
  22:   return x;
-              ^ string. This type is incompatible with the expected return type of
- 17: function foo0(b: bool): number {
-                             ^^^^^^ number
+              ^ Cannot return `x` because string [1] is incompatible with number [2].
+  References:
+   20:     var x = ""; // error: string ~> number
+                   ^^ [1]: string
+   17: function foo0(b: bool): number {
+                               ^^^^^^ [2]: number
 
 
 Found 15 errors

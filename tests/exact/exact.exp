@@ -93,9 +93,12 @@ Error: unsealed.js:14
 
 Error: unsealed2.js:15
  15:     return x.q;
-                ^^^ string. This type is incompatible with the expected return type of
- 13: function f(_): number {
-                    ^^^^^^ number
+                ^^^ Cannot return `x.q` because string [1] is incompatible with number [2].
+  References:
+   23:   x.q = "not a number";
+               ^^^^^^^^^^^^^^ [1]: string
+   13: function f(_): number {
+                      ^^^^^^ [2]: number
 
 Error: use_ops.js:2
   2: var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p

@@ -2474,10 +2474,6 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason_call)
-    | EFunReturn (reason1, reason2) ->
-        spf "EFunReturn (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
     | EFunImplicitReturn (reason1, reason2) ->
         spf "EFunImplicitReturn (%s, %s)"
           (dump_reason cx reason1)

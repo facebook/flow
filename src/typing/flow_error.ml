@@ -79,7 +79,6 @@ type error_message =
   | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of reason * reason * int
   | EFunCallThis of reason * reason * reason
-  | EFunReturn of (reason * reason)
   | EFunImplicitReturn of (reason * reason)
   | EAddition of (reason * reason)
   | EAdditionMixed of reason
@@ -317,7 +316,6 @@ let util_use_op_of_msg nope util = function
 | EPrivateLookupFailed (_, _)
 | EFunCallParam (_, _, _)
 | EFunCallThis (_, _, _)
-| EFunReturn (_, _)
 | EFunImplicitReturn (_, _)
 | EAddition (_, _)
 | EAdditionMixed (_)
@@ -505,7 +503,6 @@ let score_of_msg msg =
     | EFunCallParam (rl, ru, _)
     | EFunCallThis (rl, ru, _)
     | EFunImplicitReturn (rl, ru)
-    | EFunReturn (rl, ru)
     | EIncompatibleWithExact ((rl, ru), _)
       -> Some (rl, ru)
     | _
@@ -837,7 +834,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | Frame (TypeParamBound { name }, use_op) ->
     let msg = spf "This type is incompatible with the bound on type parameter `%s`:" name in
     unwrap_use_ops (reasons, extra, msg) use_op
-  | Op FunReturnStatement when not force ->
+  | Op FunReturnStatement _ when not force ->
     let msg = "This type is incompatible with the expected return type of" in
     extra, typecheck_msgs msg reasons
   | Op FunImplicitReturn when not force ->
@@ -966,6 +963,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         in
         Some (`Root (lower, None,
           [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]))
+
+      | Op (FunReturnStatement {value}) ->
+        Some (`Root (value, None,
+          [text "Cannot return "; desc value]))
 
       | Op (ReactCreateElementCall {op; component; _}) ->
         Some (`Root (op, Some component,
@@ -1387,11 +1388,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         info_of_reason (lreason);
       ])] in
       typecheck_error msg ~extra (reason_call, ureason)
-
-  | EFunReturn reasons ->
-      typecheck_error
-        "This type is incompatible with the expected return type of"
-        reasons
 
   | EFunImplicitReturn (lreason, ureason) ->
       mk_error ~trace_infos [mk_info ureason [spf

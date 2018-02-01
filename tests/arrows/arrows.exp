@@ -1,8 +1,11 @@
 Error: advanced_arrows.js:7
   7: var bad = (x: number): string => x; // Error!
-                                      ^ number. This type is incompatible with the expected return type of
-  7: var bad = (x: number): string => x; // Error!
-                            ^^^^^^ string
+                                      ^ Cannot return `x` because number [1] is incompatible with string [2].
+  References:
+    7: var bad = (x: number): string => x; // Error!
+                     ^^^^^^ [1]: number
+    7: var bad = (x: number): string => x; // Error!
+                              ^^^^^^ [2]: string
 
 Error: advanced_arrows.js:11
  11: (ident("hi"): number); // Error

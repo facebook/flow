@@ -98,9 +98,12 @@ Error: maybe.js:5
 
 Error: nullable.js:1
   1: function foo():string { return null; }
-                                    ^^^^ null. This type is incompatible with the expected return type of
-  1: function foo():string { return null; }
-                    ^^^^^^ string
+                                    ^^^^ Cannot return `null` because null [1] is incompatible with string [2].
+  References:
+    1: function foo():string { return null; }
+                                      ^^^^ [1]: null
+    1: function foo():string { return null; }
+                      ^^^^^^ [2]: string
 
 Error: nullable.js:11
  11: if (x != null) corge(x); // x: ?string | null

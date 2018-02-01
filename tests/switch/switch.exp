@@ -26,9 +26,12 @@ Error: switch_default_fallthrough.js:17
 
 Error: switch_default_fallthrough.js:21
  21:     return b; // error, number ~/> string
-                ^ number. This type is incompatible with the expected return type of
-  4: function foo(x : mixed): string {
-                              ^^^^^^ string
+                ^ Cannot return `b` because number [1] is incompatible with string [2].
+  References:
+   12:         b = 0;
+                   ^ [1]: number
+    4: function foo(x : mixed): string {
+                                ^^^^^^ [2]: string
 
 Error: switch_default_fallthrough.js:39
  39:     (a : string); // error, string | number ~/> string
@@ -68,9 +71,12 @@ Error: switch_default_fallthrough.js:44
 
 Error: switch_default_fallthrough.js:46
  46:     return a+b; // error, string ~/> number
-                ^^^ string. This type is incompatible with the expected return type of
- 24: function baz(x: mixed): number {
-                             ^^^^^^ number
+                ^^^ Cannot return `a + b` because string [1] is incompatible with number [2].
+  References:
+   46:     return a+b; // error, string ~/> number
+                  ^^^ [1]: string
+   24: function baz(x: mixed): number {
+                               ^^^^^^ [2]: number
 
 Error: trailing_cases.js:23
  23:   var y:number = x; // error, number | string ~/> number

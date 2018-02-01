@@ -576,9 +576,12 @@ Error: number.js:63
 
 Error: number.js:97
  97:       return s; // error
-                  ^ number literal `3`. This type is incompatible with the expected return type of
- 93:   function(s: number): ?Mode {
-                             ^^^^ number enum
+                  ^ Cannot return `s` because number literal `3` [1] is incompatible with number enum [2].
+  References:
+   93:   function(s: number): ?Mode {
+                     ^^^^^^ [1]: number literal `3`
+   93:   function(s: number): ?Mode {
+                               ^^^^ [2]: number enum
 
 Error: number.js:116
 116:       return x; // error
@@ -588,9 +591,12 @@ Error: number.js:116
 
 Error: property.js:71
  71:     return x[y.z];  // error
-                ^^^^^^ null or undefined. This type is incompatible with the expected return type of
- 68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
-                                                               ^^^^^^ string
+                ^^^^^^ Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2].
+  References:
+   68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+                                      ^^^^^^^ [1]: null or undefined
+   68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+                                                                 ^^^^^^ [2]: string
 
 Error: refinements.js:4
   4:         var y:string = x;
@@ -801,9 +807,12 @@ Error: string.js:63
 
 Error: string.js:98
  98:       return s; // error
-                  ^ string literal `d`. This type is incompatible with the expected return type of
- 94:   function(s: string): ?Mode {
-                             ^^^^ string enum
+                  ^ Cannot return `s` because string literal `d` [1] is incompatible with string enum [2].
+  References:
+   94:   function(s: string): ?Mode {
+                     ^^^^^^ [1]: string literal `d`
+   94:   function(s: string): ?Mode {
+                               ^^^^ [2]: string enum
 
 Error: string.js:117
 117:       return x; // error
@@ -813,15 +822,21 @@ Error: string.js:117
 
 Error: super_member.js:13
  13:       return super.prop; // error, unknown type passed to string expected
-                  ^^^^^^^^^^ property `prop` of unknown type. This type is incompatible with the expected return type of
- 11:   test(): string {
-               ^^^^^^ string
+                  ^^^^^^^^^^ Cannot return `super.prop` because property `prop` of unknown type [1] is incompatible with string [2].
+  References:
+   12:     if (super.prop) { // super.prop doesn't exist
+               ^^^^^^^^^^ [1]: property `prop` of unknown type
+   11:   test(): string {
+                 ^^^^^^ [2]: string
 
 Error: switch.js:8
   8:       return text; // error, should return string
-                  ^^^^ number. This type is incompatible with the expected return type of
-  3: function foo(text: string | number): string {
-                                          ^^^^^^ string
+                  ^^^^ Cannot return `text` because number [1] is incompatible with string [2].
+  References:
+    3: function foo(text: string | number): string {
+                                   ^^^^^^ [1]: number
+    3: function foo(text: string | number): string {
+                                            ^^^^^^ [2]: string
 
 Error: switch.js:27
  27:       return text[0]; // error, [0] on number
@@ -1144,9 +1159,12 @@ Error: typeof.js:5
 
 Error: typeof.js:12
  12:     return x; // error, null
-                ^ null. This type is incompatible with the expected return type of
-  9: function bar(): number {
-                     ^^^^^^ number
+                ^ Cannot return `x` because null [1] is incompatible with number [2].
+  References:
+   10:   var x = null;
+                 ^^^^ [1]: null
+    9: function bar(): number {
+                       ^^^^^^ [2]: number
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone

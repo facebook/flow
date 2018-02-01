@@ -4,9 +4,12 @@ Error: sanity-conditional.js:5
 
 Error: sanity-fall-through.js:12
  12:   return 1;
-              ^ number. This type is incompatible with the expected return type of
-  8: function foo(s: Array<string>): string {
-                                     ^^^^^^ string
+              ^ Cannot return `1` because number [1] is incompatible with string [2].
+  References:
+   12:   return 1;
+                ^ [1]: number
+    8: function foo(s: Array<string>): string {
+                                       ^^^^^^ [2]: string
 
 Error: sanity-invalid-calls.js:10
  10:   if ((1)(s)) {
@@ -47,9 +50,12 @@ Error: sanity-pred-with-body.js:6
 
 Error: sanity-return-type.js:3
   3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                                   ^^^^^^^^^^^^^^^^ boolean. This type is incompatible with the expected return type of
-  3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                    ^^^^^^ string
+                                                   ^^^^^^^^^^^^^^^^ Cannot return `Array.isArray(...)` because boolean [1] is incompatible with string [2].
+  References:
+    3: declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                                     ^^^^^^^^^^^^^^^^ [1]: boolean
+    3: declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                      ^^^^^^ [2]: string
 
 
 Found 9 errors

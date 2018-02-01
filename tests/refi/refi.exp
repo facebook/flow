@@ -264,15 +264,21 @@ Error: local.js:54
 
 Error: null_tests.js:150
 150:       return super.p;  // not ok
-                  ^^^^^^^ null or undefined. This type is incompatible with the expected return type of
-147:   ensure103(): string {
-                    ^^^^^^ string
+                  ^^^^^^^ Cannot return `super.p` because null or undefined [1] is incompatible with string [2].
+  References:
+  101:   p: ?string;
+            ^^^^^^^ [1]: null or undefined
+  147:   ensure103(): string {
+                      ^^^^^^ [2]: string
 
 Error: switch.js:49
  49:   return foo; // error, possibly uninitialized
-              ^^^ possibly uninitialized variable. This type is incompatible with the expected return type of
- 27: function exhaustion2(x, y): number {
-                                 ^^^^^^ number
+              ^^^ Cannot return `foo` because possibly uninitialized variable [1] is incompatible with number [2].
+  References:
+   28:   var foo;
+             ^^^ [1]: possibly uninitialized variable
+   27: function exhaustion2(x, y): number {
+                                   ^^^^^^ [2]: number
 
 
 Found 32 errors

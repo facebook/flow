@@ -415,25 +415,21 @@ Error: dictionary.js:301
 
 Error: dictionary.js:307
 307:   return x;
-              ^ object type. This type is incompatible with the expected return type of
-306: ): {[k:string]:B} { // error: A ~> B
-        ^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-    305:   x: {p?:A},
-                  ^ A. This type is incompatible with
-    306: ): {[k:string]:B} { // error: A ~> B
-                        ^ B
+              ^ Cannot return `x` because in property `p`, `A` [1] is incompatible with `B` [2].
+  References:
+  305:   x: {p?:A},
+                ^ [1]: `A`
+  306: ): {[k:string]:B} { // error: A ~> B
+                      ^ [2]: `B`
 
 Error: dictionary.js:319
 319:   return x;
-              ^ object type. This type is incompatible with the expected return type of
-318: ): {[k:string]:B} { // error: C ~> B
-        ^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-    317:   x: {p?:C},
-                  ^ C. This type is incompatible with
-    318: ): {[k:string]:B} { // error: C ~> B
-                        ^ B
+              ^ Cannot return `x` because in property `p`, `C` [1] is incompatible with `B` [2].
+  References:
+  317:   x: {p?:C},
+                ^ [1]: `C`
+  318: ): {[k:string]:B} { // error: C ~> B
+                      ^ [2]: `B`
 
 Error: incompatible.js:4
   4: var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
@@ -473,62 +469,39 @@ Error: incompatible.js:9
 
 Error: incompatible.js:13
  13:   return x;
-              ^ array type. This type is incompatible with the expected return type of
- 12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Indexable signature is incompatible:
-         12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
-                                                    ^^^^^^ number. This type is incompatible with
-         12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
-                                                                                     ^^^^^^ string
+              ^ Cannot return `x` because in type argument `T` and then the indexer property, number [1] is incompatible with string [2].
+  References:
+   12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                              ^^^^^^ [1]: number
+   12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                                                               ^^^^^^ [2]: string
 
 Error: incompatible.js:20
  20:   return x;
-              ^ array type. This type is incompatible with the expected return type of
- 19: ): Array<{[key: string]: number, fooBar: string}> {
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     19: ): Array<{[key: string]: number, fooBar: string}> {
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     18:   x: Array<{[key: string]: number}>
-                    ^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `fooBar` is incompatible:
-         19: ): Array<{[key: string]: number, fooBar: string}> {
-                                                      ^^^^^^ string. This type is incompatible with
-         18:   x: Array<{[key: string]: number}>
-                                        ^^^^^^ number
+              ^ Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with number [2].
+  References:
+   19: ): Array<{[key: string]: number, fooBar: string}> {
+                                                ^^^^^^ [1]: string
+   18:   x: Array<{[key: string]: number}>
+                                  ^^^^^^ [2]: number
 
 Error: incompatible.js:27
  27:   return x; // error: mixed ~> string
-              ^ array type. This type is incompatible with the expected return type of
- 25: ): Array<{[key: string]: mixed, fooBar: string}> {
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     25: ): Array<{[key: string]: mixed, fooBar: string}> {
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     24:   x: Array<{[key: string]: mixed}>
-                    ^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `fooBar` is incompatible:
-         25: ): Array<{[key: string]: mixed, fooBar: string}> {
-                                                     ^^^^^^ string. This type is incompatible with
-         24:   x: Array<{[key: string]: mixed}>
-                                        ^^^^^ mixed
+              ^ Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with mixed [2].
+  References:
+   25: ): Array<{[key: string]: mixed, fooBar: string}> {
+                                               ^^^^^^ [1]: string
+   24:   x: Array<{[key: string]: mixed}>
+                                  ^^^^^ [2]: mixed
 
 Error: incompatible.js:37
  37:   return x;
-              ^ object type. This type is incompatible with the expected return type of
- 36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                          ^^^^^^ number. This type is incompatible with
-     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                                                                 ^^^^^^ string
+              ^ Cannot return `x` because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                        ^^^^^^ [1]: number
+   36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                                                               ^^^^^^ [2]: string
 
 Error: incompatible.js:42
  42:   return x;

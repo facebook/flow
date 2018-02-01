@@ -30,9 +30,12 @@ Error: Ycombinator.js:4
 
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
-                                                ^^^^ string. This type is incompatible with the expected return type of
- 10:   function fix_f(x:number):number { return f(x); }
-                                ^^^^^^ number
+                                                ^^^^ Cannot return `f(...)` because string [1] is incompatible with number [2].
+  References:
+   14:   function fix_f(x:string):string { return f(x); }
+                                  ^^^^^^ [1]: string
+   10:   function fix_f(x:number):number { return f(x); }
+                                  ^^^^^^ [2]: number
 
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
@@ -42,9 +45,12 @@ Error: Ycombinator.js:10
 
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }
-                                                ^^^^ number. This type is incompatible with the expected return type of
- 14:   function fix_f(x:string):string { return f(x); }
-                                ^^^^^^ string
+                                                ^^^^ Cannot return `f(...)` because number [1] is incompatible with string [2].
+  References:
+   10:   function fix_f(x:number):number { return f(x); }
+                                  ^^^^^^ [1]: number
+   14:   function fix_f(x:string):string { return f(x); }
+                                  ^^^^^^ [2]: string
 
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }

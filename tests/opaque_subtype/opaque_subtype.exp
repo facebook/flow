@@ -4,38 +4,39 @@ Error: decltest.js:2
 
 Error: importtest.js:7
   7:     return y;
-                ^ number. This type is incompatible with the expected return type of
-  6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
-                                     ^^^^^^^^^^^ SuperOpaque
+                ^ Cannot return `y` because number [1] is incompatible with `SuperOpaque` [2].
+  References:
+    6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+                          ^^^^^^^^^ [1]: number
+    6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+                                       ^^^^^^^^^^^ [2]: `SuperOpaque`
 
 Error: importtest.js:15
  15:     return x;
-                ^ number. This type is incompatible with the expected return type of
- 14: function test3 (x: number): Counter {// Error: number ~> Counter
-                                 ^^^^^^^ Counter
+                ^ Cannot return `x` because number [1] is incompatible with `Counter` [2].
+  References:
+   14: function test3 (x: number): Counter {// Error: number ~> Counter
+                          ^^^^^^ [1]: number
+   14: function test3 (x: number): Counter {// Error: number ~> Counter
+                                   ^^^^^^^ [2]: `Counter`
 
 Error: importtest.js:27
  27:     return x;
-                ^ PolyFoo. This type is incompatible with the expected return type of
- 26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
-                                          ^^^^^^^^^^^^^^^ PolyBar
+                ^ Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2].
+  References:
+   27:     return x;
+                  ^ [1]: `PolyFoo`
+   26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+                                            ^^^^^^^^^^^^^^^ [2]: `PolyBar`
 
 Error: importtest.js:31
  31:     return x;
-                ^ PolyFoo. This type is incompatible with the expected return type of
- 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                          ^^^^^^^^^^^^^^^ PolyFoo
-  Type argument `T` is incompatible:
-     30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                    ^^^^^^ number. This type is incompatible with
-     30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                                      ^^^^^^ string
-
-Error: importtest.js:39
- 39:     return x++; // Error number ~> SuperType
-                ^^^ number. This type is incompatible with the expected return type of
- 38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
-                                   ^^^^^^^^^ SuperType
+                ^ Cannot return `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                  ^^^^^^ [1]: number
+   30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                                    ^^^^^^ [2]: string
 
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
@@ -46,11 +47,23 @@ Error: importtest.js:39
    38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
                          ^^^^^^^^^ [2]: `SuperType`
 
+Error: importtest.js:39
+ 39:     return x++; // Error number ~> SuperType
+                ^^^ Cannot return `x++` because number [1] is incompatible with `SuperType` [2].
+  References:
+   39:     return x++; // Error number ~> SuperType
+                  ^^^ [1]: number
+   38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                                     ^^^^^^^^^ [2]: `SuperType`
+
 Error: importtest.js:52
  52:     return x + y;
-                ^^^^^ string. This type is incompatible with the expected return type of
- 51: function test12(x: ID, y: ID): number { // Error: string ~> number
-                                    ^^^^^^ number
+                ^^^^^ Cannot return `x + y` because string [1] is incompatible with number [2].
+  References:
+   52:     return x + y;
+                  ^^^^^ [1]: string
+   51: function test12(x: ID, y: ID): number { // Error: string ~> number
+                                      ^^^^^^ [2]: number
 
 Error: test.js:7
   7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType

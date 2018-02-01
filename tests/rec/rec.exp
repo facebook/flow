@@ -1,13 +1,11 @@
 Error: issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
-                                                    ^ F. This type is incompatible with the expected return type of
-  7: function bar(y: F<number>): F<string> { return y; }
-                                 ^^^^^^^^^ F
-  Type argument `A` is incompatible:
-      7: function bar(y: F<number>): F<string> { return y; }
-                           ^^^^^^ number. This type is incompatible with
-      7: function bar(y: F<number>): F<string> { return y; }
-                                       ^^^^^^ string
+                                                    ^ Cannot return `y` because in type argument `A`, number [1] is incompatible with string [2].
+  References:
+    7: function bar(y: F<number>): F<string> { return y; }
+                         ^^^^^^ [1]: number
+    7: function bar(y: F<number>): F<string> { return y; }
+                                     ^^^^^^ [2]: string
 
 Error: test.js:6
   6: (p.x: string); // error

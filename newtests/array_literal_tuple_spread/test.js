@@ -338,14 +338,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return [...iter];
-                              ^^^^^^^^^ array literal. This type is incompatible with the expected return type of
-            4:       function test(iter: Iterable<string>): Array<number> {
-                                                            ^^^^^^^^^^^^^ array type
-            Type argument \`T\` is incompatible:
-                4:       function test(iter: Iterable<string>): Array<number> {
-                                                      ^^^^^^ string. This type is incompatible with
-                4:       function test(iter: Iterable<string>): Array<number> {
-                                                                      ^^^^^^ number
+                              ^^^^^^^^^ Cannot return array literal because in type argument \`T\`, string [1] is incompatible with number [2].
+            References:
+              4:       function test(iter: Iterable<string>): Array<number> {
+                                                    ^^^^^^ [1]: string
+              4:       function test(iter: Iterable<string>): Array<number> {
+                                                                    ^^^^^^ [2]: number
         `,
       )
       .because('Spec says you can spread iterables')

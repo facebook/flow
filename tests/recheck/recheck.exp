@@ -2,9 +2,12 @@
 Test a:
 Error: a1.js:3
   3: function foo(x: number): string { return 5; }
-                                              ^ number. This type is incompatible with the expected return type of
-  3: function foo(x: number): string { return 5; }
-                              ^^^^^^ string
+                                              ^ Cannot return `5` because number [1] is incompatible with string [2].
+  References:
+    3: function foo(x: number): string { return 5; }
+                                                ^ [1]: number
+    3: function foo(x: number): string { return 5; }
+                                ^^^^^^ [2]: string
 
 Error: a2.js:5
   5: module.exports = foo("");

@@ -1,8 +1,11 @@
 Error: pred.js:17
  17:     || options.writableObjectMode; // error, undefined ~> boolean
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of
- 14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
-                                                               ^^^^^^^ boolean
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot return `options.objectMode || options.readableObjectMode || options.writableObjectMode` because undefined [1] is incompatible with boolean [2].
+  References:
+   11:   writableObjectMode? : boolean
+                               ^^^^^^^ [1]: undefined
+   14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
+                                                                 ^^^^^^^ [2]: boolean
 
 Error: proper_blaming.js:9
   9: x.nope; // error here

@@ -24,9 +24,12 @@ Error: Closure.js:77
 
 Error: cond_havoc.js:12
  12:   return x; // error, string ~/~> number (return type anno) TODO
-              ^ string. This type is incompatible with the expected return type of
-  6: function example(b: bool): number {
-                                ^^^^^^ number
+              ^ Cannot return `x` because string [1] is incompatible with number [2].
+  References:
+    8:   function f() { x = "" }
+                            ^^ [1]: string
+    6: function example(b: bool): number {
+                                  ^^^^^^ [2]: number
 
 Error: const.js:20
  20:     call_me = () => { var y:number = var_x; };  // error

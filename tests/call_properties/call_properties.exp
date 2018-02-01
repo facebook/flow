@@ -1,8 +1,11 @@
 Error: A.js:8
   8:   return f();
-              ^^^ string. This type is incompatible with the expected return type of
-  7: function b(f: { (): string }): number {
-                                    ^^^^^^ number
+              ^^^ Cannot return `f()` because string [1] is incompatible with number [2].
+  References:
+    7: function b(f: { (): string }): number {
+                           ^^^^^^ [1]: string
+    7: function b(f: { (): string }): number {
+                                      ^^^^^^ [2]: number
 
 Error: A.js:13
  13:   return f("hello");
@@ -56,33 +59,32 @@ Error: B.js:11
    11: var d: { (): string } = function (x: number): string { return "hi"; };
                 ^^^^^^^^^^ [2]: function type
 
-Error: C.js:7
-  7: function b(x: { (z: number): string }): (z: number) => number {
-                     ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with the expected return type of
-  7: function b(x: { (z: number): string }): (z: number) => number {
-                                             ^^^^^^^^^^^^^^^^^^^^^ function type
-  The return is incompatible:
-      7: function b(x: { (z: number): string }): (z: number) => number {
-                                      ^^^^^^ string. This type is incompatible with
-      7: function b(x: { (z: number): string }): (z: number) => number {
-                                                                ^^^^^^ number
+Error: C.js:8
+  8:   return x;
+              ^ Cannot return `x` because in the return value, string [1] is incompatible with number [2].
+  References:
+    7: function b(x: { (z: number): string }): (z: number) => number {
+                                    ^^^^^^ [1]: string
+    7: function b(x: { (z: number): string }): (z: number) => number {
+                                                              ^^^^^^ [2]: number
 
-Error: C.js:12
- 12: function c(x: { (z: number): string }): (z: string) => string {
-                     ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with the expected return type of
- 12: function c(x: { (z: number): string }): (z: string) => string {
-                                             ^^^^^^^^^^^^^^^^^^^^^ function type
-  The first parameter is incompatible:
-     12: function c(x: { (z: number): string }): (z: string) => string {
-                                                     ^^^^^^ string. This type is incompatible with
-     12: function c(x: { (z: number): string }): (z: string) => string {
-                             ^^^^^^ number
+Error: C.js:13
+ 13:   return x;
+              ^ Cannot return `x` because in the first argument, number [1] is incompatible with string [2].
+  References:
+   12: function c(x: { (z: number): string }): (z: string) => string {
+                           ^^^^^^ [1]: number
+   12: function c(x: { (z: number): string }): (z: string) => string {
+                                                   ^^^^^^ [2]: string
 
-Error: C.js:17
- 17: function d(x: { (z: number): string }): () => string {
-                                             ^^^^^^^^^^^^ function type. Too few arguments passed to
- 17: function d(x: { (z: number): string }): () => string {
-                     ^^^^^^^^^^^^^^^^^^^ function type
+Error: C.js:18
+ 18:   return x;
+              ^ Cannot return `x` because function type [1] requires another argument from function type [2].
+  References:
+   17: function d(x: { (z: number): string }): () => string {
+                       ^^^^^^^^^^^^^^^^^^^ [1]: function type
+   17: function d(x: { (z: number): string }): () => string {
+                                               ^^^^^^^^^^^^ [2]: function type
 
 Error: C.js:23
  23:   return x;
@@ -115,16 +117,14 @@ Error: D.js:12
    11: var c: { (): string; (x: number): string } =
                 ^^^^^^^^^^ [2]: function type
 
-Error: D.js:20
- 20: function e(x: { (): string; (x: number): string }): () => number {
-                     ^^^^^^^^^^ function type. This type is incompatible with the expected return type of
- 20: function e(x: { (): string; (x: number): string }): () => number {
-                                                         ^^^^^^^^^^^^ function type
-  The return is incompatible:
-     20: function e(x: { (): string; (x: number): string }): () => number {
-                             ^^^^^^ string. This type is incompatible with
-     20: function e(x: { (): string; (x: number): string }): () => number {
-                                                                   ^^^^^^ number
+Error: D.js:21
+ 21:   return x;
+              ^ Cannot return `x` because in the return value, string [1] is incompatible with number [2].
+  References:
+   20: function e(x: { (): string; (x: number): string }): () => number {
+                           ^^^^^^ [1]: string
+   20: function e(x: { (): string; (x: number): string }): () => number {
+                                                                 ^^^^^^ [2]: number
 
 Error: E.js:2
   2: var a : { someProp: number } = function () {};

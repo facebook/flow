@@ -35,9 +35,12 @@ Error: flowissue.js:17
 
 Error: propagate.js:10
  10:   return c.bar(0, y); // should be able to select first case and error
-              ^^^^^^^^^^^ number. This type is incompatible with the expected return type of
-  8: function foo(c: C, x: any): string {
-                                 ^^^^^^ string
+              ^^^^^^^^^^^ Cannot return `c.bar(...)` because number [1] is incompatible with string [2].
+  References:
+    4:   bar(n1: number, n2: number): number;
+                                      ^^^^^^ [1]: number
+    8: function foo(c: C, x: any): string {
+                                   ^^^^^^ [2]: string
 
 Error: propagate.js:16
  16:     (x: boolean);

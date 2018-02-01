@@ -391,9 +391,12 @@ Error: scope.js:93
 
 Error: scope.js:103
 103:     return x(); // error: string ~> number
-                ^^^ string. This type is incompatible with the expected return type of
-101:   function f0(x = () => a): number {
-                                 ^^^^^^ number
+                ^^^ Cannot return `x()` because string [1] is incompatible with number [2].
+  References:
+  100:   let a = "";
+                 ^^ [1]: string
+  101:   function f0(x = () => a): number {
+                                   ^^^^^^ [2]: number
 
 Error: scope.js:105
 105:   function f1(x = b /* error: cannot resolve b */): number {

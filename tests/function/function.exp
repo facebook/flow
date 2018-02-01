@@ -354,14 +354,12 @@ Error: rest.js:53
 
 Error: rest.js:58
  58:   return function(...args) {
-              ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected return type of
- 57: ): (...args: Args) => number {
-        ^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  The return is incompatible:
-     59:     return args; // Error: Array ~> number
-                    ^^^^ rest array. This type is incompatible with
-     57: ): (...args: Args) => number {
-                               ^^^^^^ number
+                               ^ Cannot return function because in the return value, rest array [1] is incompatible with number [2].
+  References:
+   57: ): (...args: Args) => number {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: rest array
+   57: ): (...args: Args) => number {
+                             ^^^^^^ [2]: number
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg

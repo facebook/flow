@@ -155,9 +155,12 @@ Error: interface.js:1
 
 Error: self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-                            ^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
-  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-              ^^^^ this
+                            ^^^^^^^^^^^^^ Cannot return `new A().foo()` because `A` [1] is incompatible with `this` [2].
+  References:
+    1: class A {
+             ^ [1]: `A`
+    1: class A {
+             ^ [2]: `this`
 
 Error: statics.js:17
  17: (A.make(): B); // error

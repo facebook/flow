@@ -18,14 +18,12 @@ Error: test.js:3
 
 Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                                                  ^^^^^^ CovArrayVerbose. This type is incompatible with the expected return type of
-  8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                ^^^^^^^^^^^^^^^^^^^^^^^^ CovArrayVerbose
-  Type argument `X` is incompatible:
-      7:     x: CovArrayVerbose<E,I>;
-                                ^ E. This type is incompatible with
-      8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                                    ^^^^^ mixed
+                                                  ^^^^^^ Cannot return `this.x` because in type argument `X`, `E` [1] is incompatible with mixed [2].
+  References:
+    7:     x: CovArrayVerbose<E,I>;
+                              ^ [1]: `E`
+    8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
+                                  ^^^^^ [2]: mixed
 
 Error: test.js:13
  13: (nv.x[0]: string); // error
