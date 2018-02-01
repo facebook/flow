@@ -337,12 +337,6 @@ Error: scope.js:45
 
 Error: scope.js:66
  66:   for (var a = "" /* error: string ~> number */;;) {}
-                    ^^ string. This type is incompatible with
- 65:   var a: number = 0;
-              ^^^^^^ number
-
-Error: scope.js:66
- 66:   for (var a = "" /* error: string ~> number */;;) {}
                     ^^ Cannot assign `""` to `a` because string [1] is incompatible with number [2].
   References:
    66:   for (var a = "" /* error: string ~> number */;;) {}
@@ -350,11 +344,14 @@ Error: scope.js:66
    65:   var a: number = 0;
                 ^^^^^^ [2]: number
 
-Error: scope.js:76
- 76:   for (var a /* error: string ~> number */ in o) {}
-                ^ string. This type is incompatible with
- 75:   var a: number = 0;
-              ^^^^^^ number
+Error: scope.js:66
+ 66:   for (var a = "" /* error: string ~> number */;;) {}
+                    ^^ string [1] is incompatible with number [2].
+  References:
+   66:   for (var a = "" /* error: string ~> number */;;) {}
+                      ^^ [1]: string
+   65:   var a: number = 0;
+                ^^^^^^ [2]: number
 
 Error: scope.js:76
  76:   for (var a /* error: string ~> number */ in o) {}
@@ -365,15 +362,27 @@ Error: scope.js:76
    75:   var a: number = 0;
                 ^^^^^^ [2]: number
 
-Error: scope.js:86
- 86:   for (var a /* error: string ~> number */ of xs) {}
-                                                   ^^ string. This type is incompatible with
- 85:   var a: number = 0;
-              ^^^^^^ number
+Error: scope.js:76
+ 76:   for (var a /* error: string ~> number */ in o) {}
+                ^ string [1] is incompatible with number [2].
+  References:
+   76:   for (var a /* error: string ~> number */ in o) {}
+                  ^ [1]: string
+   75:   var a: number = 0;
+                ^^^^^^ [2]: number
 
 Error: scope.js:86
  86:   for (var a /* error: string ~> number */ of xs) {}
                                                    ^^ Cannot assign `a` to `a` because string [1] is incompatible with number [2].
+  References:
+   84: function for_of_scope_var(xs: string[]) {
+                                     ^^^^^^ [1]: string
+   85:   var a: number = 0;
+                ^^^^^^ [2]: number
+
+Error: scope.js:86
+ 86:   for (var a /* error: string ~> number */ of xs) {}
+                                                   ^^ string [1] is incompatible with number [2].
   References:
    84: function for_of_scope_var(xs: string[]) {
                                      ^^^^^^ [1]: string

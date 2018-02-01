@@ -152,6 +152,24 @@ Error: class-extends-and-implements.js:103
    93:   p2: string;
              ^^^^^^ [3]: string
 
+Error: class-refinement-env-merge.js:12
+ 12:     (this.p: number);
+          ^^^^^^ Cannot cast `this.p` to number because string [1] is incompatible with number [2].
+  References:
+    7:   p: number | string;
+                     ^^^^^^ [1]: string
+   12:     (this.p: number);
+                    ^^^^^^ [2]: number
+
+Error: class-refinement-env-merge.js:12
+ 12:     (this.p: number);
+          ^^^^^^ Cannot cast `this.p` to number because string [1] is incompatible with number [2].
+  References:
+   10:       this.p = 'foo';
+                      ^^^^^ [1]: string
+   12:     (this.p: number);
+                    ^^^^^^ [2]: number
+
 Error: desc-class-properties.js:16
  16:     (this.a: number); // Error: string ~> number
           ^^^^^^ Cannot cast `this.a` to number because string [1] is incompatible with number [2].
@@ -531,4 +549,4 @@ Error: order.js:10
                     ^^^^^ [2]: empty
 
 
-Found 56 errors
+Found 58 errors

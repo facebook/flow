@@ -1,12 +1,15 @@
 Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
-                  ^^^^^^^^ null or undefined. This type is incompatible with
- 15: function bar0(x : Bar) {
-                       ^^^ Bar
+                  ^^^^^^^^ Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2].
+  References:
+   11:   parent: ?Bar;
+                 ^^^^ [1]: null or undefined
+   15: function bar0(x : Bar) {
+                         ^^^ [2]: `Bar`
 
 Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
-                  ^^^^^^^^ Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2].
+                  ^^^^^^^^ null or undefined [1] is incompatible with `Bar` [2].
   References:
    11:   parent: ?Bar;
                  ^^^^ [1]: null or undefined
@@ -421,13 +424,16 @@ Error: not.js:5
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
-         ^^^ number. This type is incompatible with
-  3: function foo(x: ?bool) {
-                      ^^^^ boolean
+         ^^^ Cannot assign number to `x` because number [1] is incompatible with boolean [2].
+  References:
+    5:     x++; // should error for null, void and bool (false)
+           ^^^ [1]: number
+    3: function foo(x: ?bool) {
+                        ^^^^ [2]: boolean
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
-         ^^^ Cannot assign number to `x` because number [1] is incompatible with boolean [2].
+         ^^^ number [1] is incompatible with boolean [2].
   References:
     5:     x++; // should error for null, void and bool (false)
            ^^^ [1]: number

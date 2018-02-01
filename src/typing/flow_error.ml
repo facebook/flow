@@ -938,7 +938,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     let rec loop loc frames use_op =
       Option.value_map
       (match use_op with
-      | Op UnknownUse -> Some (`UnknownRoot)
+      | Op UnknownUse
+      | Op (Internal _)
+        -> Some (`UnknownRoot)
 
       | Op (AssignVar {var; init}) ->
         Some (`Root (init, None, match var with

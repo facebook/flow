@@ -992,7 +992,7 @@ let merge_env =
   in
 
   let create_union cx loc name l1 l2 =
-    let reason = mk_reason (RIdentifier name) loc in
+    let reason = mk_reason name loc in
     Tvar.mk_where cx reason (fun tvar ->
       Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
       Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar));
@@ -1045,7 +1045,7 @@ let merge_env =
       let { specific = s0; general = g0; _ } = orig in
       let { specific = s1; _ } = child1 in
       let { specific = s2; _ } = child2 in
-      let specific = merge_specific cx loc name (s0, g0) s1 s2 in
+      let specific = merge_specific cx loc (RIdentifier name) (s0, g0) s1 s2 in
       let value_state = merge_states orig child1 child2 in
       (* replace entry if anything changed *)
       if specific == s0 && value_state = orig.value_state
@@ -1095,7 +1095,7 @@ let merge_env =
     match get scope0, get scope1, get scope2 with
     (* evenly distributed refinements are merged *)
     | Some base, Some child1, Some child2 ->
-      let name = Key.string_of_key key in
+      let name = Key.reason_desc key in
       let refined = merge_specific cx loc name (base.refined, base.original)
         child1.refined child2.refined in
       if refined == base.refined
@@ -1104,7 +1104,7 @@ let merge_env =
 
     (* refi was introduced in both children *)
     | None, Some child1, Some child2 ->
-      let name = Key.string_of_key key in
+      let name = Key.reason_desc key in
       let refined = create_union cx loc name child1.refined child2.refined in
       let original = create_union cx loc name child1.original child2.original in
       let refi = { refi_loc = loc; refined; original } in
@@ -1221,7 +1221,7 @@ let widen_env =
     if specific = general
     then None
     else
-      let reason = mk_reason (RIdentifier name) loc in
+      let reason = mk_reason name loc in
       let tvar = Tvar.mk cx reason in
       Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
       Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
@@ -1243,11 +1243,11 @@ let widen_env =
   fun cx loc ->
     iter_local_scopes (fun scope ->
       scope |> Scope.update_entries Entry.(fun name -> function
-        | Value var -> Value (widen_var cx loc name var)
+        | Value var -> Value (widen_var cx loc (RIdentifier name) var)
         | entry -> entry
       );
       scope |> Scope.update_refis (fun key refi ->
-        widen_refi cx loc (Key.string_of_key key) refi)
+        widen_refi cx loc (Key.reason_desc key) refi)
     )
 
 (* The protocol around havoc has changed a few times.
