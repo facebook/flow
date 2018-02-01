@@ -643,27 +643,14 @@ Error: state5.js:5
   5:     return this.state.x; // error: need to declare type of state
                 ^^^^^^^^^^ undefined
 
-Error: state6.js:29
-                       v-------------------------------------------
- 29:     this.setState(() => ({ // Error: `bar` should be a number.
+Error: state6.js:30
  30:       bar: '42',
- 31:     }));
-         -^ function. This type is incompatible with the expected param type of
- 35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
-  The return is incompatible:
-                                  v------------------------------------
-     29:     this.setState(() => ({ // Error: `bar` should be a number.
-     30:       bar: '42',
-     31:     }));
-             ^ object literal. This type is incompatible with
-     13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                   ^^^^^ State
-      Property `bar` is incompatible:
-         30:       bar: '42',
-                        ^^^^ string. This type is incompatible with
-          7: type State = {foo: number, bar: number};
-                                             ^^^^^^ number
+                ^^^^ Cannot call `this.setState` with function bound to `partialState` because in the return value and then property `bar`, string [1] is incompatible with number [2].
+  References:
+   30:       bar: '42',
+                  ^^^^ [1]: string
+    7: type State = {foo: number, bar: number};
+                                       ^^^^^^ [2]: number
 
 Error: state6.js:33
  33:       console.log(prevState.nope); // Error: `nope` does not exist.

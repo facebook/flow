@@ -964,6 +964,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Frame (lower, use_op,
           [text "the "; text (Utils_js.ordinal n); text " argument"]))
 
+      | Frame (FunReturn {lower; _}, use_op) ->
+        Some (`Frame (lower, use_op,
+          [text "the return value"]))
+
       | Frame (PropertyCompatibility {prop=None | Some "$key" | Some "$value"; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
           [text "the indexer property"]))

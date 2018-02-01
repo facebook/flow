@@ -1973,17 +1973,6 @@ Error: proptype_shape.js:24
 
 Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$arrayOf. This type is incompatible with
-  7: (React.PropTypes.arrayOf : NoFun);
-                                ^^^^^ NoFun
-  The return is incompatible:
-    276:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:276
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
-
-Error: proptypes_builtins.js:7
-  7: (React.PropTypes.arrayOf : NoFun);
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.arrayOf` to `NoFun` because in the first argument, `ReactPropsCheckType` [1] is incompatible with mixed [2].
   References:
   276:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
@@ -1991,27 +1980,23 @@ Error: proptypes_builtins.js:7
     3: type NoFun = mixed => empty;
                     ^^^^^ [2]: mixed
 
+Error: proptypes_builtins.js:7
+  7: (React.PropTypes.arrayOf : NoFun);
+      ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.arrayOf` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  276:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:276
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
+
 Error: proptypes_builtins.js:11
  11: (React.PropTypes.instanceOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$instanceOf. This type is incompatible with
- 11: (React.PropTypes.instanceOf : NoFun);
-                                   ^^^^^ NoFun
-  The return is incompatible:
-    278:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:278
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
-
-Error: proptypes_builtins.js:15
- 15: (React.PropTypes.objectOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$objectOf. This type is incompatible with
- 15: (React.PropTypes.objectOf : NoFun);
-                                 ^^^^^ NoFun
-  The return is incompatible:
-    280:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:280
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.instanceOf` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  278:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:278
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
 
 Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
@@ -2022,16 +2007,14 @@ Error: proptypes_builtins.js:15
     3: type NoFun = mixed => empty;
                     ^^^^^ [2]: mixed
 
-Error: proptypes_builtins.js:19
- 19: (React.PropTypes.oneOf : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOf. This type is incompatible with
- 19: (React.PropTypes.oneOf : NoFun);
-                              ^^^^^ NoFun
-  The return is incompatible:
-    282:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:282
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
+Error: proptypes_builtins.js:15
+ 15: (React.PropTypes.objectOf : NoFun);
+      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.objectOf` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  280:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:280
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
 
 Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
@@ -2042,16 +2025,14 @@ Error: proptypes_builtins.js:19
     3: type NoFun = mixed => empty;
                     ^^^^^ [2]: mixed
 
-Error: proptypes_builtins.js:23
- 23: (React.PropTypes.oneOfType : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$oneOfType. This type is incompatible with
- 23: (React.PropTypes.oneOfType : NoFun);
-                                  ^^^^^ NoFun
-  The return is incompatible:
-    285:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:285
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
+Error: proptypes_builtins.js:19
+ 19: (React.PropTypes.oneOf : NoFun);
+      ^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.oneOf` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  282:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:282
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
 
 Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
@@ -2062,16 +2043,14 @@ Error: proptypes_builtins.js:23
     3: type NoFun = mixed => empty;
                     ^^^^^ [2]: mixed
 
-Error: proptypes_builtins.js:27
- 27: (React.PropTypes.shape : NoFun);
-      ^^^^^^^^^^^^^^^^^^^^^ React.PropTypes$shape. This type is incompatible with
- 27: (React.PropTypes.shape : NoFun);
-                              ^^^^^ NoFun
-  The return is incompatible:
-    288:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ReactPropsChainableTypeChecker. This type is incompatible with. See lib: <BUILTINS>/react.js:288
-      3: type NoFun = mixed => empty;
-                               ^^^^^ empty
+Error: proptypes_builtins.js:23
+ 23: (React.PropTypes.oneOfType : NoFun);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.oneOfType` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  285:     ReactPropsChainableTypeChecker;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:285
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
 
 Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
@@ -2081,6 +2060,15 @@ Error: proptypes_builtins.js:27
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type. See lib: <BUILTINS>/react.js:287
     3: type NoFun = mixed => empty;
                     ^^^^^ [2]: mixed
+
+Error: proptypes_builtins.js:27
+ 27: (React.PropTypes.shape : NoFun);
+      ^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.PropTypes.shape` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
+  References:
+  288:     ReactPropsChainableTypeChecker;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:288
+    3: type NoFun = mixed => empty;
+                             ^^^^^ [2]: empty
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
