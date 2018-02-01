@@ -569,6 +569,7 @@ let mk cx _loc reason self ~expr =
       | None -> loc in
       let reason = mk_reason (RType name) super_loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
+      Type_table.set_info (Context.type_table cx) loc c;
       let params = Anno.extract_type_param_instantiations typeParameters in
       let t = Anno.mk_nominal_type cx reason tparams_map (c, params) in
       Flow.reposition cx super_loc ~annot_loc:super_loc t

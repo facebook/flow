@@ -568,6 +568,66 @@ function_expression.js:21:3 = {
   "start":3,
   "end":3
 }
+implements.js:7:8 = {
+  "type":"IA<T>",
+  "reasons":[],
+  "loc":{
+    "source":"implements.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":23,"offset":51},
+    "end":{"line":4,"column":24,"offset":53}
+  },
+  "path":"implements.js",
+  "line":4,
+  "endline":4,
+  "start":23,
+  "end":24
+}
+module_export.js:3:24 = {
+  "type":"`klass`<T>",
+  "reasons":[
+    {
+      "desc":"`klass`",
+      "loc":{
+        "source":"module_export.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":17,"offset":26},
+        "end":{"line":3,"column":34,"offset":44}
+      },
+      "path":"module_export.js",
+      "line":3,
+      "endline":3,
+      "start":17,
+      "end":34
+    }
+  ],
+  "loc":{
+    "source":"module_export.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":23,"offset":32},
+    "end":{"line":3,"column":27,"offset":37}
+  },
+  "path":"module_export.js",
+  "line":3,
+  "endline":3,
+  "start":23,
+  "end":27
+}
+module_export.js:5:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"module_export.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":24,"offset":69},
+    "end":{"line":5,"column":26,"offset":72}
+  },
+  "path":"module_export.js",
+  "line":5,
+  "endline":5,
+  "start":24,
+  "end":26
+}
 predicates.js - null: {
   "type":"(unknown)",
   "reasons":[],

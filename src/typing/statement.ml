@@ -2959,7 +2959,12 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
           )
       | _ -> ());
 
-      mk_function id cx sig_loc func
+      let t = mk_function id cx sig_loc func in
+      (match id with
+      | Some (id_loc, _) ->
+          Type_table.set_info (Context.type_table cx) id_loc t
+      | _ -> ());
+      t
 
   | ArrowFunction func ->
       mk_arrow cx loc func
@@ -3038,6 +3043,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       (match c.Ast.Class.id with
       | Some _ ->
           let tvar = Tvar.mk cx reason in
+          Type_table.set_info (Context.type_table cx) name_loc tvar;
           let scope = Scope.fresh () in
           Scope.(
             let kind = Entry.ClassNameBinding in

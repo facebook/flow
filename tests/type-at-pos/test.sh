@@ -62,6 +62,16 @@ printf "function_expression.js:21:3 = "
 assert_ok \
   "$FLOW" type-at-pos function_expressions.js 21 3 --strip-root --pretty
 
+# implements.js
+printf "implements.js:7:8 = "
+assert_ok "$FLOW" type-at-pos implements.js 4 23 --strip-root --pretty
+
+# module_export.js
+printf "module_export.js:3:24 = "
+assert_ok "$FLOW" type-at-pos module_export.js 3 24 --strip-root --pretty
+printf "module_export.js:5:25 = "
+assert_ok "$FLOW" type-at-pos module_export.js 5 25 --strip-root --pretty
+
 printf "predicates.js - null: "
 assert_ok \
   "$FLOW" type-at-pos predicates.js 4 12 --strip-root --pretty
