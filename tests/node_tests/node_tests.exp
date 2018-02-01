@@ -917,32 +917,39 @@ Error: os/userInfo.js:14
 
 Error: process/nextTick.js:14
  14:   0, // Error: number ~> string
-       ^ number. This type is incompatible with
- 13:   (a: string, b: number, c: boolean) => {},
-           ^^^^^^ string
+       ^ Cannot call `process.nextTick` because in the rest argument and then the first argument, number [1] is incompatible with string [2].
+  References:
+   14:   0, // Error: number ~> string
+         ^ [1]: number
+   13:   (a: string, b: number, c: boolean) => {},
+             ^^^^^^ [2]: string
 
 Error: process/nextTick.js:16
  16:   null // Error: null ~> boolean
-       ^^^^ null. This type is incompatible with
- 13:   (a: string, b: number, c: boolean) => {},
-                                 ^^^^^^^ boolean
+       ^^^^ Cannot call `process.nextTick` because in the rest argument and then the third argument, null [1] is incompatible with boolean [2].
+  References:
+   16:   null // Error: null ~> boolean
+         ^^^^ [1]: null
+   13:   (a: string, b: number, c: boolean) => {},
+                                   ^^^^^^^ [2]: boolean
 
 Error: process/nextTick.js:22
  22:   'y', // Error: string ~> number
-       ^^^ string. This type is incompatible with
- 20:   (a: string, b: number, c: boolean) => {},
-                      ^^^^^^ number
+       ^^^ Cannot call `process.nextTick` because in the rest argument and then the second argument, string [1] is incompatible with number [2].
+  References:
+   22:   'y', // Error: string ~> number
+         ^^^ [1]: string
+   20:   (a: string, b: number, c: boolean) => {},
+                        ^^^^^^ [2]: number
 
 Error: process/nextTick.js:26
-     v----------------
  26: process.nextTick(
- 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
- 28: );
-     ^ process.nextTick(...)
-1961:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ function type. Too few arguments passed to. See lib: <BUILTINS>/node.js:1961
- 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+             ^^^^^^^^ Cannot call `process.nextTick` because in the rest argument, function [1] requires another argument from function type [2].
+  References:
+   27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+  1961:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                            ^^^^^^^^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1961
 
 Error: process/process.js:10
  10: process.emitWarning(); // error

@@ -97,7 +97,7 @@ Error: optional_param4.js:12
 
 Error: optional_param4.js:13
  13: foo(123, true); // ERROR boolean ~> string
-     ^^^^^^^^^^^^^^ rest parameter array of call of `foo`. Has some incompatible type argument with
+     ^^^^^^^^^^^^^^ rest array. Has some incompatible type argument with
   3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
                                     ^^^^^^^^^^^^^ array type
   Type argument `T` is incompatible:

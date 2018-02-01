@@ -37,11 +37,12 @@ Error: apply.js:22
 
 Error: apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ test.apply(...)
-288:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:288
-  1: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                    ^^^^^^^^^^^ Cannot call `test.apply` because in the rest argument, string [1] is incompatible with number [2].
+  References:
+  288:     @@iterator(): Iterator<string>;
+                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:288
+    1: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
@@ -335,10 +336,10 @@ Error: rest.js:38
 
 Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
-      ^^^^^^^^^^^^ Cannot cast `empty_rest()` to empty because rest parameter array of call of `empty_rest` [1] is incompatible with empty [2].
+      ^^^^^^^^^^^^ Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with empty [2].
   References:
    53: (empty_rest(): empty); // Error Array ~> empty
-        ^^^^^^^^^^^^ [1]: rest parameter array of call of `empty_rest`
+        ^^^^^^^^^^^^ [1]: rest array
    53: (empty_rest(): empty); // Error Array ~> empty
                       ^^^^^ [2]: empty
 
@@ -349,7 +350,7 @@ Error: rest.js:58
         ^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   The return is incompatible:
      59:     return args; // Error: Array ~> number
-                    ^^^^ rest parameter array of function type. This type is incompatible with
+                    ^^^^ rest array. This type is incompatible with
      57: ): (...args: Args) => number {
                                ^^^^^^ number
 
@@ -378,16 +379,19 @@ Error: rest_type.js:20
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ rest parameter array of call of `f`. This type is incompatible with
- 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
-                                  ^^^^^^ string
+       ^ Cannot call `f` because in the rest argument, rest array [1] is incompatible with string [2].
+  References:
+   20:   f('hello'); // Error - string ~> array - luckily this errors
+         ^^^^^^^^^^ [1]: rest array
+   18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                    ^^^^^^ [2]: string
 
 Error: rest_type.js:31
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
-                          ^^^ Cannot cast `f()` to empty because rest parameter array of call of `f` [1] is incompatible with empty [2].
+                          ^^^ Cannot cast `f()` to empty because rest array [1] is incompatible with empty [2].
   References:
    31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
-                            ^^^ [1]: rest parameter array of call of `f`
+                            ^^^ [1]: rest array
    31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
                                  ^^^^^ [2]: empty
 

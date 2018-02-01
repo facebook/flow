@@ -519,7 +519,7 @@ let rec string_of_desc = function
     | d -> d
     in
     spf "nullable %s" (string_of_desc (loop d))
-  | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
+  | RRestArray _ -> "rest array"
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
