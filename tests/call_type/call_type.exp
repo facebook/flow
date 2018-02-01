@@ -105,21 +105,30 @@ Error: test.js:38
 
 Error: test.js:39
  39: (g: number); // Error: number | string ~> number
-      ^ string. This type is incompatible with
- 39: (g: number); // Error: number | string ~> number
-         ^^^^^^ number
+      ^ Cannot cast `g` to number because string [1] is incompatible with number [2].
+  References:
+   36: declare var g: G;
+                      ^ [1]: string
+   39: (g: number); // Error: number | string ~> number
+           ^^^^^^ [2]: number
 
 Error: test.js:41
  41: (g: empty); // Error: number | string ~> empty
-      ^ number. This type is incompatible with
- 41: (g: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `g` to empty because number [1] is incompatible with empty [2].
+  References:
+   36: declare var g: G;
+                      ^ [1]: number
+   41: (g: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: test.js:41
  41: (g: empty); // Error: number | string ~> empty
-      ^ string. This type is incompatible with
- 41: (g: empty); // Error: number | string ~> empty
-         ^^^^^ empty
+      ^ Cannot cast `g` to empty because string [1] is incompatible with empty [2].
+  References:
+   36: declare var g: G;
+                      ^ [1]: string
+   41: (g: empty); // Error: number | string ~> empty
+           ^^^^^ [2]: empty
 
 Error: union.js:6
   6: ((null: mixed): A); // Error: mixed ~> number | string

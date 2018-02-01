@@ -243,25 +243,21 @@ Error: request.js:8
 
 Error: request.js:24
  24: h.text().then((t: Buffer) => t); // incorrect
-                   ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  The first parameter is incompatible:
-    999:     text(): Promise<string>;
-                             ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:999
-     24: h.text().then((t: Buffer) => t); // incorrect
-                           ^^^^^^ Buffer
+                       ^^^^^^ Cannot call `h.text().then` with function bound to `onFulfill` because in the first argument, `Buffer` [1] is incompatible with string [2].
+  References:
+   24: h.text().then((t: Buffer) => t); // incorrect
+                         ^^^^^^ [1]: `Buffer`
+  999:     text(): Promise<string>;
+                           ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:999
 
 Error: request.js:26
  26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                          ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  The first parameter is incompatible:
-     26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                                   ^^^^^^ Buffer. This type is incompatible with
-    995:     arrayBuffer(): Promise<ArrayBuffer>;
-                                    ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:995
+                               ^^^^^^ Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
+  References:
+  995:     arrayBuffer(): Promise<ArrayBuffer>;
+                                  ^^^^^^^^^^^ [1]: `ArrayBuffer`. See lib: <BUILTINS>/bom.js:995
+   26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                                 ^^^^^^ [2]: `Buffer`
 
 Error: request.js:54
                                                           v
@@ -457,25 +453,21 @@ Error: response.js:30
 
 Error: response.js:42
  42: h.text().then((t: Buffer) => t); // incorrect
-                   ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  The first parameter is incompatible:
-    973:     text(): Promise<string>;
-                             ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:973
-     42: h.text().then((t: Buffer) => t); // incorrect
-                           ^^^^^^ Buffer
+                       ^^^^^^ Cannot call `h.text().then` with function bound to `onFulfill` because in the first argument, `Buffer` [1] is incompatible with string [2].
+  References:
+   42: h.text().then((t: Buffer) => t); // incorrect
+                         ^^^^^^ [1]: `Buffer`
+  973:     text(): Promise<string>;
+                           ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:973
 
 Error: response.js:44
  44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                          ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
-  The first parameter is incompatible:
-     44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                                   ^^^^^^ Buffer. This type is incompatible with
-    969:     arrayBuffer(): Promise<ArrayBuffer>;
-                                    ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:969
+                               ^^^^^^ Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
+  References:
+  969:     arrayBuffer(): Promise<ArrayBuffer>;
+                                  ^^^^^^^^^^^ [1]: `ArrayBuffer`. See lib: <BUILTINS>/bom.js:969
+   44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                                 ^^^^^^ [2]: `Buffer`
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct

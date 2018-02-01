@@ -596,24 +596,14 @@ Error: state3.js:11
  11:         var a: number = this.state.x; // error
                     ^^^^^^ number
 
-Error: state3.js:13
-                           v
- 13:         this.setState({
+Error: state3.js:14
  14:             x: false // error
- 15:         })
-             ^ object literal. This type is incompatible with the expected param type of
-                     v------------------
-  2: var TestState = React.createClass({
-  3: 
-  4:     getInitialState: function(): { x: string; } {
-...:
- 18: });
-     -^ State
-  Property `x` is incompatible:
-     14:             x: false // error
-                        ^^^^^ boolean. This type is incompatible with
-      4:     getInitialState: function(): { x: string; } {
-                                               ^^^^^^ string
+                    ^^^^^ Cannot call `this.setState` with object literal bound to `partialState` because in property `x`, boolean [1] is incompatible with string [2].
+  References:
+   14:             x: false // error
+                      ^^^^^ [1]: boolean
+    4:     getInitialState: function(): { x: string; } {
+                                             ^^^^^^ [2]: string
 
 Error: state4.js:9
   9:     this.setState({ y: 0 });

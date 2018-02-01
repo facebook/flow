@@ -1004,6 +1004,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
       | Frame (FunCompatibility _, use_op)
       | Frame (FunMissingArg _, use_op)
+      | Frame (ImplicitTypeParam _, use_op)
         -> Some (`Next use_op)
 
       | _ -> None

@@ -202,15 +202,21 @@ Error: generators.js:100
 
 Error: generators.js:128
 128:   (multiple_return_result.value: void); // error: number|string ~> void
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-128:   (multiple_return_result.value: void); // error: number|string ~> void
-                                      ^^^^ undefined
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `multiple_return_result.value` to undefined because number [1] is incompatible with undefined [2].
+  References:
+  121:     return 0;
+                  ^ [1]: number
+  128:   (multiple_return_result.value: void); // error: number|string ~> void
+                                        ^^^^ [2]: undefined
 
 Error: generators.js:128
 128:   (multiple_return_result.value: void); // error: number|string ~> void
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-128:   (multiple_return_result.value: void); // error: number|string ~> void
-                                      ^^^^ undefined
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `multiple_return_result.value` to undefined because string [1] is incompatible with undefined [2].
+  References:
+  123:     return "foo";
+                  ^^^^^ [1]: string
+  128:   (multiple_return_result.value: void); // error: number|string ~> void
+                                        ^^^^ [2]: undefined
 
 Error: refi.js:5
   5:   (x.a: string); // error
@@ -232,21 +238,30 @@ Error: refi.js:22
 
 Error: return.js:5
   5:   (ret.value: void); // error: string | number ~> void
-        ^^^^^^^^^ number. This type is incompatible with
-  5:   (ret.value: void); // error: string | number ~> void
-                   ^^^^ undefined
+        ^^^^^^^^^ Cannot cast `ret.value` to undefined because number [1] is incompatible with undefined [2].
+  References:
+    4:   var ret = gen.return(0);
+                              ^ [1]: number
+    5:   (ret.value: void); // error: string | number ~> void
+                     ^^^^ [2]: undefined
 
 Error: return.js:5
   5:   (ret.value: void); // error: string | number ~> void
-        ^^^^^^^^^ string. This type is incompatible with
-  5:   (ret.value: void); // error: string | number ~> void
-                   ^^^^ undefined
+        ^^^^^^^^^ Cannot cast `ret.value` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    1: function test1(gen: Generator<void, string, void>) {
+                                           ^^^^^^ [1]: string
+    5:   (ret.value: void); // error: string | number ~> void
+                     ^^^^ [2]: undefined
 
 Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 20:   (refuse_return_result.value: string); // error: number | void ~> string
-                                    ^^^^^^ string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `refuse_return_result.value` to string because number [1] is incompatible with string [2].
+  References:
+   14:     return 0;
+                  ^ [1]: number
+   20:   (refuse_return_result.value: string); // error: number | void ~> string
+                                      ^^^^^^ [2]: string
 
 Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string

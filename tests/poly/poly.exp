@@ -28,14 +28,12 @@ Error: error.js:8
 
 Error: error.js:12
  12: newFn2((x: string) => {}); // The error should point here.
-            ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
- 10: declare function fn2<T>(x: T): ((T) => void) => void;
-                                     ^^^^^^^^^^^ function type
-  The first parameter is incompatible:
-     11: const newFn2 = fn2(42);
-                            ^^ number. This type is incompatible with
-     12: newFn2((x: string) => {}); // The error should point here.
-                    ^^^^^^ string
+                ^^^^^^ Cannot call `newFn2` with function bound to the first parameter because in the first argument, string [1] is incompatible with number [2].
+  References:
+   12: newFn2((x: string) => {}); // The error should point here.
+                  ^^^^^^ [1]: string
+   11: const newFn2 = fn2(42);
+                          ^^ [2]: number
 
 Error: error.js:15
  15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.

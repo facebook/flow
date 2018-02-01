@@ -30,21 +30,30 @@ Error: generator.js:23
 
 Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
-        ^^^^^^^^^^^^ number. This type is incompatible with
-  6:   (result.value: void); // error: string | number ~> void
-                      ^^^^ undefined
+        ^^^^^^^^^^^^ Cannot cast `result.value` to undefined because number [1] is incompatible with undefined [2].
+  References:
+    5: gen.return(0).then(result => {
+                  ^ [1]: number
+    6:   (result.value: void); // error: string | number ~> void
+                        ^^^^ [2]: undefined
 
 Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
-        ^^^^^^^^^^^^ string. This type is incompatible with
-  6:   (result.value: void); // error: string | number ~> void
-                      ^^^^ undefined
+        ^^^^^^^^^^^^ Cannot cast `result.value` to undefined because string [1] is incompatible with undefined [2].
+  References:
+    1: declare var gen: AsyncGenerator<void,string,void>;
+                                            ^^^^^^ [1]: string
+    6:   (result.value: void); // error: string | number ~> void
+                        ^^^^ [2]: undefined
 
 Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
-          ^^^^^^^^^^^^ number. This type is incompatible with
- 20:     (result.value: string); // error: number | void ~> string
-                        ^^^^^^ string
+          ^^^^^^^^^^^^ Cannot cast `result.value` to string because number [1] is incompatible with string [2].
+  References:
+   15:     return 0;
+                  ^ [1]: number
+   20:     (result.value: string); // error: number | void ~> string
+                          ^^^^^^ [2]: string
 
 Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
