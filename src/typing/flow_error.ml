@@ -1016,6 +1016,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Frame (lower, use_op,
           [text "type argument "; code name]))
 
+      | Frame (TypeParamBound {name}, use_op) ->
+        Some (`FrameWithoutLoc (use_op,
+          [text "type argument "; code name]))
+
       | Frame (FunCompatibility _, use_op)
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam _, use_op)
@@ -1023,7 +1027,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Frame (UnifyFlip, use_op)
         -> Some (`Next use_op)
 
-      | _ -> None
+      | Op _ -> None
       )
       ~default:None
       ~f:(function
@@ -1040,6 +1044,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         let (all_frames, local_frames) = frames in
         let frames = (frame::all_frames,
           if frame_contains_loc then local_frames else frame::local_frames) in
+        loop loc frames use_op
+      (* Same logic as `Frame except we don't have a frame location. *)
+      | `FrameWithoutLoc (use_op, frame) ->
+        let (all_frames, local_frames) = frames in
+        let frames = (frame::all_frames, frame::local_frames) in
         loop loc frames use_op
       (* We don't know what our root is! Return what we do know. *)
       | `UnknownRoot ->
