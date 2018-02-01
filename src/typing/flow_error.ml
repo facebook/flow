@@ -927,42 +927,41 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   let unwrap_use_ops_friendly =
     let open Friendly in
     let rec loop loc frames use_op =
-      Option.value_map
-      (match use_op with
+      let action = match use_op with
       | Op UnknownUse
       | Op (Internal _)
-        -> Some (`UnknownRoot)
+        -> `UnknownRoot
 
       | Op (Addition {op; left; right}) ->
-        Some (`Root (op, None,
-          [text "Cannot add "; desc left; text " and "; desc right]))
+        `Root (op, None,
+          [text "Cannot add "; desc left; text " and "; desc right])
 
       | Op (AssignVar {var; init}) ->
-        Some (`Root (init, None, match var with
+        `Root (init, None, match var with
         | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
-        | None -> [text "Cannot assign "; desc init; text " to variable"]))
+        | None -> [text "Cannot assign "; desc init; text " to variable"])
 
       | Op Cast {lower; upper} ->
-        Some (`Root (lower, None,
-          [text "Cannot cast "; desc lower; text " to "; desc upper]))
+        `Root (lower, None,
+          [text "Cannot cast "; desc lower; text " to "; desc upper])
 
       | Op ClassExtendsCheck {extends; def; _} ->
-        Some (`Root (def, None,
-          [text "Cannot extend "; ref extends; text " with "; desc def]))
+        `Root (def, None,
+          [text "Cannot extend "; ref extends; text " with "; desc def])
 
       | Op ClassImplementsCheck {implements; def; _} ->
-        Some (`Root (def, None,
-          [text "Cannot implement "; ref implements; text " with "; desc def]))
+        `Root (def, None,
+          [text "Cannot implement "; ref implements; text " with "; desc def])
 
       | Op Coercion {from; target} ->
-        Some (`Root (from, None,
-          [text "Cannot coerce "; desc from; text " to "; desc target]))
+        `Root (from, None,
+          [text "Cannot coerce "; desc from; text " to "; desc target])
 
       | Op (FunCall {op; fn; _}) ->
-        Some (`Root (op, Some fn, [text "Cannot call "; desc fn]))
+        `Root (op, Some fn, [text "Cannot call "; desc fn])
 
       | Op (FunCallMethod {op; fn; prop; _}) ->
-        Some (`Root (op, Some prop, [text "Cannot call "; desc fn]))
+        `Root (op, Some prop, [text "Cannot call "; desc fn])
 
       | Frame (FunParam {n; name; lower = lower'; _},
           Op (FunCall {args; fn; _} | FunCallMethod {args; fn; _})) ->
@@ -971,60 +970,60 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         | Some name -> code name
         | None -> text (spf "the %s parameter" (Utils_js.ordinal n))
         in
-        Some (`Root (lower, None,
-          [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]))
+        `Root (lower, None,
+          [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param])
 
       | Op (FunReturnStatement {value}) ->
-        Some (`Root (value, None,
-          [text "Cannot return "; desc value]))
+        `Root (value, None,
+          [text "Cannot return "; desc value])
 
       | Op (FunImplicitReturn {upper; fn}) ->
-        Some (`Root (upper, None,
-          [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]))
+        `Root (upper, None,
+          [text "Cannot expect "; desc upper; text " as the return type of "; desc fn])
 
       | Op (GeneratorYield {value}) ->
-        Some (`Root (value, None,
-          [text "Cannot yield "; desc value]))
+        `Root (value, None,
+          [text "Cannot yield "; desc value])
 
       | Op (GetProperty prop) ->
-        Some (`Root (prop, None,
-          [text "Cannot get "; desc prop]))
+        `Root (prop, None,
+          [text "Cannot get "; desc prop])
 
       | Op (ReactCreateElementCall {op; component; _}) ->
-        Some (`Root (op, Some component,
-          [text "Cannot create "; desc component; text " element"]))
+        `Root (op, Some component,
+          [text "Cannot create "; desc component; text " element"])
 
       | Op (ReactGetIntrinsic {literal}) ->
-        Some (`Root (literal, None,
-          [text "Cannot create "; desc literal; text " element"]))
+        `Root (literal, None,
+          [text "Cannot create "; desc literal; text " element"])
 
       | Op (SetProperty {prop; value; _}) ->
-        Some (`Root (value, None,
-          [text "Cannot assign "; desc value; text " to "; desc prop]))
+        `Root (value, None,
+          [text "Cannot assign "; desc value; text " to "; desc prop])
 
       | Frame (FunParam {n; lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the "; text (Utils_js.ordinal n); text " argument"]))
+        `Frame (lower, use_op,
+          [text "the "; text (Utils_js.ordinal n); text " argument"])
 
       | Frame (FunRestParam {lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the rest argument"]))
+        `Frame (lower, use_op,
+          [text "the rest argument"])
 
       | Frame (FunReturn {lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the return value"]))
+        `Frame (lower, use_op,
+          [text "the return value"])
 
       | Frame (IndexerKeyCompatibility {lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the indexer property's key"]))
+        `Frame (lower, use_op,
+          [text "the indexer property's key"])
 
       | Frame (PropertyCompatibility {prop=None | Some "$key" | Some "$value"; lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the indexer property"]))
+        `Frame (lower, use_op,
+          [text "the indexer property"])
 
       | Frame (PropertyCompatibility {prop=Some "$call"; lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "the callable signature"]))
+        `Frame (lower, use_op,
+          [text "the callable signature"])
 
       | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
         let repos_small_reason loc reason = function
@@ -1057,31 +1056,30 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         (* Loop through our parent use_op to get our property path. *)
         let (lower, props, use_op) = loop lower use_op in
         (* Create our final action. *)
-        Some (`Frame (lower, use_op,
+        `Frame (lower, use_op,
           [text "property "; code
-            (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props)]))
+            (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props)])
 
       | Frame (TupleElementCompatibility {n; lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "index "; text (string_of_int (n - 1))]))
+        `Frame (lower, use_op,
+          [text "index "; text (string_of_int (n - 1))])
 
       | Frame (TypeArgCompatibility {name; lower; _}, use_op) ->
-        Some (`Frame (lower, use_op,
-          [text "type argument "; code name]))
+        `Frame (lower, use_op,
+          [text "type argument "; code name])
 
       | Frame (TypeParamBound {name}, use_op) ->
-        Some (`FrameWithoutLoc (use_op,
-          [text "type argument "; code name]))
+        `FrameWithoutLoc (use_op,
+          [text "type argument "; code name])
 
       | Frame (FunCompatibility _, use_op)
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam _, use_op)
       | Frame (ReactConfigCheck, use_op)
       | Frame (UnifyFlip, use_op)
-        -> Some (`Next use_op)
-      )
-      ~default:None
-      ~f:(function
+        -> `Next use_op
+      in
+      match action with
       (* Skip this use_op and go to the next one. *)
       | `Next use_op -> loop loc frames use_op
       (* Add our frame message and reposition the location if appropriate. *)
@@ -1120,7 +1118,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          * and frames. *)
         let (all_frames, _) = frames in
         Some (Some (root_loc, root_message), loc, all_frames)
-      )
     in
     fun loc use_op message ->
       (* If friendly errors are not turned on then never return a friendly error
