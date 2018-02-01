@@ -6,11 +6,12 @@ Error: apply.js:12
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
-                   ^^^^^^ array literal
-  4:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ function type. Too few arguments passed to
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+                   ^^^^^^ Cannot call `apply` with array literal bound to `args` because function [1] requires another argument from function type [2].
+  References:
+   10: function noRest(x: 'hi', y: 123): true { return true; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+    4:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [2]: function type
 
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
@@ -49,11 +50,12 @@ Error: apply.js:31
 
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
-                       ^^^^^^ array literal
- 25:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ function type. Too few arguments passed to
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+                       ^^^^^^ Cannot call `applyType` with array literal bound to `args` because function [1] requires another argument from function type [2].
+  References:
+   10: function noRest(x: 'hi', y: 123): true { return true; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+   25:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [2]: function type
 
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123

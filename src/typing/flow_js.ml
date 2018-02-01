@@ -9645,10 +9645,13 @@ and multiflow_full
     cx ~trace ~use_op reason_op ~is_strict ~def_reason
     ~spread_arg ~rest_param (arglist, parlist) in
 
-  List.iter (fun (_, param) ->
-    let use_op = Frame (FunMissingArg (reason_op, def_reason), use_op) in
+  let _ = List.fold_left (fun n (_, param) ->
+    let use_op = Frame (FunMissingArg { n; op = reason_op; def = def_reason }, use_op) in
     rec_flow cx trace (VoidT.why reason_op, UseT (use_op, param));
-  ) unused_parameters
+    n + 1
+  ) ((List.length parlist - List.length unused_parameters) + 1) unused_parameters in
+
+  ()
 
 (* This is a tricky function. The simple description is that it flows all the
  * arguments to all the parameters. This function is used by

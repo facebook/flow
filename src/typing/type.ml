@@ -311,7 +311,7 @@ module rec TypeTerm : sig
 
   and frame_use_op =
     | FunCompatibility of { lower: reason; upper: reason }
-    | FunMissingArg of reason * reason
+    | FunMissingArg of { n: int; op: reason; def: reason }
     | FunParam of { n: int; name: string option; lower: reason; upper: reason }
     | FunRestParam of { lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }

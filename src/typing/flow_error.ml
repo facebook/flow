@@ -877,7 +877,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-  | Frame (FunMissingArg (op, def), use_op) ->
+  | Frame (FunMissingArg { op; def; _ }, use_op) ->
     let msg = "Too few arguments passed to" in
     unwrap_use_ops ~force:true ((op, def), [], msg) use_op
   | Op (ReactCreateElementCall _) ->
@@ -999,6 +999,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
             (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props)]))
 
       | Frame (FunCompatibility _, use_op)
+      | Frame (FunMissingArg _, use_op)
         -> Some (`Next use_op)
 
       | _ -> None
@@ -1071,8 +1072,22 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   let mk_incompatible_friendly_error lower upper use_op =
     let ((lower, upper), use_op) = dedupe_by_flip (lower, upper) use_op in
     let ((lower, upper), use_op) = flip_contravariant (lower, upper) use_op in
-    unwrap_use_ops_friendly (loc_of_reason lower) use_op
-      [ref lower; text " is incompatible with "; ref upper; text "."]
+    match use_op with
+    | Frame (FunMissingArg { def; op; _ }, use_op) ->
+      let message = match use_op with
+      | Op (FunCall _ | FunCallMethod _) ->
+        let def = replace_reason (function
+        | RFunctionType -> RFunction RNormal
+        | desc -> desc
+        ) def in
+        [ref def; text " requires another argument."]
+      | _ ->
+        [ref def; text " requires another argument from "; ref op; text "."]
+      in
+      unwrap_use_ops_friendly (loc_of_reason op) use_op message
+    | _ ->
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op
+        [ref lower; text " is incompatible with "; ref upper; text "."]
   in
 
   function

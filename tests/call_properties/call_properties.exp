@@ -12,9 +12,10 @@ Error: A.js:13
 
 Error: A.js:18
  18:   return f();
-              ^^^ call of `f`. Too few arguments passed to
- 17: function d(f: { (x: number): number }): number {
-                     ^^^^^^^^^^^^^^^^^^^ function type
+              ^ Cannot call `f` because function [1] requires another argument.
+  References:
+   17: function d(f: { (x: number): number }): number {
+                       ^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error: A.js:23
  23:   return f();

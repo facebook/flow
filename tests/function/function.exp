@@ -6,9 +6,10 @@ Error: apply.js:2
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^^^^ call of method `apply`. Too few arguments passed to
-  1: function test(a: string, b: number): number {
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+          ^^^^^ Cannot call `test.apply` because function [1] requires another argument.
+  References:
+    1: function test(a: string, b: number): number {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error: apply.js:15
  15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
@@ -107,9 +108,10 @@ Error: call.js:4
 
 Error: call.js:14
  14: test.call("", ""); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^ call of method `call`. Too few arguments passed to
-  3: function test(a: string, b: number): number {
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+          ^^^^ Cannot call `test.call` because function [1] requires another argument.
+  References:
+    3: function test(a: string, b: number): number {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error: call.js:17
  17: test.call("", "", ""); // error: string ~> number (2nd arg)
@@ -353,9 +355,10 @@ Error: rest.js:58
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg
-     ^^^^^^^^^^^^^^^^^^^^^^ call of `requires_first_param`. Too few arguments passed to
- 63: function requires_first_param(x: number, ...rest: Array<number>): void {}
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+     ^^^^^^^^^^^^^^^^^^^^ Cannot call `requires_first_param` because function [1] requires another argument.
+  References:
+   63: function requires_first_param(x: number, ...rest: Array<number>): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error: rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
