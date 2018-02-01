@@ -1010,6 +1010,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Frame (lower, use_op,
           [text "index "; text (string_of_int (n - 1))]))
 
+      | Frame (TypeArgCompatibility (name, lower, _), use_op) ->
+        Some (`Frame (lower, use_op,
+          [text "type argument "; code name]))
+
       | Frame (FunCompatibility _, use_op)
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam _, use_op)

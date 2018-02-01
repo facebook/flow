@@ -471,25 +471,21 @@ Error: response.js:44
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
-900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:900
-  Type argument `T` is incompatible:
-      4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                        ^^^^^^ string. This type is incompatible with
-    900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
-                                                                  ^^^^^^^^^^^^^^^^ tuple type. See lib: <BUILTINS>/bom.js:900
+                                    ^^^^^^ Cannot call `URLSearchParams` with array literal bound to `query` because in type argument `T`, string [1] is incompatible with tuple type [2].
+  References:
+    4: const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                      ^^^^^^ [1]: string
+  900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
+                                                                ^^^^^^^^^^^^^^^^ [2]: tuple type. See lib: <BUILTINS>/bom.js:900
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
-900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:900
-  Type argument `T` is incompatible:
-      4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                                ^^^^^^^^ string. This type is incompatible with
-    900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
-                                                                  ^^^^^^^^^^^^^^^^ tuple type. See lib: <BUILTINS>/bom.js:900
+                                            ^^^^^^^^ Cannot call `URLSearchParams` with array literal bound to `query` because in type argument `T`, string [1] is incompatible with tuple type [2].
+  References:
+    4: const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                              ^^^^^^^^ [1]: string
+  900:     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
+                                                                ^^^^^^^^^^^^^^^^ [2]: tuple type. See lib: <BUILTINS>/bom.js:900
 
 Error: urlsearchparams.js:9
   9: e.append('key1'); // not correct

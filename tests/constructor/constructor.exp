@@ -4,25 +4,21 @@ Error: constructor.js:6
 
 Error: constructor.js:15
  15: (new Foo(123): Bar<string>); // error, number !~> string
-      ^^^^^^^^^^^^ Bar. Has some incompatible type argument with
- 15: (new Foo(123): Bar<string>); // error, number !~> string
-                    ^^^^^^^^^^^ Bar
-  Type argument `T` is incompatible:
-     15: (new Foo(123): Bar<string>); // error, number !~> string
-                  ^^^ number. This type is incompatible with
-     15: (new Foo(123): Bar<string>); // error, number !~> string
-                            ^^^^^^ string
+              ^^^ Cannot cast `new Foo(...)` to `Bar` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   15: (new Foo(123): Bar<string>); // error, number !~> string
+                ^^^ [1]: number
+   15: (new Foo(123): Bar<string>); // error, number !~> string
+                          ^^^^^^ [2]: string
 
 Error: constructor.js:22
  22: (new Baz(123): Baz<string>); // error, number !~> string
-      ^^^^^^^^^^^^ Baz. Has some incompatible type argument with
- 22: (new Baz(123): Baz<string>); // error, number !~> string
-                    ^^^^^^^^^^^ Baz
-  Type argument `T` is incompatible:
-     22: (new Baz(123): Baz<string>); // error, number !~> string
-                  ^^^ number. This type is incompatible with
-     22: (new Baz(123): Baz<string>); // error, number !~> string
-                            ^^^^^^ string
+              ^^^ Cannot cast `new Baz(...)` to `Baz` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   22: (new Baz(123): Baz<string>); // error, number !~> string
+                ^^^ [1]: number
+   22: (new Baz(123): Baz<string>); // error, number !~> string
+                          ^^^^^^ [2]: string
 
 
 Found 3 errors

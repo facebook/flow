@@ -136,19 +136,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...arr}</Foo>;
-                   ^^^^^ props. This type is incompatible with
-          6:       function Foo(props: Props) {}
-                                       ^^^^^ Props
-          Property \`children\` is incompatible:
-              8:       <Foo>{...arr}</Foo>;
-                       ^^^^^ JSX element \`Foo\`. Has some incompatible type argument with
-              5:       type Props = {|children: Array<number>|};
-                                                ^^^^^^^^^^^^^ array type
-              Type argument \`T\` is incompatible:
-                  7:       const arr = ["foo"];
-                                        ^^^^^ string. This type is incompatible with
-                  5:       type Props = {|children: Array<number>|};
-                                                          ^^^^^^ number
+                   ^^^^^ In type argument \`T\`, string [1] is incompatible with number [2].
+          References:
+            7:       const arr = ["foo"];
+                                  ^^^^^ [1]: string
+            5:       type Props = {|children: Array<number>|};
+                                                    ^^^^^^ [2]: number
       `,
     ),
   ]),
@@ -312,19 +305,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                   ^^^^^ props. This type is incompatible with
-          6:       function Foo(props: FooProps) {}
-                                       ^^^^^^^^ FooProps
-          Property \`children\` is incompatible:
-              9:       <Foo><Bar /></Foo>
-                       ^^^^^ JSX element \`Foo\`. Has some incompatible type argument with
-              5:       type FooProps = {|children: Array<string>|};
-                                                   ^^^^^^^^^^^^^ array type
-              Type argument \`T\` is incompatible:
-                  9:       <Foo><Bar /></Foo>
-                                ^^^^^^^ number. This type is incompatible with
-                  5:       type FooProps = {|children: Array<string>|};
-                                                             ^^^^^^ string
+                   ^^^^^ In type argument \`T\`, number [1] is incompatible with string [2].
+          References:
+            8:       function Bar(props: BarProps): number {return 0;}
+                                                    ^^^^^^ [1]: number
+            5:       type FooProps = {|children: Array<string>|};
+                                                       ^^^^^^ [2]: string
       `,
     ),
   ]),

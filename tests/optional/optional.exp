@@ -97,14 +97,12 @@ Error: optional_param4.js:12
 
 Error: optional_param4.js:13
  13: foo(123, true); // ERROR boolean ~> string
-     ^^^^^^^^^^^^^^ rest array. Has some incompatible type argument with
-  3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
-                                    ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     13: foo(123, true); // ERROR boolean ~> string
-                  ^^^^ boolean. This type is incompatible with
-      3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
-                                              ^^^^^^ string
+              ^^^^ Cannot call `foo` because in the rest argument and then type argument `T`, boolean [1] is incompatible with string [2].
+  References:
+   13: foo(123, true); // ERROR boolean ~> string
+                ^^^^ [1]: boolean
+    3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
+                                            ^^^^^^ [2]: string
 
 Error: undefined.js:8
   8:     return x.duck;

@@ -1,13 +1,11 @@
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
- 30: function na(x: Array<number>) {}
-                    ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     11: na(Children.map(a, (x: string) => (x: string))); // Error
-                                               ^^^^^^ string. This type is incompatible with
-     30: function na(x: Array<number>) {}
-                              ^^^^^^ number
+                                           ^^^^^^ Cannot call `na` with `Children.map(...)` bound to `x` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                                             ^^^^^^ [1]: string
+   30: function na(x: Array<number>) {}
+                            ^^^^^^ [2]: number
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
@@ -20,47 +18,39 @@ Error: api.js:11
 
 Error: api.js:12
  12: sa(Children.map(a, (x: number) => (x: number))); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
- 31: function sa(x: Array<string>) {}
-                    ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     12: sa(Children.map(a, (x: number) => (x: number))); // Error
-                                               ^^^^^^ number. This type is incompatible with
-     31: function sa(x: Array<string>) {}
-                              ^^^^^^ string
+                                           ^^^^^^ Cannot call `sa` with `Children.map(...)` bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   12: sa(Children.map(a, (x: number) => (x: number))); // Error
+                                             ^^^^^^ [1]: number
+   31: function sa(x: Array<string>) {}
+                            ^^^^^^ [2]: string
 
 Error: api.js:14
  14: Children.forEach(a, (x: number) => {}); // Error
-                      ^ ChildrenArray. This type is incompatible with the expected param type of
-232:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
-  Type argument `T` is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ null or undefined. This type is incompatible with
-     14: Children.forEach(a, (x: number) => {}); // Error
-                                 ^^^^^^ number
+                      ^ Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T`, null or undefined [1] is incompatible with number [2].
+  References:
+    5: const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [1]: null or undefined
+   14: Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ [2]: number
 
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
-                      ^ ChildrenArray. This type is incompatible with the expected param type of
-232:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
-  Type argument `T` is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                ^^^^^^^ null or undefined. This type is incompatible with
-     16: Children.forEach(a, (x: string) => {}); // Error
-                                 ^^^^^^ string
+                      ^ Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T`, null or undefined [1] is incompatible with string [2].
+  References:
+    5: const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [1]: null or undefined
+   16: Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [2]: string
 
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
-                      ^ ChildrenArray. This type is incompatible with the expected param type of
-232:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ ChildrenArray. See lib: <BUILTINS>/react.js:232
-  Type argument `T` is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                 ^^^^^^ number. This type is incompatible with
-     16: Children.forEach(a, (x: string) => {}); // Error
-                                 ^^^^^^ string
+                      ^ Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ [1]: number
+   16: Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [2]: string
 
 Error: api.js:19
  19: s(Children.count(a)); // Error
@@ -76,14 +66,12 @@ Error: api.js:22
 
 Error: api.js:25
  25: sa(Children.toArray(a)); // Error
-        ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
- 31: function sa(x: Array<string>) {}
-                    ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-      5: const a: ChildrenArray<?number> = [
-                                 ^^^^^^ number. This type is incompatible with
-     31: function sa(x: Array<string>) {}
-                              ^^^^^^ string
+        ^^^^^^^^^^^^^^^^^^^ Cannot call `sa` with `Children.toArray(...)` bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ [1]: number
+   31: function sa(x: Array<string>) {}
+                            ^^^^^^ [2]: string
 
 Error: builtin_intrinsic.js:24
  24: <builtin>

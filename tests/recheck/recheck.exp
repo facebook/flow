@@ -219,14 +219,12 @@ No errors!
 Test m:
 Error: m3.js:6
   6: (x: T<number>);
-      ^ T. Has some incompatible type argument with
-  6: (x: T<number>);
-         ^^^^^^^^^ T
-  Type argument `X` is incompatible:
-      5: export var x: T<string> = null;
-                         ^^^^^^ string. This type is incompatible with. See: m1.js:5
-      6: (x: T<number>);
-               ^^^^^^ number
+      ^ Cannot cast `x` to `T` because in type argument `X`, string [1] is incompatible with number [2].
+  References:
+    5: export var x: T<string> = null;
+                       ^^^^^^ [1]: string. See: m1.js:5
+    6: (x: T<number>);
+             ^^^^^^ [2]: number
 
 
 Found 1 error

@@ -83,25 +83,21 @@ Error: implicit_bounded_instantiation.js:20
 
 Error: phantom.js:7
   7: (a: B); // Error
-      ^ A. Has some incompatible type argument with
-  7: (a: B); // Error
-         ^ B
-  Type argument `Phantom` is incompatible:
-      3: type A = T<number>;
-                    ^^^^^^ number. This type is incompatible with
-      4: type B = T<string>;
-                    ^^^^^^ string
+      ^ Cannot cast `a` to `B` because in type argument `Phantom`, number [1] is incompatible with string [2].
+  References:
+    3: type A = T<number>;
+                  ^^^^^^ [1]: number
+    4: type B = T<string>;
+                  ^^^^^^ [2]: string
 
 Error: phantom.js:15
  15: (c: D); // Error
-      ^ C. Has some incompatible type argument with
- 15: (c: D); // Error
-         ^ D
-  Type argument `Phantom` is incompatible:
-     11: type C = T<number>;
-                    ^^^^^^ number. This type is incompatible with
-     12: type D = T<string>;
-                    ^^^^^^ string
+      ^ Cannot cast `c` to `D` because in type argument `Phantom`, number [1] is incompatible with string [2].
+  References:
+   11: type C = T<number>;
+                  ^^^^^^ [1]: number
+   12: type D = T<string>;
+                  ^^^^^^ [2]: string
 
 Error: poly.js:17
  17: var x:string = foo.x;

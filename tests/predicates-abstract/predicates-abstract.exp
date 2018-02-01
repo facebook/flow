@@ -91,14 +91,12 @@ Error: sanity-filter-union.js:17
 
 Error: sanity-filter.js:8
   8: (b: Array<number>);
-      ^ array type. Has some incompatible type argument with
-  8: (b: Array<number>);
-         ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-      6: declare var a: Array<mixed>;
-                              ^^^^^ string. This type is incompatible with
-      8: (b: Array<number>);
-                   ^^^^^^ number
+      ^ Cannot cast `b` to array type because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+    6: declare var a: Array<mixed>;
+                            ^^^^^ [1]: string
+    8: (b: Array<number>);
+                 ^^^^^^ [2]: number
 
 Error: sanity-filter.js:13
  13: const d = my_filter(c, is_string_regular);
@@ -108,14 +106,12 @@ Error: sanity-filter.js:13
 
 Error: sanity-filter.js:14
  14: (d: Array<string>);
-      ^ array type. Has some incompatible type argument with
- 14: (d: Array<string>);
-         ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     12: declare var c: Array<mixed>;
-                              ^^^^^ mixed. This type is incompatible with
-     14: (d: Array<string>);
-                   ^^^^^^ string
+      ^ Cannot cast `d` to array type because in type argument `T`, mixed [1] is incompatible with string [2].
+  References:
+   12: declare var c: Array<mixed>;
+                            ^^^^^ [1]: mixed
+   14: (d: Array<string>);
+                 ^^^^^^ [2]: string
 
 Error: sanity-refine.js:4
   4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;

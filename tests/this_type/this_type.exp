@@ -133,14 +133,12 @@ Error: import.js:18
 
 Error: import.js:21
  21: ((new B3().bar(): B3<string>): A2<number>); // error
-                       ^^^^^^^^^^ A2. Has some incompatible type argument with
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                    ^^^^^^^^^^ A2
-  Type argument `X` is incompatible:
-     21: ((new B3().bar(): B3<string>): A2<number>); // error
-                              ^^^^^^ string. This type is incompatible with
-     21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                           ^^^^^^ number
+                          ^^^^^^ Cannot cast `new B3().bar()` to `A2` because in type argument `X`, string [1] is incompatible with number [2].
+  References:
+   21: ((new B3().bar(): B3<string>): A2<number>); // error
+                            ^^^^^^ [1]: string
+   21: ((new B3().bar(): B3<string>): A2<number>); // error
+                                         ^^^^^^ [2]: number
 
 Error: import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error

@@ -262,14 +262,12 @@ Error: intersection-function.js:55
 
 Error: intersection-function.js:56
  56: f(([1]: [number]));
-             ^^^^^^^^ tuple type. This type is incompatible with the expected param type of
- 49: declare function f(x: $ReadOnlyArray<string>): void;
-                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     56: f(([1]: [number]));
-                  ^^^^^^ number. This type is incompatible with
-     49: declare function f(x: $ReadOnlyArray<string>): void;
-                                              ^^^^^^ string
+              ^^^^^^ Cannot call `f` with array literal bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   56: f(([1]: [number]));
+                ^^^^^^ [1]: number
+   49: declare function f(x: $ReadOnlyArray<string>): void;
+                                            ^^^^^^ [2]: string
 
 Error: intersection-function.js:57
  57: f(([1, 2]: [number, number]));
@@ -282,25 +280,21 @@ Error: intersection-function.js:57
 
 Error: intersection-function.js:58
  58: f(([1, 2, 3]: [number, number, number]));
-                   ^^^^^^^^^^^^^^^^^^^^^^^^ tuple type. This type is incompatible with the expected param type of
- 49: declare function f(x: $ReadOnlyArray<string>): void;
-                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     58: f(([1, 2, 3]: [number, number, number]));
-                        ^^^^^^ number. This type is incompatible with
-     49: declare function f(x: $ReadOnlyArray<string>): void;
-                                              ^^^^^^ string
+                    ^^^^^^ Cannot call `f` with array literal bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   58: f(([1, 2, 3]: [number, number, number]));
+                      ^^^^^^ [1]: number
+   49: declare function f(x: $ReadOnlyArray<string>): void;
+                                            ^^^^^^ [2]: string
 
 Error: intersection-function.js:59
  59: f(((null: any): Array<number> & {p: number}));
-                     ^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
- 49: declare function f(x: $ReadOnlyArray<string>): void;
-                           ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     59: f(((null: any): Array<number> & {p: number}));
-                               ^^^^^^ number. This type is incompatible with
-     49: declare function f(x: $ReadOnlyArray<string>): void;
-                                              ^^^^^^ string
+                           ^^^^^^ Cannot call `f` with `null` bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   59: f(((null: any): Array<number> & {p: number}));
+                             ^^^^^^ [1]: number
+   49: declare function f(x: $ReadOnlyArray<string>): void;
+                                            ^^^^^^ [2]: string
 
 Error: intersection-function.js:63
  63: g(42);
@@ -346,14 +340,12 @@ Error: intersection-function.js:80
 
 Error: intersection-function.js:84
  84: m((new W(): W<number>));
-                 ^^^^^^^^^ W. This type is incompatible with the expected param type of
- 82: declare function m(x: W<string>): void;
-                           ^^^^^^^^^ W
-  Type argument `T` is incompatible:
-     84: m((new W(): W<number>));
-                       ^^^^^^ number. This type is incompatible with
-     82: declare function m(x: W<string>): void;
-                                 ^^^^^^ string
+                   ^^^^^^ Cannot call `m` with `new W()` bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   84: m((new W(): W<number>));
+                     ^^^^^^ [1]: number
+   82: declare function m(x: W<string>): void;
+                               ^^^^^^ [2]: string
 
 Error: sentinel.js:11
  11: ({type: 'A', p: 'foo'}: X);
@@ -679,14 +671,12 @@ Error: union.js:45
 
 Error: union.js:46
  46: (([1]: [number]): F);
-            ^^^^^^^^ tuple type. Has some incompatible type argument with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     46: (([1]: [number]): F);
-                 ^^^^^^ number. This type is incompatible with
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                               ^^^^^^ string
+             ^^^^^^ Cannot cast array literal to `F` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   46: (([1]: [number]): F);
+               ^^^^^^ [1]: number
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                             ^^^^^^ [2]: string
 
 Error: union.js:47
  47: (([1, 2]: [number, number]): F);
@@ -699,25 +689,21 @@ Error: union.js:47
 
 Error: union.js:48
  48: (([1, 2, 3]: [number, number, number]): F);
-                  ^^^^^^^^^^^^^^^^^^^^^^^^ tuple type. Has some incompatible type argument with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     48: (([1, 2, 3]: [number, number, number]): F);
-                       ^^^^^^ number. This type is incompatible with
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                               ^^^^^^ string
+                   ^^^^^^ Cannot cast array literal to `F` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   48: (([1, 2, 3]: [number, number, number]): F);
+                     ^^^^^^ [1]: number
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                             ^^^^^^ [2]: string
 
 Error: union.js:49
  49: (((null: any): Array<number> & {p: number}): F);
-                    ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                            ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Type argument `T` is incompatible:
-     49: (((null: any): Array<number> & {p: number}): F);
-                              ^^^^^^ number. This type is incompatible with
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                               ^^^^^^ string
+                          ^^^^^^ Cannot cast `null` to `F` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   49: (((null: any): Array<number> & {p: number}): F);
+                            ^^^^^^ [1]: number
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                             ^^^^^^ [2]: string
 
 Error: union.js:52
  52: (42: G);
@@ -739,14 +725,12 @@ Error: union.js:53
 
 Error: union.js:56
  56: ((new W(): W<number>): M);
-                ^^^^^^^^^ W. Has some incompatible type argument with
- 55: type M = W<string> | {p: string};
-              ^^^^^^^^^ W
-  Type argument `T` is incompatible:
-     56: ((new W(): W<number>): M);
-                      ^^^^^^ number. This type is incompatible with
-     55: type M = W<string> | {p: string};
-                    ^^^^^^ string
+                  ^^^^^^ Cannot cast `new W()` to `M` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   56: ((new W(): W<number>): M);
+                    ^^^^^^ [1]: number
+   55: type M = W<string> | {p: string};
+                  ^^^^^^ [2]: string
 
 
 Found 54 errors

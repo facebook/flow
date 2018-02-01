@@ -179,25 +179,21 @@ Error: resolve_global.js:40
 
 Error: resolve_void.js:3
   3: (Promise.resolve(): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
-  3: (Promise.resolve(): Promise<number>); // error
-                         ^^^^^^^^^^^^^^^ Promise
-  Type argument `R` is incompatible:
-      3: (Promise.resolve(): Promise<number>); // error
-          ^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-      3: (Promise.resolve(): Promise<number>); // error
-                                     ^^^^^^ number
+      ^^^^^^^^^^^^^^^^^ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R`, undefined [1] is incompatible with number [2].
+  References:
+    3: (Promise.resolve(): Promise<number>); // error
+        ^^^^^^^^^^^^^^^^^ [1]: undefined
+    3: (Promise.resolve(): Promise<number>); // error
+                                   ^^^^^^ [2]: number
 
 Error: resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Promise. Has some incompatible type argument with
-  5: (Promise.resolve(undefined): Promise<number>); // error
-                                  ^^^^^^^^^^^^^^^ Promise
-  Type argument `R` is incompatible:
-      5: (Promise.resolve(undefined): Promise<number>); // error
-                          ^^^^^^^^^ undefined. This type is incompatible with
-      5: (Promise.resolve(undefined): Promise<number>); // error
-                                              ^^^^^^ number
+                      ^^^^^^^^^ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R`, undefined [1] is incompatible with number [2].
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+    5: (Promise.resolve(undefined): Promise<number>); // error
+                                            ^^^^^^ [2]: number
 
 
 Found 28 errors

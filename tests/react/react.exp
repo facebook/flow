@@ -703,19 +703,12 @@ Error: hoc.js:12
 
 Error: hoc.js:35
  35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. This type is incompatible with the expected param type of
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-     35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                                                   ^^^^^^^^^^^^^ object type. This type is incompatible with
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                                                             ^^^^^^ string. This type is incompatible with
-          6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                                    ^^^^^^ number
+                                                     ^^^^^^ Cannot call `myHOC` with `class { ... }` bound to `Component` because in type argument `Props` and then property `foo`, string [1] is incompatible with number [2].
+  References:
+   35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
+                                                       ^^^^^^ [1]: string
+    6:   Component: React$ComponentType<{foo: number, bar: number}>,
+                                              ^^^^^^ [2]: number
 
 Error: hoc.js:36
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -912,27 +905,6 @@ Error: hoc2.js:23
          -^ object type. This type is incompatible with
       6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-         12:   a: number,
-                  ^^^^^^ number. This type is incompatible with
-         28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                    ^^^^^ string
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
       Property `b` is incompatible:
                                                        v-
          11: class MyComponent extends React.Component<{|
@@ -943,6 +915,15 @@ Error: hoc2.js:23
              -^ property `b`. Property not found in
           6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                         ^^^^^^^^^^^ In type argument `Props`, number [1] is incompatible with string [2].
+  References:
+   12:   a: number,
+            ^^^^^^ [1]: number
+   28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                              ^^^^^ [2]: string
 
 Error: hoc3.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.

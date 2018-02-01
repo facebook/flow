@@ -1,13 +1,11 @@
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest array. Has some incompatible type argument with
-  5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                                         ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-                                                  ^^^^^ string. This type is incompatible with
-      5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                                                   ^^^^^^ number
+                                              ^^^^^ Cannot call `funWithRestArray` because in the rest argument and then type argument `T`, string [1] is incompatible with number [2].
+  References:
+   14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
+                                                ^^^^^ [1]: string
+    5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
+                                                                 ^^^^^^ [2]: number
 
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);

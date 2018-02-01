@@ -622,35 +622,21 @@ Error: create_element.js:97
 
 Error: create_element.js:103
 103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                            ^^ props. This type is incompatible with
- 91: class F extends React.Component<{children: Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     91: class F extends React.Component<{children: Array<number>}> {}
-                                                    ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                        ^^^^^^ array literal. This type is incompatible with
-         91: class F extends React.Component<{children: Array<number>}> {}
-                                                              ^^^^^^ number
+                            ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                  ^^^^^^ [1]: array literal
+   91: class F extends React.Component<{children: Array<number>}> {}
+                                                        ^^^^^^ [2]: number
 
 Error: create_element.js:103
 103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                            ^^ props. This type is incompatible with
- 91: class F extends React.Component<{children: Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     91: class F extends React.Component<{children: Array<number>}> {}
-                                                    ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                                ^^^^^^ array literal. This type is incompatible with
-         91: class F extends React.Component<{children: Array<number>}> {}
-                                                              ^^^^^^ number
+                            ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                          ^^^^^^ [1]: array literal
+   91: class F extends React.Component<{children: Array<number>}> {}
+                                                        ^^^^^^ [2]: number
 
 Error: create_element.js:104
 104: React.createElement(F, {}, ...[]); // Error
@@ -730,35 +716,21 @@ Error: create_element.js:113
 
 Error: create_element.js:118
 118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                            ^^ props. This type is incompatible with
-112: class G extends React.Component<{children: number | Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                             ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                                        ^^^^^^ array literal. This type is incompatible with
-        112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                                       ^^^^^^ number
+                            ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+                                  ^^^^^^ [1]: array literal
+  112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                                 ^^^^^^ [2]: number
 
 Error: create_element.js:118
 118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                            ^^ props. This type is incompatible with
-112: class G extends React.Component<{children: number | Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                             ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                                                ^^^^^^ array literal. This type is incompatible with
-        112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                                       ^^^^^^ number
+                            ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+                                          ^^^^^^ [1]: array literal
+  112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                                 ^^^^^^ [2]: number
 
 Error: create_element.js:119
 119: React.createElement(G, {}, ...[]); // Error
@@ -782,35 +754,21 @@ Error: create_element.js:122
 
 Error: create_element.js:133
 133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-                             ^^ props. This type is incompatible with
-127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                                               ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-                                         ^^^^^^ array literal. This type is incompatible with
-        127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                                                         ^^^^^^ number
+                             ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+                                   ^^^^^^ [1]: array literal
+  127: class G2 extends React.Component<{children?: number | Array<number>}> {}
+                                                                   ^^^^^^ [2]: number
 
 Error: create_element.js:133
 133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-                             ^^ props. This type is incompatible with
-127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                                               ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
-                                                 ^^^^^^ array literal. This type is incompatible with
-        127: class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                                                         ^^^^^^ number
+                             ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+                                           ^^^^^^ [1]: array literal
+  127: class G2 extends React.Component<{children?: number | Array<number>}> {}
+                                                                   ^^^^^^ [2]: number
 
 Error: create_element.js:144
 144: React.createElement(H, {}); // Error
@@ -1572,35 +1530,21 @@ Error: create_factory.js:102
 
 Error: create_factory.js:108
 108: fFactory({}, [1, 2], [3, 4]); // Error
-              ^^ props. This type is incompatible with
- 95: class F extends React.Component<{children: Array<number>}, void> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    108: fFactory({}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     95: class F extends React.Component<{children: Array<number>}, void> {}
-                                                    ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        108: fFactory({}, [1, 2], [3, 4]); // Error
-                          ^^^^^^ array literal. This type is incompatible with
-         95: class F extends React.Component<{children: Array<number>}, void> {}
-                                                              ^^^^^^ number
+              ^^ Cannot call `fFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  108: fFactory({}, [1, 2], [3, 4]); // Error
+                    ^^^^^^ [1]: array literal
+   95: class F extends React.Component<{children: Array<number>}, void> {}
+                                                        ^^^^^^ [2]: number
 
 Error: create_factory.js:108
 108: fFactory({}, [1, 2], [3, 4]); // Error
-              ^^ props. This type is incompatible with
- 95: class F extends React.Component<{children: Array<number>}, void> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    108: fFactory({}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     95: class F extends React.Component<{children: Array<number>}, void> {}
-                                                    ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        108: fFactory({}, [1, 2], [3, 4]); // Error
-                                  ^^^^^^ array literal. This type is incompatible with
-         95: class F extends React.Component<{children: Array<number>}, void> {}
-                                                              ^^^^^^ number
+              ^^ Cannot call `fFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  108: fFactory({}, [1, 2], [3, 4]); // Error
+                            ^^^^^^ [1]: array literal
+   95: class F extends React.Component<{children: Array<number>}, void> {}
+                                                        ^^^^^^ [2]: number
 
 Error: create_factory.js:109
 109: fFactory({}, ...[]); // Error
@@ -1680,35 +1624,21 @@ Error: create_factory.js:119
 
 Error: create_factory.js:124
 124: gFactory({}, [1, 2], [3, 4]); // Error
-              ^^ props. This type is incompatible with
-117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    124: gFactory({}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                             ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        124: gFactory({}, [1, 2], [3, 4]); // Error
-                          ^^^^^^ array literal. This type is incompatible with
-        117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                                       ^^^^^^ number
+              ^^ Cannot call `gFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  124: gFactory({}, [1, 2], [3, 4]); // Error
+                    ^^^^^^ [1]: array literal
+  117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                                 ^^^^^^ [2]: number
 
 Error: create_factory.js:124
 124: gFactory({}, [1, 2], [3, 4]); // Error
-              ^^ props. This type is incompatible with
-117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    124: gFactory({}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-    117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                             ^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-        124: gFactory({}, [1, 2], [3, 4]); // Error
-                                  ^^^^^^ array literal. This type is incompatible with
-        117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                                       ^^^^^^ number
+              ^^ Cannot call `gFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
+  References:
+  124: gFactory({}, [1, 2], [3, 4]); // Error
+                            ^^^^^^ [1]: array literal
+  117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                                 ^^^^^^ [2]: number
 
 Error: create_factory.js:125
 125: gFactory({}, ...[]); // Error

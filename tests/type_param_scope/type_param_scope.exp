@@ -40,14 +40,12 @@ Error: method_shadow.js:42
 
 Error: method_shadow.js:43
  43: (g.m(""): G<number>); // err, string ~> number
-      ^^^^^^^ G. Has some incompatible type argument with
- 43: (g.m(""): G<number>); // err, string ~> number
-               ^^^^^^^^^ G
-  Type argument `T` is incompatible:
-     43: (g.m(""): G<number>); // err, string ~> number
-              ^^ string. This type is incompatible with
-     43: (g.m(""): G<number>); // err, string ~> number
-                     ^^^^^^ number
+          ^^ Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   43: (g.m(""): G<number>); // err, string ~> number
+            ^^ [1]: string
+   43: (g.m(""): G<number>); // err, string ~> number
+                   ^^^^^^ [2]: number
 
 Error: method_shadow.js:51
  51:         this.x = x; // err, m's T != H's T

@@ -93,14 +93,12 @@ Error: test.js:21
 
 Error: test.js:27
  27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                                             ^^^^^^^^^^^^^^^ Contra. Has some incompatible type argument with
- 27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                   ^^^^^^^^^^^^^^^^^^^^^^^ Contra
-  Type argument `T` is incompatible:
-     27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                              ^^^^^^ number. This type is incompatible with
-     27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                                                         ^^^^^^ string
+                                                             ^^^^^^^^^^^^^^^ In type argument `T`, number [1] is incompatible with string [2].
+  References:
+   27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                            ^^^^^^ [1]: number
+   27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                                                       ^^^^^^ [2]: string
 
 Error: typeapp-test.js:5
   5:   foo2.p = null; // Error, covariant property p

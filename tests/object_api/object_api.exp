@@ -62,14 +62,12 @@ Error: object_keys.js:14
 
 Error: object_keys.js:18
  18: (Object.keys(any): Array<number>); // error, Array<string>
-      ^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 18: (Object.keys(any): Array<number>); // error, Array<string>
-                        ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     18: (Object.keys(any): Array<number>); // error, Array<string>
-                      ^^^ string. This type is incompatible with
-     18: (Object.keys(any): Array<number>); // error, Array<string>
-                                  ^^^^^^ number
+                  ^^^ Cannot cast `Object.keys(...)` to array type because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   17: var any: Object = {};
+                ^^^^^^ [1]: string
+   18: (Object.keys(any): Array<number>); // error, Array<string>
+                                ^^^^^^ [2]: number
 
 Error: object_keys.js:25
  25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
