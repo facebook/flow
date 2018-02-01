@@ -711,7 +711,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | ReactConfigCheck -> ReactConfigCheck
   | TupleElementCompatibility c ->
     TupleElementCompatibility {c with lower = c.upper; upper = c.lower}
-  | TypeArgCompatibility (name, lower, upper) -> TypeArgCompatibility (name, upper, lower)
+  | TypeArgCompatibility c -> TypeArgCompatibility {c with lower = c.upper; upper = c.lower}
   | TypeParamBound _
   | FunMissingArg _
   | ImplicitTypeParam _
@@ -762,9 +762,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   let flip_contravariant =
     (* Is this frame part of a contravariant position? *)
     let is_contravariant = function
-    | FunParam _, Frame (FunCompatibility _, _) -> true
-    | FunRestParam _, Frame (FunCompatibility _, _) -> true
-    | _ -> false
+    | FunParam _, Frame (FunCompatibility _, _) -> (true, true)
+    | FunRestParam _, Frame (FunCompatibility _, _) -> (true, true)
+    | TypeArgCompatibility {polarity = Negative; _}, _ -> (true, false)
+    | _ -> (false, false)
     in
     (* Loop through the use_op and flip the contravariants. *)
     let rec loop = function
@@ -772,10 +773,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     (* If the frame is contravariant then flip. *)
     | Frame (frame, use_op) ->
       let (flip, use_op) = loop use_op in
-      let flip = if is_contravariant (frame, use_op) then not flip else flip in
-      if flip
-        then (true, Frame (flip_frame frame, use_op))
-        else (false, Frame (frame, use_op))
+      let (contravariant, flip_self) = is_contravariant (frame, use_op) in
+      let flip = if contravariant then not flip else flip in
+      let flip_self = flip && (not contravariant || flip_self) in
+      let frame = if flip_self then flip_frame frame else frame in
+      (flip, Frame (frame, use_op))
     in
     fun (lower, upper) use_op ->
       let (flip, use_op) = loop use_op in
@@ -825,7 +827,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     in
     let msg = "Has some incompatible tuple element with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
-  | Frame (TypeArgCompatibility (x, reason_op, reason_tapp), use_op) ->
+  | Frame (TypeArgCompatibility {name=x; lower=reason_op; upper=reason_tapp; _}, use_op) ->
     let extra =
       extra_info_of_use_op reasons extra msg
         (spf "Type argument `%s` is incompatible:" x)
@@ -1010,7 +1012,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Frame (lower, use_op,
           [text "index "; text (string_of_int (n - 1))]))
 
-      | Frame (TypeArgCompatibility (name, lower, _), use_op) ->
+      | Frame (TypeArgCompatibility {name; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
           [text "type argument "; code name]))
 

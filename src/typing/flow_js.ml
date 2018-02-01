@@ -3689,7 +3689,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             []
           | _, [] -> []
           | _, (t1, t2)::targs ->
-            let use_op = Frame (TypeArgCompatibility (name, reason_op, reason_tapp), use_op) in
+            let use_op = Frame (TypeArgCompatibility {
+              name;
+              lower = reason_op;
+              upper = reason_tapp;
+              polarity;
+            }, use_op) in
             (match polarity with
             | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
             | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
@@ -4318,7 +4323,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Arrays can flow to arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
       UseT (use_op, DefT (r2, ArrT (ArrayAT (t2, ts2)))) ->
-      let use_op = Frame (TypeArgCompatibility ("T", r1, r2), use_op) in
+      let use_op = Frame (TypeArgCompatibility {
+        name = "T";
+        lower = r1;
+        upper = r2;
+        polarity = Neutral;
+      }, use_op) in
       let lit1 = (desc_of_reason r1) = RArrayLit in
       let ts1 = Option.value ~default:[] ts1 in
       let ts2 = Option.value ~default:[] ts2 in
@@ -4362,7 +4372,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Read only arrays are the super type of all tuples and arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
       UseT (use_op, DefT (r2, ArrT (ROArrayAT (t2)))) ->
-      let use_op = Frame (TypeArgCompatibility ("T", r1, r2), use_op) in
+      let use_op = Frame (TypeArgCompatibility {
+        name = "T";
+        lower = r1;
+        upper = r2;
+        polarity = Positive;
+      }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
 
     (**************************************************)
@@ -6803,18 +6818,23 @@ and generate_tests =
 
 and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
   tmap1 |> SMap.iter (fun x t1 ->
-    let use_op = Frame (TypeArgCompatibility (x, lreason, ureason), use_op) in
     let t2 = SMap.find_unsafe x tmap2 in
     (* type_args contains a mixture of args to type params declared on the
        instance's class, and args to outer-scope type params.
        OTOH arg_polarities only holds polarities of declared params.
        it'll take some upstream refactoring to handle variance to in-scope
        type params - meanwhile, we fall back to neutral (invariant) *)
-    (match SMap.get x pmap with
-    | Some Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-    | Some Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-    | Some Neutral
-    | None -> rec_unify cx trace ~use_op t1 t2)
+    let polarity = Option.value (SMap.get x pmap) ~default:Neutral in
+    let use_op = Frame (TypeArgCompatibility {
+      name = x;
+      lower = lreason;
+      upper = ureason;
+      polarity;
+    }, use_op) in
+    (match polarity with
+    | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+    | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
+    | Neutral -> rec_unify cx trace ~use_op t1 t2)
   )
 
 and inherited_method x = x <> "constructor" && x <> "$call"

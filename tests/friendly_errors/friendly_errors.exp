@@ -43,6 +43,24 @@ Error: indexer-key-compatibility.js:7
     7: (o: {[k: string]: any});
                 ^^^^^^ [2]: string
 
+Error: loc-primary-for-covariant-ops.js:8
+  8: ((any: (x: {p: number}) => void): (x: {p: string}) => void);
+                    ^^^^^^ Cannot cast `any` to function type because in the first argument and then property `p`, number [1] is incompatible with string [2].
+  References:
+    8: ((any: (x: {p: number}) => void): (x: {p: string}) => void);
+                      ^^^^^^ [1]: number
+    8: ((any: (x: {p: number}) => void): (x: {p: string}) => void);
+                                                 ^^^^^^ [2]: string
+
+Error: loc-primary-for-covariant-ops.js:11
+ 11: ((any: X<{p: number}>): X<{p: string}>);
+                  ^^^^^^ Cannot cast `any` to `X` because in type argument `T` and then property `p`, number [1] is incompatible with string [2].
+  References:
+   11: ((any: X<{p: number}>): X<{p: string}>);
+                    ^^^^^^ [1]: number
+   11: ((any: X<{p: number}>): X<{p: string}>);
+                                     ^^^^^^ [2]: string
+
 Error: loc-primary.js:8
   8: (a1: A); // Error: string ~> number. We should point to a1.
       ^^ Cannot cast `a1` to `A` because in property `p`, number [1] is incompatible with string [2].
@@ -359,4 +377,4 @@ Error: order.js:10
                     ^^^^^ [2]: empty
 
 
-Found 40 errors
+Found 42 errors

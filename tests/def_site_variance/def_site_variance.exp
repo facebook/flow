@@ -8,12 +8,12 @@ Error: test.js:3
 
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-        ^^ Cannot cast `v1` to `Variance` because in type argument `In`, `A` [1] is incompatible with `B` [2].
+        ^^ Cannot cast `v1` to `Variance` because in type argument `In`, `B` [1] is incompatible with `A` [2].
   References:
-   13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                         ^ [1]: `A`
    10:   v1: Variance<A,B>,
-                        ^ [2]: `B`
+                        ^ [1]: `B`
+   13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                         ^ [2]: `A`
 
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)

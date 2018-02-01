@@ -325,7 +325,12 @@ module rec TypeTerm : sig
       }
     | ReactConfigCheck
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
-    | TypeArgCompatibility of string * reason * reason
+    | TypeArgCompatibility of {
+        name: string;
+        lower: reason;
+        upper: reason;
+        polarity: polarity;
+      }
     | TypeParamBound of { name: string }
     | UnifyFlip
 
