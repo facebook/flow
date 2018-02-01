@@ -66,14 +66,12 @@ Error: obj.js:11
 
 Error: obj.js:19
  19:   (y: IHasXString); // error: string != number
-        ^ object type. This type is incompatible with
- 19:   (y: IHasXString); // error: string != number
-           ^^^^^^^^^^^ IHasXString
-  Property `x` is incompatible:
-     18: function propTest6(y: {[key: string]: number}) {
-                                               ^^^^^^ number. This type is incompatible with
-      6:   x: string;
-              ^^^^^^ string
+        ^ Cannot cast `y` to `IHasXString` because in property `x`, number [1] is incompatible with string [2].
+  References:
+   18: function propTest6(y: {[key: string]: number}) {
+                                             ^^^^^^ [1]: number
+    6:   x: string;
+            ^^^^^^ [2]: string
 
 Error: optional.js:10
  10: var test2: HasOptional = {}; // Error: missing property a

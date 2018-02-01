@@ -944,6 +944,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
+      | Frame (PropertyCompatibility {prop; lower; _}, use_op) ->
+        Some (`Frame (lower, use_op,
+          match prop with
+            | None | Some "$key" | Some "$value" -> [text "the indexer property"]
+            | Some "$call" -> [text "the callable signature"]
+            | Some x -> [text "property "; code x]))
+
       | _ -> None
       )
       ~default:None

@@ -1,82 +1,38 @@
-Error: identity.js:19
-      v
- 19: ({
+Error: identity.js:20
  20:   a: 'asd', // Error: string ~> number
+          ^^^^^ Cannot cast object literal to `Foo` because in property `a`, string [1] is incompatible with number [2].
+  References:
+   20:   a: 'asd', // Error: string ~> number
+            ^^^^^ [1]: string
+    7:     a: number,
+              ^^^^^^ [2]: number
+
+Error: identity.js:21
  21:   b: 'asd', // Error: string ~> number
- 22: }: Foo);
-     ^ object literal. This type is incompatible with
- 22: }: Foo);
-        ^^^ object type
-  Property `a` is incompatible:
-     20:   a: 'asd', // Error: string ~> number
-              ^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
+          ^^^^^ Cannot cast object literal to `Foo` because in property `b`, string [1] is incompatible with number [2].
+  References:
+   21:   b: 'asd', // Error: string ~> number
+            ^^^^^ [1]: string
+    8:     b: number,
+              ^^^^^^ [2]: number
 
-Error: identity.js:19
-      v
- 19: ({
- 20:   a: 'asd', // Error: string ~> number
- 21:   b: 'asd', // Error: string ~> number
- 22: }: Foo);
-     ^ object literal. This type is incompatible with
- 22: }: Foo);
-        ^^^ object type
-  Property `b` is incompatible:
-     21:   b: 'asd', // Error: string ~> number
-              ^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:24
-            v
- 24: ((any: {
+Error: identity.js:25
  25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `a` is incompatible:
-     25:   a: string, // Error: string ~> number
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
+          ^^^^^^ Cannot cast `any` to `Foo` because in property `a`, string [1] is incompatible with number [2].
+  References:
+   25:   a: string, // Error: string ~> number
+            ^^^^^^ [1]: string
+    7:     a: number,
+              ^^^^^^ [2]: number
 
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
+Error: identity.js:26
  26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `b` is incompatible:
-     26:   b: string, // Error: string ~> number
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
+          ^^^^^^ Cannot cast `any` to `Foo` because in property `b`, string [1] is incompatible with number [2].
+  References:
+   26:   b: string, // Error: string ~> number
+            ^^^^^^ [1]: string
+    8:     b: number,
+              ^^^^^^ [2]: number
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
@@ -124,43 +80,21 @@ Error: identity.js:31
 
 Error: identity.js:38
  38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `a` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     39:   a: string, // Error: number ~> string
-              ^^^^^^ string
+      ^^^ Cannot cast `foo` to object type because in property `a`, number [1] is incompatible with string [2].
+  References:
+    7:     a: number,
+              ^^^^^^ [1]: number
+   39:   a: string, // Error: number ~> string
+            ^^^^^^ [2]: string
 
 Error: identity.js:38
  38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `b` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     40:   b: string, // Error: number ~> string
-              ^^^^^^ string
+      ^^^ Cannot cast `foo` to object type because in property `b`, number [1] is incompatible with string [2].
+  References:
+    8:     b: number,
+              ^^^^^^ [1]: number
+   40:   b: string, // Error: number ~> string
+            ^^^^^^ [2]: string
 
 Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty

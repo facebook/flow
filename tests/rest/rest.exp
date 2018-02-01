@@ -11,14 +11,12 @@ Error: type.js:10
 
 Error: type.js:12
  12: (o1: {|x?: X|}); // Error: x is not optional
-      ^^ object type. This type is incompatible with
- 12: (o1: {|x?: X|}); // Error: x is not optional
-          ^^^^^^^^^ object type
-  Property `x` is incompatible:
-      8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                              ^ X. This type is incompatible with
-     12: (o1: {|x?: X|}); // Error: x is not optional
-                    ^ undefined
+      ^^ Cannot cast `o1` to object type because in property `x`, `X` [1] is incompatible with undefined [2].
+  References:
+    8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [1]: `X`
+   12: (o1: {|x?: X|}); // Error: x is not optional
+                  ^ [2]: undefined
 
 Error: type.js:13
  13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
@@ -36,33 +34,29 @@ Error: type.js:14
       ^^ object type. This type is incompatible with
  14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
           ^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                              ^ X. This type is incompatible with
-     14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-                    ^ undefined
-
-Error: type.js:14
- 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-      ^^ object type. This type is incompatible with
- 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-          ^^^^^^^^^^^^^^^^ object type
   Property `y` is incompatible:
      14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
               ^^^^^^^^^^^^^^^^ property `y`. Property not found in
      14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
           ^^ object type
 
+Error: type.js:14
+ 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
+      ^^ Cannot cast `o1` to object type because in property `x`, `X` [1] is incompatible with undefined [2].
+  References:
+    8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [1]: `X`
+   14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
+                  ^ [2]: undefined
+
 Error: type.js:15
  15: (o1: {|x: Y|}); // Error: X = Y
-      ^^ object type. This type is incompatible with
- 15: (o1: {|x: Y|}); // Error: X = Y
-          ^^^^^^^^ object type
-  Property `x` is incompatible:
-      8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                              ^ X. This type is incompatible with
-     15: (o1: {|x: Y|}); // Error: X = Y
-                   ^ Y
+      ^^ Cannot cast `o1` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+    8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [1]: `X`
+   15: (o1: {|x: Y|}); // Error: X = Y
+                 ^ [2]: `Y`
 
 Error: type.js:16
  16: ({}: O1); // Error: missing x
@@ -94,14 +88,12 @@ Error: type.js:18
 
 Error: type.js:19
  19: ({x: y}: O1); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 19: ({x: y}: O1); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     19: ({x: y}: O1); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-      8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                              ^ X
+          ^ Cannot cast object literal to `O1` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+    8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [2]: `X`
 
 Error: type.js:21
  21: type O2 = $Rest<{|x: X, y: Y|}, {|y: X|}>;
@@ -139,22 +131,20 @@ Error: type.js:28
       ^^ object type. This type is incompatible with
  28: (o3: {|x: X|}); // Error: x is optional and missing y
           ^^^^^^^^ object type
-  Property `x` is incompatible:
-     25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
-                              ^ undefined. This type is incompatible with
-     28: (o3: {|x: X|}); // Error: x is optional and missing y
-                   ^ X
-
-Error: type.js:28
- 28: (o3: {|x: X|}); // Error: x is optional and missing y
-      ^^ object type. This type is incompatible with
- 28: (o3: {|x: X|}); // Error: x is optional and missing y
-          ^^^^^^^^ object type
   Property `y` is incompatible:
      28: (o3: {|x: X|}); // Error: x is optional and missing y
           ^^ property `y`. Property not found in
      28: (o3: {|x: X|}); // Error: x is optional and missing y
               ^^^^^^^^ object type
+
+Error: type.js:28
+ 28: (o3: {|x: X|}); // Error: x is optional and missing y
+      ^^ Cannot cast `o3` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
+                            ^ [1]: undefined
+   28: (o3: {|x: X|}); // Error: x is optional and missing y
+                 ^ [2]: `X`
 
 Error: type.js:29
  29: (o3: {|x?: X|}); // Error: missing y
@@ -169,36 +159,12 @@ Error: type.js:29
 
 Error: type.js:30
  30: (o3: {|x: X, y?: Y|}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 30: (o3: {|x: X, y?: Y|}); // Error: x is optional
-          ^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
-                              ^ undefined. This type is incompatible with
-     30: (o3: {|x: X, y?: Y|}); // Error: x is optional
-                   ^ X
-
-Error: type.js:32
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-      ^^ object type. This type is incompatible with
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-          ^^^^^^^^ object type
-  Property `x` is incompatible:
-     25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
-                              ^ X. This type is incompatible with
-     32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-                   ^ Y
-
-Error: type.js:32
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-      ^^ object type. This type is incompatible with
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-          ^^^^^^^^ object type
-  Property `x` is incompatible:
-     25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
-                              ^ undefined. This type is incompatible with
-     32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-                   ^ Y
+      ^^ Cannot cast `o3` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
+                            ^ [1]: undefined
+   30: (o3: {|x: X, y?: Y|}); // Error: x is optional
+                 ^ [2]: `X`
 
 Error: type.js:32
  32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
@@ -211,6 +177,24 @@ Error: type.js:32
      32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
               ^^^^^^^^ object type
 
+Error: type.js:32
+ 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+      ^^ Cannot cast `o3` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+   25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
+                            ^ [1]: `X`
+   32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+                 ^ [2]: `Y`
+
+Error: type.js:32
+ 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+      ^^ Cannot cast `o3` to object type because in property `x`, undefined [1] is incompatible with `Y` [2].
+  References:
+   25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
+                            ^ [1]: undefined
+   32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+                 ^ [2]: `Y`
+
 Error: type.js:33
  33: ({}: O3); // OK
       ^^ object literal. Inexact type is incompatible with exact type
@@ -219,14 +203,12 @@ Error: type.js:33
 
 Error: type.js:36
  36: ({x: y}: O3); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 36: ({x: y}: O3); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     36: ({x: y}: O3); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-     25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
-                              ^ X
+          ^ Cannot cast object literal to `O3` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+   25: type O3 = $Rest<{|x: X, y: Y|}, {y: Y}>;
+                            ^ [2]: `X`
 
 Error: type.js:40
  40: (o4: {||}); // Error: missing x and y
@@ -266,44 +248,29 @@ Error: type.js:42
       ^^ object type. This type is incompatible with
  42: (o4: {|x?: X|}); // Error: x is not optional and missing y
           ^^^^^^^^^ object type
-  Property `x` is incompatible:
-     38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                              ^ X. This type is incompatible with
-     42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-                    ^ undefined
-
-Error: type.js:42
- 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-      ^^ object type. This type is incompatible with
- 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-          ^^^^^^^^^ object type
   Property `y` is incompatible:
      42: (o4: {|x?: X|}); // Error: x is not optional and missing y
           ^^ property `y`. Property not found in
      42: (o4: {|x?: X|}); // Error: x is not optional and missing y
               ^^^^^^^^^ object type
 
+Error: type.js:42
+ 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
+      ^^ Cannot cast `o4` to object type because in property `x`, `X` [1] is incompatible with undefined [2].
+  References:
+   38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [1]: `X`
+   42: (o4: {|x?: X|}); // Error: x is not optional and missing y
+                  ^ [2]: undefined
+
 Error: type.js:44
  44: (o4: {|x?: X, y?: Y|}); // Error: x is not optional
-      ^^ object type. This type is incompatible with
- 44: (o4: {|x?: X, y?: Y|}); // Error: x is not optional
-          ^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                              ^ X. This type is incompatible with
-     44: (o4: {|x?: X, y?: Y|}); // Error: x is not optional
-                    ^ undefined
-
-Error: type.js:45
- 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-      ^^ object type. This type is incompatible with
- 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-          ^^^^^^^^ object type
-  Property `x` is incompatible:
-     38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                              ^ X. This type is incompatible with
-     45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-                   ^ Y
+      ^^ Cannot cast `o4` to object type because in property `x`, `X` [1] is incompatible with undefined [2].
+  References:
+   38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [1]: `X`
+   44: (o4: {|x?: X, y?: Y|}); // Error: x is not optional
+                  ^ [2]: undefined
 
 Error: type.js:45
  45: (o4: {|x: Y|}); // Error: X = Y, and missing y
@@ -315,6 +282,15 @@ Error: type.js:45
           ^^ property `y`. Property not found in
      45: (o4: {|x: Y|}); // Error: X = Y, and missing y
               ^^^^^^^^ object type
+
+Error: type.js:45
+ 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
+      ^^ Cannot cast `o4` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+   38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [1]: `X`
+   45: (o4: {|x: Y|}); // Error: X = Y, and missing y
+                 ^ [2]: `Y`
 
 Error: type.js:46
  46: ({}: O4); // Error: missing x
@@ -335,14 +311,12 @@ Error: type.js:46
 
 Error: type.js:49
  49: ({x: y}: O4); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 49: ({x: y}: O4); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     49: ({x: y}: O4); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-     38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                              ^ X
+          ^ Cannot cast object literal to `O4` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+   38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [2]: `X`
 
 Error: type.js:53
  53: (o5: {|x?: X|}); // Error: inexact ~> exact
@@ -352,25 +326,12 @@ Error: type.js:53
 
 Error: type.js:55
  55: (o5: {x: X}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 55: (o5: {x: X}); // Error: x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
-                             ^ undefined. This type is incompatible with
-     55: (o5: {x: X}); // Error: x is optional
-                  ^ X
-
-Error: type.js:57
- 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-      ^^ object type. This type is incompatible with
- 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-          ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
-                             ^ undefined. This type is incompatible with
-     57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-                  ^ X
+      ^^ Cannot cast `o5` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
+                           ^ [1]: undefined
+   55: (o5: {x: X}); // Error: x is optional
+                ^ [2]: `X`
 
 Error: type.js:57
  57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
@@ -382,6 +343,15 @@ Error: type.js:57
               ^^^^^^^^^^^^^ property `y`. Property not found in
      57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
           ^^ object type
+
+Error: type.js:57
+ 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
+      ^^ Cannot cast `o5` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
+                           ^ [1]: undefined
+   57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
+                ^ [2]: `X`
 
 Error: type.js:58
  58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
@@ -396,36 +366,30 @@ Error: type.js:58
 
 Error: type.js:59
  59: (o5: {x: Y}); // Error: x is optional and X = Y
-      ^^ object type. This type is incompatible with
- 59: (o5: {x: Y}); // Error: x is optional and X = Y
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
-                             ^ X. This type is incompatible with
-     59: (o5: {x: Y}); // Error: x is optional and X = Y
-                  ^ Y
+      ^^ Cannot cast `o5` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+   51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
+                           ^ [1]: `X`
+   59: (o5: {x: Y}); // Error: x is optional and X = Y
+                ^ [2]: `Y`
 
 Error: type.js:59
  59: (o5: {x: Y}); // Error: x is optional and X = Y
-      ^^ object type. This type is incompatible with
- 59: (o5: {x: Y}); // Error: x is optional and X = Y
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
-                             ^ undefined. This type is incompatible with
-     59: (o5: {x: Y}); // Error: x is optional and X = Y
-                  ^ Y
+      ^^ Cannot cast `o5` to object type because in property `x`, undefined [1] is incompatible with `Y` [2].
+  References:
+   51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
+                           ^ [1]: undefined
+   59: (o5: {x: Y}); // Error: x is optional and X = Y
+                ^ [2]: `Y`
 
 Error: type.js:63
  63: ({x: y}: O5); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 63: ({x: y}: O5); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     63: ({x: y}: O5); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-     51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
-                             ^ X
+          ^ Cannot cast object literal to `O5` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+   51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
+                           ^ [2]: `X`
 
 Error: type.js:67
  67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
@@ -435,58 +399,48 @@ Error: type.js:67
 
 Error: type.js:69
  69: (o6: {x: X}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 69: (o6: {x: X}); // Error: x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
-                             ^ undefined. This type is incompatible with
-     69: (o6: {x: X}); // Error: x is optional
-                  ^ X
+      ^^ Cannot cast `o6` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
+                           ^ [1]: undefined
+   69: (o6: {x: X}); // Error: x is optional
+                ^ [2]: `X`
 
 Error: type.js:71
  71: (o6: {x: X, y?: Y}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 71: (o6: {x: X, y?: Y}); // Error: x is optional
-          ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
-                             ^ undefined. This type is incompatible with
-     71: (o6: {x: X, y?: Y}); // Error: x is optional
-                  ^ X
+      ^^ Cannot cast `o6` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
+                           ^ [1]: undefined
+   71: (o6: {x: X, y?: Y}); // Error: x is optional
+                ^ [2]: `X`
 
 Error: type.js:73
  73: (o6: {x: Y}); // Error: X = Y, x is optional
-      ^^ object type. This type is incompatible with
- 73: (o6: {x: Y}); // Error: X = Y, x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
-                             ^ X. This type is incompatible with
-     73: (o6: {x: Y}); // Error: X = Y, x is optional
-                  ^ Y
+      ^^ Cannot cast `o6` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+   65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
+                           ^ [1]: `X`
+   73: (o6: {x: Y}); // Error: X = Y, x is optional
+                ^ [2]: `Y`
 
 Error: type.js:73
  73: (o6: {x: Y}); // Error: X = Y, x is optional
-      ^^ object type. This type is incompatible with
- 73: (o6: {x: Y}); // Error: X = Y, x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
-                             ^ undefined. This type is incompatible with
-     73: (o6: {x: Y}); // Error: X = Y, x is optional
-                  ^ Y
+      ^^ Cannot cast `o6` to object type because in property `x`, undefined [1] is incompatible with `Y` [2].
+  References:
+   65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
+                           ^ [1]: undefined
+   73: (o6: {x: Y}); // Error: X = Y, x is optional
+                ^ [2]: `Y`
 
 Error: type.js:77
  77: ({x: y}: O6); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 77: ({x: y}: O6); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     77: ({x: y}: O6); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-     65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
-                             ^ X
+          ^ Cannot cast object literal to `O6` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+   65: type O6 = $Rest<{x: X, y: Y}, {y: Y}>;
+                           ^ [2]: `X`
 
 Error: type.js:81
  81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
@@ -496,58 +450,48 @@ Error: type.js:81
 
 Error: type.js:83
  83: (o7: {x: X}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 83: (o7: {x: X}); // Error: x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
-                             ^ undefined. This type is incompatible with
-     83: (o7: {x: X}); // Error: x is optional
-                  ^ X
+      ^^ Cannot cast `o7` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
+                           ^ [1]: undefined
+   83: (o7: {x: X}); // Error: x is optional
+                ^ [2]: `X`
 
 Error: type.js:85
  85: (o7: {x: X, y?: Y}); // Error: x is optional
-      ^^ object type. This type is incompatible with
- 85: (o7: {x: X, y?: Y}); // Error: x is optional
-          ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
-                             ^ undefined. This type is incompatible with
-     85: (o7: {x: X, y?: Y}); // Error: x is optional
-                  ^ X
+      ^^ Cannot cast `o7` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
+  References:
+   79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
+                           ^ [1]: undefined
+   85: (o7: {x: X, y?: Y}); // Error: x is optional
+                ^ [2]: `X`
 
 Error: type.js:87
  87: (o7: {x: Y}); // Error: X = Y and x is optional
-      ^^ object type. This type is incompatible with
- 87: (o7: {x: Y}); // Error: X = Y and x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
-                             ^ X. This type is incompatible with
-     87: (o7: {x: Y}); // Error: X = Y and x is optional
-                  ^ Y
+      ^^ Cannot cast `o7` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
+  References:
+   79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
+                           ^ [1]: `X`
+   87: (o7: {x: Y}); // Error: X = Y and x is optional
+                ^ [2]: `Y`
 
 Error: type.js:87
  87: (o7: {x: Y}); // Error: X = Y and x is optional
-      ^^ object type. This type is incompatible with
- 87: (o7: {x: Y}); // Error: X = Y and x is optional
-          ^^^^^^ object type
-  Property `x` is incompatible:
-     79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
-                             ^ undefined. This type is incompatible with
-     87: (o7: {x: Y}); // Error: X = Y and x is optional
-                  ^ Y
+      ^^ Cannot cast `o7` to object type because in property `x`, undefined [1] is incompatible with `Y` [2].
+  References:
+   79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
+                           ^ [1]: undefined
+   87: (o7: {x: Y}); // Error: X = Y and x is optional
+                ^ [2]: `Y`
 
 Error: type.js:91
  91: ({x: y}: O7); // Error: Y ~> X
-      ^^^^^^ object literal. This type is incompatible with
- 91: ({x: y}: O7); // Error: Y ~> X
-              ^^ object type
-  Property `x` is incompatible:
-     91: ({x: y}: O7); // Error: Y ~> X
-              ^ Y. This type is incompatible with
-     79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
-                             ^ X
+          ^ Cannot cast object literal to `O7` because in property `x`, `Y` [1] is incompatible with `X` [2].
+  References:
+    6: declare var y: Y;
+                      ^ [1]: `Y`
+   79: type O7 = $Rest<{x: X, y: Y}, {|y?: Y|}>;
+                           ^ [2]: `X`
 
 Error: type.js:93
  93: type O8 = $Rest<{x: X, y: Y}, {|y: X|}>; // Error: Y ~> X
@@ -607,25 +551,21 @@ Error: type_dict.js:10
 
 Error: type_dict.js:11
  11: (o1: {|y: Y|}); // Error: y is optional
-      ^^ object type. This type is incompatible with
- 11: (o1: {|y: Y|}); // Error: y is optional
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-      8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
-                              ^ undefined. This type is incompatible with
-     11: (o1: {|y: Y|}); // Error: y is optional
-                   ^ Y
+      ^^ Cannot cast `o1` to object type because in property `y`, undefined [1] is incompatible with `Y` [2].
+  References:
+    8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
+                            ^ [1]: undefined
+   11: (o1: {|y: Y|}); // Error: y is optional
+                 ^ [2]: `Y`
 
 Error: type_dict.js:13
  13: (o1: {|y?: X|}); // Error: Y = X
-      ^^ object type. This type is incompatible with
- 13: (o1: {|y?: X|}); // Error: Y = X
-          ^^^^^^^^^ object type
-  Property `y` is incompatible:
-      8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
-                              ^ Y. This type is incompatible with
-     13: (o1: {|y?: X|}); // Error: Y = X
-                    ^ X
+      ^^ Cannot cast `o1` to object type because in property `y`, `Y` [1] is incompatible with `X` [2].
+  References:
+    8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
+                            ^ [1]: `Y`
+   13: (o1: {|y?: X|}); // Error: Y = X
+                  ^ [2]: `X`
 
 Error: type_dict.js:14
  14: ({}: O1); // OK
@@ -635,14 +575,12 @@ Error: type_dict.js:14
 
 Error: type_dict.js:16
  16: ({y: x}: O1); // Error: X ~> Y
-      ^^^^^^ object literal. This type is incompatible with
- 16: ({y: x}: O1); // Error: X ~> Y
-              ^^ object type
-  Property `y` is incompatible:
-     16: ({y: x}: O1); // Error: X ~> Y
-              ^ X. This type is incompatible with
-      8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
-                              ^ Y
+          ^ Cannot cast object literal to `O1` because in property `y`, `X` [1] is incompatible with `Y` [2].
+  References:
+    5: declare var x: X;
+                      ^ [1]: `X`
+    8: type O1 = $Rest<{|y: Y|}, {|[string]: Y|}>;
+                            ^ [2]: `Y`
 
 Error: type_dict.js:18
  18: type O2 = $Rest<{|y: Y|}, {|[string]: X|}>; // Error: Y ~> X
@@ -666,25 +604,21 @@ Error: type_dict.js:24
 
 Error: type_dict.js:25
  25: (o3: {|y: Y|}); // Error: y is optional
-      ^^ object type. This type is incompatible with
- 25: (o3: {|y: Y|}); // Error: y is optional
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-     22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
-                              ^ undefined. This type is incompatible with
-     25: (o3: {|y: Y|}); // Error: y is optional
-                   ^ Y
+      ^^ Cannot cast `o3` to object type because in property `y`, undefined [1] is incompatible with `Y` [2].
+  References:
+   22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
+                            ^ [1]: undefined
+   25: (o3: {|y: Y|}); // Error: y is optional
+                 ^ [2]: `Y`
 
 Error: type_dict.js:27
  27: (o3: {|y?: X|}); // Error: Y = X
-      ^^ object type. This type is incompatible with
- 27: (o3: {|y?: X|}); // Error: Y = X
-          ^^^^^^^^^ object type
-  Property `y` is incompatible:
-     22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
-                              ^ Y. This type is incompatible with
-     27: (o3: {|y?: X|}); // Error: Y = X
-                    ^ X
+      ^^ Cannot cast `o3` to object type because in property `y`, `Y` [1] is incompatible with `X` [2].
+  References:
+   22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
+                            ^ [1]: `Y`
+   27: (o3: {|y?: X|}); // Error: Y = X
+                  ^ [2]: `X`
 
 Error: type_dict.js:28
  28: ({}: O3); // OK
@@ -694,14 +628,12 @@ Error: type_dict.js:28
 
 Error: type_dict.js:30
  30: ({y: x}: O3); // Error: X ~> Y
-      ^^^^^^ object literal. This type is incompatible with
- 30: ({y: x}: O3); // Error: X ~> Y
-              ^^ object type
-  Property `y` is incompatible:
-     30: ({y: x}: O3); // Error: X ~> Y
-              ^ X. This type is incompatible with
-     22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
-                              ^ Y
+          ^ Cannot cast object literal to `O3` because in property `y`, `X` [1] is incompatible with `Y` [2].
+  References:
+    5: declare var x: X;
+                      ^ [1]: `X`
+   22: type O3 = $Rest<{|y: Y|}, {[string]: Y}>;
+                            ^ [2]: `Y`
 
 Error: type_dict.js:34
  34: (o4: {|y?: Y|}); // Error: inexact ~> exact
@@ -711,36 +643,30 @@ Error: type_dict.js:34
 
 Error: type_dict.js:36
  36: (o4: {y: Y}); // Error: y is optional
-      ^^ object type. This type is incompatible with
- 36: (o4: {y: Y}); // Error: y is optional
-          ^^^^^^ object type
-  Property `y` is incompatible:
-     32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
-                             ^ undefined. This type is incompatible with
-     36: (o4: {y: Y}); // Error: y is optional
-                  ^ Y
+      ^^ Cannot cast `o4` to object type because in property `y`, undefined [1] is incompatible with `Y` [2].
+  References:
+   32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
+                           ^ [1]: undefined
+   36: (o4: {y: Y}); // Error: y is optional
+                ^ [2]: `Y`
 
 Error: type_dict.js:38
  38: (o4: {y?: X}); // Error: Y = X
-      ^^ object type. This type is incompatible with
- 38: (o4: {y?: X}); // Error: Y = X
-          ^^^^^^^ object type
-  Property `y` is incompatible:
-     32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
-                             ^ Y. This type is incompatible with
-     38: (o4: {y?: X}); // Error: Y = X
-                   ^ X
+      ^^ Cannot cast `o4` to object type because in property `y`, `Y` [1] is incompatible with `X` [2].
+  References:
+   32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
+                           ^ [1]: `Y`
+   38: (o4: {y?: X}); // Error: Y = X
+                 ^ [2]: `X`
 
 Error: type_dict.js:42
  42: ({y: x}: O4); // Error: X ~> Y
-      ^^^^^^ object literal. This type is incompatible with
- 42: ({y: x}: O4); // Error: X ~> Y
-              ^^ object type
-  Property `y` is incompatible:
-     42: ({y: x}: O4); // Error: X ~> Y
-              ^ X. This type is incompatible with
-     32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
-                             ^ Y
+          ^ Cannot cast object literal to `O4` because in property `y`, `X` [1] is incompatible with `Y` [2].
+  References:
+    5: declare var x: X;
+                      ^ [1]: `X`
+   32: type O4 = $Rest<{y: Y}, {|[string]: Y|}>;
+                           ^ [2]: `Y`
 
 Error: type_dict.js:46
  46: (o5: {|y?: Y|}); // Error: inexact ~> exact
@@ -750,36 +676,30 @@ Error: type_dict.js:46
 
 Error: type_dict.js:48
  48: (o5: {y: Y}); // Error: y is optional
-      ^^ object type. This type is incompatible with
- 48: (o5: {y: Y}); // Error: y is optional
-          ^^^^^^ object type
-  Property `y` is incompatible:
-     44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
-                             ^ undefined. This type is incompatible with
-     48: (o5: {y: Y}); // Error: y is optional
-                  ^ Y
+      ^^ Cannot cast `o5` to object type because in property `y`, undefined [1] is incompatible with `Y` [2].
+  References:
+   44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
+                           ^ [1]: undefined
+   48: (o5: {y: Y}); // Error: y is optional
+                ^ [2]: `Y`
 
 Error: type_dict.js:50
  50: (o5: {y?: X}); // Error: Y = X
-      ^^ object type. This type is incompatible with
- 50: (o5: {y?: X}); // Error: Y = X
-          ^^^^^^^ object type
-  Property `y` is incompatible:
-     44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
-                             ^ Y. This type is incompatible with
-     50: (o5: {y?: X}); // Error: Y = X
-                   ^ X
+      ^^ Cannot cast `o5` to object type because in property `y`, `Y` [1] is incompatible with `X` [2].
+  References:
+   44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
+                           ^ [1]: `Y`
+   50: (o5: {y?: X}); // Error: Y = X
+                 ^ [2]: `X`
 
 Error: type_dict.js:54
  54: ({y: x}: O5); // Error: X ~> Y
-      ^^^^^^ object literal. This type is incompatible with
- 54: ({y: x}: O5); // Error: X ~> Y
-              ^^ object type
-  Property `y` is incompatible:
-     54: ({y: x}: O5); // Error: X ~> Y
-              ^ X. This type is incompatible with
-     44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
-                             ^ Y
+          ^ Cannot cast object literal to `O5` because in property `y`, `X` [1] is incompatible with `Y` [2].
+  References:
+    5: declare var x: X;
+                      ^ [1]: `X`
+   44: type O5 = $Rest<{y: Y}, {[string]: Y}>;
+                           ^ [2]: `Y`
 
 Error: type_dict.js:56
  56: type O6 = $Rest<{y: Y}, {|[string]: X|}>; // Error: Y ~> X
@@ -860,14 +780,12 @@ Error: type_generic.js:7
 
 Error: type_generic.js:7
   7: (o: {|x: string|});
-      ^ object literal. This type is incompatible with
-  7: (o: {|x: string|});
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      6: const [o, p] = remove({x: 'foo', p: 42});
-                                   ^^^^^ undefined. This type is incompatible with
-      7: (o: {|x: string|});
-                  ^^^^^^ string
+      ^ Cannot cast `o` to object type because in property `x`, undefined [1] is incompatible with string [2].
+  References:
+    6: const [o, p] = remove({x: 'foo', p: 42});
+                                 ^^^^^ [1]: undefined
+    7: (o: {|x: string|});
+                ^^^^^^ [2]: string
 
 Error: type_union.js:14
  14: ({x}: O1<X, Y>); // Error: x is not allowed

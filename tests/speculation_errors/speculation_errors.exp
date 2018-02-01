@@ -377,14 +377,12 @@ Error: intersection-function.js:84
 
 Error: sentinel.js:11
  11: ({type: 'A', p: 'foo'}: X);
-      ^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  7:   | {type: 'A', p: number}
-         ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     11: ({type: 'A', p: 'foo'}: X);
-                         ^^^^^ string. This type is incompatible with
-      7:   | {type: 'A', p: number}
-                            ^^^^^^ number
+                     ^^^^^ Cannot cast object literal to `X` because in property `p`, string [1] is incompatible with number [2].
+  References:
+   11: ({type: 'A', p: 'foo'}: X);
+                       ^^^^^ [1]: string
+    7:   | {type: 'A', p: number}
+                          ^^^^^^ [2]: number
 
 Error: sentinel.js:12
  12: ({type: 'D'}: X);
@@ -464,14 +462,12 @@ Error: union.js:21
 
 Error: union.js:22
  22: ({p: 42}: B);
-      ^^^^^^^ object literal. This type is incompatible with
- 20: type B = string | {p: string};
-                       ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     22: ({p: 42}: B);
-              ^^ number. This type is incompatible with
-     20: type B = string | {p: string};
-                               ^^^^^^ string
+          ^^ Cannot cast object literal to `B` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   22: ({p: 42}: B);
+            ^^ [1]: number
+   20: type B = string | {p: string};
+                             ^^^^^^ [2]: string
 
 Error: union.js:25
  25: (42: C);
@@ -548,30 +544,21 @@ Error: union.js:29
 
 Error: union.js:30
  30: ({a: 42}: D);
-      ^^^^^^^ object literal. This type is incompatible with
- 28: type D = string | {a: string} | {a: {b: string}};
-                       ^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     30: ({a: 42}: D);
-              ^^ number. This type is incompatible with
-     28: type D = string | {a: string} | {a: {b: string}};
-                               ^^^^^^ string
+          ^^ Cannot cast object literal to `D` because in property `a`, number [1] is incompatible with string [2].
+  References:
+   30: ({a: 42}: D);
+            ^^ [1]: number
+   28: type D = string | {a: string} | {a: {b: string}};
+                             ^^^^^^ [2]: string
 
 Error: union.js:31
  31: ({a: {b: 42}}: D);
-      ^^^^^^^^^^^^ object literal. This type is incompatible with
- 28: type D = string | {a: string} | {a: {b: string}};
-                                     ^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     31: ({a: {b: 42}}: D);
-              ^^^^^^^ object literal. This type is incompatible with
-     28: type D = string | {a: string} | {a: {b: string}};
-                                             ^^^^^^^^^^^ object type
-      Property `b` is incompatible:
-         31: ({a: {b: 42}}: D);
-                      ^^ number. This type is incompatible with
-         28: type D = string | {a: string} | {a: {b: string}};
-                                                     ^^^^^^ string
+              ^^ Cannot cast object literal to `D` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+  References:
+   31: ({a: {b: 42}}: D);
+                ^^ [1]: number
+   28: type D = string | {a: string} | {a: {b: string}};
+                                               ^^^^^^ [2]: string
 
 Error: union.js:34
  34: (42: E);
@@ -597,14 +584,12 @@ Error: union.js:34
 
 Error: union.js:36
  36: (new Y(): E);
-      ^^^^^^^ Y. This type is incompatible with
- 33: type E = X | {p: string};
-                  ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10:   p: number;
-              ^^^^^^ number. This type is incompatible with
-     33: type E = X | {p: string};
-                          ^^^^^^ string
+      ^^^^^^^ Cannot cast `new Y()` to `E` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   10:   p: number;
+            ^^^^^^ [1]: number
+   33: type E = X | {p: string};
+                        ^^^^^^ [2]: string
 
 Error: union.js:37
  37: (new Z(): E);
@@ -635,14 +620,12 @@ Error: union.js:37
 
 Error: union.js:38
  38: ({p: true}: E);
-      ^^^^^^^^^ object literal. This type is incompatible with
- 33: type E = X | {p: string};
-                  ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     38: ({p: true}: E);
-              ^^^^ boolean. This type is incompatible with
-     33: type E = X | {p: string};
-                          ^^^^^^ string
+          ^^^^ Cannot cast object literal to `E` because in property `p`, boolean [1] is incompatible with string [2].
+  References:
+   38: ({p: true}: E);
+            ^^^^ [1]: boolean
+   33: type E = X | {p: string};
+                        ^^^^^^ [2]: string
 
 Error: union.js:41
  41: (42: F);
@@ -676,14 +659,12 @@ Error: union.js:41
 
 Error: union.js:42
  42: ({p: 42}: F);
-      ^^^^^^^ object literal. This type is incompatible with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-              ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     42: ({p: 42}: F);
-              ^^ number. This type is incompatible with
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                      ^^^^^^ string
+          ^^ Cannot cast object literal to `F` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   42: ({p: 42}: F);
+            ^^ [1]: number
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                    ^^^^^^ [2]: string
 
 Error: union.js:43
  43: ({}: F);
@@ -698,14 +679,12 @@ Error: union.js:43
 
 Error: union.js:44
  44: (new Y(): F);
-      ^^^^^^^ Y. This type is incompatible with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-              ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10:   p: number;
-              ^^^^^^ number. This type is incompatible with
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                      ^^^^^^ string
+      ^^^^^^^ Cannot cast `new Y()` to `F` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   10:   p: number;
+            ^^^^^^ [1]: number
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                    ^^^^^^ [2]: string
 
 Error: union.js:45
  45: (new Z(): F);

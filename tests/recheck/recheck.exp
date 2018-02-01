@@ -159,14 +159,12 @@ No errors!
 Test f:
 Error: f2.js:4
   4: (c: { x: number });
-      ^ S. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: type S = { x: string };
-                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
-      4: (c: { x: number });
-                  ^^^^^^ number
+      ^ Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
+  References:
+    4: type S = { x: string };
+                     ^^^^^^ [1]: string. See: f1.js:4
+    4: (c: { x: number });
+                ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -174,14 +172,12 @@ No errors!
 No errors!
 Error: f2.js:4
   4: (c: { x: number });
-      ^ S. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: type S = { x: string };
-                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
-      4: (c: { x: number });
-                  ^^^^^^ number
+      ^ Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
+  References:
+    4: type S = { x: string };
+                     ^^^^^^ [1]: string. See: f1.js:4
+    4: (c: { x: number });
+                ^^^^^^ [2]: number
 
 
 Found 1 error

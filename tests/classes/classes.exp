@@ -122,14 +122,12 @@ Error: loc.js:5
 
 Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of `C`. This type is incompatible with
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-         ^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      4:   static p: string;
-                     ^^^^^^ string. This type is incompatible with
-     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-                ^^^^^^ number
+      ^ Cannot cast `C` to object type because in property `p`, string [1] is incompatible with number [2].
+  References:
+    4:   static p: string;
+                   ^^^^^^ [1]: string
+   10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+              ^^^^^^ [2]: number
 
 Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type

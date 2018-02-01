@@ -4,14 +4,12 @@ Error: copyProperties.js:6
 
 Error: copyProperties.js:31
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                        ^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                    ^^^ string. This type is incompatible with
-     31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                                   ^^^^^^ number
+                                ^^^ Cannot cast `copyProperties(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+  References:
+   31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                  ^^^ [1]: string
+   31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                                 ^^^^^^ [2]: number
 
 Error: invariant.js:6
   6:     invariant(x, 'truthy only'); // error, forgot to require invariant

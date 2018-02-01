@@ -1,13 +1,11 @@
 Error: qux.js:2
   2: ({ x: "" }: Foo);
-      ^^^^^^^^^ object literal. This type is incompatible with
-  2: ({ x: "" }: Foo);
-                 ^^^ Foo
-  Property `x` is incompatible:
-      2: ({ x: "" }: Foo);
-               ^^ string. This type is incompatible with
-      1: export type Foo = { x: number; }
-                                ^^^^^^ number. See: foo.js:1
+           ^^ Cannot cast object literal to `Foo` because in property `x`, string [1] is incompatible with number [2].
+  References:
+    2: ({ x: "" }: Foo);
+             ^^ [1]: string
+    1: export type Foo = { x: number; }
+                              ^^^^^^ [2]: number. See: foo.js:1
 
 
 Found 1 error

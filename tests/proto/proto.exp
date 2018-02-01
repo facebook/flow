@@ -18,25 +18,21 @@ Error: annot.js:4
 
 Error: annot.js:8
   8: ({p: 0, q: 0}: O); // error: number ~> string
-      ^^^^^^^^^^^^ object literal. This type is incompatible with
-  8: ({p: 0, q: 0}: O); // error: number ~> string
-                    ^ object type
-  Property `q` is incompatible:
-      8: ({p: 0, q: 0}: O); // error: number ~> string
-                    ^ number. This type is incompatible with
-      1: type O = {p: number, __proto__: {q: string}};
-                                             ^^^^^^ string
+                ^ Cannot cast object literal to `O` because in property `q`, number [1] is incompatible with string [2].
+  References:
+    8: ({p: 0, q: 0}: O); // error: number ~> string
+                  ^ [1]: number
+    1: type O = {p: number, __proto__: {q: string}};
+                                           ^^^^^^ [2]: string
 
 Error: annot.js:9
   9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-                                 ^ object type
-  Property `q` is incompatible:
-      9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
-                                ^ number. This type is incompatible with
-      1: type O = {p: number, __proto__: {q: string}};
-                                             ^^^^^^ string
+                            ^ Cannot cast object literal to `O` because in property `q`, number [1] is incompatible with string [2].
+  References:
+    9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                              ^ [1]: number
+    1: type O = {p: number, __proto__: {q: string}};
+                                           ^^^^^^ [2]: string
 
 Error: annot.js:10
  10: ({p: 0}: O); // error, property `q` not found

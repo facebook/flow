@@ -86,14 +86,12 @@ Error: undefined.js:8
 
 Error: undefined.js:10
  10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-            ^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                    ^^^^ undefined. This type is incompatible with
-     10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                            ^ A
+                ^^^^ Cannot cast `any` to object type because in property `a`, undefined [1] is incompatible with `A` [2].
+  References:
+   10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                  ^^^^ [1]: undefined
+   10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                          ^ [2]: `A`
 
 
 Found 8 errors
