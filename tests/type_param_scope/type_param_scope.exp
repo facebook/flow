@@ -1,20 +1,29 @@
 Error: class.js:4
   4:     this.b(a); // error: A ~> incompatible instance of T
-                ^ A. This type is incompatible with the expected param type of
-  1: class C<T> {
-             ^ T
+                ^ Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
+  References:
+    2:   a<A>(x:T, a:A) {
+                     ^ [1]: `A`
+    1: class C<T> {
+               ^ [2]: `T`
 
 Error: default_params.js:6
   6:     h(c); // err, T ~> U
-           ^ T. This type is incompatible with the expected param type of
-  3:     function h(d:U = b) {}
-                      ^ U
+           ^ Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
+  References:
+    2:   function g<U>(b:U, c:T = a) {
+                              ^ [1]: `T`
+    3:     function h(d:U = b) {}
+                        ^ [2]: `U`
 
 Error: default_params.js:10
  10:   g(0,0); // error: number ~> T
-           ^ number. This type is incompatible with the expected param type of
-  2:   function g<U>(b:U, c:T = a) {
-                            ^ T
+           ^ Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2].
+  References:
+   10:   g(0,0); // error: number ~> T
+             ^ [1]: number
+    2:   function g<U>(b:U, c:T = a) {
+                              ^ [2]: `T`
 
 Error: method_shadow.js:42
  42: g.m(true); // err, bool ~> number|string

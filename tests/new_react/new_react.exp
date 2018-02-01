@@ -590,9 +590,12 @@ Error: props4.js:18
 
 Error: props4.js:19
  19:   document.body
-       ^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
- 18:     container: Element,
-                    ^^^^^^^ Element. See lib: <BUILTINS>/react-dom.js:18
+       ^^^^^^^^^^^^^ Cannot call `ReactDOM.render` with `document.body` bound to `container` because null [1] is incompatible with `Element` [2].
+  References:
+  564:   body: HTMLElement | null;
+                             ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:564
+   18:     container: Element,
+                      ^^^^^^^ [2]: `Element`. See lib: <BUILTINS>/react-dom.js:18
 
 Error: state.js:19
  19:                 {this.state.bar.qux}

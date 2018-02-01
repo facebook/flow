@@ -54,15 +54,21 @@ Error: api.js:16
 
 Error: api.js:19
  19: s(Children.count(a)); // Error
-       ^^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
- 29: function s(x: string) {}
-                   ^^^^^^ string
+       ^^^^^^^^^^^^^^^^^ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is incompatible with string [2].
+  References:
+  236:     count(children: ChildrenArray<any>): number;
+                                                ^^^^^^ [1]: number. See lib: <BUILTINS>/react.js:236
+   29: function s(x: string) {}
+                     ^^^^^^ [2]: string
 
 Error: api.js:22
  22: s(Children.only(a)); // Error
-       ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
- 29: function s(x: string) {}
-                   ^^^^^^ string
+       ^^^^^^^^^^^^^^^^ Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ [1]: number
+   29: function s(x: string) {}
+                     ^^^^^^ [2]: string
 
 Error: api.js:25
  25: sa(Children.toArray(a)); // Error

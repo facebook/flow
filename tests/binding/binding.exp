@@ -455,9 +455,12 @@ Error: tdz.js:80
 
 Error: tdz.js:96
  96: f(a); // error: undefined ~/> number
-       ^ uninitialized variable. This type is incompatible with the expected param type of
- 94: function f(n: number) { return n; }
-                   ^^^^^^ number
+       ^ Cannot call `f` with `a` bound to `n` because uninitialized variable [1] is incompatible with number [2].
+  References:
+   92: var a: number;  // not an error per se - only if used before init
+           ^ [1]: uninitialized variable
+   94: function f(n: number) { return n; }
+                     ^^^^^^ [2]: number
 
 
 Found 71 errors

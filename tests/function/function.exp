@@ -13,27 +13,39 @@ Error: apply.js:12
 
 Error: apply.js:15
  15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
-                         ^^ string. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                         ^^ Cannot call `test.apply` with string bound to `b` because string [1] is incompatible with number [2].
+  References:
+   15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
+                           ^^ [1]: string
+    1: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: apply.js:16
  16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
-                     ^ number. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                     ^ Cannot call `test.apply` with number bound to `a` because number [1] is incompatible with string [2].
+  References:
+   16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
+                       ^ [1]: number
+    1: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: apply.js:21
  21: f(["", ""]); // error: string ~> number (2nd arg)
-            ^^ string. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+            ^^ Cannot call `test.apply` with string bound to `b` because string [1] is incompatible with number [2].
+  References:
+   21: f(["", ""]); // error: string ~> number (2nd arg)
+              ^^ [1]: string
+    1: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: apply.js:22
  22: f([0, 0]); // error: number ~> string (1st arg)
-        ^ number. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                      ^^^^^^ string
+        ^ Cannot call `test.apply` with number bound to `a` because number [1] is incompatible with string [2].
+  References:
+   22: f([0, 0]); // error: number ~> string (1st arg)
+          ^ [1]: number
+    1: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
@@ -55,39 +67,57 @@ Error: apply.js:32
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-                                ^^^ number. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                                ^^^ Cannot call `test.call.apply` with number bound to `a` because number [1] is incompatible with string [2].
+  References:
+   32: (test.call.apply(test, [0, 123, 'foo']): void);
+                                  ^^^ [1]: number
+    1: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-                                     ^^^^^ string. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                                     ^^^^^ Cannot call `test.call.apply` with string bound to `b` because string [1] is incompatible with number [2].
+  References:
+   32: (test.call.apply(test, [0, 123, 'foo']): void);
+                                       ^^^^^ [1]: string
+    1: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: apply.js:37
  37: (test.bind.apply(test, [0, 123]): (b: number) => number);
-                                ^^^ number. This type is incompatible with the expected param type of
-  1: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                                ^^^ Cannot call `test.bind.apply` with number bound to `a` because number [1] is incompatible with string [2].
+  References:
+   37: (test.bind.apply(test, [0, 123]): (b: number) => number);
+                                  ^^^ [1]: number
+    1: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: apply.js:47
  47:   x.apply(x, ['foo', 123]); // error, number !~> string
-                          ^^^ number. This type is incompatible with the expected param type of
- 45: function test3(x: { (a: string, b: string): void }) {
-                                        ^^^^^^ string
+                          ^^^ Cannot call `x.apply` with number bound to `b` because number [1] is incompatible with string [2].
+  References:
+   47:   x.apply(x, ['foo', 123]); // error, number !~> string
+                            ^^^ [1]: number
+   45: function test3(x: { (a: string, b: string): void }) {
+                                          ^^^^^^ [2]: string
 
 Error: bind.js:7
   7:     y(123); // error, number !~> string
-           ^^^ number. This type is incompatible with the expected param type of
-  4:   function(x: (a: string, b: string) => void) {
-                                  ^^^^^^ string
+           ^^^ Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
+  References:
+    7:     y(123); // error, number !~> string
+             ^^^ [1]: number
+    4:   function(x: (a: string, b: string) => void) {
+                                    ^^^^^^ [2]: string
 
 Error: bind.js:14
  14:     y(123); // error, number !~> string
-           ^^^ number. This type is incompatible with the expected param type of
- 11:   function(x: { (a: string, b: string): void }) {
-                                    ^^^^^^ string
+           ^^^ Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
+  References:
+   14:     y(123); // error, number !~> string
+             ^^^ [1]: number
+   11:   function(x: { (a: string, b: string): void }) {
+                                      ^^^^^^ [2]: string
 
 Error: bind.js:19
  19:     x.bind(x, 'foo'); // error
@@ -97,9 +127,12 @@ Error: bind.js:19
 
 Error: bind.js:25
  25:     (x.bind(123): void); // error, number !~> string
-                 ^^^ number. This type is incompatible with the expected param type of
- 23:   function(x: {(a: string, b: string): void, bind(a: string): void}) {
-                                                          ^^^^^^ string
+                 ^^^ Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2].
+  References:
+   25:     (x.bind(123): void); // error, number !~> string
+                   ^^^ [1]: number
+   23:   function(x: {(a: string, b: string): void, bind(a: string): void}) {
+                                                            ^^^^^^ [2]: string
 
 Error: call.js:4
   4:   return this.length; // expect []/"" this
@@ -116,45 +149,66 @@ Error: call.js:14
 
 Error: call.js:17
  17: test.call("", "", ""); // error: string ~> number (2nd arg)
-                       ^^ string. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                       ^^ Cannot call `test.call` with `""` bound to `b` because string [1] is incompatible with number [2].
+  References:
+   17: test.call("", "", ""); // error: string ~> number (2nd arg)
+                         ^^ [1]: string
+    3: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: call.js:18
  18: test.call("", 0, 0); // error: number ~> string (1st arg)
-                   ^ number. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                   ^ Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible with string [2].
+  References:
+   18: test.call("", 0, 0); // error: number ~> string (1st arg)
+                     ^ [1]: number
+    3: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
-                                      ^^^^^^^ number. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                                      ^^^^^^^ Cannot call `test.call` with `args[0]` bound to `a` because number [1] is incompatible with string [2].
+  References:
+   24: f([0, 0]); // error: number ~> string (1st arg)
+          ^ [1]: number
+    3: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
-                                               ^^^^^^^ string. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                                               ^^^^^^^ Cannot call `test.call` with `args[1]` bound to `b` because string [1] is incompatible with number [2].
+  References:
+   23: f(["", ""]); // error: string ~> number (2nd arg)
+              ^^ [1]: string
+    3: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
-                                ^ number. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                      ^^^^^^ string
+                                ^ Cannot call `test.apply.call` with number bound to `a` because number [1] is incompatible with string [2].
+  References:
+   30: (test.apply.call(test, 0, [0, 'foo']): number);
+                                  ^ [1]: number
+    3: function test(a: string, b: number): number {
+                        ^^^^^^ [2]: string
 
 Error: call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
-                                   ^^^^^ string. This type is incompatible with the expected param type of
-  3: function test(a: string, b: number): number {
-                                 ^^^^^^ number
+                                   ^^^^^ Cannot call `test.apply.call` with string bound to `b` because string [1] is incompatible with number [2].
+  References:
+   30: (test.apply.call(test, 0, [0, 'foo']): number);
+                                     ^^^^^ [1]: string
+    3: function test(a: string, b: number): number {
+                                   ^^^^^^ [2]: number
 
 Error: call.js:40
  40:   x.call(x, 'foo', 123); // error, number !~> string
-                        ^^^ number. This type is incompatible with the expected param type of
- 38: function test3(x: { (a: string, b: string): void }) {
-                                        ^^^^^^ string
+                        ^^^ Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible with string [2].
+  References:
+   40:   x.call(x, 'foo', 123); // error, number !~> string
+                          ^^^ [1]: number
+   38: function test3(x: { (a: string, b: string): void }) {
+                                          ^^^^^^ [2]: string
 
 Error: call.js:47
  47:     f({x: "foo"}); // error, "foo" !~> "bar"

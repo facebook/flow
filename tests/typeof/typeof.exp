@@ -55,11 +55,14 @@ Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                       ^^^ Map
 
-Error: union.js:9
-  9: (null: typeof x); // error: null ~> number|string
-      ^^^^ null. This type is incompatible with the expected param type of
-  9: (null: typeof x); // error: null ~> number|string
-            ^^^^^^^^ string
+Error: union.js:8
+  8: const x = f(42, 'foo');
+                     ^^^^^ Cannot call `f` with `'foo'` bound to `b` because null [1] is incompatible with string [2].
+  References:
+    9: (null: typeof x); // error: null ~> number|string
+        ^^^^ [1]: null
+    8: const x = f(42, 'foo');
+                       ^^^^^ [2]: string
 
 
 Found 8 errors

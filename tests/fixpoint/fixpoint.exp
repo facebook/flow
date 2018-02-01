@@ -8,21 +8,30 @@ Error: Fun.js:19
 
 Error: Fun.js:20
  20:       if (eq (n, 1)) { return 1; }
-                   ^ string. This type is incompatible with the expected param type of
-  4: function eq(x:number,y:number) { return true };
-                   ^^^^^^ number
+                   ^ Cannot call `eq` with `n` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   28: factorial("...");
+                 ^^^^^ [1]: string
+    4: function eq(x:number,y:number) { return true };
+                     ^^^^^^ [2]: number
 
 Error: Fun.js:21
  21:       return mul (factorial (sub (n, 1)), n);
-                                       ^ string. This type is incompatible with the expected param type of
-  5: function sub(x:number,y:number) { return 0; }
-                    ^^^^^^ number
+                                       ^ Cannot call `sub` with `n` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   28: factorial("...");
+                 ^^^^^ [1]: string
+    5: function sub(x:number,y:number) { return 0; }
+                      ^^^^^^ [2]: number
 
 Error: Fun.js:21
  21:       return mul (factorial (sub (n, 1)), n);
-                                               ^ string. This type is incompatible with the expected param type of
-  6: function mul(x:number,y:number) { return 0; }
-                             ^^^^^^ number
+                                               ^ Cannot call `mul` with `n` bound to `y` because string [1] is incompatible with number [2].
+  References:
+   28: factorial("...");
+                 ^^^^^ [1]: string
+    6: function mul(x:number,y:number) { return 0; }
+                               ^^^^^^ [2]: number
 
 Error: Ycombinator.js:4
   4: function Y(f) {
@@ -39,9 +48,12 @@ Error: Ycombinator.js:10
 
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
-                                                  ^ number. This type is incompatible with the expected param type of
- 14:   function fix_f(x:string):string { return f(x); }
-                        ^^^^^^ string
+                                                  ^ Cannot call `f` with `x` bound to `x` because number [1] is incompatible with string [2].
+  References:
+   10:   function fix_f(x:number):number { return f(x); }
+                          ^^^^^^ [1]: number
+   14:   function fix_f(x:string):string { return f(x); }
+                          ^^^^^^ [2]: string
 
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }
@@ -54,9 +66,12 @@ Error: Ycombinator.js:14
 
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }
-                                                  ^ string. This type is incompatible with the expected param type of
- 10:   function fix_f(x:number):number { return f(x); }
-                        ^^^^^^ number
+                                                  ^ Cannot call `f` with `x` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   14:   function fix_f(x:string):string { return f(x); }
+                          ^^^^^^ [1]: string
+   10:   function fix_f(x:number):number { return f(x); }
+                          ^^^^^^ [2]: number
 
 
 Found 10 errors

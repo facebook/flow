@@ -9,9 +9,12 @@ Error: A.js:8
 
 Error: A.js:13
  13:   return f("hello");
-                ^^^^^^^ string. This type is incompatible with the expected param type of
- 12: function c(f: { (x: number): number }): number {
-                         ^^^^^^ number
+                ^^^^^^^ Cannot call `f` with `"hello"` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   13:   return f("hello");
+                  ^^^^^^^ [1]: string
+   12: function c(f: { (x: number): number }): number {
+                           ^^^^^^ [2]: number
 
 Error: A.js:18
  18:   return f();

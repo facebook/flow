@@ -163,9 +163,12 @@ Error: tvar3.js:22
 
 Error: tvar3.js:22
  22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-          ^ A. This type is incompatible with the expected param type of
- 22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
-                 ^ B
+          ^ Cannot call `fn3` with `a` bound to `x` because `A` [1] is incompatible with `B` [2].
+  References:
+    6: declare var a: A;
+                      ^ [1]: `A`
+   22: (fn3(a, (b: B) => {}): C); // Error: A ~> C and A ~> B. Not B ~> C!
+                   ^ [2]: `B`
 
 Error: tvar3.js:23
  23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
@@ -178,9 +181,12 @@ Error: tvar3.js:23
 
 Error: tvar3.js:23
  23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
-          ^ A. This type is incompatible with the expected param type of
- 23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
-                 ^ B
+          ^ Cannot call `fn4` with `a` bound to `x` because `A` [1] is incompatible with `B` [2].
+  References:
+    6: declare var a: A;
+                      ^ [1]: `A`
+   23: (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
+                   ^ [2]: `B`
 
 Error: tvar3.js:25
  25: (fn5(a): B); // Error: A ~> B
@@ -211,9 +217,12 @@ Error: tvar3.js:27
 
 Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-          ^ A. This type is incompatible with the expected param type of
- 27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
-                 ^ B
+          ^ Cannot call `fn7` with `a` bound to `x` because `A` [1] is incompatible with `B` [2].
+  References:
+    6: declare var a: A;
+                      ^ [1]: `A`
+   27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
+                   ^ [2]: `B`
 
 Error: tvar3.js:27
  27: (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
@@ -235,9 +244,12 @@ Error: tvar3.js:28
 
 Error: tvar3.js:28
  28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
-          ^ A. This type is incompatible with the expected param type of
- 28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
-                 ^ B
+          ^ Cannot call `fn8` with `a` bound to `x` because `A` [1] is incompatible with `B` [2].
+  References:
+    6: declare var a: A;
+                      ^ [1]: `A`
+   28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
+                   ^ [2]: `B`
 
 Error: tvar3.js:28
  28: (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
@@ -284,15 +296,21 @@ Error: tvar4.js:38
 
 Error: tvar4.js:43
  43:   return p => a({p});
-                     ^^^ object literal. This type is incompatible with the expected param type of
- 40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
-                                    ^ T
+                     ^^^ Cannot call `a` with object literal bound to the first parameter because object literal [1] is incompatible with `T` [2].
+  References:
+   43:   return p => a({p});
+                       ^^^ [1]: object literal
+   40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
+                                      ^ [2]: `T`
 
 Error: tvar4.js:47
  47: fn4((x: {p: string}) => {})(42);
-                                 ^^ number. This type is incompatible with the expected param type of
- 40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ string
+                                 ^^ Cannot call `fn4(...)` with `42` bound to the first parameter because number [1] is incompatible with string [2].
+  References:
+   47: fn4((x: {p: string}) => {})(42);
+                                   ^^ [1]: number
+   47: fn4((x: {p: string}) => {})(42);
+                   ^^^^^^ [2]: string
 
 Error: tvar4.js:51
  51: fn4((x: {}) => {})(42);

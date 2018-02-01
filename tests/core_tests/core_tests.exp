@@ -54,9 +54,12 @@ Error: map.js:29
 
 Error: map.js:30
  30:     x.get(123); // error, wrong key type
-               ^^^ number. This type is incompatible with the expected param type of
- 28:   function(x: Map<string, number>) {
-                       ^^^^^^ string
+               ^^^ Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2].
+  References:
+   30:     x.get(123); // error, wrong key type
+                 ^^^ [1]: number
+   28:   function(x: Map<string, number>) {
+                         ^^^^^^ [2]: string
 
 Error: regexp.js:26
  26:     RegExp('foo', 'z'); // error

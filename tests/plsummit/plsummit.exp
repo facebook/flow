@@ -9,9 +9,12 @@ Error: generics.js:4
 
 Error: import_class.js:3
   3: var c = new C("");
-                   ^^ string. This type is incompatible with the expected param type of
-  3:     constructor(x: number) { this.x = x; }
-                        ^^^^^^ number. See: export_class.js:3
+                   ^^ Cannot call `C` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    3: var c = new C("");
+                     ^^ [1]: string
+    3:     constructor(x: number) { this.x = x; }
+                          ^^^^^^ [2]: number. See: export_class.js:3
 
 Error: objects.js:5
   5: var x: string = c.foo();

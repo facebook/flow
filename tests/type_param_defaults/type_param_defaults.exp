@@ -45,9 +45,12 @@ Error: classes.js:27
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
-                                     ^^^ number. This type is incompatible with the expected param type of
- 25: class C<T: ?string = string> extends A<T> {}
-                 ^^^^^^ string
+                                     ^^^ Cannot call `C` with `123` bound to `p` because number [1] is incompatible with string [2].
+  References:
+   27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                                       ^^^ [1]: number
+   25: class C<T: ?string = string> extends A<T> {}
+                   ^^^^^^ [2]: string
 
 Error: classes.js:32
  32: (c_void.p: boolean); // Error void ~> boolean
@@ -175,9 +178,12 @@ Error: classes.js:62
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
-                                     ^^^ number. This type is incompatible with the expected param type of
- 60: class I<T: ?string = *> extends A<T> {}
-                 ^^^^^^ string
+                                     ^^^ Cannot call `I` with `123` bound to `p` because number [1] is incompatible with string [2].
+  References:
+   62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                                       ^^^ [1]: number
+   60: class I<T: ?string = *> extends A<T> {}
+                   ^^^^^^ [2]: string
 
 
 Found 22 errors

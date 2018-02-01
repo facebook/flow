@@ -9,9 +9,12 @@ Error: test.js:3
 
 Error: test.js:3
   3: N.x = M(N.x);
-             ^^^ number. This type is incompatible with the expected param type of
-  2:     declare module.exports: (x: string) => string;
-                                     ^^^^^^ string. See lib: lib/lib.js:2
+             ^^^ Cannot call `M` with `N.x` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    5:     declare var x: number;
+                          ^^^^^^ [1]: number. See lib: lib/lib.js:5
+    2:     declare module.exports: (x: string) => string;
+                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 Error: test.js:5
   5: N.y = P(N.y);
@@ -24,9 +27,12 @@ Error: test.js:5
 
 Error: test.js:5
   5: N.y = P(N.y);
-             ^^^ number. This type is incompatible with the expected param type of
-  2:     declare module.exports: (x: string) => string;
-                                     ^^^^^^ string. See lib: lib/lib.js:2
+             ^^^ Cannot call `P` with `N.y` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    6:     declare var y: number;
+                          ^^^^^^ [1]: number. See lib: lib/lib.js:6
+    2:     declare module.exports: (x: string) => string;
+                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 Error: test.js:7
   7: N.z = Q(N.z);
@@ -39,9 +45,12 @@ Error: test.js:7
 
 Error: test.js:7
   7: N.z = Q(N.z);
-             ^^^ number. This type is incompatible with the expected param type of
-  2:     declare module.exports: (x: string) => string;
-                                     ^^^^^^ string. See lib: lib/lib.js:2
+             ^^^ Cannot call `Q` with `N.z` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    7:     declare var z: number;
+                          ^^^^^^ [1]: number. See lib: lib/lib.js:7
+    2:     declare module.exports: (x: string) => string;
+                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 
 Found 6 errors

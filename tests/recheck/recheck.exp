@@ -11,17 +11,23 @@ Error: a1.js:3
 
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): string { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    5: module.exports = foo("");
+                            ^^ [1]: string
+    3: function foo(x: number): string { return 5; }
+                       ^^^^^^ [2]: number. See: a1.js:3
 
 
 Found 2 errors
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    5: module.exports = foo("");
+                            ^^ [1]: string
+    3: function foo(x: number): number { return 5; }
+                       ^^^^^^ [2]: number. See: a1.js:3
 
 Error: a3.js:5
   5: (five + five: string);
@@ -36,15 +42,21 @@ Error: a3.js:5
 Found 2 errors
 Error: a1.js:5
   5: foo("");
-         ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number
+         ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    5: foo("");
+           ^^ [1]: string
+    3: function foo(x: number): number { return 5; }
+                       ^^^^^^ [2]: number
 
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    5: module.exports = foo("");
+                            ^^ [1]: string
+    3: function foo(x: number): number { return 5; }
+                       ^^^^^^ [2]: number. See: a1.js:3
 
 Error: a3.js:5
   5: (five + five: string);

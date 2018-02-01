@@ -160,15 +160,21 @@ Error: object_prototype.js:49
 
 Error: object_prototype.js:51
  51: (123).toString('foo'); // error
-                    ^^^^^ string. This type is incompatible with the expected param type of
-144:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:144
+                    ^^^^^ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is incompatible with number [2].
+  References:
+   51: (123).toString('foo'); // error
+                      ^^^^^ [1]: string
+  144:     toString(radix?: number): string;
+                            ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:144
 
 Error: object_prototype.js:52
  52: (123).toString(null); // error
-                    ^^^^ null. This type is incompatible with the expected param type of
-144:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:144
+                    ^^^^ Cannot call `123.toString` with `null` bound to `radix` because null [1] is incompatible with number [2].
+  References:
+   52: (123).toString(null); // error
+                      ^^^^ [1]: null
+  144:     toString(radix?: number): string;
+                            ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:144
 
 Error: object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };

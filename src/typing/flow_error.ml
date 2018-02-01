@@ -77,7 +77,6 @@ type error_message =
     }
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason)
-  | EFunCallParam of reason * reason * int
   | EAdditionMixed of reason
   | EComparison of (reason * reason)
   | ETupleArityMismatch of (reason * reason) * int * int * use_op
@@ -310,7 +309,6 @@ let util_use_op_of_msg nope util = function
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
 | EPrivateLookupFailed (_, _)
-| EFunCallParam (_, _, _)
 | EAdditionMixed (_)
 | EComparison (_, _)
 | ENonLitArrayToTuple (_, _)
@@ -392,9 +390,22 @@ let score_of_use_op =
   fold_use_op
     (fun _ -> 0)
     (fun acc frame -> acc + (match frame with
-      (* See our comment above EFunCallParam in score_of_msg for why we do this.
-       * In short, n gives us some information into how much successful type
-       * checking Flow was able to do before erroring.
+      (* Later params that error get a higher score. This roughly represents how
+       * much type-checking work Flow successfully completed before erroring.
+       * Useful for basically only overloaded function error messages.
+       *
+       * The signal that this gives us is that we successfully type checked n
+       * params in the call before erroring. If there was no error, Flow may
+       * have gone to successfully check another m params. However, we will
+       * never know that. n is our best approximation. It rewards errors near
+       * the end of a call and punishes (slightly) errors near the beginning of
+       * a call.
+       *
+       * This, however, turns out to be consistent with code style in modern
+       * JavaScript. As an unspoken convention, more complex arguments usually
+       * go last. For overloaded functions, the switching generally happens on
+       * the first argument. The "tag". This gives us confidence that n on
+       * FunParam is a good heuristic for the score.
        *
        * FunRestParam is FunParam, but at the end. So give it a larger score
        * then FunParam after adding n. *)
@@ -460,24 +471,6 @@ let score_of_msg msg =
   | EPropNotFound (_, Frame (PropertyCompatibility _, _))
   | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _)))
     -> -frame_score
-  (* In Flow_js we catch FunParam(FunCall) use_ops and turn them into
-   * EFunCallParam. Re-create the score we add for FunParams here. Later params
-   * that error get a higher score. Useful for basically only overloaded
-   * function error messages.
-   *
-   * The signal that this gives us is that we successfully type checked n params
-   * in the call before erroring. If there was no error, Flow may have gone to
-   * successfully check another m params. However, we will never know that. n is
-   * our best approximation. It rewards errors near the end of a call and
-   * punishes (slightly) errors near the beginning of a call.
-   *
-   * This, however, turns out to be consistent with code style in modern
-   * JavaScript. As an unspoken convention, more complex arguments usually go
-   * last. For overloaded functions, the switching generally happens on the
-   * first argument. The "tag". This gives us confidence that n on EFunCallParam
-   * is a good heuristic for the score. *)
-  | EFunCallParam (_, _, n)
-    -> frame_score + n
   | _
     -> 0
   in
@@ -490,7 +483,6 @@ let score_of_msg msg =
     let reasons = match msg with
     | EIncompatibleDefs {reason_lower=rl; reason_upper=ru; extras=[]}
     | EIncompatibleWithUseOp (rl, ru, _)
-    | EFunCallParam (rl, ru, _)
     | EIncompatibleWithExact ((rl, ru), _)
       -> Some (rl, ru)
     | _
@@ -1413,30 +1405,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
   | EPrivateLookupFailed reasons ->
       typecheck_error "Property not found in" reasons
-
-  | EFunCallParam (lreason, ureason, _) ->
-      (* Special case: if the lower bound is from a libdef, then flip
-         the message and the reasons, so we point at something in user code.
-
-         For example, consider a libdef like:
-
-           declare function foo(): Promise<string>
-
-         and user code like:
-
-           let callback = (x: number) => ...;
-           foo().then(callback)
-
-         The user's `callback` gets "called" with a `string` arg. `lreason` is
-         the `string` from `Promise<string>` in the libdef, and `ureason` is
-         `number` inside `callback`. *)
-      let r1, r2, msg = if is_lib_reason lreason then
-        ureason, lreason, "This type is incompatible with an argument type of"
-      else
-        lreason, ureason,
-          "This type is incompatible with the expected param type of"
-      in
-      typecheck_error msg (r1, r2)
 
   | EAdditionMixed reason ->
       mk_error ~trace_infos [mk_info reason [

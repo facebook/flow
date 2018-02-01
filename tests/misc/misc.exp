@@ -9,9 +9,12 @@ Error: A.js:13
 
 Error: A.js:14
  14: f(A.x); // A.x is now a string, by def assign
-       ^^^ string. This type is incompatible with the expected param type of
-  9: function f(x:boolean) { }
-                  ^^^^^^^ boolean
+       ^^^ Cannot call `f` with `A.x` bound to `x` because string [1] is incompatible with boolean [2].
+  References:
+   12: A.y = "?";
+             ^^^ [1]: string
+    9: function f(x:boolean) { }
+                    ^^^^^^^ [2]: boolean
 
 Error: C.js:9
   9:   f(o.b);
@@ -21,9 +24,12 @@ Error: C.js:9
 
 Error: C.js:10
  10:   f(o.s);
-         ^^^ number. This type is incompatible with the expected param type of
-  9: function f(x:boolean) { }
-                  ^^^^^^^ boolean. See: A.js:9
+         ^^^ Cannot call `f` with `o.s` bound to `x` because number [1] is incompatible with boolean [2].
+  References:
+   12: B.prototype.s = 0;
+                       ^ [1]: number. See: B.js:12
+    9: function f(x:boolean) { }
+                    ^^^^^^^ [2]: boolean. See: A.js:9
 
 Error: D.js:6
   6: function g():string { return this.i; }
@@ -36,15 +42,21 @@ Error: D.js:6
 
 Error: D.js:12
  12: f(i);
-       ^ string. This type is incompatible with the expected param type of
-  9: function f(x:boolean) { }
-                  ^^^^^^^ boolean. See: A.js:9
+       ^ Cannot call `f` with `i` bound to `x` because string [1] is incompatible with boolean [2].
+  References:
+    6: function g():string { return this.i; }
+                    ^^^^^^ [1]: string
+    9: function f(x:boolean) { }
+                    ^^^^^^^ [2]: boolean. See: A.js:9
 
 Error: E.js:8
   8: o.fn(false);
-          ^^^^^ boolean. This type is incompatible with the expected param type of
-  4: function h(x:number) { }
-                  ^^^^^^ number
+          ^^^^^ Cannot call `o.fn` with `false` bound to `x` because boolean [1] is incompatible with number [2].
+  References:
+    8: o.fn(false);
+            ^^^^^ [1]: boolean
+    4: function h(x:number) { }
+                    ^^^^^^ [2]: number
 
 Error: F.js:1
   1: function fn2(x) { return x.length * 4; }

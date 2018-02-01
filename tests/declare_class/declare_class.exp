@@ -21,9 +21,12 @@ Error: declare_class.js:8
 
 Error: declare_class.js:9
   9: C.foo("");
-           ^^ string. This type is incompatible with the expected param type of
-  3:     static foo(x: number): void;
-                       ^^^^^^ number
+           ^^ Cannot call `C.foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    9: C.foo("");
+             ^^ [1]: string
+    3:     static foo(x: number): void;
+                         ^^^^^^ [2]: number
 
 Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
@@ -36,9 +39,12 @@ Error: declare_class.js:12
 
 Error: declare_class.js:15
  15: new D(123); // error, number ~> string
-           ^^^ number. This type is incompatible with the expected param type of
-  5:     constructor(x: string): void;
-                        ^^^^^^ string
+           ^^^ Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2].
+  References:
+   15: new D(123); // error, number ~> string
+             ^^^ [1]: number
+    5:     constructor(x: string): void;
+                          ^^^^^^ [2]: string
 
 
 Found 5 errors

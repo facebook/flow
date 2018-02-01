@@ -1,8 +1,11 @@
 Error: issue-1462-i.js:21
  21:   print(val.foo);  // <--- foo could be an array
-             ^^^^^^^ array type. This type is incompatible with the expected param type of
- 16: function print(x: number) {
-                       ^^^^^^ number
+             ^^^^^^^ Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
+  References:
+   11:   foo: Array<number>
+              ^^^^^^^^^^^^^ [1]: array type
+   16: function print(x: number) {
+                         ^^^^^^ [2]: number
 
 Error: issue-824.js:21
  21:     return this.foo(p);
@@ -313,9 +316,12 @@ Error: test22.js:20
 
 Error: test26.js:20
  20: new Record().set('foo', "42");
-                             ^^^^ string. This type is incompatible with the expected param type of
- 16:   set(x: 'foo', y: number): void;
-                        ^^^^^^ number
+                             ^^^^ Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is incompatible with number [2].
+  References:
+   20: new Record().set('foo', "42");
+                               ^^^^ [1]: string
+   16:   set(x: 'foo', y: number): void;
+                          ^^^^^^ [2]: number
 
 Error: test33.js:7
   7: foo(bar); // error: ambiguous speculation

@@ -416,21 +416,30 @@ Error: object_types.js:73
 
 Error: object_types.js:79
  79: magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
-                ^^^^^^^^^^ string. This type is incompatible with the expected param type of
- 64: function magicTrick(suite: SuiteEnum) {
-                                ^^^^^^^^^ string enum
+                ^^^^^^^^^^ Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with string enum [2].
+  References:
+   79: magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
+                  ^^^^^^^^^^ [1]: string
+   64: function magicTrick(suite: SuiteEnum) {
+                                  ^^^^^^^^^ [2]: string enum
 
 Error: object_types.js:80
  80: magicTrick('Magic'); // Error: 'Magic' is not a value.
-                ^^^^^^^ string. This type is incompatible with the expected param type of
- 64: function magicTrick(suite: SuiteEnum) {
-                                ^^^^^^^^^ string enum
+                ^^^^^^^ Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with string enum [2].
+  References:
+   80: magicTrick('Magic'); // Error: 'Magic' is not a value.
+                  ^^^^^^^ [1]: string
+   64: function magicTrick(suite: SuiteEnum) {
+                                  ^^^^^^^^^ [2]: string enum
 
 Error: object_types.js:81
  81: magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
-                             ^^^^^^ string. This type is incompatible with the expected param type of
- 64: function magicTrick(suite: SuiteEnum) {
-                                ^^^^^^^^^ string enum
+                             ^^^^^^ Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with string enum [2].
+  References:
+   81: magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
+                               ^^^^^^ [1]: string
+   64: function magicTrick(suite: SuiteEnum) {
+                                  ^^^^^^^^^ [2]: string enum
 
 Error: object_types.js:95
  95: ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.

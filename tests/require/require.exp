@@ -1,14 +1,20 @@
 Error: require.js:9
   9: takesAString(A.numberValue);
-                  ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
-  4: function takesAString(str: string): void {}
-                                ^^^^^^ string
+                  ^^^^^^^^^^^^^ Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
+  References:
+    6: exports.numberValue = 42;
+                             ^^ [1]: number. See: ProvidesModuleA.js:6
+    4: function takesAString(str: string): void {}
+                                  ^^^^^^ [2]: string
 
 Error: require.js:14
  14: takesAString(B.numberValue);
-                  ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
-  4: function takesAString(str: string): void {}
-                                ^^^^^^ string
+                  ^^^^^^^^^^^^^ Cannot call `takesAString` with `B.numberValue` bound to `str` because number [1] is incompatible with string [2].
+  References:
+    3: exports.numberValue = 42;
+                             ^^ [1]: number. See: B.js:3
+    4: function takesAString(str: string): void {}
+                                  ^^^^^^ [2]: string
 
 Error: require.js:17
  17: require("C");

@@ -1,8 +1,11 @@
 Error: Arrays.js:10
  10: foo(a[1]);
-         ^^^^ number. This type is incompatible with the expected param type of
-  4: function foo(x:string) { }
-                    ^^^^^^ string
+         ^^^^ Cannot call `foo` with `a[1]` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    7: a[0] = 1;
+              ^ [1]: number
+    4: function foo(x:string) { }
+                      ^^^^^^ [2]: string
 
 Error: numeric_elem.js:7
   7: (arr[day]: string); // error: number ~> string

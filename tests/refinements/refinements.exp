@@ -305,9 +305,12 @@ Error: missing-property-cond.js:65
 
 Error: mixed.js:8
   8:     takesString(x); // error
-                     ^ number. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    6: function num(x: mixed) {
+                       ^^^^^ [1]: number
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:9
   9:     (!x: false); // error: we don't know the truthiness of x
@@ -317,9 +320,12 @@ Error: mixed.js:9
 
 Error: mixed.js:21
  21:     takesNumber(x); // error
-                     ^ string. This type is incompatible with the expected param type of
-  3: function takesNumber(x: number) {}
-                             ^^^^^^ number
+                     ^ Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   19: function str(x: mixed) {
+                       ^^^^^ [1]: string
+    3: function takesNumber(x: number) {}
+                               ^^^^^^ [2]: number
 
 Error: mixed.js:22
  22:     (!x: false); // error: we don't know the truthiness of x
@@ -329,9 +335,12 @@ Error: mixed.js:22
 
 Error: mixed.js:34
  34:     takesString(x); // error
-                     ^ boolean. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2].
+  References:
+   32: function bool(x: mixed) {
+                        ^^^^^ [1]: boolean
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:35
  35:     (x: true); // error: we don't know the truthiness of x
@@ -341,63 +350,93 @@ Error: mixed.js:35
 
 Error: mixed.js:47
  47:     takesString(x); // error
-                     ^ function. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because function [1] is incompatible with string [2].
+  References:
+   45: function fun(x: mixed) {
+                       ^^^^^ [1]: function
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:53
  53:     takesString(x); // error
-                     ^ null. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
+  References:
+   51: function obj0(x: mixed) {
+                        ^^^^^ [1]: null
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:53
  53:     takesString(x); // error
-                     ^ object. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because object [1] is incompatible with string [2].
+  References:
+   51: function obj0(x: mixed) {
+                        ^^^^^ [1]: object
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:59
  59:     takesString(x); // error
-                     ^ array. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because array [1] is incompatible with string [2].
+  References:
+   57: function obj1(x: mixed) {
+                        ^^^^^ [1]: array
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:65
  65:     takesString(x); // error
-                     ^ undefined. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+  References:
+   63: function undef(x: mixed) {
+                         ^^^^^ [1]: undefined
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:71
  71:     takesString(x); // error
-                     ^ null. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
+  References:
+   69: function null_(x: mixed) {
+                         ^^^^^ [1]: null
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:77
  77:     takesString(x); // error
-                     ^ null. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
+  References:
+   75: function maybe(x: mixed) {
+                         ^^^^^ [1]: null
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:77
  77:     takesString(x); // error
-                     ^ undefined. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+  References:
+   75: function maybe(x: mixed) {
+                         ^^^^^ [1]: undefined
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:83
  83:     takesString(x); // error
-                     ^ boolean literal `true`. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because boolean literal `true` [1] is incompatible with string [2].
+  References:
+   81: function true_(x: mixed) {
+                         ^^^^^ [1]: boolean literal `true`
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:89
  89:     takesString(x); // error
-                     ^ boolean literal `false`. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^ Cannot call `takesString` with `x` bound to `x` because boolean literal `false` [1] is incompatible with string [2].
+  References:
+   87: function false_(x: mixed) {
+                          ^^^^^ [1]: boolean literal `false`
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: mixed.js:97
  97:       (x['foo']: string); // error, mixed
@@ -410,9 +449,12 @@ Error: mixed.js:97
 
 Error: mixed.js:119
 119:     takesString(x[0]); // error
-                     ^^^^ mixed. This type is incompatible with the expected param type of
-  4: function takesString(x: string) {}
-                             ^^^^^^ string
+                     ^^^^ Cannot call `takesString` with `x[0]` bound to `x` because mixed [1] is incompatible with string [2].
+  References:
+  117: function arr0(x: mixed) {
+                        ^^^^^ [1]: mixed
+    4: function takesString(x: string) {}
+                               ^^^^^^ [2]: string
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)

@@ -1,8 +1,11 @@
 Error: buffer/buffer.js:57
  57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
-110:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
-                          ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/node.js:110
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `Buffer.from` with array literal bound to `value` because array literal [1] is incompatible with `ArrayBuffer` [2].
+  References:
+   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: array literal
+  110:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
+                            ^^^^^^^^^^^ [2]: `ArrayBuffer`. See lib: <BUILTINS>/node.js:110
 
 Error: child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
@@ -51,19 +54,25 @@ Error: crypto/crypto.js:16
 
 Error: crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
-                            ^^^^^^^ string. This type is incompatible with the expected param type of
-                                                      v----------------------------
-441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-442:   'binary'): crypto$Hmac;
-       -------^ string enum. See lib: <BUILTINS>/node.js:441
+                            ^^^^^^^ Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with string enum [2].
+  References:
+   26:     hmac.update('foo', 'bogus'); // 1 error
+                              ^^^^^^^ [1]: string
+                                                        v----------------------------
+  441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+  442:   'binary'): crypto$Hmac;
+         -------^ [2]: string enum. See lib: <BUILTINS>/node.js:441
 
 Error: crypto/crypto.js:29
  29:     hmac.update(buf, 'bogus'); // 1 error
-                          ^^^^^^^ string. This type is incompatible with the expected param type of
-                                                      v----------------------------
-441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-442:   'binary'): crypto$Hmac;
-       -------^ string enum. See lib: <BUILTINS>/node.js:441
+                          ^^^^^^^ Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with string enum [2].
+  References:
+   29:     hmac.update(buf, 'bogus'); // 1 error
+                            ^^^^^^^ [1]: string
+                                                        v----------------------------
+  441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+  442:   'binary'): crypto$Hmac;
+         -------^ [2]: string enum. See lib: <BUILTINS>/node.js:441
 
 Error: crypto/crypto.js:36
  36:     (hmac.digest('hex'): void); // 1 error
@@ -173,15 +182,21 @@ Error: http/server.js:68
 
 Error: http/server.js:69
  69: server.listen({}, () => {}, 'localhost', 123);
-                   ^^ object literal. This type is incompatible with the expected param type of
-1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                        ^^^^^^ number. See lib: <BUILTINS>/node.js:1093
+                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
+  References:
+   69: server.listen({}, () => {}, 'localhost', 123);
+                     ^^ [1]: object literal
+  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:70
  70: server.listen({}, function() {}, 'localhost', 123);
-                   ^^ object literal. This type is incompatible with the expected param type of
-1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                        ^^^^^^ number. See lib: <BUILTINS>/node.js:1093
+                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
+  References:
+   70: server.listen({}, function() {}, 'localhost', 123);
+                     ^^ [1]: object literal
+  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -245,15 +260,21 @@ Error: http/server.js:72
 
 Error: http/server.js:73
  73: server.listen(() => {}, 123);
-                             ^^^ number. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+                             ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
+  References:
+   73: server.listen(() => {}, 123);
+                               ^^^ [1]: number
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:74
  74: server.listen(function() {}, 123);
-                                  ^^^ number. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+                                  ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
+  References:
+   74: server.listen(function() {}, 123);
+                                    ^^^ [1]: number
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:75
  75: server.listen(() => {}, 'localhost', 123);
@@ -317,27 +338,39 @@ Error: http/server.js:76
 
 Error: http/server.js:77
  77: server.listen(() => {}, 'localhost');
-                             ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+                             ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
+  References:
+   77: server.listen(() => {}, 'localhost');
+                               ^^^^^^^^^^^ [1]: string
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:78
  78: server.listen(function() {}, 'localhost');
-                                  ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
+                                  ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
+  References:
+   78: server.listen(function() {}, 'localhost');
+                                    ^^^^^^^^^^^ [1]: string
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:79
  79: server.listen(8080, () => {}, 'localhost', 123);
-                         ^^^^^^^^ function. This type is incompatible with the expected param type of
-1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                           ^^^^^^ string. See lib: <BUILTINS>/node.js:1093
+                         ^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
+  References:
+   79: server.listen(8080, () => {}, 'localhost', 123);
+                           ^^^^^^^^ [1]: function
+  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:80
  80: server.listen(8080, function() {}, 'localhost', 123);
-                         ^^^^^^^^^^ function. This type is incompatible with the expected param type of
-1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                           ^^^^^^ string. See lib: <BUILTINS>/node.js:1093
+                         ^^^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
+  References:
+   80: server.listen(8080, function() {}, 'localhost', 123);
+                           ^^^^^^^^^^ [1]: function
+  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:81
  81: server.listen(8080, () => {}, 123);
@@ -483,15 +516,21 @@ Error: https/server.js:68
 
 Error: https/server.js:69
  69: server.listen({}, () => {}, 'localhost', 123);
-                   ^^ object literal. This type is incompatible with the expected param type of
-1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                        ^^^^^^ number. See lib: <BUILTINS>/node.js:1132
+                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
+  References:
+   69: server.listen({}, () => {}, 'localhost', 123);
+                     ^^ [1]: object literal
+  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:70
  70: server.listen({}, function() {}, 'localhost', 123);
-                   ^^ object literal. This type is incompatible with the expected param type of
-1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                        ^^^^^^ number. See lib: <BUILTINS>/node.js:1132
+                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
+  References:
+   70: server.listen({}, function() {}, 'localhost', 123);
+                     ^^ [1]: object literal
+  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -555,15 +594,21 @@ Error: https/server.js:72
 
 Error: https/server.js:73
  73: server.listen(() => {}, 123);
-                             ^^^ number. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
+                             ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
+  References:
+   73: server.listen(() => {}, 123);
+                               ^^^ [1]: number
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:74
  74: server.listen(function() {}, 123);
-                                  ^^^ number. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
+                                  ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
+  References:
+   74: server.listen(function() {}, 123);
+                                    ^^^ [1]: number
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:75
  75: server.listen(() => {}, 'localhost', 123);
@@ -627,27 +672,39 @@ Error: https/server.js:76
 
 Error: https/server.js:77
  77: server.listen(() => {}, 'localhost');
-                             ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
+                             ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
+  References:
+   77: server.listen(() => {}, 'localhost');
+                               ^^^^^^^^^^^ [1]: string
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:78
  78: server.listen(function() {}, 'localhost');
-                                  ^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
+                                  ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
+  References:
+   78: server.listen(function() {}, 'localhost');
+                                    ^^^^^^^^^^^ [1]: string
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:79
  79: server.listen(8443, () => {}, 'localhost', 123);
-                         ^^^^^^^^ function. This type is incompatible with the expected param type of
-1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                           ^^^^^^ string. See lib: <BUILTINS>/node.js:1132
+                         ^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
+  References:
+   79: server.listen(8443, () => {}, 'localhost', 123);
+                           ^^^^^^^^ [1]: function
+  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:80
  80: server.listen(8443, function() {}, 'localhost', 123);
-                         ^^^^^^^^^^ function. This type is incompatible with the expected param type of
-1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                           ^^^^^^ string. See lib: <BUILTINS>/node.js:1132
+                         ^^^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
+  References:
+   80: server.listen(8443, function() {}, 'localhost', 123);
+                           ^^^^^^^^^^ [1]: function
+  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
+                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:81
  81: server.listen(8443, () => {}, 123);

@@ -6188,10 +6188,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         use_op;
       })
 
-    | _, UseT (Frame (FunParam {n; _}, Op (FunCall _ | FunCallMethod _)), u) ->
-      add_output cx ~trace
-        (FlowError.EFunCallParam (reason_of_t l, reason_of_t u, n))
-
     | _, UseT (use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op

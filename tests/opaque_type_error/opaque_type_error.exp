@@ -18,9 +18,12 @@ Error: importtest.js:10
 
 Error: importtest.js:14
  14:     return Test.hide(x); // Error: ID ~> number
-                          ^ ID. This type is incompatible with the expected param type of
- 12: export function hide(x: number) : ID {
-                             ^^^^^^ number. See: test.js:12
+                          ^ Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2].
+  References:
+   13: function bad2(x: ID) : ID {
+                        ^^ [1]: `ID`
+   12: export function hide(x: number) : ID {
+                               ^^^^^^ [2]: number. See: test.js:12
 
 Error: importtest.js:18
  18:     return x; // Error: ID ~> ID2

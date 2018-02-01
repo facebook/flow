@@ -1,8 +1,8 @@
 
 Stop any already-running server.
 Full check shows the two unused suppressions:
-Warning: dependency.js:6
-  6: // $FlowFixMe - Unused suppression
+Warning: dependency.js:5
+  5: // $FlowFixMe - Unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 Warning: focused.js:7
@@ -13,8 +13,8 @@ Warning: focused.js:7
 Found 2 warnings
 
 Full focus-check shows the two unused suppressions:
-Warning: dependency.js:6
-  6: // $FlowFixMe - Unused suppression
+Warning: dependency.js:5
+  5: // $FlowFixMe - Unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 Warning: focused.js:7
@@ -36,8 +36,8 @@ Focused check on unrelated.js doesn't show any unused suppressions
 Found 0 errors
 
 Focused check on dependency.js shows the two unused suppressions
-Warning: dependency.js:6
-  6: // $FlowFixMe - Unused suppression
+Warning: dependency.js:5
+  5: // $FlowFixMe - Unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 Warning: focused.js:7

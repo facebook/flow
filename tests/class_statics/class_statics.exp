@@ -37,9 +37,12 @@ Error: test.js:13
 
 Error: test.js:15
  15:     B.foo(0); // error
-               ^ number. This type is incompatible with the expected param type of
- 11:   static foo(x: string) { } // error?
-                     ^^^^^^ string
+               ^ Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible with string [2].
+  References:
+   15:     B.foo(0); // error
+                 ^ [1]: number
+   11:   static foo(x: string) { } // error?
+                       ^^^^^^ [2]: string
 
 Error: test.js:17
  17:     B.y = 0; // error
@@ -52,9 +55,12 @@ Error: test.js:17
 
 Error: test.js:18
  18:     B.bar(0); // error
-               ^ number. This type is incompatible with the expected param type of
-  5:   static bar(y: string) { }
-                     ^^^^^^ string
+               ^ Cannot call `B.bar` with `0` bound to `y` because number [1] is incompatible with string [2].
+  References:
+   18:     B.bar(0); // error
+                 ^ [1]: number
+    5:   static bar(y: string) { }
+                       ^^^^^^ [2]: string
 
 Error: test.js:19
  19:     B.qux(0); // error
@@ -79,9 +85,12 @@ Error: test.js:40
 
 Error: test.js:42
  42:     D.bar(0);
-               ^ number. This type is incompatible with the expected param type of
- 38: class D extends C<string> {
-                       ^^^^^^ string
+               ^ Cannot call `D.bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+  References:
+   42:     D.bar(0);
+                 ^ [1]: number
+   38: class D extends C<string> {
+                         ^^^^^^ [2]: string
 
 Error: test.js:47
  47: (new A: typeof A);

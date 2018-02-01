@@ -18,9 +18,12 @@ Error: test.js:9
 
 Error: test.js:13
  13: counter_to_number(y); // Error: number ~> Counter
-                       ^ number. This type is incompatible with the expected param type of
-  8: declare function counter_to_number(c: Counter): number;
-                                           ^^^^^^^ Counter. See lib: flow-typed/decls.js:8
+                       ^ Cannot call `counter_to_number` with `y` bound to `c` because number [1] is incompatible with `Counter` [2].
+  References:
+   12: var y = c + 1; // Fine, since Counter is a number.
+               ^^^^^ [1]: number
+    8: declare function counter_to_number(c: Counter): number;
+                                             ^^^^^^^ [2]: `Counter`. See lib: flow-typed/decls.js:8
 
 Error: test.js:22
  22:     return x; // Error: string ~> number, number ~> string

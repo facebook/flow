@@ -22,9 +22,12 @@ Error: annot.js:10
 
 Error: error.js:8
   8: newFn1('string'); // The error should point here.
-            ^^^^^^^^ string. This type is incompatible with the expected param type of
-  7: const newFn1 = fn1((x: number) => {});
-                            ^^^^^^ number
+            ^^^^^^^^ Cannot call `newFn1` with `'string'` bound to the first parameter because string [1] is incompatible with number [2].
+  References:
+    8: newFn1('string'); // The error should point here.
+              ^^^^^^^^ [1]: string
+    7: const newFn1 = fn1((x: number) => {});
+                              ^^^^^^ [2]: number
 
 Error: error.js:12
  12: newFn2((x: string) => {}); // The error should point here.
@@ -37,9 +40,12 @@ Error: error.js:12
 
 Error: error.js:15
  15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
-         ^^ number. This type is incompatible with the expected param type of
- 15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
-                 ^^^^^^ string
+         ^^ Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2].
+  References:
+   15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+           ^^ [1]: number
+   15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+                   ^^^^^^ [2]: string
 
 Error: error.js:20
  20: (newVal4: string); // The error should point here.
@@ -70,9 +76,12 @@ Error: implicit_bounded_instantiation.js:15
 
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
-            ^^ number. This type is incompatible with the expected param type of
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
+            ^^ Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2].
+  References:
+   19: a.meth(42); // Error: number ~> Middle
+              ^^ [1]: number
+    7: class C<T: Middle> {
+                  ^^^^^^ [2]: `Middle`
 
 Error: implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle

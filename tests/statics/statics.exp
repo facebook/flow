@@ -6,15 +6,21 @@ Error: class_statics.js:6
 
 Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
-                                    ^ string. This type is incompatible with the expected param type of
-  2:   static f(x:number) { }
-                  ^^^^^^ number
+                                    ^ Cannot call `C.f` with `x` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    6: C.g = function(x:string) { C.f(x); };
+                        ^^^^^^ [1]: string
+    2:   static f(x:number) { }
+                    ^^^^^^ [2]: number
 
 Error: class_statics.js:7
   7: C.g(0);
-         ^ number. This type is incompatible with the expected param type of
-  6: C.g = function(x:string) { C.f(x); };
-                      ^^^^^^ string
+         ^ Cannot call `C.g` with `0` bound to `x` because number [1] is incompatible with string [2].
+  References:
+    7: C.g(0);
+           ^ [1]: number
+    6: C.g = function(x:string) { C.f(x); };
+                        ^^^^^^ [2]: string
 
 Error: class_statics.js:9
   9: var x:number = C.x;

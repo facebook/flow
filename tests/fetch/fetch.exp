@@ -76,9 +76,12 @@ Error: headers.js:10
 
 Error: headers.js:10
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-887:     append(name: string, value: string): void;
-                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:887
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `e.append` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+  References:
+   10: e.append({'Content-Type': 'image/jpeg'}); // not correct
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+  887:     append(name: string, value: string): void;
+                        ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:887
 
 Error: headers.js:12
  12: e.set('Content-Type'); // not correct
@@ -96,9 +99,12 @@ Error: headers.js:13
 
 Error: headers.js:13
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-894:     set(name: string, value: string): void;
-                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:894
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `e.set` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+  References:
+   13: e.set({'Content-Type': 'image/jpeg'}); // not correct
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+  894:     set(name: string, value: string): void;
+                     ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:894
 
 Error: headers.js:15
  15: const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
@@ -505,9 +511,12 @@ Error: urlsearchparams.js:10
 
 Error: urlsearchparams.js:10
  10: e.append({'key1': 'value1'}); // not correct
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-901:     append(name: string, value: string): void;
-                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:901
+              ^^^^^^^^^^^^^^^^^^ Cannot call `e.append` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+  References:
+   10: e.append({'key1': 'value1'}); // not correct
+                ^^^^^^^^^^^^^^^^^^ [1]: object literal
+  901:     append(name: string, value: string): void;
+                        ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:901
 
 Error: urlsearchparams.js:12
  12: e.set('key1'); // not correct
@@ -525,9 +534,12 @@ Error: urlsearchparams.js:13
 
 Error: urlsearchparams.js:13
  13: e.set({'key1': 'value1'}); // not correct
-           ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-909:     set(name: string, value: string): void;
-                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:909
+           ^^^^^^^^^^^^^^^^^^ Cannot call `e.set` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+  References:
+   13: e.set({'key1': 'value1'}); // not correct
+             ^^^^^^^^^^^^^^^^^^ [1]: object literal
+  909:     set(name: string, value: string): void;
+                     ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:909
 
 Error: urlsearchparams.js:15
  15: const f: URLSearchParams = e.append('key1', 'value1'); // not correct

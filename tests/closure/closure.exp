@@ -1,26 +1,74 @@
 Error: Closure.js:20
  20: takes_string(global_x); // error
-                  ^^^^^^^^ number. This type is incompatible with the expected param type of
-  6: function takes_string(_:string) { }
-                             ^^^^^^ string
+                  ^^^^^^^^ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   14: function global_g() { global_x = 42; }
+                                        ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
+
+Error: Closure.js:20
+ 20: takes_string(global_x); // error
+                  ^^^^^^^^ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   22: global_x = 42;  // shouldn't pollute linear refinement
+                  ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
 
 Error: Closure.js:38
  38:   takes_string(local_x); // error
-                    ^^^^^^^ number. This type is incompatible with the expected param type of
-  6: function takes_string(_:string) { }
-                             ^^^^^^ string
+                    ^^^^^^^ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   32:   function local_g() { local_x = 42; }
+                                        ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
+
+Error: Closure.js:38
+ 38:   takes_string(local_x); // error
+                    ^^^^^^^ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   40:   local_x = 42;  // shouldn't pollute linear refinement
+                   ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
 
 Error: Closure.js:57
  57: takes_string(global_y); // error
-                  ^^^^^^^^ number. This type is incompatible with the expected param type of
-  6: function takes_string(_:string) { }
-                             ^^^^^^ string
+                  ^^^^^^^^ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   50:   g: function() { global_y = 42; }
+                                    ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
+
+Error: Closure.js:57
+ 57: takes_string(global_y); // error
+                  ^^^^^^^^ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   59: global_y = 42;  // shouldn't pollute linear refinement
+                  ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
 
 Error: Closure.js:77
  77:   takes_string(local_y); // error
-                    ^^^^^^^ number. This type is incompatible with the expected param type of
-  6: function takes_string(_:string) { }
-                             ^^^^^^ string
+                    ^^^^^^^ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   70:     g: function() { local_y = 42; }
+                                     ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
+
+Error: Closure.js:77
+ 77:   takes_string(local_y); // error
+                    ^^^^^^^ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+  References:
+   79:   local_y = 42;  // shouldn't pollute linear refinement
+                   ^^ [1]: number
+    6: function takes_string(_:string) { }
+                               ^^^^^^ [2]: string
 
 Error: cond_havoc.js:12
  12:   return x; // error, string ~/~> number (return type anno) TODO
@@ -50,4 +98,4 @@ Error: const.js:20
                                    ^^^^^^ [2]: number
 
 
-Found 7 errors
+Found 11 errors

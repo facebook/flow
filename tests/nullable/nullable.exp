@@ -107,27 +107,39 @@ Error: nullable.js:1
 
 Error: nullable.js:11
  11: if (x != null) corge(x); // x: ?string | null
-                          ^ string. This type is incompatible with the expected param type of
-  7: function corge(x:number) { }
-                      ^^^^^^ number
+                          ^ Cannot call `corge` with `x` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    3: function bar():?string { return null; }
+                       ^^^^^^ [1]: string
+    7: function corge(x:number) { }
+                        ^^^^^^ [2]: number
 
 Error: nullable.js:15
  15:   grault(); qux(x);
-                     ^ null. This type is incompatible with the expected param type of
-  5: function qux(x:string) { }
-                    ^^^^^^ string
+                     ^ Cannot call `qux` with `x` bound to `x` because null [1] is incompatible with string [2].
+  References:
+   13: function grault() { x = null; }
+                               ^^^^ [1]: null
+    5: function qux(x:string) { }
+                      ^^^^^^ [2]: string
 
 Error: nullable.js:15
  15:   grault(); qux(x);
-                     ^ null or undefined. This type is incompatible with the expected param type of
-  5: function qux(x:string) { }
-                    ^^^^^^ string
+                     ^ Cannot call `qux` with `x` bound to `x` because null or undefined [1] is incompatible with string [2].
+  References:
+    3: function bar():?string { return null; }
+                      ^^^^^^^ [1]: null or undefined
+    5: function qux(x:string) { }
+                      ^^^^^^ [2]: string
 
 Error: simple_nullable.js:4
   4: bar('hmm');
-         ^^^^^ string. This type is incompatible with the expected param type of
-  2: function bar(x:?number) {}
-                     ^^^^^^ number
+         ^^^^^ Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible with number [2].
+  References:
+    4: bar('hmm');
+           ^^^^^ [1]: string
+    2: function bar(x:?number) {}
+                       ^^^^^^ [2]: number
 
 
 Found 13 errors

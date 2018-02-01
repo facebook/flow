@@ -48,9 +48,12 @@ Error: basic.js:15
 
 Error: recompose.js:23
  23:     c: Math.round(props.p), // Error: string ~> number
-                       ^^^^^^^ string. This type is incompatible with the expected param type of
-184:     round(x: number): number;
-                  ^^^^^^ number. See lib: <BUILTINS>/core.js:184
+                       ^^^^^^^ Cannot call `Math.round` with `props.p` bound to `x` because string [1] is incompatible with number [2].
+  References:
+   20:     p: `${props.p * 3}`,
+              ^^^^^^^^^^^^^^^^ [1]: string
+  184:     round(x: number): number;
+                    ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:184
 
 Error: spread.js:8
       v-------
@@ -102,9 +105,12 @@ Error: spread.js:12
 
 Error: spread.js:13
  13:   ...fns1, // Error: string ~> number
-          ^^^^ string. This type is incompatible with the expected param type of
-  4: declare var fns1: Array<(number) => number>;
-                              ^^^^^^ number
+          ^^^^ Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible with number [2].
+  References:
+   14: )('foo'): empty); // Error: string ~> empty and number ~> empty
+         ^^^^^ [1]: string
+    4: declare var fns1: Array<(number) => number>;
+                                ^^^^^^ [2]: number
 
 Error: spread.js:16
       v-------
@@ -132,9 +138,12 @@ Error: spread.js:16
 
 Error: spread.js:17
  17:   ...fns2, // Error: string ~> number
-          ^^^^ string. This type is incompatible with the expected param type of
-  5: declare var fns2: Array<(number) => string>;
-                              ^^^^^^ number
+          ^^^^ Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible with number [2].
+  References:
+    5: declare var fns2: Array<(number) => string>;
+                                           ^^^^^^ [1]: string
+    5: declare var fns2: Array<(number) => string>;
+                                ^^^^^^ [2]: number
 
 Error: spread.js:21
       v-------
