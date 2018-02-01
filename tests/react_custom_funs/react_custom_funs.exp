@@ -1300,7 +1300,7 @@ Error: create_element.js:216
 
 Error: create_element.js:221
 221: (React.createElement(M).type: typeof N); // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).type` to statics of `N` because `M` [1] is incompatible with `N` [2].
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).type` to `typeof N` because `M` [1] is incompatible with `N` [2].
   References:
   221: (React.createElement(M).type: typeof N); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `M`
@@ -2358,7 +2358,7 @@ Error: create_factory.js:212
 
 Error: create_factory.js:218
 218: (mFactory().type: typeof N); // Error
-      ^^^^^^^^^^^^^^^ Cannot cast `mFactory().type` to statics of `N` because `M` [1] is incompatible with `N` [2].
+      ^^^^^^^^^^^^^^^ Cannot cast `mFactory().type` to `typeof N` because `M` [1] is incompatible with `N` [2].
   References:
   218: (mFactory().type: typeof N); // Error
         ^^^^^^^^^^^^^^^ [1]: `M`

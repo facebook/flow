@@ -20,7 +20,7 @@ Error: typeof.js:53
  53: var c: typeof MyClass2 = new MyClass2();
                               ^^^^^^^^^^^^^^ MyClass2. This type is incompatible with
  53: var c: typeof MyClass2 = new MyClass2();
-            ^^^^^^^^^^^^^^^ statics of `MyClass2`
+            ^^^^^^^^^^^^^^^ `typeof MyClass2`
 
 Error: typeof.js:61
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number

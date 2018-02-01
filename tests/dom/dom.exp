@@ -920,10 +920,10 @@ Error: traversal.js:186
     3197: typeof NodeFilter.FILTER_ACCEPT |
     3198: typeof NodeFilter.FILTER_REJECT |
     3199: typeof NodeFilter.FILTER_SKIP;
-          ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3197
+          ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
       Member 1:
       3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3197
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
       Error:
       186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -931,7 +931,7 @@ Error: traversal.js:186
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
       Member 2:
       3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3198
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
       Error:
       186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -939,7 +939,7 @@ Error: traversal.js:186
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
       Member 3:
       3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3199
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
       Error:
       186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -963,10 +963,10 @@ Error: traversal.js:188
         3197: typeof NodeFilter.FILTER_ACCEPT |
         3198: typeof NodeFilter.FILTER_REJECT |
         3199: typeof NodeFilter.FILTER_SKIP;
-              ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3197
+              ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
           Member 1:
           3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3197
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
           Error:
           188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                         ^^^^^^^^ string. This type is incompatible with
@@ -974,7 +974,7 @@ Error: traversal.js:188
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
           Member 2:
           3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3198
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
           Error:
           188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                         ^^^^^^^^ string. This type is incompatible with
@@ -982,7 +982,7 @@ Error: traversal.js:188
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
           Member 3:
           3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3199
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
           Error:
           188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                         ^^^^^^^^ string. This type is incompatible with
@@ -1033,10 +1033,10 @@ Error: traversal.js:193
     3197: typeof NodeFilter.FILTER_ACCEPT |
     3198: typeof NodeFilter.FILTER_REJECT |
     3199: typeof NodeFilter.FILTER_SKIP;
-          ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3197
+          ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
       Member 1:
       3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3197
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
       Error:
       193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
@@ -1044,7 +1044,7 @@ Error: traversal.js:193
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
       Member 2:
       3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3198
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
       Error:
       193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
@@ -1052,7 +1052,7 @@ Error: traversal.js:193
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
       Member 3:
       3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3199
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
       Error:
       193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
@@ -1076,10 +1076,10 @@ Error: traversal.js:195
         3197: typeof NodeFilter.FILTER_ACCEPT |
         3198: typeof NodeFilter.FILTER_REJECT |
         3199: typeof NodeFilter.FILTER_SKIP;
-              ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3197
+              ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
           Member 1:
           3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3197
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
           Error:
           195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -1087,7 +1087,7 @@ Error: traversal.js:195
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
           Member 2:
           3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3198
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
           Error:
           195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                       ^^^^^^^^ string. This type is incompatible with
@@ -1095,7 +1095,7 @@ Error: traversal.js:195
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
           Member 3:
           3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3199
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
           Error:
           195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                       ^^^^^^^^ string. This type is incompatible with

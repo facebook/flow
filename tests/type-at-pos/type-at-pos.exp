@@ -452,7 +452,7 @@
   "type":"<Config>(name: ReactClass<Config>, config: Config, children: any) => React$Element<Config> & <Config>(fn: (config: Config, context: any) => React$Element<Config>, config: Config, children: any) => React$Element<Config>",
   "reasons":[
     {
-      "desc":"declare createElement",
+      "desc":"`typeof createElement`",
       "loc":{
         "source":"react.js",
         "type":"SourceFile",

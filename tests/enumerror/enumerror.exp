@@ -13,7 +13,7 @@ Error: enumerror.js:20
  20: isActive2({state: 'PAUSE'});
                        ^^^^^^^ property `PAUSE`. Property not found in
  17: function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
-                                    ^^^^^^^^^^^^^^^^^^^^^^ object literal
+                                    ^^^^^^^^^^^^^^^^^^^^^^ `typeof MyStates`
 
 
 Found 2 errors

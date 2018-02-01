@@ -131,6 +131,7 @@ type reason_desc =
   | RTypeAlias of string * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc * Loc.t
+  | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
   | RParameter of string option
@@ -468,6 +469,7 @@ let rec string_of_desc = function
   | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _, _) -> spf "`%s`" x
+  | RTypeof x -> spf "`typeof %s`" x
   | RMethod (Some x) -> spf "method `%s`" x
   | RMethod None -> "computed method"
   | RIdentifier x -> spf "`%s`" (prettify_react_util x)
@@ -1046,6 +1048,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RTypeAlias _
 | ROpaqueType _
 | RTypeParam _
+| RTypeof _
 | RMethod _
 | RMethodCall _
 | RParameter _
@@ -1195,6 +1198,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RTypeAlias _
 | ROpaqueType _
 | RTypeParam _
+| RTypeof _
 | RMethod _
 | RMethodCall _
 | RParameter _

@@ -18,7 +18,7 @@ module Flow = Flow_js
 let qualified_name =
   let rec loop acc = Ast.Type.Generic.Identifier.(function
     | Unqualified (_, name) ->
-      let parts = List.rev (name::acc) in
+      let parts = name::acc in
       String.concat "." parts
     | Qualified (_, { qualification; id = (_, name) }) ->
       loop (name::acc) qualification
@@ -113,7 +113,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     }) ->
       let valtype = convert_qualification ~lookup_mode:ForTypeof cx
         "typeof-annotation" qualification in
-      let reason = repos_reason loc (reason_of_t valtype) in
+      let reason = mk_reason (RTypeof (qualified_name qualification)) loc in
+      let valtype = mod_reason_of_t (fun _ -> reason) valtype in
       Flow.mk_typeof_annotation cx reason valtype
   | _ ->
     error_type cx loc (FlowError.EUnexpectedTypeof loc)
