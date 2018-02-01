@@ -8,7 +8,21 @@
  *
  *)
 open Hh_core
-open Ide_api_types
+
+type position = {
+  line : int; (* 1-based *)
+  column : int; (* 1-based *)
+}
+
+type range = {
+  st : position;
+  ed : position;
+}
+
+type text_edit = {
+  range : range option;
+  text : string;
+}
 
 (* UTF-8 encoding character lengths.
  *
@@ -78,8 +92,7 @@ let get_offset (content : string) (position : position) : int =
 (* It is okay to ask for the position of the offset of the end of the file.   *)
 (* In case of multi-byte characters, if you give an offset inside a character,*)
 (* it still gives the position immediately after.                             *)
-let offset_to_position (content: string) (offset: int)
-  : Ide_api_types.position =
+let offset_to_position (content: string) (offset: int) : position =
   let rec helper ~(line: int) ~(column: int) ~(index: int) =
     if index >= offset then
       {line; column;}

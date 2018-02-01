@@ -8,7 +8,20 @@
  *
  *)
 
-open Ide_api_types
+type position = {
+  line : int; (* 1-based *)
+  column : int; (* 1-based *)
+}
+
+type range = {
+  st : position;
+  ed : position;
+}
+
+type text_edit = {
+  range : range option;
+  text : string;
+}
 
 val edit_file : string -> text_edit list -> (string, string) result
 
