@@ -185,6 +185,15 @@ let parse_textDocumentItem (json: json option) : TextDocumentItem.t =
     text = Jget.string_exn json "text";
   }
 
+let print_textDocumentItem (item: TextDocumentItem.t) : json =
+  let open TextDocumentItem in
+  JSON_Object [
+    "uri", JSON_String item.uri;
+    "languageId", JSON_String item.languageId;
+    "version", JSON_Number (string_of_int item.version);
+    "text", JSON_String item.text;
+  ]
+
 let print_markedItem (item: markedString) : json =
   match item with
   | MarkedString s -> JSON_String s
@@ -320,6 +329,11 @@ let parse_didOpen (params: json option) : DidOpen.params =
                    |> parse_textDocumentItem;
   }
 
+let print_didOpen (params: DidOpen.params) : json =
+  let open DidOpen in
+  JSON_Object [
+    "textDocument", params.textDocument |> print_textDocumentItem;
+  ]
 
 (************************************************************************)
 (** textDocument/didClose notification                                 **)
