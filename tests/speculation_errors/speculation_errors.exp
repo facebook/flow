@@ -553,7 +553,7 @@ Error: union.js:30
 
 Error: union.js:31
  31: ({a: {b: 42}}: D);
-              ^^ Cannot cast object literal to `D` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+              ^^ Cannot cast object literal to `D` because in property `a.b`, number [1] is incompatible with string [2].
   References:
    31: ({a: {b: 42}}: D);
                 ^^ [1]: number

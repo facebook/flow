@@ -944,12 +944,35 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
-      | Frame (PropertyCompatibility {prop; lower; _}, use_op) ->
+      | Frame (PropertyCompatibility {prop=None | Some "$key" | Some "$value"; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
-          match prop with
-            | None | Some "$key" | Some "$value" -> [text "the indexer property"]
-            | Some "$call" -> [text "the callable signature"]
-            | Some x -> [text "property "; code x]))
+          [text "the indexer property"]))
+
+      | Frame (PropertyCompatibility {prop=Some "$call"; lower; _}, use_op) ->
+        Some (`Frame (lower, use_op,
+          [text "the callable signature"]))
+
+      | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
+        let rec loop lower = function
+        (* Don't match $key/$value/$call properties since they have special
+         * meaning. As defined above. *)
+        | Frame (PropertyCompatibility {prop=Some prop; lower=lower'; _}, use_op)
+            when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
+          (* Perform the same frame location unwrapping as we do in our
+           * general code. *)
+          let lower = if Loc.contains (loc_of_reason lower') (loc_of_reason lower)
+            then lower else lower' in
+          let (lower, props, use_op) = loop lower use_op in
+          (lower, prop::props, use_op)
+        (* Perform standard iteration through these use_ops. *)
+        | use_op -> (lower, [], use_op)
+        in
+        (* Loop through our parent use_op to get our property path. *)
+        let (lower, props, use_op) = loop lower use_op in
+        (* Create our final action. *)
+        Some (`Frame (lower, use_op,
+          [text "property "; code
+            (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props)]))
 
       | _ -> None
       )

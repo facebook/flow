@@ -63,7 +63,7 @@ Error: loc-primary.js:11
 
 Error: loc-primary.js:15
  15: (b1: B); // Error: string ~> number. We should point to b1.
-      ^^ Cannot cast `b1` to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+      ^^ Cannot cast `b1` to `B` because in property `a.b`, number [1] is incompatible with string [2].
   References:
    14: declare var b1: {a: {b: number}};
                                ^^^^^^ [1]: number
@@ -72,7 +72,7 @@ Error: loc-primary.js:15
 
 Error: loc-primary.js:17
  17: ({a: b2}: B); // Error: string ~> number. We should point to b2.
-          ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+          ^^ Cannot cast object literal to `B` because in property `a.b`, number [1] is incompatible with string [2].
   References:
    16: declare var b2: {b: number};
                            ^^^^^^ [1]: number
@@ -81,7 +81,7 @@ Error: loc-primary.js:17
 
 Error: loc-primary.js:19
  19: ({a: {b: b3}}: B); // Error: string ~> number. We should point to b3.
-              ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+              ^^ Cannot cast object literal to `B` because in property `a.b`, number [1] is incompatible with string [2].
   References:
    18: declare var b3: number;
                        ^^^^^^ [1]: number
@@ -90,7 +90,7 @@ Error: loc-primary.js:19
 
 Error: loc-primary.js:20
  20: ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
-              ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+              ^^ Cannot cast object literal to `B` because in property `a.b`, number [1] is incompatible with string [2].
   References:
    20: ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
                 ^^ [1]: number
@@ -99,7 +99,7 @@ Error: loc-primary.js:20
 
 Error: loc-primary.js:24
  24: (c1: C); // Error: string ~> number. We should point to c1.
-      ^^ Cannot cast `c1` to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+      ^^ Cannot cast `c1` to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
   References:
    23: declare var c1: {a: {b: {c: number}}};
                                    ^^^^^^ [1]: number
@@ -108,7 +108,7 @@ Error: loc-primary.js:24
 
 Error: loc-primary.js:26
  26: ({a: c2}: C); // Error: string ~> number. We should point to c2.
-          ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+          ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
   References:
    25: declare var c2: {b: {c: number}};
                                ^^^^^^ [1]: number
@@ -117,7 +117,7 @@ Error: loc-primary.js:26
 
 Error: loc-primary.js:28
  28: ({a: {b: c3}}: C); // Error: string ~> number. We should point to c3.
-              ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+              ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
   References:
    27: declare var c3: {c: number};
                            ^^^^^^ [1]: number
@@ -126,7 +126,7 @@ Error: loc-primary.js:28
 
 Error: loc-primary.js:30
  30: ({a: {b: {c: c4}}}: C); // Error: string ~> number. We should point to c4.
-                  ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+                  ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
   References:
    29: declare var c4: number;
                        ^^^^^^ [1]: number
@@ -135,7 +135,7 @@ Error: loc-primary.js:30
 
 Error: loc-primary.js:31
  31: ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
-                  ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+                  ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
   References:
    31: ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
                     ^^ [1]: number
@@ -144,7 +144,7 @@ Error: loc-primary.js:31
 
 Error: loc-primary.js:35
  35: (d1: D); // Error: string ~> number. We should point to d1.
-      ^^ Cannot cast `d1` to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+      ^^ Cannot cast `d1` to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    34: declare var d1: {a: {b: {c: {d: number}}}};
                                        ^^^^^^ [1]: number
@@ -153,7 +153,7 @@ Error: loc-primary.js:35
 
 Error: loc-primary.js:37
  37: ({a: d2}: D); // Error: string ~> number. We should point to d2.
-          ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+          ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    36: declare var d2: {b: {c: {d: number}}};
                                    ^^^^^^ [1]: number
@@ -162,7 +162,7 @@ Error: loc-primary.js:37
 
 Error: loc-primary.js:39
  39: ({a: {b: d3}}: D); // Error: string ~> number. We should point to d3.
-              ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+              ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    38: declare var d3: {c: {d: number}};
                                ^^^^^^ [1]: number
@@ -171,7 +171,7 @@ Error: loc-primary.js:39
 
 Error: loc-primary.js:41
  41: ({a: {b: {c: d4}}}: D); // Error: string ~> number. We should point to d4.
-                  ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+                  ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    40: declare var d4: {d: number};
                            ^^^^^^ [1]: number
@@ -180,7 +180,7 @@ Error: loc-primary.js:41
 
 Error: loc-primary.js:43
  43: ({a: {b: {c: {d: d5}}}}: D); // Error: string ~> number. We should point to d5.
-                      ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+                      ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    42: declare var d5: number;
                        ^^^^^^ [1]: number
@@ -189,7 +189,7 @@ Error: loc-primary.js:43
 
 Error: loc-primary.js:44
  44: ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
-                      ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+                      ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
   References:
    44: ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
                         ^^ [1]: number
