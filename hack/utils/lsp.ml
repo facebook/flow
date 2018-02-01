@@ -685,7 +685,7 @@ end
 
 (* ShowMessage request, method="window/showMessageRequest" *)
 module ShowMessageRequest = struct
-  type t = Some of {cancel: unit -> unit;} | None
+  type t = Some of {id: lsp_id;} | None
 
   and params = showMessageRequestParams
 
