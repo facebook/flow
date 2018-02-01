@@ -18,7 +18,10 @@ Error: async.js:31
 
 Error: async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>
-                          ^^^^ undefined. This type is incompatible with an implicitly-returned `Promise`.
+                          ^^^^ Cannot expect undefined as the return type of async function because undefined [1] is incompatible with implicitly-returned `Promise`.
+  References:
+   45:   static async m(a): void { await a; } // error, void != Promise<void>
+                            ^^^^ [1]: undefined
 
 Error: async2.js:13
  13:     var c: string = a; // Error: number ~> string
@@ -40,16 +43,17 @@ Error: async2.js:32
 
 Error: async2.js:50
  50:   async function voidoid5(): void { // error, void != Promise<void>
-                                  ^^^^ undefined. This type is incompatible with an implicitly-returned `Promise`.
+                                  ^^^^ Cannot expect undefined as the return type of async function because undefined [1] is incompatible with implicitly-returned `Promise`.
+  References:
+   50:   async function voidoid5(): void { // error, void != Promise<void>
+                                    ^^^^ [1]: undefined
 
 Error: async2.js:57
  57:   : Promise<number> { // error, number != void
-         ^^^^^^^^^^^^^^^ Promise. This type is incompatible with an implicitly-returned Promise<void>
-  Type argument `R` is incompatible:
-     57:   : Promise<number> { // error, number != void
-             ^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-     57:   : Promise<number> { // error, number != void
-                     ^^^^^^ number
+                 ^^^^^^ Cannot expect `Promise` as the return type of async function because in type argument `R`, number [1] is incompatible with implicitly-returned undefined.
+  References:
+   57:   : Promise<number> { // error, number != void
+                   ^^^^^^ [1]: number
 
 Error: async3.js:31
  31:   var c: string = a;

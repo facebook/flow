@@ -119,6 +119,7 @@ type reason_desc =
   | RDefaultConstructor
   | RConstructorCall of reason_desc
   | RReturn
+  | RImplicitReturn of reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -462,6 +463,7 @@ let rec string_of_desc = function
   | RConstructorCall (RStatics d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
   | RReturn -> "return"
+  | RImplicitReturn desc -> spf "implicitly-returned %s" (string_of_desc desc)
   | RRegExp -> "regexp"
   | RSuper -> "super"
   | RNoSuper -> "empty super object"
@@ -1057,6 +1059,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RDefaultConstructor
 | RConstructorCall _
 | RReturn
+| RImplicitReturn _
 | RSuper
 | RNoSuper
 | RDummyPrototype
@@ -1206,6 +1209,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RDefaultConstructor
 | RConstructorCall _
 | RReturn
+| RImplicitReturn _
 | RRegExp
 | RSuper
 | RNoSuper

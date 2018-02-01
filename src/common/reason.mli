@@ -71,6 +71,7 @@ type reason_desc =
   | RDefaultConstructor
   | RConstructorCall of reason_desc
   | RReturn
+  | RImplicitReturn of reason_desc
   | RRegExp
   | RSuper
   | RNoSuper

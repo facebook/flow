@@ -1,11 +1,11 @@
 Error: class.js:2
   2:   *stmt_yield(): Generator<number, void, void> {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator. This type is incompatible with an implicitly-returned Generator<Yield,void,Next>
-  Type argument `Yield` is incompatible:
-      4:     yield ""; // error: string ~> number
-                   ^^ string. This type is incompatible with
-      2:   *stmt_yield(): Generator<number, void, void> {
-                                    ^^^^^^ number
+                                ^^^^^^ Cannot expect `Generator` as the return type of generator function because in type argument `Yield`, number [1] is incompatible with string [2].
+  References:
+    2:   *stmt_yield(): Generator<number, void, void> {
+                                  ^^^^^^ [1]: number
+    4:     yield ""; // error: string ~> number
+                 ^^ [2]: string
 
 Error: class.js:15
  15:       (b : string); // error: number ~> string
@@ -123,12 +123,12 @@ Error: class_failure.js:19
 
 Error: generators.js:1
   1: function *stmt_yield(): Generator<number, void, void> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Generator. This type is incompatible with an implicitly-returned Generator<Yield,void,Next>
-  Type argument `Yield` is incompatible:
-      3:   yield ""; // error: string ~> number
-                 ^^ string. This type is incompatible with
-      1: function *stmt_yield(): Generator<number, void, void> {
-                                           ^^^^^^ number
+                                       ^^^^^^ Cannot expect `Generator` as the return type of generator function because in type argument `Yield`, number [1] is incompatible with string [2].
+  References:
+    1: function *stmt_yield(): Generator<number, void, void> {
+                                         ^^^^^^ [1]: number
+    3:   yield ""; // error: string ~> number
+               ^^ [2]: string
 
 Error: generators.js:14
  14:     (b : string); // error: number ~> string

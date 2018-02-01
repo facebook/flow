@@ -153,7 +153,10 @@ module Friendly = struct
       | Some loc -> loc
       | None -> def_loc_of_reason r
       in
-      Reference (desc, loc)
+      if loc = Loc.none then
+        Inline desc
+      else
+        Reference (desc, loc)
     ) else (
       Inline desc
     )

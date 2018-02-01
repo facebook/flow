@@ -185,7 +185,7 @@ let settertype {fparams; _} =
   | _ -> failwith "Setter property with unexpected type"
 
 let toplevels id cx this super ~decls ~stmts ~expr
-  {kind; tparams_map; fparams; body; return_t; _} =
+  {reason=reason_fn; kind; tparams_map; fparams; body; return_t; _} =
 
   let loc, reason =
     let loc = Ast.Function.(match body with
@@ -335,29 +335,36 @@ let toplevels id cx this super ~decls ~stmts ~expr
     let use_op, void_t = match kind with
     | Ordinary
     | Ctor ->
-      Op FunImplicitReturn, VoidT.at loc
+      let t = VoidT.at loc in
+      let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
+      use_op, t
     | Async ->
-      let reason = mk_reason (RCustom "Promise<void>") loc in
-      let promise = Flow.get_builtin cx "Promise" reason in
-      Op FunImplicitReturn, typeapp promise [VoidT.at loc]
+      let reason = mk_reason (RType "Promise") loc in
+      let void_t = VoidT.at loc in
+      let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
+      let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
+      use_op, t
     | Generator ->
-      let reason = mk_reason (RCustom "Generator<Yield,void,Next>") loc in
-      let return_t = VoidT.at loc in
-      Op FunImplicitReturn,
-      Flow.get_builtin_typeapp cx reason "Generator" [yield_t; return_t; next_t]
+      let reason = mk_reason (RType "Generator") loc in
+      let void_t = VoidT.at loc in
+      let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
+      let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
+      use_op, t
     | AsyncGenerator ->
-      let reason = mk_reason (RCustom "AsyncGenerator<Yield,void,Next>") loc in
-      let return_t = VoidT.at loc in
-      Op FunImplicitReturn,
-      Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; return_t; next_t]
+      let reason = mk_reason (RType "AsyncGenerator") loc in
+      let void_t = VoidT.at loc in
+      let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
+      let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
+      use_op, t
     | FieldInit e ->
-      let return_t = expr cx e in
-      unknown_use, return_t
+      unknown_use, expr cx e
     | Predicate ->
       let loc = loc_of_reason reason in
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
-      Op FunImplicitReturn, VoidT.at loc
+      let t = VoidT.at loc in
+      let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
+      use_op, t
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))
   );
