@@ -2,8 +2,8 @@ Error: issue-198.js:9
   9:         return str.toFixed();
                         ^^^^^^^ Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
   References:
-    9:         return str.toFixed();
-                      ^^^ [1]: `String`
+  141:     toFixed(fractionDigits?: number): string;
+                                             ^^^^^^ [1]: `String`. See lib: <BUILTINS>/core.js:141
 
 Error: issue-324.js:8
   8: foostr = barstr;

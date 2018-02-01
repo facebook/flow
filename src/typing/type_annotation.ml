@@ -122,7 +122,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Tuple ts ->
   let tuple_types = List.map (convert cx tparams_map) ts in
-  let reason = mk_reason RTupleType loc in
+  let reason = annot_reason (mk_reason RTupleType loc) in
   let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
   | [] -> EmptyT.why element_reason
@@ -220,7 +220,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$ReadOnlyArray" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let elemt = convert_type_params () |> List.hd in
-      DefT (mk_reason RROArrayType loc, ArrT (ROArrayAT (elemt)))
+      DefT (annot_reason (mk_reason RROArrayType loc), ArrT (ROArrayAT (elemt)))
     )
 
   (* $Supertype<T> acts as any over supertypes of T *)
@@ -911,6 +911,8 @@ and mk_singleton_boolean loc b =
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 (** See comment on Flow.mk_instance for what the for_type flag means. **)
 and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
+  let reason = annot_reason reason in
+  let c = mod_reason_of_t annot_reason c in
   match targs with
   | None ->
       Flow.mk_instance cx reason ~for_type c

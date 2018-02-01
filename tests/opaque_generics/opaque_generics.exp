@@ -101,8 +101,8 @@ Error: importtest.js:23
  23:     return x;
                 ^ Cannot return `x` because `Container` [1] is incompatible with `Box` [2].
   References:
-   23:     return x;
-                  ^ [1]: `Container`
+   22: function test5(x : Container<string>) : Box<string> { // Error: Container ~> Box
+                          ^^^^^^^^^^^^^^^^^ [1]: `Container`
    22: function test5(x : Container<string>) : Box<string> { // Error: Container ~> Box
                                                ^^^^^^^^^^^ [2]: `Box`
 
@@ -110,8 +110,8 @@ Error: importtest.js:27
  27:     return x;
                 ^ Cannot return `x` because `Box` [1] is incompatible with `Container` [2].
   References:
-   27:     return x;
-                  ^ [1]: `Box`
+   26: function test6(x : Box<string>) : Container<string> { // Error: Box ~> Container
+                          ^^^^^^^^^^^ [1]: `Box`
    26: function test6(x : Box<string>) : Container<string> { // Error: Box ~> Container
                                          ^^^^^^^^^^^^^^^^^ [2]: `Container`
 

@@ -54,8 +54,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            21:         (esmodule.pi: string);
                                  ^^ Cannot get \`esmodule.pi\` because property \`pi\` is missing in \`Promise\` [1].
             References:
-             21:         (esmodule.pi: string);
-                          ^^^^^^^^ [1]: \`Promise\`
+             20:         const esmodule = import('./esmodule');
+                                          ^^^^^^^^^^^^^^^^^^^^ [1]: \`Promise\`
         `,
       ),
   ]),

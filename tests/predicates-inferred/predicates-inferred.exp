@@ -11,8 +11,8 @@ Error: sanity-multi-params.js:12
  12:     return x.join();
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
   References:
-   12:     return x.join();
-                  ^ [1]: `String`
+    8: function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]: `String`
 
 Error: sanity-ordering.js:7
   7:   (obj.page: Object);
@@ -48,8 +48,8 @@ Error: sanity-unbound-var.js:15
  15:     return x.join();
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
   References:
-   15:     return x.join();
-                  ^ [1]: `String`
+   11: function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]: `String`
 
 Error: sanity.js:5
   5: function check(y): %checks(typeof y === "string") {

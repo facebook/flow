@@ -341,21 +341,21 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t
     | Async ->
-      let reason = mk_reason (RType "Promise") loc in
+      let reason = annot_reason (mk_reason (RType "Promise") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
       use_op, t
     | Generator ->
-      let reason = mk_reason (RType "Generator") loc in
+      let reason = annot_reason (mk_reason (RType "Generator") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
       use_op, t
     | AsyncGenerator ->
-      let reason = mk_reason (RType "AsyncGenerator") loc in
+      let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in

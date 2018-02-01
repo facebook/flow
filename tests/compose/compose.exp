@@ -149,8 +149,8 @@ Error: spread.js:21
  21: (compose(
       ^^^^^^^ Cannot call `compose` because property `p` is missing in `Number` [1].
   References:
-   22:   ...fns3, // Error: Cannot get p on number
-            ^^^^ [1]: `Number`
+   20: const x1 = { p: { p: { p: { p: 42 } } } };
+                                      ^^ [1]: `Number`
 
 Error: spread.js:21
       v-------

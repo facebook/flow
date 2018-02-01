@@ -20,8 +20,8 @@ Error: test.js:9
   9: (pstar: number); // error, but limit potentially unbounded number of errors!
       ^^^^^ Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
   References:
-    9: (pstar: number); // error, but limit potentially unbounded number of errors!
-        ^^^^^ [1]: `P`
+    8: var pstar: Pstar<number> = 0; // OK
+                  ^^^^^^^^^^^^^ [1]: `P`
     9: (pstar: number); // error, but limit potentially unbounded number of errors!
                ^^^^^^ [2]: number
 
@@ -38,8 +38,8 @@ Error: test.js:16
  16: (pstar.x: string); // error
       ^^^^^^^ Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
   References:
-   16: (pstar.x: string); // error
-        ^^^^^^^ [1]: `P`
+   15: pstar = (new P: P<P<number>>); // OK
+                         ^^^^^^^^^ [1]: `P`
    16: (pstar.x: string); // error
                  ^^^^^^ [2]: string
 

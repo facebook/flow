@@ -150,7 +150,7 @@ Error: F.js:9
                                                ^^^^^^^ Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1].
   References:
     9: var c: { (x: string): string } = (x) => x.toFixed()
-                                               ^ [1]: `String`
+                    ^^^^^^ [1]: `String`
 
 Error: use_ops.js:4
   4: (a: B); // error HERE and preserve use ops

@@ -61,7 +61,7 @@ Error: array_lib.js:46
                                            ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
   References:
    46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                         ^^^ [1]: `Number`
+                                   ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error: array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
@@ -72,7 +72,7 @@ Error: array_lib.js:47
                                                 ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
   References:
    47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                              ^^^ [1]: `Number`
+                                        ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error: length.js:7
   7: r.length = 6; //ng

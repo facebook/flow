@@ -101,8 +101,8 @@ Error: main.js:19
  19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
                     ^^^^ Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
   References:
-   19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
-                      ^^^^ [1]: object type
+   11: declare var user: Profile_user;
+                         ^^^^^^^^^^^^ [1]: object type
    12:   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
@@ -110,8 +110,8 @@ Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
                     ^^^^ Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
   References:
-   20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-                      ^^^^ [1]: object type
+   11: declare var user: Profile_user;
+                         ^^^^^^^^^^^^ [1]: object type
    12:   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 

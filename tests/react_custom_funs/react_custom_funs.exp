@@ -14,8 +14,13 @@ Error: clone_element.js:24
   References:
    24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                           ^^^^^^^^^^^^^ [1]: object literal
-   24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                          ^^^^^^^^^^^^^ [2]: `React.Element`
+                                                                     v-
+  157: declare type React$Element<+ElementType: React$ElementType> = {|
+  158:   +type: ElementType,
+  159:   +props: React$ElementProps<ElementType>,
+  ...:
+  162: |};
+       -^ [2]: `React.Element`. See lib: <BUILTINS>/react.js:157
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -23,8 +28,13 @@ Error: clone_element.js:24
   References:
    24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                           ^^^^^^^^^^^^^ [1]: object literal
-   24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                          ^^^^^^^^^^^^^ [2]: `React.Element`
+                                                                     v-
+  157: declare type React$Element<+ElementType: React$ElementType> = {|
+  158:   +type: ElementType,
+  159:   +props: React$ElementProps<ElementType>,
+  ...:
+  162: |};
+       -^ [2]: `React.Element`. See lib: <BUILTINS>/react.js:157
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -32,8 +42,13 @@ Error: clone_element.js:24
   References:
    24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                           ^^^^^^^^^^^^^ [1]: object literal
-   24: React.cloneElement({ type: any }); // Error: Not a valid element type.
-                          ^^^^^^^^^^^^^ [2]: `React.Element`
+                                                                     v-
+  157: declare type React$Element<+ElementType: React$ElementType> = {|
+  158:   +type: ElementType,
+  159:   +props: React$ElementProps<ElementType>,
+  ...:
+  162: |};
+       -^ [2]: `React.Element`. See lib: <BUILTINS>/react.js:157
 
 Error: clone_element.js:28
  28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.

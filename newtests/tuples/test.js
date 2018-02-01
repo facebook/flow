@@ -65,7 +65,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                                      ^^^^ Cannot call \`tup.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
             References:
              30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
-                                                                                   ^^^ [1]: \`$ReadOnlyArray\`
+                                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]: \`$ReadOnlyArray\`
         `,
       ),
   ]),
@@ -103,8 +103,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             6:           readOnlyRef.push(123);
                                      ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
             References:
-              6:           readOnlyRef.push(123);
-                           ^^^^^^^^^^^ [1]: \`$ReadOnlyArray\`
+            207:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => any, thisArg?: any): void;
+                                                                          ^^^^^^^^^^^^^^^^^ [1]: \`$ReadOnlyArray\`. See lib: [LIB] core.js:207
 
           test.js:7
             7:           (readOnlyRef[0]: 1);
@@ -127,7 +127,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                         ^^^^^^^ Cannot call \`x.unshift\` because property \`unshift\` is missing in \`$ReadOnlyArray\` [1].
            References:
              3: function foo(x: [1,2]): number { return x.unshift(); }
-                                                        ^ [1]: \`$ReadOnlyArray\`
+                                ^^^^^ [1]: \`$ReadOnlyArray\`
        `,
      ),
   ]),

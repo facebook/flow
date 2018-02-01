@@ -10208,7 +10208,7 @@ and get_builtin_typeapp cx ?trace reason x ts =
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ?(use_op=unknown_use) ~reason_op ~reason_tapp ?cache c ts =
-  let c = reposition cx ?trace (loc_of_reason reason_tapp) c in
+  let c = reposition_reason cx ?trace reason_tapp c in
   let t = Tvar.mk cx reason_op in
   flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
   mk_instance cx ?trace (reason_of_t c) t
@@ -10217,7 +10217,6 @@ and mk_typeapp_instance cx ?trace ?(use_op=unknown_use) ~reason_op ~reason_tapp 
    an annotation), and false when expecting a runtime value (e.g., when
    processing an extends). *)
 and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
-  let instance_reason = annot_reason instance_reason in
   if for_type then
     (* Make an annotation. *)
     let source = Tvar.mk_where cx instance_reason (fun t ->

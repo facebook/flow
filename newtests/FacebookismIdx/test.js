@@ -184,7 +184,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                               ^^^^ Cannot get \`n.nope\` because property \`nope\` is missing in \`Number\` [1].
                                             References:
                                              12: idx(42, n => n.nope);
-                                                              ^ [1]: \`Number\`
+                                                     ^^ [1]: \`Number\`
                                         `,
                                       ),
   ]),

@@ -24,8 +24,8 @@ Error: importtest.js:27
  27:     return x;
                 ^ Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2].
   References:
-   27:     return x;
-                  ^ [1]: `PolyFoo`
+   26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+                         ^^^^^^^^^^^^^^^^ [1]: `PolyFoo`
    26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
                                             ^^^^^^^^^^^^^^^ [2]: `PolyBar`
 

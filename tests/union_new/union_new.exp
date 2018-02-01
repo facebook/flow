@@ -266,7 +266,7 @@ Error: test20.js:14
                                         ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
   References:
    14: [""].reduce((acc,str) => acc * str.length);
-                                      ^^^ [1]: `Number`
+                                ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error: test21.js:11
  11: ({ type: bar(), x: str() }: T);

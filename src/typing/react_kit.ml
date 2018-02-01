@@ -128,7 +128,10 @@ let run cx trace ~use_op reason_op l u
   let get_intrinsic artifact literal prop =
     let reason = reason_of_t l in
     (* Get the internal $JSXIntrinsics map. *)
-    let intrinsics = get_builtin_type cx ~trace reason "$JSXIntrinsics" in
+    let intrinsics =
+      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
+      get_builtin_type cx ~trace reason "$JSXIntrinsics"
+    in
     (* GetPropT with a non-literal when there is not a dictionary will propagate
      * any. Run the HasOwnPropT check to give the user an error if they use a
      * non-literal without a dictionary. *)
@@ -419,7 +422,7 @@ let run cx trace ~use_op reason_op l u
           ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
-    let elem_reason = replace_reason_const (RType "React$Element") reason_op in
+    let elem_reason = annot_reason (replace_reason_const (RType "React$Element") reason_op) in
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout
@@ -516,7 +519,7 @@ let run cx trace ~use_op reason_op l u
       resolve t
 
     | InstanceOf ->
-      let t = mk_instance cx reason_op l in
+      let t = mk_instance cx (annot_reason reason_op) l in
       resolve t
 
     | ObjectOf ->

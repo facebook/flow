@@ -1871,8 +1871,8 @@ Error: test-utils.js:34
  34:   child => child.tagName === 'BUTTON',
                       ^^^^^^^ Cannot get `child.tagName` because property `tagName` is missing in `React.Component` [1].
   References:
-   34:   child => child.tagName === 'BUTTON',
-                  ^^^^^ [1]: `React.Component`
+   79:     test: (child: React$Component<any, any>) => boolean,
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Component`. See lib: <BUILTINS>/react-dom.js:79
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;

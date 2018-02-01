@@ -443,8 +443,12 @@ Error: props3.js:50
  50:       bad_two: React.PropTypes.string.inRequired,
                                            ^^^^^^^^^^ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is missing in `ReactPropsChainableTypeChecker` [1].
   References:
-   50:       bad_two: React.PropTypes.string.inRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^ [1]: `ReactPropsChainableTypeChecker`
+                                             v
+  270: type ReactPropsChainableTypeChecker = {
+  271:   isRequired: ReactPropsCheckType;
+  272:   (props: any, propName: string, componentName: string, href?: string): ?Error;
+  273: };
+       ^ [1]: `ReactPropsChainableTypeChecker`. See lib: <BUILTINS>/react.js:270
 
 Error: props4.js:9
   9: <JDiv id={42} />;

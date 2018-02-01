@@ -29,15 +29,23 @@ Error: strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics
       ^^^ Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1].
   References:
-   10: <Bad />; // Error: 'bad' not in JSXIntrinsics
-        ^^^ [1]: `$JSXIntrinsics`
+                             v
+    3: type $JSXIntrinsics = {
+    4:   div: $JSXIntrinsic<{id: string}>,
+    5:   span: $JSXIntrinsic<{id: string, class: string}>,
+    6: };
+       ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
 Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
       ^^^ An indexer property is missing in `$JSXIntrinsics` [1].
   References:
-   11: <Str />; // Error: string ~> keys of JSXIntrinsics
-        ^^^ [1]: `$JSXIntrinsics`
+                             v
+    3: type $JSXIntrinsics = {
+    4:   div: $JSXIntrinsic<{id: string}>,
+    5:   span: $JSXIntrinsic<{id: string, class: string}>,
+    6: };
+       ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
@@ -52,15 +60,23 @@ Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                          ^^^^^ Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1].
   References:
-   14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                           ^^^^^ [1]: `$JSXIntrinsics`
+                             v
+    3: type $JSXIntrinsics = {
+    4:   div: $JSXIntrinsic<{id: string}>,
+    5:   span: $JSXIntrinsic<{id: string, class: string}>,
+    6: };
+       ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
                          ^^^ An indexer property is missing in `$JSXIntrinsics` [1].
   References:
-   15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                           ^^^ [1]: `$JSXIntrinsics`
+                             v
+    3: type $JSXIntrinsics = {
+    4:   div: $JSXIntrinsic<{id: string}>,
+    5:   span: $JSXIntrinsic<{id: string, class: string}>,
+    6: };
+       ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually

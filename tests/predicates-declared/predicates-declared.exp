@@ -36,8 +36,8 @@ Error: sanity-is-string-bug.js:13
  13:     return x.join();    // error: both string and Array<string> can flow to x
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
   References:
-   13:     return x.join();    // error: both string and Array<string> can flow to x
-                  ^ [1]: `String`
+    9: function bar(x: string | Array<string>): string {
+                       ^^^^^^ [1]: `String`
 
 Error: sanity-parameter-mismatch.js:10
  10: foo(3, 3);

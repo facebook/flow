@@ -2,8 +2,22 @@ Error: apply.js:2
   2:   return this.length; // expect []/"" this
                    ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
   References:
-    2:   return this.length; // expect []/"" this
-                ^^^^ [1]: `Number`
+    9: test.apply(0, ["", 0]); // error: lookup `length` on Number
+                  ^ [1]: `Number`
+
+Error: apply.js:2
+  2:   return this.length; // expect []/"" this
+                   ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
+  References:
+   32: (test.call.apply(test, [0, 123, 'foo']): void);
+                               ^ [1]: `Number`
+
+Error: apply.js:2
+  2:   return this.length; // expect []/"" this
+                   ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
+  References:
+   37: (test.bind.apply(test, [0, 123]): (b: number) => number);
+                               ^ [1]: `Number`
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
@@ -140,8 +154,15 @@ Error: call.js:4
   4:   return this.length; // expect []/"" this
                    ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
   References:
-    4:   return this.length; // expect []/"" this
-                ^^^^ [1]: `Number`
+   11: test.call(0, "", 0); // error: lookup `length` on Number
+                 ^ [1]: `Number`
+
+Error: call.js:4
+  4:   return this.length; // expect []/"" this
+                   ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
+  References:
+   30: (test.apply.call(test, 0, [0, 'foo']): number);
+                              ^ [1]: `Number`
 
 Error: call.js:14
  14: test.call("", ""); // error: void ~> number
@@ -454,4 +475,4 @@ Error: rest_type.js:31
                                  ^^^^^ [2]: empty
 
 
-Found 53 errors
+Found 56 errors

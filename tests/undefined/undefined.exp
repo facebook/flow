@@ -44,8 +44,8 @@ Error: undefined2.js:22
  22:       x[0]; // should error, could be void
            ^^^^ An indexer property is missing in `Number` [1].
   References:
-   22:       x[0]; // should error, could be void
-             ^ [1]: `Number`
+   16:   function(x: number) {
+                     ^^^^^^ [1]: `Number`
 
 Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only

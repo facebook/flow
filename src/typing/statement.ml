@@ -3139,7 +3139,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
         import_ns cx import_reason (source_loc, module_name) loc
       in
 
-      let reason = mk_reason (RCustom "async import") loc in
+      let reason = annot_reason (mk_reason (RCustom "async import") loc) in
       Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t]
     | _ ->
       let ignore_non_literals =
@@ -3275,19 +3275,19 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
         then Literal (None, s)
         else AnyLiteral
       in
-      DefT (mk_reason RString loc, StrT lit)
+      DefT (annot_reason (mk_reason RString loc), StrT lit)
 
   | Boolean b ->
-      DefT (mk_reason RBoolean loc, BoolT (Some b))
+      DefT (annot_reason (mk_reason RBoolean loc), BoolT (Some b))
 
   | Null ->
       NullT.at loc
 
   | Number f ->
-      DefT (mk_reason RNumber loc, NumT (Literal (None, (f, lit.raw))))
+      DefT (annot_reason (mk_reason RNumber loc), NumT (Literal (None, (f, lit.raw))))
 
   | RegExp _ ->
-      Flow.get_builtin_type cx (mk_reason RRegExp loc) "RegExp"
+      Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp"
 )
 
 (* traverse a unary expression, return result type *)

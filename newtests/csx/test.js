@@ -117,8 +117,8 @@ export default suite(({addFile, addFiles, addCode}) => [
           References:
             7:       const x = 42;
                                ^^ [1]: number
-            8:       <Foo>{...x}</Foo>;
-                              ^ [2]: \`$Iterable\`
+           31: interface $Iterable<+Yield,+Return,-Next> {
+                         ^^^^^^^^^ [2]: \`$Iterable\`. See lib: [LIB] prelude.js:31
       `,
     )
   ]),
