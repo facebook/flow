@@ -3,9 +3,9 @@
 open Lsp
 open Lsp_fmt
 
-module Make (Jsonrpc: Jsonrpc.SigType) (P: sig
-  val get : unit -> Hh_json.json option  (* params of the initialize request *)
-end) = struct
+module Make (Jsonrpc: Jsonrpc.SigType) = struct
+
+  let progress_and_actionRequired_counter = ref 0
 
   (************************************************************************)
   (** Conversions                                                        **)
@@ -39,40 +39,24 @@ end) = struct
   (** Accessors                                                          **)
   (************************************************************************)
 
-  let initialize_params_memoized : Initialize.params option ref = ref None
-
-  let get_initialize_params () : Initialize.params option =
-    if Option.is_none !initialize_params_memoized then begin
-      let json_params = P.get () in
-      let parsed_params = Lsp_fmt.parse_initialize json_params in
-      initialize_params_memoized := Some parsed_params
-    end;
-    !initialize_params_memoized
-
-  let get_root () : string option =
+  let get_root (p: Lsp.Initialize.params) : string =
     let open Lsp.Initialize in
-    match get_initialize_params () with
-    | None -> None
-    | Some params ->
-      match params.rootUri with
-      | Some uri -> Some (lsp_uri_to_path uri)
-      | None -> params.rootPath
+    match p.rootUri, p.rootPath with
+    | Some uri, _ -> lsp_uri_to_path uri
+    | None, Some path -> path
+    | None, None -> failwith "Initialize params missing root"
 
-  let supports_progress () : bool =
+  let supports_progress (p: Lsp.Initialize.params) : bool =
     let open Lsp.Initialize in
-    Option.value_map (get_initialize_params ())
-      ~default:false ~f:(fun params -> params.client_capabilities.window.progress)
+    p.client_capabilities.window.progress
 
-  let supports_actionRequired () : bool =
+  let supports_actionRequired (p: Lsp.Initialize.params) : bool =
     let open Lsp.Initialize in
-    Option.value_map (get_initialize_params ())
-      ~default:false ~f:(fun params -> params.client_capabilities.window.actionRequired)
+    p.client_capabilities.window.actionRequired
 
-  let supports_snippets () : bool =
+  let supports_snippets (p: Lsp.Initialize.params) : bool =
     let open Lsp.Initialize in
-    Option.value_map (get_initialize_params ())
-      ~default:false ~f:(fun params ->
-      params.client_capabilities.textDocument.completion.completionItem.snippetSupport)
+    p.client_capabilities.textDocument.completion.completionItem.snippetSupport
 
 
   (************************************************************************)
@@ -128,16 +112,16 @@ end) = struct
   (* To close an existing one: id=Some, message=None, and get back None       *)
   (* No-op, for convenience: id=None, message=None, and you get back None     *)
   (* messages. To start a new progress notifier, put id=None and message=Some *)
-  let progress_and_actionRequired_counter = ref 0
 
   let notify_progress
+      (p: Lsp.Initialize.params)
       (writer: Jsonrpc.writer)
       (id: Progress.t)
       (label: string option)
     : Progress.t =
     match id, label with
     | Progress.None, Some label ->
-      if supports_progress () then
+      if supports_progress p then
         let () = incr progress_and_actionRequired_counter in
         let id = !progress_and_actionRequired_counter in
         let () = print_progress id (Some label) |> Jsonrpc.notify writer "window/progress" in
@@ -156,13 +140,14 @@ end) = struct
       Progress.None
 
   let notify_actionRequired
+      (p: Lsp.Initialize.params)
       (writer: Jsonrpc.writer)
       (id: ActionRequired.t)
       (label: string option)
     : ActionRequired.t =
     match id, label with
     | ActionRequired.None, Some label ->
-      if supports_actionRequired () then
+      if supports_actionRequired p then
         let () = incr progress_and_actionRequired_counter in
         let id = !progress_and_actionRequired_counter in
         let () = print_actionRequired id (Some label)
