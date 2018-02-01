@@ -29,3 +29,4 @@ type monitor_to_client =
   | Connection_ok
   | Build_id_mismatch of { server_build_id: build_id; server_bin: string }
   | Too_many_clients
+  | Not_ready of ServerStatus.status (* only sent to PersistentLsp clients *)

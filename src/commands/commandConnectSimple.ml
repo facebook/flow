@@ -104,6 +104,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
 
 let verify_handshake sockaddr ic = function
   | SocketHandshake.Connection_ok -> Ok ()
+  | SocketHandshake.Not_ready _ -> Error (Server_busy Not_responding)
   | SocketHandshake.Build_id_mismatch _ ->
       (* TODO (glevi) - I want to change this behavior. I want the server to survive and the client
        * to exec a new client. *)

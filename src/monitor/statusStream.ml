@@ -20,6 +20,7 @@ module Logger = FlowServerMonitorLogger
 (* This is the status info for a single Flow server *)
 type t = {
   mutable status: ServerStatus.status;
+  mutable ever_been_free: bool;
   stream: ServerStatus.status Lwt_stream.t;
   push_to_stream: ServerStatus.status option -> unit
 }
@@ -48,11 +49,14 @@ module UpdateLoop = LwtLoop.Make (struct
     (* We don't need a lock here, since we're the only thread processing statuses *)
     t.status <- new_status;
 
-    if ServerStatus.is_free new_status
-    then Lwt.async invoke_all_call_on_free;
+    if ServerStatus.is_free new_status then begin
+      t.ever_been_free <- true;
+      Lwt.async invoke_all_call_on_free
+    end;
 
-    if ServerStatus.is_significant_transition old_status new_status
-    then Lwt_condition.broadcast significant_transition new_status;
+    if ServerStatus.is_significant_transition old_status new_status then begin
+      Lwt_condition.broadcast significant_transition new_status
+    end;
 
     Lwt.return t
 
@@ -74,6 +78,7 @@ let empty () =
   let stream, push_to_stream = Lwt_stream.create () in
   let ret = {
     status = ServerStatus.initial_status;
+    ever_been_free = false;
     stream;
     push_to_stream;
   } in
@@ -100,6 +105,8 @@ let reset () = Lwt_mutex.with_lock mutex (fun () ->
 )
 
 let get_status () = !current_status.status
+
+let ever_been_free () = !current_status.ever_been_free
 
 let wait_for_signficant_status ~timeout =
   (* If there is a significant transition before the timeout, the cancel the sleep and return the

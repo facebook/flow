@@ -121,6 +121,9 @@ let perform_handshake_and_get_client_type ~client_fd =
   (* Read the build id *)
   Marshal_tools_lwt.from_fd_with_preamble client_fd
   >>= (fun ({SocketHandshake.client_build_id; client_type}) ->
+    let is_lsp = match client_type with
+      | SocketHandshake.PersistentLsp _ -> true
+      | _ -> false in
     (* If the build id doesn't match, send an error and exit
      *
      * Note: glevi hates this behavior. In the future, glevi plans to instead have the client
@@ -142,10 +145,13 @@ let perform_handshake_and_get_client_type ~client_fd =
        * So we can't have an unlimited number of clients. So if the new fd is too large, let's
        * reject it. Never reject a kill handshake, though. *)
       let fd_as_int: int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
-      if client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500
-      then
+      if client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500 then
         Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Too_many_clients
         >|= (fun () -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
+      else if is_lsp && not (StatusStream.ever_been_free ()) then
+        let status = StatusStream.get_status () in
+        Marshal_tools_lwt.to_fd_with_preamble client_fd (SocketHandshake.Not_ready status)
+        >|= (fun () -> failwith (ServerStatus.string_of_status status))
       else
         (* If the build id matches, send the Ok and return the client_type *)
         Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
