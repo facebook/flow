@@ -709,7 +709,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_merge_timeout;
   }
 
-let connect ~client_type server_flags root =
+let make_env server_flags root =
   let flowconfig_path = Server_files_js.config_file root in
   let flowconfig = FlowConfig.get flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
@@ -726,8 +726,9 @@ let connect ~client_type server_flags root =
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
   | None -> None
-  | Some n -> Some (Unix.gettimeofday () +. float n) in
-  let env = { CommandConnect.
+  | Some n -> Some (Unix.gettimeofday () +. float n)
+  in
+  { CommandConnect.
     root;
     autostart = not server_flags.no_auto_start;
     retries;
@@ -744,7 +745,11 @@ let connect ~client_type server_flags root =
     ignore_version = server_flags.ignore_version;
     emoji = FlowConfig.emoji flowconfig;
     quiet = server_flags.quiet;
-  } in
+  }
+
+let connect ~client_type server_flags root =
+  let env = make_env server_flags root
+  in
   CommandConnect.connect ~client_type env
 
 let rec search_for_root config start recursion_limit : Path.t option =
