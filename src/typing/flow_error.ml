@@ -944,6 +944,12 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
+      | Op (FunCall {op; fn; _}) ->
+        Some (`Root (op, Some fn, [text "Cannot call "; desc fn]))
+
+      | Op (FunCallMethod {op; fn; prop; _}) ->
+        Some (`Root (op, Some prop, [text "Cannot call "; desc fn]))
+
       | Frame (FunParam {n; name; lower = lower'; _},
           Op (FunCall {args; fn; _} | FunCallMethod {args; fn; _})) ->
         let lower = if List.length args > n - 1 then List.nth args (n - 1) else lower' in
