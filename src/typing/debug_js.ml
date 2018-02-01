@@ -2474,10 +2474,6 @@ let dump_flow_error =
           n
     | EAdditionMixed reason ->
         spf "EAdditionMixed (%s)" (dump_reason cx reason)
-    | ECoercion (reason1, reason2) ->
-        spf "ECoercion (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
     | EComparison (reason1, reason2) ->
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)

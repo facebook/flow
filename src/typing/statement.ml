@@ -3015,7 +3015,10 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
           let t_out = StrT.at loc in
           List.iter (fun expr ->
             let e = expression cx expr in
-            Flow.flow cx (e, UseT (Op Coercion, t_out));
+            Flow.flow cx (e, UseT (Op (Coercion {
+              from = mk_expression_reason expr;
+              target = reason_of_t t_out;
+            }), t_out));
           ) expressions;
           t_out
       end

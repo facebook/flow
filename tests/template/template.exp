@@ -9,45 +9,52 @@ Error: template.js:5
 
 Error: template.js:8
   8: `foo ${{bar: 123}} baz`; // error, object can't be appended
-            ^^^^^^^^^^ object literal. This type cannot be coerced to
-  8: `foo ${{bar: 123}} baz`; // error, object can't be appended
-     ^^^^^^^^^^^^^^^^^^^^^^^ string
+            ^^^^^^^^^^ Cannot coerce object literal to string because object literal [1] should not be coerced.
+  References:
+    8: `foo ${{bar: 123}} baz`; // error, object can't be appended
+              ^^^^^^^^^^ [1]: object literal
 
 Error: template.js:22
  22:     `foo ${x}`; // error
-                ^ boolean. This type cannot be coerced to
- 22:     `foo ${x}`; // error
-         ^^^^^^^^^^ string
+                ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
+  References:
+   21:   function(x: boolean) {
+                     ^^^^^^^ [1]: boolean
 
 Error: template.js:23
  23:     `${x} bar`; // error
-            ^ boolean. This type cannot be coerced to
- 23:     `${x} bar`; // error
-         ^^^^^^^^^^ string
+            ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
+  References:
+   21:   function(x: boolean) {
+                     ^^^^^^^ [1]: boolean
 
 Error: template.js:24
  24:     `foo ${'bar'} ${x}`; // error
-                         ^ boolean. This type cannot be coerced to
- 24:     `foo ${'bar'} ${x}`; // error
-         ^^^^^^^^^^^^^^^^^^^ string
+                         ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
+  References:
+   21:   function(x: boolean) {
+                     ^^^^^^^ [1]: boolean
 
 Error: template.js:27
  27:     `foo ${x}`; // error
-                ^ mixed. This type cannot be coerced to
- 27:     `foo ${x}`; // error
-         ^^^^^^^^^^ string
+                ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
+  References:
+   26:   function(x: mixed) {
+                     ^^^^^ [1]: mixed
 
 Error: template.js:28
  28:     `${x} bar`; // error
-            ^ mixed. This type cannot be coerced to
- 28:     `${x} bar`; // error
-         ^^^^^^^^^^ string
+            ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
+  References:
+   26:   function(x: mixed) {
+                     ^^^^^ [1]: mixed
 
 Error: template.js:29
  29:     `foo ${'bar'} ${x}`; // error
-                         ^ mixed. This type cannot be coerced to
- 29:     `foo ${'bar'} ${x}`; // error
-         ^^^^^^^^^^^^^^^^^^^ string
+                         ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
+  References:
+   26:   function(x: mixed) {
+                     ^^^^^ [1]: mixed
 
 
 Found 8 errors

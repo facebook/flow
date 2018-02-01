@@ -287,7 +287,7 @@ module rec TypeTerm : sig
     | Cast of { lower: reason; upper: reason }
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
     | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
-    | Coercion
+    | Coercion of { from: reason; target: reason }
     | FunCall of {
         op: reason;
         fn: reason;
@@ -2478,6 +2478,7 @@ let loc_of_root_use_op = function
 | Cast {lower=op; _}
 | ClassExtendsCheck {def=op; _}
 | ClassImplementsCheck {def=op; _}
+| Coercion {from=op; _}
 | FunCall {op; _}
 | FunCallMethod {op; _}
 | FunReturnStatement {value=op}
@@ -2487,7 +2488,6 @@ let loc_of_root_use_op = function
 | ReactCreateElementCall {op; _}
 | SetProperty {value=op; _}
   -> loc_of_reason op
-| Coercion
 | ReactGetIntrinsic _
 | Internal _
 | UnknownUse
@@ -2601,7 +2601,7 @@ let string_of_root_use_op = function
 | Cast _ -> "Cast"
 | ClassExtendsCheck _ -> "ClassExtendsCheck"
 | ClassImplementsCheck _ -> "ClassImplementsCheck"
-| Coercion -> "Coercion"
+| Coercion _ -> "Coercion"
 | FunCall _ -> "FunCall"
 | FunCallMethod _ -> "FunCallMethod"
 | FunImplicitReturn _ -> "FunImplicitReturn"

@@ -5644,7 +5644,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************************)
 
     (* string and number can be coerced to strings *)
-    | DefT (_, NumT _), UseT (Op Coercion, DefT (_, StrT _)) -> ()
+    | DefT (_, NumT _), UseT (Op Coercion _, DefT (_, StrT _)) -> ()
 
     (**************************)
     (* relational comparisons *)
@@ -6187,9 +6187,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         special = flow_error_kind_of_lower l;
         use_op;
       })
-
-    | _, UseT (Op Coercion, u) ->
-      add_output cx ~trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
     | _, UseT (Frame (FunParam {n; _}, Op (FunCall _ | FunCallMethod _)), u) ->
       add_output cx ~trace
