@@ -860,10 +860,10 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   = Ast.Type.Generic.Identifier.(function
-  | Qualified (loc, { qualification; id; }) ->
+  | Qualified (loc, { qualification; id; }) as qualified ->
     let m = convert_qualification ~lookup_mode cx reason_prefix qualification in
     let id_loc, name = id in
-    let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
+    let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
     let reason = mk_reason desc loc in
     Tvar.mk_where cx reason (fun t ->
       Type_table.set_info (Context.type_table cx) id_loc t;

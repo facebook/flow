@@ -472,17 +472,27 @@ let mk_super cx tparams_map c targs = Type.(
 )
 
 let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; typeParameters}) =
-  let r = mk_reason (RCustom (Anno.qualified_name id)) loc in
   let lookup_mode = Env.LookupMode.ForType in
   let i = Anno.convert_qualification ~lookup_mode cx "extends" id in
   let params = Anno.extract_type_param_instantiations typeParameters in
-  Anno.mk_nominal_type cx r tparams_map (i, params)
+  let loc = match typeParameters with
+  | Some (targs, _) -> Loc.btwn loc targs
+  | None -> loc
+  in
+  let r = mk_reason (RType (Anno.qualified_name id)) loc in
+  let t = Anno.mk_nominal_type cx r tparams_map (i, params) in
+  Flow.reposition cx loc ~annot_loc:loc t
 
 let mk_extends cx tparams_map ~expr = function
   | None, None -> Implicit { null = false }
   | None, _ -> assert false (* type args with no head expr *)
   | Some e, targs ->
+    let loc = match e, targs with
+    | (e, _), Some (targs, _) -> Loc.btwn e targs
+    | (e, _), _ -> e
+    in
     let c = expr cx e in
+    let c = Flow.reposition cx loc ~annot_loc:loc c in
     Explicit (mk_super cx tparams_map c targs)
 
 let mk_mixins cx tparams_map (r, id, targs) =
@@ -554,10 +564,14 @@ let mk cx _loc reason self ~expr =
     in
     let implements = List.map (fun (_, i) ->
       let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
-      let reason = mk_reason (RCustom "implements") loc in
+      let super_loc = match typeParameters with
+      | Some (ts, _) -> Loc.btwn loc ts
+      | None -> loc in
+      let reason = mk_reason (RType name) super_loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
       let params = Anno.extract_type_param_instantiations typeParameters in
-      Anno.mk_nominal_type cx reason tparams_map (c, params)
+      let t = Anno.mk_nominal_type cx reason tparams_map (c, params) in
+      Flow.reposition cx super_loc ~annot_loc:super_loc t
     ) implements in
     let super = Class { extends; mixins = []; implements } in
     empty id reason tparams tparams_map super

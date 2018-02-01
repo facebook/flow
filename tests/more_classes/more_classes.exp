@@ -7,24 +7,16 @@ Error: Bar.js:15
    15:     new Qux().w = "?";
            ^^^^^^^^^^^ [2]: number
 
-Error: Foo.js:7
-  7: class Foo extends Qux {
-           ^^^ Foo. Cannot extend
-  7: class Foo extends Qux {
-                       ^^^ Qux
-  Property `fooqux` is incompatible:
-           v-----------------
-     21:   fooqux(x:string) {
-     22:     this.x;
-     23:   }
-           ^ function. This type is incompatible with
-      9:   fooqux(x:number) { }
-           ^^^^^^^^^^^^^^^^^^^^ function. See: Qux.js:9
-      The first parameter is incompatible:
-          9:   fooqux(x:number) { }
-                        ^^^^^^ number. This type is incompatible with. See: Qux.js:9
-         21:   fooqux(x:string) {
-                        ^^^^^^ string
+Error: Foo.js:21
+ 21:   fooqux(x:string) {
+                ^^^^^^ Cannot extend `Qux` [1] with `Foo` because in property `fooqux` and then the first argument, string [2] is incompatible with number [3].
+  References:
+    7: class Foo extends Qux {
+                         ^^^ [1]: `Qux`
+   21:   fooqux(x:string) {
+                  ^^^^^^ [2]: string
+    9:   fooqux(x:number) { }
+                  ^^^^^^ [3]: number. See: Qux.js:9
 
 Error: Foo.js:10
  10:     this.x = x;

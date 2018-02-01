@@ -94,14 +94,14 @@ Error: test2.js:5
 
 Error: test3.js:3
   3: interface K extends I, J { x: string } // error: x is number in I
-               ^ K. Cannot extend
-  3: interface K extends I, J { x: string } // error: x is number in I
-                         ^ I
-  Property `x` is incompatible:
-      3: interface K extends I, J { x: string } // error: x is number in I
-                                       ^^^^^^ string. This type is incompatible with
-      1: interface I { x: number, y : string }
-                          ^^^^^^ number
+                                   ^^^^^^ Cannot extend `I` [1] with `K` because in property `x`, string [2] is incompatible with number [3].
+  References:
+    3: interface K extends I, J { x: string } // error: x is number in I
+                           ^ [1]: `I`
+    3: interface K extends I, J { x: string } // error: x is number in I
+                                     ^^^^^^ [2]: string
+    1: interface I { x: number, y : string }
+                        ^^^^^^ [3]: number
 
 Error: test3.js:5
   5:   (k.x: number); // error: x is string in K

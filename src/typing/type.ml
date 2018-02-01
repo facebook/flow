@@ -2865,7 +2865,10 @@ let typeapp t tparams =
   DefT (reason, TypeAppT (t, tparams))
 
 let this_typeapp t this tparams =
-  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  let reason = match tparams with
+  | Some _ -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
+  | None -> reason_of_t t
+  in
   ThisTypeAppT (reason, t, this, tparams)
 
 let annot use_desc = function

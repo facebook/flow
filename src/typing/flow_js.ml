@@ -3059,12 +3059,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (t, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
 
     (** consistent override of properties **)
-    | DefT (_, IntersectionT rep), SuperT _ ->
-      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+    | DefT (_, IntersectionT rep), SuperT (use_op, reason, derived) ->
+      InterRep.members rep |> List.iter (fun t ->
+        let u = match use_op with
+        | Op (ClassExtendsCheck c) ->
+          let use_op = Op (ClassExtendsCheck { c with extends = reason_of_t t }) in
+          SuperT (use_op, reason, derived)
+        | _ ->
+          u
+        in
+        rec_flow cx trace (t, u))
 
     (** structural subtype multiple inheritance **)
-    | DefT (_, IntersectionT rep), ImplementsT _ ->
-      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+    | DefT (_, IntersectionT rep), ImplementsT (use_op, this) ->
+      InterRep.members rep |> List.iter (fun t ->
+        let u = match use_op with
+        | Op (ClassImplementsCheck c) ->
+          let use_op = Op (ClassImplementsCheck { c with implements = reason_of_t t }) in
+          ImplementsT (use_op, this)
+        | _ ->
+          u
+        in
+        rec_flow cx trace (t, u))
 
     (** object types: an intersection may satisfy an object UB without
         any particular member of the intersection doing so completely.
@@ -6927,7 +6943,7 @@ and subst =
         begin match SMap.get typeparam.name map with
         | None -> t
         | Some param_t when typeparam.name = "this" ->
-          ReposT (typeparam.reason, param_t)
+          ReposT (annot_reason typeparam.reason, param_t)
         | Some param_t ->
           (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
           | RPolyTest _ ->

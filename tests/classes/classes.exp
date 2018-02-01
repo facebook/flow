@@ -7,21 +7,16 @@ Error: B.js:6
     6: (b.foo: number); // error, number !~> function
                ^^^^^^ [2]: number
 
-Error: C.js:3
-  3: class C extends B {
-           ^ C. Cannot extend
-  3: class C extends B {
-                     ^ B
-  Property `foo` is incompatible:
-      4:   foo(x:string):void { }
-           ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-      2:   foo(x:number):void { }
-           ^^^^^^^^^^^^^^^^^^^^^^ function. See: A.js:2
-      The first parameter is incompatible:
-          2:   foo(x:number):void { }
-                     ^^^^^^ number. This type is incompatible with. See: A.js:2
-          4:   foo(x:string):void { }
-                     ^^^^^^ string
+Error: C.js:4
+  4:   foo(x:string):void { }
+             ^^^^^^ Cannot extend `B` [1] with `C` because in property `foo` and then the first argument, string [2] is incompatible with number [3].
+  References:
+    3: class C extends B {
+                       ^ [1]: `B`
+    4:   foo(x:string):void { }
+               ^^^^^^ [2]: string
+    2:   foo(x:number):void { }
+               ^^^^^^ [3]: number. See: A.js:2
 
 Error: C.js:8
   8: (c.foo: number); // error, number !~> function

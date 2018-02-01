@@ -1,20 +1,14 @@
 Library type error:
-lib/test.js:0
-inconsistent use of library definitions
-  7: declare class D extends _module.C {
-                   ^ D. Cannot extend
-  7: declare class D extends _module.C {
-                             ^^^^^^^^^ _C
-  Property `foo` is incompatible:
-      8:   foo(): string;
-           ^^^^^^^^^^^^^ function type. This type is incompatible with
-      2:   foo(): number;
-           ^^^^^^^^^^^^^ function type
-      The return is incompatible:
-          8:   foo(): string;
-                      ^^^^^^ string. This type is incompatible with
-          2:   foo(): number;
-                      ^^^^^^ number
+lib/test.js:8
+  8:   foo(): string;
+              ^^^^^^ Cannot extend mixins `_module.C` [1] with `D` because in property `foo` and then the return value, string [2] is incompatible with number [3].
+  References:
+    7: declare class D extends _module.C {
+                               ^^^^^^^^^ [1]: mixins `_module.C`
+    8:   foo(): string;
+                ^^^^^^ [2]: string
+    2:   foo(): number;
+                ^^^^^^ [3]: number
 
 Error: declare_class.js:8
   8: C.x = "";

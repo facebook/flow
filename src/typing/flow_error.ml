@@ -948,6 +948,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper]))
 
+      | Op ClassExtendsCheck {extends; def; _} ->
+        Some (`Root (def, None,
+          [text "Cannot extend "; ref extends; text " with "; desc def]))
+
+      | Op ClassImplementsCheck {implements; def; _} ->
+        Some (`Root (def, None,
+          [text "Cannot implement "; ref implements; text " with "; desc def]))
+
       | Op (FunCall {op; fn; _}) ->
         Some (`Root (op, Some fn, [text "Cannot call "; desc fn]))
 
@@ -997,19 +1005,24 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           [text "the callable signature"]))
 
       | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
-        let repos_if_react_prop loc reason = function
+        let repos_small_reason loc reason = function
         (* If we are checking the React config then don't reposition to the
          * props object type which does not contain the children. *)
         | Frame (ReactConfigCheck, _) -> repos_reason loc reason
+        (* If we are checking class extensions or implementations then the
+         * object reason will point to the class name. So don't reposition with
+         * this reason. *)
+        | Op (ClassExtendsCheck _) ->  repos_reason loc reason
+        | Op (ClassImplementsCheck _) ->  repos_reason loc reason
         | _ -> reason
         in
-        let lower = repos_if_react_prop loc lower use_op in
+        let lower = repos_small_reason loc lower use_op in
         let rec loop lower = function
         (* Don't match $key/$value/$call properties since they have special
          * meaning. As defined above. *)
         | Frame (PropertyCompatibility {prop=Some prop; lower=lower'; _}, use_op)
             when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
-          let lower' = repos_if_react_prop (loc_of_reason lower) lower' use_op in
+          let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
           (* Perform the same frame location unwrapping as we do in our
            * general code. *)
           let lower = if Loc.contains (loc_of_reason lower') (loc_of_reason lower)

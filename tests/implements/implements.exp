@@ -11,14 +11,14 @@ Error: test.js:5
 
 Error: test.js:6
   6: class C2 implements IFoo { foo: number } // error: number <~> string
-           ^^ C2. Cannot implement
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-                         ^^^^ IFoo
-  Property `foo` is incompatible:
-      6: class C2 implements IFoo { foo: number } // error: number <~> string
-                                         ^^^^^^ number. This type is incompatible with
-      3: interface IFoo { foo: string }
-                               ^^^^^^ string
+                                     ^^^^^^ Cannot implement `IFoo` [1] with `C2` because in property `foo`, number [2] is incompatible with string [3].
+  References:
+    6: class C2 implements IFoo { foo: number } // error: number <~> string
+                           ^^^^ [1]: `IFoo`
+    6: class C2 implements IFoo { foo: number } // error: number <~> string
+                                       ^^^^^^ [2]: number
+    3: interface IFoo { foo: string }
+                             ^^^^^^ [3]: string
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found

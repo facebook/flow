@@ -1,3 +1,157 @@
+Error: class-extends-and-implements.js:15
+ 15:   p: string;
+          ^^^^^^ Cannot extend `A` [1] with `C` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   14: class C extends A {
+                       ^ [1]: `A`
+   15:   p: string;
+            ^^^^^^ [2]: string
+    7:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:19
+ 19:   p: string;
+          ^^^^^^ Cannot extend `B` [1] with `D` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   18: class D extends B<empty> {
+                       ^^^^^^^^ [1]: `B`
+   19:   p: string;
+            ^^^^^^ [2]: string
+   11:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:31
+ 31:   p: string;
+          ^^^^^^ Cannot implement `E` [1] with `G` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   30: class G implements E {
+                          ^ [1]: `E`
+   31:   p: string;
+            ^^^^^^ [2]: string
+   23:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:35
+ 35:   p: string;
+          ^^^^^^ Cannot implement `F` [1] with `H` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   34: class H implements F<empty> {
+                          ^^^^^^^^ [1]: `F`
+   35:   p: string;
+            ^^^^^^ [2]: string
+   27:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:47
+ 47:   p: string;
+          ^^^^^^ Cannot extend `I` [1] with `K` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   46: interface K extends I {
+                           ^ [1]: `I`
+   47:   p: string;
+            ^^^^^^ [2]: string
+   39:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:51
+ 51:   p: string;
+          ^^^^^^ Cannot extend `J` [1] with `L` because in property `p`, string [2] is incompatible with number [3].
+  References:
+   50: interface L extends J<empty> {
+                           ^^^^^^^^ [1]: `J`
+   51:   p: string;
+            ^^^^^^ [2]: string
+   43:   p: number;
+            ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:71
+ 71:   p1: string;
+           ^^^^^^ Cannot extend `M1` [1] with `O` because in property `p1`, string [2] is incompatible with number [3].
+  References:
+   70: interface O extends M1, M2 {
+                           ^^ [1]: `M1`
+   71:   p1: string;
+             ^^^^^^ [2]: string
+   55:   p1: number;
+             ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:72
+ 72:   p2: string;
+           ^^^^^^ Cannot extend `M2` [1] with `O` because in property `p2`, string [2] is incompatible with number [3].
+  References:
+   70: interface O extends M1, M2 {
+                               ^^ [1]: `M2`
+   72:   p2: string;
+             ^^^^^^ [2]: string
+   59:   p2: number;
+             ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:76
+ 76:   p1: string;
+           ^^^^^^ Cannot extend `N1` [1] with `P` because in property `p1`, string [2] is incompatible with number [3].
+  References:
+   75: interface P extends N1<empty>, N2<empty> {
+                           ^^^^^^^^^ [1]: `N1`
+   76:   p1: string;
+             ^^^^^^ [2]: string
+   63:   p1: number;
+             ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:77
+ 77:   p2: string;
+           ^^^^^^ Cannot extend `N2` [1] with `P` because in property `p2`, string [2] is incompatible with number [3].
+  References:
+   75: interface P extends N1<empty>, N2<empty> {
+                                      ^^^^^^^^^ [1]: `N2`
+   77:   p2: string;
+             ^^^^^^ [2]: string
+   67:   p2: number;
+             ^^^^^^ [3]: number
+
+Error: class-extends-and-implements.js:97
+ 97:   p1: number;
+           ^^^^^^ Cannot implement `Q1` [1] with `S` because in property `p1`, number [2] is incompatible with string [3].
+  References:
+   96: class S implements Q1, Q2 {
+                          ^^ [1]: `Q1`
+   97:   p1: number;
+             ^^^^^^ [2]: number
+   81:   p1: string;
+             ^^^^^^ [3]: string
+
+Error: class-extends-and-implements.js:98
+ 98:   p2: number;
+           ^^^^^^ Cannot implement `Q2` [1] with `S` because in property `p2`, number [2] is incompatible with string [3].
+  References:
+   96: class S implements Q1, Q2 {
+                              ^^ [1]: `Q2`
+   98:   p2: number;
+             ^^^^^^ [2]: number
+   85:   p2: string;
+             ^^^^^^ [3]: string
+
+Error: class-extends-and-implements.js:102
+102:   p1: number;
+           ^^^^^^ Cannot implement `R1` [1] with `T` because in property `p1`, number [2] is incompatible with string [3].
+  References:
+  101: class T implements R1<empty>, R2<empty> {
+                          ^^^^^^^^^ [1]: `R1`
+  102:   p1: number;
+             ^^^^^^ [2]: number
+   89:   p1: string;
+             ^^^^^^ [3]: string
+
+Error: class-extends-and-implements.js:103
+103:   p2: number;
+           ^^^^^^ Cannot implement `R2` [1] with `T` because in property `p2`, number [2] is incompatible with string [3].
+  References:
+  101: class T implements R1<empty>, R2<empty> {
+                                     ^^^^^^^^^ [1]: `R2`
+  103:   p2: number;
+             ^^^^^^ [2]: number
+   93:   p2: string;
+             ^^^^^^ [3]: string
+
 Error: desc-class-properties.js:16
  16:     (this.a: number); // Error: string ~> number
           ^^^^^^ Cannot cast `this.a` to number because string [1] is incompatible with number [2].
@@ -377,4 +531,4 @@ Error: order.js:10
                     ^^^^^ [2]: empty
 
 
-Found 42 errors
+Found 56 errors
