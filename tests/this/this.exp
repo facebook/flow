@@ -1,17 +1,18 @@
 Error: This.js:29
  29:   return this.x
+                   ^ Cannot get `this.x` because property `x` is missing in global object [1].
+  References:
+   29:   return this.x
+                ^^^^ [1]: global object
+
+Error: This.js:29
+ 29:   return this.x
               ^^^^^^ Cannot return `this.x` because string [1] is incompatible with number [2].
   References:
    34: var f1_3 = f1.bind({x: ""})();           // error, string -> number
                               ^^ [1]: string
    28: function f1() : number {
                        ^^^^^^ [2]: number
-
-Error: This.js:29
- 29:   return this.x
-                   ^ property `x`. Property not found in
- 29:   return this.x
-              ^^^^ global object
 
 Error: This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
@@ -24,15 +25,17 @@ Error: This.js:33
 
 Error: This.js:41
  41:   return this.x
-                   ^ property `x`. Property not found in
- 41:   return this.x
-              ^^^^ global object
+                   ^ Cannot get `this.x` because property `x` is missing in global object [1].
+  References:
+   41:   return this.x
+                ^^^^ [1]: global object
 
 Error: This.js:48
  48:     var a2 = () => { return this.x };
-                                      ^ property `x`. Property not found in
- 48:     var a2 = () => { return this.x };
-                                 ^^^^ global object
+                                      ^ Cannot get `this.x` because property `x` is missing in global object [1].
+  References:
+   48:     var a2 = () => { return this.x };
+                                   ^^^^ [1]: global object
 
 Error: This.js:49
  49:     return a2()

@@ -126,9 +126,10 @@ Error: headers.js:18
 
 Error: headers.js:28
  28: e.getAll('content-type'); // incorrect
-       ^^^^^^ property `getAll`. Property not found in
- 28: e.getAll('content-type'); // incorrect
-     ^ Headers
+       ^^^^^^ Cannot call `e.getAll` because property `getAll` is missing in `Headers` [1].
+  References:
+    7: const e: Headers = new Headers(); // correct
+                ^^^^^^^ [1]: `Headers`
 
 Error: request.js:2
   2: const a: Request = new Request(); // incorrect

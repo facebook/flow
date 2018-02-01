@@ -49,9 +49,10 @@ Error: commonjs-pascal.js:6
 
 Error: commonjs-pascal.js:7
   7: (null: React.Missing); // Error
-            ^^^^^^^^^^^^^ Missing. Property not found in
-  1: const React = require('React');
-                   ^^^^^^^^^^^^^^^^ module `react`
+            ^^^^^^^^^^^^^ Property `Missing` is missing in module `react` [1].
+  References:
+  261:   declare module.exports: $Exports<'react'>;
+                                 ^^^^^^^^^^^^^^^^^ [1]: module `react`. See lib: <BUILTINS>/react.js:261
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
@@ -104,9 +105,10 @@ Error: commonjs.js:6
 
 Error: commonjs.js:7
   7: (null: React.Missing); // Error
-            ^^^^^^^^^^^^^ Missing. Property not found in
-  1: const React = require('react');
-                   ^^^^^^^^^^^^^^^^ module `react`
+            ^^^^^^^^^^^^^ Property `Missing` is missing in module `react` [1].
+  References:
+    1: const React = require('react');
+                     ^^^^^^^^^^^^^^^^ [1]: module `react`
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
@@ -159,9 +161,10 @@ Error: es-default-pascal.js:6
 
 Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
-            ^^^^^^^^^^^^^ Missing. Property not found in
-261:   declare module.exports: $Exports<'react'>;
-                               ^^^^^^^^^^^^^^^^^ module `react`. See lib: <BUILTINS>/react.js:261
+            ^^^^^^^^^^^^^ Property `Missing` is missing in module `react` [1].
+  References:
+  261:   declare module.exports: $Exports<'react'>;
+                                 ^^^^^^^^^^^^^^^^^ [1]: module `react`. See lib: <BUILTINS>/react.js:261
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
@@ -174,36 +177,39 @@ Error: es-default.js:4
 
 Error: es-default.js:5
   5: ('Hello, world!': React.Node); // Error: Not in default export.
-                       ^^^^^^^^^^ Node. Property not found in
-                              v-
-241:   declare export default {|
-242:     +DOM: typeof DOM,
-243:     +PropTypes: typeof PropTypes,
-...:
-255:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:241
+                       ^^^^^^^^^^ Property `Node` is missing in object type [1].
+  References:
+                                v-
+  241:   declare export default {|
+  242:     +DOM: typeof DOM,
+  243:     +PropTypes: typeof PropTypes,
+  ...:
+  255:   |};
+         -^ [1]: object type. See lib: <BUILTINS>/react.js:241
 
 Error: es-default.js:6
   6: ({}: React.Node); // Error: Not in default export.
-          ^^^^^^^^^^ Node. Property not found in
-                              v-
-241:   declare export default {|
-242:     +DOM: typeof DOM,
-243:     +PropTypes: typeof PropTypes,
-...:
-255:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:241
+          ^^^^^^^^^^ Property `Node` is missing in object type [1].
+  References:
+                                v-
+  241:   declare export default {|
+  242:     +DOM: typeof DOM,
+  243:     +PropTypes: typeof PropTypes,
+  ...:
+  255:   |};
+         -^ [1]: object type. See lib: <BUILTINS>/react.js:241
 
 Error: es-default.js:7
   7: (null: React.Missing); // Error: Not in default export.
-            ^^^^^^^^^^^^^ Missing. Property not found in
-                              v-
-241:   declare export default {|
-242:     +DOM: typeof DOM,
-243:     +PropTypes: typeof PropTypes,
-...:
-255:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:241
+            ^^^^^^^^^^^^^ Property `Missing` is missing in object type [1].
+  References:
+                                v-
+  241:   declare export default {|
+  242:     +DOM: typeof DOM,
+  243:     +PropTypes: typeof PropTypes,
+  ...:
+  255:   |};
+         -^ [1]: object type. See lib: <BUILTINS>/react.js:241
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
@@ -256,9 +262,10 @@ Error: es-namespace-pascal.js:6
 
 Error: es-namespace-pascal.js:7
   7: (null: React.Missing); // Error
-            ^^^^^^^^^^^^^ Missing. Property not found in
-  1: import * as React from 'React';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ module `React`
+            ^^^^^^^^^^^^^ Property `Missing` is missing in module `React` [1].
+  References:
+    1: import * as React from 'React';
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `React`
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
@@ -311,9 +318,10 @@ Error: es-namespace.js:6
 
 Error: es-namespace.js:7
   7: (null: React.Missing); // Error
-            ^^^^^^^^^^^^^ Missing. Property not found in
-  1: import * as React from 'react';
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ module `react`
+            ^^^^^^^^^^^^^ Property `Missing` is missing in module `react` [1].
+  References:
+    1: import * as React from 'react';
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `react`
 
 
 Found 19 errors

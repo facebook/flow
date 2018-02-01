@@ -1,13 +1,11 @@
 Error: type.js:10
  10: (o1: {||}); // Error: missing x
-      ^^ object type. This type is incompatible with
- 10: (o1: {||}); // Error: missing x
-          ^^^^ object type
-  Property `x` is incompatible:
-     10: (o1: {||}); // Error: missing x
-          ^^ property `x`. Property not found in
-     10: (o1: {||}); // Error: missing x
-              ^^^^ object type
+      ^^ Cannot cast `o1` to object type because property `x` is missing in object type [1] but exists in object type [2].
+  References:
+   10: (o1: {||}); // Error: missing x
+            ^^^^ [1]: object type
+    9: declare var o1: O1;
+                       ^^ [2]: object type
 
 Error: type.js:12
  12: (o1: {|x?: X|}); // Error: x is not optional
@@ -20,25 +18,12 @@ Error: type.js:12
 
 Error: type.js:13
  13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
-      ^^ object type. This type is incompatible with
- 13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
-          ^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
-              ^^^^^^^^^^^^^^^ property `y`. Property not found in
-     13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
-          ^^ object type
-
-Error: type.js:14
- 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-      ^^ object type. This type is incompatible with
- 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-          ^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-              ^^^^^^^^^^^^^^^^ property `y`. Property not found in
-     14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-          ^^ object type
+      ^^ Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+    9: declare var o1: O1;
+                       ^^ [1]: object type
+   13: (o1: {|x: X, y?: Y|}); // Error: y is not in O1
+            ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: type.js:14
  14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
@@ -48,6 +33,15 @@ Error: type.js:14
                             ^ [1]: `X`
    14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
                   ^ [2]: undefined
+
+Error: type.js:14
+ 14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
+      ^^ Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+    9: declare var o1: O1;
+                       ^^ [1]: object type
+   14: (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
+            ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: type.js:15
  15: (o1: {|x: Y|}); // Error: X = Y
@@ -66,25 +60,21 @@ Error: type.js:16
 
 Error: type.js:16
  16: ({}: O1); // Error: missing x
-      ^^ object literal. This type is incompatible with
- 16: ({}: O1); // Error: missing x
-          ^^ object type
-  Property `x` is incompatible:
-     16: ({}: O1); // Error: missing x
-              ^^ property `x`. Property not found in
-     16: ({}: O1); // Error: missing x
-          ^^ object literal
+      ^^ Cannot cast object literal to `O1` because property `x` is missing in object literal [1] but exists in object type [2].
+  References:
+   16: ({}: O1); // Error: missing x
+        ^^ [1]: object literal
+   16: ({}: O1); // Error: missing x
+            ^^ [2]: object type
 
 Error: type.js:18
  18: ({x, y}: O1); // Error: y is not in O1
-      ^^^^^^ object literal. This type is incompatible with
- 18: ({x, y}: O1); // Error: y is not in O1
-              ^^ object type
-  Property `y` is incompatible:
-     18: ({x, y}: O1); // Error: y is not in O1
-          ^^^^^^ property `y`. Property not found in
-     18: ({x, y}: O1); // Error: y is not in O1
-                  ^^ object type
+      ^^^^^^ Cannot cast object literal to `O1` because property `y` is missing in object type [1] but exists in object literal [2].
+  References:
+   18: ({x, y}: O1); // Error: y is not in O1
+                ^^ [1]: object type
+   18: ({x, y}: O1); // Error: y is not in O1
+        ^^^^^^ [2]: object literal
 
 Error: type.js:19
  19: ({x: y}: O1); // Error: Y ~> X
@@ -106,36 +96,21 @@ Error: type.js:21
 
 Error: type.js:27
  27: (o3: {||}); // Error: missing x and y
-      ^^ object type. This type is incompatible with
- 27: (o3: {||}); // Error: missing x and y
-          ^^^^ object type
-  Property `x` is incompatible:
-     27: (o3: {||}); // Error: missing x and y
-          ^^ property `x`. Property not found in
-     27: (o3: {||}); // Error: missing x and y
-              ^^^^ object type
+      ^^ Cannot cast `o3` to object type because property `x` is missing in object type [1] but exists in object type [2].
+  References:
+   27: (o3: {||}); // Error: missing x and y
+            ^^^^ [1]: object type
+   26: declare var o3: O3;
+                       ^^ [2]: object type
 
 Error: type.js:27
  27: (o3: {||}); // Error: missing x and y
-      ^^ object type. This type is incompatible with
- 27: (o3: {||}); // Error: missing x and y
-          ^^^^ object type
-  Property `y` is incompatible:
-     27: (o3: {||}); // Error: missing x and y
-          ^^ property `y`. Property not found in
-     27: (o3: {||}); // Error: missing x and y
-              ^^^^ object type
-
-Error: type.js:28
- 28: (o3: {|x: X|}); // Error: x is optional and missing y
-      ^^ object type. This type is incompatible with
- 28: (o3: {|x: X|}); // Error: x is optional and missing y
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-     28: (o3: {|x: X|}); // Error: x is optional and missing y
-          ^^ property `y`. Property not found in
-     28: (o3: {|x: X|}); // Error: x is optional and missing y
-              ^^^^^^^^ object type
+      ^^ Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   27: (o3: {||}); // Error: missing x and y
+            ^^^^ [1]: object type
+   26: declare var o3: O3;
+                       ^^ [2]: object type
 
 Error: type.js:28
  28: (o3: {|x: X|}); // Error: x is optional and missing y
@@ -146,16 +121,23 @@ Error: type.js:28
    28: (o3: {|x: X|}); // Error: x is optional and missing y
                  ^ [2]: `X`
 
+Error: type.js:28
+ 28: (o3: {|x: X|}); // Error: x is optional and missing y
+      ^^ Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   28: (o3: {|x: X|}); // Error: x is optional and missing y
+            ^^^^^^^^ [1]: object type
+   26: declare var o3: O3;
+                       ^^ [2]: object type
+
 Error: type.js:29
  29: (o3: {|x?: X|}); // Error: missing y
-      ^^ object type. This type is incompatible with
- 29: (o3: {|x?: X|}); // Error: missing y
-          ^^^^^^^^^ object type
-  Property `y` is incompatible:
-     29: (o3: {|x?: X|}); // Error: missing y
-          ^^ property `y`. Property not found in
-     29: (o3: {|x?: X|}); // Error: missing y
-              ^^^^^^^^^ object type
+      ^^ Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   29: (o3: {|x?: X|}); // Error: missing y
+            ^^^^^^^^^ [1]: object type
+   26: declare var o3: O3;
+                       ^^ [2]: object type
 
 Error: type.js:30
  30: (o3: {|x: X, y?: Y|}); // Error: x is optional
@@ -165,17 +147,6 @@ Error: type.js:30
                             ^ [1]: undefined
    30: (o3: {|x: X, y?: Y|}); // Error: x is optional
                  ^ [2]: `X`
-
-Error: type.js:32
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-      ^^ object type. This type is incompatible with
- 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-     32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-          ^^ property `y`. Property not found in
-     32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
-              ^^^^^^^^ object type
 
 Error: type.js:32
  32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
@@ -195,6 +166,15 @@ Error: type.js:32
    32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
                  ^ [2]: `Y`
 
+Error: type.js:32
+ 32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+      ^^ Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   32: (o3: {|x: Y|}); // Error: X = Y, x is optional, and missing y
+            ^^^^^^^^ [1]: object type
+   26: declare var o3: O3;
+                       ^^ [2]: object type
+
 Error: type.js:33
  33: ({}: O3); // OK
       ^^ object literal. Inexact type is incompatible with exact type
@@ -212,47 +192,30 @@ Error: type.js:36
 
 Error: type.js:40
  40: (o4: {||}); // Error: missing x and y
-      ^^ object type. This type is incompatible with
- 40: (o4: {||}); // Error: missing x and y
-          ^^^^ object type
-  Property `x` is incompatible:
-     40: (o4: {||}); // Error: missing x and y
-          ^^ property `x`. Property not found in
-     40: (o4: {||}); // Error: missing x and y
-              ^^^^ object type
+      ^^ Cannot cast `o4` to object type because property `x` is missing in object type [1] but exists in object type [2].
+  References:
+   40: (o4: {||}); // Error: missing x and y
+            ^^^^ [1]: object type
+   39: declare var o4: O4;
+                       ^^ [2]: object type
 
 Error: type.js:40
  40: (o4: {||}); // Error: missing x and y
-      ^^ object type. This type is incompatible with
- 40: (o4: {||}); // Error: missing x and y
-          ^^^^ object type
-  Property `y` is incompatible:
-     40: (o4: {||}); // Error: missing x and y
-          ^^ property `y`. Property not found in
-     40: (o4: {||}); // Error: missing x and y
-              ^^^^ object type
+      ^^ Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   40: (o4: {||}); // Error: missing x and y
+            ^^^^ [1]: object type
+   39: declare var o4: O4;
+                       ^^ [2]: object type
 
 Error: type.js:41
  41: (o4: {|x: X|}); // Error: missing y
-      ^^ object type. This type is incompatible with
- 41: (o4: {|x: X|}); // Error: missing y
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-     41: (o4: {|x: X|}); // Error: missing y
-          ^^ property `y`. Property not found in
-     41: (o4: {|x: X|}); // Error: missing y
-              ^^^^^^^^ object type
-
-Error: type.js:42
- 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-      ^^ object type. This type is incompatible with
- 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-          ^^^^^^^^^ object type
-  Property `y` is incompatible:
-     42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-          ^^ property `y`. Property not found in
-     42: (o4: {|x?: X|}); // Error: x is not optional and missing y
-              ^^^^^^^^^ object type
+      ^^ Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   41: (o4: {|x: X|}); // Error: missing y
+            ^^^^^^^^ [1]: object type
+   39: declare var o4: O4;
+                       ^^ [2]: object type
 
 Error: type.js:42
  42: (o4: {|x?: X|}); // Error: x is not optional and missing y
@@ -262,6 +225,15 @@ Error: type.js:42
                             ^ [1]: `X`
    42: (o4: {|x?: X|}); // Error: x is not optional and missing y
                   ^ [2]: undefined
+
+Error: type.js:42
+ 42: (o4: {|x?: X|}); // Error: x is not optional and missing y
+      ^^ Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   42: (o4: {|x?: X|}); // Error: x is not optional and missing y
+            ^^^^^^^^^ [1]: object type
+   39: declare var o4: O4;
+                       ^^ [2]: object type
 
 Error: type.js:44
  44: (o4: {|x?: X, y?: Y|}); // Error: x is not optional
@@ -274,23 +246,21 @@ Error: type.js:44
 
 Error: type.js:45
  45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-      ^^ object type. This type is incompatible with
- 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-          ^^^^^^^^ object type
-  Property `y` is incompatible:
-     45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-          ^^ property `y`. Property not found in
-     45: (o4: {|x: Y|}); // Error: X = Y, and missing y
-              ^^^^^^^^ object type
-
-Error: type.js:45
- 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
       ^^ Cannot cast `o4` to object type because in property `x`, `X` [1] is incompatible with `Y` [2].
   References:
    38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
                             ^ [1]: `X`
    45: (o4: {|x: Y|}); // Error: X = Y, and missing y
                  ^ [2]: `Y`
+
+Error: type.js:45
+ 45: (o4: {|x: Y|}); // Error: X = Y, and missing y
+      ^^ Cannot cast `o4` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   45: (o4: {|x: Y|}); // Error: X = Y, and missing y
+            ^^^^^^^^ [1]: object type
+   39: declare var o4: O4;
+                       ^^ [2]: object type
 
 Error: type.js:46
  46: ({}: O4); // Error: missing x
@@ -300,14 +270,12 @@ Error: type.js:46
 
 Error: type.js:46
  46: ({}: O4); // Error: missing x
-      ^^ object literal. This type is incompatible with
- 46: ({}: O4); // Error: missing x
-          ^^ object type
-  Property `x` is incompatible:
-     46: ({}: O4); // Error: missing x
-              ^^ property `x`. Property not found in
-     46: ({}: O4); // Error: missing x
-          ^^ object literal
+      ^^ Cannot cast object literal to `O4` because property `x` is missing in object literal [1] but exists in object type [2].
+  References:
+   46: ({}: O4); // Error: missing x
+        ^^ [1]: object literal
+   46: ({}: O4); // Error: missing x
+            ^^ [2]: object type
 
 Error: type.js:49
  49: ({x: y}: O4); // Error: Y ~> X
@@ -335,17 +303,6 @@ Error: type.js:55
 
 Error: type.js:57
  57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-      ^^ object type. This type is incompatible with
- 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-          ^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-              ^^^^^^^^^^^^^ property `y`. Property not found in
-     57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
-          ^^ object type
-
-Error: type.js:57
- 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
       ^^ Cannot cast `o5` to object type because in property `x`, undefined [1] is incompatible with `X` [2].
   References:
    51: type O5 = $Rest<{x: X, y: Y}, {|y: Y|}>;
@@ -353,16 +310,23 @@ Error: type.js:57
    57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
                 ^ [2]: `X`
 
+Error: type.js:57
+ 57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
+      ^^ Cannot cast `o5` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   52: declare var o5: O5;
+                       ^^ [1]: object type
+   57: (o5: {x: X, y?: Y}); // Error: x is optional and y is not in O5
+            ^^^^^^^^^^^^^ [2]: object type
+
 Error: type.js:58
  58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
-      ^^ object type. This type is incompatible with
- 58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
-          ^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
-              ^^^^^^^^^^^^^^ property `y`. Property not found in
-     58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
-          ^^ object type
+      ^^ Cannot cast `o5` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   52: declare var o5: O5;
+                       ^^ [1]: object type
+   58: (o5: {x?: X, y?: Y}); // Error: y is not in O5
+            ^^^^^^^^^^^^^^ [2]: object type
 
 Error: type.js:59
  59: (o5: {x: Y}); // Error: x is optional and X = Y
@@ -540,14 +504,12 @@ Error: type.js:109
 
 Error: type_dict.js:10
  10: (o1: {||}); // Error: missing y
-      ^^ object type. This type is incompatible with
- 10: (o1: {||}); // Error: missing y
-          ^^^^ object type
-  Property `y` is incompatible:
-     10: (o1: {||}); // Error: missing y
-          ^^ property `y`. Property not found in
-     10: (o1: {||}); // Error: missing y
-              ^^^^ object type
+      ^^ Cannot cast `o1` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   10: (o1: {||}); // Error: missing y
+            ^^^^ [1]: object type
+    9: declare var o1: O1;
+                       ^^ [2]: object type
 
 Error: type_dict.js:11
  11: (o1: {|y: Y|}); // Error: y is optional
@@ -593,14 +555,12 @@ Error: type_dict.js:18
 
 Error: type_dict.js:24
  24: (o3: {||}); // Error: missing y
-      ^^ object type. This type is incompatible with
- 24: (o3: {||}); // Error: missing y
-          ^^^^ object type
-  Property `y` is incompatible:
-     24: (o3: {||}); // Error: missing y
-          ^^ property `y`. Property not found in
-     24: (o3: {||}); // Error: missing y
-              ^^^^ object type
+      ^^ Cannot cast `o3` to object type because property `y` is missing in object type [1] but exists in object type [2].
+  References:
+   24: (o3: {||}); // Error: missing y
+            ^^^^ [1]: object type
+   23: declare var o3: O3;
+                       ^^ [2]: object type
 
 Error: type_dict.js:25
  25: (o3: {|y: Y|}); // Error: y is optional
@@ -769,23 +729,21 @@ Error: type_generic.js:2
 
 Error: type_generic.js:7
   7: (o: {|x: string|});
-      ^ object literal. This type is incompatible with
-  7: (o: {|x: string|});
-         ^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      7: (o: {|x: string|});
-          ^ property `p`. Property not found in
-      7: (o: {|x: string|});
-             ^^^^^^^^^^^^^ object type
-
-Error: type_generic.js:7
-  7: (o: {|x: string|});
       ^ Cannot cast `o` to object type because in property `x`, undefined [1] is incompatible with string [2].
   References:
     6: const [o, p] = remove({x: 'foo', p: 42});
                                  ^^^^^ [1]: undefined
     7: (o: {|x: string|});
                 ^^^^^^ [2]: string
+
+Error: type_generic.js:7
+  7: (o: {|x: string|});
+      ^ Cannot cast `o` to object type because property `p` is missing in object type [1] but exists in object literal [2].
+  References:
+    7: (o: {|x: string|});
+           ^^^^^^^^^^^^^ [1]: object type
+    6: const [o, p] = remove({x: 'foo', p: 42});
+                             ^^^^^^^^^^^^^^^^^ [2]: object literal
 
 Error: type_union.js:14
  14: ({x}: O1<X, Y>); // Error: x is not allowed
@@ -796,10 +754,10 @@ Error: type_union.js:14
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
-   14: ({x}: O1<X, Y>); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   14: ({x}: O1<X, Y>); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        14: ({x}: O1<X, Y>); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -809,10 +767,10 @@ Error: type_union.js:14
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
-   14: ({x}: O1<X, Y>); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   14: ({x}: O1<X, Y>); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        14: ({x}: O1<X, Y>); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -828,10 +786,10 @@ Error: type_union.js:16
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
-   16: ({x, y}: O1<X, Y>); // Error: x is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   16: ({x, y}: O1<X, Y>); // Error: x is not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        16: ({x, y}: O1<X, Y>); // Error: x is not allowed
             ^^^^^^ property `x`. Property not found in
@@ -841,10 +799,10 @@ Error: type_union.js:16
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O1
   Error:
-   16: ({x, y}: O1<X, Y>); // Error: x is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    12: type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   16: ({x, y}: O1<X, Y>); // Error: x is not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        16: ({x, y}: O1<X, Y>); // Error: x is not allowed
             ^^^^^^ property `x`. Property not found in
@@ -860,10 +818,10 @@ Error: type_union.js:21
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
-   21: ({y}: O2<X, Y>); // Error: y is not allowed
-        ^^^ object literal. This type is incompatible with
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   21: ({y}: O2<X, Y>); // Error: y is not allowed
+        ^^^ object literal
     Property `y` is incompatible:
        21: ({y}: O2<X, Y>); // Error: y is not allowed
             ^^^ property `y`. Property not found in
@@ -873,10 +831,10 @@ Error: type_union.js:21
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
-   21: ({y}: O2<X, Y>); // Error: y is not allowed
-        ^^^ object literal. This type is incompatible with
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   21: ({y}: O2<X, Y>); // Error: y is not allowed
+        ^^^ object literal
     Property `y` is incompatible:
        21: ({y}: O2<X, Y>); // Error: y is not allowed
             ^^^ property `y`. Property not found in
@@ -892,10 +850,10 @@ Error: type_union.js:22
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
-   22: ({x, y}: O2<X, Y>); // Error: y is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   22: ({x, y}: O2<X, Y>); // Error: y is not allowed
+        ^^^^^^ object literal
     Property `y` is incompatible:
        22: ({x, y}: O2<X, Y>); // Error: y is not allowed
             ^^^^^^ property `y`. Property not found in
@@ -905,10 +863,10 @@ Error: type_union.js:22
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O2
   Error:
-   22: ({x, y}: O2<X, Y>); // Error: y is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    18: type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   22: ({x, y}: O2<X, Y>); // Error: y is not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        22: ({x, y}: O2<X, Y>); // Error: y is not allowed
             ^^^^^^ property `x`. Property not found in
@@ -946,10 +904,10 @@ Error: type_union.js:29
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   29: ({x}: O4); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   29: ({x}: O4); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        29: ({x}: O4); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -959,10 +917,10 @@ Error: type_union.js:29
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   29: ({x}: O4); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   29: ({x}: O4); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        29: ({x}: O4); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -978,10 +936,10 @@ Error: type_union.js:30
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   30: ({y}: O4); // Error: y is not allowed
-        ^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   30: ({y}: O4); // Error: y is not allowed
+        ^^^ object literal
     Property `y` is incompatible:
        30: ({y}: O4); // Error: y is not allowed
             ^^^ property `y`. Property not found in
@@ -991,10 +949,10 @@ Error: type_union.js:30
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   30: ({y}: O4); // Error: y is not allowed
-        ^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   30: ({y}: O4); // Error: y is not allowed
+        ^^^ object literal
     Property `y` is incompatible:
        30: ({y}: O4); // Error: y is not allowed
             ^^^ property `y`. Property not found in
@@ -1010,10 +968,10 @@ Error: type_union.js:31
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   31: ({x, y}: O4); // Error: x and y are not allowed
-        ^^^^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   31: ({x, y}: O4); // Error: x and y are not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        31: ({x, y}: O4); // Error: x and y are not allowed
             ^^^^^^ property `x`. Property not found in
@@ -1023,10 +981,10 @@ Error: type_union.js:31
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ O4
   Error:
-   31: ({x, y}: O4); // Error: x and y are not allowed
-        ^^^^^^ object literal. This type is incompatible with
    27: type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   31: ({x, y}: O4); // Error: x and y are not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        31: ({x, y}: O4); // Error: x and y are not allowed
             ^^^^^^ property `x`. Property not found in
@@ -1074,10 +1032,10 @@ Error: type_union.js:37
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
   Error:
-   37: ({x, y}: O5); // Error: x and y are not allowed together
-        ^^^^^^ object literal. This type is incompatible with
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
-                       ^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
+   37: ({x, y}: O5); // Error: x and y are not allowed together
+        ^^^^^^ object literal
     Property `y` is incompatible:
        37: ({x, y}: O5); // Error: x and y are not allowed together
             ^^^^^^ property `y`. Property not found in
@@ -1087,10 +1045,10 @@ Error: type_union.js:37
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
   Error:
-   37: ({x, y}: O5); // Error: x and y are not allowed together
-        ^^^^^^ object literal. This type is incompatible with
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
-                       ^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
+   37: ({x, y}: O5); // Error: x and y are not allowed together
+        ^^^^^^ object literal
     Property `x` is incompatible:
        37: ({x, y}: O5); // Error: x and y are not allowed together
             ^^^^^^ property `x`. Property not found in
@@ -1115,10 +1073,10 @@ Error: type_union.js:44
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
                        ^^^^^^^^ object type
   Error:
-   44: ({x}: O7); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
-                       ^^^^^^^^ object type
+                       ^^^^^^^^ object type. This type is incompatible with
+   44: ({x}: O7); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        44: ({x}: O7); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -1128,10 +1086,10 @@ Error: type_union.js:44
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
                        ^^^^^^^^ object type
   Error:
-   44: ({x}: O7); // Error: x is not allowed
-        ^^^ object literal. This type is incompatible with
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
-                       ^^^^^^^^ object type
+                       ^^^^^^^^ object type. This type is incompatible with
+   44: ({x}: O7); // Error: x is not allowed
+        ^^^ object literal
     Property `x` is incompatible:
        44: ({x}: O7); // Error: x is not allowed
             ^^^ property `x`. Property not found in
@@ -1147,10 +1105,10 @@ Error: type_union.js:46
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
                        ^^^^^^^^ object type
   Error:
-   46: ({x, y}: O7); // Error: x is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
-                       ^^^^^^^^ object type
+                       ^^^^^^^^ object type. This type is incompatible with
+   46: ({x, y}: O7); // Error: x is not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        46: ({x, y}: O7); // Error: x is not allowed
             ^^^^^^ property `x`. Property not found in
@@ -1160,10 +1118,10 @@ Error: type_union.js:46
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
                        ^^^^^^^^ object type
   Error:
-   46: ({x, y}: O7); // Error: x is not allowed
-        ^^^^^^ object literal. This type is incompatible with
    42: type O7 = $Rest<{|y: Y|}, {|x: X | void|} | {|y: Y|}>;
-                       ^^^^^^^^ object type
+                       ^^^^^^^^ object type. This type is incompatible with
+   46: ({x, y}: O7); // Error: x is not allowed
+        ^^^^^^ object literal
     Property `x` is incompatible:
        46: ({x, y}: O7); // Error: x is not allowed
             ^^^^^^ property `x`. Property not found in
@@ -1209,10 +1167,10 @@ Error: type_union.js:55
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
                          ^^^^^^^^ object type
     Error:
-     55: ({x, y}: O9); // Error: x and y are not allowed together
-          ^^^^^^ object literal. This type is incompatible with
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                         ^^^^^^^^ object type
+                         ^^^^^^^^ object type. This type is incompatible with
+     55: ({x, y}: O9); // Error: x and y are not allowed together
+          ^^^^^^ object literal
       Property `y` is incompatible:
          55: ({x, y}: O9); // Error: x and y are not allowed together
               ^^^^^^ property `y`. Property not found in
@@ -1222,10 +1180,10 @@ Error: type_union.js:55
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
                          ^^^^^^^^ object type
     Error:
-     55: ({x, y}: O9); // Error: x and y are not allowed together
-          ^^^^^^ object literal. This type is incompatible with
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                         ^^^^^^^^ object type
+                         ^^^^^^^^ object type. This type is incompatible with
+     55: ({x, y}: O9); // Error: x and y are not allowed together
+          ^^^^^^ object literal
       Property `x` is incompatible:
          55: ({x, y}: O9); // Error: x and y are not allowed together
               ^^^^^^ property `x`. Property not found in
@@ -1243,10 +1201,10 @@ Error: type_union.js:55
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
                                     ^^^^^^^^ object type
     Error:
-     55: ({x, y}: O9); // Error: x and y are not allowed together
-          ^^^^^^ object literal. This type is incompatible with
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                                    ^^^^^^^^ object type
+                                    ^^^^^^^^ object type. This type is incompatible with
+     55: ({x, y}: O9); // Error: x and y are not allowed together
+          ^^^^^^ object literal
       Property `x` is incompatible:
          55: ({x, y}: O9); // Error: x and y are not allowed together
               ^^^^^^ property `x`. Property not found in
@@ -1256,10 +1214,10 @@ Error: type_union.js:55
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
                                     ^^^^^^^^ object type
     Error:
-     55: ({x, y}: O9); // Error: x and y are not allowed together
-          ^^^^^^ object literal. This type is incompatible with
      51: type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                                    ^^^^^^^^ object type
+                                    ^^^^^^^^ object type. This type is incompatible with
+     55: ({x, y}: O9); // Error: x and y are not allowed together
+          ^^^^^^ object literal
       Property `x` is incompatible:
          55: ({x, y}: O9); // Error: x and y are not allowed together
               ^^^^^^ property `x`. Property not found in

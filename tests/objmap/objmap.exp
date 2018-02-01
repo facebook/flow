@@ -36,47 +36,39 @@ Error: identity.js:26
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal. This type is incompatible with
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ object type
-  Property `a` is incompatible:
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-              ^^^ property `a`. Property not found in
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^ object literal
+      ^^ Cannot cast object literal to `Foo` because property `a` is missing in object literal [1] but exists in object type [2].
+  References:
+   29: ({}: Foo); // Error: `a` and `b` are not defined.
+        ^^ [1]: object literal
+   29: ({}: Foo); // Error: `a` and `b` are not defined.
+            ^^^ [2]: object type
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal. This type is incompatible with
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ object type
-  Property `b` is incompatible:
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-              ^^^ property `b`. Property not found in
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^ object literal
+      ^^ Cannot cast object literal to `Foo` because property `b` is missing in object literal [1] but exists in object type [2].
+  References:
+   29: ({}: Foo); // Error: `a` and `b` are not defined.
+        ^^ [1]: object literal
+   29: ({}: Foo); // Error: `a` and `b` are not defined.
+            ^^^ [2]: object type
 
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type. This type is incompatible with
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ object type
-  Property `a` is incompatible:
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                     ^^^ property `a`. Property not found in
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                ^^ object type
+            ^^ Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
+  References:
+   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]: object type
+   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]: object type
 
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type. This type is incompatible with
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ object type
-  Property `b` is incompatible:
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                     ^^^ property `b`. Property not found in
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                ^^ object type
+            ^^ Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
+  References:
+   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]: object type
+   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]: object type
 
 Error: identity.js:38
  38: (foo: {

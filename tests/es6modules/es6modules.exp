@@ -57,15 +57,27 @@ Error: es6modules.js:39
 
 Error: es6modules.js:40
  40: CJS_Clobb_Lit.doesntExist; // Error: doesntExist isn't a property
-                   ^^^^^^^^^^^ property `doesntExist`. Property not found in
- 40: CJS_Clobb_Lit.doesntExist; // Error: doesntExist isn't a property
-     ^^^^^^^^^^^^^ object literal
+                   ^^^^^^^^^^^ Cannot get `CJS_Clobb_Lit.doesntExist` because property `doesntExist` is missing in object literal [1].
+  References:
+                        v
+    6: module.exports = {
+    7:   numberValue1: 1,
+    8:   numberValue2: 2,
+  ...:
+   12: };
+       ^ [1]: object literal. See: CommonJS_Clobbering_Lit.js:6
 
 Error: es6modules.js:45
  45: CJS_Clobb_Lit_NS.default.default; // Error: No 'default' property on the exported obj
-                              ^^^^^^^ property `default`. Property not found in
- 45: CJS_Clobb_Lit_NS.default.default; // Error: No 'default' property on the exported obj
-     ^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+                              ^^^^^^^ Cannot get `CJS_Clobb_Lit_NS.default.default` because property `default` is missing in object literal [1].
+  References:
+                        v
+    6: module.exports = {
+    7:   numberValue1: 1,
+    8:   numberValue2: 2,
+  ...:
+   12: };
+       ^ [1]: object literal. See: CommonJS_Clobbering_Lit.js:6
 
 Error: es6modules.js:46
  46: var f3: string = CJS_Clobb_Lit_NS.numberValue4; // Error: number ~> string
@@ -103,9 +115,10 @@ Error: es6modules.js:59
 
 Error: es6modules.js:63
  63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
-                           ^^^^^^^^^^^ property `doesntExist`. Property not found in
- 63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
-     ^^^^^^^^^^^^^^^^^^^^^ Test
+                           ^^^^^^^^^^^ Cannot get `new CJS_Clobb_Class().doesntExist` because property `doesntExist` is missing in `Test` [1].
+  References:
+   63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
+       ^^^^^^^^^^^^^^^^^^^^^ [1]: `Test`
 
 Error: es6modules.js:65
  65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
@@ -133,9 +146,10 @@ Error: es6modules.js:70
 
 Error: es6modules.js:71
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                                         ^^^^^^^^^^^^^ property `staticNumber3`. Property not found in
- 71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                      ^^^^^^^^^^^^^^^^^^ module `CommonJS_Clobbering_Class`
+                                         ^^^^^^^^^^^^^ Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` is missing in module `CommonJS_Clobbering_Class` [1].
+  References:
+   69: import * as CJS_Clobb_Class_NS from "CommonJS_Clobbering_Class";
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:73
  73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
@@ -179,9 +193,10 @@ Error: es6modules.js:91
 
 Error: es6modules.js:92
  92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
-               ^^^^^^^^^^^ property `doesntExist`. Property not found in
- 92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
-     ^^^^^^^^^ module `CommonJS_Named`
+               ^^^^^^^^^^^ Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in module `CommonJS_Named` [1].
+  References:
+   89: import * as CJS_Named from "CommonJS_Named";
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `CommonJS_Named`
 
 Error: es6modules.js:96
  96: var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
@@ -373,9 +388,10 @@ Error: es6modules.js:177
 
 Error: es6modules.js:183
 183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
-                                          ^^^^^^^^^^^ property `doesntExist`. Property not found in
-183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ module `ES6_Default_AnonFunction2`
+                                          ^^^^^^^^^^^ Cannot get `require(...).doesntExist` because property `doesntExist` is missing in module `ES6_Default_AnonFunction2` [1].
+  References:
+  183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `ES6_Default_AnonFunction2`
 
 Error: es6modules.js:187
 187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string

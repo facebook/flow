@@ -1,19 +1,18 @@
 Error: c.js:5
   5: c.foo();
-       ^^^ property `foo`. Property not found in
-  5: c.foo();
-     ^ object literal
+       ^^^ Cannot call `c.foo` because property `foo` is missing in object literal [1].
+  References:
+    4: var b = Object.assign({ bar() {}, ...{} }, a);
+                             ^^^^^^^^^^^^^^^^^^^ [1]: object literal. See: b.js:4
 
 Error: object_assign.js:7
   7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                       ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                           ^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `Object.assign(...)` to `decl_export_` because property `bar` is missing in object literal [1] but exists in object type [2].
+  References:
+    7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                                ^^ [1]: object literal
+    7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                         ^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: object_create.js:12
  12: ({ foo: "foo" }: C);
@@ -107,9 +106,10 @@ Error: object_keys.js:44
 
 Error: object_missing.js:5
   5:     Object.doesNotExist();
-                ^^^^^^^^^^^^ property `doesNotExist`. Property not found in
-  5:     Object.doesNotExist();
-         ^^^^^^ statics of `Object`
+                ^^^^^^^^^^^^ Cannot call method `doesNotExist` because property `doesNotExist` is missing in statics of `Object` [1].
+  References:
+   25: declare class Object {
+                     ^^^^^^ [1]: statics of `Object`. See lib: <BUILTINS>/core.js:25
 
 Error: object_prototype.js:31
  31: b.toString = function(): string { return 'foo'; };
@@ -320,9 +320,10 @@ Error: proto.js:13
 
 Error: proto.js:17
  17: (inst1_proto.m: empty); // TODO error: function ~> empty
-                  ^ property `m`. Property not found in
- 17: (inst1_proto.m: empty); // TODO error: function ~> empty
-      ^^^^^^^^^^^ super of `C1`
+                  ^ Cannot get `inst1_proto.m` because property `m` is missing in super of `C1` [1].
+  References:
+   17: (inst1_proto.m: empty); // TODO error: function ~> empty
+        ^^^^^^^^^^^ [1]: super of `C1`
 
 
 Found 39 errors

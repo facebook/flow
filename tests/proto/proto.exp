@@ -36,20 +36,19 @@ Error: annot.js:9
 
 Error: annot.js:10
  10: ({p: 0}: O); // error, property `q` not found
-      ^^^^^^ object literal. This type is incompatible with
- 10: ({p: 0}: O); // error, property `q` not found
-              ^ object type
-  Property `q` is incompatible:
-     10: ({p: 0}: O); // error, property `q` not found
-                  ^ property `q`. Property not found in
-     10: ({p: 0}: O); // error, property `q` not found
-          ^^^^^^ object literal
+      ^^^^^^ Cannot cast object literal to `O` because property `q` is missing in object literal [1] but exists in object type [2].
+  References:
+   10: ({p: 0}: O); // error, property `q` not found
+        ^^^^^^ [1]: object literal
+   10: ({p: 0}: O); // error, property `q` not found
+                ^ [2]: object type
 
 Error: annot.js:15
  15: (o_optional.q: empty); // error: property `q` not found
-                 ^ property `q`. Property not found in
- 15: (o_optional.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ O_optional
+                 ^ Cannot get `o_optional.q` because property `q` is missing in `O_optional` [1].
+  References:
+   14: declare var o_optional: O_optional;
+                               ^^^^^^^^^^ [1]: `O_optional`
 
 Error: annot.js:16
  16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
@@ -71,9 +70,10 @@ Error: annot.js:16
 
 Error: annot.js:21
  21: (o_variance.q: empty); // error: property `q` not found
-                 ^ property `q`. Property not found in
- 21: (o_variance.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ O_variance
+                 ^ Cannot get `o_variance.q` because property `q` is missing in `O_variance` [1].
+  References:
+   20: declare var o_variance: O_variance;
+                               ^^^^^^^^^^ [1]: `O_variance`
 
 Error: annot.js:22
  22: (o_variance.__proto__: empty); // error: object type ~> empty
@@ -86,9 +86,10 @@ Error: annot.js:22
 
 Error: annot.js:27
  27: (o_callable.q: empty); // error: property `q` not found
-                 ^ property `q`. Property not found in
- 27: (o_callable.q: empty); // error: property `q` not found
-      ^^^^^^^^^^ O_callable
+                 ^ Cannot get `o_callable.q` because property `q` is missing in `O_callable` [1].
+  References:
+   26: declare var o_callable: O_callable;
+                               ^^^^^^^^^^ [1]: `O_callable`
 
 Error: annot.js:28
  28: (o_callable.__proto__: empty); // error: object type ~> empty
@@ -141,9 +142,10 @@ Error: literal.js:3
 
 Error: literal.js:6
   6: (o_get.q: empty); // error: property `q` not found
-            ^ property `q`. Property not found in
-  6: (o_get.q: empty); // error: property `q` not found
-      ^^^^^ object literal
+            ^ Cannot get `o_get.q` because property `q` is missing in object literal [1].
+  References:
+    5: var o_get = { get __proto__() { return { q: 1 } } };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
 
 Error: literal.js:10
  10: (o_set.__proto__: empty); // error: read from contravariant prop
@@ -162,9 +164,10 @@ Error: literal.js:13
 
 Error: literal.js:17
  17: (o_shorthand.q: empty); // error: property `q` not found
-                  ^ property `q`. Property not found in
- 17: (o_shorthand.q: empty); // error: property `q` not found
-      ^^^^^^^^^^^ object literal
+                  ^ Cannot get `o_shorthand.q` because property `q` is missing in object literal [1].
+  References:
+   16: var o_shorthand = { __proto__ };
+                         ^^^^^^^^^^^^^ [1]: object literal
 
 Error: literal.js:20
  20: var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
@@ -194,9 +197,10 @@ Error: literal.js:24
 
 Error: literal.js:25
  25: (o_loop.q: empty); // error: property `q` not found
-             ^ property `q`. Property not found in
- 25: (o_loop.q: empty); // error: property `q` not found
-      ^^^^^^ object literal
+             ^ Cannot get `o_loop.q` because property `q` is missing in object literal [1].
+  References:
+   23: var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
 
 Error: literal.js:27
  27: var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
@@ -204,9 +208,10 @@ Error: literal.js:27
 
 Error: null.js:5
   5: o_null.toString(); // property `toString` not found
-            ^^^^^^^^ property `toString`. Property not found in
-  5: o_null.toString(); // property `toString` not found
-     ^^^^^^ object literal
+            ^^^^^^^^ Cannot call `o_null.toString` because property `toString` is missing in object literal [1].
+  References:
+    4: var o_null = { p: 0, __proto__: null }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
 
 Error: null.js:13
  13: (o_shadow.p: string);

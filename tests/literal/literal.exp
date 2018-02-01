@@ -1,14 +1,20 @@
 Error: enum_client.js:6
   6: foo("LOCATION"); // error
-         ^^^^^^^^^^ property `LOCATION`. Property not found in
-  4: function foo(x: $Keys<typeof APIKeys>) { }
-                     ^^^^^^^^^^^^^^^^^^^^^ object literal
+         ^^^^^^^^^^ Property `LOCATION` is missing in object literal [1].
+  References:
+                     v
+    1: var APIKeys = {
+    2:     AGE: 'age',
+    3:     NAME: 'name',
+    4: };
+       ^ [1]: object literal. See: enum.js:1
 
 Error: enum_client.js:10
  10: bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
-         ^^^^^^^^^^^^ property `name`. Property not found in
-  8: function bar(x: $Keys<{age: number}>) { }
-                     ^^^^^^^^^^^^^^^^^^^^ object type
+         ^^^^^^^^^^^^ Property `name` is missing in object type [1].
+  References:
+    8: function bar(x: $Keys<{age: number}>) { }
+                             ^^^^^^^^^^^^^ [1]: object type
 
 Error: enum_client.js:17
  17: var name:number = object[APIKeys.NAME]; // error: object.name is a string

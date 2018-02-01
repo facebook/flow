@@ -160,25 +160,21 @@ Error: fs/fs.js:37
 
 Error: http/server.js:67
  67: server.listen(() => {}, {});
-                             ^^ object literal. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
-  Callable property is incompatible:
-    1099:     listen(handle: Object, callback?: Function): Server;
-                                                ^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/node.js:1099
-     67: server.listen(() => {}, {});
-                                 ^^ object literal
+                             ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
+  References:
+   67: server.listen(() => {}, {});
+                               ^^ [1]: object literal
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:68
  68: server.listen(function() {}, {});
-                                  ^^ object literal. This type is incompatible with the expected param type of
-1099:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1099
-  Callable property is incompatible:
-    1099:     listen(handle: Object, callback?: Function): Server;
-                                                ^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/node.js:1099
-     68: server.listen(function() {}, {});
-                                      ^^ object literal
+                                  ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
+  References:
+   68: server.listen(function() {}, {});
+                                    ^^ [1]: object literal
+  1099:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:69
  69: server.listen({}, () => {}, 'localhost', 123);
@@ -494,25 +490,21 @@ Error: http/server.js:84
 
 Error: https/server.js:67
  67: server.listen(() => {}, {});
-                             ^^ object literal. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
-  Callable property is incompatible:
-    1138:     listen(handle: Object, callback?: Function): Server;
-                                                ^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/node.js:1138
-     67: server.listen(() => {}, {});
-                                 ^^ object literal
+                             ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
+  References:
+   67: server.listen(() => {}, {});
+                               ^^ [1]: object literal
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:68
  68: server.listen(function() {}, {});
-                                  ^^ object literal. This type is incompatible with the expected param type of
-1138:     listen(handle: Object, callback?: Function): Server;
-                                            ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1138
-  Callable property is incompatible:
-    1138:     listen(handle: Object, callback?: Function): Server;
-                                                ^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/node.js:1138
-     68: server.listen(function() {}, {});
-                                      ^^ object literal
+                                  ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
+  References:
+   68: server.listen(function() {}, {});
+                                    ^^ [1]: object literal
+  1138:     listen(handle: Object, callback?: Function): Server;
+                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:69
  69: server.listen({}, () => {}, 'localhost', 123);

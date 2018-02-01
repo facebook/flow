@@ -15,14 +15,12 @@ Error: error_continues.js:3
 
 Error: exact_basics.js:49
  49: takesExactlyPerson(subtypeOfPerson); // error
-                        ^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ ExactPerson
-  Property `first` is incompatible:
-     49: takesExactlyPerson(subtypeOfPerson); // error
-                            ^^^^^^^^^^^^^^^ property `first`. Property not found in
-     43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                     ^^^^^^^^^^^ ExactPerson
+                        ^^^^^^^^^^^^^^^ Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is missing in `ExactPerson` [1] but exists in object literal [2].
+  References:
+   43: declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [1]: `ExactPerson`
+   41: var subtypeOfPerson = { salutation: "Mr", first: "Bob", last: "Dobalina" };
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object literal
 
 Error: exact_basics.js:61
  61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
@@ -32,25 +30,21 @@ Error: exact_basics.js:61
 
 Error: exact_basics.js:71
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
-                        ^^^^^^^^^^^^^^^^^^^^^^^ ExactPerson2. This type is incompatible with the expected param type of
- 43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ ExactPerson
-  Property `first` is incompatible:
-     71: takesExactlyPerson(returnsExactlyPerson2()); // error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ property `first`. Property not found in
-     43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                     ^^^^^^^^^^^ ExactPerson
+                        ^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is missing in `ExactPerson` [1] but exists in `ExactPerson2` [2].
+  References:
+   43: declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [1]: `ExactPerson`
+   68: declare function returnsExactlyPerson2(): ExactPerson2;
+                                                 ^^^^^^^^^^^^ [2]: `ExactPerson2`
 
 Error: exact_basics.js:85
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                           ^^^^^^^^^^^^^^^^^^^^^^ ExactPerson. This type is incompatible with the expected param type of
- 76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                     ^^^^^^^ Person2
-  Property `first` is incompatible:
-     76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                         ^^^^^^^ property `first`. Property not found in
-     85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                               ^^^^^^^^^^^^^^^^^^^^^^ ExactPerson
+                           ^^^^^^^^^^^^^^^^^^^^^^ Cannot call `takesSubtypeOfPerson2` with `returnsExactlyPerson()` bound to `person2` because property `first` is missing in `ExactPerson` [1] but exists in `Person2` [2].
+  References:
+   55: declare function returnsExactlyPerson(): ExactPerson;
+                                                ^^^^^^^^^^^ [1]: `ExactPerson`
+   76: declare function takesSubtypeOfPerson2(person2: Person2): void;
+                                                       ^^^^^^^ [2]: `Person2`
 
 Error: exact_basics.js:94
  94: takesPersonPred(returnsExactlyPersonPred()); // error
@@ -60,9 +54,10 @@ Error: exact_basics.js:94
 
 Error: prop_test.js:28
  28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-                 ^^^^^ property `state`. Property not found in
- 28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-              ^^ Person
+                 ^^^^^ Cannot get `pc.state` because property `state` is missing in `Person` [1].
+  References:
+   24: function prop_test_exact_union(pc: $Exact<Person> | $Exact<Address>): string {
+                                                 ^^^^^^ [1]: `Person`
 
 Error: unsealed.js:14
  14: f(o); // error: o incompatible with exact type

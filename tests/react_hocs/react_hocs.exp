@@ -1,29 +1,5 @@
 Error: Bad.js:11
  11: const Bad = (props: Props) => null;
-                 ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-122:   (props: Props, context: any): React$Node,
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-  The first parameter is incompatible:
-                                 v-
-     15: ): (React.ComponentType<{|
-     16:   ...Props,
-     17:   ...ExtraProps,
-     18: |}>) => React.ComponentType<Props> {
-         -^ object type. This type is incompatible with. See: hocs.js:15
-     11: const Bad = (props: Props) => null;
-                             ^^^^^ Props
-      Property `foo` is incompatible:
-         11: const Bad = (props: Props) => null;
-                                 ^^^^^ property `foo`. Property not found in
-                                     v-
-         15: ): (React.ComponentType<{|
-         16:   ...Props,
-         17:   ...ExtraProps,
-         18: |}>) => React.ComponentType<Props> {
-             -^ object type. See: hocs.js:15
-
-Error: Bad.js:11
- 11: const Bad = (props: Props) => null;
                          ^^^^^ In property `bar`, number [1] is incompatible with string [2].
   References:
     8:   bar: number,
@@ -33,21 +9,24 @@ Error: Bad.js:11
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
-                   ^^^ property `foo`. Property not found in
-  9: <Good buz={2} qux={3} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:9
+                   ^^^ Property `foo` is missing in props [1].
+  References:
+    9: <Good buz={2} qux={3} />; // Error: Missing foo
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:9
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
-                        ^^^ property `buz`. Property not found in
-  8: <Good foo={1} qux={3} />; // Error: Missing buz
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:8
+                        ^^^ Property `buz` is missing in props [1].
+  References:
+    8: <Good foo={1} qux={3} />; // Error: Missing buz
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:8
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
-                             ^^^ property `qux`. Property not found in
-  7: <Good foo={1} buz={2} />; // Error: Missing qux
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. See: Good_use.js:7
+                             ^^^ Property `qux` is missing in props [1].
+  References:
+    7: <Good foo={1} buz={2} />; // Error: Missing qux
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:7
 
 Error: Good.js:17
  17:     buz: buz * 2,
@@ -61,6 +40,23 @@ Error: Good.js:18
                                  ^^^^^^ [1]: string. See: Good_use.js:11
     9:   qux: number,
               ^^^^^^ [2]: number
+
+Error: hocs.js:15
+                             v-
+ 15: ): (React.ComponentType<{|
+ 16:   ...Props,
+ 17:   ...ExtraProps,
+ 18: |}>) => React.ComponentType<Props> {
+     -^ Property `foo` is missing in object type [1] but exists in `Props` [2].
+  References:
+                               v-
+   15: ): (React.ComponentType<{|
+   16:   ...Props,
+   17:   ...ExtraProps,
+   18: |}>) => React.ComponentType<Props> {
+       -^ [1]: object type
+   11: const Bad = (props: Props) => null;
+                           ^^^^^ [2]: `Props`. See: Bad.js:11
 
 
 Found 7 errors

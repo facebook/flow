@@ -60,9 +60,10 @@ Error: super.js:14
 
 Error: super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
-                ^^^^^^^^^^^ property `doesntExist`. Property not found in
- 15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
-          ^^^^^ statics of `A`
+                ^^^^^^^^^^^ Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1].
+  References:
+    2: class A {
+             ^ [1]: statics of `A`
 
 Error: super.js:19
  19:     super.f(0);
@@ -75,9 +76,10 @@ Error: super.js:19
 
 Error: super.js:20
  20:     return super.g;
-                      ^ property `g`. Property not found in
-  8: class B extends A {
-                     ^ A
+                      ^ Cannot get `super.g` because property `g` is missing in `A` [1].
+  References:
+    2: class A {
+             ^ [1]: `A`
 
 
 Found 12 errors

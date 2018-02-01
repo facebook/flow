@@ -27,14 +27,12 @@ Error: test.js:8
 
 Error: test.js:23
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-      ^^^^^^^^^^^^^^^ new object. This type is incompatible with
- 23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-                       ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-                           ^^^^^^^^^^^ property `x`. Property not found in
-     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-          ^^^^^^^^^^^^^^^ new object
+      ^^^^^^^^^^^^^^^ Cannot cast `new makeUnion()` to object type because property `x` is missing in new object [1] but exists in object type [2].
+  References:
+   23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+        ^^^^^^^^^^^^^^^ [1]: new object
+   23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+                         ^^^^^^^^^^^ [2]: object type
 
 Error: test2.js:7
   7: d.x = ""; // error, string ~/~ number (but property x is found)

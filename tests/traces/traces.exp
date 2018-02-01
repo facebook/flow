@@ -140,9 +140,7 @@ Trace:
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ React.Element. This type is incompatible with the expected return type of
- 14: function f(b): Element<*> {
-                    ^^^^^^^^^^ React.Element
+                ^^^^^^^^^^^^^^ Cannot return `<B />` because in property `props`, property `foo` is missing in propTypes of React component [1] but exists in propTypes of React component [2].
 Trace:
 * path 1:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
@@ -159,22 +157,15 @@ Trace:
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ OpenT [`React.ElementProps`]. See lib: <BUILTINS>/react.js:159
 159:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, OpenT) [`React.ElementProps`] (from [not shown]). See lib: <BUILTINS>/react.js:159
-  Property `props` is incompatible:
-     11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
-      7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
-      Property `foo` is incompatible:
-          7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
-         11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+  References:
+   11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: propTypes of React component
+    7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: propTypes of React component
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;
-                 ^ React.Component. Has some incompatible type argument with
- 18:     return <B bar="hey"/>;
-                 ^ React.Component
+                 ^ In type argument `Props`, property `bar` is missing in propTypes of React component [1] but exists in propTypes of React component [2].
 Trace:
 * path 1:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
@@ -191,22 +182,15 @@ Trace:
                  ^ InstanceT [`React.Component`]
  18:     return <B bar="hey"/>;
                  ^ ~> ExtendsUseT [extends `React.Component`] (from [not shown])
-  Type argument `Props` is incompatible:
-      7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
-     11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
-      Property `foo` is incompatible:
-          7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
-         11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+  References:
+    7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: propTypes of React component
+   11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: propTypes of React component
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;
-                 ^ React.Component. Has some incompatible type argument with
- 18:     return <B bar="hey"/>;
-                 ^ React.Component
+                 ^ In type argument `Props`, property `foo` is missing in propTypes of React component [1] but exists in propTypes of React component [2].
 Trace:
 * path 1:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
@@ -223,16 +207,11 @@ Trace:
                  ^ InstanceT [`React.Component`]
  18:     return <B bar="hey"/>;
                  ^ ~> ExtendsUseT [extends `React.Component`] (from [not shown])
-  Type argument `Props` is incompatible:
-     11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
-      7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
-      Property `bar` is incompatible:
-         11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-          7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+  References:
+   11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: propTypes of React component
+    7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: propTypes of React component
 
 
 Found 8 errors

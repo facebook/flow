@@ -250,24 +250,17 @@ Error: object_type.js:52
 
 Error: react.js:15
  15: (<Example />); // error: property `a` not found
-      ^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  8:   propTypes: {
-  9:     get a() { return React.PropTypes.number.isRequired; },
- 10:     set b(x: number) { this.c = x; },
- 11:     c: React.PropTypes.string,
- 12:   }
-       ^ propTypes of React component
-  Property `a` is incompatible:
-                      v
-      8:   propTypes: {
-      9:     get a() { return React.PropTypes.number.isRequired; },
-     10:     set b(x: number) { this.c = x; },
-     11:     c: React.PropTypes.string,
-     12:   }
-           ^ property `a`. Property not found in
-     15: (<Example />); // error: property `a` not found
-          ^^^^^^^^^^^ props
+       ^^^^^^^ Cannot create `Example` element because property `a` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   15: (<Example />); // error: property `a` not found
+        ^^^^^^^^^^^ [1]: props
+                    v
+    8:   propTypes: {
+    9:     get a() { return React.PropTypes.number.isRequired; },
+   10:     set b(x: number) { this.c = x; },
+   11:     c: React.PropTypes.string,
+   12:   }
+         ^ [2]: propTypes of React component
 
 Error: react.js:17
  17: (<Example a="bad" />); // error: number ~> string

@@ -36,9 +36,10 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:14
            14:         esmodule.default;
-                                ^^^^^^^ property \`default\`. Property not found in
-           14:         esmodule.default;
-                       ^^^^^^^^ module \`./esmodule\`
+                                ^^^^^^^ Cannot get \`esmodule.default\` because property \`default\` is missing in module \`./esmodule\` [1].
+            References:
+             12:         const esmodule = await import('./esmodule');
+                                                ^^^^^^^^^^^^^^^^^^^^ [1]: module \`./esmodule\`
         `,
       ),
 
@@ -47,13 +48,16 @@ export default suite(({addFile, addFiles, addCode}) => [
         const esmodule = import('./esmodule');
         (esmodule.pi: string);
       }
-    `).newErrors(`
-      test.js:21
-       21:         (esmodule.pi: string);
-                             ^^ property ${'`'}pi${'`'}. Property not found in
-       21:         (esmodule.pi: string);
-                    ^^^^^^^^ Promise
-    `),
+    `).newErrors(
+        `
+          test.js:21
+           21:         (esmodule.pi: string);
+                                 ^^ Cannot get \`esmodule.pi\` because property \`pi\` is missing in \`Promise\` [1].
+            References:
+             21:         (esmodule.pi: string);
+                          ^^^^^^^^ [1]: \`Promise\`
+        `,
+      ),
   ]),
 
   test('properly converts CJS modules to ModuleNamespaceObjects', [

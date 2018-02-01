@@ -126,36 +126,30 @@ Error: builtin_intrinsic.js:24
 
 Error: component.js:15
  15: <MyComponent />; // Error: `children` is required.
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  6: class MyComponent extends React.Component<{children: Node}, void> {
-                                               ^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      6: class MyComponent extends React.Component<{children: Node}, void> {
-                                                   ^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     15: <MyComponent />; // Error: `children` is required.
-         ^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^ Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   15: <MyComponent />; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^ [1]: props
+    6: class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: component.js:16
  16: <MyComponent></MyComponent>; // Error: `children` is required.
-     ^^^^^^^^^^^^^ props. This type is incompatible with
-  6: class MyComponent extends React.Component<{children: Node}, void> {
-                                               ^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      6: class MyComponent extends React.Component<{children: Node}, void> {
-                                                   ^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     16: <MyComponent></MyComponent>; // Error: `children` is required.
-         ^^^^^^^^^^^^^ props
+     ^^^^^^^^^^^^^ Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   16: <MyComponent></MyComponent>; // Error: `children` is required.
+       ^^^^^^^^^^^^^ [1]: props
+    6: class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: component.js:18
  18: <MyComponent>{}</MyComponent>; // Error: `children` is required.
-     ^^^^^^^^^^^^^ props. This type is incompatible with
-  6: class MyComponent extends React.Component<{children: Node}, void> {
-                                               ^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      6: class MyComponent extends React.Component<{children: Node}, void> {
-                                                   ^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     18: <MyComponent>{}</MyComponent>; // Error: `children` is required.
-         ^^^^^^^^^^^^^ props
+     ^^^^^^^^^^^^^ Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   18: <MyComponent>{}</MyComponent>; // Error: `children` is required.
+       ^^^^^^^^^^^^^ [1]: props
+    6: class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: component.js:40
  40: <MyComponent>
@@ -204,14 +198,12 @@ Error: component.js:40
 
 Error: fun.js:23
  23: <Fun />; // Error: `children` is required.
-     ^^^^^^^ props. This type is incompatible with
- 16: class Fun extends React.Component<{children: Fn}, void> {}
-                                       ^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: class Fun extends React.Component<{children: Fn}, void> {}
-                                           ^^^^^^^^^^^^^^ property `children`. Property not found in
-     23: <Fun />; // Error: `children` is required.
-         ^^^^^^^ props
+      ^^^ Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   23: <Fun />; // Error: `children` is required.
+       ^^^^^^^ [1]: props
+   16: class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:27
  27: <Fun>{() => 42}{() => 42}</Fun>; // Error: Two functions are not allowed.
@@ -260,31 +252,28 @@ Error: fun.js:40
 
 Error: fun.js:41
  41:     (data.nope: boolean); // Error: `nope` does not exist.
-               ^^^^ property `nope`. Property not found in
- 41:     (data.nope: boolean); // Error: `nope` does not exist.
-          ^^^^ Data
+               ^^^^ Cannot get `data.nope` because property `nope` is missing in `Data` [1].
+  References:
+   14: type Fn = (Data) => number;
+                  ^^^^ [1]: `Data`
 
 Error: fun.js:46
  46: <Fun>{}</Fun>; // Error: `void` is not allowed.
-     ^^^^^ props. This type is incompatible with
- 16: class Fun extends React.Component<{children: Fn}, void> {}
-                                       ^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: class Fun extends React.Component<{children: Fn}, void> {}
-                                           ^^^^^^^^^^^^^^ property `children`. Property not found in
-     46: <Fun>{}</Fun>; // Error: `void` is not allowed.
-         ^^^^^ props
+     ^^^^^ Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   46: <Fun>{}</Fun>; // Error: `void` is not allowed.
+       ^^^^^ [1]: props
+   16: class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:47
  47: <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
-     ^^^^^ props. This type is incompatible with
- 16: class Fun extends React.Component<{children: Fn}, void> {}
-                                       ^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: class Fun extends React.Component<{children: Fn}, void> {}
-                                           ^^^^^^^^^^^^^^ property `children`. Property not found in
-     47: <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
-         ^^^^^ props
+     ^^^^^ Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   47: <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
+       ^^^^^ [1]: props
+   16: class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:48
  48: <Fun>{undefined}</Fun>; // Error: `undefined` is not allowed.
@@ -342,30 +331,21 @@ Error: fun.js:53
 
 Error: fun.js:54
  54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
-     ^^^^^ props. This type is incompatible with
- 16: class Fun extends React.Component<{children: Fn}, void> {}
-                                       ^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
-              ^^^^^^^^^^^^ React.Element. This type is incompatible with
-     16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                      ^^ Fn
-      Callable property is incompatible:
-         16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                          ^^ Fn. Callable signature not found in
-         54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
-                  ^^^^^^^^^^^^ React.Element
+          ^^^^^^^^^^^^ Cannot create `Fun` element because in property `children`, a callable signature is missing in `React.Element` [1] but exists in `Fn` [2].
+  References:
+   54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
+            ^^^^^^^^^^^^ [1]: `React.Element`
+   16: class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]: `Fn`
 
 Error: fun.js:56
  56: <Obj />; // Error: `children` is required.
-     ^^^^^^^ props. This type is incompatible with
- 18: class Obj extends React.Component<{children: Data}, void> {}
-                                       ^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     18: class Obj extends React.Component<{children: Data}, void> {}
-                                           ^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     56: <Obj />; // Error: `children` is required.
-         ^^^^^^^ props
+      ^^^ Cannot create `Obj` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   56: <Obj />; // Error: `children` is required.
+       ^^^^^^^ [1]: props
+   18: class Obj extends React.Component<{children: Data}, void> {}
+                                         ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:60
  60: <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
@@ -486,25 +466,21 @@ Error: fun.js:111
 
 Error: fun.js:134
 134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
-     ^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-    134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
-         ^^^^^^^^^^ props
+     ^^^^^^^^^^ Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+  134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
+       ^^^^^^^^^^ [1]: props
+   21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:135
 135: <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
-     ^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-    135: <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
-         ^^^^^^^^^^ props
+     ^^^^^^^^^^ Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+  135: <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
+       ^^^^^^^^^^ [1]: props
+   21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: fun.js:136
 136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
@@ -670,19 +646,12 @@ Error: fun.js:141
 
 Error: fun.js:142
 142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-     ^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                   ^^^^^^^^^^^^ React.Element. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^ Fn
-      Callable property is incompatible:
-         21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                               ^^ Fn. Callable signature not found in
-        142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
-                       ^^^^^^^^^^^^ React.Element
+               ^^^^^^^^^^^^ Cannot create `FunArray` element because in property `children`, a callable signature is missing in `React.Element` [1] but exists in `Fn` [2].
+  References:
+  142: <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
+                 ^^^^^^^^^^^^ [1]: `React.Element`
+   21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                         ^^ [2]: `Fn`
 
 Error: spread.js:7
   7: <Foo>{...["a", "b"]}</Foo>
@@ -690,14 +659,12 @@ Error: spread.js:7
 
 Error: tabs.js:26
  26: <TabBar />; // Error: `children` is required.
-     ^^^^^^^^^^ props. This type is incompatible with
- 24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     26: <TabBar />; // Error: `children` is required.
-         ^^^^^^^^^^ props
+      ^^^^^^ Cannot create `TabBar` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   26: <TabBar />; // Error: `children` is required.
+       ^^^^^^^^^^ [1]: props
+   24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: tabs.js:30
  30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
@@ -857,58 +824,48 @@ Error: tabs.js:73
 
 Error: text.js:9
   9: <Text />; // Error: `children` is required.
-     ^^^^^^^^ props. This type is incompatible with
-  5: class Text extends React.Component<{children: string}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      5: class Text extends React.Component<{children: string}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-      9: <Text />; // Error: `children` is required.
-         ^^^^^^^^ props
+      ^^^^ Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+    9: <Text />; // Error: `children` is required.
+       ^^^^^^^^ [1]: props
+    5: class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: text.js:11
  11: <TextLiteral />; // Error: `children` is required.
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      7: class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     11: <TextLiteral />; // Error: `children` is required.
-         ^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^ Cannot create `TextLiteral` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   11: <TextLiteral />; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^ [1]: props
+    7: class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: text.js:15
  15: <Text></Text>; // Error: `children` does not exist.
-     ^^^^^^ props. This type is incompatible with
-  5: class Text extends React.Component<{children: string}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      5: class Text extends React.Component<{children: string}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     15: <Text></Text>; // Error: `children` does not exist.
-         ^^^^^^ props
+     ^^^^^^ Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   15: <Text></Text>; // Error: `children` does not exist.
+       ^^^^^^ [1]: props
+    5: class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: text.js:18
  18: <Text>{}</Text>; // Error: `children` is required.
-     ^^^^^^ props. This type is incompatible with
-  5: class Text extends React.Component<{children: string}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      5: class Text extends React.Component<{children: string}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     18: <Text>{}</Text>; // Error: `children` is required.
-         ^^^^^^ props
+     ^^^^^^ Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   18: <Text>{}</Text>; // Error: `children` is required.
+       ^^^^^^ [1]: props
+    5: class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: text.js:19
  19: <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
-     ^^^^^^ props. This type is incompatible with
-  5: class Text extends React.Component<{children: string}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      5: class Text extends React.Component<{children: string}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-     19: <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
-         ^^^^^^ props
+     ^^^^^^ Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+   19: <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
+       ^^^^^^ [1]: props
+    5: class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: text.js:20
  20: <Text>{undefined}</Text>; // Error: `undefined` is not allowed.
@@ -1065,14 +1022,12 @@ Error: text.js:53
 
 Error: tuple.js:9
   9: <Tuple />; // Error: `children` is required.
-     ^^^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-      9: <Tuple />; // Error: `children` is required.
-         ^^^^^^^^^ props
+      ^^^^^ Cannot create `Tuple` element because property `children` is missing in props [1] but exists in object type [2].
+  References:
+    9: <Tuple />; // Error: `children` is required.
+       ^^^^^^^^^ [1]: props
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: tuple.js:12
  12: <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
@@ -1185,19 +1140,12 @@ Error: tuple.js:34
 
 Error: view.js:31
  31: <View>
-     ^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     32:   {{a: 1, b: 2, c: 3}}
-            ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-      9:   | React$Element<any>
-             ^^^^^^^^^^^^^^^^^^ React.Element
-      Property `a` is incompatible:
-         32:   {{a: 1, b: 2, c: 3}}
-                ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-          9:   | React$Element<any>
-                 ^^^^^^^^^^^^^^^^^^ React.Element
+      ^^^^ Cannot create `View` element because in property `children`, property `a` is missing in `React.Element` [1] but exists in object literal [2].
+  References:
+    9:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [1]: `React.Element`
+   32:   {{a: 1, b: 2, c: 3}}
+          ^^^^^^^^^^^^^^^^^^ [2]: object literal
 
 Error: view.js:35
  35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.

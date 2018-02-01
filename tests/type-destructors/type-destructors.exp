@@ -34,25 +34,24 @@ Error: errors.js:10
 
 Error: errors.js:12
  12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-              ^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-                            ^^ object type
+              ^^^^^^^^^^^^^^^^^^^^^^ Property `p` is missing in object type [1].
+  References:
+   12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
+                              ^^ [1]: object type
 
 Error: errors.js:16
  16: (null: B); // We should get an error on this line.
-      ^^^^ null
-  6: type P<O> = $PropertyType<O, 'p'>;
-                 ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 15: type B = P<{}>;
-                ^^ object type
+      ^^^^ Cannot cast `null` to `B` because property `p` is missing in object type [1].
+  References:
+   15: type B = P<{}>;
+                  ^^ [1]: object type
 
 Error: errors.js:18
  18: fn1({x: 42}); // We should get an error on this line.
-     ^^^^^^^^^^^^ fn1(...)
-  7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
-                                                    ^^^ property `p`. Property not found in
- 18: fn1({x: 42}); // We should get an error on this line.
-         ^^^^^^^ object literal
+     ^^^ Cannot call `fn1` because property `p` is missing in object literal [1].
+  References:
+   18: fn1({x: 42}); // We should get an error on this line.
+           ^^^^^^^ [1]: object literal
 
 Error: errors.js:19
  19: fn1(null); // We should get an error on this line.
@@ -64,11 +63,10 @@ Error: errors.js:19
 
 Error: errors.js:21
  21: fn2({x: 42})(); // We should get an error on this line.
-     ^^^^^^^^^^^^ fn2(...)
-  8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
-                                                     ^^^ property `p`. Property not found in
- 21: fn2({x: 42})(); // We should get an error on this line.
-         ^^^^^^^ object literal
+     ^^^ Cannot call `fn2` because property `p` is missing in object literal [1].
+  References:
+   21: fn2({x: 42})(); // We should get an error on this line.
+           ^^^^^^^ [1]: object literal
 
 Error: errors.js:22
  22: fn2(null)(); // We should get an error on this line.
@@ -80,19 +78,17 @@ Error: errors.js:22
 
 Error: errors.js:24
  24: fn3({x: 42}); // We should get an error on this line.
-     ^^^^^^^^^^^^ fn3(...)
-  9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
-                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 24: fn3({x: 42}); // We should get an error on this line.
-         ^^^^^^^ object literal
+     ^^^ Cannot call `fn3` because property `p` is missing in object literal [1].
+  References:
+   24: fn3({x: 42}); // We should get an error on this line.
+           ^^^^^^^ [1]: object literal
 
 Error: errors.js:27
  27: fn4({x: 42})(); // We should get an error on this line.
-     ^^^^^^^^^^^^ fn4(...)
- 10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
-                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 27: fn4({x: 42})(); // We should get an error on this line.
-         ^^^^^^^ object literal
+     ^^^ Cannot call `fn4` because property `p` is missing in object literal [1].
+  References:
+   27: fn4({x: 42})(); // We should get an error on this line.
+           ^^^^^^^ [1]: object literal
 
 Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error
@@ -262,19 +258,17 @@ Error: tvar3.js:28
 
 Error: tvar4.js:24
  24: fn1({p: 42}, (x: {}) => {});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ fn1(...)
-  3: function fn1<T: {p: any}>(a: T, b: T => void): $PropertyType<T, 'p'> {
-                                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 24: fn1({p: 42}, (x: {}) => {});
-                      ^^ object type
+     ^^^ Cannot call `fn1` because property `p` is missing in object type [1].
+  References:
+   24: fn1({p: 42}, (x: {}) => {});
+                        ^^ [1]: object type
 
 Error: tvar4.js:25
  25: fn2({p: 42}, (x: {}) => {})('foo');
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ fn2(...)
-  8: function fn2<T: {p: any}>(a: T, b: T => void): ($PropertyType<T, 'p'>) => void {
-                                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 25: fn2({p: 42}, (x: {}) => {})('foo');
-                      ^^ object type
+     ^^^ Cannot call `fn2` because property `p` is missing in object type [1].
+  References:
+   25: fn2({p: 42}, (x: {}) => {})('foo');
+                        ^^ [1]: object type
 
 Error: tvar4.js:33
  33: fn3((x: {foo: string, p: number}) => {})({foo: 42});
@@ -314,11 +308,10 @@ Error: tvar4.js:47
 
 Error: tvar4.js:51
  51: fn4((x: {}) => {})(42);
-     ^^^^^^^^^^^^^^^^^^ fn4(...)
- 40: function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
- 51: fn4((x: {}) => {})(42);
-             ^^ object type
+     ^^^ Cannot call `fn4` because property `p` is missing in object type [1].
+  References:
+   51: fn4((x: {}) => {})(42);
+               ^^ [1]: object type
 
 Error: union.js:2
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string

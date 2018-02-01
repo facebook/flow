@@ -54,20 +54,21 @@ Error: all.js:19
 
 Error: all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ call of method `all`. Too few arguments passed to
-608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:608
+             ^^^ Cannot call `Promise.all` because property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+  References:
+   24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
+       ^^^^^^^^^^^^^ [1]: undefined
+  608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                         ^^^^^^^^^^^^^^^ [2]: `$Iterable`. See lib: <BUILTINS>/core.js:608
 
 Error: all.js:27
  27: Promise.all(0); // Error: expected array instead of number
-                 ^ number. This type is incompatible with the expected param type of
-608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                       ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
-  Property `@@iterator` is incompatible:
-    608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/core.js:608
-     27: Promise.all(0); // Error: expected array instead of number
-                     ^ number
+                 ^ Cannot call `Promise.all` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but exists in `$Iterable` [2].
+  References:
+   27: Promise.all(0); // Error: expected array instead of number
+                   ^ [1]: number
+  608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                         ^^^^^^^^^^^^^^^ [2]: `$Iterable`. See lib: <BUILTINS>/core.js:608
 
 Error: promise.js:16
  16:   var b: string = num; // Error: number ~> string
@@ -215,9 +216,10 @@ Error: promise.js:225
 
 Error: resolve_global.js:35
  35:   return Promise.resolve(0);
-                      ^^^^^^^ property `resolve`. Property not found in
- 35:   return Promise.resolve(0);
-              ^^^^^^^ statics of `Promise`
+                      ^^^^^^^ Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1].
+  References:
+    9: class Promise {}
+             ^^^^^^^ [1]: statics of `Promise`
 
 Error: resolve_global.js:40
  40:   return 0;

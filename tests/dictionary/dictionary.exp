@@ -270,25 +270,21 @@ Error: dictionary.js:221
 
 Error: dictionary.js:227
 227:   return x; // error: if allowed, could write {p:X,q:Y} into `x`
-              ^ array type. This type is incompatible with the expected return type of
-226: ): Array<{p:X}> {
-        ^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-    225:   x: Array<{[k:string]:X}>,
-                    ^^^^^^^^^^^^^^ some property. Property not found in
-    226: ): Array<{p:X}> {
-                  ^^^^^ object type
+              ^ Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object type [2].
+  References:
+  226: ): Array<{p:X}> {
+                ^^^^^ [1]: object type
+  225:   x: Array<{[k:string]:X}>,
+                  ^^^^^^^^^^^^^^ [2]: object type
 
 Error: dictionary.js:233
 233:   return x; // error: if allowed, could write {p:X,q:Y} into returned array
-              ^ array type. This type is incompatible with the expected return type of
-232: ): Array<{[k:string]:X}> {
-        ^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-    232: ): Array<{[k:string]:X}> {
-                  ^^^^^^^^^^^^^^ some property. Property not found in
-    231:   x: Array<{p:X}>,
-                    ^^^^^ object type
+              ^ Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object type [2].
+  References:
+  231:   x: Array<{p:X}>,
+                  ^^^^^ [1]: object type
+  232: ): Array<{[k:string]:X}> {
+                ^^^^^^^^^^^^^^ [2]: object type
 
 Error: dictionary.js:239
 239:   let a: {p:A} = x; // error
@@ -508,25 +504,21 @@ Error: incompatible.js:37
 
 Error: incompatible.js:42
  42:   return x;
-              ^ array type. This type is incompatible with the expected return type of
- 41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
-                                                       ^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^ some property. Property not found in
-     41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
-                                                                 ^^^^^^^^^^^^^ object type
+              ^ Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object type [2].
+  References:
+   41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                                                               ^^^^^^^^^^^^^ [1]: object type
+   41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: incompatible.js:47
  47:   return x;
-              ^ array type. This type is incompatible with the expected return type of
- 46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ some property. Property not found in
-     46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                                ^^^^^^^^^^^^^ object type
+              ^ Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object type [2].
+  References:
+   46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                              ^^^^^^^^^^^^^ [1]: object type
+   46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: incompatible.js:55
  55:   (x.foo: string); // error

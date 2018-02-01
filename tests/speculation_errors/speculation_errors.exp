@@ -237,14 +237,12 @@ Error: intersection-function.js:52
 
 Error: intersection-function.js:53
  53: f({});
-       ^^ object literal. This type is incompatible with the expected param type of
- 48: declare function f(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     48: declare function f(x: {p: string}): void;
-                               ^^^^^^^^^^^ property `p`. Property not found in
-     53: f({});
-           ^^ object literal
+       ^^ Cannot call `f` with object literal bound to `x` because property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   53: f({});
+         ^^ [1]: object literal
+   48: declare function f(x: {p: string}): void;
+                             ^^^^^^^^^^^ [2]: object type
 
 Error: intersection-function.js:54
  54: f(new Y());
@@ -257,14 +255,12 @@ Error: intersection-function.js:54
 
 Error: intersection-function.js:55
  55: f(new Z());
-       ^^^^^^^ Z. This type is incompatible with the expected param type of
- 48: declare function f(x: {p: string}): void;
-                           ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     48: declare function f(x: {p: string}): void;
-                               ^^^^^^^^^^^ property `p`. Property not found in
-     55: f(new Z());
-           ^^^^^^^ Z
+       ^^^^^^^ Cannot call `f` with `new Z()` bound to `x` because property `p` is missing in `Z` [1] but exists in object type [2].
+  References:
+   55: f(new Z());
+         ^^^^^^^ [1]: `Z`
+   48: declare function f(x: {p: string}): void;
+                             ^^^^^^^^^^^ [2]: object type
 
 Error: intersection-function.js:56
  56: f(([1]: [number]));
@@ -658,14 +654,12 @@ Error: union.js:42
 
 Error: union.js:43
  43: ({}: F);
-      ^^ object literal. This type is incompatible with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-              ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                  ^^^^^^^^^^^ property `p`. Property not found in
-     43: ({}: F);
-          ^^ object literal
+      ^^ Cannot cast object literal to `F` because property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   43: ({}: F);
+        ^^ [1]: object literal
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^ [2]: object type
 
 Error: union.js:44
  44: (new Y(): F);
@@ -678,14 +672,12 @@ Error: union.js:44
 
 Error: union.js:45
  45: (new Z(): F);
-      ^^^^^^^ Z. This type is incompatible with
- 40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-              ^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                  ^^^^^^^^^^^ property `p`. Property not found in
-     45: (new Z(): F);
-          ^^^^^^^ Z
+      ^^^^^^^ Cannot cast `new Z()` to `F` because property `p` is missing in `Z` [1] but exists in object type [2].
+  References:
+   45: (new Z(): F);
+        ^^^^^^^ [1]: `Z`
+   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^ [2]: object type
 
 Error: union.js:46
  46: (([1]: [number]): F);

@@ -34,6 +34,7 @@ type error_message =
       extras: (int * Reason.t * error_message) list;
     }
   | EIncompatibleProp of {
+      prop: string option;
       reason_prop: reason;
       reason_obj: reason;
       special: lower_kind option;
@@ -66,7 +67,7 @@ type error_message =
       Type.number_literal Type.literal *
       use_op
   | EExpectedBooleanLit of (reason * reason) * bool * bool option * use_op
-  | EPropNotFound of (reason * reason) * use_op
+  | EPropNotFound of string option * (reason * reason) * use_op
   | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
   | EPolarityMismatch of {
@@ -272,14 +273,14 @@ let util_use_op_of_msg nope util = function
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
       EIncompatible {use_op=Some use_op; lower; upper; extras}))
-| EIncompatibleProp {use_op; reason_prop; reason_obj; special} ->
+| EIncompatibleProp {use_op; prop; reason_prop; reason_obj; special} ->
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
-      EIncompatibleProp {use_op=Some use_op; reason_prop; reason_obj; special}))
+      EIncompatibleProp {use_op=Some use_op; prop; reason_prop; reason_obj; special}))
 | EExpectedStringLit (rs, u, l, op) -> util op (fun op -> EExpectedStringLit (rs, u, l, op))
 | EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
 | EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
-| EPropNotFound (rs, op) -> util op (fun op -> EPropNotFound (rs, op))
+| EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
@@ -468,7 +469,7 @@ let score_of_msg msg =
    * a missing prop does not increase the likelihood that the user was close to
    * the right types. *)
   | EIncompatibleProp {use_op=Some (Frame (PropertyCompatibility _, _)); _}
-  | EPropNotFound (_, Frame (PropertyCompatibility _, _))
+  | EPropNotFound (_, _, Frame (PropertyCompatibility _, _))
   | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _)))
     -> -frame_score
   | _
@@ -911,6 +912,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   in
 
   let text = Friendly.text in
+  let code = Friendly.code in
   let ref = Friendly.ref in
   let desc = Friendly.ref ~loc:false in
 
@@ -989,8 +991,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `Root (literal, None,
           [text "Cannot create "; desc literal; text " element"])
 
-      | Op (SetProperty {prop; value; _}) ->
-        `Root (value, None,
+      | Op (SetProperty {prop; value; lhs; _}) ->
+        let loc_reason = if Loc.contains (loc_of_reason lhs) loc then lhs else value in
+        `Root (loc_reason, None,
           [text "Cannot assign "; desc value; text " to "; desc prop])
 
       | Frame (FunParam {n; lower; _}, use_op) ->
@@ -1187,6 +1190,41 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       )
   in
 
+  (* When we fail to find a property on an object we use this function to create
+   * an error. prop_loc should be the position of the use which caused this
+   * error. The use_op represents how we got to this error.
+   *
+   * If the use_op is a PropertyCompatibility frame then we encountered this
+   * error while subtyping two objects. In this case we add a bit more
+   * information to the error message. *)
+  let mk_prop_missing_friendly_error prop_loc prop lower use_op =
+    let (loc, lower, upper, use_op) = match use_op with
+    (* If we are missing a property while performing property compatibility
+     * then we are subtyping. Record the upper reason. *)
+    | Frame (PropertyCompatibility {prop=compat_prop; lower; upper; _}, use_op)
+        when prop = compat_prop ->
+      (loc_of_reason lower, lower, Some upper, use_op)
+    (* Otherwise this is a general property missing error. *)
+    | _ -> (prop_loc, lower, None, use_op)
+    in
+    let prop_message = match prop with
+    | None | Some "$key" | Some "$value" -> [text "an indexer property"]
+    | Some "$call" -> [text "a callable signature"]
+    | Some prop -> [text "property "; code prop]
+    in
+    (* If we were subtyping that add to the error message so our user knows what
+     * object required the missing property. *)
+    let message = match upper with
+    | Some upper ->
+      prop_message @ [text " is missing in "; ref lower; text " but exists in "] @
+      [ref upper; text "."]
+    | None ->
+      prop_message @ [text " is missing in "; ref lower; text "."]
+    in
+    (* Finally, create our error message. *)
+    unwrap_use_ops_friendly loc use_op message
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, lower_kind);
@@ -1219,7 +1257,12 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     let extra = speculation_extras extras in
     typecheck_error ~extra "This type is incompatible with" reasons
 
-  | EIncompatibleProp { reason_prop; reason_obj; special; use_op } ->
+  | EIncompatibleProp { prop; reason_prop; reason_obj; special; use_op } ->
+    let friendly_error = mk_prop_missing_friendly_error
+      (loc_of_reason reason_prop) prop reason_obj (Option.value ~default:unknown_use use_op) in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let reasons = (reason_prop, reason_obj) in
       let msg = spf "Property not found in%s" (special_suffix special) in
       begin match use_op with
@@ -1229,6 +1272,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | None ->
         typecheck_error msg reasons
       end
+    )
 
   | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
       let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
@@ -1368,11 +1412,18 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  | EPropNotFound (reasons, use_op) ->
+  | EPropNotFound (prop, reasons, use_op) ->
+    let (reason_prop, reason_obj) = reasons in
+    let friendly_error = mk_prop_missing_friendly_error
+      (loc_of_reason reason_prop) prop reason_obj use_op in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
       let extra, msgs =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EPropAccess (reasons, x, polarity, rw) ->
       let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
@@ -1403,20 +1454,27 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [mk_info (fst reasons) [msg]]
     else
-      let msg = match x with
-      | Some "$call" -> "Callable signature not found in"
-      | Some "$key" | Some "$value" -> "Indexable signature not found in"
-      | _ -> "Property not found in"
-      in
-      begin match use_op with
-      | Some use_op ->
-        let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
-        let extra, msgs =
-          unwrap_use_ops ~force:true (reasons, [], msg) use_op in
-        typecheck_error_with_core_infos ~extra msgs
+      let (reason_prop, reason_obj) = reasons in
+      let friendly_error = mk_prop_missing_friendly_error
+        (loc_of_reason reason_prop) x reason_obj (Option.value ~default:unknown_use use_op) in
+      (match friendly_error with
+      | Some error -> error
       | None ->
-        typecheck_error msg reasons
-      end
+        let msg = match x with
+        | Some "$call" -> "Callable signature not found in"
+        | Some "$key" | Some "$value" -> "Indexable signature not found in"
+        | _ -> "Property not found in"
+        in
+        begin match use_op with
+        | Some use_op ->
+          let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in
+          let extra, msgs =
+            unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+          typecheck_error_with_core_infos ~extra msgs
+        | None ->
+          typecheck_error msg reasons
+        end
+      )
 
   | EPrivateLookupFailed reasons ->
       typecheck_error "Property not found in" reasons

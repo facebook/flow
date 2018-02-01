@@ -87,38 +87,32 @@ No errors!
 Test c:
 Error: c2.js:6
   6:   foo({ y: 0 });
-           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  3: export function foo(props: { x: number }) { }
-                                ^^^^^^^^^^^^^ object type. See: c1.js:3
-  Property `x` is incompatible:
-      3: export function foo(props: { x: number }) { }
-                                    ^^^^^^^^^^^^^ property `x`. Property not found in. See: c1.js:3
-      6:   foo({ y: 0 });
-               ^^^^^^^^ object literal
+           ^^^^^^^^ Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists in object type [2].
+  References:
+    6:   foo({ y: 0 });
+             ^^^^^^^^ [1]: object literal
+    3: export function foo(props: { x: number }) { }
+                                  ^^^^^^^^^^^^^ [2]: object type. See: c1.js:3
 
 Error: c3.js:5
   5: bar({ x: 0 });
-         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ object type. See: c2.js:5
-  Property `y` is incompatible:
-      5: export function bar(props: { y: number }) {
-                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
-      5: bar({ x: 0 });
-             ^^^^^^^^ object literal
+         ^^^^^^^^ Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists in object type [2].
+  References:
+    5: bar({ x: 0 });
+           ^^^^^^^^ [1]: object literal
+    5: export function bar(props: { y: number }) {
+                                  ^^^^^^^^^^^^^ [2]: object type. See: c2.js:5
 
 
 Found 2 errors
 Error: c3.js:5
   5: bar({ x: 0 });
-         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ object type. See: c2.js:5
-  Property `y` is incompatible:
-      5: export function bar(props: { y: number }) {
-                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
-      5: bar({ x: 0 });
-             ^^^^^^^^ object literal
+         ^^^^^^^^ Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists in object type [2].
+  References:
+    5: bar({ x: 0 });
+           ^^^^^^^^ [1]: object literal
+    5: export function bar(props: { y: number }) {
+                                  ^^^^^^^^^^^^^ [2]: object type. See: c2.js:5
 
 
 Found 1 error
@@ -250,18 +244,20 @@ Found 1 error
 Test k:
 Error: k.js:4
   4: (x.p: string);
-        ^ property `p`. Property not found in
-  4: (x.p: string);
-      ^ LibK
+        ^ Cannot get `x.p` because property `p` is missing in `LibK` [1].
+  References:
+    3: declare var x: LibK;
+                      ^^^^ [1]: `LibK`
 
 
 Found 1 error
 No errors!
 Error: k.js:4
   4: (x.p: string);
-        ^ property `p`. Property not found in
-  4: (x.p: string);
-      ^ LibK
+        ^ Cannot get `x.p` because property `p` is missing in `LibK` [1].
+  References:
+    3: declare var x: LibK;
+                      ^^^^ [1]: `LibK`
 
 
 Found 1 error

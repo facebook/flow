@@ -60,28 +60,24 @@ export default suite(({addFile, addFiles, addCode}) => [
                             `
                               test.js:18
                                18: (cVal: DT);
-                                    ^^^^ object literal. This type is incompatible with
-                               18: (cVal: DT);
-                                          ^^ DT
-                                Property \`C\` is incompatible:
-                                   18: (cVal: DT);
-                                              ^^ property \`C\`. Property not found in
-                                   18: (cVal: DT);
-                                        ^^^^ object literal
+                                    ^^^^ Cannot cast \`cVal\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
+                                References:
+                                  8:       const cVal = {};
+                                                        ^^ [1]: object literal
+                                 18: (cVal: DT);
+                                            ^^ [2]: \`DT\`
                             `,
                           ),
     addCode('(cVal.D: CT);').newErrors(
                               `
                                 test.js:20
                                  20: (cVal.D: CT);
-                                      ^^^^^^ object literal. This type is incompatible with
-                                 20: (cVal.D: CT);
-                                              ^^ CT
-                                  Property \`D\` is incompatible:
-                                     20: (cVal.D: CT);
-                                                  ^^ property \`D\`. Property not found in
-                                     20: (cVal.D: CT);
-                                          ^^^^^^ object literal
+                                      ^^^^^^ Cannot cast \`cVal.D\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
+                                  References:
+                                    9:       const dVal = {};
+                                                          ^^ [1]: object literal
+                                   20: (cVal.D: CT);
+                                                ^^ [2]: \`CT\`
                               `,
                             ),
 
@@ -91,28 +87,24 @@ export default suite(({addFile, addFiles, addCode}) => [
                             `
                               test.js:26
                                26: (dVal: CT);
-                                    ^^^^ object literal. This type is incompatible with
-                               26: (dVal: CT);
-                                          ^^ CT
-                                Property \`D\` is incompatible:
-                                   26: (dVal: CT);
-                                              ^^ property \`D\`. Property not found in
-                                   26: (dVal: CT);
-                                        ^^^^ object literal
+                                    ^^^^ Cannot cast \`dVal\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
+                                References:
+                                  9:       const dVal = {};
+                                                        ^^ [1]: object literal
+                                 26: (dVal: CT);
+                                            ^^ [2]: \`CT\`
                             `,
                           ),
     addCode('(dVal.C: DT);').newErrors(
                               `
                                 test.js:28
                                  28: (dVal.C: DT);
-                                      ^^^^^^ object literal. This type is incompatible with
-                                 28: (dVal.C: DT);
-                                              ^^ DT
-                                  Property \`C\` is incompatible:
-                                     28: (dVal.C: DT);
-                                                  ^^ property \`C\`. Property not found in
-                                     28: (dVal.C: DT);
-                                          ^^^^^^ object literal
+                                      ^^^^^^ Cannot cast \`dVal.C\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
+                                  References:
+                                    8:       const cVal = {};
+                                                          ^^ [1]: object literal
+                                   28: (dVal.C: DT);
+                                                ^^ [2]: \`DT\`
                               `,
                             ),
   ]),

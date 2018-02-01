@@ -66,14 +66,12 @@ Error: type.js:36
 
 Error: type.js:37
  37: ({}: O4); // error: property `p` not found
-      ^^ object literal. This type is incompatible with
- 37: ({}: O4); // error: property `p` not found
-          ^^ object type
-  Property `p` is incompatible:
-     37: ({}: O4); // error: property `p` not found
-              ^^ property `p`. Property not found in
-     37: ({}: O4); // error: property `p` not found
-          ^^ object literal
+      ^^ Cannot cast object literal to `O4` because property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   37: ({}: O4); // error: property `p` not found
+        ^^ [1]: object literal
+   37: ({}: O4); // error: property `p` not found
+            ^^ [2]: object type
 
 Error: type.js:39
  39: ({p:y}: O4); // error: y ~> T
@@ -86,14 +84,12 @@ Error: type.js:39
 
 Error: type.js:47
  47: (nil: O5); // error: property `p` not found
-      ^^^ object type. This type is incompatible with
- 47: (nil: O5); // error: property `p` not found
-           ^^ object type
-  Property `p` is incompatible:
-     47: (nil: O5); // error: property `p` not found
-               ^^ property `p`. Property not found in
-     47: (nil: O5); // error: property `p` not found
-          ^^^ object type
+      ^^^ Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
+  References:
+    7: declare var nil: {||};
+                        ^^^^ [1]: object type
+   47: (nil: O5); // error: property `p` not found
+             ^^ [2]: object type
 
 Error: type.js:49
  49: ({p:y}: O5); // error: y ~> T
@@ -106,25 +102,21 @@ Error: type.js:49
 
 Error: type.js:50
  50: ({p:x,q:y}: O5); // error: additional property `q` found
-      ^^^^^^^^^ object literal. This type is incompatible with
- 50: ({p:x,q:y}: O5); // error: additional property `q` found
-                 ^^ object type
-  Property `q` is incompatible:
-     50: ({p:x,q:y}: O5); // error: additional property `q` found
-          ^^^^^^^^^ property `q`. Property not found in
-     50: ({p:x,q:y}: O5); // error: additional property `q` found
-                     ^^ object type
+      ^^^^^^^^^ Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
+  References:
+   50: ({p:x,q:y}: O5); // error: additional property `q` found
+                   ^^ [1]: object type
+   50: ({p:x,q:y}: O5); // error: additional property `q` found
+        ^^^^^^^^^ [2]: object literal
 
 Error: type.js:56
  56: ({}: O6); // error: property `p` not found
-      ^^ object literal. This type is incompatible with
- 56: ({}: O6); // error: property `p` not found
-          ^^ O6
-  Property `p` is incompatible:
-     56: ({}: O6); // error: property `p` not found
-              ^^ property `p`. Property not found in
-     56: ({}: O6); // error: property `p` not found
-          ^^ object literal
+      ^^ Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
+  References:
+   56: ({}: O6); // error: property `p` not found
+        ^^ [1]: object literal
+   56: ({}: O6); // error: property `p` not found
+            ^^ [2]: `O6`
 
 Error: type.js:57
  57: ({p:x}: O6); // error: x ~> U
@@ -371,25 +363,21 @@ Error: type_void.js:12
 
 Error: type_void.js:13
  13: (o1: {p:T}); // error
-      ^^ O1. This type is incompatible with
- 13: (o1: {p:T}); // error
-          ^^^^^ object type
-  Property `p` is incompatible:
-     13: (o1: {p:T}); // error
-              ^^^^^ property `p`. Property not found in
-     13: (o1: {p:T}); // error
-          ^^ O1
+      ^^ Cannot cast `o1` to object type because property `p` is missing in `O1` [1] but exists in object type [2].
+  References:
+   10: declare var o1: O1;
+                       ^^ [1]: `O1`
+   13: (o1: {p:T}); // error
+            ^^^^^ [2]: object type
 
 Error: type_void.js:21
  21: (o2: {p:T}); // error
-      ^^ O2. This type is incompatible with
- 21: (o2: {p:T}); // error
-          ^^^^^ object type
-  Property `p` is incompatible:
-     21: (o2: {p:T}); // error
-              ^^^^^ property `p`. Property not found in
-     21: (o2: {p:T}); // error
-          ^^ O2
+      ^^ Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but exists in object type [2].
+  References:
+   18: declare var o2: O2;
+                       ^^ [1]: `O2`
+   21: (o2: {p:T}); // error
+            ^^^^^ [2]: object type
 
 Error: type_void.js:22
  22: ({}: O2); // error
@@ -399,14 +387,12 @@ Error: type_void.js:22
 
 Error: type_void.js:23
  23: ({p:x}: O2); // error
-      ^^^^^ object literal. This type is incompatible with
- 23: ({p:x}: O2); // error
-             ^^ O2
-  Property `p` is incompatible:
-     23: ({p:x}: O2); // error
-          ^^^^^ property `p`. Property not found in
-     23: ({p:x}: O2); // error
-                 ^^ O2
+      ^^^^^ Cannot cast object literal to `O2` because property `p` is missing in `O2` [1] but exists in object literal [2].
+  References:
+   23: ({p:x}: O2); // error
+               ^^ [1]: `O2`
+   23: ({p:x}: O2); // error
+        ^^^^^ [2]: object literal
 
 Error: type_void.js:28
  28: (o3: {||}); // error
@@ -416,25 +402,21 @@ Error: type_void.js:28
 
 Error: type_void.js:29
  29: (o3: {p:T}); // error
-      ^^ O3. This type is incompatible with
- 29: (o3: {p:T}); // error
-          ^^^^^ object type
-  Property `p` is incompatible:
-     29: (o3: {p:T}); // error
-              ^^^^^ property `p`. Property not found in
-     29: (o3: {p:T}); // error
-          ^^ O3
+      ^^ Cannot cast `o3` to object type because property `p` is missing in `O3` [1] but exists in object type [2].
+  References:
+   26: declare var o3: O3;
+                       ^^ [1]: `O3`
+   29: (o3: {p:T}); // error
+            ^^^^^ [2]: object type
 
 Error: type_void.js:37
  37: (o4: {p:T}); // error
-      ^^ O4. This type is incompatible with
- 37: (o4: {p:T}); // error
-          ^^^^^ object type
-  Property `p` is incompatible:
-     37: (o4: {p:T}); // error
-              ^^^^^ property `p`. Property not found in
-     37: (o4: {p:T}); // error
-          ^^ O4
+      ^^ Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but exists in object type [2].
+  References:
+   34: declare var o4: O4;
+                       ^^ [1]: `O4`
+   37: (o4: {p:T}); // error
+            ^^^^^ [2]: object type
 
 Error: type_void.js:38
  38: ({}: O4); // error
@@ -444,14 +426,12 @@ Error: type_void.js:38
 
 Error: type_void.js:39
  39: ({p:x}: O4); // error
-      ^^^^^ object literal. This type is incompatible with
- 39: ({p:x}: O4); // error
-             ^^ O4
-  Property `p` is incompatible:
-     39: ({p:x}: O4); // error
-          ^^^^^ property `p`. Property not found in
-     39: ({p:x}: O4); // error
-                 ^^ O4
+      ^^^^^ Cannot cast object literal to `O4` because property `p` is missing in `O4` [1] but exists in object literal [2].
+  References:
+   39: ({p:x}: O4); // error
+               ^^ [1]: `O4`
+   39: ({p:x}: O4); // error
+        ^^^^^ [2]: object literal
 
 Error: type_void.js:44
  44: (o5: {p:T}); // error: o5.p is optional

@@ -6,19 +6,12 @@ Error: annot.js:3
 
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                        ^^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
-  9: function bar(): A<*> { // error, * can't be {} and {x: string} at the same time
-                     ^^^^ A
-  Type argument `X` is incompatible:
-     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                              ^^^^^^^^^^^ object type. This type is incompatible with
-     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                            ^^ object type
-      Property `x` is incompatible:
-         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                                  ^^^^^^^^^^^ property `x`. Property not found in
-         10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                ^^ object type
+                                        ^^^^^^^^^^^^^^ Cannot return `new A() || new A()` because in type argument `X`, property `x` is missing in object type [1] but exists in object type [2].
+  References:
+   10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                          ^^ [1]: object type
+   10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                            ^^^^^^^^^^^ [2]: object type
 
 Error: error.js:8
   8: newFn1('string'); // The error should point here.

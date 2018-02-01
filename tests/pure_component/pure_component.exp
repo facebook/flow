@@ -1,13 +1,11 @@
 Error: test.js:4
   4: (<C />); // error (`x` is a required prop)
-      ^^^^^ props. This type is incompatible with
-  3: class C extends React.PureComponent<{ x: number }> {}
-                                         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      3: class C extends React.PureComponent<{ x: number }> {}
-                                             ^^^^^^^^^^^^^ property `x`. Property not found in
-      4: (<C />); // error (`x` is a required prop)
-          ^^^^^ props
+       ^ Cannot create `C` element because property `x` is missing in props [1] but exists in object type [2].
+  References:
+    4: (<C />); // error (`x` is a required prop)
+        ^^^^^ [1]: props
+    3: class C extends React.PureComponent<{ x: number }> {}
+                                           ^^^^^^^^^^^^^ [2]: object type
 
 
 Found 1 error

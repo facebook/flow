@@ -27,23 +27,21 @@ Error: B.js:7
 
 Error: B.js:10
  10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
-                        ^^^ global object. This type is incompatible with
- 13: var bad: number = Bad.foo();
-                       ^^^ object literal. See: A.js:13
-  Property `foo` is incompatible:
-     13: var bad: number = Bad.foo();
-                           ^^^ property `foo`. Property not found in. See: A.js:13
-     10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
-                            ^^^ global object
-
-Error: B.js:10
- 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                         ^^^ Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2].
   References:
     9:   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]: string. See: A.js:9
    10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                  ^^^^^^ [2]: number
+
+Error: B.js:10
+ 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                        ^ Cannot call `f` because property `foo` is missing in global object [1] but exists in object literal [2].
+  References:
+   10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                          ^^^ [1]: global object
+    8: var Bad = Object.assign({}, EventEmitter.prototype, {
+                               ^^ [2]: object literal. See: A.js:8
 
 Error: B.js:12
  12: var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)

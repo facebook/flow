@@ -1,14 +1,16 @@
 Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
-         ^^^^^^^^ property `setProps`. Property not found in
-  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
-     ^^^ React.Element
+         ^^^^^^^^ Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1].
+  References:
+    4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
+       ^^^ [1]: `React.Element`
 
 Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
-         ^^^^^^^^ property `setState`. Property not found in
-  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
-     ^^^ React.Element
+         ^^^^^^^^ Cannot call `app.setState` because property `setState` is missing in `React.Element` [1].
+  References:
+    5: app.setState({z:42}); // error, z:number but foo expects string in App.react
+       ^^^ [1]: `React.Element`
 
 Error: App.react.js:36
  36:         {foo(z,x)} // error, since z: number
@@ -45,9 +47,10 @@ Error: checkPropTypes.js:8
 
 Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-                                  ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:191
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^ Property `bar` is missing in object literal [1].
+  References:
+   10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
+                                                 ^^^^^^^^^^^^^^ [1]: object literal
 
 Error: checkPropTypes.js:12
  12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
@@ -60,41 +63,29 @@ Error: checkPropTypes.js:12
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props. This type is incompatible with
-                  v
-  9:   propTypes: {
- 10:     name: React.PropTypes.string.isRequired,
- 11:     ...C.propTypes,
- 12:   }
-       ^ propTypes of React component
-  Property `name` is incompatible:
-                      v
-      9:   propTypes: {
-     10:     name: React.PropTypes.string.isRequired,
-     11:     ...C.propTypes,
-     12:   }
-           ^ property `name`. Property not found in
-     15: <D />; // errors: properties `name` and `title` not found
-         ^^^^^ props
+      ^ Cannot create `D` element because property `name` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   15: <D />; // errors: properties `name` and `title` not found
+       ^^^^^ [1]: props
+                    v
+    9:   propTypes: {
+   10:     name: React.PropTypes.string.isRequired,
+   11:     ...C.propTypes,
+   12:   }
+         ^ [2]: propTypes of React component
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props. This type is incompatible with
-                  v
-  9:   propTypes: {
- 10:     name: React.PropTypes.string.isRequired,
- 11:     ...C.propTypes,
- 12:   }
-       ^ propTypes of React component
-  Property `title` is incompatible:
-                      v
-      9:   propTypes: {
-     10:     name: React.PropTypes.string.isRequired,
-     11:     ...C.propTypes,
-     12:   }
-           ^ property `title`. Property not found in
-     15: <D />; // errors: properties `name` and `title` not found
-         ^^^^^ props
+      ^ Cannot create `D` element because property `title` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   15: <D />; // errors: properties `name` and `title` not found
+       ^^^^^ [1]: props
+                    v
+    9:   propTypes: {
+   10:     name: React.PropTypes.string.isRequired,
+   11:     ...C.propTypes,
+   12:   }
+         ^ [2]: propTypes of React component
 
 
 Found 9 errors

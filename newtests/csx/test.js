@@ -113,14 +113,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...x}</Foo>;
-                            ^ number. This type is incompatible with
-          8:       <Foo>{...x}</Foo>;
-                            ^ $Iterable
-          Property \`@@iterator\` is incompatible:
-              8:       <Foo>{...x}</Foo>;
-                                ^ property \`@@iterator\` of \`$Iterable\`. Property not found in
-              8:       <Foo>{...x}</Foo>;
-                                ^ number
+                            ^ Property \`@@iterator\` is missing in number [1] but exists in \`$Iterable\` [2].
+          References:
+            7:       const x = 42;
+                               ^^ [1]: number
+            8:       <Foo>{...x}</Foo>;
+                              ^ [2]: \`$Iterable\`
       `,
     )
   ]),
@@ -281,14 +279,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>Test</Bar>
-                   ^^^^^ props. This type is incompatible with
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-          Property \`children\` is incompatible:
-              7:       <Bar>Test</Bar>
-                       ^^^^^ property \`children\`. Property not found in
-              6:       function Bar(props: Props) {}
-                                           ^^^^^ Props
+                   ^^^^^ In the first argument, property \`children\` is missing in \`Props\` [1] but exists in props [2].
+          References:
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [1]: \`Props\`
+            7:       <Bar>Test</Bar>
+                     ^^^^^ [2]: props
       `,
     ),
   ]),

@@ -1,34 +1,20 @@
 Error: compatibility.js:3
   3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ object type. This type is incompatible with
-  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                            ^^^^^^^^^^^^^^^ object type. This type is incompatible with
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                       ^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                ^^^^^^^^^^^^^^^ property `foo`. Property not found in
-          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                           ^^^^^^^^^^^^^^^ object type
+             ^ Cannot assign `y` to `x` because in property `x`, property `bar` is missing in object type [1] but exists in object type [2].
+  References:
+    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                          ^^^^^^^^^^^^^^^ [1]: object type
+    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                     ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: compatibility.js:3
   3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ object type. This type is incompatible with
-  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                            ^^^^^^^^^^^^^^^ object type
-      Property `bar` is incompatible:
-          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                           ^^^^^^^^^^^^^^^ property `bar`. Property not found in
-          2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                ^^^^^^^^^^^^^^^ object type
+             ^ Cannot assign `y` to `x` because in property `x`, property `foo` is missing in object type [1] but exists in object type [2].
+  References:
+    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                     ^^^^^^^^^^^^^^^ [1]: object type
+    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                          ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: compatibility.js:7
   7:     x = y; // 2 errors: string !~> number; number !~> string
@@ -95,21 +81,24 @@ Error: conversion.js:10
 
 Error: conversion.js:19
  19: (z.charAt(0): string);
-        ^^^^^^ property `charAt`. Property not found in
- 19: (z.charAt(0): string);
-      ^ Number
+        ^^^^^^ Cannot call `z.charAt` because property `charAt` is missing in `Number` [1].
+  References:
+   28:     static (o: number): Number;
+                               ^^^^^^ [1]: `Number`. See lib: <BUILTINS>/core.js:28
 
 Error: objects.js:4
   4: (x.foo : string);     // error, key doesn't exist
-        ^^^ property `foo`. Property not found in
-  4: (x.foo : string);     // error, key doesn't exist
-      ^ object type
+        ^^^ Cannot get `x.foo` because property `foo` is missing in object type [1].
+  References:
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: objects.js:5
   5: (x['foo'] : string);  // error, key doesn't exist
-        ^^^^^ property `foo`. Property not found in
-  5: (x['foo'] : string);  // error, key doesn't exist
-      ^ object type
+        ^^^^^ Property `foo` is missing in object type [1].
+  References:
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: objects.js:7
   7: (x.bar: boolean);     // error, string !~> boolean
@@ -140,9 +129,10 @@ Error: objects.js:9
 
 Error: objects.js:12
  12: (x[`foo`]: string);   // error, key doesn't exist
-        ^^^^^ property `foo`. Property not found in
- 12: (x[`foo`]: string);   // error, key doesn't exist
-      ^ object type
+        ^^^^^ Property `foo` is missing in object type [1].
+  References:
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: objects.js:15
  15: y['foo'] = 123; // error, number !~> string
@@ -155,9 +145,10 @@ Error: objects.js:15
 
 Error: objects.js:16
  16: y['bar'] = 'abc'; // error, property not found
-       ^^^^^ property `bar`. Property not found in
- 16: y['bar'] = 'abc'; // error, property not found
-     ^ object type
+       ^^^^^ Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object type [1].
+  References:
+   14: var y : {foo: string} = {foo: 'bar'};
+               ^^^^^^^^^^^^^ [1]: object type
 
 Error: objects.js:18
  18: (y['hasOwnProperty']: string); // error, prototype method is not a string

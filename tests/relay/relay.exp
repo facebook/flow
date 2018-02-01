@@ -54,25 +54,21 @@ Error: ProfilePic.js:17
 
 Error: main.js:15
  15: <Profile user={userRef} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `foo` is incompatible:
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
-     15: <Profile user={userRef} />; // Error: Missing foo
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^ Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   15: <Profile user={userRef} />; // Error: Missing foo
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+   46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error: main.js:16
  16: <Profile foo={42} />; // Error: Missing user
-     ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `user` is incompatible:
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
-     16: <Profile foo={42} />; // Error: Missing user
-         ^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^ Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+  References:
+   16: <Profile foo={42} />; // Error: Missing user
+       ^^^^^^^^^^^^^^^^^^^^ [1]: props
+   46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error: main.js:17
  17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
@@ -85,25 +81,21 @@ Error: main.js:17
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `foo` is incompatible:
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
-     18: <Profile />; // Error: Missing user and foo
-         ^^^^^^^^^^^ props
+      ^^^^^^^ Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   18: <Profile />; // Error: Missing user and foo
+       ^^^^^^^^^^^ [1]: props
+   46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
-     ^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `user` is incompatible:
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
-     18: <Profile />; // Error: Missing user and foo
-         ^^^^^^^^^^^ props
+      ^^^^^^^ Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+  References:
+   18: <Profile />; // Error: Missing user and foo
+       ^^^^^^^^^^^ [1]: props
+   46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error: main.js:19
  19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
@@ -161,14 +153,12 @@ Error: more.js:92
 
 Error: more.js:95
  95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `user` is incompatible:
-     35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in
-     95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^ Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in object type [2].
+  References:
+   95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+   35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
@@ -208,14 +198,12 @@ Error: more.js:144
 
 Error: more.js:147
 147: <PluralTest nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `users` is incompatible:
-     35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `users`. Property not found in
-    147: <PluralTest nullableUsers={null} />;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^ Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in object type [2].
+  References:
+  147: <PluralTest nullableUsers={null} />;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+   35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;

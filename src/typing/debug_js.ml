@@ -2095,7 +2095,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, _, prop, _, ptype, _) -> p ~extra:(spf "(%s), %s"
+  | SetPropT (use_op, _, prop, _, ptype, _) -> p ~extra:(spf "%s, (%s), %s"
+      (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
   | SetPrivatePropT (_, _, prop, _, _, ptype, _) -> p ~extra:(spf "(%s), %s"
@@ -2364,8 +2365,8 @@ let dump_flow_error =
         spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
-    | EIncompatibleProp { reason_prop; reason_obj; special=_; use_op=_ } ->
-        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; use_op = _ }"
+    | EIncompatibleProp { reason_prop; reason_obj; special=_; prop=_; use_op=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
     | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
@@ -2438,10 +2439,12 @@ let dump_flow_error =
           expected
           literal
           (string_of_use_op use_op)
-    | EPropNotFound ((prop_reason, obj_reason), _use_op) ->
-        spf "EPropNotFound (%s, %s)"
+    | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
+        spf "EPropNotFound (%s, %s, %s, %s)"
+          (match prop with Some prop -> spf "Some %s" prop | None -> "None")
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
+          (string_of_use_op use_op)
     | EPropAccess ((reason1, reason2), x, _, _) ->
         spf "EPropAccess ((%s, %s), %s, _, _)"
           (dump_reason cx reason1)

@@ -27,21 +27,24 @@ Error: proto.js:7
 
 Error: sealed.js:3
   3: o.z = 0;
-       ^ property `z`. Property not found in
-  3: o.z = 0;
-     ^ object type
+       ^ Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
+  References:
+   12: var export_o: { x:any; } = o; // awkward type cast
+                     ^^^^^^^^^^ [1]: object type. See: proto.js:12
 
 Error: sealed.js:8
   8: a.x = 123;
-       ^ property `x`. Property not found in
-  8: a.x = 123;
-     ^ new object
+       ^ Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
+  References:
+    7: var a = new Bar(234);
+               ^^^^^^^^^^^^ [1]: new object
 
 Error: sealed.js:9
   9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
-       ^ property `y`. Property not found in
-  9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
-     ^ new object
+       ^ Cannot assign `'abc'` to `a.y` because property `y` is missing in new object [1].
+  References:
+    7: var a = new Bar(234);
+               ^^^^^^^^^^^^ [1]: new object
 
 
 Found 6 errors

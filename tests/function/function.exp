@@ -1,8 +1,9 @@
 Error: apply.js:2
   2:   return this.length; // expect []/"" this
-                   ^^^^^^ property `length`. Property not found in
-  2:   return this.length; // expect []/"" this
-              ^^^^ Number
+                   ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
+  References:
+    2:   return this.length; // expect []/"" this
+                ^^^^ [1]: `Number`
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
@@ -121,9 +122,10 @@ Error: bind.js:14
 
 Error: bind.js:19
  19:     x.bind(x, 'foo'); // error
-           ^^^^ property `bind`. Property not found in
- 19:     x.bind(x, 'foo'); // error
-         ^ object type
+           ^^^^ Cannot call `x.bind` because property `bind` is missing in object type [1].
+  References:
+   18:   function(x: { a: string }) {
+                     ^^^^^^^^^^^^^ [1]: object type
 
 Error: bind.js:25
  25:     (x.bind(123): void); // error, number !~> string
@@ -136,9 +138,10 @@ Error: bind.js:25
 
 Error: call.js:4
   4:   return this.length; // expect []/"" this
-                   ^^^^^^ property `length`. Property not found in
-  4:   return this.length; // expect []/"" this
-              ^^^^ Number
+                   ^^^^^^ Cannot get `this.length` because property `length` is missing in `Number` [1].
+  References:
+    4:   return this.length; // expect []/"" this
+                ^^^^ [1]: `Number`
 
 Error: call.js:14
  14: test.call("", ""); // error: void ~> number

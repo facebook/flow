@@ -26,9 +26,13 @@ Error: require.js:20
 
 Error: require.js:25
  25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
-       ^^^^^^^^^^^ property `stringValue`. Property not found in
- 25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
-     ^ object literal
+       ^^^^^^^^^^^ Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1].
+  References:
+                        v
+    6: module.exports = {
+    7:   numberValue: 42
+    8: };
+       ^ [1]: object literal. See: E.js:6
 
 Error: require.js:30
  30: require(a); // Error: Param must be string literal

@@ -9,28 +9,21 @@ Error: sanity-filter-union.js:6
 
 Error: sanity-filter-union.js:16
  16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                     ^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     14: declare var ab: Array<A|B|C>;
-                               ^ A. This type is incompatible with
-     16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                               ^ B
-      Property `v` is incompatible:
-         16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                                   ^ property `v`. Property not found in
-         14: declare var ab: Array<A|B|C>;
-                                   ^ A
-
-Error: sanity-filter-union.js:16
- 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `my_filter(...)` to array type because in type argument `T` and then property `kind`, string literal `A` [1] is incompatible with string literal `B` [2].
   References:
     8: type A = { kind: 'A', u: number }
                         ^^^ [1]: string literal `A`
     9: type B = { kind: 'B', v: string }
                         ^^^ [2]: string literal `B`
+
+Error: sanity-filter-union.js:16
+ 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `my_filter(...)` to array type because in type argument `T`, property `v` is missing in `A` [1] but exists in `B` [2].
+  References:
+   14: declare var ab: Array<A|B|C>;
+                             ^ [1]: `A`
+   16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                             ^ [2]: `B`
 
 Error: sanity-filter-union.js:17
  17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR

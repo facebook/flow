@@ -62,15 +62,17 @@ Error: bool.js:27
 
 Error: bool.js:37
  37:     return x.result; // error
-                  ^^^^^^ property `result`. Property not found in
- 37:     return x.result; // error
-                ^ object type
+                  ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
+  References:
+   33:   function(x: { done: true, result: string } | { done: false }) {
+                                                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: bool.js:44
  44:     return x.result; // error
-                  ^^^^^^ property `result`. Property not found in
- 44:     return x.result; // error
-                ^ object type
+                  ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
+  References:
+   40:   function(x: { done: true, result: string } | { done: false }) {
+                                                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: cond_prop.js:11
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -119,39 +121,45 @@ Error: cond_prop.js:11
 
 Error: cond_prop.js:19
  19:     return x.result; // error
-                  ^^^^^^ property `result`. Property not found in
- 19:     return x.result; // error
-                ^ object type
+                  ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
+  References:
+   15:   function(x: { done: true, result: string } | { done: false }) {
+                                                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: cond_prop.js:24
  24:       return x.result; // error, consider { foo: "herp", done: "derp" }
-                    ^^^^^^ property `result`. Property not found in
- 24:       return x.result; // error, consider { foo: "herp", done: "derp" }
-                  ^ object type
+                    ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
+  References:
+   22:   function(x: { done: true, result: string } | { foo: string }) {
+                                                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: cond_prop.js:26
  26:     return x.result; // error
-                  ^^^^^^ property `result`. Property not found in
- 26:     return x.result; // error
-                ^ object type
+                  ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
+  References:
+   22:   function(x: { done: true, result: string } | { foo: string }) {
+                                                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: cond_prop.js:36
  36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
-                ^^^ property `bar`. Property not found in
- 36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
-              ^ object type
+                ^^^ Cannot get `t.bar` because property `bar` is missing in object type [1].
+  References:
+   34:     function testAlwaysTruthyProp(t: T) {
+                                            ^ [1]: object type
 
 Error: cond_prop.js:46
  46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
-                ^^^ property `foo`. Property not found in
- 46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
-              ^ object type
+                ^^^ Cannot get `t.foo` because property `foo` is missing in object type [1].
+  References:
+   44:     function testSometimesTruthyProp(t: T) {
+                                               ^ [1]: object type
 
 Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
-                ^^^^ property `quux`. Property not found in
- 48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
-              ^ object type
+                ^^^^ Cannot get `t.quux` because property `quux` is missing in object type [1].
+  References:
+   44:     function testSometimesTruthyProp(t: T) {
+                                               ^ [1]: object type
 
 Error: cond_prop.js:54
  54:     if (o.p) {} // error: property `p` not found on null
@@ -191,9 +199,10 @@ Error: hasOwnProperty.js:6
 
 Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
-           ^ property `z`. Property not found in
-  9:     x.z(); // error: unreachable, but we don't help you here
-         ^ object type
+           ^ Cannot call `x.z` because property `z` is missing in object type [1].
+  References:
+    3: function foo(x:{y?:() => void}) {
+                      ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: heap_defassign.js:10
  10:     var x: number = obj.p;      // error, obj.p : number | string
@@ -275,9 +284,10 @@ Error: missing-property-cond.js:11
 
 Error: missing-property-cond.js:16
  16:   o.p3.x; // usual error outside conditional
-         ^^ property `p3`. Property not found in
- 16:   o.p3.x; // usual error outside conditional
-       ^ object type
+         ^^ Cannot get `o.p3` because property `p3` is missing in object type [1].
+  References:
+   15: function foo3(o: { x: number }) {
+                        ^^^^^^^^^^^^^ [1]: object type
 
 Error: missing-property-cond.js:23
  23:     o.p4.x; // error
@@ -287,15 +297,17 @@ Error: missing-property-cond.js:23
 
 Error: missing-property-cond.js:37
  37:   if (o.bar) {} // error, any lookup on mixed is unsafe
-             ^^^ property `bar`. Property not found in
- 37:   if (o.bar) {} // error, any lookup on mixed is unsafe
-           ^ mixed
+             ^^^ Property `bar` is missing in mixed [1].
+  References:
+   36: function foo6(o: mixed) {
+                        ^^^^^ [1]: mixed
 
 Error: missing-property-cond.js:41
  41:   if (typeof o.bar === 'string') {} // error
-                    ^^^ property `bar`. Property not found in
- 41:   if (typeof o.bar === 'string') {} // error
-                  ^ mixed
+                    ^^^ Property `bar` is missing in mixed [1].
+  References:
+   40: function foo7(o: mixed) {
+                        ^^^^^ [1]: mixed
 
 Error: missing-property-cond.js:65
  65:   if (null.q) {} // error: property `q` on null
@@ -505,15 +517,17 @@ Error: not.js:11
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
-         ^^^^ computed property. Indexable signature not found in
- 11:     x[0]; // should error for null, void and number (0)
-         ^ Number
+         ^^^^ An indexer property is missing in `Number` [1].
+  References:
+   11:     x[0]; // should error for null, void and number (0)
+           ^ [1]: `Number`
 
 Error: not.js:21
  21:     x[0]; // should error for number (0)
-         ^^^^ computed property. Indexable signature not found in
- 21:     x[0]; // should error for number (0)
-         ^ Number
+         ^^^^ An indexer property is missing in `Number` [1].
+  References:
+   21:     x[0]; // should error for number (0)
+           ^ [1]: `Number`
 
 Error: not.js:41
  41:     (!x: false); // error, strings are not always truthy
@@ -948,15 +962,17 @@ Error: switch.js:8
 
 Error: switch.js:27
  27:       return text[0]; // error, [0] on number
-                  ^^^^^^^ computed property. Indexable signature not found in
- 27:       return text[0]; // error, [0] on number
-                  ^^^^ Number
+                  ^^^^^^^ An indexer property is missing in `Number` [1].
+  References:
+   27:       return text[0]; // error, [0] on number
+                    ^^^^ [1]: `Number`
 
 Error: switch.js:37
  37:       return text[0]; // error, [0] on number
-                  ^^^^^^^ computed property. Indexable signature not found in
- 37:       return text[0]; // error, [0] on number
-                  ^^^^ Number
+                  ^^^^^^^ An indexer property is missing in `Number` [1].
+  References:
+   37:       return text[0]; // error, [0] on number
+                    ^^^^ [1]: `Number`
 
 Error: switch.js:51
  51:       return (text++) + '';
@@ -997,15 +1013,17 @@ Error: tagged_union.js:40
 
 Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^^^ property `raw`. Property not found in
- 40:     (x.raw: 'Yes' | 'No'); // 2 errors:
-          ^ Orange
+            ^^^ Cannot get `x.raw` because property `raw` is missing in `Orange` [1].
+  References:
+   38: function qux(x: Breakfast) {
+                       ^^^^^^^^^ [1]: `Orange`
 
 Error: tagged_union.js:72
  72:   default: return x.A; // error, x: C and property A not found in type C
-                         ^ property `A`. Property not found in
- 72:   default: return x.A; // error, x: C and property A not found in type C
-                       ^ C
+                         ^ Cannot get `x.A` because property `A` is missing in `C` [1].
+  References:
+   68: function kind(x: A | B | C): number {
+                                ^ [1]: `C`
 
 Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
@@ -1018,9 +1036,10 @@ Error: tagged_union.js:89
 
 Error: tagged_union.js:96
  96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
-               ^^^^^^^ property `fooTypo`. Property not found in
- 96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
-             ^ object type
+               ^^^^^^^ Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1].
+  References:
+   94:   function test8(x: {foo: {bar: 1}}) {
+                           ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:101
 101:     if (x.kind === (null).toString()) {} // error, method on null
@@ -1126,159 +1145,185 @@ Error: tagged_union.js:162
 
 Error: tagged_union.js:170
 170:       x.z; // error
-             ^ property `z`. Property not found in
-170:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  167:   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:173
 173:       x.y; // error
-             ^ property `y`. Property not found in
-173:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  167:   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:177
 177:       x.y; // error
-             ^ property `y`. Property not found in
-177:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  167:   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:180
 180:       x.z; // error
-             ^ property `z`. Property not found in
-180:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  167:   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:188
 188:       x.z; // error
-             ^ property `z`. Property not found in
-188:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  185:   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:190
 190:       x.y; // error: x.foo could be a string
-             ^ property `y`. Property not found in
-190:       x.y; // error: x.foo could be a string
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  185:   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:191
 191:       x.z; // error: could still be either case (if foo was a different number)
-             ^ property `z`. Property not found in
-191:       x.z; // error: could still be either case (if foo was a different number)
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  185:   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:196
 196:       x.y; // error
-             ^ property `y`. Property not found in
-196:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  185:   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:199
 199:       x.z; // error
-             ^ property `z`. Property not found in
-199:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  185:   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:207
 207:       x.z; // error
-             ^ property `z`. Property not found in
-207:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:209
 209:       x.y; // error: x.foo could be a string
-             ^ property `y`. Property not found in
-209:       x.y; // error: x.foo could be a string
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:210
 210:       x.z; // error: could still be either case (if foo was a different number)
-             ^ property `z`. Property not found in
-210:       x.z; // error: could still be either case (if foo was a different number)
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:215
 215:       x.y; // error
-             ^ property `y`. Property not found in
-215:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:217
 217:       x.y; // error: x.foo could be a different string
-             ^ property `y`. Property not found in
-217:       x.y; // error: x.foo could be a different string
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:218
 218:       x.z; // error: x.foo could be a number
-             ^ property `z`. Property not found in
-218:       x.z; // error: x.foo could be a number
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  204:   function(x: { foo: number, y: string } | { foo: string, z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:228
 228:       x.y; // error: flow isn't smart enough to figure this out yet
-             ^ property `y`. Property not found in
-228:       x.y; // error: flow isn't smart enough to figure this out yet
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  224:     x: { foo: number, y: string } | { foo: string, z: string },
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:229
 229:       x.z; // error
-             ^ property `z`. Property not found in
-229:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  224:     x: { foo: number, y: string } | { foo: string, z: string },
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:237
 237:       x.z; // error
-             ^ property `z`. Property not found in
-237:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  234:   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:240
 240:       x.y; // error
-             ^ property `y`. Property not found in
-240:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  234:   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:244
 244:       x.y; // error
-             ^ property `y`. Property not found in
-244:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  234:   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:247
 247:       x.z; // error
-             ^ property `z`. Property not found in
-247:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  234:   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:255
 255:       x.z; // error
-             ^ property `z`. Property not found in
-255:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  252:   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:258
 258:       x.y; // error
-             ^ property `y`. Property not found in
-258:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  252:   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:262
 262:       x.y; // error
-             ^ property `y`. Property not found in
-262:       x.y; // error
-           ^ object type
+             ^ Cannot get `x.y` because property `y` is missing in object type [1].
+  References:
+  252:   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: tagged_union.js:265
 265:       x.z; // error
-             ^ property `z`. Property not found in
-265:       x.z; // error
-           ^ object type
+             ^ Cannot get `x.z` because property `z` is missing in object type [1].
+  References:
+  252:   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: typeof.js:5
   5:     x[0]; // error for boolean, not number
-         ^^^^ computed property. Indexable signature not found in
-  5:     x[0]; // error for boolean, not number
-         ^ Boolean
+         ^^^^ An indexer property is missing in `Boolean` [1].
+  References:
+    5:     x[0]; // error for boolean, not number
+           ^ [1]: `Boolean`
 
 Error: typeof.js:12
  12:     return x; // error, null
@@ -1369,21 +1414,24 @@ Error: undef.js:77
 
 Error: union.js:7
   7:     x[0]; // error on boolean
-         ^^^^ computed property. Indexable signature not found in
-  7:     x[0]; // error on boolean
-         ^ Boolean
+         ^^^^ An indexer property is missing in `Boolean` [1].
+  References:
+    7:     x[0]; // error on boolean
+           ^ [1]: `Boolean`
 
 Error: union.js:13
  13:     x[0]; // error on number
-         ^^^^ computed property. Indexable signature not found in
- 13:     x[0]; // error on number
-         ^ Number
+         ^^^^ An indexer property is missing in `Number` [1].
+  References:
+   13:     x[0]; // error on number
+           ^ [1]: `Number`
 
 Error: union.js:19
  19:     x[0]; // error on number
-         ^^^^ computed property. Indexable signature not found in
- 19:     x[0]; // error on number
-         ^ Number
+         ^^^^ An indexer property is missing in `Number` [1].
+  References:
+   19:     x[0]; // error on number
+           ^ [1]: `Number`
 
 Error: void.js:31
  31:     var y = x * 1000;

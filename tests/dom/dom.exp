@@ -120,9 +120,10 @@ Error: HTMLSelectElement.js:22
 
 Error: URL.js:8
   8: const e: string = c.path; // not correct
-                         ^^^^ property `path`. Property not found in
-  8: const e: string = c.path; // not correct
-                       ^ URL
+                         ^^^^ Cannot get `c.path` because property `path` is missing in `URL` [1].
+  References:
+    5: const c = new URL('/docs', 'http://flowtype.org/'); // correct
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `URL`
 
 Error: eventtarget.js:9
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined

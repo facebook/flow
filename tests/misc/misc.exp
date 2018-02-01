@@ -18,9 +18,10 @@ Error: A.js:14
 
 Error: C.js:9
   9:   f(o.b);
-           ^ property `b`. Property not found in
-  9:   f(o.b);
-         ^ new object
+           ^ Cannot get `o.b` because property `b` is missing in new object [1].
+  References:
+    8:   var o = new B();
+                 ^^^^^^^ [1]: new object
 
 Error: C.js:10
  10:   f(o.s);

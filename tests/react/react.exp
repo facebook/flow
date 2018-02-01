@@ -1,13 +1,11 @@
 Error: createElementRequiredProp_string.js:17
  17:     return (<Cmp/>);
-                 ^^^^^^ props. This type is incompatible with
-  4: class Bar extends React.Component<{test: number}> {
-                                       ^^^^^^^^^^^^^^ object type
-  Property `test` is incompatible:
-      4: class Bar extends React.Component<{test: number}> {
-                                           ^^^^^^^^^^^^^^ property `test`. Property not found in
-     17:     return (<Cmp/>);
-                     ^^^^^^ props
+                  ^^^ Cannot create `Cmp` element because property `test` is missing in props [1] but exists in object type [2].
+  References:
+   17:     return (<Cmp/>);
+                   ^^^^^^ [1]: props
+    4: class Bar extends React.Component<{test: number}> {
+                                         ^^^^^^^^^^^^^^ [2]: object type
 
 Error: create_class.js:7
   7:     (this.props.foo: empty); // error: string ~> empty
@@ -47,21 +45,39 @@ Error: create_class.js:48
 
 Error: create_class.js:71
  71:     (this.mixins: mixed); // error: property `mixins` not found
-               ^^^^^^ property `mixins`. Property not found in
- 71:     (this.mixins: mixed); // error: property `mixins` not found
-          ^^^^ React component
+               ^^^^^^ Cannot get `this.mixins` because property `mixins` is missing in React component [1].
+  References:
+                 v------------------
+   66: const G = React.createClass({
+   67:   mixins: [],
+   68:   autobind: true,
+  ...:
+   75: });
+       -^ [1]: React component
 
 Error: create_class.js:72
  72:     (this.autobind: mixed); // error: property `autobind` not found
-               ^^^^^^^^ property `autobind`. Property not found in
- 72:     (this.autobind: mixed); // error: property `autobind` not found
-          ^^^^ React component
+               ^^^^^^^^ Cannot get `this.autobind` because property `autobind` is missing in React component [1].
+  References:
+                 v------------------
+   66: const G = React.createClass({
+   67:   mixins: [],
+   68:   autobind: true,
+  ...:
+   75: });
+       -^ [1]: React component
 
 Error: create_class.js:73
  73:     (this.statics: mixed); // error: property `statics` not found
-               ^^^^^^^ property `statics`. Property not found in
- 73:     (this.statics: mixed); // error: property `statics` not found
-          ^^^^ React component
+               ^^^^^^^ Cannot get `this.statics` because property `statics` is missing in React component [1].
+  References:
+                 v------------------
+   66: const G = React.createClass({
+   67:   mixins: [],
+   68:   autobind: true,
+  ...:
+   75: });
+       -^ [1]: React component
 
 Error: create_class.js:80
  80:     (this.q: empty); // error: number ~> empty
@@ -311,25 +327,17 @@ Error: create_class_initial_state_sealed.js:35
 
 Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
-                       ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-     v------------------
- 40: React.createClass({
- 41:   getInitialState(): { p: number } {
- 42:     return { p: 0 };
-...:
- 50: });
-     -^ State
-  Property `q` is incompatible:
-     45:     this.setState({ q: 0 }); // property `q` not found
-                           ^^^^^^^^ property `q` of object literal. Property not found in
-     41:   getInitialState(): { p: number } {
-                          ^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^ Cannot call `this.setState` with object literal bound to `partialState` because in property `q`, property `q` is missing in object type [1].
+  References:
+   41:   getInitialState(): { p: number } {
+                            ^^^^^^^^^^^^^ [1]: object type
 
 Error: create_class_initial_state_sealed.js:48
  48:     (this.state.q: empty); // property `q` not found
-                     ^ property `q`. Property not found in
- 48:     (this.state.q: empty); // property `q` not found
-          ^^^^^^^^^^ object type
+                     ^ Cannot get `this.state.q` because property `q` is missing in object type [1].
+  References:
+   41:   getInitialState(): { p: number } {
+                            ^^^^^^^^^^^^^ [1]: object type
 
 Error: create_class_initial_state_sealed.js:66
  66:     (this.state.baz: empty); // number ~> empty
@@ -342,25 +350,17 @@ Error: create_class_initial_state_sealed.js:66
 
 Error: create_class_initial_state_sealed.js:81
  81:     this.setState({ baz: 0 }); // property `baz`  not found
-                       ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-     v------------------
- 71: React.createClass({
- 72:   mixins: [{
- 73:     getInitialState(): { foo: number } {
-...:
- 86: });
-     -^ State
-  Property `baz` is incompatible:
-     81:     this.setState({ baz: 0 }); // property `baz`  not found
-                           ^^^^^^^^^^ property `baz` of object literal. Property not found in
-     73:     getInitialState(): { foo: number } {
-                            ^^^^^^^^^^^^^^^^^^^ object type
+                       ^^^^^^^^^^ Cannot call `this.setState` with object literal bound to `partialState` because in property `baz`, property `baz` is missing in object type [1].
+  References:
+   73:     getInitialState(): { foo: number } {
+                              ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found
-                     ^^^ property `baz`. Property not found in
- 84:     (this.state.baz: empty); // property `baz` not found
-          ^^^^^^^^^^ object type
+                     ^^^ Cannot get `this.state.baz` because property `baz` is missing in object type [1].
+  References:
+   73:     getInitialState(): { foo: number } {
+                              ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: create_class_statics_sealed.js:5
   5: (A.bar: empty); // number ~> empty (inflow below)
@@ -418,15 +418,17 @@ Error: create_class_statics_sealed.js:28
 
 Error: create_class_statics_sealed.js:29
  29: (D.bar: empty); // property `bar` not found
-        ^^^ property `bar`. Property not found in
- 29: (D.bar: empty); // property `bar` not found
-      ^ statics of React class
+        ^^^ Cannot get `D.bar` because property `bar` is missing in statics of React class [1].
+  References:
+   26:   statics: ({ foo: 0 }: { foo: number }),
+                               ^^^^^^^^^^^^^^^ [1]: statics of React class
 
 Error: create_class_statics_sealed.js:30
  30: D.bar = 0; // property `bar` not found
-       ^^^ property `bar`. Property not found in
- 30: D.bar = 0; // property `bar` not found
-     ^ statics of React class
+       ^^^ Cannot assign `0` to `D.bar` because property `bar` is missing in statics of React class [1].
+  References:
+   26:   statics: ({ foo: 0 }: { foo: number }),
+                               ^^^^^^^^^^^^^^^ [1]: statics of React class
 
 Error: create_class_statics_sealed.js:39
  39: (E.foo: empty); // number ~> empty
@@ -475,15 +477,17 @@ Error: create_class_statics_sealed.js:52
 
 Error: create_class_statics_sealed.js:53
  53: (F.baz: empty); // number ~> empty (inflow below)
-        ^^^ property `baz`. Property not found in
- 53: (F.baz: empty); // number ~> empty (inflow below)
-      ^ statics of React class
+        ^^^ Cannot get `F.baz` because property `baz` is missing in statics of React class [1].
+  References:
+   49:   statics: { bar: 0 },
+                  ^^^^^^^^^^ [1]: statics of React class
 
 Error: create_class_statics_sealed.js:54
  54: F.baz = 0;
-       ^^^ property `baz`. Property not found in
- 54: F.baz = 0;
-     ^ statics of React class
+       ^^^ Cannot assign `0` to `F.baz` because property `baz` is missing in statics of React class [1].
+  References:
+   49:   statics: { bar: 0 },
+                  ^^^^^^^^^^ [1]: statics of React class
 
 Error: default_props_undefined.js:10
  10: <Foo bar="42"/>; // Error
@@ -505,14 +509,12 @@ Error: element_config.js:15
 
 Error: element_config.js:31
  31:   static defaultProps = {p: 42}; // Error: extra property `p`
-                             ^^^^^^^ object literal. This type is incompatible with
- 30: class F extends React.Component<{||}> {
-                                     ^^^^ object type
-  Property `p` is incompatible:
-     31:   static defaultProps = {p: 42}; // Error: extra property `p`
-                                 ^^^^^^^ property `p`. Property not found in
-     30: class F extends React.Component<{||}> {
-                                         ^^^^ object type
+                             ^^^^^^^ Property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   31:   static defaultProps = {p: 42}; // Error: extra property `p`
+                               ^^^^^^^ [1]: object literal
+   30: class F extends React.Component<{||}> {
+                                       ^^^^ [2]: object type
 
 Error: element_config.js:39
  39:   static defaultProps = {p: 'foo'}; // Error: string ~> number
@@ -552,14 +554,12 @@ Error: element_config.js:56
 
 Error: element_config.js:58
  58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-      ^^ object literal. This type is incompatible with
- 58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
-     58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-          ^^ object literal
+      ^^ Cannot cast object literal to `ElementConfig` because property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+        ^^ [1]: object literal
+   58: ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: element_config.js:60
  60: ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
@@ -572,14 +572,12 @@ Error: element_config.js:60
 
 Error: element_config.js:62
  62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-      ^^ object literal. This type is incompatible with
- 62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `p`. Property not found in
-     62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-          ^^ object literal
+      ^^ Cannot cast object literal to `ElementConfig` because property `p` is missing in object literal [1] but exists in object type [2].
+  References:
+   62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+        ^^ [1]: object literal
+   62: ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: element_config.js:64
  64: ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
@@ -592,25 +590,21 @@ Error: element_config.js:64
 
 Error: element_config.js:71
  71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
-      ^^^^^^^ object literal. This type is incompatible with
- 71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
-          ^^^^^^^ property `p`. Property not found in
-     71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      ^^^^^^^ Cannot cast object literal to `ElementConfig` because property `p` is missing in object type [1] but exists in object literal [2].
+  References:
+   71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+   71: ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
+        ^^^^^^^ [2]: object literal
 
 Error: element_config.js:72
  72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
-      ^^^^^^^^^^ object literal. This type is incompatible with
- 72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
-          ^^^^^^^^^^ property `p`. Property not found in
-     72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      ^^^^^^^^^^ Cannot cast object literal to `ElementConfig` because property `p` is missing in object type [1] but exists in object literal [2].
+  References:
+   72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+   72: ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+        ^^^^^^^^^^ [2]: object literal
 
 Error: element_config.js:76
  76: ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
@@ -650,57 +644,39 @@ Error: element_config.js:88
 
 Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-      ^^^^^^^^^^^^^ React.Element. This type is incompatible with
-  8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-      8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-           ^^^ React.Component. Has some incompatible type argument with
-    138:   | Class<React$Component<Props, any>>;
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-      Type argument `Props` is incompatible:
-          8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                               ^^^^^^^^^^^ object type. This type is incompatible with
-          5: class Foo extends React.Component<{a: number}> {}
-                                               ^^^^^^^^^^^ object type
-          Property `b` is incompatible:
-              8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                                   ^^^^^^^^^^^ property `b`. Property not found in
-              5: class Foo extends React.Component<{a: number}> {}
-                                                   ^^^^^^^^^^^ object type
+       ^^^ Cannot cast `<Foo />` to `Element` because in property `type` and then type argument `Props`, property `b` is missing in object type [1] but exists in object type [2].
+  References:
+    5: class Foo extends React.Component<{a: number}> {}
+                                         ^^^^^^^^^^^ [1]: object type
+    8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                         ^^^^^^^^^^^ [2]: object type
 
 Error: hoc.js:11
  11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ props. This type is incompatible with
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     11:       <Component />; // Error: `foo` is required.
-               ^^^^^^^^^^^^^ props
+            ^^^^^^^^^ Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   11:       <Component />; // Error: `foo` is required.
+             ^^^^^^^^^^^^^ [1]: props
+    6:   Component: React$ComponentType<{foo: number, bar: number}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc.js:11
  11:       <Component />; // Error: `foo` is required.
-           ^^^^^^^^^^^^^ props. This type is incompatible with
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
-     11:       <Component />; // Error: `foo` is required.
-               ^^^^^^^^^^^^^ props
+            ^^^^^^^^^ Cannot create `Component` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   11:       <Component />; // Error: `foo` is required.
+             ^^^^^^^^^^^^^ [1]: props
+    6:   Component: React$ComponentType<{foo: number, bar: number}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc.js:12
  12:       <Component foo={42} />; // Error: `bar` is required.
-           ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      6:   Component: React$ComponentType<{foo: number, bar: number}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     12:       <Component foo={42} />; // Error: `bar` is required.
-               ^^^^^^^^^^^^^^^^^^^^^^ props
+            ^^^^^^^^^ Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   12:       <Component foo={42} />; // Error: `bar` is required.
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+    6:   Component: React$ComponentType<{foo: number, bar: number}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc.js:35
  35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
@@ -722,87 +698,49 @@ Error: hoc.js:36
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.
-     ^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React$ComponentType<{foo: number}> {
-                            ^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      7: ): React$ComponentType<{foo: number}> {
-                                ^^^^^^^^^^^^^ property `foo`. Property not found in
-     41: <Wrapped />; // Error: `foo` is required.
-         ^^^^^^^^^^^ props
+      ^^^^^^^ Cannot create `Wrapped` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   41: <Wrapped />; // Error: `foo` is required.
+       ^^^^^^^^^^^ [1]: props
+    7: ): React$ComponentType<{foo: number}> {
+                              ^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc.js:43
  43: <WrappedFun />; // Error: `foo` is required.
-     ^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React$ComponentType<{foo: number}> {
-                            ^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      7: ): React$ComponentType<{foo: number}> {
-                                ^^^^^^^^^^^^^ property `foo`. Property not found in
-     43: <WrappedFun />; // Error: `foo` is required.
-         ^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^ Cannot create `WrappedFun` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   43: <WrappedFun />; // Error: `foo` is required.
+       ^^^^^^^^^^^^^^ [1]: props
+    7: ): React$ComponentType<{foo: number}> {
+                              ^^^^^^^^^^^^^ [2]: object type
 
-Error: hoc2.js:17
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-122:   (props: Props, context: any): React$Node,
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-  The first parameter is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                             v-
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         -^ object type
-      Property `a` is incompatible:
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ property `a`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+Error: hoc2.js:6
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `a` is missing in object type [1] but exists in object type [2].
+  References:
+    6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                           v-
+   17: function MyFunctionComponent(props: {|
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: |}) {}
+       -^ [2]: object type
 
-Error: hoc2.js:17
-     v-------------------------------------
- 17: function MyFunctionComponent(props: {|
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: |}) {}
-     --^ function. This type is incompatible with
-122:   (props: Props, context: any): React$Node,
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-  The first parameter is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                             v-
-     17: function MyFunctionComponent(props: {|
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: |}) {}
-         -^ object type
-      Property `b` is incompatible:
-                                                 v-
-         17: function MyFunctionComponent(props: {|
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: |}) {}
-             -^ property `b`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+Error: hoc2.js:6
+  6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `b` is missing in object type [1] but exists in object type [2].
+  References:
+    6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                           v-
+   17: function MyFunctionComponent(props: {|
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: |}) {}
+       -^ [2]: object type
 
 Error: hoc2.js:18
  18:   a: number,
@@ -815,110 +753,6 @@ Error: hoc2.js:18
 
 Error: hoc2.js:23
  23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `a` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `a`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type
-      Property `b` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `b`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `a` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `a`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
-                                         ^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-138:   | Class<React$Component<Props, any>>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component. See lib: <BUILTINS>/react.js:138
-  Type argument `Props` is incompatible:
-                                                   v-
-     11: class MyComponent extends React.Component<{|
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: |}> {}
-         -^ object type. This type is incompatible with
-      6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `b` is incompatible:
-                                                       v-
-         11: class MyComponent extends React.Component<{|
-         12:   a: number,
-         13:   b: number,
-         14:   prop: number,
-         15: |}> {}
-             -^ property `b`. Property not found in
-          6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-
-Error: hoc2.js:23
- 23: const MyEnhancedComponent = connect(MyComponent);
                                          ^^^^^^^^^^^ In type argument `Props`, number [1] is incompatible with string [2].
   References:
    12:   a: number,
@@ -926,47 +760,61 @@ Error: hoc2.js:23
    28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                               ^^^^^ [2]: string
 
-Error: hoc3.js:26
- 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
-  Property `a` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `a`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                         ^^^^^^^^^^^ In type argument `Props`, property `a` is missing in object type [1] but exists in object type [2].
+  References:
+    6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                                 v-
+   11: class MyComponent extends React.Component<{|
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: |}> {}
+       -^ [2]: object type
+
+Error: hoc2.js:23
+ 23: const MyEnhancedComponent = connect(MyComponent);
+                                         ^^^^^^^^^^^ In type argument `Props`, property `b` is missing in object type [1] but exists in object type [2].
+  References:
+    6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                                 v-
+   11: class MyComponent extends React.Component<{|
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: |}> {}
+       -^ [2]: object type
 
 Error: hoc3.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
-  Property `b` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `b`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
+  References:
+   26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                                 v
+   11: class MyComponent extends React.Component<{
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: }> {}
+       ^ [2]: object type
+
+Error: hoc3.js:26
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+      ^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
+  References:
+   26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                                 v
+   11: class MyComponent extends React.Component<{
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: }> {}
+       ^ [2]: object type
 
 Error: hoc3.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -979,45 +827,31 @@ Error: hoc3.js:28
 
 Error: hoc3.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                         v
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     ^ object type
-  Property `a` is incompatible:
-                                             v
-     17: function MyFunctionComponent(props: {
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         ^ property `a`. Property not found in
-     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object type [2].
+  References:
+   30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                           v
+   17: function MyFunctionComponent(props: {
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: }) {}
+       ^ [2]: object type
 
 Error: hoc3.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                         v
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     ^ object type
-  Property `b` is incompatible:
-                                             v
-     17: function MyFunctionComponent(props: {
-     18:   a: number,
-     19:   b: number,
-     20:   prop: number,
-     21: }) {}
-         ^ property `b`. Property not found in
-     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object type [2].
+  References:
+   30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                           v
+   17: function MyFunctionComponent(props: {
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: }) {}
+       ^ [2]: object type
 
 Error: hoc3.js:32
  32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -1030,25 +864,31 @@ Error: hoc3.js:32
 
 Error: hoc4.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
+  References:
+   26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                                 v
+   11: class MyComponent extends React.Component<{
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: }> {}
+       ^ [2]: object type
 
 Error: hoc4.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `b` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
-     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
+  References:
+   26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                                 v
+   11: class MyComponent extends React.Component<{
+   12:   a: number,
+   13:   b: number,
+   14:   prop: number,
+   15: }> {}
+       ^ [2]: object type
 
 Error: hoc4.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -1061,25 +901,31 @@ Error: hoc4.js:28
 
 Error: hoc4.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object type [2].
+  References:
+   30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                           v
+   17: function MyFunctionComponent(props: {
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: }) {}
+       ^ [2]: object type
 
 Error: hoc4.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `b` is incompatible:
-      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
-     30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object type [2].
+  References:
+   30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+                                           v
+   17: function MyFunctionComponent(props: {
+   18:   a: number,
+   19:   b: number,
+   20:   prop: number,
+   21: }) {}
+       ^ [2]: object type
 
 Error: hoc4.js:32
  32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -1092,14 +938,12 @@ Error: hoc4.js:32
 
 Error: hoc5.js:21
  21: <MyComponent1 />; // Error
-     ^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     21: <MyComponent1 />; // Error
-         ^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^ Cannot create `MyComponent1` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   21: <MyComponent1 />; // Error
+       ^^^^^^^^^^^^^^^^ [1]: props
+   14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc5.js:23
  23: <MyComponent1 bar="nope" />; // Error
@@ -1121,14 +965,12 @@ Error: hoc5.js:25
 
 Error: hoc5.js:28
  28: <MyComponent2 />; // Error
-     ^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     28: <MyComponent2 />; // Error
-         ^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^ Cannot create `MyComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   28: <MyComponent2 />; // Error
+       ^^^^^^^^^^^^^^^^ [1]: props
+   18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc5.js:30
  30: <MyComponent2 bar="nope" />; // Error
@@ -1150,14 +992,12 @@ Error: hoc5.js:32
 
 Error: hoc5.js:38
  38: <MyEnhancedComponent1 />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     10: ): React.ComponentType<React.ElementConfig<Component>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     38: <MyEnhancedComponent1 />; // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   38: <MyEnhancedComponent1 />; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+   10: ): React.ComponentType<React.ElementConfig<Component>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc5.js:40
  40: <MyEnhancedComponent1 bar="nope" />; // Error
@@ -1179,14 +1019,12 @@ Error: hoc5.js:42
 
 Error: hoc5.js:45
  45: <MyEnhancedComponent2 />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     10: ): React.ComponentType<React.ElementConfig<Component>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-     45: <MyEnhancedComponent2 />; // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^^^^^^^^^^ Cannot create `MyEnhancedComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
+  References:
+   45: <MyEnhancedComponent2 />; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props
+   10: ): React.ComponentType<React.ElementConfig<Component>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: hoc5.js:47
  47: <MyEnhancedComponent2 bar="nope" />; // Error
@@ -1217,14 +1055,12 @@ Error: import_react.js:7
 
 Error: intersection_component_error.js:12
  12: <MyComponent />;
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  8: declare var MyComponent: React.ComponentType<{foo: number}> & {
-                                                  ^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      8: declare var MyComponent: React.ComponentType<{foo: number}> & {
-                                                      ^^^^^^^^^^^^^ property `foo`. Property not found in
-     12: <MyComponent />;
-         ^^^^^^^^^^^^^^^ props
+      ^^^^^^^^^^^ Cannot create `MyComponent` element because property `foo` is missing in props [1] but exists in object type [2].
+  References:
+   12: <MyComponent />;
+       ^^^^^^^^^^^^^^^ [1]: props
+    8: declare var MyComponent: React.ComponentType<{foo: number}> & {
+                                                    ^^^^^^^^^^^^^ [2]: object type
 
 Error: jsx_spread.js:11
  11: var blah = <Foo {...props} />; // error bar, number given string expected
@@ -1290,20 +1126,15 @@ Error: portals.js:12
 
 Error: proptype_arrayOf.js:13
  13: var fail_missing = <Example />
-                        ^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-  7:   },
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-                      v
-      5:   propTypes: {
-      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-      7:   },
-           ^ property `arr`. Property not found in
-     13: var fail_missing = <Example />
-                            ^^^^^^^^^^^ props
+                         ^^^^^^^ Cannot create `Example` element because property `arr` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   13: var fail_missing = <Example />
+                          ^^^^^^^^^^^ [1]: props
+                    v
+    5:   propTypes: {
+    6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+    7:   },
+         ^ [2]: propTypes of React component
 
 Error: proptype_arrayOf.js:14
  14: var fail_not_array = <Example arr={2} />
@@ -1450,20 +1281,15 @@ Error: proptype_object.js:13
 
 Error: proptype_objectOf.js:13
  13: var fail_missing = <Example />
-                        ^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-                      v
-      5:   propTypes: {
-      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-      7:   },
-           ^ property `obj`. Property not found in
-     13: var fail_missing = <Example />
-                            ^^^^^^^^^^^ props
+                         ^^^^^^^ Cannot create `Example` element because property `obj` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   13: var fail_missing = <Example />
+                          ^^^^^^^^^^^ [1]: props
+                    v
+    5:   propTypes: {
+    6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+    7:   },
+         ^ [2]: propTypes of React component
 
 Error: proptype_objectOf.js:14
  14: var fail_not_object = <Example obj={2} />
@@ -1585,20 +1411,15 @@ Error: proptype_oneOf.js:24
 
 Error: proptype_oneOf.js:32
  32: (<RequiredExample />); // error: `p` not found
-      ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 27:   propTypes: {
- 28:     p: React.PropTypes.oneOf([]).isRequired,
- 29:   },
-       ^ propTypes of React component
-  Property `p` is incompatible:
-                      v
-     27:   propTypes: {
-     28:     p: React.PropTypes.oneOf([]).isRequired,
-     29:   },
-           ^ property `p`. Property not found in
-     32: (<RequiredExample />); // error: `p` not found
-          ^^^^^^^^^^^^^^^^^^^ props
+       ^^^^^^^^^^^^^^^ Cannot create `RequiredExample` element because property `p` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   32: (<RequiredExample />); // error: `p` not found
+        ^^^^^^^^^^^^^^^^^^^ [1]: props
+                    v
+   27:   propTypes: {
+   28:     p: React.PropTypes.oneOf([]).isRequired,
+   29:   },
+         ^ [2]: propTypes of React component
 
 Error: proptype_oneOf.js:40
  40: (<EmptyExample nil={0} />); // number ~> empty
@@ -1617,24 +1438,17 @@ Error: proptype_oneOf.js:76
 
 Error: proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
-                        ^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     prop: React.PropTypes.oneOfType([
-  7:       React.PropTypes.string,
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `prop` is incompatible:
-                      v
-      5:   propTypes: {
-      6:     prop: React.PropTypes.oneOfType([
-      7:       React.PropTypes.string,
-    ...:
-     10:   },
-           ^ property `prop`. Property not found in
-     23: var fail_missing = <Example />;
-                            ^^^^^^^^^^^ props
+                         ^^^^^^^ Cannot create `Example` element because property `prop` is missing in props [1] but exists in propTypes of React component [2].
+  References:
+   23: var fail_missing = <Example />;
+                          ^^^^^^^^^^^ [1]: props
+                    v
+    5:   propTypes: {
+    6:     prop: React.PropTypes.oneOfType([
+    7:       React.PropTypes.string,
+  ...:
+   10:   },
+         ^ [2]: propTypes of React component
 
 Error: proptype_oneOfType.js:24
  24: var fail_bool = <Example prop={true} />;
@@ -1772,15 +1586,23 @@ Error: proptype_oneOfType.js:99
 
 Error: proptype_shape.js:20
  20:     (this.props.foo.baz: string);
-                         ^^^ property `baz`. Property not found in
- 20:     (this.props.foo.baz: string);
-          ^^^^^^^^^^^^^^ object type
+                         ^^^ Cannot get `this.props.foo.baz` because property `baz` is missing in object type [1].
+  References:
+                v----------------------
+   14:     foo: React.PropTypes.shape({
+   15:       bar: React.PropTypes.string.isRequired,
+   16:     }).isRequired,
+           -^ [1]: object type
 
 Error: proptype_shape.js:24
  24:     this.props.foo.baz = 0;
-                        ^^^ property `baz`. Property not found in
- 24:     this.props.foo.baz = 0;
-         ^^^^^^^^^^^^^^ object type
+                        ^^^ Cannot assign `0` to `this.props.foo.baz` because property `baz` is missing in object type [1].
+  References:
+                v----------------------
+   14:     foo: React.PropTypes.shape({
+   15:       bar: React.PropTypes.string.isRequired,
+   16:     }).isRequired,
+           -^ [1]: object type
 
 Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
@@ -1883,15 +1705,23 @@ Error: proptypes_builtins.js:27
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
-                     ^^^ property `baz`. Property not found in
- 18:     (this.props.baz: string);
-          ^^^^^^^^^^ propTypes of React component
+                     ^^^ Cannot get `this.props.baz` because property `baz` is missing in propTypes of React component [1].
+  References:
+                    v
+   13:   propTypes: {
+   14:     foo: React.PropTypes.string.isRequired,
+   15:   },
+         ^ [1]: propTypes of React component
 
 Error: proptypes_sealed.js:22
  22:     this.props.baz = 0;
-                    ^^^ property `baz`. Property not found in
- 22:     this.props.baz = 0;
-         ^^^^^^^^^^ propTypes of React component
+                    ^^^ Cannot assign `0` to `this.props.baz` because property `baz` is missing in propTypes of React component [1].
+  References:
+                    v
+   13:   propTypes: {
+   14:     foo: React.PropTypes.string.isRequired,
+   15:   },
+         ^ [1]: propTypes of React component
 
 Error: ref.js:12
  12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
@@ -1994,14 +1824,12 @@ Error: render_callback.js:23
 
 Error: render_callback.js:23
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                                                  ^^ object literal. This type is incompatible with the expected param type of
- 19:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:19
-  Callable property is incompatible:
-     19:     callback?: () => void,
-                        ^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react-dom.js:19
-     23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                                                      ^^ object literal
+                                                                  ^^ Cannot call `ReactDOM.render` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
+  References:
+   23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                    ^^ [1]: object literal
+   19:     callback?: () => void,
+                      ^^^^^^^^^^ [2]: function type. See lib: <BUILTINS>/react-dom.js:19
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
@@ -2041,9 +1869,10 @@ Error: render_callback.js:25
 
 Error: test-utils.js:34
  34:   child => child.tagName === 'BUTTON',
-                      ^^^^^^^ property `tagName`. Property not found in
- 34:   child => child.tagName === 'BUTTON',
-                ^^^^^ React.Component
+                      ^^^^^^^ Cannot get `child.tagName` because property `tagName` is missing in `React.Component` [1].
+  References:
+   34:   child => child.tagName === 'BUTTON',
+                  ^^^^^ [1]: `React.Component`
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
@@ -2055,4 +1884,4 @@ Error: undefined_prop.js:7
                                                          ^^^^^^ [2]: string
 
 
-Found 190 errors
+Found 188 errors

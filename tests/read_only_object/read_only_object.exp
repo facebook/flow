@@ -24,9 +24,10 @@ Error: test.js:22
 
 Error: test.js:24
  24:   (unionObj.q: number); // Should error!
-                 ^ property `q`. Property not found in
- 24:   (unionObj.q: number); // Should error!
-        ^^^^^^^^ object type
+                 ^ Cannot get `unionObj.q` because property `q` is missing in object type [1].
+  References:
+   20: declare var unionObj: $ReadOnly<UnionObj>;
+                                       ^^^^^^^^ [1]: object type
 
 Error: test.js:26
  26:   unionObj.p = 42; // Should error!
@@ -54,9 +55,10 @@ Error: test.js:37
 
 Error: test.js:40
  40:   (spreadUnionObj.q: number); // Should error!
-                       ^ property `q`. Property not found in
- 40:   (spreadUnionObj.q: number); // Should error!
-        ^^^^^^^^^^^^^^ SpreadUnionObj
+                       ^ Cannot get `spreadUnionObj.q` because property `q` is missing in `SpreadUnionObj` [1].
+  References:
+   34: declare var spreadUnionObj: $ReadOnly<SpreadUnionObj>
+                                             ^^^^^^^^^^^^^^ [1]: `SpreadUnionObj`
 
 Error: test.js:42
  42:   spreadUnionObj.p = 42; // Should error!

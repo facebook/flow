@@ -180,9 +180,10 @@ Error: heap.js:188
 
 Error: heap.js:192
 192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
-                      ^^^ property `bar`. Property not found in
-192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
-                    ^ mixed
+                      ^^^ Property `bar` is missing in mixed [1].
+  References:
+  191:   function(x: mixed) {
+                     ^^^^^ [1]: mixed
 
 Error: heap.js:193
 193:     (x: string & number);

@@ -36,14 +36,15 @@ Error: test3.js:17
 
 Error: test6.js:10
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-      ^ object literal. This type is incompatible with
- 10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `abc` is incompatible:
-     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
-     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-          ^ object literal
+      ^ Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
+  References:
+               v
+    7: var p = {
+    8:   foo: 'bar'
+    9: };
+       ^ [1]: object literal
+   10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: test7.js:6
   6:     ({...x}: void); // error, Object
@@ -74,36 +75,30 @@ Error: test8.js:8
 
 Error: test9.js:5
   5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
-      ^^^^^^^^^^^^^ object literal. This type is incompatible with
-  5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
-                     ^^^^^^^^^^^^^^^^ object type
-  Callable property is incompatible:
-      5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
-                         ^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
-      5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
-          ^^^^^^^^^^^^^ object literal
+      ^^^^^^^^^^^^^ Cannot cast object literal to object type because a callable signature is missing in object literal [1] but exists in object type [2].
+  References:
+    5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+        ^^^^^^^^^^^^^ [1]: object literal
+    5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+                       ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: test9.js:11
  11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
-      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
-                      ^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
-     11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
-                          ^^^^^^^^^^^^^^^ property `$key`. Indexable signature not found in
-     11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
-          ^^^^^^^^^^^^^^ object literal
+      ^^^^^^^^^^^^^^ Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in object type [2].
+  References:
+   11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+        ^^^^^^^^^^^^^^ [1]: object literal
+   11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+                        ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: test9.js:12
  12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
-      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
-                      ^^^^^^^^^^^^^^^^^ object type
-  Indexable signature is incompatible:
-     12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
-                          ^^^^^^^^^^^^^^^^^ property `$value`. Indexable signature not found in
-     12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
-          ^^^^^^^^^^^^^^ object literal
+      ^^^^^^^^^^^^^^ Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in object type [2].
+  References:
+   12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+        ^^^^^^^^^^^^^^ [1]: object literal
+   12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+                        ^^^^^^^^^^^^^^^^^ [2]: object type
 
 
 Found 11 errors

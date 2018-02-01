@@ -155,14 +155,12 @@ Error: test10.js:62
 
 Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
-            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 16: type List = Nil | Cons;
-                       ^^^^ Cons
-  Property `next` is incompatible:
-     16: type List = Nil | Cons;
-                           ^^^^ property `next`. Property not found in
-     12: length({ kind: "cons" }); // missing `next`
-                ^^^^^^^^^^^^^^^^ object literal
+            ^^^^^^^^^^^^^^^^ Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but exists in `Cons` [2].
+  References:
+   12: length({ kind: "cons" }); // missing `next`
+              ^^^^^^^^^^^^^^^^ [1]: object literal
+   16: type List = Nil | Cons;
+                         ^^^^ [2]: `Cons`
 
 Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
@@ -265,9 +263,10 @@ Error: test20.js:14
 
 Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                                        ^^^^^^ property `length`. Property not found in
- 14: [""].reduce((acc,str) => acc * str.length);
-                                    ^^^ Number
+                                        ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
+  References:
+   14: [""].reduce((acc,str) => acc * str.length);
+                                      ^^^ [1]: `Number`
 
 Error: test21.js:11
  11: ({ type: bar(), x: str() }: T);

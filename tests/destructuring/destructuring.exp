@@ -415,25 +415,21 @@ Error: destructuring.js:20
 
 Error: destructuring.js:23
  23:     var o:{x: string; y: number;} = z;
-                                         ^ z. This type is incompatible with
- 23:     var o:{x: string; y: number;} = z;
-               ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     23:     var o:{x: string; y: number;} = z;
-                   ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
-     23:     var o:{x: string; y: number;} = z;
-                                             ^ z
+                                         ^ Cannot assign `z` to `o` because property `x` is missing in `z` [1] but exists in object type [2].
+  References:
+   22: function bar({x, ...z}) {
+                        ^^^^ [1]: `z`
+   23:     var o:{x: string; y: number;} = z;
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: destructuring.js:28
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                                                    ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `z` is incompatible:
-     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
-     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                                                        ^^^^^^^^^^^^^^^^ object literal
+                                                    ^^^^^^^^^^^^^^^^ Cannot assign object literal to `extend` because property `z` is missing in object literal [1] but exists in object type [2].
+  References:
+   28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                                                      ^^^^^^^^^^^^^^^^ [1]: object literal
+   28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: destructuring.js:31
  31: qux({a:""});
@@ -464,27 +460,31 @@ Error: destructuring.js:35
 
 Error: destructuring.js:38
  38:   var {foo} = {bar: 123}; // error on foo
-            ^^^ property `foo`. Property not found in
- 38:   var {foo} = {bar: 123}; // error on foo
-                   ^^^^^^^^^^ object literal
+            ^^^ Property `foo` is missing in object literal [1].
+  References:
+   38:   var {foo} = {bar: 123}; // error on foo
+                     ^^^^^^^^^^ [1]: object literal
 
 Error: destructuring.js:39
  39:   var {bar, baz} = {bar: 123} // error on baz
-                 ^^^ property `baz`. Property not found in
- 39:   var {bar, baz} = {bar: 123} // error on baz
-                        ^^^^^^^^^^ object literal
+                 ^^^ Property `baz` is missing in object literal [1].
+  References:
+   39:   var {bar, baz} = {bar: 123} // error on baz
+                          ^^^^^^^^^^ [1]: object literal
 
 Error: destructuring.js:45
  45:   (x.baz: string); // error, baz doesn't exist
-          ^^^ property `baz`. Property not found in
- 45:   (x.baz: string); // error, baz doesn't exist
-        ^ object literal
+          ^^^ Cannot get `x.baz` because property `baz` is missing in object literal [1].
+  References:
+   43:   var x = {foo: 'abc', bar: 123};
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
 
 Error: destructuring.js:46
  46:   (rest.baz: string); // error, rest is sealed
-             ^^^ property `baz`. Property not found in
- 46:   (rest.baz: string); // error, rest is sealed
-        ^^^^ rest
+             ^^^ Cannot get `rest.baz` because property `baz` is missing in `rest` [1].
+  References:
+   44:   var {foo, ...rest} = x;
+                   ^^^^^^^ [1]: `rest`
 
 Error: destructuring.js:64
  64: var bp1_err: string = baseprop1; // Error: number ~> string
@@ -538,21 +538,24 @@ Error: eager.js:2
 
 Error: object_rest.js:5
   5: o1_rest.x = 0; // error: rest result is sealed
-             ^ property `x`. Property not found in
-  5: o1_rest.x = 0; // error: rest result is sealed
-     ^^^^^^^ o1_rest
+             ^ Cannot assign `0` to `o1_rest.x` because property `x` is missing in `o1_rest` [1].
+  References:
+    3: var {p, ...o1_rest} = o1;
+               ^^^^^^^^^^ [1]: `o1_rest`
 
 Error: object_rest.js:11
  11: o2_rest.x = 0; // error: rest result is sealed
-             ^ property `x`. Property not found in
- 11: o2_rest.x = 0; // error: rest result is sealed
-     ^^^^^^^ o2_rest
+             ^ Cannot assign `0` to `o2_rest.x` because property `x` is missing in `o2_rest` [1].
+  References:
+    9: var {p, ...o2_rest} = o2;
+               ^^^^^^^^^^ [1]: `o2_rest`
 
 Error: object_rest.js:16
  16: o3_rest.x = 0; // error: rest result is sealed
-             ^ property `x`. Property not found in
- 16: o3_rest.x = 0; // error: rest result is sealed
-     ^^^^^^^ o3_rest
+             ^ Cannot assign `0` to `o3_rest.x` because property `x` is missing in `o3_rest` [1].
+  References:
+   14: var {p, ...o3_rest} = o3;
+               ^^^^^^^^^^ [1]: `o3_rest`
 
 Error: string_lit.js:2
   2: (val: void); // error: string ~> void
@@ -565,9 +568,10 @@ Error: string_lit.js:2
 
 Error: unannotated.js:8
   8:   x.bar
-         ^^^ property `bar`. Property not found in
-  8:   x.bar
-       ^ object literal
+         ^^^ Cannot get `x.bar` because property `bar` is missing in object literal [1].
+  References:
+    4:   x: { foo: "foo" }
+            ^^^^^^^^^^^^^^ [1]: object literal
 
 
 Found 69 errors

@@ -1,8 +1,9 @@
 Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
-       ^ property `g`. Property not found in
-  6: C.g = function(x:string) { C.f(x); };
-     ^ statics of `C`
+       ^ Cannot assign function to `C.g` because property `g` is missing in statics of `C` [1].
+  References:
+    1: class C {
+             ^ [1]: statics of `C`
 
 Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };

@@ -64,14 +64,15 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                             `,
                                                           ),
     addCode('idx(obj1, obj => obj.notAProp);\n').newErrors(
-       `
-         test.js:26
-          26: idx(obj1, obj => obj.notAProp);
-                                   ^^^^^^^^ property \`notAProp\`. Property not found in
-          26: idx(obj1, obj => obj.notAProp);
-                               ^^^ object type
-       `,
-    ),
+                                                  `
+                                                    test.js:26
+                                                     26: idx(obj1, obj => obj.notAProp);
+                                                                              ^^^^^^^^ Cannot get \`obj.notAProp\` because property \`notAProp\` is missing in object type [1].
+                                                      References:
+                                                        6: declare var obj1: {a: ?{b: {c: number}}};
+                                                                             ^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                                  `,
+                                                ),
     addCode('idx(obj1, obj => obj.a = null);\n').newErrors(
                                                   `
                                                     test.js:29
@@ -177,14 +178,15 @@ export default suite(({addFile, addFiles, addCode}) => [
                                              `,
                                            ),
     addCode('idx(42, n => n.nope);\n').newErrors(
-      `
-        test.js:12
-         12: idx(42, n => n.nope);
-                            ^^^^ property \`nope\`. Property not found in
-         12: idx(42, n => n.nope);
-                          ^ Number
-      `,
-    ),
+                                        `
+                                          test.js:12
+                                           12: idx(42, n => n.nope);
+                                                              ^^^^ Cannot get \`n.nope\` because property \`nope\` is missing in \`Number\` [1].
+                                            References:
+                                             12: idx(42, n => n.nope);
+                                                              ^ [1]: \`Number\`
+                                        `,
+                                      ),
   ]),
 
   test('idx() weird edge cases', [

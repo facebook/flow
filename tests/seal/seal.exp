@@ -1,8 +1,9 @@
 Error: obj_annot.js:4
   4:     return param.id;
-                      ^^ property `id`. Property not found in
-  4:     return param.id;
-                ^^^^^ object type
+                      ^^ Cannot get `param.id` because property `id` is missing in object type [1].
+  References:
+    3: function foo(param: { name: string; }): number {
+                           ^^^^^^^^^^^^^^^^^ [1]: object type
 
 
 Found 1 error

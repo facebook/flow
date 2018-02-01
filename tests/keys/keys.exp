@@ -54,15 +54,17 @@ Error: keys.js:33
 
 Error: keys.js:38
  38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
-        ^^^ some string with unknown value. Property not found in
- 38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
-             ^^^^^^^^^^^^^ ObjLit
+        ^^^ An indexer property is missing in `ObjLit` [1].
+  References:
+   38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
+                     ^^^^^^ [1]: `ObjLit`
 
 Error: keys.js:40
  40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
-          ^^^ some string with unknown value. Property not found in
- 40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
-               ^^^^^^^^^^^^^ ObjLit
+          ^^^ An indexer property is missing in `ObjLit` [1].
+  References:
+   40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
+                       ^^^^^^ [1]: `ObjLit`
 
 Error: keys.js:44
  44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit

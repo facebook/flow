@@ -1,13 +1,11 @@
 Error: test.js:2
   2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                               ^ object type. This type is incompatible with
-  2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-            ^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                ^^^^^^^^^^^^^^^^ property `foo`. Property not found in
-      2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                                   ^ object type
+                               ^ Cannot assign `x` to `y` because property `foo` is missing in object type [1] but exists in object type [2].
+  References:
+    1: var x: { } = { foo: 0 };
+              ^^^ [1]: object type
+    2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
+              ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: test.js:8
   8: o.foo = 0; // future widening is constrained
@@ -47,32 +45,33 @@ Error: test2.js:10
 
 Error: test3.js:54
  54:         this.x.b = 'hello';
-                    ^ property `b`. Property not found in
- 54:         this.x.b = 'hello';
-             ^^^^^^ object literal
+                    ^ Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object literal [1].
+  References:
+   53:         this.x = { a: 123 };
+                        ^^^^^^^^^^ [1]: object literal
 
 Error: test3_exact_annot.js:5
   5: const b: { a: number, b?: number } = a; // error: property `b` not found
-                                          ^ object type. This type is incompatible with
-  5: const b: { a: number, b?: number } = a; // error: property `b` not found
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `b` is incompatible:
-      5: const b: { a: number, b?: number } = a; // error: property `b` not found
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
-      5: const b: { a: number, b?: number } = a; // error: property `b` not found
-                                              ^ object type
+                                          ^ Cannot assign `a` to `b` because property `b` is missing in object type [1] but exists in object type [2].
+  References:
+    4: const a: {| a: number |} = { a: 1 };
+                ^^^^^^^^^^^^^^^ [1]: object type
+    5: const b: { a: number, b?: number } = a; // error: property `b` not found
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: test3_exact_annot.js:7
   7: (a.b: number); // error: property `b` not found
-        ^ property `b`. Property not found in
-  7: (a.b: number); // error: property `b` not found
-      ^ object type
+        ^ Cannot get `a.b` because property `b` is missing in object type [1].
+  References:
+    4: const a: {| a: number |} = { a: 1 };
+                ^^^^^^^^^^^^^^^ [1]: object type
 
 Error: test3_failure.js:7
   7:     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)
-                  ^ property `b`. Property not found in
-  7:     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)
-         ^^^^^^^^ object literal
+                  ^ Cannot assign `'hello'` to `this.o.x.b` because property `b` is missing in object literal [1].
+  References:
+    6:     this.o.x = { a: 123 };
+                      ^^^^^^^^^^ [1]: object literal
 
 
 Found 9 errors

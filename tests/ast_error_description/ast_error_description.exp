@@ -500,9 +500,10 @@ Error: expression.js:40
 
 Error: expression.js:40
  40: (((<>foo</>: empty): T).p: empty);
-        ^^ React.Fragment. Property not found in
- 40: (((<>foo</>: empty): T).p: empty);
-        ^^ object type
+        ^^ Cannot get `React.Fragment` because property `Fragment` is missing in object type [1].
+  References:
+   12: declare var React: {createElement: React$CreateElement};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: expression.js:41
  41: ((('foo': empty): T).p: empty);

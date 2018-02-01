@@ -24,9 +24,10 @@ Error: object_freeze.js:11
 
 Error: object_freeze.js:12
  12: bliffl.corge; // error
-            ^^^^^ property `corge`. Property not found in
- 12: bliffl.corge; // error
-     ^^^^^^ frozen object literal
+            ^^^^^ Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1].
+  References:
+    9: var bliffl = Object.freeze({bar: '12345', ...baz});
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]: frozen object literal
 
 Error: object_freeze.js:13
  13: bliffl.constructor = baz; // error

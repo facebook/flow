@@ -1,8 +1,9 @@
 Error: Sigma.js:13
  13:     x.c(); // error
-           ^ property `c`. Property not found in
- 13:     x.c(); // error
-         ^ B
+           ^ Cannot call `x.c` because property `c` is missing in `B` [1].
+  References:
+   10: function bar(x:B) {
+                      ^ [1]: `B`
 
 Error: Sigma.js:15
  15:     x++; // TODO no error? since unreachable (x: B implies x: A)
@@ -24,15 +25,17 @@ Error: Sigma.js:15
 
 Error: Sigma.js:24
  24:     x.d(); // error
-           ^ property `d`. Property not found in
- 24:     x.d(); // error
-         ^ C
+           ^ Cannot call `x.d` because property `d` is missing in `C` [1].
+  References:
+    8: class C extends B { c() {} }
+             ^ [1]: `C`
 
 Error: Sigma.js:27
  27:     x.c(); // error
-           ^ property `c`. Property not found in
- 27:     x.c(); // error
-         ^ A
+           ^ Cannot call `x.c` because property `c` is missing in `A` [1].
+  References:
+   19: function foo(x:A) {
+                      ^ [1]: `A`
 
 Error: Sigma.js:35
  35:   if (x instanceof A) {
@@ -45,9 +48,10 @@ Error: Sigma.js:35
 
 Error: test.js:11
  11:     return obj.childProp_TYPO; // error (obj: ChildClass)
-                    ^^^^^^^^^^^^^^ property `childProp_TYPO`. Property not found in
- 11:     return obj.childProp_TYPO; // error (obj: ChildClass)
-                ^^^ ChildClass
+                    ^^^^^^^^^^^^^^ Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1].
+  References:
+    5: class ChildClass extends BaseClass {
+             ^^^^^^^^^^ [1]: `ChildClass`
 
 
 Found 7 errors

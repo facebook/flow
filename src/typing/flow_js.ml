@@ -2808,7 +2808,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (DefT (reason_op, StrT x), key)
       | _ ->
-        let err = FlowError.EPropNotFound ((reason_op, reason_o), unknown_use) in
+        let prop = match x with
+        | Literal (_, prop) -> Some prop
+        | _ -> None
+        in
+        let err = FlowError.EPropNotFound (prop, (reason_op, reason_o), unknown_use) in
         add_output cx ~trace err)
 
     | DefT (reason_o, InstanceT (_, _, _, instance)), HasOwnPropT(reason_op, Literal (_, x)) ->
@@ -2818,7 +2822,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match SMap.get x fields with
       | Some _ -> ()
       | None ->
-        let err = FlowError.EPropNotFound ((reason_op, reason_o), unknown_use) in
+        let err = FlowError.EPropNotFound (Some x, (reason_op, reason_o), unknown_use) in
         add_output cx ~trace err)
 
     | DefT (reason_o, InstanceT (_, _, _, _)), HasOwnPropT(reason_op, _) ->
@@ -3428,12 +3432,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         then
           let use_op = Frame (PropertyCompatibility {
             prop = Some prop_name;
-            lower = rl;
-            upper = ru;
+            (* Lower and upper are reversed in this case since the lower object
+             * is the one requiring the prop. *)
+            lower = ru;
+            upper = rl;
             is_sentinel;
           }, use_op) in
           let rl = replace_reason_const (RProperty (Some prop_name)) rl in
-          let err = FlowError.EPropNotFound ((rl, ru), use_op) in
+          let err = FlowError.EPropNotFound (Some prop_name, (rl, ru), use_op) in
           add_output cx ~trace err
       );
       rec_flow cx trace (DefT (rl, ObjT xl), UseT (use_op, DefT (ru, ObjT xu)))
@@ -6182,6 +6188,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, LookupT (_, _, _, propref, lookup_action) ->
       let use_op = use_op_of_lookup_action lookup_action in
       add_output cx ~trace (FlowError.EIncompatibleProp {
+        prop = (match propref with Named (_, name) -> Some name | Computed _ -> None);
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
         special = flow_error_kind_of_lower l;
@@ -6596,7 +6603,7 @@ and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
       }, use_op) in
       let reason_prop =
         replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-      let err = FlowError.EPropNotFound ((reason_prop, reason), use_op) in
+      let err = FlowError.EPropNotFound (Some x, (reason_prop, reason), use_op) in
       add_output cx ~trace err
     ) props_not_found;
     not (SMap.is_empty props_not_found)
@@ -8323,12 +8330,12 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t =
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
-    | Named (reason_prop, _) ->
+    | Named (reason_prop, prop) ->
       let sealed = sealed_in_op reason_op o.flags.sealed in
       if sealed && o.flags.exact
       then
         add_output cx ~trace (FlowError.EPropNotFound
-          ((reason_prop, reason_obj), unknown_use))
+          (Some prop, (reason_prop, reason_obj), use_op))
       else
         let strict =
           if sealed
@@ -9426,12 +9433,24 @@ and __unify cx ~use_op t1 t2 trace =
           is_sentinel = false;
         }, use_op))
     | Some _, None ->
+        let use_op = Frame (PropertyCompatibility {
+          prop = None;
+          lower = ureason;
+          upper = lreason;
+          is_sentinel = false;
+        }, use_op) in
         let lreason = replace_reason_const RSomeProperty lreason in
-        let err = FlowError.EPropNotFound ((lreason, ureason), use_op) in
+        let err = FlowError.EPropNotFound (None, (lreason, ureason), use_op) in
         add_output cx ~trace err
     | None, Some _ ->
+        let use_op = Frame (PropertyCompatibility {
+          prop = None;
+          lower = lreason;
+          upper = ureason;
+          is_sentinel = false;
+        }, Frame (UnifyFlip, use_op)) in
         let ureason = replace_reason_const RSomeProperty ureason in
-        let err = FlowError.EPropNotFound ((ureason, lreason), use_op) in
+        let err = FlowError.EPropNotFound (None, (ureason, lreason), use_op) in
         add_output cx ~trace err
     | None, None -> ()
     end;
@@ -9511,7 +9530,7 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
   match dict with
   | Some { key; value; dict_polarity; _ } ->
     rec_flow cx trace (string_key x prop_reason, UseT (
-      Frame (IndexerKeyCompatibility {lower = prop_obj_reason; upper = dict_reason}, use_op),
+      Frame (IndexerKeyCompatibility {lower = dict_reason; upper = prop_obj_reason}, use_op),
       key
     ));
     let p2 = Field (None, value, dict_polarity) in
@@ -9519,11 +9538,11 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
   | None ->
     let use_op = Frame (PropertyCompatibility {
       prop = Some x;
-      lower = prop_obj_reason;
-      upper = dict_reason;
+      lower = dict_reason;
+      upper = prop_obj_reason;
       is_sentinel = false;
     }, use_op) in
-    let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
+    let err = FlowError.EPropNotFound (Some x, (prop_reason, dict_reason), use_op) in
     add_output cx ~trace err
 
 (* TODO: Unification between concrete types is still implemented as
@@ -11062,7 +11081,7 @@ and object_kit =
               is_sentinel = false;
             }, unknown_use) in
             let r2 = replace_reason_const (RProperty (Some k)) r2 in
-            let err = FlowError.EPropNotFound ((r2, r1), use_op) in
+            let err = FlowError.EPropNotFound (Some k, (r2, r1), use_op) in
             add_output cx ~trace err
           );
           None

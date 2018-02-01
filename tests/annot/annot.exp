@@ -18,14 +18,12 @@ Error: annot.js:6
 
 Error: annot.js:8
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `j` is incompatible:
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `j`. Property not found in
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign object literal to `obj` because property `j` is missing in object literal [1] but exists in object type [2].
+  References:
+    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: annot.js:8
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
@@ -56,14 +54,12 @@ Error: annot.js:13
 
 Error: annot.js:27
  27: var test_obj: ObjType = { 'bar-foo': '23' };
-                             ^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 27: var test_obj: ObjType = { 'bar-foo': '23' };
-                   ^^^^^^^ ObjType
-  Property `foo-bar` is incompatible:
-     27: var test_obj: ObjType = { 'bar-foo': '23' };
-                       ^^^^^^^ property `foo-bar`. Property not found in
-     27: var test_obj: ObjType = { 'bar-foo': '23' };
-                                 ^^^^^^^^^^^^^^^^^^^ object literal
+                             ^^^^^^^^^^^^^^^^^^^ Cannot assign object literal to `test_obj` because property `foo-bar` is missing in object literal [1] but exists in `ObjType` [2].
+  References:
+   27: var test_obj: ObjType = { 'bar-foo': '23' };
+                               ^^^^^^^^^^^^^^^^^^^ [1]: object literal
+   27: var test_obj: ObjType = { 'bar-foo': '23' };
+                     ^^^^^^^ [2]: `ObjType`
 
 Error: annot.js:31
  31:   n = "hey"; // error
@@ -74,36 +70,24 @@ Error: annot.js:31
    30: function param_anno(n:number):void {
                              ^^^^^^ [2]: number
 
-Error: annot.js:45
-                         v-------------------------------
- 45:     batchRequests = batchRequests.map((request) => {
+Error: annot.js:46
+                  v
  46:       return {
  47:         method: request.method,
-...:
- 51:     });
-         -^ array type. Has some incompatible type argument with
- 37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-                      v
-     46:       return {
-     47:         method: request.method,
-     48:         params: request.params,
-     49:         relative_url: request.path,
-     50:       };
-               ^ object literal. This type is incompatible with
-     37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `path` is incompatible:
-         37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `path`. Property not found in
-                          v
-         46:       return {
-         47:         method: request.method,
-         48:         params: request.params,
-         49:         relative_url: request.path,
-         50:       };
-                   ^ object literal
+ 48:         params: request.params,
+ 49:         relative_url: request.path,
+ 50:       };
+           ^ Cannot assign `batchRequests.map(...)` to `batchRequests` because in type argument `T`, property `path` is missing in object literal [1] but exists in object type [2].
+  References:
+                    v
+   46:       return {
+   47:         method: request.method,
+   48:         params: request.params,
+   49:         relative_url: request.path,
+   50:       };
+             ^ [1]: object literal
+   37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: annot.js:55
  55: var toz : null = 3;

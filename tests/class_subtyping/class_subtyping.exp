@@ -18,25 +18,21 @@ Error: test3.js:6
 
 Error: test4.js:7
   7: foo((new C: C<O>), { f_: 0 });
-                        ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  7: foo((new C: C<O>), { f_: 0 });
-                   ^ O
-  Property `f` is incompatible:
-      7: foo((new C: C<O>), { f_: 0 });
-                       ^ property `f`. Property not found in
-      7: foo((new C: C<O>), { f_: 0 });
-                            ^^^^^^^^^ object literal
+                        ^^^^^^^^^ Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in `O` [2].
+  References:
+    7: foo((new C: C<O>), { f_: 0 });
+                          ^^^^^^^^^ [1]: object literal
+    7: foo((new C: C<O>), { f_: 0 });
+                     ^ [2]: `O`
 
 Error: test4.js:13
  13: foo(new D, { f_: 0 });
-                ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  9: class D extends C<O> {
-                       ^ O
-  Property `f` is incompatible:
-      9: class D extends C<O> {
-                           ^ property `f`. Property not found in
-     13: foo(new D, { f_: 0 });
-                    ^^^^^^^^^ object literal
+                ^^^^^^^^^ Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in `O` [2].
+  References:
+   13: foo(new D, { f_: 0 });
+                  ^^^^^^^^^ [1]: object literal
+    9: class D extends C<O> {
+                         ^ [2]: `O`
 
 
 Found 4 errors

@@ -62,9 +62,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:30
            30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
-                                                                                     ^^^^ property \`push\`. Property not found in
-           30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
-                                                                                 ^^^ $ReadOnlyArray
+                                                                                     ^^^^ Cannot call \`tup.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
+            References:
+             30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
+                                                                                   ^^^ [1]: \`$ReadOnlyArray\`
         `,
       ),
   ]),
@@ -100,9 +101,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:           readOnlyRef.push(123);
-                                     ^^^^ property \`push\`. Property not found in
-            6:           readOnlyRef.push(123);
-                         ^^^^^^^^^^^ $ReadOnlyArray
+                                     ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
+            References:
+              6:           readOnlyRef.push(123);
+                           ^^^^^^^^^^^ [1]: \`$ReadOnlyArray\`
 
           test.js:7
             7:           (readOnlyRef[0]: 1);
@@ -122,9 +124,10 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:3
            3: function foo(x: [1,2]): number { return x.unshift(); }
-                                                        ^^^^^^^ property \`unshift\`. Property not found in
-           3: function foo(x: [1,2]): number { return x.unshift(); }
-                                                      ^ $ReadOnlyArray
+                                                        ^^^^^^^ Cannot call \`x.unshift\` because property \`unshift\` is missing in \`$ReadOnlyArray\` [1].
+           References:
+             3: function foo(x: [1,2]): number { return x.unshift(); }
+                                                        ^ [1]: \`$ReadOnlyArray\`
        `,
      ),
   ]),

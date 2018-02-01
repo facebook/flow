@@ -9,61 +9,30 @@ Error: main.js:12
 
 Error: main.js:14
  14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
- 13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
-  Property `props` is incompatible:
-      6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                       ^^^^^^^^^^^^^^ object type. This type is incompatible with
-    159:   +props: React$ElementProps<ElementType>,
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:159
-      Property `prop1` is incompatible:
-        159:   +props: React$ElementProps<ElementType>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop1`. Property not found in. See lib: <BUILTINS>/react.js:159
-          6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                           ^^^^^^^^^^^^^^ object type
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `props`, property `prop1` is missing in object type [1] but exists in object type [2].
+  References:
+    6: class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [1]: object type
+   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: main.js:14
  14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
- 13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-            ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-     13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component
-      Type argument `Props` is incompatible:
-          6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                           ^^^^^^^^^^^^^^ object type. This type is incompatible with
-         13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                                  ^^^^^^^^^^^^^^^ object type
-          Property `prop` is incompatible:
-              6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                               ^^^^^^^^^^^^^^ property `prop`. Property not found in
-             13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                                      ^^^^^^^^^^^^^^^ object type
+        ^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `type` and then type argument `Props`, property `prop` is missing in object type [1] but exists in object type [2].
+  References:
+   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [1]: object type
+    6: class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [2]: object type
 
 Error: main.js:14
  14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
- 13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-            ^^^^^^^^^^^^^^^ React.Component. Has some incompatible type argument with
-     13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Component
-      Type argument `Props` is incompatible:
-         13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                                  ^^^^^^^^^^^^^^^ object type. This type is incompatible with
-          6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                           ^^^^^^^^^^^^^^ object type
-          Property `prop1` is incompatible:
-             13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                                      ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
-              6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                               ^^^^^^^^^^^^^^ object type
+        ^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `type` and then type argument `Props`, property `prop1` is missing in object type [1] but exists in object type [2].
+  References:
+    6: class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [1]: object type
+   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [2]: object type
 
 Error: main.js:21
  21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;

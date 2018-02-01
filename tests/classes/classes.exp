@@ -29,32 +29,33 @@ Error: C.js:8
 
 Error: D.js:3
   3: new E().x
-             ^ property `x`. Property not found in
-  3: new E().x
-     ^^^^^^^ E
+             ^ Cannot get `new E().x` because property `x` is missing in `E` [1].
+  References:
+    3: new E().x
+       ^^^^^^^ [1]: `E`
 
 Error: class_shapes.js:18
  18: x.b; // error, TestClass has no b
-       ^ property `b`. Property not found in
- 18: x.b; // error, TestClass has no b
-     ^ TestClass
+       ^ Cannot get `x.b` because property `b` is missing in `TestClass` [1].
+  References:
+   15: var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]: `TestClass`
 
 Error: class_shapes.js:20
  20: x.d; // error, TestClass has no d
-       ^ property `d`. Property not found in
- 20: x.d; // error, TestClass has no d
-     ^ TestClass
+       ^ Cannot get `x.d` because property `d` is missing in `TestClass` [1].
+  References:
+   15: var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]: `TestClass`
 
 Error: class_shapes.js:22
  22: var y : Foo = x;
-                   ^ TestClass. This type is incompatible with
- 22: var y : Foo = x;
-             ^^^ Foo
-  Property `b` is incompatible:
-     22: var y : Foo = x;
-                 ^^^ property `b`. Property not found in
-     22: var y : Foo = x;
-                       ^ TestClass
+                   ^ Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
+  References:
+   15: var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]: `TestClass`
+   22: var y : Foo = x;
+               ^^^ [2]: `Foo`
 
 Error: class_shapes.js:35
  35: var w : Foo = z;

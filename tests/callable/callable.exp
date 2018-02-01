@@ -1,8 +1,9 @@
 Error: primitives.js:6
   6: dict(); // error, callable signature not found
-     ^^^^^^ call of `dict`. Callable signature not found in
-  6: dict(); // error, callable signature not found
-     ^^^^ object type
+     ^^^^ Cannot call `dict` because a callable signature is missing in object type [1].
+  References:
+    5: var dict: { [k: string]: any } = {};
+                 ^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error: primitives.js:12
  12: icall(0); // error, number ~> string

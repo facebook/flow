@@ -264,14 +264,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ props. This type is incompatible with
-            5:       function Foo(elem: number, props: {x: string}) {}
-                                                       ^^^^^^^^^^^ object type
-            Property \`x\` is incompatible:
-                5:       function Foo(elem: number, props: {x: string}) {}
-                                                           ^^^^^^^^^^^ property \`x\`. Property not found in
-                8:       <Bar y="hi" />;
-                         ^^^^^^^^^^^^^^ props
+                     ^^^^^^^^^^^^^^ Property \`x\` is missing in props [1] but exists in object type [2].
+            References:
+              8:       <Bar y="hi" />;
+                       ^^^^^^^^^^^^^^ [1]: props
+              5:       function Foo(elem: number, props: {x: string}) {}
+                                                         ^^^^^^^^^^^ [2]: object type
         `,
       ),
   ]),
