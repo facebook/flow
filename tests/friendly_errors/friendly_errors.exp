@@ -1,0 +1,353 @@
+Error: desc-class-properties.js:16
+ 16:     (this.a: number); // Error: string ~> number
+          ^^^^^^ Cannot cast `this.a` to number because string [1] is incompatible with number [2].
+  References:
+    7:   a: string;
+            ^^^^^^ [1]: string
+   16:     (this.a: number); // Error: string ~> number
+                    ^^^^^^ [2]: number
+
+Error: desc-class-properties.js:17
+ 17:     (super.a: number); // Error: string ~> number
+          ^^^^^^^ Cannot cast `super.a` to number because string [1] is incompatible with number [2].
+  References:
+    7:   a: string;
+            ^^^^^^ [1]: string
+   17:     (super.a: number); // Error: string ~> number
+                     ^^^^^^ [2]: number
+
+Error: desc-class-properties.js:18
+ 18:     (this.b: number); // Error: string ~> number
+          ^^^^^^ Cannot cast `this.b` to number because string [1] is incompatible with number [2].
+  References:
+   11:   b: string;
+            ^^^^^^ [1]: string
+   18:     (this.b: number); // Error: string ~> number
+                    ^^^^^^ [2]: number
+
+Error: desc-class-properties.js:19
+ 19:     (this.#c: number); // Error: string ~> number
+          ^^^^^^^ Cannot cast `this.#c` to number because string [1] is incompatible with number [2].
+  References:
+   13:   #c: string;
+             ^^^^^^ [1]: string
+   19:     (this.#c: number); // Error: string ~> number
+                     ^^^^^^ [2]: number
+
+Error: loc-primary.js:8
+  8: (a1: A); // Error: string ~> number. We should point to a1.
+      ^^ Cannot cast `a1` to `A` because in property `p`, number [1] is incompatible with string [2].
+  References:
+    7: declare var a1: {p: number};
+                           ^^^^^^ [1]: number
+    6: type A = {p: string};
+                    ^^^^^^ [2]: string
+
+Error: loc-primary.js:10
+ 10: ({p: a2}: A); // Error: string ~> number. We should point to a2.
+          ^^ Cannot cast object literal to `A` because in property `p`, number [1] is incompatible with string [2].
+  References:
+    9: declare var a2: number;
+                       ^^^^^^ [1]: number
+    6: type A = {p: string};
+                    ^^^^^^ [2]: string
+
+Error: loc-primary.js:11
+ 11: ({p: 42}: A); // Error: string ~> number. We should point to 42.
+          ^^ Cannot cast object literal to `A` because in property `p`, number [1] is incompatible with string [2].
+  References:
+   11: ({p: 42}: A); // Error: string ~> number. We should point to 42.
+            ^^ [1]: number
+    6: type A = {p: string};
+                    ^^^^^^ [2]: string
+
+Error: loc-primary.js:15
+ 15: (b1: B); // Error: string ~> number. We should point to b1.
+      ^^ Cannot cast `b1` to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+  References:
+   14: declare var b1: {a: {b: number}};
+                               ^^^^^^ [1]: number
+   13: type B = {a: {b: string}};
+                        ^^^^^^ [2]: string
+
+Error: loc-primary.js:17
+ 17: ({a: b2}: B); // Error: string ~> number. We should point to b2.
+          ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+  References:
+   16: declare var b2: {b: number};
+                           ^^^^^^ [1]: number
+   13: type B = {a: {b: string}};
+                        ^^^^^^ [2]: string
+
+Error: loc-primary.js:19
+ 19: ({a: {b: b3}}: B); // Error: string ~> number. We should point to b3.
+              ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+  References:
+   18: declare var b3: number;
+                       ^^^^^^ [1]: number
+   13: type B = {a: {b: string}};
+                        ^^^^^^ [2]: string
+
+Error: loc-primary.js:20
+ 20: ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
+              ^^ Cannot cast object literal to `B` because in property `a` and then property `b`, number [1] is incompatible with string [2].
+  References:
+   20: ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
+                ^^ [1]: number
+   13: type B = {a: {b: string}};
+                        ^^^^^^ [2]: string
+
+Error: loc-primary.js:24
+ 24: (c1: C); // Error: string ~> number. We should point to c1.
+      ^^ Cannot cast `c1` to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+  References:
+   23: declare var c1: {a: {b: {c: number}}};
+                                   ^^^^^^ [1]: number
+   22: type C = {a: {b: {c: string}}};
+                            ^^^^^^ [2]: string
+
+Error: loc-primary.js:26
+ 26: ({a: c2}: C); // Error: string ~> number. We should point to c2.
+          ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+  References:
+   25: declare var c2: {b: {c: number}};
+                               ^^^^^^ [1]: number
+   22: type C = {a: {b: {c: string}}};
+                            ^^^^^^ [2]: string
+
+Error: loc-primary.js:28
+ 28: ({a: {b: c3}}: C); // Error: string ~> number. We should point to c3.
+              ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+  References:
+   27: declare var c3: {c: number};
+                           ^^^^^^ [1]: number
+   22: type C = {a: {b: {c: string}}};
+                            ^^^^^^ [2]: string
+
+Error: loc-primary.js:30
+ 30: ({a: {b: {c: c4}}}: C); // Error: string ~> number. We should point to c4.
+                  ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+  References:
+   29: declare var c4: number;
+                       ^^^^^^ [1]: number
+   22: type C = {a: {b: {c: string}}};
+                            ^^^^^^ [2]: string
+
+Error: loc-primary.js:31
+ 31: ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
+                  ^^ Cannot cast object literal to `C` because in property `a`, property `b`, and then property `c`; number [1] is incompatible with string [2].
+  References:
+   31: ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
+                    ^^ [1]: number
+   22: type C = {a: {b: {c: string}}};
+                            ^^^^^^ [2]: string
+
+Error: loc-primary.js:35
+ 35: (d1: D); // Error: string ~> number. We should point to d1.
+      ^^ Cannot cast `d1` to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   34: declare var d1: {a: {b: {c: {d: number}}}};
+                                       ^^^^^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-primary.js:37
+ 37: ({a: d2}: D); // Error: string ~> number. We should point to d2.
+          ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   36: declare var d2: {b: {c: {d: number}}};
+                                   ^^^^^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-primary.js:39
+ 39: ({a: {b: d3}}: D); // Error: string ~> number. We should point to d3.
+              ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   38: declare var d3: {c: {d: number}};
+                               ^^^^^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-primary.js:41
+ 41: ({a: {b: {c: d4}}}: D); // Error: string ~> number. We should point to d4.
+                  ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   40: declare var d4: {d: number};
+                           ^^^^^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-primary.js:43
+ 43: ({a: {b: {c: {d: d5}}}}: D); // Error: string ~> number. We should point to d5.
+                      ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   42: declare var d5: number;
+                       ^^^^^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-primary.js:44
+ 44: ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
+                      ^^ Cannot cast object literal to `D` because in property `a`, property `b`, property `c`, and then property `d`; number [1] is incompatible with string [2].
+  References:
+   44: ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
+                        ^^ [1]: number
+   33: type D = {a: {b: {c: {d: string}}}};
+                                ^^^^^^ [2]: string
+
+Error: loc-reference.js:15
+ 15: (x1: empty); // X ~> empty. Ref should point to first `new X()`.
+      ^^ Cannot cast `x1` to empty because `X` [1] is incompatible with empty [2].
+  References:
+    8: const x1 = new X();
+                  ^^^^^^^ [1]: `X`
+   15: (x1: empty); // X ~> empty. Ref should point to first `new X()`.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:16
+ 16: (x2: empty); // X ~> empty. Ref should point to first `X` annotation.
+      ^^ Cannot cast `x2` to empty because `X` [1] is incompatible with empty [2].
+  References:
+    9: const x2: X = new X();
+                 ^ [1]: `X`
+   16: (x2: empty); // X ~> empty. Ref should point to first `X` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:17
+ 17: (x3: empty); // X ~> empty. Ref should point to first `new X()`.
+      ^^ Cannot cast `x3` to empty because `X` [1] is incompatible with empty [2].
+  References:
+    8: const x1 = new X();
+                  ^^^^^^^ [1]: `X`
+   17: (x3: empty); // X ~> empty. Ref should point to first `new X()`.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:18
+ 18: (x4: empty); // X ~> empty. Ref should point to first `X` annotation.
+      ^^ Cannot cast `x4` to empty because `X` [1] is incompatible with empty [2].
+  References:
+    9: const x2: X = new X();
+                 ^ [1]: `X`
+   18: (x4: empty); // X ~> empty. Ref should point to first `X` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:19
+ 19: (x5: empty); // X ~> empty. Ref should point to second `X` annotation.
+      ^^ Cannot cast `x5` to empty because `X` [1] is incompatible with empty [2].
+  References:
+   12: const x5: X = x1;
+                 ^ [1]: `X`
+   19: (x5: empty); // X ~> empty. Ref should point to second `X` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:20
+ 20: (x6: empty); // X ~> empty. Ref should point to second `X` annotation.
+      ^^ Cannot cast `x6` to empty because `X` [1] is incompatible with empty [2].
+  References:
+    8: const x1 = new X();
+                  ^^^^^^^ [1]: `X`
+   20: (x6: empty); // X ~> empty. Ref should point to second `X` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:29
+ 29: (y1: empty); // number ~> empty. Ref should point to 42.
+      ^^ Cannot cast `y1` to empty because number [1] is incompatible with empty [2].
+  References:
+   22: const y1 = 42;
+                  ^^ [1]: number
+   29: (y1: empty); // number ~> empty. Ref should point to 42.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:30
+ 30: (y2: empty); // number ~> empty. Ref should point to first `number` annotation.
+      ^^ Cannot cast `y2` to empty because number [1] is incompatible with empty [2].
+  References:
+   23: const y2: number = -42;
+                 ^^^^^^ [1]: number
+   30: (y2: empty); // number ~> empty. Ref should point to first `number` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:31
+ 31: (y3: empty); // number ~> empty. Ref should point to 42.
+      ^^ Cannot cast `y3` to empty because number [1] is incompatible with empty [2].
+  References:
+   22: const y1 = 42;
+                  ^^ [1]: number
+   31: (y3: empty); // number ~> empty. Ref should point to 42.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:32
+ 32: (y4: empty); // number ~> empty. Ref should point to first `number` annotation.
+      ^^ Cannot cast `y4` to empty because number [1] is incompatible with empty [2].
+  References:
+   23: const y2: number = -42;
+                 ^^^^^^ [1]: number
+   32: (y4: empty); // number ~> empty. Ref should point to first `number` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:33
+ 33: (y5: empty); // number ~> empty. Ref should point to second `number` annotation.
+      ^^ Cannot cast `y5` to empty because number [1] is incompatible with empty [2].
+  References:
+   26: const y5: number = y1;
+                 ^^^^^^ [1]: number
+   33: (y5: empty); // number ~> empty. Ref should point to second `number` annotation.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:34
+ 34: (y6: empty); // number ~> empty. Ref should point to 42.
+      ^^ Cannot cast `y6` to empty because number [1] is incompatible with empty [2].
+  References:
+   22: const y1 = 42;
+                  ^^ [1]: number
+   34: (y6: empty); // number ~> empty. Ref should point to 42.
+            ^^^^^ [2]: empty
+
+Error: loc-reference.js:37
+ 37:   (x: number); // string ~> number. Ref should point to `x: string`.
+        ^ Cannot cast `x` to number because string [1] is incompatible with number [2].
+  References:
+   36: function fn1(x: string) {
+                       ^^^^^^ [1]: string
+   37:   (x: number); // string ~> number. Ref should point to `x: string`.
+             ^^^^^^ [2]: number
+
+Error: loc-reference.js:41
+ 41:   (x: number); // T ~> number. Ref should point to `x: T`.
+        ^ Cannot cast `x` to number because `T` [1] is incompatible with number [2].
+  References:
+   40: function fn2<T>(x: T) {
+                          ^ [1]: `T`
+   41:   (x: number); // T ~> number. Ref should point to `x: T`.
+             ^^^^^^ [2]: number
+
+Error: order.js:9
+  9:   a: 42,
+          ^^ Cannot cast object literal to object type because in property `a`, number [1] is incompatible with boolean [2].
+  References:
+    9:   a: 42,
+            ^^ [1]: number
+   13:   a: boolean,
+            ^^^^^^^ [2]: boolean
+
+Error: order.js:11
+ 11:   c: true,
+          ^^^^ Cannot cast object literal to object type because in property `c`, boolean [1] is incompatible with number [2].
+  References:
+   11:   c: true,
+            ^^^^ [1]: boolean
+   14:   c: number,
+            ^^^^^^ [2]: number
+
+Error: order.js:10
+ 10:   b: ('foo': empty),
+           ^^^^^ Cannot cast `'foo'` to empty because string [1] is incompatible with empty [2].
+  References:
+   10:   b: ('foo': empty),
+             ^^^^^ [1]: string
+   10:   b: ('foo': empty),
+                    ^^^^^ [2]: empty
+
+
+Found 39 errors
