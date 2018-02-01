@@ -994,6 +994,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (op, Some component,
           [text "Cannot create "; desc component; text " element"]))
 
+      | Op (ReactGetIntrinsic {literal}) ->
+        Some (`Root (literal, None,
+          [text "Cannot create "; desc literal; text " element"]))
+
       | Op (SetProperty {prop; value; _}) ->
         Some (`Root (value, None,
           [text "Cannot assign "; desc value; text " to "; desc prop]))
@@ -1075,8 +1079,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Frame (ReactConfigCheck, use_op)
       | Frame (UnifyFlip, use_op)
         -> Some (`Next use_op)
-
-      | Op _ -> None
       )
       ~default:None
       ~f:(function
