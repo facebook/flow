@@ -1,13 +1,11 @@
 Error: main.js:6
   6: <div id={42} />; // Error: (`id` prop) number ~> string
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-      6: <div id={42} />; // Error: (`id` prop) number ~> string
-                  ^^ number. This type is incompatible with
-      4:   div: $JSXIntrinsic<{id: string}>,
-                                   ^^^^^^ string. See lib: lib/jsx.js:4
+              ^^ Cannot create `div` element because in property `id`, number [1] is incompatible with string [2].
+  References:
+    6: <div id={42} />; // Error: (`id` prop) number ~> string
+                ^^ [1]: number
+    4:   div: $JSXIntrinsic<{id: string}>,
+                                 ^^^^^^ [2]: string. See lib: lib/jsx.js:4
 
 Error: main.js:9
   9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
@@ -62,14 +60,12 @@ Error: strings.js:15
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-     18: <Div id={42} />; // Not an error but should be eventually
-                  ^^ number. This type is incompatible with
-      4:   div: $JSXIntrinsic<{id: string}>,
-                                   ^^^^^^ string. See lib: lib/jsx.js:4
+              ^^ Cannot create `Div` element because in property `id`, number [1] is incompatible with string [2].
+  References:
+   18: <Div id={42} />; // Not an error but should be eventually
+                ^^ [1]: number
+    4:   div: $JSXIntrinsic<{id: string}>,
+                                 ^^^^^^ [2]: string. See lib: lib/jsx.js:4
 
 
 Found 9 errors

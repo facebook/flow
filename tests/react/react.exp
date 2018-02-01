@@ -484,14 +484,12 @@ Error: create_class_statics_sealed.js:54
 
 Error: default_props_undefined.js:10
  10: <Foo bar="42"/>; // Error
-     ^^^^^^^^^^^^^^^ props. This type is incompatible with
-  5: class Foo extends React.Component<{bar: number}, void> {
-                                       ^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     10: <Foo bar="42"/>; // Error
-                  ^^^^ string. This type is incompatible with
-      5: class Foo extends React.Component<{bar: number}, void> {
-                                                 ^^^^^^ number
+              ^^^^ Cannot create `Foo` element because in property `bar`, string [1] is incompatible with number [2].
+  References:
+   10: <Foo bar="42"/>; // Error
+                ^^^^ [1]: string
+    5: class Foo extends React.Component<{bar: number}, void> {
+                                               ^^^^^^ [2]: number
 
 Error: element_config.js:15
  15:   static defaultProps = {p: 'foo'}; // Error: string ~> number
@@ -969,19 +967,12 @@ Error: hoc3.js:26
 
 Error: hoc3.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
-  Property `a` is incompatible:
-     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                ^^^^^ string. This type is incompatible with
-     12:   a: number,
-              ^^^^^^ number
+                            ^^^^^ Cannot create `MyEnhancedComponent` element because in property `a`, string [1] is incompatible with number [2].
+  References:
+   28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                              ^^^^^ [1]: string
+   12:   a: number,
+            ^^^^^^ [2]: number
 
 Error: hoc3.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -1027,19 +1018,12 @@ Error: hoc3.js:30
 
 Error: hoc3.js:32
  32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                                         v
- 17: function MyFunctionComponent(props: {
- 18:   a: number,
- 19:   b: number,
- 20:   prop: number,
- 21: }) {}
-     ^ object type
-  Property `a` is incompatible:
-     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                        ^^^^^ string. This type is incompatible with
-     18:   a: number,
-              ^^^^^^ number
+                                    ^^^^^ Cannot create `MyEnhancedFunctionComponent` element because in property `a`, string [1] is incompatible with number [2].
+  References:
+   32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                      ^^^^^ [1]: string
+   18:   a: number,
+            ^^^^^^ [2]: number
 
 Error: hoc4.js:26
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -1065,14 +1049,12 @@ Error: hoc4.js:26
 
 Error: hoc4.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                                ^^^^^ string. This type is incompatible with
-     12:   a: number,
-              ^^^^^^ number
+                            ^^^^^ Cannot create `MyEnhancedComponent` element because in property `a`, string [1] is incompatible with number [2].
+  References:
+   28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                              ^^^^^ [1]: string
+   12:   a: number,
+            ^^^^^^ [2]: number
 
 Error: hoc4.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -1098,14 +1080,12 @@ Error: hoc4.js:30
 
 Error: hoc4.js:32
  32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `a` is incompatible:
-     32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                        ^^^^^ string. This type is incompatible with
-     18:   a: number,
-              ^^^^^^ number
+                                    ^^^^^ Cannot create `MyEnhancedFunctionComponent` element because in property `a`, string [1] is incompatible with number [2].
+  References:
+   32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                      ^^^^^ [1]: string
+   18:   a: number,
+            ^^^^^^ [2]: number
 
 Error: hoc5.js:21
  21: <MyComponent1 />; // Error
@@ -1120,25 +1100,21 @@ Error: hoc5.js:21
 
 Error: hoc5.js:23
  23: <MyComponent1 bar="nope" />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     23: <MyComponent1 bar="nope" />; // Error
-                           ^^^^^^ string. This type is incompatible with
-     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                                       ^^^^^^ number
+                       ^^^^^^ Cannot create `MyComponent1` element because in property `bar`, string [1] is incompatible with number [2].
+  References:
+   23: <MyComponent1 bar="nope" />; // Error
+                         ^^^^^^ [1]: string
+   14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                                     ^^^^^^ [2]: number
 
 Error: hoc5.js:25
  25: <MyComponent1 bar={42} foo={100} />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     25: <MyComponent1 bar={42} foo={100} />; // Error
-                                     ^^^ number. This type is incompatible with
-     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                          ^^^^^^ string
+                                 ^^^ Cannot create `MyComponent1` element because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   25: <MyComponent1 bar={42} foo={100} />; // Error
+                                   ^^^ [1]: number
+   14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                        ^^^^^^ [2]: string
 
 Error: hoc5.js:28
  28: <MyComponent2 />; // Error
@@ -1153,25 +1129,21 @@ Error: hoc5.js:28
 
 Error: hoc5.js:30
  30: <MyComponent2 bar="nope" />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     30: <MyComponent2 bar="nope" />; // Error
-                           ^^^^^^ string. This type is incompatible with
-     18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                                         ^^^^^^ number
+                       ^^^^^^ Cannot create `MyComponent2` element because in property `bar`, string [1] is incompatible with number [2].
+  References:
+   30: <MyComponent2 bar="nope" />; // Error
+                         ^^^^^^ [1]: string
+   18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                                       ^^^^^^ [2]: number
 
 Error: hoc5.js:32
  32: <MyComponent2 bar={42} foo={100} />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     32: <MyComponent2 bar={42} foo={100} />; // Error
-                                     ^^^ number. This type is incompatible with
-     18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                            ^^^^^^ string
+                                 ^^^ Cannot create `MyComponent2` element because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   32: <MyComponent2 bar={42} foo={100} />; // Error
+                                   ^^^ [1]: number
+   18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                          ^^^^^^ [2]: string
 
 Error: hoc5.js:38
  38: <MyEnhancedComponent1 />; // Error
@@ -1186,25 +1158,21 @@ Error: hoc5.js:38
 
 Error: hoc5.js:40
  40: <MyEnhancedComponent1 bar="nope" />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     40: <MyEnhancedComponent1 bar="nope" />; // Error
-                                   ^^^^^^ string. This type is incompatible with
-     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                                       ^^^^^^ number
+                               ^^^^^^ Cannot create `MyEnhancedComponent1` element because in property `bar`, string [1] is incompatible with number [2].
+  References:
+   40: <MyEnhancedComponent1 bar="nope" />; // Error
+                                 ^^^^^^ [1]: string
+   14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                                     ^^^^^^ [2]: number
 
 Error: hoc5.js:42
  42: <MyEnhancedComponent1 bar={42} foo={100} />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     42: <MyEnhancedComponent1 bar={42} foo={100} />; // Error
-                                             ^^^ number. This type is incompatible with
-     14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-                                                          ^^^^^^ string
+                                         ^^^ Cannot create `MyEnhancedComponent1` element because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   42: <MyEnhancedComponent1 bar={42} foo={100} />; // Error
+                                           ^^^ [1]: number
+   14: class MyComponent1 extends React.Component<{foo: string, bar: number}> {
+                                                        ^^^^^^ [2]: string
 
 Error: hoc5.js:45
  45: <MyEnhancedComponent2 />; // Error
@@ -1219,25 +1187,21 @@ Error: hoc5.js:45
 
 Error: hoc5.js:47
  47: <MyEnhancedComponent2 bar="nope" />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-     47: <MyEnhancedComponent2 bar="nope" />; // Error
-                                   ^^^^^^ string. This type is incompatible with
-     18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                                         ^^^^^^ number
+                               ^^^^^^ Cannot create `MyEnhancedComponent2` element because in property `bar`, string [1] is incompatible with number [2].
+  References:
+   47: <MyEnhancedComponent2 bar="nope" />; // Error
+                                 ^^^^^^ [1]: string
+   18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                                       ^^^^^^ [2]: number
 
 Error: hoc5.js:49
  49: <MyEnhancedComponent2 bar={42} foo={100} />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 10: ): React.ComponentType<React.ElementConfig<Component>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     49: <MyEnhancedComponent2 bar={42} foo={100} />; // Error
-                                             ^^^ number. This type is incompatible with
-     18: function MyComponent2(props: {foo: string, bar: number}) {}
-                                            ^^^^^^ string
+                                         ^^^ Cannot create `MyEnhancedComponent2` element because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   49: <MyEnhancedComponent2 bar={42} foo={100} />; // Error
+                                           ^^^ [1]: number
+   18: function MyComponent2(props: {foo: string, bar: number}) {}
+                                          ^^^^^^ [2]: string
 
 Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
@@ -1261,17 +1225,12 @@ Error: intersection_component_error.js:12
 
 Error: jsx_spread.js:11
  11: var blah = <Foo {...props} />; // error bar, number given string expected
-                ^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     bar: React.PropTypes.string.isRequired,
-  7:   },
-       ^ propTypes of React component
-  Property `bar` is incompatible:
-     10: var props = {bar: 42};
-                           ^^ number. This type is incompatible with
-      6:     bar: React.PropTypes.string.isRequired,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                 ^^^ Cannot create `Foo` element because in property `bar`, number [1] is incompatible with string [2].
+  References:
+   10: var props = {bar: 42};
+                         ^^ [1]: number
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: key.js:12
  12: <Foo key={true} />; // Error
@@ -1342,88 +1301,48 @@ Error: proptype_arrayOf.js:13
 
 Error: proptype_arrayOf.js:14
  14: var fail_not_array = <Example arr={2} />
-                          ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-  7:   },
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-     14: var fail_not_array = <Example arr={2} />
-                                            ^ number. This type is incompatible with
-      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+                                        ^ Cannot create `Example` element because in property `arr`, number [1] is incompatible with array type [2].
+  References:
+   14: var fail_not_array = <Example arr={2} />
+                                          ^ [1]: number
+    6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 Error: proptype_arrayOf.js:15
  15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-  7:   },
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-     15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                                                 ^^^^^^^^^^ array literal. Has some incompatible type argument with
-      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                                                         ^^^^^ string. This type is incompatible with
-          6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                                              ^^^^^^^^^^^^^^^^^^^^^^ number
+                                                 ^^^^^ Cannot create `Example` element because in property `arr` and then type argument `T`, string [1] is incompatible with number [2].
+  References:
+   15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+                                                   ^^^^^ [1]: string
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_arrayOf.js:20
  20: var todo_required = <Example arr={[null]} />
-                         ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-  7:   },
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-     20: var todo_required = <Example arr={[null]} />
-                                           ^^^^^^ array literal. Has some incompatible type argument with
-      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         20: var todo_required = <Example arr={[null]} />
-                                                ^^^^ null. This type is incompatible with
-          6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                                              ^^^^^^^^^^^^^^^^^^^^^^ number
+                                        ^^^^ Cannot create `Example` element because in property `arr` and then type argument `T`, null [1] is incompatible with number [2].
+  References:
+   20: var todo_required = <Example arr={[null]} />
+                                          ^^^^ [1]: null
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_arrayOf.js:30
  30: (<OptionalExample arr={[""]} />); // error: string ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 23:   propTypes: {
- 24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
- 25:   }
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-     30: (<OptionalExample arr={[""]} />); // error: string ~> number
-                                ^^^^ array literal. Has some incompatible type argument with
-     24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         30: (<OptionalExample arr={[""]} />); // error: string ~> number
-                                     ^^ string. This type is incompatible with
-         24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
-                                              ^^^^^^^^^^^^^^^^^^^^^^ number
+                             ^^ Cannot create `OptionalExample` element because in property `arr` and then type argument `T`, string [1] is incompatible with number [2].
+  References:
+   30: (<OptionalExample arr={[""]} />); // error: string ~> number
+                               ^^ [1]: string
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_arrayOf.js:38
  38: (<AnyExample arr={0} />); // error: still needs to be an array
-      ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 33:   propTypes: {
- 34:     arr: React.PropTypes.arrayOf((0:any)), // OK
- 35:   },
-       ^ propTypes of React component
-  Property `arr` is incompatible:
-     38: (<AnyExample arr={0} />); // error: still needs to be an array
-                           ^ number. This type is incompatible with
-     34:     arr: React.PropTypes.arrayOf((0:any)), // OK
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+                       ^ Cannot create `AnyExample` element because in property `arr`, number [1] is incompatible with array type [2].
+  References:
+   38: (<AnyExample arr={0} />); // error: still needs to be an array
+                         ^ [1]: number
+   34:     arr: React.PropTypes.arrayOf((0:any)), // OK
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 Error: proptype_arrayOf.js:43
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
@@ -1475,17 +1394,12 @@ Error: proptype_custom_validator.js:11
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
-                         ^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     func: React.PropTypes.func.isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `func` is incompatible:
-     14: var fail_mistyped = <Example func={2} />
-                                            ^ number. This type is incompatible with
-      6:     func: React.PropTypes.func.isRequired
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+                                        ^ Cannot create `Example` element because in property `func`, number [1] is incompatible with function type [2].
+  References:
+   14: var fail_mistyped = <Example func={2} />
+                                          ^ [1]: number
+  293:   func: React$PropType$Primitive<Function>;
+                                        ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/react.js:293
 
 Error: proptype_incompatible.js:3
                    v------------------
@@ -1500,45 +1414,30 @@ Error: proptype_incompatible.js:3
 
 Error: proptype_instanceOf.js:14
  14: (<Example x={new A} />); // error: A ~> B
-      ^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  9:   propTypes: {
- 10:     x: React.PropTypes.instanceOf(B),
- 11:   }
-       ^ propTypes of React component
-  Property `x` is incompatible:
-     14: (<Example x={new A} />); // error: A ~> B
-                      ^^^^^ A. This type is incompatible with
-     10:     x: React.PropTypes.instanceOf(B),
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+                  ^^^^^ Cannot create `Example` element because in property `x`, `A` [1] is incompatible with `B` [2].
+  References:
+   14: (<Example x={new A} />); // error: A ~> B
+                    ^^^^^ [1]: `A`
+   10:     x: React.PropTypes.instanceOf(B),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: `B`
 
 Error: proptype_instanceOf.js:17
  17: (<Example x="wrong" />); // error: string ~> B
-      ^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  9:   propTypes: {
- 10:     x: React.PropTypes.instanceOf(B),
- 11:   }
-       ^ propTypes of React component
-  Property `x` is incompatible:
-     17: (<Example x="wrong" />); // error: string ~> B
-                     ^^^^^^^ string. This type is incompatible with
-     10:     x: React.PropTypes.instanceOf(B),
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+                 ^^^^^^^ Cannot create `Example` element because in property `x`, string [1] is incompatible with `B` [2].
+  References:
+   17: (<Example x="wrong" />); // error: string ~> B
+                   ^^^^^^^ [1]: string
+   10:     x: React.PropTypes.instanceOf(B),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: `B`
 
 Error: proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
-                         ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     object: React.PropTypes.object.isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `object` is incompatible:
-     13: var fail_mistyped = <Example object={2} />
-                                              ^ number. This type is incompatible with
-      6:     object: React.PropTypes.object.isRequired
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                                          ^ Cannot create `Example` element because in property `object`, number [1] is incompatible with object type [2].
+  References:
+   13: var fail_mistyped = <Example object={2} />
+                                            ^ [1]: number
+  295:   object: React$PropType$Primitive<Object>;
+                                          ^^^^^^ [2]: object type. See lib: <BUILTINS>/react.js:295
 
 Error: proptype_objectOf.js:13
  13: var fail_missing = <Example />
@@ -1559,88 +1458,48 @@ Error: proptype_objectOf.js:13
 
 Error: proptype_objectOf.js:14
  14: var fail_not_object = <Example obj={2} />
-                           ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-     14: var fail_not_object = <Example obj={2} />
-                                             ^ number. This type is incompatible with
-      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                                         ^ Cannot create `Example` element because in property `obj`, number [1] is incompatible with object type [2].
+  References:
+   14: var fail_not_object = <Example obj={2} />
+                                           ^ [1]: number
+    6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: proptype_objectOf.js:15
  15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-     15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                                                 ^^^^^^^^^^^^ object literal. This type is incompatible with
-      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                                                           ^^^^^ string. This type is incompatible with
-          6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                                               ^^^^^^^^^^^^^^^^^^^^^^ number
+                                                   ^^^^^ Cannot create `Example` element because in property `obj.foo`, string [1] is incompatible with number [2].
+  References:
+   15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+                                                     ^^^^^ [1]: string
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_objectOf.js:20
  20: var todo_required = <Example obj={{p:null}} />
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-  7:   },
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-     20: var todo_required = <Example obj={{p:null}} />
-                                           ^^^^^^^^ object literal. This type is incompatible with
-      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `p` is incompatible:
-         20: var todo_required = <Example obj={{p:null}} />
-                                                  ^^^^ null. This type is incompatible with
-          6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                                               ^^^^^^^^^^^^^^^^^^^^^^ number
+                                          ^^^^ Cannot create `Example` element because in property `obj.p`, null [1] is incompatible with number [2].
+  References:
+   20: var todo_required = <Example obj={{p:null}} />
+                                            ^^^^ [1]: null
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_objectOf.js:30
  30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 23:   propTypes: {
- 24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
- 25:   }
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-     30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
-                                ^^^^^^ object literal. This type is incompatible with
-     24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `p` is incompatible:
-         30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
-                                       ^^ string. This type is incompatible with
-         24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
-                                               ^^^^^^^^^^^^^^^^^^^^^^ number
+                               ^^ Cannot create `OptionalExample` element because in property `obj.p`, string [1] is incompatible with number [2].
+  References:
+   30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
+                                 ^^ [1]: string
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: proptype_objectOf.js:38
  38: (<AnyExample obj={0} />); // error: still needs to be an object
-      ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 33:   propTypes: {
- 34:     obj: React.PropTypes.objectOf((0:any)), // OK
- 35:   },
-       ^ propTypes of React component
-  Property `obj` is incompatible:
-     38: (<AnyExample obj={0} />); // error: still needs to be an object
-                           ^ number. This type is incompatible with
-     34:     obj: React.PropTypes.objectOf((0:any)), // OK
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                       ^ Cannot create `AnyExample` element because in property `obj`, number [1] is incompatible with object type [2].
+  References:
+   38: (<AnyExample obj={0} />); // error: still needs to be an object
+                         ^ [1]: number
+   34:     obj: React.PropTypes.objectOf((0:any)), // OK
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: proptype_objectOf.js:43
  43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
@@ -1650,35 +1509,21 @@ Error: proptype_objectOf.js:43
 
 Error: proptype_oneOf.js:14
  14: (<Example str="baz" />); // error: 'baz' not in enum
-      ^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     str: React.PropTypes.oneOf(["foo", "bar"]),
-  7:     num: React.PropTypes.oneOf([0, 1, 2]),
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `str` is incompatible:
-     14: (<Example str="baz" />); // error: 'baz' not in enum
-                       ^^^^^ string. This type is incompatible with
-      6:     str: React.PropTypes.oneOf(["foo", "bar"]),
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum
+                   ^^^^^ Cannot create `Example` element because in property `str`, string [1] is incompatible with string enum [2].
+  References:
+   14: (<Example str="baz" />); // error: 'baz' not in enum
+                     ^^^^^ [1]: string
+    6:     str: React.PropTypes.oneOf(["foo", "bar"]),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string enum
 
 Error: proptype_oneOf.js:17
  17: (<Example num={3} />); // error: 3 not in enum
-      ^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     str: React.PropTypes.oneOf(["foo", "bar"]),
-  7:     num: React.PropTypes.oneOf([0, 1, 2]),
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `num` is incompatible:
-     17: (<Example num={3} />); // error: 3 not in enum
-                        ^ number. This type is incompatible with
-      7:     num: React.PropTypes.oneOf([0, 1, 2]),
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number enum
+                    ^ Cannot create `Example` element because in property `num`, number [1] is incompatible with number enum [2].
+  References:
+   17: (<Example num={3} />); // error: 3 not in enum
+                      ^ [1]: number
+    7:     num: React.PropTypes.oneOf([0, 1, 2]),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: number enum
 
 Error: proptype_oneOf.js:20
  20: (<Example bool={false} />); // error: false ~> true
@@ -1755,17 +1600,12 @@ Error: proptype_oneOf.js:32
 
 Error: proptype_oneOf.js:40
  40: (<EmptyExample nil={0} />); // number ~> empty
-      ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 35:   propTypes: {
- 36:     nil: React.PropTypes.oneOf([]), // i.e., `empty`
- 37:   },
-       ^ propTypes of React component
-  Property `nil` is incompatible:
-     40: (<EmptyExample nil={0} />); // number ~> empty
-                             ^ number. This type is incompatible with
-     36:     nil: React.PropTypes.oneOf([]), // i.e., `empty`
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ empty
+                         ^ Cannot create `EmptyExample` element because in property `nil`, number [1] is incompatible with empty [2].
+  References:
+   40: (<EmptyExample nil={0} />); // number ~> empty
+                           ^ [1]: number
+   36:     nil: React.PropTypes.oneOf([]), // i.e., `empty`
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: empty
 
 Error: proptype_oneOf.js:76
  76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
@@ -1900,36 +1740,21 @@ Error: proptype_oneOfType.js:29
 
 Error: proptype_oneOfType.js:41
  41: (<OptionalExample p={0} />); // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 32:   propTypes: {
- 33:     p: React.PropTypes.oneOfType([
- 34:       React.PropTypes.string,
- 35:     ]),
- 36:   },
-       ^ propTypes of React component
-  Property `p` is incompatible:
-     41: (<OptionalExample p={0} />); // error: number ~> string
-                              ^ number. This type is incompatible with
-                v--------------------------
-     33:     p: React.PropTypes.oneOfType([
-     34:       React.PropTypes.string,
-     35:     ]),
-             -^ string
+                          ^ Cannot create `OptionalExample` element because in property `p`, number [1] is incompatible with string [2].
+  References:
+   41: (<OptionalExample p={0} />); // error: number ~> string
+                            ^ [1]: number
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: proptype_oneOfType.js:49
  49: (<EmptyExample nil={0} />); // number ~> empty
-      ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
- 44:   propTypes: {
- 45:     nil: React.PropTypes.oneOfType([]), // i.e., `empty`
- 46:   },
-       ^ propTypes of React component
-  Property `nil` is incompatible:
-     49: (<EmptyExample nil={0} />); // number ~> empty
-                             ^ number. This type is incompatible with
-     45:     nil: React.PropTypes.oneOfType([]), // i.e., `empty`
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ empty
+                         ^ Cannot create `EmptyExample` element because in property `nil`, number [1] is incompatible with empty [2].
+  References:
+   49: (<EmptyExample nil={0} />); // number ~> empty
+                           ^ [1]: number
+   45:     nil: React.PropTypes.oneOfType([]), // i.e., `empty`
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: empty
 
 Error: proptype_oneOfType.js:91
  91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
@@ -2193,14 +2018,12 @@ Error: test-utils.js:34
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  5: class MyComponent extends React.Component<{title: string}> {}
-                                               ^^^^^^^^^^^^^^^ object type
-  Property `title` is incompatible:
-      7: <MyComponent title={undefined} />;
-                             ^^^^^^^^^ undefined. This type is incompatible with
-      5: class MyComponent extends React.Component<{title: string}> {}
-                                                           ^^^^^^ string
+                         ^^^^^^^^^ Cannot create `MyComponent` element because in property `title`, undefined [1] is incompatible with string [2].
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+    5: class MyComponent extends React.Component<{title: string}> {}
+                                                         ^^^^^^ [2]: string
 
 
 Found 190 errors

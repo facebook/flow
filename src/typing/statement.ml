@@ -3812,7 +3812,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
     let el = RReactElement (Some name) in
     let reason = mk_reason el loc_opening in
     let c = jsx_title_member_to_expression member in
-    let c = expression cx c in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier name)) (expression cx c) in
     let o = jsx_mk_props cx reason c name attributes children in
     jsx_desugar cx name c o attributes children locs
 

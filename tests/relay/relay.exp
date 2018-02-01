@@ -36,14 +36,12 @@ Error: Profile.js:22
 
 Error: Profile.js:23
  23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `image` is incompatible:
-     23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Relay.js:46
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `ProfilePic` element because in property `image`, object literal [1] is incompatible with `ProfilePic_imageRef` [2].
+  References:
+   23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
+   11:   ProfilePic_imageRef,
+         ^^^^^^^^^^^^^^^^^^^ [2]: `ProfilePic_imageRef`. See: ProfilePic.graphql.js:11
 
 Error: ProfilePic.js:17
  17:     (this.props.image.url: empty); // Error: string ~> empty
@@ -78,14 +76,12 @@ Error: main.js:16
 
 Error: main.js:17
  17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `foo` is incompatible:
-     17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
-                                     ^^^^^ string. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+                                 ^^^^^ Cannot create `Profile` element because in property `foo`, string [1] is incompatible with number [2].
+  References:
+   17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
+                                   ^^^^^ [1]: string
+   14:   foo: number,
+              ^^^^^^ [2]: number. See: Profile.js:14
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
@@ -111,74 +107,57 @@ Error: main.js:18
 
 Error: main.js:19
  19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `user` is incompatible:
-     19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
-                        ^^^^ object type. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+                    ^^^^ Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
+  References:
+   19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
+                      ^^^^ [1]: object type
+   12:   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `foo` is incompatible:
-     20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-                                  ^^^^^ string. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+                    ^^^^ Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
+  References:
+   20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+                      ^^^^ [1]: object type
+   12:   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `user` is incompatible:
-     20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-                        ^^^^ object type. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+                              ^^^^^ Cannot create `Profile` element because in property `foo`, string [1] is incompatible with number [2].
+  References:
+   20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+                                ^^^^^ [1]: string
+   14:   foo: number,
+              ^^^^^^ [2]: number. See: Profile.js:14
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `foo` is incompatible:
-     21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-                                                   ^^^^^ mixed. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+                           ^^^^^ Cannot create `Profile` element because in property `user`, mixed [1] is incompatible with `Profile_userRef` [2].
+  References:
+   21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                             ^^^^^ [1]: mixed
+   12:   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
-  Property `user` is incompatible:
-     21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
-                               ^^^^^ mixed. This type is incompatible with
-     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+                                               ^^^^^ Cannot create `Profile` element because in property `foo`, mixed [1] is incompatible with number [2].
+  References:
+   21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                                                 ^^^^^ [1]: mixed
+   14:   foo: number,
+              ^^^^^^ [2]: number. See: Profile.js:14
 
 Error: more.js:92
  92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `user` is incompatible:
-     92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
-                                                     ^^^^ null. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ object type
+                                                 ^^^^ Cannot create `SingularTest` element because in property `user`, null [1] is incompatible with object type [2].
+  References:
+   92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
+                                                   ^^^^ [1]: null
+   23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:95
  95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
@@ -193,92 +172,39 @@ Error: more.js:95
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `user` is incompatible:
-     98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-                                                     ^^^^^^^^^^ object type. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ object type
-      Property `__fragments` is incompatible:
-         86:   +__fragments: FragmentReference<{thing: true}>,
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
-         23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                                    ^^^^^^^^^^^^^^^^^^^^ FragmentReference
-          Type argument `T` is incompatible:
-             23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                          ^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
-             86:   +__fragments: FragmentReference<{thing: true}>,
-                                                   ^^^^^^^^^^^^^ object type
+                                                 ^^^^^^^^^^ Cannot create `SingularTest` element because in property `user.__fragments` and then type argument `T`, `FragmentTypeof` [1] is incompatible with object type [2].
+  References:
+   23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+                ^^^^^^^^^^^^^^ [1]: `FragmentTypeof`
+   86:   +__fragments: FragmentReference<{thing: true}>,
+                                         ^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `user` is incompatible:
-     98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
-                                                     ^^^^^^^^^^ object type. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ object type
-      Property `__fragments` is incompatible:
-         86:   +__fragments: FragmentReference<{thing: true}>,
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
-         23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                                    ^^^^^^^^^^^^^^^^^^^^ FragmentReference
-          Type argument `T` is incompatible:
-             86:   +__fragments: FragmentReference<{thing: true}>,
-                                                   ^^^^^^^^^^^^^ object type. This type is incompatible with
-             43:   +__typeof: RelayModernTypedFlowtest_user$reference,
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof
+                                                 ^^^^^^^^^^ Cannot create `SingularTest` element because in property `user.__fragments` and then type argument `T`, object type [1] is incompatible with `FragmentTypeof` [2].
+  References:
+   86:   +__fragments: FragmentReference<{thing: true}>,
+                                         ^^^^^^^^^^^^^ [1]: object type
+   43:   +__typeof: RelayModernTypedFlowtest_user$reference,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: `FragmentTypeof`
 
-Error: more.js:121
-     v------------
-121: <SingularTest
-122:   onClick={cb}
-123:   string="x"
-...:
-127: />;
-     -^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `optionalUser` is incompatible:
-    126:   optionalUser={null}
-                         ^^^^ null. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ object type
+Error: more.js:126
+126:   optionalUser={null}
+                     ^^^^ Cannot create `SingularTest` element because in property `optionalUser`, null [1] is incompatible with object type [2].
+  References:
+  126:   optionalUser={null}
+                       ^^^^ [1]: null
+   23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:144
 144: <PluralTest users={null} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `users` is incompatible:
-    144: <PluralTest users={null} nullableUsers={null} />;
-                            ^^^^ null. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ read-only array type
+                        ^^^^ Cannot create `PluralTest` element because in property `users`, null [1] is incompatible with read-only array type [2].
+  References:
+  144: <PluralTest users={null} nullableUsers={null} />;
+                          ^^^^ [1]: null
+   25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: read-only array type
 
 Error: more.js:147
 147: <PluralTest nullableUsers={null} />;
@@ -293,113 +219,48 @@ Error: more.js:147
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `users` is incompatible:
-    150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-                            ^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ read-only array type
-      Type argument `T` is incompatible:
-        150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-                                 ^^^^^^^^^^ object type. This type is incompatible with
-         25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-          Property `__fragments` is incompatible:
-             86:   +__fragments: FragmentReference<{thing: true}>,
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
-             25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                                       ^^^^^^^^^^^^^^^^^^^^ FragmentReference
-              Type argument `T` is incompatible:
-                 25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                              ^^^^^^^^^^^^^^ FragmentTypeof. This type is incompatible with
-                 86:   +__fragments: FragmentReference<{thing: true}>,
-                                                       ^^^^^^^^^^^^^ object type
+                         ^^^^^^^^^^ Cannot create `PluralTest` element because in property `users`, type argument `T`, property `__fragments`, and then type argument `T`; `FragmentTypeof` [1] is incompatible with object type [2].
+  References:
+   25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                ^^^^^^^^^^^^^^ [1]: `FragmentTypeof`
+   86:   +__fragments: FragmentReference<{thing: true}>,
+                                         ^^^^^^^^^^^^^ [2]: object type
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `users` is incompatible:
-    150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-                            ^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ read-only array type
-      Type argument `T` is incompatible:
-        150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
-                                 ^^^^^^^^^^ object type. This type is incompatible with
-         25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-          Property `__fragments` is incompatible:
-             86:   +__fragments: FragmentReference<{thing: true}>,
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentReference. Has some incompatible type argument with
-             25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                                       ^^^^^^^^^^^^^^^^^^^^ FragmentReference
-              Type argument `T` is incompatible:
-                 86:   +__fragments: FragmentReference<{thing: true}>,
-                                                       ^^^^^^^^^^^^^ object type. This type is incompatible with
-                 49:   +__typeof: RelayModernTypedFlowtest_users$reference,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FragmentTypeof
+                         ^^^^^^^^^^ Cannot create `PluralTest` element because in property `users`, type argument `T`, property `__fragments`, and then type argument `T`; object type [1] is incompatible with `FragmentTypeof` [2].
+  References:
+   86:   +__fragments: FragmentReference<{thing: true}>,
+                                         ^^^^^^^^^^^^^ [1]: object type
+   49:   +__typeof: RelayModernTypedFlowtest_users$reference,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: `FragmentTypeof`
 
 Error: more.js:174
 174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `optionalUsers` is incompatible:
-    174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
-                                                                          ^^^^ null. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ read-only array type
+                                                                      ^^^^ Cannot create `PluralTest` element because in property `optionalUsers`, null [1] is incompatible with read-only array type [2].
+  References:
+  174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
+                                                                        ^^^^ [1]: null
+   25:   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
+                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: read-only array type
 
 Error: more.js:177
 177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `onClick` is incompatible:
-    177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
-                                ^^^^ string. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ function type
+                            ^^^^ Cannot create `SingularTest` element because in property `onClick`, string [1] is incompatible with function type [2].
+  References:
+  177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
+                              ^^^^ [1]: string
+   59:   onClick: () => void,
+                  ^^^^^^^^^^ [2]: function type
 
 Error: more.js:180
 180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 35: ): React.ComponentType<$RelayProps<Props, RelayProp>>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `string` is incompatible:
-    180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
-                                            ^ number. This type is incompatible with
-                                               v-------
-     21: type $RelayProps<Props, RelayPropT> = $ObjMap<
-     22:   $Diff<Props, {relay: RelayPropT | void}>,
-     23:   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-    ...:
-     30: >;
-         ^ string
+                                        ^ Cannot create `SingularTest` element because in property `string`, number [1] is incompatible with string [2].
+  References:
+  180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
+                                          ^ [1]: number
+   58:   string: string,
+                 ^^^^^^ [2]: string
 
 
 Found 28 errors

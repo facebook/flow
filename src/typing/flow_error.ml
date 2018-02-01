@@ -967,6 +967,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (lower, None,
           [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]))
 
+      | Op (ReactCreateElementCall {op; component; _}) ->
+        Some (`Root (op, Some component,
+          [text "Cannot create "; desc component; text " element"]))
+
       | Frame (FunParam {n; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,
           [text "the "; text (Utils_js.ordinal n); text " argument"]))
@@ -992,11 +996,19 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           [text "the callable signature"]))
 
       | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
+        let repos_if_react_prop loc reason = function
+        (* If we are checking the React config then don't reposition to the
+         * props object type which does not contain the children. *)
+        | Frame (ReactConfigCheck, _) -> repos_reason loc reason
+        | _ -> reason
+        in
+        let lower = repos_if_react_prop loc lower use_op in
         let rec loop lower = function
         (* Don't match $key/$value/$call properties since they have special
          * meaning. As defined above. *)
         | Frame (PropertyCompatibility {prop=Some prop; lower=lower'; _}, use_op)
             when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
+          let lower' = repos_if_react_prop (loc_of_reason lower) lower' use_op in
           (* Perform the same frame location unwrapping as we do in our
            * general code. *)
           let lower = if Loc.contains (loc_of_reason lower') (loc_of_reason lower)

@@ -261,14 +261,12 @@ Error: classes.js:79
 
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 14: class HelloMessage extends React.Component<{ name: string }> {}
-                                                ^^^^^^^^^^^^^^^^ object type
-  Property `name` is incompatible:
-     16: <HelloMessage name={007} />; // number ~/~> string error
-                             ^^^ number. This type is incompatible with
-     14: class HelloMessage extends React.Component<{ name: string }> {}
-                                                            ^^^^^^ string
+                         ^^^ Cannot create `HelloMessage` element because in property `name`, number [1] is incompatible with string [2].
+  References:
+   16: <HelloMessage name={007} />; // number ~/~> string error
+                           ^^^ [1]: number
+   14: class HelloMessage extends React.Component<{ name: string }> {}
+                                                          ^^^^^^ [2]: string
 
 Error: new_react.js:17
  17:         var foo: string = this.state;
@@ -328,19 +326,12 @@ Error: new_react.js:21
 
 Error: new_react.js:29
  29: var element = <C x = {0}/>;
-                   ^^^^^^^^^^^^ props. This type is incompatible with
-                    v
-  5:     propTypes: {
-  6:         x: React.PropTypes.string.isRequired,
-  7:         y: React.PropTypes.array,
-  8:         z: React.PropTypes.number
-  9:     },
-         ^ propTypes of React component
-  Property `x` is incompatible:
-     29: var element = <C x = {0}/>;
-                               ^ number. This type is incompatible with
-      6:         x: React.PropTypes.string.isRequired,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                           ^ Cannot create `C` element because in property `x`, number [1] is incompatible with string [2].
+  References:
+   29: var element = <C x = {0}/>;
+                             ^ [1]: number
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: new_react.js:30
  30: var element_ = <C/>;
@@ -500,33 +491,21 @@ Error: props.js:16
 
 Error: props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                    v
-  4:     propTypes: {
-  5:         x: React.PropTypes.string,
-  6:         z: React.PropTypes.number
-  7:     },
-         ^ propTypes of React component
-  Property `x` is incompatible:
-     20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                     ^^^^^ boolean. This type is incompatible with
-      5:         x: React.PropTypes.string,
-                    ^^^^^^^^^^^^^^^^^^^^^^ string
+                                 ^^^^^ Cannot create `TestProps` element because in property `x`, boolean [1] is incompatible with string [2].
+  References:
+   20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                   ^^^^^ [1]: boolean
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                    v
-  4:     propTypes: {
-  5:         x: React.PropTypes.string,
-  6:         z: React.PropTypes.number
-  7:     },
-         ^ propTypes of React component
-  Property `z` is incompatible:
-     20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                                         ^^^^^ boolean. This type is incompatible with
-      6:         z: React.PropTypes.number
-                    ^^^^^^^^^^^^^^^^^^^^^^ number
+                                                     ^^^^^ Cannot create `TestProps` element because in property `z`, boolean [1] is incompatible with number [2].
+  References:
+   20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                                       ^^^^^ [1]: boolean
+  294:   number: React$PropType$Primitive<number>;
+                                          ^^^^^^ [2]: number. See lib: <BUILTINS>/react.js:294
 
 Error: props.js:27
  27: (element: $jsx<Class<FooProps>>);
@@ -563,33 +542,21 @@ Error: props2.js:14
 
 Error: props2.js:15
  15:         return <C {...this.state} foo = {0} />;
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                    v
-  3:     propTypes: {
-  4:         foo: React.PropTypes.string.isRequired,
-  5:         bar: React.PropTypes.string.isRequired,
-  6:     }
-         ^ propTypes of React component
-  Property `bar` is incompatible:
-      9:     getInitialState: function(): { bar: number } {
-                                                 ^^^^^^ number. This type is incompatible with
-      5:         bar: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                     ^ Cannot create `C` element because in property `bar`, number [1] is incompatible with string [2].
+  References:
+    9:     getInitialState: function(): { bar: number } {
+                                               ^^^^^^ [1]: number
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: props2.js:15
  15:         return <C {...this.state} foo = {0} />;
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                    v
-  3:     propTypes: {
-  4:         foo: React.PropTypes.string.isRequired,
-  5:         bar: React.PropTypes.string.isRequired,
-  6:     }
-         ^ propTypes of React component
-  Property `foo` is incompatible:
-     15:         return <C {...this.state} foo = {0} />;
-                                                  ^ number. This type is incompatible with
-      4:         foo: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+                                              ^ Cannot create `C` element because in property `foo`, number [1] is incompatible with string [2].
+  References:
+   15:         return <C {...this.state} foo = {0} />;
+                                                ^ [1]: number
+  296:   string: React$PropType$Primitive<string>;
+                                          ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:296
 
 Error: props3.js:49
  49:       bad_one: React.PropTypes.imaginaryType,
@@ -605,14 +572,12 @@ Error: props3.js:50
 
 Error: props4.js:9
   9: <JDiv id={42} />;
-     ^^^^^^^^^^^^^^^^ props. This type is incompatible with
-  6: class JDiv extends React.Component<{id: string}> {}
-                                        ^^^^^^^^^^^^ object type
-  Property `id` is incompatible:
-      9: <JDiv id={42} />;
-                   ^^ number. This type is incompatible with
-      6: class JDiv extends React.Component<{id: string}> {}
-                                                 ^^^^^^ string
+               ^^ Cannot create `JDiv` element because in property `id`, number [1] is incompatible with string [2].
+  References:
+    9: <JDiv id={42} />;
+                 ^^ [1]: number
+    6: class JDiv extends React.Component<{id: string}> {}
+                                               ^^^^^^ [2]: string
 
 Error: props4.js:18
  18:   <Example foo="foo" />,
