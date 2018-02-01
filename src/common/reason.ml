@@ -391,7 +391,7 @@ let rec string_of_desc = function
   | RVoid -> "undefined"
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
-  | RStringLit "" -> "empty string literal"
+  | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
@@ -978,6 +978,8 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, Array _) -> mk_reason RArrayLit loc
 | (loc, ArrowFunction f) -> func_reason f loc
 | (loc, Function f) -> func_reason f loc
+| (loc, Ast.Expression.Literal {Ast.Literal.value = Ast.Literal.String ""; _}) ->
+  mk_reason (RStringLit "") loc
 | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
 | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc

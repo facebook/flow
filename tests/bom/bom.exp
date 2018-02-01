@@ -1,6 +1,6 @@
 Error: FormData.js:5
   5: new FormData(''); // incorrect
-                  ^^ Cannot call `FormData` with `''` bound to `form` because string [1] is incompatible with `HTMLFormElement` [2].
+                  ^^ Cannot call `FormData` with empty string bound to `form` because string [1] is incompatible with `HTMLFormElement` [2].
   References:
     5: new FormData(''); // incorrect
                     ^^ [1]: string

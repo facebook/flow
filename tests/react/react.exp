@@ -2014,7 +2014,7 @@ Error: render_callback.js:24
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
-                                                                  ^^ Cannot call `ReactDOM.render` with `''` bound to `callback` because string [1] is incompatible with function type [2].
+                                                                  ^^ Cannot call `ReactDOM.render` with empty string bound to `callback` because string [1] is incompatible with function type [2].
   References:
    24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                     ^^ [1]: string

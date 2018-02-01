@@ -12,7 +12,7 @@ lib/test.js:8
 
 Error: declare_class.js:8
   8: C.x = "";
-           ^^ Cannot assign `""` to `C.x` because string [1] is incompatible with number [2].
+           ^^ Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
   References:
     8: C.x = "";
              ^^ [1]: string
@@ -21,7 +21,7 @@ Error: declare_class.js:8
 
 Error: declare_class.js:9
   9: C.foo("");
-           ^^ Cannot call `C.foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+           ^^ Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     9: C.foo("");
              ^^ [1]: string

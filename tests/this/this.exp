@@ -72,7 +72,7 @@ Error: arrows.js:16
 
 Error: arrows.js:24
  24:       super.foo(""); // find super method, error due to incorrect arg
-                     ^^ Cannot call `super.foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+                     ^^ Cannot call `super.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
    24:       super.foo(""); // find super method, error due to incorrect arg
                        ^^ [1]: string

@@ -30,7 +30,7 @@ Error: other_root/other_root_file.js:3
 
 Error: test.js:3
   3: ("": number);
-      ^^ Cannot cast `""` to number because string [1] is incompatible with number [2].
+      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
   References:
     3: ("": number);
         ^^ [1]: string
@@ -70,7 +70,7 @@ Error: other_root/other_root_file.js:3
 
 Error: test.js:3
   3: ("": number);
-      ^^ Cannot cast `""` to number because string [1] is incompatible with number [2].
+      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
   References:
     3: ("": number);
         ^^ [1]: string
@@ -83,7 +83,7 @@ Found 4 errors
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error: test.js:3
   3: ("": number);
-      ^^ Cannot cast `""` to number because string [1] is incompatible with number [2].
+      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
   References:
     3: ("": number);
         ^^ [1]: string
@@ -144,7 +144,7 @@ Error: a.js:3
 
 Error: test.js:3
   3: ("": number);
-      ^^ Cannot cast `""` to number because string [1] is incompatible with number [2].
+      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
   References:
     3: ("": number);
         ^^ [1]: string
@@ -166,7 +166,7 @@ Error: dir/test2.foo:4
 
 Error: test.js:3
   3: ("": number);
-      ^^ Cannot cast `""` to number because string [1] is incompatible with number [2].
+      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
   References:
     3: ("": number);
         ^^ [1]: string

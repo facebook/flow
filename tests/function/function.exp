@@ -149,7 +149,7 @@ Error: call.js:14
 
 Error: call.js:17
  17: test.call("", "", ""); // error: string ~> number (2nd arg)
-                       ^^ Cannot call `test.call` with `""` bound to `b` because string [1] is incompatible with number [2].
+                       ^^ Cannot call `test.call` with empty string bound to `b` because string [1] is incompatible with number [2].
   References:
    17: test.call("", "", ""); // error: string ~> number (2nd arg)
                          ^^ [1]: string

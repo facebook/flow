@@ -1,6 +1,6 @@
 Error: class.js:4
   4:     yield ""; // error: string ~> number
-               ^^ Cannot yield `""` because string [1] is incompatible with number [2].
+               ^^ Cannot yield empty string because string [1] is incompatible with number [2].
   References:
     4:     yield ""; // error: string ~> number
                  ^^ [1]: string
@@ -18,7 +18,7 @@ Error: class.js:15
 
 Error: class.js:24
  24:     return ""; // error: string ~> number
-                ^^ Cannot return `""` because in type argument `Return`, string [1] is incompatible with number [2].
+                ^^ Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
   References:
    24:     return ""; // error: string ~> number
                   ^^ [1]: string
@@ -126,7 +126,7 @@ Error: class_failure.js:19
 
 Error: generators.js:3
   3:   yield ""; // error: string ~> number
-             ^^ Cannot yield `""` because string [1] is incompatible with number [2].
+             ^^ Cannot yield empty string because string [1] is incompatible with number [2].
   References:
     3:   yield ""; // error: string ~> number
                ^^ [1]: string
@@ -144,7 +144,7 @@ Error: generators.js:14
 
 Error: generators.js:23
  23:   return ""; // error: string ~> number
-              ^^ Cannot return `""` because in type argument `Return`, string [1] is incompatible with number [2].
+              ^^ Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
   References:
    23:   return ""; // error: string ~> number
                 ^^ [1]: string

@@ -11,7 +11,7 @@ Error: a1.js:3
 
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     5: module.exports = foo("");
                             ^^ [1]: string
@@ -22,7 +22,7 @@ Error: a2.js:5
 Found 2 errors
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     5: module.exports = foo("");
                             ^^ [1]: string
@@ -42,7 +42,7 @@ Error: a3.js:5
 Found 2 errors
 Error: a1.js:5
   5: foo("");
-         ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+         ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     5: foo("");
            ^^ [1]: string
@@ -51,7 +51,7 @@ Error: a1.js:5
 
 Error: a2.js:5
   5: module.exports = foo("");
-                          ^^ Cannot call `foo` with `""` bound to `x` because string [1] is incompatible with number [2].
+                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     5: module.exports = foo("");
                             ^^ [1]: string

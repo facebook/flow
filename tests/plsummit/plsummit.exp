@@ -9,7 +9,7 @@ Error: generics.js:4
 
 Error: import_class.js:3
   3: var c = new C("");
-                   ^^ Cannot call `C` with `""` bound to `x` because string [1] is incompatible with number [2].
+                   ^^ Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2].
   References:
     3: var c = new C("");
                      ^^ [1]: string

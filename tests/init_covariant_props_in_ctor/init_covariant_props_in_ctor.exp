@@ -33,7 +33,7 @@ Error: a.js:61
 
 Error: a.js:70
  70:     this.prop = "";           // ERROR
-                     ^^ Cannot assign `""` to `this.prop` because string [1] is incompatible with number [2].
+                     ^^ Cannot assign empty string to `this.prop` because string [1] is incompatible with number [2].
   References:
    70:     this.prop = "";           // ERROR
                        ^^ [1]: string

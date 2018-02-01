@@ -921,12 +921,12 @@ Error: string.js:98
 
 Error: string.js:117
 117:       return x; // error
-                  ^ Cannot return `x` because string [1] is incompatible with empty string literal [2].
+                  ^ Cannot return `x` because string [1] is incompatible with empty string [2].
   References:
   115:   function(x: string): "" {
                      ^^^^^^ [1]: string
   115:   function(x: string): "" {
-                              ^^ [2]: empty string literal
+                              ^^ [2]: empty string
 
 Error: super_member.js:13
  13:       return super.prop; // error, unknown type passed to string expected

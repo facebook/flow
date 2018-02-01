@@ -42,7 +42,7 @@ Error: union.js:9
 
 Error: yuge.js:23
  23:     ("": ErrorCode);  // also, error pos omits this line completely
-          ^^ Cannot cast `""` to `ErrorCode` because string [1] is incompatible with number enum [2].
+          ^^ Cannot cast empty string to `ErrorCode` because string [1] is incompatible with number enum [2].
   References:
    23:     ("": ErrorCode);  // also, error pos omits this line completely
             ^^ [1]: string
