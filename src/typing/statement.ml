@@ -2511,7 +2511,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
         let tobj = expression cx _object in
         let tind = expression cx index in
         Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (tobj, GetElemT (unknown_use, reason, tind, t))
+          let use_op = Op (GetProperty (mk_expression_reason ex)) in
+          Flow.flow cx (tobj, GetElemT (use_op, reason, tind, t))
         )
       )
 

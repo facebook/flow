@@ -42,7 +42,7 @@ Error: undefined2.js:13
 
 Error: undefined2.js:22
  22:       x[0]; // should error, could be void
-           ^^^^ An indexer property is missing in `Number` [1].
+           ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
   References:
    16:   function(x: number) {
                      ^^^^^^ [1]: `Number`

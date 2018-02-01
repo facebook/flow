@@ -95,7 +95,7 @@ Error: objects.js:4
 
 Error: objects.js:5
   5: (x['foo'] : string);  // error, key doesn't exist
-        ^^^^^ Property `foo` is missing in object type [1].
+        ^^^^^ Cannot get `x['foo']` because property `foo` is missing in object type [1].
   References:
     3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
@@ -129,7 +129,7 @@ Error: objects.js:9
 
 Error: objects.js:12
  12: (x[`foo`]: string);   // error, key doesn't exist
-        ^^^^^ Property `foo` is missing in object type [1].
+        ^^^^^ Cannot get `x[`...`]` because property `foo` is missing in object type [1].
   References:
     3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
