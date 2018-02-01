@@ -885,7 +885,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | Op (ReactGetIntrinsic {literal}) ->
     let msg = "Is not a valid React JSX intrinsic" in
     extra, [literal, [msg]]
-  | Op (SetProperty reason_op) ->
+  | Op (SetProperty {lhs=reason_op; _}) ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
     extra, typecheck_msgs msg (rl, ru)
@@ -988,6 +988,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Op (ReactCreateElementCall {op; component; _}) ->
         Some (`Root (op, Some component,
           [text "Cannot create "; desc component; text " element"]))
+
+      | Op (SetProperty {prop; value; _}) ->
+        Some (`Root (value, None,
+          [text "Cannot assign "; desc value; text " to "; desc prop]))
 
       | Frame (FunParam {n; lower; _}, use_op) ->
         Some (`Frame (lower, use_op,

@@ -9,12 +9,12 @@ Error: value.js:3
 
 Error: value.js:6
   6: table["x"] = "hello";
-                  ^^^^^^^ string [1] is incompatible with number [2].
+                  ^^^^^^^ Cannot assign `"hello"` to `table["x"]` because string [1] is incompatible with number [2].
   References:
     6: table["x"] = "hello";
                     ^^^^^^^ [1]: string
-    6: table["x"] = "hello";
-       ^^^^^^^^^^ [2]: number
+    5: var table: { [_: string]: number } = {};
+                                 ^^^^^^ [2]: number
 
 
 Found 2 errors

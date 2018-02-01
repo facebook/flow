@@ -307,7 +307,7 @@ module rec TypeTerm : sig
     | Internal of internal_use_op
     | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
     | ReactGetIntrinsic of { literal: reason }
-    | SetProperty of reason
+    | SetProperty of { lhs: reason; prop: reason; value: reason }
     | UnknownUse
 
   and frame_use_op =
@@ -2485,7 +2485,7 @@ let loc_of_root_use_op = function
 | GeneratorYield {value=op}
 | GetProperty op
 | ReactCreateElementCall {op; _}
-| SetProperty op
+| SetProperty {value=op; _}
   -> loc_of_reason op
 | Addition
 | Coercion

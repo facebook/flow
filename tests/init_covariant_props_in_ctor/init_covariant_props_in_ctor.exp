@@ -6,12 +6,12 @@ Error: a.js:13
 
 Error: a.js:20
  20:     this.prop = prop;         // ERROR: we should not be assigning a string here
-                     ^^^^ string [1] is incompatible with number [2].
+                     ^^^^ Cannot assign `prop` to `this.prop` because string [1] is incompatible with number [2].
   References:
    19:   constructor(prop: string) {
                            ^^^^^^ [1]: string
-   20:     this.prop = prop;         // ERROR: we should not be assigning a string here
-           ^^^^^^^^^ [2]: number
+   16:   +prop: number;
+                ^^^^^^ [2]: number
 
 Error: a.js:21
  21:     this.m = () => {};        // ERORR: cannot assign method
@@ -33,12 +33,12 @@ Error: a.js:61
 
 Error: a.js:70
  70:     this.prop = "";           // ERROR
-                     ^^ string [1] is incompatible with number [2].
+                     ^^ Cannot assign `""` to `this.prop` because string [1] is incompatible with number [2].
   References:
    70:     this.prop = "";           // ERROR
                        ^^ [1]: string
-   70:     this.prop = "";           // ERROR
-           ^^^^^^^^^ [2]: number
+    5:   +prop: number;
+                ^^^^^^ [2]: number
 
 Error: a.js:74
  74: class G extends F {

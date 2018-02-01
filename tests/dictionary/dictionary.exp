@@ -9,9 +9,12 @@ Error: any.js:5
 
 Error: dictionary.js:47
  47:   o.p = new A; // error, A ~> B
-             ^^^^^ A. This type is incompatible with
- 47:   o.p = new A; // error, A ~> B
-       ^^^ B
+             ^^^^^ Cannot assign `new A()` to `o.p` because `A` [1] is incompatible with `B` [2].
+  References:
+   47:   o.p = new A; // error, A ~> B
+               ^^^^^ [1]: `A`
+   45:   o: {[k:string]:B},
+                        ^ [2]: `B`
 
 Error: dictionary.js:58
  58:   (o.p: C); // error, C ~> B
@@ -545,14 +548,12 @@ Error: test.js:5
 
 Error: test_client.js:3
   3: o.foo = function (params) {
-             ^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  3: o.foo = function (params) {
-     ^^^^^ QueryFunction
-  The return is incompatible:
-      4:   return params.count; // error, number ~/~ string
-                  ^^^^^^^^^^^^ number. This type is incompatible with
-      2: type QueryFunction = (params: Params) => string;
-                                                  ^^^^^^ string. See: test.js:2
+                              ^ Cannot assign function to `o.foo` because in the return value, number [1] is incompatible with string [2].
+  References:
+    1: type Params = {count: number; [name: string]: string};
+                             ^^^^^^ [1]: number. See: test.js:1
+    2: type QueryFunction = (params: Params) => string;
+                                                ^^^^^^ [2]: string. See: test.js:2
 
 
 Found 61 errors

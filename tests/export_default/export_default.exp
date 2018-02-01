@@ -1,11 +1,11 @@
 Error: test.js:3
   3: N.x = M(N.x);
-           ^^^^^^ string [1] is incompatible with number [2].
+           ^^^^^^ Cannot assign `M(...)` to `N.x` because string [1] is incompatible with number [2].
   References:
     2:     declare module.exports: (x: string) => string;
                                                   ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    3: N.x = M(N.x);
-       ^^^ [2]: number
+    5:     declare var x: number;
+                          ^^^^^^ [2]: number. See lib: lib/lib.js:5
 
 Error: test.js:3
   3: N.x = M(N.x);
@@ -15,12 +15,12 @@ Error: test.js:3
 
 Error: test.js:5
   5: N.y = P(N.y);
-           ^^^^^^ string [1] is incompatible with number [2].
+           ^^^^^^ Cannot assign `P(...)` to `N.y` because string [1] is incompatible with number [2].
   References:
     2:     declare module.exports: (x: string) => string;
                                                   ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    5: N.y = P(N.y);
-       ^^^ [2]: number
+    6:     declare var y: number;
+                          ^^^^^^ [2]: number. See lib: lib/lib.js:6
 
 Error: test.js:5
   5: N.y = P(N.y);
@@ -30,12 +30,12 @@ Error: test.js:5
 
 Error: test.js:7
   7: N.z = Q(N.z);
-           ^^^^^^ string [1] is incompatible with number [2].
+           ^^^^^^ Cannot assign `Q(...)` to `N.z` because string [1] is incompatible with number [2].
   References:
     2:     declare module.exports: (x: string) => string;
                                                   ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    7: N.z = Q(N.z);
-       ^^^ [2]: number
+    7:     declare var z: number;
+                          ^^^^^^ [2]: number. See lib: lib/lib.js:7
 
 Error: test.js:7
   7: N.z = Q(N.z);

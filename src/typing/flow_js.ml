@@ -6202,13 +6202,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace
         (FlowError.EFunCallThis (reason_of_t l, reason_of_t u, reason_call))
 
-    | _, UseT (Op (SetProperty reason_op), u) ->
-      add_output cx ~trace (FlowError.EIncompatibleDefs {
-        reason_lower = reason_of_t l;
-        reason_upper = replace_reason_const (desc_of_t u) reason_op;
-        extras = [];
-      })
-
     | _, UseT (use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op

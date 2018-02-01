@@ -3510,19 +3510,23 @@ and assignment cx loc = Ast.Expression.(function
             set_module_exports cx lhs_loc t
 
         (* super.name = e *)
-        | lhs_loc, Ast.Pattern.Expression (_, Member {
+        | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object = super_loc, Super;
             property = Member.PropertyIdentifier (ploc, name);
             _
-          }) ->
+          }) as rx) ->
             let reason =
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
             Type_table.set_info (Context.type_table cx) super_loc super;
-            let use_op = Op (SetProperty reason) in
             let prop_t = Tvar.mk cx prop_reason in
             Type_table.set_info (Context.type_table cx) ploc prop_t;
+            let use_op = Op (SetProperty {
+              lhs = reason;
+              prop = mk_reason (desc_of_reason (mk_expression_reason rx)) ploc;
+              value = mk_expression_reason e;
+            }) in
             Flow.flow cx (super, SetPropT (
               use_op, reason, Named (prop_reason, name), Normal, t, Some prop_t
             ))
@@ -3541,10 +3545,14 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
-              let use_op = Op (SetProperty reason) in
-              let prop_reason = mk_reason (RProperty (Some name)) ploc in
+              let prop_reason = mk_reason (RPrivateProperty name) ploc in
               let prop_t = Tvar.mk cx prop_reason in
               Type_table.set_info (Context.type_table cx) ploc prop_t;
+              let use_op = Op (SetProperty {
+                lhs = reason;
+                prop = mk_reason (desc_of_reason (mk_expression_reason expr)) ploc;
+                value = mk_expression_reason e;
+              }) in
               Flow.flow cx (o, SetPrivatePropT (
                 use_op, reason, name, class_entries, false, t, Some prop_t
               ));
@@ -3569,9 +3577,13 @@ and assignment cx loc = Ast.Expression.(function
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
-              let use_op = Op (SetProperty reason) in
               let prop_t = Tvar.mk cx prop_reason in
               Type_table.set_info (Context.type_table cx) ploc prop_t;
+              let use_op = Op (SetProperty {
+                lhs = reason;
+                prop = mk_reason (desc_of_reason (mk_expression_reason expr)) ploc;
+                value = mk_expression_reason e;
+              }) in
               Flow.flow cx (o, SetPropT (
                 use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
               ));
@@ -3579,15 +3591,19 @@ and assignment cx loc = Ast.Expression.(function
             )
 
         (* _object[index] = e *)
-        | lhs_loc, Ast.Pattern.Expression (_, Member {
+        | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
-            property = Member.PropertyExpression index;
+            property = Member.PropertyExpression ((iloc, _) as index);
             _
-          }) ->
+          }) as rx) ->
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let a = expression cx _object in
             let i = expression cx index in
-            let use_op = Op (SetProperty reason) in
+            let use_op = Op (SetProperty {
+              lhs = reason;
+              prop = mk_reason (desc_of_reason (mk_expression_reason rx)) iloc;
+              value = mk_expression_reason e;
+            }) in
             Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
 
             (* types involved in the assignment itself are computed

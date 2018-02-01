@@ -21,12 +21,12 @@ Error: test.js:49
 
 Error: test.js:51
  51:         this.#p = 3; // Error, #p is a string not a number
-                       ^ number [1] is incompatible with string [2].
+                       ^ Cannot assign `3` to `this.#p` because number [1] is incompatible with string [2].
   References:
    51:         this.#p = 3; // Error, #p is a string not a number
                          ^ [1]: number
-   51:         this.#p = 3; // Error, #p is a string not a number
-               ^^^^^^^ [2]: string
+   47:       #p: string
+                 ^^^^^^ [2]: string
 
 Error: test.js:53
  53:         (x.#p : string) // Error, here #p is a number not a string

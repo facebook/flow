@@ -131,12 +131,12 @@ Error: objects.js:8
 
 Error: objects.js:9
   9: x['123'] = false;     // error, boolean !~> string
-                ^^^^^ boolean [1] is incompatible with string [2].
+                ^^^^^ Cannot assign `false` to `x['123']` because boolean [1] is incompatible with string [2].
   References:
     9: x['123'] = false;     // error, boolean !~> string
                   ^^^^^ [1]: boolean
-    9: x['123'] = false;     // error, boolean !~> string
-       ^^^^^^^^ [2]: string
+    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                       ^^^^^^ [2]: string
 
 Error: objects.js:12
  12: (x[`foo`]: string);   // error, key doesn't exist
@@ -146,12 +146,12 @@ Error: objects.js:12
 
 Error: objects.js:15
  15: y['foo'] = 123; // error, number !~> string
-                ^^^ number [1] is incompatible with string [2].
+                ^^^ Cannot assign `123` to `y['foo']` because number [1] is incompatible with string [2].
   References:
    15: y['foo'] = 123; // error, number !~> string
                   ^^^ [1]: number
-   15: y['foo'] = 123; // error, number !~> string
-       ^^^^^^^^ [2]: string
+   14: var y : {foo: string} = {foo: 'bar'};
+                     ^^^^^^ [2]: string
 
 Error: objects.js:16
  16: y['bar'] = 'abc'; // error, property not found

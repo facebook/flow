@@ -1,11 +1,11 @@
 Error: Bar.js:15
  15:     new Qux().w = "?";
-                       ^^^ string [1] is incompatible with number [2].
+                       ^^^ Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with number [2].
   References:
    15:     new Qux().w = "?";
                          ^^^ [1]: string
-   15:     new Qux().w = "?";
-           ^^^^^^^^^^^ [2]: number
+    5:   w:number;
+           ^^^^^^ [2]: number. See: Qux.js:5
 
 Error: Foo.js:21
  21:   fooqux(x:string) {

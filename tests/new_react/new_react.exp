@@ -71,23 +71,21 @@ Error: classes.js:15
 
 Error: classes.js:20
  20:     this.state = { y: "" };
-                      ^^^^^^^^^ object literal. This type is incompatible with
- 20:     this.state = { y: "" };
-         ^^^^^^^^^^ State
-  Property `y` is incompatible:
-     20:     this.state = { y: "" };
-                               ^^ string. This type is incompatible with
-      5: type State = { y: number };
-                           ^^^^^^ number
+                           ^^ Cannot assign object literal to `this.state` because in property `y`, string [1] is incompatible with number [2].
+  References:
+   20:     this.state = { y: "" };
+                             ^^ [1]: string
+    5: type State = { y: number };
+                         ^^^^^^ [2]: number
 
 Error: classes.js:38
  38: Foo.defaultProps = 0;
-                        ^ number [1] is incompatible with object type [2].
+                        ^ Cannot assign `0` to `Foo.defaultProps` because number [1] is incompatible with `DefaultProps` [2].
   References:
    38: Foo.defaultProps = 0;
                           ^ [1]: number
-   38: Foo.defaultProps = 0;
-       ^^^^^^^^^^^^^^^^ [2]: object type
+    8:   static defaultProps: DefaultProps;
+                              ^^^^^^^^^^^^ [2]: `DefaultProps`
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;

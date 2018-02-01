@@ -276,57 +276,57 @@ Error: function.js:43
 
 Error: function.js:48
  48:     x.length = 'foo'; // error, it's a number
-                    ^^^^^ string [1] is incompatible with number [2].
+                    ^^^^^ Cannot assign `'foo'` to `x.length` because string [1] is incompatible with number [2].
   References:
    48:     x.length = 'foo'; // error, it's a number
                       ^^^^^ [1]: string
-   48:     x.length = 'foo'; // error, it's a number
-           ^^^^^^^^ [2]: number
+   99:     length: number;
+                   ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:99
 
 Error: function.js:49
  49:     y.length = 'foo'; // error, it's a number
-                    ^^^^^ string [1] is incompatible with number [2].
+                    ^^^^^ Cannot assign `'foo'` to `y.length` because string [1] is incompatible with number [2].
   References:
    49:     y.length = 'foo'; // error, it's a number
                       ^^^^^ [1]: string
-   49:     y.length = 'foo'; // error, it's a number
-           ^^^^^^^^ [2]: number
+   99:     length: number;
+                   ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:99
 
 Error: function.js:50
  50:     z.length = 'foo'; // error, it's a number
-                    ^^^^^ string [1] is incompatible with number [2].
+                    ^^^^^ Cannot assign `'foo'` to `z.length` because string [1] is incompatible with number [2].
   References:
    50:     z.length = 'foo'; // error, it's a number
                       ^^^^^ [1]: string
-   50:     z.length = 'foo'; // error, it's a number
-           ^^^^^^^^ [2]: number
+   99:     length: number;
+                   ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:99
 
 Error: function.js:52
  52:     x.name = 123; // error, it's a string
-                  ^^^ number [1] is incompatible with string [2].
+                  ^^^ Cannot assign `123` to `x.name` because number [1] is incompatible with string [2].
   References:
    52:     x.name = 123; // error, it's a string
                     ^^^ [1]: number
-   52:     x.name = 123; // error, it's a string
-           ^^^^^^ [2]: string
+  100:     name: string;
+                 ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:100
 
 Error: function.js:53
  53:     y.name = 123; // error, it's a string
-                  ^^^ number [1] is incompatible with string [2].
+                  ^^^ Cannot assign `123` to `y.name` because number [1] is incompatible with string [2].
   References:
    53:     y.name = 123; // error, it's a string
                     ^^^ [1]: number
-   53:     y.name = 123; // error, it's a string
-           ^^^^^^ [2]: string
+  100:     name: string;
+                 ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:100
 
 Error: function.js:54
  54:     z.name = 123; // error, it's a string
-                  ^^^ number [1] is incompatible with string [2].
+                  ^^^ Cannot assign `123` to `z.name` because number [1] is incompatible with string [2].
   References:
    54:     z.name = 123; // error, it's a string
                     ^^^ [1]: number
-   54:     z.name = 123; // error, it's a string
-           ^^^^^^ [2]: string
+  100:     name: string;
+                 ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:100
 
 Error: rest.js:36
  36:   return xs.pop(); // Error - no bound on T

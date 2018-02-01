@@ -196,12 +196,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: proto.p = 0;
-                         ^ number [1] is incompatible with string [2].
+                         ^ Cannot assign \`0\` to \`proto.p\` because number [1] is incompatible with string [2].
             References:
               9: proto.p = 0;
                            ^ [1]: number
-              9: proto.p = 0;
-                 ^^^^^^^ [2]: string
+              7: var o: {p: string} = Object.create(proto);
+                            ^^^^^^ [2]: string
         `,
       ),
   ]),

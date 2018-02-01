@@ -18,12 +18,12 @@ Error: D.js:4
 
 Error: D.js:5
   5: C.A = false;
-           ^^^^^ boolean [1] is incompatible with number [2].
+           ^^^^^ Cannot assign `false` to `C.A` because boolean [1] is incompatible with number [2].
   References:
     5: C.A = false;
              ^^^^^ [1]: boolean
-    5: C.A = false;
-       ^^^ [2]: number
+    2: module.exports = 0;
+                        ^ [2]: number. See: A.js:2
 
 
 Found 3 errors
