@@ -2549,7 +2549,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
         then AnyT.at ploc
         else (
           Tvar.mk_where cx expr_reason (fun tvar ->
-            let use_op = Op (GetProperty prop_reason) in
+            let use_op = Op (GetProperty (mk_expression_reason ex)) in
             Flow.flow cx (
               super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
             )
@@ -2571,7 +2571,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
-        get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
     )
     |> fun t -> Type_table.set_info (Context.type_table cx) ploc t; t
 
@@ -2581,14 +2582,15 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       _
     } -> (
       let expr_reason = mk_reason (RPrivateProperty name) loc in
-      let prop_reason = mk_reason (RPrivateProperty name) ploc in
       match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let tobj = expression cx _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
-        else get_private_field cx expr_reason tobj (prop_reason, name)
+        else
+          let use_op = Op (GetProperty (mk_expression_reason ex)) in
+          get_private_field cx expr_reason ~use_op tobj name
     )
     |> fun t -> Type_table.set_info (Context.type_table cx) ploc t; t
 
@@ -3749,7 +3751,8 @@ and jsx_fragment cx = Ast.JSX.(
   let fragment =
     let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
     let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
-    get_prop ~is_cond:false cx reason react (reason, "Fragment")
+    let use_op = Op (GetProperty reason) in
+    get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
   in
   jsx_desugar cx "React.Fragment" fragment (NullT.at loc_opening) [] children locs
 )
@@ -3851,12 +3854,15 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
           if Type_inference_hooks_js.dispatch_member_hook
             cx name loc jsx_intrinsics
           then AnyT.at loc
-          else get_prop
-            ~is_cond:false
-            cx
-            component_t_reason
-            jsx_intrinsics
-            (component_t_reason, name)
+          else
+            let use_op = Op (GetProperty component_t_reason) in
+            get_prop
+              ~is_cond:false
+              cx
+              component_t_reason
+              ~use_op
+              jsx_intrinsics
+              (component_t_reason, name)
         in
         Flow.flow_t cx (prop_t, t)
       )
@@ -4201,8 +4207,10 @@ and predicates_of_condition cx e = Ast.(Expression.(
         if Type_inference_hooks_js.dispatch_member_hook cx
           prop_name prop_loc obj_t
         then AnyT.at prop_loc
-        else get_prop ~is_cond:true cx
-          expr_reason obj_t (prop_reason, prop_name)
+        else
+          let use_op = Op (GetProperty prop_reason) in
+          get_prop ~is_cond:true cx
+            expr_reason ~use_op obj_t (prop_reason, prop_name)
       in
       Type_table.set_info (Context.type_table cx) prop_loc prop_t;
 
@@ -4476,8 +4484,10 @@ and predicates_of_condition cx e = Ast.(Expression.(
         if Type_inference_hooks_js.dispatch_member_hook cx
           prop_name prop_loc obj_t
         then AnyT.at prop_loc
-        else get_prop ~is_cond:true cx
-          expr_reason obj_t (prop_reason, prop_name)
+        else
+          let use_op = Op (GetProperty (mk_expression_reason e)) in
+          get_prop ~is_cond:true cx
+            expr_reason ~use_op obj_t (prop_reason, prop_name)
       in
 
       (* since we never called `expression cx e`, we have to add to the
@@ -4547,7 +4557,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "`Array.isArray(...)`") callee_loc in
       let fn_t = Tvar.mk_where cx reason (fun t ->
         let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
-        let use_op = Op (GetProperty prop_reason) in
+        let use_op = Op (GetProperty (mk_expression_reason e)) in
         Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t))
       ) in
       Type_table.set (Context.type_table cx) prop_loc fn_t;
@@ -4647,10 +4657,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
 and condition cx e =
   expression ~is_cond:true cx e
 
-and get_private_field cx reason tobj (prop_reason, name) =
+and get_private_field cx reason ~use_op tobj name =
   Tvar.mk_where cx reason (fun t ->
     let class_entries = Env.get_class_entries () in
-    let use_op = Op (GetProperty prop_reason) in
     let get_prop_u = GetPrivatePropT (use_op, reason, name, class_entries, false, t) in
     Flow.flow cx (tobj, get_prop_u)
   )
@@ -4662,12 +4671,12 @@ and get_private_field cx reason tobj (prop_reason, name) =
    expressions out of `expression`, somewhat like what assignment_lhs does. That
    would make everything involving Refinement be in the same place.
 *)
-and get_prop ~is_cond cx reason tobj (prop_reason, name) =
+and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
   Tvar.mk_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
       then TestPropT (reason, Named (prop_reason, name), t)
-      else GetPropT (Op (GetProperty prop_reason), reason, Named (prop_reason, name), t)
+      else GetPropT (use_op, reason, Named (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)
   )

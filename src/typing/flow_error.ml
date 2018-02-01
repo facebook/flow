@@ -986,6 +986,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (value, None,
           [text "Cannot yield "; desc value]))
 
+      | Op (GetProperty prop) ->
+        Some (`Root (prop, None,
+          [text "Cannot get "; desc prop]))
+
       | Op (ReactCreateElementCall {op; component; _}) ->
         Some (`Root (op, Some component,
           [text "Cannot create "; desc component; text " element"]))
