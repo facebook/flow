@@ -193,18 +193,18 @@ let catch close exn =
 
 module type Handler = sig
   val create_socket_connection:
-    (Lwt_unix.file_descr * Lwt_unix.sockaddr) ->
+    autostop:bool -> (Lwt_unix.file_descr * Lwt_unix.sockaddr) ->
     unit Lwt.t
 end
 
 module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
-  type acc = Lwt_unix.file_descr
+  type acc = bool * Lwt_unix.file_descr
 
-  let main socket_fd =
+  let main (autostop, socket_fd) =
     Logger.debug "Waiting for a new socket connection";
     Lwt_unix.accept socket_fd
-    >>= Handler.create_socket_connection
-    >|= (fun () -> socket_fd)
+    >>= Handler.create_socket_connection ~autostop
+    >|= (fun () -> (autostop, socket_fd))
 
   let catch _ exn =
     Logger.fatal ~exn "Uncaught exception in the socket acceptor";
@@ -212,8 +212,17 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
 end)
 
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
-  let create_socket_connection (client_fd, _) =
-    let close = close client_fd in
+  let create_socket_connection ~autostop (client_fd, _) =
+    let close_without_autostop = close client_fd in
+    let close () =
+      close_without_autostop () >>= fun () ->
+      let num_persistent = PersistentConnectionMap.cardinal () in
+      let num_ephemeral = RequestMap.cardinal () in
+      if autostop && num_persistent = 0 && num_ephemeral = 0 then
+        Server.exit FlowExitStatus.Autostop ~msg:"Autostop"
+      else
+        Lwt.return_unit
+    in
     Lwt.catch
       (fun () ->
         perform_handshake_and_get_client_type ~client_fd
@@ -225,19 +234,23 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
             create_persistent_connection ~client_fd ~close ~logging_context
           | SocketHandshake.StabbityStabStab ->
             (* Ow my face *)
-            close ()
+            close_without_autostop ()
             >>= (fun () -> Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error)
         )
       )
-      (catch close)
+      (catch close_without_autostop)
+      (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
+      (* from 1 connections to 0 connections then it might stop the server. *)
+      (* But this catch clause is fired when an attempt to connect has      *)
+      (* failed, and that's why it never triggers an autostop.              *)
 end)
 
-let run monitor_socket_fd =
-  MonitorSocketAcceptorLoop.run ~cancel_condition:ExitSignal.signal monitor_socket_fd
+let run monitor_socket_fd ~autostop =
+  MonitorSocketAcceptorLoop.run ~cancel_condition:ExitSignal.signal (autostop, monitor_socket_fd)
 
 
 module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
-  let create_socket_connection (client_fd, _) =
+  let create_socket_connection ~autostop:_ (client_fd, _) =
     let close = close client_fd in
     Lwt.catch
       (fun () ->
@@ -254,4 +267,4 @@ module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
 end)
 
 let run_legacy legacy_socket_fd =
-  LegacySocketAcceptorLoop.run ~cancel_condition:ExitSignal.signal legacy_socket_fd
+  LegacySocketAcceptorLoop.run ~cancel_condition:ExitSignal.signal (false, legacy_socket_fd)

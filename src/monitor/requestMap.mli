@@ -17,3 +17,7 @@ val remove:
 val remove_all:
   unit ->
   (ServerProt.Request.command_with_context * EphemeralConnection.t) list Lwt.t
+
+val cardinal:
+  unit ->
+  int

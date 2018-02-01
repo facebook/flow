@@ -16,4 +16,8 @@ val get:
 
 val remove:
   client_id:Persistent_connection_prot.client_id ->
-  unit Lwt.t
+  unit
+
+val cardinal:
+  unit ->
+  int

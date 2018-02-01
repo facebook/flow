@@ -45,6 +45,8 @@ type t =
   | Server_start_failed of Unix.process_status
   (* Something went wrong with extracting the flowlib *)
   | Missing_flowlib
+  (* Flow monitor had been instructed to exit when there were no more clients *)
+  | Autostop
 
   (* The hack code might throw this *)
   | Socket_error
@@ -87,6 +89,7 @@ let error_code = function
   | Flowconfig_changed -> 16
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Path_is_not_a_file -> 17
+  | Autostop -> 18
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -117,6 +120,7 @@ let error_type = function
   | 15 -> Out_of_shared_memory
   | 16 -> Flowconfig_changed
   | 17 -> Path_is_not_a_file
+  | 18 -> Autostop
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -163,6 +167,7 @@ let to_string = function
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
   | Flowconfig_changed -> "Flowconfig_changed"
+  | Autostop -> "Autostop"
 
 exception Exit_with of t
 

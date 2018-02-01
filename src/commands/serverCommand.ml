@@ -63,6 +63,7 @@ let main lazy_mode options_flags shm_flags ignore_version from
 
   let monitor_options = FlowServerMonitorOptions.make
     ~log_file:monitor_log_file
+    ~autostop:false
     ~no_restart
     ~server_log_file
     ~server_options:options

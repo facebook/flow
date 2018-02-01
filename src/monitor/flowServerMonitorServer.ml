@@ -112,6 +112,7 @@ end = struct
           let msg = MonitorProt.NewPersistentConnection (client_id, logging_context) in
           Lwt.return (send_request ~msg conn)
         | Notify_dead_persistent_connection (client_id) ->
+          let () = PersistentConnectionMap.remove ~client_id in
           let msg = MonitorProt.DeadPersistentConnection client_id in
           Lwt.return (send_request ~msg conn)
       )
@@ -274,6 +275,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | No_input
       | Missing_flowlib
       | Server_start_failed _
+      | Autostop (* is used by monitor to exit, not server *)
         -> true
     end
 

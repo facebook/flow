@@ -253,7 +253,9 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
 
   (* We can start up the socket acceptor even before the server starts *)
   Lwt.async (fun () ->
-    SocketAcceptor.run (Lwt_unix.of_unix_file_descr ~blocking:true monitor_socket_fd)
+    SocketAcceptor.run
+      (Lwt_unix.of_unix_file_descr ~blocking:true monitor_socket_fd)
+      monitor_options.FlowServerMonitorOptions.autostop
   );
   Lwt.async (fun () ->
     SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr ~blocking:true legacy_socket_fd)

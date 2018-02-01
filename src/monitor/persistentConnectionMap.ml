@@ -13,18 +13,20 @@ let mutex = Lwt_mutex.create ()
 let map = ref IMap.empty
 
 let add ~client_id ~client =
+  (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
     map := IMap.add client_id client !map;
     Lwt.return_unit
   )
 
 let get ~client_id =
+  (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
     Lwt.return (IMap.get client_id !map)
   )
 
 let remove ~client_id =
-  Lwt_mutex.with_lock mutex (fun () ->
-    map := IMap.remove client_id !map;
-    Lwt.return_unit
-  )
+  map := IMap.remove client_id !map
+
+let cardinal () =
+  IMap.cardinal !map

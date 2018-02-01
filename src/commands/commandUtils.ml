@@ -733,6 +733,7 @@ let connect ~client_type server_flags root =
     retries;
     retry_if_init;
     expiry;
+    autostop = false;
     tmp_dir;
     shm_dirs;
     shm_min_avail = server_flags.shm_flags.shm_min_avail;

@@ -21,6 +21,8 @@ let spec = { CommandSpec.
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
       |> lazy_flags
+      |> flag "--autostop" no_arg
+          ~doc:"" (* empty to omit it from --help *)
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
@@ -38,7 +40,7 @@ let spec = { CommandSpec.
 
 let main
     options_flags json pretty server_log_file monitor_log_file wait lazy_mode
-    shm_flags ignore_version from no_restart path_opt () =
+    autostop shm_flags ignore_version from no_restart path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -88,6 +90,7 @@ let main
 
   let monitor_options = FlowServerMonitorOptions.make
     ~log_file:monitor_log_file
+    ~autostop
     ~no_restart
     ~server_log_file
     ~server_options

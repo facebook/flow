@@ -13,6 +13,7 @@ type env = {
   retries : int;
   retry_if_init : bool;
   expiry : float option;
+  autostop : bool;
   tmp_dir : string;
   shm_dirs : string list option;
   shm_min_avail : int option;
@@ -40,6 +41,7 @@ let flag name value arr =
 let start_flow_server env =
   let {
     tmp_dir;
+    autostop;
     shm_dirs;
     shm_min_avail;
     shm_dep_table_pow;
@@ -64,6 +66,7 @@ let start_flow_server env =
   |> arg "--from" FlowEventLogger.((get_context ()).from)
   |> flag "--ignore-version" ignore_version
   |> flag "--quiet" quiet
+  |> flag "--autostop" autostop
   in
   try
     let server_pid =

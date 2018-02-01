@@ -7,10 +7,12 @@
 
 (* These are all the little bits of information which the Flow server monitor needs in order to
  * function *)
- 
+
 type t = {
   (* Where the monitor logs will go by default *)
   log_file: string;
+  (* If true then the monitor will exit when the last client exits. This is used by lsp. *)
+  autostop: bool;
   (* If true then the monitor will always exit when a server exits, and will never try to create
    * a new server. This is currently only used for testing what causes servers to die *)
   no_restart: bool;
@@ -24,8 +26,11 @@ type t = {
   argv: string array;
 }
 
-let make ~log_file ~no_restart ~server_log_file ~server_options ~shared_mem_config ~argv = {
+let make
+  ~log_file ~autostop ~no_restart ~server_log_file ~server_options ~shared_mem_config ~argv
+  = {
   log_file;
+  autostop;
   no_restart;
   server_log_file;
   server_options;
