@@ -144,57 +144,84 @@ Error: test.js:139
 
 Error: test.js:155
 155:      (this.p: 3); // Error, this.#p doesn't refine this.p
-           ^^^^^^ number. Expected number literal `3`
-155:      (this.p: 3); // Error, this.#p doesn't refine this.p
-                   ^ number literal `3`
+           ^^^^^^ Cannot cast `this.p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  150:  p: number;
+           ^^^^^^ [1]: number
+  155:      (this.p: 3); // Error, this.#p doesn't refine this.p
+                     ^ [2]: number literal `3`
 
 Error: test.js:159
 159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
-           ^^^^^^^ number literal `3`. Expected number literal `4`, got `3` instead
-159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
-                    ^ number literal `4`
+           ^^^^^^^ Cannot cast `this.#p` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
+  References:
+  154:    if (this.#p === 3) {
+              ^^^^^^^ [1]: number literal `3`
+  159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
+                      ^ [2]: number literal `4`
 
 Error: test.js:162
 162:      (this.p: 3); // Error, this.#p doesnt refine this.p
-           ^^^^^^ number. Expected number literal `3`, got `4` instead
-162:      (this.p: 3); // Error, this.#p doesnt refine this.p
-                   ^ number literal `3`
+           ^^^^^^ Cannot cast `this.p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  157:      this.p = 4;
+                     ^ [1]: number
+  162:      (this.p: 3); // Error, this.#p doesnt refine this.p
+                     ^ [2]: number literal `3`
 
 Error: test.js:165
 165:    (this.#p: 3); // Error, Havoc happens as normal
-         ^^^^^^^ number. Expected number literal `3`
-165:    (this.#p: 3); // Error, Havoc happens as normal
-                  ^ number literal `3`
+         ^^^^^^^ Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  149:  #p: number;
+            ^^^^^^ [1]: number
+  165:    (this.#p: 3); // Error, Havoc happens as normal
+                    ^ [2]: number literal `3`
 
 Error: test.js:169
 169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
-           ^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`
-169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
-                                ^ number literal `3`
+           ^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  151:  static q: number;
+                  ^^^^^^ [1]: number
+  169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
+                                  ^ [2]: number literal `3`
 
 Error: test.js:173
 173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
-           ^^^^^^^^^^^^^^^^^^^^ number literal `3`. Expected number literal `4`, got `3` instead
-173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
-                                 ^ number literal `4`
+           ^^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.#q` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
+  References:
+  168:    if (RefinementClashes.#q === 3) {
+              ^^^^^^^^^^^^^^^^^^^^ [1]: number literal `3`
+  173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
+                                   ^ [2]: number literal `4`
 
 Error: test.js:176
 176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
-           ^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`, got `4` instead
-176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
-                                ^ number literal `3`
+           ^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  171:      RefinementClashes.q = 4;
+                                  ^ [1]: number
+  176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
+                                  ^ [2]: number literal `3`
 
 Error: test.js:179
 179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
-         ^^^^^^^^^^^^^^^^^^^^ number. Expected number literal `3`
-179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
-                               ^ number literal `3`
+         ^^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.#q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  152:  static #q: number;
+                   ^^^^^^ [1]: number
+  179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
+                                 ^ [2]: number literal `3`
 
 Error: test.js:185
 185:      (this.#p: 3); // Error, other.#p does havoc this.#p
-           ^^^^^^^ number. Expected number literal `3`
-185:      (this.#p: 3); // Error, other.#p does havoc this.#p
-                    ^ number literal `3`
+           ^^^^^^^ Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+  References:
+  149:  #p: number;
+            ^^^^^^ [1]: number
+  185:      (this.#p: 3); // Error, other.#p does havoc this.#p
+                      ^ [2]: number literal `3`
 
 
 Found 28 errors

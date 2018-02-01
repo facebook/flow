@@ -106,9 +106,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:7
             7:           (readOnlyRef[0]: 1);
-                          ^^^^^^^^^^^^^^ number literal \`2\`. Expected number literal \`1\`, got \`2\` instead
-            7:           (readOnlyRef[0]: 1);
-                                          ^ number literal \`1\`
+                          ^^^^^^^^^^^^^^ Cannot cast \`readOnlyRef[0]\` to number literal \`1\` because number literal \`2\` [1] is incompatible with number literal \`1\` [2].
+            References:
+              4:       function foo(tup: [1,2], arr: Array<number>): void {
+                                            ^ [1]: number literal \`2\`
+              7:           (readOnlyRef[0]: 1);
+                                            ^ [2]: number literal \`1\`
         `,
       ),
   ]),
@@ -300,37 +303,30 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       (a: 10);
-                      ^ number literal \`1\`. Expected number literal \`10\`, got \`1\` instead
-            6:       (a: 10);
-                         ^^ number literal \`10\`
+                      ^ Cannot cast \`a\` to number literal \`10\` because number literal \`1\` [1] is incompatible with number literal \`10\` [2].
+            References:
+              4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                   ^ [1]: number literal \`1\`
+              6:       (a: 10);
+                           ^^ [2]: number literal \`10\`
 
           test.js:7
             7:       (b: 20);
-                      ^ number literal \`2\`. Expected number literal \`20\`, got \`2\` instead
-            7:       (b: 20);
-                         ^^ number literal \`20\`
+                      ^ Cannot cast \`b\` to number literal \`20\` because number literal \`2\` [1] is incompatible with number literal \`20\` [2].
+            References:
+              4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                     ^ [1]: number literal \`2\`
+              7:       (b: 20);
+                           ^^ [2]: number literal \`20\`
 
           test.js:8
             8:       (rest: [3,40]);
-                      ^^^^ rest. Has some incompatible tuple element with
-            8:       (rest: [3,40]);
-                            ^^^^^^ tuple type
-            The second tuple element is incompatible:
-                4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                           ^ number literal \`4\`. Expected number literal \`40\`, got \`4\` instead
-                8:       (rest: [3,40]);
-                                   ^^ number literal \`40\`
-
-          test.js:8
-            8:       (rest: [3,40]);
-                      ^^^^ rest. Has some incompatible tuple element with
-            8:       (rest: [3,40]);
-                            ^^^^^^ tuple type
-            The second tuple element is incompatible:
-                8:       (rest: [3,40]);
-                                   ^^ number literal \`40\`. Expected number literal \`4\`, got \`40\` instead
-                4:       const tup: [1,2,3,4] = [1,2,3,4];
-                                           ^ number literal \`4\`
+                      ^^^^ Cannot cast \`rest\` to tuple type because in index 1, number literal \`4\` [1] is incompatible with number literal \`40\` [2].
+            References:
+              4:       const tup: [1,2,3,4] = [1,2,3,4];
+                                         ^ [1]: number literal \`4\`
+              8:       (rest: [3,40]);
+                                 ^^ [2]: number literal \`40\`
         `,
       ),
   ]),
@@ -397,25 +393,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return tup;
-                              ^^^ tuple type. This type is incompatible with the expected return type of
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                                ^^^^^^^^^^^^^^^^ tuple type
-            The first tuple element is incompatible:
-                4:       function foo(tup: [1, 2]): [number, number] {
-                                                     ^^^^^^ number. Expected number literal \`1\`
-                4:       function foo(tup: [1, 2]): [number, number] {
-                                            ^ number literal \`1\`
+                              ^^^ Cannot return \`tup\` because in index 0, number literal \`1\` [1] is incompatible with number [2].
+            References:
+              4:       function foo(tup: [1, 2]): [number, number] {
+                                          ^ [1]: number literal \`1\`
+              4:       function foo(tup: [1, 2]): [number, number] {
+                                                   ^^^^^^ [2]: number
 
           test.js:5
             5:         return tup;
-                              ^^^ tuple type. This type is incompatible with the expected return type of
-            4:       function foo(tup: [1, 2]): [number, number] {
-                                                ^^^^^^^^^^^^^^^^ tuple type
-            The second tuple element is incompatible:
-                4:       function foo(tup: [1, 2]): [number, number] {
-                                                             ^^^^^^ number. Expected number literal \`2\`
-                4:       function foo(tup: [1, 2]): [number, number] {
-                                               ^ number literal \`2\`
+                              ^^^ Cannot return \`tup\` because in index 1, number literal \`2\` [1] is incompatible with number [2].
+            References:
+              4:       function foo(tup: [1, 2]): [number, number] {
+                                             ^ [1]: number literal \`2\`
+              4:       function foo(tup: [1, 2]): [number, number] {
+                                                           ^^^^^^ [2]: number
         `,
       ),
   ]),

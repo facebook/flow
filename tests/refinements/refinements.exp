@@ -314,9 +314,12 @@ Error: mixed.js:8
 
 Error: mixed.js:9
   9:     (!x: false); // error: we don't know the truthiness of x
-          ^^ boolean. Expected boolean literal `false`
-  9:     (!x: false); // error: we don't know the truthiness of x
-              ^^^^^ boolean literal `false`
+          ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+    9:     (!x: false); // error: we don't know the truthiness of x
+            ^^ [1]: boolean
+    9:     (!x: false); // error: we don't know the truthiness of x
+                ^^^^^ [2]: boolean literal `false`
 
 Error: mixed.js:21
  21:     takesNumber(x); // error
@@ -329,9 +332,12 @@ Error: mixed.js:21
 
 Error: mixed.js:22
  22:     (!x: false); // error: we don't know the truthiness of x
-          ^^ boolean. Expected boolean literal `false`
- 22:     (!x: false); // error: we don't know the truthiness of x
-              ^^^^^ boolean literal `false`
+          ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+   22:     (!x: false); // error: we don't know the truthiness of x
+            ^^ [1]: boolean
+   22:     (!x: false); // error: we don't know the truthiness of x
+                ^^^^^ [2]: boolean literal `false`
 
 Error: mixed.js:34
  34:     takesString(x); // error
@@ -344,9 +350,12 @@ Error: mixed.js:34
 
 Error: mixed.js:35
  35:     (x: true); // error: we don't know the truthiness of x
-          ^ boolean. Expected boolean literal `true`
- 35:     (x: true); // error: we don't know the truthiness of x
-             ^^^^ boolean literal `true`
+          ^ Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+  References:
+   32: function bool(x: mixed) {
+                        ^^^^^ [1]: boolean
+   35:     (x: true); // error: we don't know the truthiness of x
+               ^^^^ [2]: boolean literal `true`
 
 Error: mixed.js:47
  47:     takesString(x); // error
@@ -508,21 +517,30 @@ Error: not.js:21
 
 Error: not.js:41
  41:     (!x: false); // error, strings are not always truthy
-          ^^ boolean. Expected boolean literal `false`
- 41:     (!x: false); // error, strings are not always truthy
-              ^^^^^ boolean literal `false`
+          ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+   41:     (!x: false); // error, strings are not always truthy
+            ^^ [1]: boolean
+   41:     (!x: false); // error, strings are not always truthy
+                ^^^^^ [2]: boolean literal `false`
 
 Error: not.js:44
  44:     (!x: false); // error, numbers are not always truthy
-          ^^ boolean. Expected boolean literal `false`
- 44:     (!x: false); // error, numbers are not always truthy
-              ^^^^^ boolean literal `false`
+          ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+   44:     (!x: false); // error, numbers are not always truthy
+            ^^ [1]: boolean
+   44:     (!x: false); // error, numbers are not always truthy
+                ^^^^^ [2]: boolean literal `false`
 
 Error: not.js:47
  47:     (!x: false); // error, bools are not always truthy
-          ^^ boolean. Expected boolean literal `false`
- 47:     (!x: false); // error, bools are not always truthy
-              ^^^^^ boolean literal `false`
+          ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+   47:     (!x: false); // error, bools are not always truthy
+            ^^ [1]: boolean
+   47:     (!x: false); // error, bools are not always truthy
+                ^^^^^ [2]: boolean literal `false`
 
 Error: null.js:4
   4:   if (100 * null) {
@@ -543,15 +561,21 @@ Error: number.js:8
 
 Error: number.js:10
  10:     (x: 0); // error
-          ^ number. Expected number literal `0`
- 10:     (x: 0); // error
-             ^ number literal `0`
+          ^ Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+  References:
+    6:   function(x: number) {
+                     ^^^^^^ [1]: number
+   10:     (x: 0); // error
+               ^ [2]: number literal `0`
 
 Error: number.js:15
  15:       (x: 0); // error
-            ^ number. Expected number literal `0`
- 15:       (x: 0); // error
-               ^ number literal `0`
+            ^ Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+  References:
+   13:   function(x: number) {
+                     ^^^^^^ [1]: number
+   15:       (x: 0); // error
+                 ^ [2]: number literal `0`
 
 Error: number.js:17
  17:     (x: void); // error
@@ -564,21 +588,30 @@ Error: number.js:17
 
 Error: number.js:21
  21:     if (x === 0) {
-                   ^ number literal `0`. This === check always fails because `0` is not the same number as `1`
- 20:   function(x: 1): 0 {
-                   ^ number literal `1`
+                   ^ number literal `0` [1] is incompatible with number literal `1` [2].
+  References:
+   21:     if (x === 0) {
+                     ^ [1]: number literal `0`
+   20:   function(x: 1): 0 {
+                     ^ [2]: number literal `1`
 
 Error: number.js:28
  28:     if (x === 1) {
-                   ^ number literal `1`. This === check always fails because `1` is not the same number as `0`
- 27:   function(x: 0): number {
-                   ^ number literal `0`
+                   ^ number literal `1` [1] is incompatible with number literal `0` [2].
+  References:
+   28:     if (x === 1) {
+                     ^ [1]: number literal `1`
+   27:   function(x: 0): number {
+                     ^ [2]: number literal `0`
 
 Error: number.js:35
  35:     if (x !== 1) {
-                   ^ number literal `1`. This !== check always succeeds because `1` is not the same number as `0`
- 34:   function(x: 0) {
-                   ^ number literal `0`
+                   ^ number literal `1` [1] is incompatible with number literal `0` [2].
+  References:
+   35:     if (x !== 1) {
+                     ^ [1]: number literal `1`
+   34:   function(x: 0) {
+                     ^ [2]: number literal `0`
 
 Error: number.js:51
  51:       (x: void); // error
@@ -618,9 +651,12 @@ Error: number.js:55
 
 Error: number.js:63
  63:     return x.foo; // error
-                ^^^^^ number. Expected number literal `0`
- 59:   function(x: { foo: number }): 0 {
-                                     ^ number literal `0`
+                ^^^^^ Cannot return `x.foo` because number [1] is incompatible with number literal `0` [2].
+  References:
+   59:   function(x: { foo: number }): 0 {
+                            ^^^^^^ [1]: number
+   59:   function(x: { foo: number }): 0 {
+                                       ^ [2]: number literal `0`
 
 Error: number.js:97
  97:       return s; // error
@@ -633,9 +669,12 @@ Error: number.js:97
 
 Error: number.js:116
 116:       return x; // error
-                  ^ number. Expected number literal `0`
-114:   function(x: number): 0 {
-                            ^ number literal `0`
+                  ^ Cannot return `x` because number [1] is incompatible with number literal `0` [2].
+  References:
+  114:   function(x: number): 0 {
+                     ^^^^^^ [1]: number
+  114:   function(x: number): 0 {
+                              ^ [2]: number literal `0`
 
 Error: property.js:71
  71:     return x[y.z];  // error
@@ -774,15 +813,21 @@ Error: string.js:8
 
 Error: string.js:10
  10:     (x: 'foo'); // error
-          ^ string. Expected string literal `foo`
- 10:     (x: 'foo'); // error
-             ^^^^^ string literal `foo`
+          ^ Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+  References:
+    6:   function(x: string) {
+                     ^^^^^^ [1]: string
+   10:     (x: 'foo'); // error
+               ^^^^^ [2]: string literal `foo`
 
 Error: string.js:15
  15:       (x: 'foo'); // error
-            ^ string. Expected string literal `foo`
- 15:       (x: 'foo'); // error
-               ^^^^^ string literal `foo`
+            ^ Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+  References:
+   13:   function(x: string) {
+                     ^^^^^^ [1]: string
+   15:       (x: 'foo'); // error
+                 ^^^^^ [2]: string literal `foo`
 
 Error: string.js:17
  17:     (x: void); // error
@@ -795,21 +840,30 @@ Error: string.js:17
 
 Error: string.js:21
  21:     if (x === 'foo') {
-                   ^^^^^ string literal `foo`. This === check always fails because `foo` is not the same string as `bar`
- 20:   function(x: 'bar'): 'foo' {
-                   ^^^^^ string literal `bar`
+                   ^^^^^ string literal `foo` [1] is incompatible with string literal `bar` [2].
+  References:
+   21:     if (x === 'foo') {
+                     ^^^^^ [1]: string literal `foo`
+   20:   function(x: 'bar'): 'foo' {
+                     ^^^^^ [2]: string literal `bar`
 
 Error: string.js:28
  28:     if (x === 'bar') {
-                   ^^^^^ string literal `bar`. This === check always fails because `bar` is not the same string as `foo`
- 27:   function(x: 'foo'): string {
-                   ^^^^^ string literal `foo`
+                   ^^^^^ string literal `bar` [1] is incompatible with string literal `foo` [2].
+  References:
+   28:     if (x === 'bar') {
+                     ^^^^^ [1]: string literal `bar`
+   27:   function(x: 'foo'): string {
+                     ^^^^^ [2]: string literal `foo`
 
 Error: string.js:35
  35:     if (x !== 'bar') {
-                   ^^^^^ string literal `bar`. This !== check always succeeds because `bar` is not the same string as `foo`
- 34:   function(x: 'foo') {
-                   ^^^^^ string literal `foo`
+                   ^^^^^ string literal `bar` [1] is incompatible with string literal `foo` [2].
+  References:
+   35:     if (x !== 'bar') {
+                     ^^^^^ [1]: string literal `bar`
+   34:   function(x: 'foo') {
+                     ^^^^^ [2]: string literal `foo`
 
 Error: string.js:51
  51:       (x: void); // error
@@ -849,9 +903,12 @@ Error: string.js:55
 
 Error: string.js:63
  63:     return x.foo; // error
-                ^^^^^ string. Expected string literal `foo`
- 59:   function(x: { foo: string }): 'foo' {
-                                     ^^^^^ string literal `foo`
+                ^^^^^ Cannot return `x.foo` because string [1] is incompatible with string literal `foo` [2].
+  References:
+   59:   function(x: { foo: string }): 'foo' {
+                            ^^^^^^ [1]: string
+   59:   function(x: { foo: string }): 'foo' {
+                                       ^^^^^ [2]: string literal `foo`
 
 Error: string.js:98
  98:       return s; // error
@@ -864,9 +921,12 @@ Error: string.js:98
 
 Error: string.js:117
 117:       return x; // error
-                  ^ string. Expected string literal ``
-115:   function(x: string): "" {
-                            ^^ empty string literal
+                  ^ Cannot return `x` because string [1] is incompatible with empty string literal [2].
+  References:
+  115:   function(x: string): "" {
+                     ^^^^^^ [1]: string
+  115:   function(x: string): "" {
+                              ^^ [2]: empty string literal
 
 Error: super_member.js:13
  13:       return super.prop; // error, unknown type passed to string expected
@@ -910,15 +970,21 @@ Error: tagged_union.js:20
 
 Error: tagged_union.js:34
  34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-                                  ^^^^^^^ string literal `Bad`. Expected string literal `Good`, got `Bad` instead
- 34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-                                           ^^^^^^ string literal `Good`
+                                  ^^^^^^^ Cannot cast `x.taste` to string literal `Good` because string literal `Bad` [1] is incompatible with string literal `Good` [2].
+  References:
+   26: type Apple = { kind: 'Fruit', taste: 'Bad' }
+                                            ^^^^^ [1]: string literal `Bad`
+   34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
+                                             ^^^^^^ [2]: string literal `Good`
 
 Error: tagged_union.js:35
  35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-             ^^^^^ string literal `Maybe`. Expected string literal `No`, got `Maybe` instead
- 35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-                    ^^^^ string literal `No`
+             ^^^^^ Cannot cast `x.raw` to string literal `No` because string literal `Maybe` [1] is incompatible with string literal `No` [2].
+  References:
+   29: type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
+                                                        ^^^^^^^ [1]: string literal `Maybe`
+   35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
+                      ^^^^ [2]: string literal `No`
 
 Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
@@ -1006,21 +1072,30 @@ Error: tagged_union.js:128
 
 Error: tagged_union.js:146
 146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
-            ^^^^^ string literal `str`. Expected string literal `not str`, got `str` instead
-146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
-                   ^^^^^^^^^ string literal `not str`
+            ^^^^^ Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal `not str` [2].
+  References:
+  145:     if (x.str === 'str') {
+               ^^^^^ [1]: string literal `str`
+  146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
+                     ^^^^^^^^^ [2]: string literal `not str`
 
 Error: tagged_union.js:149
 149:       (x.num: 456); // error: 123 !~> 456
-            ^^^^^ number literal `123`. Expected number literal `456`, got `123` instead
-149:       (x.num: 456); // error: 123 !~> 456
-                   ^^^ number literal `456`
+            ^^^^^ Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal `456` [2].
+  References:
+  148:     if (x.num === 123) {
+               ^^^^^ [1]: number literal `123`
+  149:       (x.num: 456); // error: 123 !~> 456
+                     ^^^ [2]: number literal `456`
 
 Error: tagged_union.js:152
 152:       (x.bool: false); // error: true !~> false
-            ^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
-152:       (x.bool: false); // error: true !~> false
-                    ^^^^^ boolean literal `false`
+            ^^^^^^ Cannot cast `x.bool` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+  References:
+  151:     if (x.bool === true) {
+               ^^^^^^ [1]: boolean literal `true`
+  152:       (x.bool: false); // error: true !~> false
+                      ^^^^^ [2]: boolean literal `false`
 
 Error: tagged_union.js:156
 156:       (x.badStr: empty); // error: 'bad' !~> empty

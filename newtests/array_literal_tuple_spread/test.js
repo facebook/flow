@@ -48,39 +48,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Has some incompatible tuple element with
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
-            The second tuple element is incompatible:
-                6:         foo = [...foo, x];
-                                          ^ number. Expected number literal \`1\`
-                8:       (foo: [0, 1, 2]);
-                                   ^ number literal \`1\`
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Has some incompatible tuple element with
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
-            The third tuple element is incompatible:
-                6:         foo = [...foo, x];
-                                          ^ number. Expected number literal \`2\`
-                8:       (foo: [0, 1, 2]);
-                                      ^ number literal \`2\`
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Has some incompatible tuple element with
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
-            The third tuple element is incompatible:
-                6:         foo = [...foo, x];
-                                          ^ number. Expected number literal \`2\`, got \`1\` instead
-                8:       (foo: [0, 1, 2]);
-                                      ^ number literal \`2\`
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
                       ^^^ array literal. Only tuples and array literals with known elements can flow to
             8:       (foo: [0, 1, 2]);
                            ^^^^^^^^^ tuple type
@@ -96,6 +63,33 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ array literal. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
             8:       (foo: [0, 1, 2]);
                            ^^^^^^^^^ tuple type
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because in index 1, number [1] is incompatible with number literal \`1\` [2].
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                              ^^^ [1]: number
+              8:       (foo: [0, 1, 2]);
+                                 ^ [2]: number literal \`1\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because in index 2, number [1] is incompatible with number literal \`2\` [2].
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                    ^ [1]: number
+              8:       (foo: [0, 1, 2]);
+                                    ^ [2]: number literal \`2\`
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because in index 2, number [1] is incompatible with number literal \`2\` [2].
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                              ^^^ [1]: number
+              8:       (foo: [0, 1, 2]);
+                                    ^ [2]: number literal \`2\`
         `,
       ),
   ]),
@@ -129,9 +123,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:15
            15:       (ret[5]: 2);
-                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
+                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
+            References:
+              6:         return foo([...arr, 1]);
+                                             ^ [1]: number
+             15:       (ret[5]: 2);
+                                ^ [2]: number literal \`2\`
+
+          test.js:15
            15:       (ret[5]: 2);
-                              ^ number literal \`2\`
+                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
+            References:
+              8:       const ret = foo([1]);
+                                        ^ [1]: number
+             15:       (ret[5]: 2);
+                                ^ [2]: number literal \`2\`
         `,
       )
       .because('The element type should be `1`'),
@@ -175,9 +181,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:15
            15:       (ret[5]: 2);
-                      ^^^^^^ number. Expected number literal \`2\`, got \`1\` instead
-           15:       (ret[5]: 2);
-                              ^ number literal \`2\`
+                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
+            References:
+              8:       const ret = foo([1]);
+                                        ^ [1]: number
+             15:       (ret[5]: 2);
+                                ^ [2]: number literal \`2\`
         `,
       )
       .because('The element type should be `1`'),
@@ -191,36 +200,30 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
-            6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                            ^^^^^^^^^^^^^^^^ tuple type
-            The second tuple element is incompatible:
-                4:       var a = [2];
-                                  ^ number. Expected number literal \`20\`, got \`2\` instead
-                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                   ^^ number literal \`20\`
+                                               ^^^^^^^^^^^^^^^^^^^^^ Cannot assign array literal to \`x\` because in index 1, number [1] is incompatible with number literal \`20\` [2].
+            References:
+              4:       var a = [2];
+                                ^ [1]: number
+              6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                 ^^ [2]: number literal \`20\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
-            6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                            ^^^^^^^^^^^^^^^^ tuple type
-            The sixth tuple element is incompatible:
-                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                                      ^ number. Expected number literal \`60\`, got \`6\` instead
-                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                             ^^ number literal \`60\`
+                                                         ^ Cannot assign array literal to \`x\` because in index 2, number [1] is incompatible with number literal \`30\` [2].
+            References:
+              6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                           ^ [1]: number
+              6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                    ^^ [2]: number literal \`30\`
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                               ^^^^^^^^^^^^^^^^^^^^^ array literal. Has some incompatible tuple element with
-            6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                            ^^^^^^^^^^^^^^^^ tuple type
-            The third tuple element is incompatible:
-                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                             ^ number. Expected number literal \`30\`, got \`3\` instead
-                6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                      ^^ number literal \`30\`
+                                                                  ^ Cannot assign array literal to \`x\` because in index 5, number [1] is incompatible with number literal \`60\` [2].
+            References:
+              6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                                                    ^ [1]: number
+              6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
+                                           ^^ [2]: number literal \`60\`
         `,
       )
   ]),
@@ -245,9 +248,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: (ret1[0]: 2);
-                ^^^^^^^ number. Expected number literal \`2\`, got \`3\` instead
-           11: (ret1[0]: 2);
-                         ^ number literal \`2\`
+                ^^^^^^^ Cannot cast \`ret1[0]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
+            References:
+              8:       const ret2 = foo([3]);
+                                         ^ [1]: number
+             11: (ret1[0]: 2);
+                           ^ [2]: number literal \`2\`
         `,
       )
       .because('Flow infers the return type to [2,1] | [3,1]'),
@@ -256,9 +262,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13: (ret2[0]: 3);
-                ^^^^^^^ number. Expected number literal \`3\`, got \`2\` instead
-           13: (ret2[0]: 3);
-                         ^ number literal \`3\`
+                ^^^^^^^ Cannot cast \`ret2[0]\` to number literal \`3\` because number [1] is incompatible with number literal \`3\` [2].
+            References:
+              7:       const ret1 = foo([2]);
+                                         ^ [1]: number
+             13: (ret2[0]: 3);
+                           ^ [2]: number literal \`3\`
         `,
       )
       .because('Flow infers the return type to [2,1] | [3,1]'),

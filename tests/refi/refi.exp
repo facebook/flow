@@ -171,9 +171,12 @@ Error: heap.js:172
 
 Error: heap.js:188
 188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
-          ^ string. Expected string literal `b`
-188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
-             ^^^ string literal `b`
+          ^ Cannot cast `x` to string literal `b` because string [1] is incompatible with string literal `b` [2].
+  References:
+  186:   function(x: string) {
+                     ^^^^^^ [1]: string
+  188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+               ^^^ [2]: string literal `b`
 
 Error: heap.js:192
 192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty

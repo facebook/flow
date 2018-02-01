@@ -243,9 +243,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <baz />;
-                      ^^^ baz. Expected string literal \`bar\`, got \`baz\` instead
-            5:       function Foo(elem: "bar") {}
-                                        ^^^^^ string literal \`bar\`
+                      ^^^ \`baz\` [1] is incompatible with string literal \`bar\` [2].
+            References:
+              7:       <baz />;
+                        ^^^ [1]: \`baz\`
+              5:       function Foo(elem: "bar") {}
+                                          ^^^^^ [2]: string literal \`bar\`
         `,
       ),
   ]).flowConfig("_flowconfig_with_flowlib"),
@@ -347,15 +350,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:16
            16:         hi
-                       ^^ JSX text. Expected string literal \`hello\`, got \`hi\` instead
-            8:         child1: 'hello',
-                               ^^^^^^^ string literal \`hello\`
+                       ^^ JSX text [1] is incompatible with string literal \`hello\` [2].
+            References:
+             16:         hi
+                         ^^ [1]: JSX text
+              8:         child1: 'hello',
+                                 ^^^^^^^ [2]: string literal \`hello\`
 
           test.js:18
            18:         bye
-                       ^ JSX text. Expected string literal \`bye\`, got \`bye there\` instead
-           10:         child3: 'bye',
-                               ^^^^^ string literal \`bye\`
+                       ^ JSX text [1] is incompatible with string literal \`bye\` [2].
+            References:
+             18:         bye
+                         ^ [1]: JSX text
+             10:         child3: 'bye',
+                                 ^^^^^ [2]: string literal \`bye\`
         `,
       ),
   ]),
@@ -380,9 +389,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:16
            16:       <Bar> {true}
-                          ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
-            8:         child1: "should be single space",
-                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be single space\`
+                          ^ JSX text [1] is incompatible with string literal \`should be single space\` [2].
+            References:
+             16:       <Bar> {true}
+                            ^ [1]: JSX text
+              8:         child1: "should be single space",
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be single space\`
 
           test.js:16
            16:       <Bar> {true}
@@ -395,15 +407,21 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:17
            17:       {''} </Bar>;
-                      ^^ string. Expected string literal \`should be empty string\`, got \`\` instead
-           10:         child3: "should be empty string",
-                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be empty string\`
+                      ^^ string [1] is incompatible with string literal \`should be empty string\` [2].
+            References:
+             17:       {''} </Bar>;
+                        ^^ [1]: string
+             10:         child3: "should be empty string",
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be empty string\`
 
           test.js:17
            17:       {''} </Bar>;
-                         ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
-           11:         child4: "should be single space",
-                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be single space\`
+                         ^ JSX text [1] is incompatible with string literal \`should be single space\` [2].
+            References:
+             17:       {''} </Bar>;
+                           ^ [1]: JSX text
+             11:         child4: "should be single space",
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be single space\`
         `,
       )
       .because('JSXText children with only whitespace or newlines are ignored'),
@@ -421,9 +439,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:       (<Bar>    First
-                           ^ JSX text. Expected string literal \`First Middle Last\`, got \`    First Middle Last     \` instead
-            8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
-                                                           ^^^^^^^^^^^^^^^^^^^ string literal \`First Middle Last\`
+                           ^ JSX text [1] is incompatible with string literal \`First Middle Last\` [2].
+            References:
+              9:       (<Bar>    First
+                             ^ [1]: JSX text
+              8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                                             ^^^^^^^^^^^^^^^^^^^ [2]: string literal \`First Middle Last\`
         `,
       )
       .because(
@@ -450,9 +471,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:24
            24: (<Bar>First    Middle    Last</Bar>)
-                     ^^^^^^^^^^^^^^^^^^^^^^^ JSX text. Expected string literal \`First Middle Last\`, got \`First    Middle    Last\` instead
-            8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
-                                                           ^^^^^^^^^^^^^^^^^^^ string literal \`First Middle Last\`
+                     ^^^^^^^^^^^^^^^^^^^^^^^ JSX text [1] is incompatible with string literal \`First Middle Last\` [2].
+            References:
+             24: (<Bar>First    Middle    Last</Bar>)
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: JSX text
+              8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                                             ^^^^^^^^^^^^^^^^^^^ [2]: string literal \`First Middle Last\`
         `,
       )
       .because("Multiple spaces midline stay as multiple spaces"),

@@ -236,45 +236,66 @@ Error: identity.js:70
 
 Error: issue-2674.js:7
   7: (a.FOO: 'BAR'); // error
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
-  7: (a.FOO: 'BAR'); // error
-             ^^^^^ string literal `BAR`
+      ^^^^^ Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
+  References:
+    3: type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `FOO`
+    7: (a.FOO: 'BAR'); // error
+               ^^^^^ [2]: string literal `BAR`
 
 Error: issue-2674.js:8
   8: a.FOO = 'BAR'; // error
-             ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
-  8: a.FOO = 'BAR'; // error
-     ^^^^^ string literal `FOO`
+             ^^^^^ Cannot assign `'BAR'` to `a.FOO` because string [1] is incompatible with string literal `FOO` [2].
+  References:
+    8: a.FOO = 'BAR'; // error
+               ^^^^^ [1]: string
+    3: type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal `FOO`
 
 Error: issue-2674.js:14
  14: (b.FOO : 'BAR'); // error
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 14: (b.FOO : 'BAR'); // error
-              ^^^^^ string literal `BAR`
+      ^^^^^ Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
+  References:
+   10: type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
+                                                    ^^^^^ [1]: string literal `FOO`
+   14: (b.FOO : 'BAR'); // error
+                ^^^^^ [2]: string literal `BAR`
 
 Error: issue-2674.js:15
  15: b.FOO = 'BAR'; // error
-             ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 15: b.FOO = 'BAR'; // error
-     ^^^^^ string literal `FOO`
+             ^^^^^ Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2].
+  References:
+   15: b.FOO = 'BAR'; // error
+               ^^^^^ [1]: string
+   10: type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
+                                                    ^^^^^ [2]: string literal `FOO`
 
 Error: issue-2674.js:21
  21: (c[0]: 'BAR'); // error
-      ^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 21: (c[0]: 'BAR'); // error
-            ^^^^^ string literal `BAR`
+      ^^^^ Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
+  References:
+   17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
+                                                       ^^^^^ [1]: string literal `FOO`
+   21: (c[0]: 'BAR'); // error
+              ^^^^^ [2]: string literal `BAR`
 
 Error: issue-2674.js:22
  22: c[0] = 'BAR'; // error
-            ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 22: c[0] = 'BAR'; // error
-     ^^^^ string literal `FOO`
+            ^^^^^ Cannot assign `'BAR'` to `c[0]` because string [1] is incompatible with string literal `FOO` [2].
+  References:
+   22: c[0] = 'BAR'; // error
+              ^^^^^ [1]: string
+   17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
+                                                       ^^^^^ [2]: string literal `FOO`
 
 Error: objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-              ^^^^^ string literal `BAR`
+      ^^^^^ Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
+  References:
+    2: declare function keyMirror<O>(o: O): $ObjMapi<O, <K>(k:K) => K>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `FOO`
+   10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+                ^^^^^ [2]: string literal `BAR`
 
 Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string

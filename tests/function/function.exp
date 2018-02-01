@@ -212,36 +212,30 @@ Error: call.js:40
 
 Error: call.js:47
  47:     f({x: "foo"}); // error, "foo" !~> "bar"
-           ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 46:     function f(y: { x: "bar" }): void {}
-                       ^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     47:     f({x: "foo"}); // error, "foo" !~> "bar"
-                   ^^^^^ string. Expected string literal `bar`, got `foo` instead
-     46:     function f(y: { x: "bar" }): void {}
-                                ^^^^^ string literal `bar`
+               ^^^^^ Cannot call `f` with object literal bound to `y` because in property `x`, string [1] is incompatible with string literal `bar` [2].
+  References:
+   47:     f({x: "foo"}); // error, "foo" !~> "bar"
+                 ^^^^^ [1]: string
+   46:     function f(y: { x: "bar" }): void {}
+                              ^^^^^ [2]: string literal `bar`
 
 Error: call.js:53
  53:     f({x: 234}); // error, 234 !~> 123
-           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 52:     function f(y: { x: 123 }): void {}
-                       ^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     53:     f({x: 234}); // error, 234 !~> 123
-                   ^^^ number. Expected number literal `123`, got `234` instead
-     52:     function f(y: { x: 123 }): void {}
-                                ^^^ number literal `123`
+               ^^^ Cannot call `f` with object literal bound to `y` because in property `x`, number [1] is incompatible with number literal `123` [2].
+  References:
+   53:     f({x: 234}); // error, 234 !~> 123
+                 ^^^ [1]: number
+   52:     function f(y: { x: 123 }): void {}
+                              ^^^ [2]: number literal `123`
 
 Error: call.js:59
  59:     f({x: true}); // error, true !~> false
-           ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
- 58:     function f(y: { x: false }): void {}
-                       ^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     59:     f({x: true}); // error, true !~> false
-                   ^^^^ boolean. Expected boolean literal `false`, got `true` instead
-     58:     function f(y: { x: false }): void {}
-                                ^^^^^ boolean literal `false`
+               ^^^^ Cannot call `f` with object literal bound to `y` because in property `x`, boolean [1] is incompatible with boolean literal `false` [2].
+  References:
+   59:     f({x: true}); // error, true !~> false
+                 ^^^^ [1]: boolean
+   58:     function f(y: { x: false }): void {}
+                              ^^^^^ [2]: boolean literal `false`
 
 Error: function.js:21
  21:   <MyThing />;

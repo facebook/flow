@@ -34,9 +34,12 @@ Error: test.js:20
 
 Error: test.js:25
  25:   (x: "foo");
-        ^ string. Expected string literal `foo`
- 25:   (x: "foo");
-           ^^^^^ string literal `foo`
+        ^ Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+  References:
+   24: function h(x: $CharSet<"ab">) {
+                     ^^^^^^^^^^^^^^ [1]: string
+   25:   (x: "foo");
+             ^^^^^ [2]: string literal `foo`
 
 
 Found 5 errors

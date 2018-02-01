@@ -71,47 +71,39 @@ Error: object_keys.js:18
 
 Error: object_keys.js:25
  25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-                              ^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-          ^^^^^^^^^^^^^^^^^^^^^^ string literal `prop`. Expected string literal `error`, got `prop` instead
-     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-                                        ^^^^^^^ string literal `error`
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `prop` [1] is incompatible with string literal `error` [2].
+  References:
+   25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `prop`
+   25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+                                      ^^^^^^^ [2]: string literal `error`
 
 Error: object_keys.js:32
  32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-                              ^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-          ^^^^^^^^^^^^^^^^^^^^^^ string literal `bar_prop`. Expected string literal `error`, got `bar_prop` instead
-     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-                                        ^^^^^^^ string literal `error`
+      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `bar_prop` [1] is incompatible with string literal `error` [2].
+  References:
+   32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `bar_prop`
+   32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+                                      ^^^^^^^ [2]: string literal `error`
 
 Error: object_keys.js:38
  38:     (Object.keys(dict): Array<'bye'>); // error
-          ^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 38:     (Object.keys(dict): Array<'bye'>); // error
-                             ^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     36:   function(dict: {['hi']: mixed}) {
-                            ^^^^ string literal `hi`. Expected string literal `bye`, got `hi` instead
-     38:     (Object.keys(dict): Array<'bye'>); // error
-                                       ^^^^^ string literal `bye`
+          ^^^^^^^^^^^^^^^^^ Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `hi` [1] is incompatible with string literal `bye` [2].
+  References:
+   36:   function(dict: {['hi']: mixed}) {
+                          ^^^^ [1]: string literal `hi`
+   38:     (Object.keys(dict): Array<'bye'>); // error
+                                     ^^^^^ [2]: string literal `bye`
 
 Error: object_keys.js:44
  44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
-          ^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
-                             ^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
-              ^^^^^^^^^^^^^^^^^ string. Expected string literal `123`
-     44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
-                                       ^^^^^ string literal `123`
+          ^^^^^^^^^^^^^^^^^ Cannot cast `Object.keys(...)` to array type because in type argument `T`, string [1] is incompatible with string literal `123` [2].
+  References:
+   44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
+            ^^^^^^^^^^^^^^^^^ [1]: string
+   44:     (Object.keys(dict): Array<'123'>); // error: not supported yet
+                                     ^^^^^ [2]: string literal `123`
 
 Error: object_missing.js:5
   5:     Object.doesNotExist();

@@ -1,8 +1,11 @@
 Error: apply.js:12
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
-                          ^^^ number. Expected number literal `123`, got `456` instead
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+                          ^^^ Cannot call `apply` with array literal bound to `args` because in the second argument, number [1] is incompatible with number literal `123` [2].
+  References:
+   12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
+                            ^^^ [1]: number
+   10: function noRest(x: 'hi', y: 123): true { return true; }
+                                   ^^^ [2]: number literal `123`
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
@@ -15,16 +18,12 @@ Error: apply.js:13
 
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-                     ^^^^^^^^^^^ array literal
-  4:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. This type is incompatible with the expected param type of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-     19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-                                ^^^ number. Expected number literal `123`, got `456` instead
-     17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                           ^^^ number literal `123`
+                     ^^^^^^^^^^^ Cannot call `apply` with array literal bound to `args` because in the rest argument and then index 1, number [1] is incompatible with number literal `123` [2].
+  References:
+   19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
+                              ^^^ [1]: number
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                         ^^^ [2]: number literal `123`
 
 Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
@@ -44,9 +43,12 @@ Error: apply.js:21
 
 Error: apply.js:31
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
-                              ^^^ number. Expected number literal `123`, got `456` instead
- 10: function noRest(x: 'hi', y: 123): true { return true; }
-                                 ^^^ number literal `123`
+                              ^^^ Cannot call `applyType` with array literal bound to `args` because in the second argument, number [1] is incompatible with number literal `123` [2].
+  References:
+   31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
+                                ^^^ [1]: number
+   10: function noRest(x: 'hi', y: 123): true { return true; }
+                                   ^^^ [2]: number literal `123`
 
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
@@ -59,16 +61,12 @@ Error: apply.js:32
 
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-                         ^^^^^^^^^^^ array literal
- 25:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. This type is incompatible with the expected param type of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
-  The second tuple element is incompatible:
-     38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-                                    ^^^ number. Expected number literal `123`, got `456` instead
-     17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                           ^^^ number literal `123`
+                         ^^^^^^^^^^^ Cannot call `applyType` with array literal bound to `args` because in the rest argument and then index 1, number [1] is incompatible with number literal `123` [2].
+  References:
+   38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
+                                  ^^^ [1]: number
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                         ^^^ [2]: number literal `123`
 
 Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args

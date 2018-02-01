@@ -1307,6 +1307,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error "Mutation not allowed on" (reason_op, reason)
 
   | EExpectedStringLit (reasons, expected, actual, use_op) ->
+    let (reason_lower, reason_upper) = reasons in
+    (match (mk_incompatible_friendly_error reason_lower reason_upper use_op) with
+    | Some error -> error
+    | None ->
       let msg = match actual with
       | Literal (None, actual) ->
           spf "Expected string literal `%s`, got `%s` instead"
@@ -1323,8 +1327,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       let extra, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EExpectedNumberLit (reasons, (expected, _), actual, use_op) ->
+    let (reason_lower, reason_upper) = reasons in
+    (match (mk_incompatible_friendly_error reason_lower reason_upper use_op) with
+    | Some error -> error
+    | None ->
       let msg = match actual with
       | Literal (None, (actual, _)) ->
           spf "Expected number literal `%.16g`, got `%.16g` instead"
@@ -1341,8 +1350,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       let extra, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EExpectedBooleanLit (reasons, expected, actual, use_op) ->
+    let (reason_lower, reason_upper) = reasons in
+    (match (mk_incompatible_friendly_error reason_lower reason_upper use_op) with
+    | Some error -> error
+    | None ->
       let msg = match actual with
       | Some actual ->
           spf "Expected boolean literal `%b`, got `%b` instead"
@@ -1352,6 +1366,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       let extra, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EPropNotFound (reasons, use_op) ->
       let use_op = match use_op with Op (SetProperty _) -> unknown_use | _ -> use_op in

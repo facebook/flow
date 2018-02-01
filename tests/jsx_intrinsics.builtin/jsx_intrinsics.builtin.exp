@@ -67,14 +67,12 @@ Error: main.js:14
 
 Error: main.js:21
  21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.Element. This type is incompatible with
- 21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-            ^^^^^^^^^^^^^^^ React.Element
-  Property `type` is incompatible:
-     21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                                   ^^^ div. Expected string literal `span`, got `div` instead
-     21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                        ^^^^^^ string literal `span`
+                               ^^^ Cannot assign `<div />` to `e` because in property `type`, `div` [1] is incompatible with string literal `span` [2].
+  References:
+   21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                                 ^^^ [1]: `div`
+   21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                      ^^^^^^ [2]: string literal `span`
 
 
 Found 5 errors

@@ -1536,19 +1536,12 @@ Error: proptype_oneOf.js:17
 
 Error: proptype_oneOf.js:20
  20: (<Example bool={false} />); // error: false ~> true
-      ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     str: React.PropTypes.oneOf(["foo", "bar"]),
-  7:     num: React.PropTypes.oneOf([0, 1, 2]),
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `bool` is incompatible:
-     20: (<Example bool={false} />); // error: false ~> true
-                         ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
-      8:     bool: React.PropTypes.oneOf([true]),
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+                     ^^^^^ Cannot create `Example` element because in property `bool`, boolean [1] is incompatible with boolean literal `true` [2].
+  References:
+   20: (<Example bool={false} />); // error: false ~> true
+                       ^^^^^ [1]: boolean
+    8:     bool: React.PropTypes.oneOf([true]),
+                                        ^^^^ [2]: boolean literal `true`
 
 Error: proptype_oneOf.js:24
  24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
