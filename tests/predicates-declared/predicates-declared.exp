@@ -25,9 +25,12 @@ Error: sanity-invalid-calls.js:14
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-            ^^^^ function type. This type cannot be added to
- 14:   if ((pred + 1)("s")) {
-                   ^ number
+            ^^^^ Cannot add `pred` and `1` because function type [1] is incompatible with number [2].
+  References:
+    6: declare function pred<T>(x: T): boolean;
+                            ^^^^^^^^^^^^^^^^^^ [1]: function type
+   14:   if ((pred + 1)("s")) {
+                     ^ [2]: number
 
 Error: sanity-is-string-bug.js:13
  13:     return x.join();    // error: both string and Array<string> can flow to x

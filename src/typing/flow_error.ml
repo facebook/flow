@@ -78,7 +78,6 @@ type error_message =
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of reason * reason * int
-  | EAddition of (reason * reason)
   | EAdditionMixed of reason
   | ECoercion of (reason * reason)
   | EComparison of (reason * reason)
@@ -313,7 +312,6 @@ let util_use_op_of_msg nope util = function
 | EStrictLookupFailed (_, _, _, None)
 | EPrivateLookupFailed (_, _)
 | EFunCallParam (_, _, _)
-| EAddition (_, _)
 | EAdditionMixed (_)
 | ECoercion (_, _)
 | EComparison (_, _)
@@ -494,7 +492,6 @@ let score_of_msg msg =
     let reasons = match msg with
     | EIncompatibleDefs {reason_lower=rl; reason_upper=ru; extras=[]}
     | EIncompatibleWithUseOp (rl, ru, _)
-    | EAddition (rl, ru)
     | ECoercion (rl, ru)
     | EFunCallParam (rl, ru, _)
     | EIncompatibleWithExact ((rl, ru), _)
@@ -938,6 +935,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Op UnknownUse
       | Op (Internal _)
         -> Some (`UnknownRoot)
+
+      | Op (Addition {op; left; right}) ->
+        Some (`Root (op, None,
+          [text "Cannot add "; desc left; text " and "; desc right]))
 
       | Op (AssignVar {var; init}) ->
         Some (`Root (init, None, match var with
@@ -1427,9 +1428,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           "This type is incompatible with the expected param type of"
       in
       typecheck_error msg (r1, r2)
-
-  | EAddition reasons ->
-      typecheck_error "This type cannot be added to" reasons
 
   | EAdditionMixed reason ->
       mk_error ~trace_infos [mk_info reason [

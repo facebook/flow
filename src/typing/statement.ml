@@ -3444,7 +3444,12 @@ and binary cx loc expr = Ast.Expression.Binary.(
       ) in
       let reason = mk_reason desc loc in
       Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (t1, AdderT (reason, false, t2, t));
+        let use_op = Op (Addition {
+          op = reason;
+          left = mk_expression_reason left;
+          right = mk_expression_reason right;
+        }) in
+        Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t));
       )
 )
 
@@ -3624,8 +3629,26 @@ and assignment cx loc = Ast.Expression.(function
       let rhs_t = expression cx rhs in
       let result_t = Tvar.mk cx reason in
       (* lhs = lhs + rhs *)
-      Flow.flow cx (lhs_t, AdderT (reason, false, rhs_t, result_t));
-      Flow.flow cx (rhs_t, AdderT (reason, false, lhs_t, result_t));
+      let () =
+        let use_op = Op (Addition {
+          op = reason;
+          left = (match lhs with
+          | (_, Ast.Pattern.Expression lhs) -> mk_expression_reason lhs
+          | _ -> reason_of_t lhs_t);
+          right = mk_expression_reason rhs;
+        }) in
+        Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
+      in
+      let () =
+        let use_op = Op (Addition {
+          op = reason;
+          left = mk_expression_reason rhs;
+          right = (match lhs with
+          | (_, Ast.Pattern.Expression lhs) -> mk_expression_reason lhs
+          | _ -> reason_of_t lhs_t);
+        }) in
+        Flow.flow cx (rhs_t, AdderT (use_op, reason, false, lhs_t, result_t))
+      in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.

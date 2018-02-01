@@ -282,7 +282,7 @@ module rec TypeTerm : sig
     | WidenEnv
 
   and root_use_op =
-    | Addition
+    | Addition of { op: reason; left: reason; right: reason }
     | AssignVar of { var: reason option; init: reason }
     | Cast of { lower: reason; upper: reason }
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
@@ -388,7 +388,7 @@ module rec TypeTerm : sig
     | ToStringT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of reason * bool * t * t
+    | AdderT of use_op * reason * bool * t * t
     (* overloaded relational operator, could be subsumed by general
        overloading *)
     | ComparatorT of reason * bool * t
@@ -1824,7 +1824,7 @@ end = struct
 
   and reason_of_use_t = function
     | UseT (_, t) -> reason_of_t t
-    | AdderT (reason,_,_,_) -> reason
+    | AdderT (_,reason,_,_,_) -> reason
     | AndT (reason, _, _) -> reason
     | ArrRestT (_, reason, _, _) -> reason
     | AssertArithmeticOperandT reason -> reason
@@ -1968,7 +1968,7 @@ end = struct
 
   and mod_reason_of_use_t f = function
     | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
-    | AdderT (reason, flip, rt, lt) -> AdderT (f reason, flip, rt, lt)
+    | AdderT (use_op, reason, flip, rt, lt) -> AdderT (use_op, f reason, flip, rt, lt)
     | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
     | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
     | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
@@ -2103,6 +2103,7 @@ end = struct
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
+  | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
   | TypeAppVarianceCheckT (op, r1, r2, ts) ->
@@ -2121,7 +2122,6 @@ end = struct
   | SetProtoT (_, _)
   | MixinT (_, _)
   | ToStringT (_, _)
-  | AdderT (_, _, _, _)
   | ComparatorT (_, _, _)
   | UnaryMinusT (_, _)
   | AssertArithmeticOperandT (_)
@@ -2473,6 +2473,7 @@ let rec replace_unknown_root_use_op new_parent_use_op = function
   else Frame (frame, parent_use_op')
 
 let loc_of_root_use_op = function
+| Addition {op; _}
 | AssignVar {init=op; _}
 | Cast {lower=op; _}
 | ClassExtendsCheck {def=op; _}
@@ -2486,7 +2487,6 @@ let loc_of_root_use_op = function
 | ReactCreateElementCall {op; _}
 | SetProperty {value=op; _}
   -> loc_of_reason op
-| Addition
 | Coercion
 | ReactGetIntrinsic _
 | Internal _
@@ -2596,7 +2596,7 @@ let string_of_internal_use_op = function
   | WidenEnv -> "WidenEnv"
 
 let string_of_root_use_op = function
-| Addition -> "Addition"
+| Addition _ -> "Addition"
 | AssignVar _ -> "AssignVar"
 | Cast _ -> "Cast"
 | ClassExtendsCheck _ -> "ClassExtendsCheck"

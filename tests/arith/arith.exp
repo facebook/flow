@@ -12,45 +12,66 @@ Error: Arith.js:15
 
 Error: Arith.js:16
  16:   str(z+y); // error
-           ^ object literal. This type cannot be added to
- 16:   str(z+y); // error
-             ^ string
+           ^ Cannot add `z` and `y` because object literal [1] is incompatible with string [2].
+  References:
+   11:   var z = {};
+                 ^^ [1]: object literal
+   10:   var y = "...";
+                 ^^^^^ [2]: string
 
 Error: Arith.js:56
  56: str("foo" + true); // error
-                 ^^^^ boolean. This type cannot be added to
- 56: str("foo" + true); // error
-         ^^^^^ string
+                 ^^^^ Cannot add `"foo"` and `true` because boolean [1] is incompatible with string [2].
+  References:
+   56: str("foo" + true); // error
+                   ^^^^ [1]: boolean
+   56: str("foo" + true); // error
+           ^^^^^ [2]: string
 
 Error: Arith.js:57
  57: str(true + "foo"); // error
-         ^^^^ boolean. This type cannot be added to
- 57: str(true + "foo"); // error
-                ^^^^^ string
+         ^^^^ Cannot add `true` and `"foo"` because boolean [1] is incompatible with string [2].
+  References:
+   57: str(true + "foo"); // error
+           ^^^^ [1]: boolean
+   57: str(true + "foo"); // error
+                  ^^^^^ [2]: string
 
 Error: Arith.js:58
  58: str("foo" + null); // error
-                 ^^^^ null. This type cannot be added to
- 58: str("foo" + null); // error
-         ^^^^^ string
+                 ^^^^ Cannot add `"foo"` and `null` because null [1] is incompatible with string [2].
+  References:
+   58: str("foo" + null); // error
+                   ^^^^ [1]: null
+   58: str("foo" + null); // error
+           ^^^^^ [2]: string
 
 Error: Arith.js:59
  59: str(null + "foo"); // error
-         ^^^^ null. This type cannot be added to
- 59: str(null + "foo"); // error
-                ^^^^^ string
+         ^^^^ Cannot add `null` and `"foo"` because null [1] is incompatible with string [2].
+  References:
+   59: str(null + "foo"); // error
+           ^^^^ [1]: null
+   59: str(null + "foo"); // error
+                  ^^^^^ [2]: string
 
 Error: Arith.js:60
  60: str("foo" + undefined); // error
-                 ^^^^^^^^^ undefined. This type cannot be added to
- 60: str("foo" + undefined); // error
-         ^^^^^ string
+                 ^^^^^^^^^ Cannot add `"foo"` and `undefined` because undefined [1] is incompatible with string [2].
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+   60: str("foo" + undefined); // error
+           ^^^^^ [2]: string
 
 Error: Arith.js:61
  61: str(undefined + "foo"); // error
-         ^^^^^^^^^ undefined. This type cannot be added to
- 61: str(undefined + "foo"); // error
-                     ^^^^^ string
+         ^^^^^^^^^ Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with string [2].
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+   61: str(undefined + "foo"); // error
+                       ^^^^^ [2]: string
 
 Error: Arith.js:65
  65:     (x + y); // error
@@ -82,27 +103,39 @@ Error: Arith.js:71
 
 Error: Arith.js:78
  78:     ((1 + {}): number); // error: object !~> number
-               ^^ object literal. This type cannot be added to
- 78:     ((1 + {}): number); // error: object !~> number
-           ^ number
+               ^^ Cannot add `1` and object literal because object literal [1] is incompatible with number [2].
+  References:
+   78:     ((1 + {}): number); // error: object !~> number
+                 ^^ [1]: object literal
+   78:     ((1 + {}): number); // error: object !~> number
+             ^ [2]: number
 
 Error: Arith.js:79
  79:     (({} + 1): number); // error: object !~> number
-           ^^ object literal. This type cannot be added to
- 79:     (({} + 1): number); // error: object !~> number
-                ^ number
+           ^^ Cannot add object literal and `1` because object literal [1] is incompatible with number [2].
+  References:
+   79:     (({} + 1): number); // error: object !~> number
+             ^^ [1]: object literal
+   79:     (({} + 1): number); // error: object !~> number
+                  ^ [2]: number
 
 Error: Arith.js:80
  80:     (("1" + {}): string); // error: object !~> string
-                 ^^ object literal. This type cannot be added to
- 80:     (("1" + {}): string); // error: object !~> string
-           ^^^ string
+                 ^^ Cannot add `"1"` and object literal because object literal [1] is incompatible with string [2].
+  References:
+   80:     (("1" + {}): string); // error: object !~> string
+                   ^^ [1]: object literal
+   80:     (("1" + {}): string); // error: object !~> string
+             ^^^ [2]: string
 
 Error: Arith.js:81
  81:     (({} + "1"): string); // error: object !~> string
-           ^^ object literal. This type cannot be added to
- 81:     (({} + "1"): string); // error: object !~> string
-                ^^^ string
+           ^^ Cannot add object literal and `"1"` because object literal [1] is incompatible with string [2].
+  References:
+   81:     (({} + "1"): string); // error: object !~> string
+             ^^ [1]: object literal
+   81:     (({} + "1"): string); // error: object !~> string
+                  ^^^ [2]: string
 
 Error: Arith.js:88
  88:     (x + z: empty); // error, string ~> empty

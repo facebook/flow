@@ -547,11 +547,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ToStringT (r, t'')
-    | AdderT (r, flip, t1, t2) ->
+    | AdderT (op, r, flip, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else AdderT (r, flip, t1', t2')
+        else AdderT (op, r, flip, t1', t2')
     | ComparatorT (r, flip, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

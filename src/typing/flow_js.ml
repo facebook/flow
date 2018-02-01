@@ -5619,8 +5619,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* addition                                                *)
     (***********************************************************)
 
-    | (l, AdderT (reason, flip, r, u)) ->
-      flow_addition cx trace reason flip l r u
+    | (l, AdderT (use_op, reason, flip, r, u)) ->
+      flow_addition cx trace use_op reason flip l r u
 
     (*********************************************************)
     (* arithmetic/bitwise/update operations besides addition *)
@@ -6188,9 +6188,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         use_op;
       })
 
-    | _, UseT (Op Addition, u) ->
-      add_output cx ~trace (FlowError.EAddition (reason_of_t l, reason_of_t u))
-
     | _, UseT (Op Coercion, u) ->
       add_output cx ~trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
@@ -6291,8 +6288,8 @@ and needs_resolution = function
  * TODO: handle symbols (which raise a TypeError, so should be banned)
  *
  **)
-and flow_addition cx trace reason flip l r u =
-  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, not flip, l, u)) else
+and flow_addition cx trace use_op reason flip l r u =
+  if needs_resolution r then rec_flow cx trace (r, AdderT (use_op, reason, not flip, l, u)) else
   let (l, r) = if flip then (r, l) else (l, r) in
   (* disable ops because the left and right sides should already be
      repositioned. *)
@@ -6316,30 +6313,30 @@ and flow_addition cx trace reason flip l r u =
     rec_flow_t cx trace (NumT.why reason, u)
 
   | DefT (_, StrT _), _ ->
-    rec_flow cx trace (r, UseT (Op Addition, l));
-    rec_flow cx trace (StrT.why reason, UseT (unknown_use, u));
+    rec_flow cx trace (r, UseT (use_op, l));
+    rec_flow_t cx trace (StrT.why reason, u);
 
   | _, DefT (_, StrT _) ->
-    rec_flow cx trace (l, UseT (Op Addition, r));
-    rec_flow cx trace (StrT.why reason, UseT (unknown_use, u));
+    rec_flow cx trace (l, UseT (use_op, r));
+    rec_flow_t cx trace (StrT.why reason, u);
 
   | DefT (_, AnyT), _
   | _, DefT (_, AnyT) ->
     rec_flow_t cx trace (AnyT.why reason, u)
 
   | DefT (_, NumT _), _ ->
-    rec_flow cx trace (r, UseT (Op Addition, l));
-    rec_flow cx trace (NumT.why reason, UseT (unknown_use, u));
+    rec_flow cx trace (r, UseT (use_op, l));
+    rec_flow_t cx trace (NumT.why reason, u);
 
   | _, DefT (_, NumT _) ->
-    rec_flow cx trace (l, UseT (Op Addition, r));
-    rec_flow cx trace (NumT.why reason, UseT (unknown_use, u));
+    rec_flow cx trace (l, UseT (use_op, r));
+    rec_flow_t cx trace (NumT.why reason, u);
 
   | (_, _) ->
     let fake_str = StrT.why reason in
-    rec_flow cx trace (l, UseT (Op Addition, fake_str));
-    rec_flow cx trace (r, UseT (Op Addition, fake_str));
-    rec_flow cx trace (fake_str, UseT (Op Addition, u));
+    rec_flow cx trace (l, UseT (use_op, fake_str));
+    rec_flow cx trace (r, UseT (use_op, fake_str));
+    rec_flow cx trace (fake_str, UseT (use_op, u));
   end;
 
 (**

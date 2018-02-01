@@ -321,7 +321,7 @@ class ['a] t = object(self)
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
 
-  | AdderT (_, _, a, b) ->
+  | AdderT (_, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc
