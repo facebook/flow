@@ -302,6 +302,7 @@ module rec TypeTerm : sig
     | FunReturnStatement of { value: reason }
     | FunImplicitReturn of { fn: reason; upper: reason }
     | FunCallThis of reason
+    | GeneratorYield of { value: reason }
     | GetProperty of reason
     | Internal of internal_use_op
     | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
@@ -2481,6 +2482,7 @@ let loc_of_root_use_op = function
 | FunCallMethod {op; _}
 | FunReturnStatement {value=op}
 | FunImplicitReturn {upper=op; _}
+| GeneratorYield {value=op}
 | GetProperty op
 | ReactCreateElementCall {op; _}
 | SetProperty op
@@ -2607,6 +2609,7 @@ let string_of_root_use_op = function
 | FunCallThis _ -> "FunCallThis"
 | FunImplicitReturn _ -> "FunImplicitReturn"
 | FunReturnStatement _ -> "FunReturnStatement"
+| GeneratorYield _ -> "GeneratorYield"
 | GetProperty _ -> "GetProperty"
 | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
 | ReactCreateElementCall _ -> "ReactCreateElementCall"

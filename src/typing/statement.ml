@@ -3053,7 +3053,12 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
       Env.havoc_heap_refinements ();
-      Flow.flow_t cx (t, yield);
+      let use_op = Op (GeneratorYield {
+        value = (match argument with
+        | Some expr -> mk_expression_reason expr
+        | None -> reason_of_t t);
+      }) in
+      Flow.flow cx (t, UseT (use_op, yield));
       Env.get_internal_var cx "next" loc
 
   | Yield { Yield.argument; delegate = true } ->
@@ -3083,7 +3088,12 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
             "$Iterable" targs
       in
       Env.havoc_heap_refinements ();
-      Flow.flow_t cx (t, iterable);
+      let use_op = Op (GeneratorYield {
+        value = (match argument with
+        | Some expr -> mk_expression_reason expr
+        | None -> reason_of_t t);
+      }) in
+      Flow.flow cx (t, UseT (use_op, iterable));
 
       ret
 

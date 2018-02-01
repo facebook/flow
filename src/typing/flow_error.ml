@@ -981,6 +981,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         Some (`Root (upper, None,
           [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]))
 
+      | Op (GeneratorYield {value}) ->
+        Some (`Root (value, None,
+          [text "Cannot yield "; desc value]))
+
       | Op (ReactCreateElementCall {op; component; _}) ->
         Some (`Root (op, Some component,
           [text "Cannot create "; desc component; text " element"]))
