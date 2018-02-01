@@ -1252,7 +1252,7 @@ end
 and Properties : sig
   type t = Property.t SMap.t
 
-  type id
+  type id = private int
   module Map : MyMap.S with type key = id
   type map = t Map.t
 
