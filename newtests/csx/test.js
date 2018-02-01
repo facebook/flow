@@ -362,19 +362,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>{42}</Bar>
-                   ^^^^^ props. This type is incompatible with
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-          Property \`children\` is incompatible:
-              7:       <Bar>{42}</Bar>
-                       ^^^^^ JSX element \`Bar\`. Has some incompatible tuple element with
-              5:       type Props = {|children: ['A']|};
-                                                ^^^^^ tuple type
-              The first tuple element is incompatible:
-                  7:       <Bar>{42}</Bar>
-                                 ^^ number. This type is incompatible with
-                  5:       type Props = {|children: ['A']|};
-                                                     ^^^ string literal \`A\`
+                   ^^^^^ In index 0, number [1] is incompatible with string literal \`A\` [2].
+          References:
+            7:       <Bar>{42}</Bar>
+                           ^^ [1]: number
+            5:       type Props = {|children: ['A']|};
+                                               ^^^ [2]: string literal \`A\`
       `,
     ),
   ]),
