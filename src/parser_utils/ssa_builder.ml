@@ -877,6 +877,28 @@ class ssa_builder = object(this)
     );
     stmt
 
+  (* branching expressions *)
+  method! logical (expr: Loc.t Ast.Expression.Logical.t) =
+    let open Ast.Expression.Logical in
+    let { operator = _; left; right } = expr in
+    ignore @@ this#expression left;
+    let env1 = this#ssa_env in
+    ignore @@ this#expression right;
+    this#merge_self_ssa_env env1;
+    expr
+
+  method! conditional (expr: Loc.t Ast.Expression.Conditional.t) =
+    let open Ast.Expression.Conditional in
+    let { test; consequent; alternate } = expr in
+    ignore @@ this#predicate_expression test;
+    let env0 = this#ssa_env in
+    ignore @@ this#expression consequent;
+    let env1 = this#ssa_env in
+    this#reset_ssa_env env0;
+    ignore @@ this#expression alternate;
+    this#merge_self_ssa_env env1;
+    expr
+
   (* We also havoc state when entering functions and exiting calls. *)
   method! lambda params body =
     this#expecting_abrupt_completions (fun () ->
