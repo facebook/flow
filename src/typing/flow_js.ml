@@ -1706,7 +1706,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ()
 
     | _, BecomeT (reason, t) ->
-      rec_unify cx trace ~use_op:unknown_use (reposition ~trace cx (loc_of_reason reason) l) t
+      let l = reposition ~trace cx (loc_of_reason reason) l in
+      rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
 
     (***********************)
     (* guarded unification *)
@@ -1720,7 +1721,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         are processed only when the corresponding triggers fire. *)
 
     | (_, UnifyT(t,t_other)) ->
-      rec_unify cx trace ~use_op:unknown_use t t_other
+      rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_other
 
     (*********************************************************************)
     (* `import type` creates a properly-parameterized type alias for the *)
@@ -4447,7 +4448,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, BecomeT (reason, t))
 
     | DefT (_, TypeT l), UseT (use_op, DefT (_, TypeT u)) ->
-      rec_unify cx trace ~use_op l u
+      rec_unify cx trace ~use_op ~unify_any:true l u
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, DefT (ru, TypeT _)) ->
@@ -6027,7 +6028,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       *)
       let use_op = Option.value ~default:unknown_use (use_op_of_lookup_action action) in
       begin match t_opt with
-      | Some (not_found, t) -> rec_unify cx trace ~use_op t not_found
+      | Some (not_found, t) ->
+        rec_unify cx trace ~use_op ~unify_any:true t not_found
       | None -> ()
       end
 
@@ -7350,7 +7352,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
   | None -> t
   | Some rs ->
     let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
-    rec_unify cx trace ~use_op:unknown_use t t_;
+    rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_;
     t_
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
@@ -9328,11 +9330,13 @@ and resolve_id cx trace ~use_op id t =
    to just AnyWithUpperBoundT, AnyWithLowerBoundT, and MergedT which are
    internal types.
 *)
-and ok_unify = function
-  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ | MergedT _ -> false
+and ok_unify ~unify_any desc = function
+  | DefT (_, AnyT) | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ ->
+    (match desc with RExistential -> true | _ -> unify_any)
+  | MergedT _ -> false
   | _ -> true
 
-and __unify cx ~use_op t1 t2 trace =
+and __unify cx ~use_op ~unify_any t1 t2 trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
@@ -9372,9 +9376,9 @@ and __unify cx ~use_op t1 t2 trace =
   | OpenT (_, id1), OpenT (_, id2) ->
     merge_ids cx trace ~use_op id1 id2
 
-  | OpenT (_, id), t when ok_unify t ->
+  | OpenT (r, id), t when ok_unify ~unify_any (desc_of_reason r) t ->
     resolve_id cx trace ~use_op id t
-  | t, OpenT (_, id) when ok_unify t ->
+  | t, OpenT (r, id) when ok_unify ~unify_any (desc_of_reason r) t ->
     resolve_id cx trace ~use_op:(unify_flip use_op) id t
 
   | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
@@ -10272,7 +10276,7 @@ and reposition cx ?trace loc ?desc ?annot_loc t =
              open -> open, concrete -> concrete). The unification below thus
              results in resolving `tvar` to `t'`, so we end up with a resolved
              tvar whenever we started with one. *)
-          unify_opt cx ?trace tvar t';
+          unify_opt cx ?trace ~unify_any:true tvar t';
         ))
     | _ ->
       (* Try to re-use an already created repositioning tvar.
@@ -10534,24 +10538,25 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
 (* Wrapper functions around __unify that manage traces. Use these functions for
    all recursive calls in the implementation of __unify. *)
 
-and rec_unify cx trace ~use_op t1 t2 =
+and rec_unify cx trace ~use_op ?(unify_any=false) t1 t2 =
   let max = Context.max_trace_depth cx in
-  __unify cx ~use_op t1 t2 (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
+  __unify cx ~use_op ~unify_any t1 t2
+    (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
-and unify_opt cx ?trace t1 t2 =
+and unify_opt cx ?trace ?(unify_any=false) t1 t2 =
   let trace = match trace with
   | None -> Trace.unit_trace t1 (UseT (unknown_use, t2))
   | Some trace ->
     let max = Context.max_trace_depth cx in
     Trace.rec_trace ~max t1 (UseT (unknown_use, t2)) trace
   in
-  __unify cx ~use_op:unknown_use t1 t2 trace
+  __unify cx ~use_op:unknown_use ~unify_any t1 t2 trace
 
 (* Externally visible function for unification. *)
 (* Calls internal entry point and traps runaway recursion. *)
 and unify cx t1 t2 =
   try
-    unify_opt cx t1 t2
+    unify_opt cx ~unify_any:true t1 t2
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
@@ -11812,8 +11817,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | OpenT (_, id) when infer ->
     assert_ground_id cx ~depth:(depth + 1) skip ids id
 
-  | OpenT (reason_open, id) ->
-    unify_opt cx (OpenT (reason_open, id)) Locationless.AnyT.t;
+  | OpenT (reason_open, _) ->
+    unify_opt cx ~unify_any:true t Locationless.AnyT.t;
     add_output cx (FlowError.EMissingAnnotation reason_open)
 
   | DefT (_, NumT _)
@@ -11829,9 +11834,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | DefT (reason, FunT (static, prototype, ft)) ->
     let { this_t; params; return_t; rest_param; _ } = ft in
-    unify_opt cx static Locationless.AnyT.t;
-    unify_opt cx prototype Locationless.AnyT.t;
-    unify_opt cx this_t Locationless.AnyT.t;
+    unify_opt cx ~unify_any:true static Locationless.AnyT.t;
+    unify_opt cx ~unify_any:true prototype Locationless.AnyT.t;
+    unify_opt cx ~unify_any:true this_t Locationless.AnyT.t;
     let infer = is_derivable_reason reason in
     List.iter (fun (_, t) -> recurse ~infer t) params;
     Option.iter ~f:(fun (_, _, t) -> recurse ~infer t) rest_param;
@@ -11842,7 +11847,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse t
 
   | DefT (_, ObjT { props_tmap = id; proto_t; _ }) ->
-    unify_opt cx proto_t Locationless.AnyT.t;
+    unify_opt cx ~unify_any:true proto_t Locationless.AnyT.t;
     Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
   | InternalT (IdxWrapper (_, obj)) -> recurse ~infer obj
