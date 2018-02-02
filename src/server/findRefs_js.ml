@@ -173,6 +173,24 @@ module PropertyRefs: sig
     ((string * Loc.t list) option, string) result
 
 end = struct
+
+  class property_access_searcher name = object(this)
+    inherit [bool] Flow_ast_visitor.visitor ~init:false as super
+    method! member expr =
+      let open Ast.Expression.Member in
+      begin match expr.property with
+        | PropertyIdentifier (_, x) when x = name ->
+            this#set_acc true
+        | _ -> ()
+      end;
+      super#member expr
+  end
+
+  (* Returns true iff the given AST contains an access to a property with the given name *)
+  let check_for_matching_prop name ast =
+    let checker = new property_access_searcher name in
+    checker#eval checker#program ast
+
   let set_def_loc_hook prop_access_info target_loc =
     let use_hook ret _ctxt name loc ty =
       begin if Loc.contains loc target_loc then
@@ -273,17 +291,8 @@ end = struct
       | FailureAnyType ->
           Ok AnyType
 
-  let find_refs_in_file options content file_key def_locs name =
-    let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
-    set_get_refs_hook potential_refs name;
-    let cx_result =
-      get_ast_result file_key content >>| fun (ast, file_sig, info) ->
-      let ensure_checked = fun _ -> () in
-      Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-    in
-    unset_hooks ();
-    cx_result >>= fun cx ->
-    !potential_refs |>
+  let filter_refs cx potential_refs file_key def_locs name =
+    potential_refs |>
       LocMap.bindings |>
       List.map begin fun (ref_loc, ty) ->
         extract_def_loc cx ty name >>| function
@@ -308,12 +317,30 @@ end = struct
             err
         )
       >>|
-      List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) [] >>| fun refs ->
+      List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
+
+  let find_refs_in_file options content file_key def_locs name =
+    let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
+    get_ast_result file_key content
+    >>= begin fun (ast, file_sig, info) ->
       let local_defs =
         Nel.to_list def_locs
         |> List.filter (fun loc -> loc.Loc.source = Some file_key)
       in
-      local_defs @ refs
+      let has_symbol = check_for_matching_prop name ast in
+      if not has_symbol then
+        Ok local_defs
+      else begin
+        set_get_refs_hook potential_refs name;
+        let cx =
+          let ensure_checked = fun _ -> () in
+          Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+        in
+        unset_hooks ();
+        filter_refs cx !potential_refs file_key def_locs name
+        >>| (@) local_defs
+      end
+    end
 
   let find_external_refs genv all_deps def_locs name =
     let {options; workers} = genv in
