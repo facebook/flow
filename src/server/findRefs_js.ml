@@ -50,7 +50,7 @@ module VariableRefs: sig
     content: string ->
     Loc.t ->
     global: bool ->
-    ((string * Loc.t list) option, string) result
+    ((string * Loc.t list * int option) option, string) result
 end = struct
   let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t list, string) result =
     let open File_sig in
@@ -132,7 +132,7 @@ end = struct
       Ok (List.concat locs)
     in
     all_external_locations >>= fun all_external_locations ->
-    Ok (List.concat [all_external_locations; local_refs])
+    Ok (all_external_locations @ local_refs, FilenameSet.cardinal direct_dependents)
 
   let find_refs options workers env file_key ~content loc ~global =
     (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
@@ -145,20 +145,20 @@ end = struct
             let open File_sig in
             begin match file_sig.module_sig.module_kind with
               (* TODO support CommonJS *)
-              | CommonJS _ -> Ok (Some (name, refs))
+              | CommonJS _ -> Ok (Some (name, refs, None))
               | ES {named; _} -> begin match SMap.get name named with
-                  | None -> Ok (Some (name, refs))
-                  | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs))
+                  | None -> Ok (Some (name, refs, None))
+                  | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
                       if List.mem loc refs then
                         let all_refs_result = find_external_refs options workers env file_key content name refs in
-                        all_refs_result >>= fun all_refs -> Ok (Some (name, all_refs))
+                        all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
                       else
-                        Ok (Some (name, refs))
+                        Ok (Some (name, refs, None))
                 end
             end
           else
-            Ok (Some (name, refs))
+            Ok (Some (name, refs, None))
 end
 
 module PropertyRefs: sig
@@ -170,7 +170,7 @@ module PropertyRefs: sig
     File_key.t ->
     Loc.t ->
     global: bool ->
-    ((string * Loc.t list) option, string) result
+    ((string * Loc.t list * int option) option, string) result
 
 end = struct
 
@@ -417,11 +417,15 @@ end = struct
             File_input.content_of_file_input fileinput >>= fun content ->
             find_refs_in_file options content file_key def_locs name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
+            let dependent_file_count = FilenameSet.cardinal all_deps in
+            Hh_logger.info
+              "find-refs: searching %d dependent modules for references"
+              dependent_file_count;
             find_external_refs genv all_deps def_locs name >>| fun external_refs ->
-            Some (name, List.concat (refs::external_refs))
+            Some (name, List.concat (refs::external_refs), Some dependent_file_count)
           else
             find_refs_in_file options content file_key def_locs name >>= fun refs ->
-            Ok (Some (name, refs))
+            Ok (Some (name, refs, None))
 end
 
 let sort_find_refs_result = function
@@ -438,13 +442,20 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
   match File_input.content_of_file_input file_input with
   | Error err -> Error err, None
   | Ok content ->
-    let unsorted =
+    let result =
       VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
         | Some _ as result -> Ok result
         | None -> PropertyRefs.find_refs genv env ~profiling ~content file_key loc ~global
     in
-    let result = sort_find_refs_result unsorted in
-    let json_data = Hh_json.JSON_Object [
-      "result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE");
-    ] in
-    result, Some json_data
+    let json_data = match result with
+      | Ok (Some (_, _, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]
+      | _ -> []
+    in
+    (* Drop the dependent file count  from the result *)
+    let result = result >>| Option.map ~f:(fun (name, locs, _) -> (name, locs)) in
+    let result = sort_find_refs_result result in
+    let json_data =
+      ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))
+      :: json_data
+    in
+    result, Some (Hh_json.JSON_Object json_data)
