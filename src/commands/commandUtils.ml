@@ -547,6 +547,7 @@ module Options_flags = struct
     verbose: Verbose.t option;
     weak: bool;
     merge_timeout: int option;
+    file_watcher: Options.file_watcher;
   }
 end
 
@@ -569,11 +570,17 @@ let parse_lints_flag =
 let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
-    include_warnings flowconfig_flags verbose strip_root temp_dir quiet merge_timeout =
+    include_warnings flowconfig_flags verbose strip_root temp_dir quiet
+    merge_timeout file_watcher =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
     | _ -> ());
+    let file_watcher = match file_watcher with
+    | "none" -> Options.NoFileWatcher
+    | "dfind" -> Options.DFind
+    | _ -> assert false in
+
     main { Options_flags.
       debug;
       profile;
@@ -590,6 +597,7 @@ let options_flags =
       temp_dir;
       quiet;
       merge_timeout;
+      file_watcher;
    }
   in
   fun prev ->
@@ -622,6 +630,9 @@ let options_flags =
       ~doc:("The maximum time in seconds to attempt to typecheck a file or cycle of files. " ^
         "0 means no timeout (default: 100)")
       ~env:"FLOW_MERGE_TIMEOUT"
+    |> flag "--file-watcher" (required ~default:"dfind" (enum ["none"; "dfind"]))
+        ~doc:("Which file watcher Flow should use (none, dfind). " ^
+          "Flow will ignore file system events if this is set to none. (default: dfind)")
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -707,6 +718,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
+    opt_file_watcher = options_flags.file_watcher;
   }
 
 let make_env server_flags root =

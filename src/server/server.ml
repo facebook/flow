@@ -107,10 +107,13 @@ let exit_due_to_dfind_dying ~genv e =
  * is no longer getting populated. *)
 let rec recheck_loop ~dfind genv env =
   let raw_updates =
-    try DfindLib.get_changes dfind
-    with
-    | Sys_error msg as e when msg = "Broken pipe" -> exit_due_to_dfind_dying ~genv e
-    | End_of_file as e -> exit_due_to_dfind_dying ~genv e
+    if Options.use_file_watcher genv.options
+    then
+      try DfindLib.get_changes dfind
+      with
+      | Sys_error msg as e when msg = "Broken pipe" -> exit_due_to_dfind_dying ~genv e
+      | End_of_file as e -> exit_due_to_dfind_dying ~genv e
+    else SSet.empty
   in
   if SSet.is_empty raw_updates then env else begin
     let updates = Rechecker.process_updates genv env raw_updates in
