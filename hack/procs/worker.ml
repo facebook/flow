@@ -110,11 +110,13 @@ type t = {
  *
  *****************************************************************************)
 
-type 'a handle = 'a delayed ref
+type ('a, 'b) handle = ('a, 'b) delayed ref
 
-and 'a delayed =
-  | Processing of 'a slave
-  | Cached of 'a
+and ('a, 'b) delayed = 'a * 'b worker_handle
+
+and 'b worker_handle =
+  | Processing of 'b slave
+  | Cached of 'b
   | Failed of exn
 
 and 'a slave = {
@@ -318,7 +320,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
  *
  **************************************************************************)
 
-let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
+let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   if w.killed then Printf.ksprintf failwith "killed worker (%d)" w.id;
   if w.busy then raise Worker_busy;
   (* Spawn the slave, if not prespawned. *)
@@ -366,7 +368,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
     end
   in
   (* And returned the 'handle'. *)
-  ref (Processing slave)
+  ref (x, Processing slave)
 
 
 (**************************************************************************
@@ -380,21 +382,21 @@ let is_oom_failure msg =
   (String_utils.is_substring "signaled -7" msg)
 
 let get_result d =
-  match !d with
+  match snd !d with
   | Cached x -> x
   | Failed exn -> raise exn
   | Processing s ->
       try
         let res = s.result () in
         s.worker.busy <- false;
-        d := Cached res;
+        d := fst !d, Cached res;
         res
       with
       | Failure (msg) when is_oom_failure msg ->
         raise Worker_oomed
       | exn ->
         s.worker.busy <- false;
-        d := Failed exn;
+        d := fst !d, Failed exn;
         raise exn
 
 
@@ -404,15 +406,15 @@ let get_result d =
  *
  *****************************************************************************)
 
-type 'a selected = {
-  readys: 'a handle list;
-  waiters: 'a handle list;
+type ('a, 'b) selected = {
+  readys: ('a, 'b) handle list;
+  waiters: ('a, 'b) handle list;
 }
 
 let get_processing ds =
   List.rev_filter_map
     ds
-    ~f:(fun d -> match !d with Processing p -> Some p | _ -> None)
+    ~f:(fun d -> match snd !d with Processing p -> Some p | _ -> None)
 
 let select ds =
   let processing = get_processing ds in
@@ -424,7 +426,7 @@ let select ds =
       Sys_utils.select_non_intr fds [] [] ~-.1. in
   List.fold_right
     ~f:(fun d { readys ; waiters } ->
-      match !d with
+      match snd !d with
       | Cached _ | Failed _ ->
           { readys = d :: readys ; waiters }
       | Processing s when List.mem ready_fds s.infd ->
@@ -435,10 +437,12 @@ let select ds =
     ds
 
 let get_worker h =
-  match !h with
+  match snd !h with
   | Processing {worker; _} -> worker
   | Cached _
   | Failed _ -> invalid_arg "Worker.get_worker"
+
+let get_job h = fst !h
 
 (**************************************************************************
  * Worker termination
