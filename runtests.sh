@@ -248,6 +248,7 @@ runtest() {
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
         cp "$dir/../assert.sh" "$OUT_PARENT_DIR"
+        cp "$dir/../fs.sh" "$OUT_PARENT_DIR"
         mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
         export FLOW_TEMP_DIR="$OUT_PARENT_DIR"
@@ -301,6 +302,7 @@ runtest() {
         ignore_stderr=true
         cwd=""
         start_args=""
+        file_watcher="none"
         if [ -e ".testconfig" ]
         then
             # all
@@ -324,6 +326,12 @@ runtest() {
             then
                 cmd=""
                 shell="$config_shell"
+            fi
+            # file_watcher
+            config_fw="$(awk '$1=="file_watcher:"{print $2}' .testconfig)"
+            if [ "$config_fw" != "" ]
+            then
+              file_watcher="$config_fw"
             fi
             # start_args
             config_start_args="$(awk '$1=="start_args:"{$1="";print}' .testconfig)"
@@ -365,6 +373,7 @@ runtest() {
             # start server and wait
             "$FLOW" start . \
               $all $flowlib --wait \
+              --file-watcher "$file_watcher" \
               --log-file "$abs_log_file" \
               --monitor-log-file "$abs_monitor_log_file" \
               $start_args \

@@ -1,2 +1,3 @@
 shell: test.sh
 all: false
+file_watcher: dfind
