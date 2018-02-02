@@ -29,6 +29,7 @@ type handle = private {
   h_heap_size: int;
 }
 
+exception Worker_should_exit
 exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
@@ -39,6 +40,7 @@ exception Less_than_minimum_available of int
 exception Failed_to_use_shm_dir of string
 exception C_assertion_failure of string
 let () =
+  Callback.register_exception "worker_should_exit" Worker_should_exit;
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "dep_table_full" Dep_table_full;
@@ -134,6 +136,9 @@ let init config =
     if !Utils.debug
     then Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config config.shm_dirs
+
+external stop_workers : unit -> unit = "hh_stop_workers"
+external resume_workers : unit -> unit = "hh_resume_workers"
 
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 

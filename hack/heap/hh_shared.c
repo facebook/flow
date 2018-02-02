@@ -409,6 +409,8 @@ static uintptr_t* counter;
  */
 static size_t* log_level;
 
+static size_t* workers_should_exit;
+
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
@@ -796,9 +798,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   log_level = (size_t*)(mem + 5*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 6*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 7*CACHE_LINE_SIZE + (int)sizeof(int));
 
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
@@ -856,6 +861,8 @@ static void init_shared_globals(size_t config_log_level) {
   *dcounter = 0;
   *counter = early_counter + 1;
   *log_level = config_log_level;
+  *workers_should_exit = 0;
+
   // Initialize top heap pointers
   *heap = heap_init;
 
@@ -1029,6 +1036,28 @@ void assert_not_master() {
 }
 
 /*****************************************************************************/
+
+CAMLprim value hh_stop_workers() {
+  CAMLparam0();
+  assert_master();
+  *workers_should_exit = 1;
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_resume_workers() {
+  CAMLparam0();
+  assert_master();
+  *workers_should_exit = 0;
+  CAMLreturn(Val_unit);
+}
+
+void check_should_exit() {
+  if(*workers_should_exit) {
+    static value *exn = NULL;
+    if (!exn) exn = caml_named_value("worker_should_exit");
+    caml_raise_constant(*exn);
+  }
+}
 
 /*****************************************************************************/
 /* Global storage */
@@ -1256,6 +1285,7 @@ static void add_dep(uint32_t key, uint32_t val) {
 
 void hh_add_dep(value ocaml_dep) {
   CAMLparam1(ocaml_dep);
+  check_should_exit();
   uint64_t dep = Long_val(ocaml_dep);
   add_dep((uint32_t)(dep >> 31), (uint32_t)(dep & 0x7FFFFFFF));
   CAMLreturn0;
@@ -1281,6 +1311,7 @@ CAMLprim value hh_dep_slots(void) {
 /* Given a key, returns the list of values bound to it. */
 CAMLprim value hh_get_dep(value ocaml_key) {
   CAMLparam1(ocaml_key);
+  check_should_exit();
   CAMLlocal2(result, cell);
 
   volatile deptbl_entry_t* const table = deptbl;
@@ -1617,6 +1648,7 @@ static void raise_hash_table_full() {
 /*****************************************************************************/
 value hh_add(value key, value data) {
   CAMLparam2(key, data);
+  check_should_exit();
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
   unsigned int init_slot = slot;
@@ -1700,6 +1732,7 @@ static unsigned int find_slot(value key) {
 /*****************************************************************************/
 value hh_mem(value key) {
   CAMLparam1(key);
+  check_should_exit ();
   unsigned int slot = find_slot(key);
   if(hashtbl[slot].hash == get_hash(key) &&
      hashtbl[slot].addr != NULL) {
@@ -1759,6 +1792,7 @@ CAMLprim value hh_deserialize(char *src) {
 /*****************************************************************************/
 CAMLprim value hh_get_and_deserialize(value key) {
   CAMLparam1(key);
+  check_should_exit();
   CAMLlocal1(result);
 
   unsigned int slot = find_slot(key);

@@ -53,6 +53,26 @@ val init: config -> handle
 val connect: handle -> is_master:bool -> unit
 
 (*****************************************************************************)
+(* Worker cancellation *)
+(*****************************************************************************)
+
+(* Usually, a worker that was sent a job must finish it, and anyone who wants to
+ * do not-threadsafe operations on shared memory must wait for it. If we are in
+ * a hurry and want to speed up workers demise we can call this function - this
+ * will set a flag that is checked in few core functions that will make them
+ * raise Worker_should_exit exception.
+ *
+ * Should be called by master process only.
+ *)
+val stop_workers: unit -> unit
+
+(* Unsets the stop_workers flag.
+ *
+ * Should be called by master process only.
+ *)
+val resume_workers: unit -> unit
+
+(*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
