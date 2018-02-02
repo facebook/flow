@@ -13,6 +13,10 @@
  *)
 type 'a nextlist = 'a list Bucket.next
 
+(* List of file descriptors that became ready (and triggered interruption),
+ * returns whether current job should be cancelled *)
+type interrupt_handler = Unix.file_descr list -> bool
+
 val next :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
   ?max_size: int ->
@@ -31,4 +35,13 @@ val call :
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.next ->
+  'c
+
+val call_with_interrupt :
+  Worker.t list option ->
+  job:('c -> 'a -> 'b) ->
+  merge:('b -> 'c -> 'c) -> neutral:'c ->
+  next:'a Bucket.next ->
+  interrupt_fds:Unix.file_descr list ->
+  interrupt_handler:interrupt_handler ->
   'c

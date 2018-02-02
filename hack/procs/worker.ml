@@ -131,9 +131,19 @@ and 'a slave = {
   (* A blocking function that returns the job result. *)
   result: unit -> 'a;
 
+  (* A blocking function that waits for job cancellation (see Worker.cancel)
+   * to finish *)
+  wait_for_cancel: unit -> unit;
+
 }
 
-
+(* If we cancel before sending results, master will be left blocking waiting
+* for results. We need to send something back *)
+let on_slave_cancelled parent_oc =
+   (* The cancelling master will ignore result of cancelled job anyway (see
+    * wait_for_cancel function), so we can send back anything. *)
+   Daemon.output_string parent_oc (Marshal.to_string "anything" []);
+   Daemon.flush parent_oc
 
 (*****************************************************************************
  * Entry point for spawned worker.
@@ -178,11 +188,14 @@ let slave_main ic oc =
       Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
         (Printexc.get_callstack 100));
     end;
+    (* If we got so far, just let it finish "naturally" *)
+    SharedMem.set_on_worker_cancelled (fun () -> ());
     Daemon.output_string oc s;
     Daemon.flush oc in
   try
     Measure.push_global ();
     let Request do_process = Daemon.from_channel ic in
+    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled oc);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
@@ -328,14 +341,10 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
     match w.prespawned with
     | None -> w.spawn ()
     | Some handle -> handle in
-  (* Prepare ourself to read answer from the slave. *)
-  let result () : b =
+  let with_exit_status_check slave_pid f =
     match Unix.waitpid [Unix.WNOHANG] slave_pid with
     | 0, _ | _, Unix.WEXITED 0 ->
-        let res : b * Measure.record_data = Daemon.input_value inc in
-        if w.prespawned = None then Daemon.close h;
-        Measure.merge (Measure.deserialize (snd res));
-        fst res
+        f ()
     | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
@@ -345,9 +354,27 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
         Printf.ksprintf failwith "Subprocess(%d): stopped %d" slave_pid i
     | _, Unix.WSIGNALED i ->
         Printf.ksprintf failwith "Subprocess(%d): signaled %d" slave_pid i in
+  (* Prepare ourself to read answer from the slave. *)
+  let result () : b =
+    with_exit_status_check slave_pid begin fun () ->
+      let res : b * Measure.record_data = Daemon.input_value inc in
+      if w.prespawned = None then Daemon.close h;
+      Measure.merge (Measure.deserialize (snd res));
+      fst res
+    end in
+  let wait_for_cancel () : unit =
+    with_exit_status_check slave_pid begin fun () ->
+      (* Depending on whether we manage to kill the slave before it starts writing
+       * results back, this will return either actual results, or "anything"
+       * (written by interrupt signal that exited). The types don't match, but we
+       * ignore both of them anyway. *)
+      let _ : 'c = Daemon.input_value inc in
+      ()
+    end in
+
   (* Mark the worker as busy. *)
   let infd = Daemon.descr_of_in_channel inc in
-  let slave = { result; slave_pid; infd; worker = w; } in
+  let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
   w.busy <- true;
   let request = match w.call_wrapper with
     | Some { wrap } ->
@@ -381,24 +408,26 @@ let is_oom_failure msg =
   (String_utils.string_starts_with msg "Subprocess") &&
   (String_utils.is_substring "signaled -7" msg)
 
+let with_worker_exn (handle : ('a, 'b) handle) slave f =
+  try f () with
+  | Failure (msg) when is_oom_failure msg ->
+    raise Worker_oomed
+  | exn ->
+    slave.worker.busy <- false;
+    handle := fst !handle, Failed exn;
+    raise exn
+
 let get_result d =
   match snd !d with
   | Cached x -> x
   | Failed exn -> raise exn
   | Processing s ->
-      try
-        let res = s.result () in
-        s.worker.busy <- false;
-        d := fst !d, Cached res;
-        res
-      with
-      | Failure (msg) when is_oom_failure msg ->
-        raise Worker_oomed
-      | exn ->
-        s.worker.busy <- false;
-        d := fst !d, Failed exn;
-        raise exn
-
+    with_worker_exn d s begin fun () ->
+      let res = s.result () in
+      s.worker.busy <- false;
+      d := fst !d, Cached res;
+      res
+    end
 
 (*****************************************************************************
  * Our polling primitive on workers
@@ -409,6 +438,7 @@ let get_result d =
 type ('a, 'b) selected = {
   readys: ('a, 'b) handle list;
   waiters: ('a, 'b) handle list;
+  ready_fds: Unix.file_descr list;
 }
 
 let get_processing ds =
@@ -416,24 +446,26 @@ let get_processing ds =
     ds
     ~f:(fun d -> match snd !d with Processing p -> Some p | _ -> None)
 
-let select ds =
+let select ds additional_fds =
   let processing = get_processing ds in
   let fds = List.map ~f:(fun {infd; _} -> infd) processing in
   let ready_fds, _, _ =
     if fds = [] || List.length processing <> List.length ds then
       [], [], []
     else
-      Sys_utils.select_non_intr fds [] [] ~-.1. in
+      Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
+  let additional_ready_fds =
+    List.filter ~f:(List.mem ready_fds) additional_fds in
   List.fold_right
-    ~f:(fun d { readys ; waiters } ->
+    ~f:(fun d acc ->
       match snd !d with
       | Cached _ | Failed _ ->
-          { readys = d :: readys ; waiters }
+          { acc with readys = d :: acc.readys }
       | Processing s when List.mem ready_fds s.infd ->
-          { readys = d :: readys ; waiters }
+          { acc with readys = d :: acc.readys }
       | Processing _ ->
-          { readys ; waiters = d :: waiters})
-    ~init:{ readys = [] ; waiters = [] }
+          { acc with waiters = d :: acc.waiters})
+    ~init:{ readys = [] ; waiters = []; ready_fds = additional_ready_fds }
     ds
 
 let get_worker h =
@@ -458,3 +490,18 @@ let kill w =
 
 let killall () =
   List.iter ~f:kill !workers
+
+let wait_for_cancel d =
+  match snd !d with
+  | Processing s ->
+    with_worker_exn d s begin fun () ->
+      s.wait_for_cancel ();
+      s.worker.busy <- false
+    end
+  | _ -> ()
+
+let cancel handles =
+  SharedMem.stop_workers ();
+  List.iter handles ~f:(fun x -> wait_for_cancel x);
+  SharedMem.resume_workers ();
+  ()

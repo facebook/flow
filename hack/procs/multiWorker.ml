@@ -12,6 +12,8 @@ open Hh_core
 
 type 'a nextlist = 'a list Bucket.next
 
+type interrupt_handler = Unix.file_descr list -> bool
+
 type 'a bucket = 'a Bucket.bucket =
   | Job of 'a
   | Wait
@@ -44,7 +46,16 @@ let multi_threaded_call
   workers (job: c -> a -> b)
   (merge: b -> c -> c)
   (neutral: c)
-  (next: a Bucket.next) =
+  (next: a Bucket.next)
+  (interrupt_fds: Unix.file_descr list)
+  (interrupt_handler: interrupt_handler) =
+
+  let check_cancel workers handles ready_fds =
+    if ready_fds <> [] && interrupt_handler ready_fds then begin
+      Worker.cancel handles;
+      true
+    end else false in
+
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)
     (* 'handles' represents pendings jobs. *)
@@ -69,7 +80,8 @@ let multi_threaded_call
                 bucket in
             dispatch workers (handle :: handles) acc
   and collect workers handles acc =
-    let { Worker.readys; waiters } = Worker.select handles in
+    let { Worker.readys; waiters; ready_fds } =
+      Worker.select handles interrupt_fds in
     let workers = List.map ~f:Worker.get_worker readys @ workers in
     (* Collect the results. *)
     let acc =
@@ -77,14 +89,26 @@ let multi_threaded_call
         ~f:(fun acc h -> merge (Worker.get_result h) acc)
         ~init:acc
         readys in
+    if check_cancel workers waiters ready_fds then acc else
     (* And continue.. *)
     dispatch workers waiters acc in
   dispatch workers [] neutral
 
-let call workers ~job ~merge ~neutral ~next =
+let call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler =
   match workers with
   | None -> single_threaded_call job merge neutral next
-  | Some workers -> multi_threaded_call workers job merge neutral next
+  | Some workers ->
+    multi_threaded_call workers job merge neutral next
+      interrupt_fds interrupt_handler
+
+let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt_fds
+    ~interrupt_handler =
+  call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler
+
+let call workers ~job ~merge ~neutral ~next =
+  let interrupt_fds = [] in
+  let interrupt_handler = fun _ -> assert false in
+  call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler
 
 let next ?progress_fn ?max_size workers =
   Bucket.make

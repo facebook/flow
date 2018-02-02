@@ -140,6 +140,14 @@ let init config =
 external stop_workers : unit -> unit = "hh_stop_workers"
 external resume_workers : unit -> unit = "hh_resume_workers"
 
+let on_worker_cancelled = ref (fun () -> ())
+let set_on_worker_cancelled f = on_worker_cancelled := f
+
+let with_worker_exit f =
+  try f () with Worker_should_exit ->
+    !on_worker_cancelled ();
+    exit 0
+
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 (*****************************************************************************)
@@ -376,6 +384,11 @@ end = struct
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
   external hh_remove      : Key.md5 -> unit            = "hh_remove"
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
+
+  let hh_mem x = with_worker_exit (fun () -> hh_mem x)
+  let hh_add x y = with_worker_exit (fun () -> hh_add x y)
+  let hh_get_and_deserialize x =
+    with_worker_exit (fun () -> hh_get_and_deserialize x)
 
   let log_serialize compressed original =
     let compressed = float compressed in

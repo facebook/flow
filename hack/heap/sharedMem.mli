@@ -72,6 +72,14 @@ val stop_workers: unit -> unit
  *)
 val resume_workers: unit -> unit
 
+(* Workers that are interrupted in the middle of a job might need to do some
+ * cleanup. This is a place to set it up. *)
+val set_on_worker_cancelled: (unit -> unit) -> unit
+
+(* A helper function to be wrapped around Worker_should_exit-raising methods.
+ * It catches the exception, runs the cleanup, and kill the worker. *)
+val with_worker_exit: (unit -> 'a) -> 'a
+
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
  * free data (cf hh_shared.c for the underlying C implementation).

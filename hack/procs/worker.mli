@@ -73,11 +73,15 @@ val get_result: ('a, 'b) handle -> 'b
 type ('a, 'b) selected = {
   readys: ('a, 'b) handle list;
   waiters: ('a, 'b) handle list;
+  (* Additional (non worker) ready fds that we selected on. *)
+  ready_fds: Unix.file_descr list;
 }
-val select: ('a, 'b) handle list -> ('a, 'b) selected
+val select: ('a, 'b) handle list -> Unix.file_descr list -> ('a, 'b) selected
 
 (* Returns the worker which produces this handle *)
 val get_worker: ('a, 'b) handle -> t
 
 (* Killall the workers *)
 val killall: unit -> unit
+
+val cancel : ('a, 'b) handle list -> unit
