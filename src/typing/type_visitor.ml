@@ -160,7 +160,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole acc t in
     acc
 
-  | TypeAppT (t, ts) ->
+  | TypeAppT (_, t, ts) ->
     let acc = self#type_ cx Positive acc t in
     (* If we knew what `t` resolved to, we could determine the polarities for
        `ts`, but in general `t` might be unresolved. Subclasses which have more
@@ -375,7 +375,7 @@ class ['a] t = object(self)
       acc
     ) acc ts
 
-  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), _) ->
+  | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts2 in

@@ -399,11 +399,11 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (desc_of_reason reason) in
       DefT (reason, OptionalT (normalize_type_impl cx ids t))
 
-  | DefT (reason, TypeAppT (c, ts)) ->
+  | DefT (reason, TypeAppT (op, c, ts)) ->
       let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let ts = List.map (normalize_type_impl cx ids) ts in
-      DefT (reason, TypeAppT (c, ts))
+      DefT (reason, TypeAppT (op, c, ts))
 
   | ThisTypeAppT (reason, c, this, ts_opt) ->
       let reason = locationless_reason (desc_of_reason reason) in

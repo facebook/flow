@@ -239,7 +239,7 @@ module rec TypeTerm : sig
     (* polymorphic type *)
     | PolyT of typeparam list * t * int
     (* type application *)
-    | TypeAppT of t * t list
+    | TypeAppT of use_op * t * t list
 
     (* ? types *)
     | MaybeT of t
@@ -306,6 +306,7 @@ module rec TypeTerm : sig
     | Internal of internal_use_op
     | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
     | ReactGetIntrinsic of { literal: reason }
+    | TypeApplication of { type': reason }
     | SetProperty of { lhs: reason; prop: reason; value: reason }
     | UnknownUse
 
@@ -443,10 +444,10 @@ module rec TypeTerm : sig
         use_op *
         (* The type args and reason for the TypeAppT that is currently the
          * lower bound *)
-        (t list * reason) *
+        (t list * use_op * reason) *
         (* The polymorphic type, its type args, and reason for the TypeAppT that
          * is currently the upper bound. *)
-        (t * t list * reason) *
+        (t * t list * use_op * reason) *
         (* A boolean which answers the question: Is the TypeAppT that is
          * currently our lower bound in fact our upper bound in the original
          * TypeAppT ~> TypeAppT? If the answer is yes then we need to flip our
@@ -1907,7 +1908,7 @@ end = struct
     | UnifyT (_,t) -> reason_of_t t
     | VarianceCheckT(reason,_,_) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
-    | ConcretizeTypeAppsT (_, _, (_, _, reason), _) -> reason
+    | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
@@ -2073,8 +2074,8 @@ end = struct
         VarianceCheckT (f reason, ts, polarity)
     | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
         TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
-    | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, r2), targs) ->
-        ConcretizeTypeAppsT (use_op, t1, (t2, ts2, f r2), targs)
+    | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
+        ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
   let rec util_use_op_of_use_t: 'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
@@ -2108,7 +2109,8 @@ end = struct
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
   | TypeAppVarianceCheckT (op, r1, r2, ts) ->
     util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
-  | ConcretizeTypeAppsT (op, x1, x2, b) -> util op (fun op -> ConcretizeTypeAppsT (op, x1, x2, b))
+  | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
+    util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
@@ -2464,13 +2466,25 @@ let rec root_of_use_op = function
 | Op use_op -> use_op
 | Frame (_, use_op) -> root_of_use_op use_op
 
-let rec replace_unknown_root_use_op new_parent_use_op = function
-| Op UnknownUse -> new_parent_use_op
-| (Op _) as use_op -> use_op
-| (Frame (frame, parent_use_op)) as use_op ->
-  let parent_use_op' = replace_unknown_root_use_op new_parent_use_op parent_use_op in
-  if parent_use_op' == parent_use_op then use_op
-  else Frame (frame, parent_use_op')
+let replace_unknown_root_use_op =
+  let rec loop new_parent_use_op = function
+  | Op UnknownUse -> Ok new_parent_use_op
+  | Op _ -> Error new_parent_use_op
+  | (Frame (frame, parent_use_op)) as use_op ->
+    let parent_use_op' = loop new_parent_use_op parent_use_op in
+    (match parent_use_op' with
+    | (Error _) as error -> error
+    | Ok parent_use_op' ->
+      if parent_use_op' == parent_use_op then
+        Ok use_op
+      else
+        Ok (Frame (frame, parent_use_op'))
+    )
+  in
+  fun new_parent_use_op use_op ->
+    match loop new_parent_use_op use_op with
+    | Ok use_op -> use_op
+    | Error use_op -> use_op
 
 let loc_of_root_use_op = function
 | Addition {op; _}
@@ -2486,6 +2500,7 @@ let loc_of_root_use_op = function
 | GeneratorYield {value=op}
 | GetProperty op
 | ReactCreateElementCall {op; _}
+| TypeApplication {type'=op}
 | SetProperty {value=op; _}
   -> loc_of_reason op
 | ReactGetIntrinsic _
@@ -2611,6 +2626,7 @@ let string_of_root_use_op = function
 | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
 | ReactCreateElementCall _ -> "ReactCreateElementCall"
 | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
+| TypeApplication _ -> "TypeApplication"
 | SetProperty _ -> "SetProperty"
 | UnknownUse -> "UnknownUse"
 
@@ -2862,7 +2878,8 @@ let poly_type id tparams t =
 
 let typeapp t tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
-  DefT (reason, TypeAppT (t, tparams))
+  let use_op = Op (TypeApplication { type' = reason }) in
+  DefT (reason, TypeAppT (use_op, t, tparams))
 
 let this_typeapp t this tparams =
   let reason = match tparams with

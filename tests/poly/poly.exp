@@ -51,7 +51,7 @@ Error: error.js:20
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
-                   ^^^^^^^ Cannot assign `new C()` to `a` because in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
+            ^^^^ Cannot instantiate `C` because in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
   References:
    20: a.meth(new Base()); // Error: Base ~> Middle
               ^^^^^^^^^^ [1]: `Base`
@@ -60,7 +60,7 @@ Error: implicit_bounded_instantiation.js:15
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
-                   ^^^^^^^ Cannot assign `new C()` to `a` because in type argument `T`, number [1] is incompatible with `Middle` [2].
+            ^^^^ Cannot instantiate `C` because in type argument `T`, number [1] is incompatible with `Middle` [2].
   References:
    19: a.meth(42); // Error: number ~> Middle
               ^^ [1]: number

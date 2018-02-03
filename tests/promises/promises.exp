@@ -221,9 +221,9 @@ Error: resolve_global.js:35
     9: class Promise {}
              ^^^^^^^ [1]: statics of `Promise`
 
-Error: resolve_global.js:40
- 40:   return 0;
-              ^ Cannot return `0` because `Promise` [1] is not a polymorphic type.
+Error: resolve_global.js:39
+ 39: async function baz(): Promise<number> {
+                           ^^^^^^^^^^^^^^^ Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
   References:
    39: async function baz(): Promise<number> {
                              ^^^^^^^^^^^^^^^ [1]: `Promise`

@@ -22,16 +22,16 @@ Error: element_type.js:18
 
 Error: errors.js:12
  12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-              ^^^^^^^^^^^^^^^^^^^^^^ Property `p` is missing in object type [1].
+              ^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `$PropertyType` because property `p` is missing in object type [1].
   References:
    12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
                               ^^ [1]: object type
 
-Error: errors.js:16
- 16: (null: B); // We should get an error on this line.
-      ^^^^ Cannot cast `null` to `B` because property `p` is missing in object type [1].
+Error: errors.js:15
+ 15: type B = P<{}>; // We should get an error on this line.
+              ^^^^^ Cannot instantiate `P` because property `p` is missing in object type [1].
   References:
-   15: type B = P<{}>;
+   15: type B = P<{}>; // We should get an error on this line.
                   ^^ [1]: object type
 
 Error: errors.js:18
@@ -89,6 +89,55 @@ Error: errors.js:28
   References:
    28: fn4(null)(); // We should get an error on this line.
            ^^^^ [1]: null
+
+Error: errors2.js:6
+  6: (null: $PropertyType<{}, 'p'>); // Error should point here.
+            ^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `$PropertyType` because property `p` is missing in object type [1].
+  References:
+    6: (null: $PropertyType<{}, 'p'>); // Error should point here.
+                            ^^ [1]: object type
+
+Error: errors2.js:8
+  8: type A = $PropertyType<{}, 'p'>; // Error should point here.
+              ^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `$PropertyType` because property `p` is missing in object type [1].
+  References:
+    8: type A = $PropertyType<{}, 'p'>; // Error should point here.
+                              ^^ [1]: object type
+
+Error: errors2.js:12
+ 12: type C = B<{}>; // Error should point here.
+              ^^^^^ Cannot instantiate `B` because property `p` is missing in object type [1].
+  References:
+   12: type C = B<{}>; // Error should point here.
+                  ^^ [1]: object type
+
+Error: errors2.js:15
+ 15: declare function f1<O>(o: O): $PropertyType<{}, 'p'>; // Error should point here.
+                                   ^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `$PropertyType` because property `p` is missing in object type [1].
+  References:
+   15: declare function f1<O>(o: O): $PropertyType<{}, 'p'>; // Error should point here.
+                                                   ^^ [1]: object type
+
+Error: errors2.js:17
+ 17: declare function f3<O>(o: O): B<{}>; // Error should point here.
+                                   ^^^^^ Cannot instantiate `B` because property `p` is missing in object type [1].
+  References:
+   17: declare function f3<O>(o: O): B<{}>; // Error should point here.
+                                       ^^ [1]: object type
+
+Error: errors2.js:25
+ 25: (f4(o): empty); // Error should point here.
+      ^^ Cannot call `f4` because property `p` is missing in object type [1].
+  References:
+   21: declare var o: {};
+                      ^^ [1]: object type
+
+Error: errors2.js:26
+ 26: (f5(o): empty); // Error should point here.
+      ^^ Cannot call `f5` because property `p` is missing in object type [1].
+  References:
+   21: declare var o: {};
+                      ^^ [1]: object type
 
 Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error
@@ -380,4 +429,4 @@ Error: union.js:10
                  ^^^^^^^^^^^^^^^^^^^^^ number
 
 
-Found 42 errors
+Found 49 errors

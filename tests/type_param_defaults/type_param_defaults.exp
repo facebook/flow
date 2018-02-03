@@ -36,6 +36,15 @@ Error: classes.js:23
 
 Error: classes.js:27
  27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                     ^^^^^^ Cannot instantiate `C` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   27: var c_number: C<number> = new C(123); // Error number ~> ?string
+                       ^^^^^^ [1]: number
+   25: class C<T: ?string = string> extends A<T> {}
+                   ^^^^^^ [2]: string
+
+Error: classes.js:27
+ 27: var c_number: C<number> = new C(123); // Error number ~> ?string
                                ^^^^^^^^^^ Cannot assign `new C(...)` to `c_number` because in type argument `T`, number [1] is incompatible with string [2].
   References:
    27: var c_number: C<number> = new C(123); // Error number ~> ?string
@@ -169,6 +178,15 @@ Error: classes.js:58
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                     ^^^^^^ Cannot instantiate `I` because in type argument `T`, number [1] is incompatible with string [2].
+  References:
+   62: var i_number: I<number> = new I(123); // Error number ~> ?string
+                       ^^^^^^ [1]: number
+   60: class I<T: ?string = *> extends A<T> {}
+                   ^^^^^^ [2]: string
+
+Error: classes.js:62
+ 62: var i_number: I<number> = new I(123); // Error number ~> ?string
                                ^^^^^^^^^^ Cannot assign `new I(...)` to `i_number` because in type argument `T`, number [1] is incompatible with string [2].
   References:
    62: var i_number: I<number> = new I(123); // Error number ~> ?string
@@ -186,4 +204,4 @@ Error: classes.js:62
                    ^^^^^^ [2]: string
 
 
-Found 22 errors
+Found 24 errors

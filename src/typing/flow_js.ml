@@ -604,7 +604,7 @@ end = struct
     inherit [TypeSet.t] Type_visitor.t as super
 
     method! type_ cx pole acc t = match t with
-    | DefT (_, TypeAppT (c, _)) -> super#type_ cx pole (TypeSet.add c acc) t
+    | DefT (_, TypeAppT (_, c, _)) -> super#type_ cx pole (TypeSet.add c acc) t
     | OpenT _ -> (match ImplicitTypeArgument.abstract_targ t with
       | None -> acc
       | Some t -> TypeSet.add t acc
@@ -956,7 +956,7 @@ module ResolvableTypeJob = struct
         collect_of_types ?log_unresolved cx reason acc ts
       end
 
-    | DefT (_, TypeAppT (poly_t, targs))
+    | DefT (_, TypeAppT (_, poly_t, targs))
       ->
       begin match poly_t with
       | OpenT tvar ->
@@ -2594,7 +2594,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, TypeAppT _), ReposLowerT (reason, use_desc, u) ->
         rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
-    | DefT (reason_tapp, TypeAppT(c, ts)), MethodT (use_op, _, _, _, _, _) ->
+    | DefT (reason_tapp, TypeAppT(use_op, c, ts)), MethodT (_, _, _, _, _, _) ->
         let reason_op = reason_of_use_t u in
         let t = mk_typeapp_instance cx
           ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts in
@@ -2611,9 +2611,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * upper and lower TypeAppT bound. We start by concretizing the upper bound
      * which we signal by setting the final element in ConcretizeTypeAppsT to
      * true. *)
-    | DefT (r1, TypeAppT (c1, ts1)),
-      UseT (use_op, DefT (r2, TypeAppT (c2, ts2))) ->
-      rec_flow cx trace (c2, ConcretizeTypeAppsT (use_op, (ts2, r2), (c1, ts1, r1), true))
+    | DefT (r1, TypeAppT (op1, c1, ts1)),
+      UseT (use_op, DefT (r2, TypeAppT (op2, c2, ts2))) ->
+      rec_flow cx trace (c2, ConcretizeTypeAppsT
+        (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true))
 
     (* When we have concretized the c for our upper bound TypeAppT then we want
      * to concretize the lower bound. We flip all our arguments to
@@ -2623,8 +2624,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * If the upper bound's c is not a PolyT then we will fall down to an
      * incompatible use error. *)
     | DefT (_, PolyT _) as c2,
-      ConcretizeTypeAppsT (use_op, (ts2, r2), (c1, ts1, r1), true) ->
-      rec_flow cx trace (c1, ConcretizeTypeAppsT (use_op, (ts1, r1), (c2, ts2, r2), false))
+      ConcretizeTypeAppsT (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true) ->
+      rec_flow cx trace (c1, ConcretizeTypeAppsT
+        (use_op, (ts1, op1, r1), (c2, ts2, op2, r2), false))
 
     (* When we have concretized the c for our lower bound TypeAppT then we can
      * finally run our TypeAppT ~> TypeAppT logic. If we have referentially the
@@ -2639,7 +2641,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * The upper bound's c should always be a PolyT here since we could not have
      * made it here if it was not given the logic of our earlier case. *)
     | DefT (_, PolyT (_, _, id1)),
-      ConcretizeTypeAppsT (use_op, (ts1, r1), (DefT (_, PolyT (_, _, id2)), ts2, r2), false)
+      ConcretizeTypeAppsT (use_op, (ts1, _, r1), (DefT (_, PolyT (_, _, id2)), ts2, _, r2), false)
       when id1 = id2 && List.length ts1 = List.length ts2 ->
       let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
       rec_flow cx trace (l,
@@ -2648,29 +2650,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* This is the case which implements the expansion for our
      * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
     | DefT (_, PolyT _) as c1,
-      ConcretizeTypeAppsT (use_op, (ts1, r1), ((DefT (_, PolyT _) as c2), ts2, r2), false) ->
+      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), ((DefT (_, PolyT _) as c2), ts2, op2, r2), false) ->
       if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
-        let t1 = mk_typeapp_instance cx ~trace ~reason_op:r2 ~reason_tapp:r1 c1 ts1 in
+        let t1 = mk_typeapp_instance cx ~trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1 c1 ts1 in
         if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
-          let t2 = mk_typeapp_instance cx ~trace ~use_op ~reason_op:r1 ~reason_tapp:r2 c2 ts2 in
+          let t2 = mk_typeapp_instance cx ~trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2 c2 ts2 in
           rec_flow cx trace (t1, UseT (use_op, t2));
           TypeAppExpansion.pop ();
         );
         TypeAppExpansion.pop ();
       );
 
-    | DefT (reason_tapp, TypeAppT (c, ts)), _ ->
+    | DefT (reason_tapp, TypeAppT (use_op, c, ts)), _ ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_use_t u in
-        let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
+        let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
         rec_flow cx trace (t, u);
         TypeAppExpansion.pop ();
       );
 
-    | _, UseT (use_op, DefT (reason_tapp, TypeAppT (c, ts))) ->
+    | _, UseT (use_op, DefT (reason_tapp, TypeAppT (use_op_tapp, c, ts))) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t l in
-        let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+        let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
         rec_flow cx trace (l, UseT (use_op, t));
         TypeAppExpansion.pop ();
       );
@@ -6940,6 +6942,18 @@ and subst =
         let this_ = self#type_ cx (map, force, use_op) this in
         if this_ == this then t else ThisClassT (reason, this_)
 
+      | DefT (r, TypeAppT (op, c, ts)) ->
+        let c' = self#type_ cx map_cx c in
+        let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
+        if c == c' && ts == ts' then t else (
+          (* If the TypeAppT changed then one of the type arguments had a
+           * BoundT that was substituted. In this case, also change the use_op
+           * so we can point at the op which instantiated the types that
+           * were substituted. *)
+          let use_op = Option.value use_op ~default:op in
+          DefT (r, TypeAppT (use_op, c', ts'))
+        )
+
       | EvalT (x, TypeDestructorT (op, r, d), _) ->
         let x' = self#type_ cx map_cx x in
         let d' = self#destructor cx map_cx d in
@@ -7038,9 +7052,9 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
 (* Specialize TypeAppTs before evaluating them so that we can handle special
    cases. Like the union case below. mk_typeapp_instance will return an AnnotT
    which will be fully resolved using the AnnotT case above. *)
-| DefT (reason_tapp, TypeAppT (c, ts)) ->
+| DefT (reason_tapp, TypeAppT (use_op_tapp, c, ts)) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
-  let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op:reason ~reason_tapp c ts in
+  let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts in
   rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
@@ -7200,7 +7214,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Positive c
 
   | ThisTypeAppT (_, c, _, Some ts)
-  | DefT (_, TypeAppT (c, ts))
+  | DefT (_, TypeAppT (_, c, ts))
     ->
     check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
@@ -7989,13 +8003,21 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
        error found for each alternative *)
     let ts = choices_of_spec spec in
     assert (List.length ts = List.length msgs);
+    (* Get the root use_op we expect for all the speculation messages. If any
+     * speculation messages have a different root then they likely weren't the
+     * branch the user wanted to match. *)
+    let root_use_op = match spec with
+    | UnionCases _ -> UnknownUse
+    | IntersectionCases (_, u) ->
+      root_of_use_op (Option.value (use_op_of_use_t u) ~default:unknown_use)
+    in
     (* Instead of spewing out all possible branches, we only show the messages
      * with the highest "score." If there are multiple messages with the same
      * score then we show all messages with an equivalent score while throwing
      * away messages with a lower score. *)
     let (_, _, branches) = List.fold_left (fun (i, high_score, branches) msg ->
       let reason = reason_of_t (List.nth ts i) in
-      let score = Flow_error.score_of_msg msg in
+      let score = Flow_error.score_of_msg ~root_use_op msg in
       if score > high_score then
         (i - 1, score, [(i, reason, msg)])
       else if score = high_score then
@@ -9458,7 +9480,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     ) funtype1.params funtype2.params;
     rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
 
-  | DefT (_, TypeAppT (c1, ts1)), DefT (_, TypeAppT (c2, ts2))
+  | DefT (_, TypeAppT (_, c1, ts1)), DefT (_, TypeAppT (_, c2, ts2))
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
 
@@ -10186,7 +10208,7 @@ and get_builtin_typeapp cx ?trace reason x ts =
   typeapp (get_builtin cx ?trace x reason) ts
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx ?trace ?(use_op=unknown_use) ~reason_op ~reason_tapp ?cache c ts =
+and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
   let c = reposition_reason cx ?trace reason_tapp c in
   let t = Tvar.mk cx reason_op in
   flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
@@ -11575,7 +11597,7 @@ end = struct
         let inst_t = instantiate_poly_t cx c ts_opt in
         let inst_t = instantiate_type inst_t in
         extract_type cx inst_t
-    | DefT (_, TypeAppT (c, ts)) ->
+    | DefT (_, TypeAppT (_, c, ts)) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c (Some ts) in
         let inst_t = instantiate_type inst_t in
@@ -11871,7 +11893,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, OptionalT t) ->
     recurse t
 
-  | DefT (_, TypeAppT (c, ts)) ->
+  | DefT (_, TypeAppT (_, c, ts)) ->
     recurse ~infer:true c;
     List.iter recurse ts
 

@@ -1,78 +1,78 @@
 Error: classes.js:26
  26: ('yo': $Values<NoProps>); // Error: There are no properties.
-      ^^^^ Cannot cast `'yo'` to values type because string [1] is incompatible with values type [2].
+      ^^^^ Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2].
   References:
    26: ('yo': $Values<NoProps>); // Error: There are no properties.
         ^^^^ [1]: string
    26: ('yo': $Values<NoProps>); // Error: There are no properties.
-              ^^^^^^^^^^^^^^^^ [2]: values type
+              ^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:27
  27: (123: $Values<NoProps>); // Error: There are no properties.
-      ^^^ Cannot cast `123` to values type because number [1] is incompatible with values type [2].
+      ^^^ Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2].
   References:
    27: (123: $Values<NoProps>); // Error: There are no properties.
         ^^^ [1]: number
    27: (123: $Values<NoProps>); // Error: There are no properties.
-             ^^^^^^^^^^^^^^^^ [2]: values type
+             ^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:28
  28: ((() => {}): $Values<NoProps>); // Error: There are no properties.
-       ^^^^^^^^ Cannot cast function to values type because function [1] is incompatible with values type [2].
+       ^^^^^^^^ Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2].
   References:
    28: ((() => {}): $Values<NoProps>); // Error: There are no properties.
          ^^^^^^^^ [1]: function
    28: ((() => {}): $Values<NoProps>); // Error: There are no properties.
-                    ^^^^^^^^^^^^^^^^ [2]: values type
+                    ^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:29
  29: (true: $Values<NoProps>); // Error: There are no properties.
-      ^^^^ Cannot cast `true` to values type because boolean [1] is incompatible with values type [2].
+      ^^^^ Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2].
   References:
    29: (true: $Values<NoProps>); // Error: There are no properties.
         ^^^^ [1]: boolean
    29: (true: $Values<NoProps>); // Error: There are no properties.
-              ^^^^^^^^^^^^^^^^ [2]: values type
+              ^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:31
  31: ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
-      ^^^^ Cannot cast `'yo'` to values type because string [1] is incompatible with values type [2].
+      ^^^^ Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2].
   References:
    31: ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
         ^^^^ [1]: string
    31: ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
-              ^^^^^^^^^^^^^^^^^^^^ [2]: values type
+              ^^^^^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:32
  32: (123: $Values<NoReadProps>); // Error: There are no readable properties.
-      ^^^ Cannot cast `123` to values type because number [1] is incompatible with values type [2].
+      ^^^ Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2].
   References:
    32: (123: $Values<NoReadProps>); // Error: There are no readable properties.
         ^^^ [1]: number
    32: (123: $Values<NoReadProps>); // Error: There are no readable properties.
-             ^^^^^^^^^^^^^^^^^^^^ [2]: values type
+             ^^^^^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:33
  33: ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
-       ^^^^^^^^ Cannot cast function to values type because function [1] is incompatible with values type [2].
+       ^^^^^^^^ Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2].
   References:
    33: ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
          ^^^^^^^^ [1]: function
    33: ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
-                    ^^^^^^^^^^^^^^^^^^^^ [2]: values type
+                    ^^^^^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:34
  34: (true: $Values<NoReadProps>); // Error: There are no readable properties.
-      ^^^^ Cannot cast `true` to values type because boolean [1] is incompatible with values type [2].
+      ^^^^ Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2].
   References:
    34: (true: $Values<NoReadProps>); // Error: There are no readable properties.
         ^^^^ [1]: boolean
    34: (true: $Values<NoReadProps>); // Error: There are no readable properties.
-              ^^^^^^^^^^^^^^^^^^^^ [2]: values type
+              ^^^^^^^^^^^^^^^^^^^^ [2]: `$Values`
 
 Error: classes.js:36
  36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
-      ^^^^ Cannot cast `'yo'` to values type because string [1] is incompatible with number [2].
+      ^^^^ Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2].
   References:
    36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
         ^^^^ [1]: string
@@ -81,7 +81,7 @@ Error: classes.js:36
 
 Error: classes.js:39
  39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
-       ^^^^^^^^ Cannot cast function to values type because function [1] is incompatible with number [2].
+       ^^^^^^^^ Cannot cast function to `$Values` because function [1] is incompatible with number [2].
   References:
    39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
          ^^^^^^^^ [1]: function
@@ -90,7 +90,7 @@ Error: classes.js:39
 
 Error: classes.js:41
  41: (true: $Values<OneProp>); // Error: There is no property with the type of
-      ^^^^ Cannot cast `true` to values type because boolean [1] is incompatible with number [2].
+      ^^^^ Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2].
   References:
    41: (true: $Values<OneProp>); // Error: There is no property with the type of
         ^^^^ [1]: boolean
@@ -159,7 +159,7 @@ Error: classes.js:48
 
 Error: classes.js:51
  51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
-      ^^^^ Cannot cast `'yo'` to values type because string [1] is incompatible with number [2].
+      ^^^^ Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2].
   References:
    51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
         ^^^^ [1]: string
@@ -168,7 +168,7 @@ Error: classes.js:51
 
 Error: classes.js:54
  54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
-       ^^^^^^^^ Cannot cast function to values type because function [1] is incompatible with number [2].
+       ^^^^^^^^ Cannot cast function to `$Values` because function [1] is incompatible with number [2].
   References:
    54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
          ^^^^^^^^ [1]: function
@@ -177,7 +177,7 @@ Error: classes.js:54
 
 Error: classes.js:56
  56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
-      ^^^^ Cannot cast `true` to values type because boolean [1] is incompatible with number [2].
+      ^^^^ Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2].
   References:
    56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
         ^^^^ [1]: boolean

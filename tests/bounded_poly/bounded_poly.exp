@@ -27,6 +27,15 @@ Error: test.js:13
 
 Error: test.js:22
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
+              ^^^^^^ Cannot instantiate `C` because in type argument `T`, string [1] is incompatible with number [2].
+  References:
+   22: var c: C<string> = new C; // error, since T = string is incompatible with number
+                ^^^^^^ [1]: string
+    7: class C<T: number> {
+                  ^^^^^^ [2]: number
+
+Error: test.js:22
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
                         ^^^^^ Cannot assign `new C()` to `c` because in type argument `T`, string [1] is incompatible with number [2].
   References:
    22: var c: C<string> = new C; // error, since T = string is incompatible with number
@@ -42,15 +51,6 @@ Error: test.js:23
                 ^^^^^^ [1]: string
    23: var q: number = c.qux(0);
               ^^^^^^ [2]: number
-
-Error: test.js:23
- 23: var q: number = c.qux(0);
-                       ^^^ Cannot call `c.qux` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                ^^^^^^ [1]: string
-    7: class C<T: number> {
-                  ^^^^^^ [2]: number
 
 Error: test.js:23
  23: var q: number = c.qux(0);

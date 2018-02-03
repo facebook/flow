@@ -168,14 +168,14 @@ Error: identity.js:70
  73:   ({ foo: number } | { foo: string }),
  74:   <T>(T) => T,
  75: >);
-     ^ union: object map(s)
+     ^ union: `$ObjMap`(s)
   Member 1:
           v-------
    72: }: $ObjMap<
    73:   ({ foo: number } | { foo: string }),
    74:   <T>(T) => T,
    75: >);
-       ^ object map
+       ^ $ObjMap
   Error:
         v
    70: ({
@@ -203,7 +203,7 @@ Error: identity.js:70
    73:   ({ foo: number } | { foo: string }),
    74:   <T>(T) => T,
    75: >);
-       ^ object map
+       ^ $ObjMap
   Error:
         v
    70: ({

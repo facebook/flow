@@ -469,9 +469,9 @@ let rec string_of_desc = function
   | RNoSuper -> "empty super object"
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
-  | RTupleMap -> "tuple map"
-  | RObjectMap -> "object map"
-  | RObjectMapi -> "object mapi"
+  | RTupleMap -> "`$TupleMap`"
+  | RObjectMap -> "`$ObjMap`"
+  | RObjectMapi -> "`$ObjMapi`"
   | RType x -> spf "`%s`" (prettify_react_util x)
   | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)

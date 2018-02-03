@@ -1,3 +1,17 @@
+Library type error:
+<BUILTINS>/react.js:159
+159:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of
+ 39: var foo: $jsx<number> = <Foo/>;
+                   ^^^^^^ number. See: classes.js:39
+
+Library type error:
+<BUILTINS>/react.js:159
+159:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                          ^^^^^^ number. See: classes.js:79
+
 Error: bad_default_props.js:15
  15: class C3 extends React.Component { // error
                       ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
@@ -71,23 +85,6 @@ Error: classes.js:38
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ `<Foo />`
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
- 39: var foo: $jsx<number> = <Foo/>;
-                   ^^^^^^ number
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ Cannot assign `<Foo />` to `foo` because in type argument `ElementType`, number [1] is incompatible with string [2].
-  References:
-   39: var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [1]: number
-  149:   | string
-           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
                               ^^^ Cannot assign `<Foo />` to `foo` because in property `type`, statics of `Foo` [1] is incompatible with number [2].
   References:
     7: class Foo extends React.Component<Props, State> {
@@ -103,6 +100,15 @@ Error: classes.js:39
                                ^^^^^^ [1]: props
     7: class Foo extends React.Component<Props, State> {
                                          ^^^^^ [2]: `Props`
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ Cannot instantiate `React.Element` because in type argument `ElementType`, number [1] is incompatible with string [2].
+  References:
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [1]: number
+  149:   | string
+           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
 
 Error: classes.js:43
                      v------------------
@@ -143,26 +149,9 @@ Error: classes.js:57
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ `<FooLegacy />`
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of. See lib: <BUILTINS>/react.js:159
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                          ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props. Cannot use React default props from
  78: FooLegacy.defaultProps = 0;
                               ^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ Cannot assign `<FooLegacy />` to `foo_legacy` because in type argument `ElementType`, number [1] is incompatible with string [2].
-  References:
-   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                            ^^^^^^ [1]: number
-  149:   | string
-           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -189,6 +178,15 @@ Error: classes.js:79
    47:     x: React.PropTypes.number.isRequired
    48:   },
          ^ [2]: propTypes of React component
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ Cannot instantiate `React.Element` because in type argument `ElementType`, number [1] is incompatible with string [2].
+  References:
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [1]: number
+  149:   | string
+           ^^^^^^ [2]: string. See lib: <BUILTINS>/react.js:149
 
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error

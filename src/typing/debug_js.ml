@@ -183,7 +183,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, TypeAppT (t, targs)) -> [
+  | DefT (_, TypeAppT (_, t, targs)) -> [
       "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
@@ -563,7 +563,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) targs)
     ]
 
-  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), will_flip) -> [
+  | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) -> [
       "willFlip", JSON_Bool will_flip;
       "currentTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts1);
       "currentUpper", _json_of_t json_cx t2;
@@ -1711,7 +1711,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
+  | DefT (_, TypeAppT (_, base, args)) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with

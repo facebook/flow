@@ -32,7 +32,7 @@ Error: intersection.js:9
 
 Error: intersection.js:12
  12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
-            ^^^^^^ Cannot cast `any` to object type because property `a` is missing in object type [1] but exists in object type [2].
+            ^^^^^^ Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
   References:
    12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
               ^^^^^^ [1]: object type
@@ -41,7 +41,7 @@ Error: intersection.js:12
 
 Error: intersection.js:14
  14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
-            ^^^^^^ Cannot cast `any` to object type because property `a` is missing in object type [1] but exists in object type [2].
+            ^^^^^^ Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
   References:
    14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
               ^^^^^^ [1]: object type
@@ -73,7 +73,7 @@ Error: lower.js:23
 
 Error: undefined.js:8
   8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-            ^^^^^^ Cannot cast `any` to object type because property `a` is missing in object type [1] but exists in object type [2].
+            ^^^^^^ Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
   References:
     8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
               ^^^^^^ [1]: object type
@@ -82,7 +82,7 @@ Error: undefined.js:8
 
 Error: undefined.js:10
  10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                ^^^^ Cannot cast `any` to object type because in property `a`, undefined [1] is incompatible with `A` [2].
+                ^^^^ Cannot cast `any` to `$Diff` because in property `a`, undefined [1] is incompatible with `A` [2].
   References:
    10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                   ^^^^ [1]: undefined

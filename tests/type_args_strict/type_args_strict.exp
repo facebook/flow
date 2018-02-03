@@ -38,7 +38,7 @@ Error: test.js:79
 
 Error: test.js:83
  83: var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic
-                            ^^^^^^^^^^^^ Cannot assign `new MyClass4()` to `mono` because `MyClass4` [1] is not a polymorphic type.
+               ^^^^^^^^^^ Cannot instantiate `MyClass4` because `MyClass4` [1] is not a polymorphic type.
   References:
    83: var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic
                  ^^^^^^^^^^ [1]: `MyClass4`

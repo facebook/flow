@@ -374,10 +374,24 @@ let property_sentinel_score = tuple_element_frame_score * 2
  * score_of_msg to learn more about scores.
  *
  * Calculated by taking the count of all the frames. *)
-let score_of_use_op =
-  fold_use_op
-    (fun _ -> 0)
-    (fun acc frame -> acc + (match frame with
+let score_of_use_op ~root_use_op use_op =
+  let score = fold_use_op
+    (* Comparing the scores of use_ops only works when they all have the same
+     * root_use_op! If two use_ops have different roots, we can't realistically
+     * compare the number of frames since the basis is completely different.
+     *
+     * So we require a root_use_op to be passed into score_of_use_op and we
+     * perform a structural equality check using that.
+     *
+     * Otherwise, the total score from score_of_use_op is -1. This way, errors
+     * which match our root_use_op will be promoted. It is more likely the user
+     * was trying to target these branches. *)
+    (function
+    | use_op when use_op = root_use_op -> Ok 0
+    | _ -> Error (-1))
+
+    (fun acc frame -> match acc with Error _ -> acc | Ok acc ->
+      Ok (acc + (match frame with
       (* Later params that error get a higher score. This roughly represents how
        * much type-checking work Flow successfully completed before erroring.
        * Useful for basically only overloaded function error messages.
@@ -396,7 +410,9 @@ let score_of_use_op =
        * FunParam is a good heuristic for the score.
        *
        * FunRestParam is FunParam, but at the end. So give it a larger score
-       * then FunParam after adding n. *)
+       * then FunParam after adding n.
+       *
+       * We do _not_ add n to the score if this use_op was added to an implicit type parameter. *)
       | FunParam {n; _} -> frame_score + n
       | FunRestParam _ -> frame_score + frame_score - 1
       (* FunCompatibility is generally followed by another use_op. So let's not
@@ -413,7 +429,12 @@ let score_of_use_op =
        * compatibility are always picked relative to the score of errors which
        * failed their sentinel prop checks. *)
       | PropertyCompatibility {is_sentinel=true; _} -> -property_sentinel_score
-      | _ -> frame_score))
+      | _ -> frame_score)))
+    use_op
+  in
+  match score with
+  | Ok n -> n
+  | Error n -> n
 
 (* Gets the score of an error message. The score is an approximation of how
  * close the user was to getting their code right. A higher score means the user
@@ -443,12 +464,12 @@ let score_of_use_op =
  * where we want to approximate which branch the user meant to target with
  * their code. Branches with higher scores have a higher liklihood of being
  * the branch the user was targeting. *)
-let score_of_msg msg =
+let score_of_msg ~root_use_op msg =
   (* Start by getting the score based off the use_op of our error message. If
    * the message does not have a use_op then we return 0. This score
    * contribution declares that greater complexity in the use is more likely to
    * cause a match. *)
-  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op op) msg in
+  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op ~root_use_op op) msg in
   (* Special cases for messages which increment the score. *)
   let score = score + match msg with
   (* If a property doesn't exist, we still use a PropertyCompatibility use_op.
@@ -976,6 +997,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Op (ReactGetIntrinsic {literal}) ->
         `Root (literal, None,
           [text "Cannot create "; desc literal; text " element"])
+
+      | Op (TypeApplication {type'}) ->
+        `Root (type', None,
+          [text "Cannot instantiate "; desc type'])
 
       | Op (SetProperty {prop; value; lhs; _}) ->
         let loc_reason = if Loc.contains (loc_of_reason lhs) loc then lhs else value in
