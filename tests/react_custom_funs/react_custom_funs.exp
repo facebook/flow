@@ -192,21 +192,24 @@ Error: create_element.js:7
 
 Error: create_element.js:9
   9: React.createElement(42); // Error: Number is not a valid component type.
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
-  9: React.createElement(42); // Error: Number is not a valid component type.
-                         ^^ number
+                         ^^ Cannot call `React.createElement` because number [1] is not a React component.
+  References:
+    9: React.createElement(42); // Error: Number is not a valid component type.
+                           ^^ [1]: number
 
 Error: create_element.js:11
  11: React.createElement(42, {}); // Error: Number is not a valid component type.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
- 11: React.createElement(42, {}); // Error: Number is not a valid component type.
-                         ^^ number
+                         ^^ Cannot call `React.createElement` because number [1] is not a React component.
+  References:
+   11: React.createElement(42, {}); // Error: Number is not a valid component type.
+                           ^^ [1]: number
 
 Error: create_element.js:12
  12: React.createElement({}, {}); // Error: Object is not a valid component type.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
- 12: React.createElement({}, {}); // Error: Object is not a valid component type.
-                         ^^ object literal
+                         ^^ Cannot call `React.createElement` because object literal [1] is not a React component.
+  References:
+   12: React.createElement({}, {}); // Error: Object is not a valid component type.
+                           ^^ [1]: object literal
 
 Error: create_element.js:22
  22:   bar: 'Hello, world!', // Error: `bar` is a string.

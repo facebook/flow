@@ -48,9 +48,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
-            3: const arr = [1,2,3];
-                            ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+            References:
+              3: const arr = [1,2,3];
+                              ^ [1]: number
 
           test.js:7
             7: React.createElement(...arr, {})
@@ -76,9 +77,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
-            3: const arr = [1,2,3];
-                            ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+            References:
+              3: const arr = [1,2,3];
+                              ^ [1]: number
 
           test.js:11
            11: React.createElement(...arr, ...arr)

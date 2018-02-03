@@ -22,9 +22,10 @@ Error: test.js:9
 
 Error: test.js:13
  13: <Z />; // error, expected React component
-     ^^^^^ `Z` element. Expected React component instead of
- 13: <Z />; // error, expected React component
-      ^ number
+      ^ Cannot create `Z` element because number [1] is not a React component.
+  References:
+   12: var Z = 0;
+               ^ [1]: number
 
 
 Found 4 errors

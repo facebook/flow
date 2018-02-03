@@ -288,15 +288,17 @@ Error: create_class.js:168
 
 Error: create_class.js:173
 173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
-173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
-                       ^^ object literal
+                       ^^ Cannot call `React.createClass` because object literal [1] is not an exact object.
+  References:
+  173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
+                         ^^ [1]: object literal
 
 Error: create_class.js:174
 174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
-174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
-                            ^^ object type
+                            ^^ Cannot call `React.createClass` because object type [1] is not an exact object.
+  References:
+  174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
+                              ^^ [1]: object type
 
 Error: create_class_initial_state_sealed.js:9
   9:     (this.state.q: empty); // number ~> empty
@@ -1183,9 +1185,10 @@ Error: proptype_arrayOf.js:38
 
 Error: proptype_arrayOf.js:43
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arrayOf`. Expected a React PropType instead of
- 43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
-                                      ^ number
+                                      ^ number [1] is not a React propType.
+  References:
+   43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
+                                        ^ [1]: number
 
 Error: proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
@@ -1241,16 +1244,12 @@ Error: proptype_func.js:14
   293:   func: React$PropType$Primitive<Function>;
                                         ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/react.js:293
 
-Error: proptype_incompatible.js:3
-                   v------------------
-  3: var Example = React.createClass({
-  4:   propTypes: {
+Error: proptype_incompatible.js:5
   5:     foo: 0, // error: `0` is not a prop type
-  6:   },
-  7: });
-     -^ call of method `createClass`. Expected a React PropType instead of
-  5:     foo: 0, // error: `0` is not a prop type
-              ^ number
+              ^ number [1] is not a React propType.
+  References:
+    5:     foo: 0, // error: `0` is not a prop type
+                ^ [1]: number
 
 Error: proptype_instanceOf.js:14
  14: (<Example x={new A} />); // error: A ~> B
@@ -1338,9 +1337,10 @@ Error: proptype_objectOf.js:38
 
 Error: proptype_objectOf.js:43
  43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `objectOf`. Expected a React PropType instead of
- 43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
-                                       ^ number
+                                       ^ number [1] is not a React propType.
+  References:
+   43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
+                                         ^ [1]: number
 
 Error: proptype_oneOf.js:14
  14: (<Example str="baz" />); // error: 'baz' not in enum
@@ -1432,9 +1432,10 @@ Error: proptype_oneOf.js:40
 
 Error: proptype_oneOf.js:76
  76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
-            ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOf`. Expected an array instead of
- 76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
-                                  ^ number
+                                  ^ number [1] is not an array.
+  References:
+   76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
+                                    ^ [1]: number
 
 Error: proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
@@ -1574,15 +1575,17 @@ Error: proptype_oneOfType.js:49
 
 Error: proptype_oneOfType.js:91
  91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected an array instead of
- 91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
-                                      ^ number
+                                      ^ number [1] is not an array.
+  References:
+   91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
+                                        ^ [1]: number
 
 Error: proptype_oneOfType.js:99
  99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected a React PropType instead of
- 99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
-                                       ^^ object literal
+                                       ^^ object literal [1] is not a React propType.
+  References:
+   99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
+                                         ^^ [1]: object literal
 
 Error: proptype_shape.js:20
  20:     (this.props.foo.baz: string);

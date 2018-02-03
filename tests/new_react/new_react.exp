@@ -1,17 +1,3 @@
-Library type error:
-<BUILTINS>/react.js:159
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of
- 39: var foo: $jsx<number> = <Foo/>;
-                   ^^^^^^ number. See: classes.js:39
-
-Library type error:
-<BUILTINS>/react.js:159
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React.ElementProps. Expected React component instead of
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                          ^^^^^^ number. See: classes.js:79
-
 Error: bad_default_props.js:15
  15: class C3 extends React.Component { // error
                       ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
@@ -103,6 +89,13 @@ Error: classes.js:39
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ Cannot instantiate `React.Element` because number [1] is not a React component.
+  References:
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [1]: number
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ Cannot instantiate `React.Element` because in type argument `ElementType`, number [1] is incompatible with string [2].
   References:
    39: var foo: $jsx<number> = <Foo/>;
@@ -179,6 +172,13 @@ Error: classes.js:79
    47:     x: React.PropTypes.number.isRequired
    48:   },
          ^ [2]: propTypes of React component
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ Cannot instantiate `React.Element` because number [1] is not a React component.
+  References:
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ [1]: number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;

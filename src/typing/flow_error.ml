@@ -2118,7 +2118,47 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         "Argument to implements clause must be an interface"]]
 
   | EReactKit (reasons, tool, use_op) ->
-      let open React in
+    let open React in
+    let friendly_error =
+      let (_, reason) = reasons in
+      let is_not_prop_type = "is not a React propType" in
+      let msg = match tool with
+      | GetProps _
+      | GetConfig _
+      | GetRef _
+      | CreateElement _
+        -> "is not a React component"
+      | SimplifyPropType (tool, _) ->
+        SimplifyPropType.(match tool with
+        | ArrayOf -> is_not_prop_type
+        | InstanceOf -> "is not a class"
+        | ObjectOf -> is_not_prop_type
+        | OneOf ResolveArray -> "is not an array"
+        | OneOf (ResolveElem _) -> "is not a literal"
+        | OneOfType ResolveArray -> "is not an array"
+        | OneOfType (ResolveElem _) -> is_not_prop_type
+        | Shape ResolveObject -> "is not an object"
+        | Shape (ResolveDict _) -> is_not_prop_type
+        | Shape (ResolveProp _) -> is_not_prop_type
+        )
+      | CreateClass (tool, _, _) ->
+        CreateClass.(match tool with
+        | Spec _ -> "is not an exact object"
+        | Mixins _ -> "is not a tuple"
+        | Statics _ -> "is not an object"
+        | PropTypes (_, ResolveObject) -> "is not an object"
+        | PropTypes (_, ResolveDict _) -> is_not_prop_type
+        | PropTypes (_, ResolveProp _) -> is_not_prop_type
+        | DefaultProps _ -> "is not an object"
+        | InitialState _ -> "is not an object or null"
+        )
+      in
+      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+        [ref reason; text (" " ^ msg ^ ".")]
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let expected_prop_type = "Expected a React PropType instead of" in
       let resolve_object prop = function
       | ResolveObject -> "Expected an object instead of"
@@ -2161,6 +2201,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EReactElementFunArity (reason, fn, n) ->
       mk_error ~trace_infos [mk_info reason [
