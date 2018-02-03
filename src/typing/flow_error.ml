@@ -2036,6 +2036,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
 
   | EInvalidObjectKit { tool; reason; reason_op; use_op } ->
+    let friendly_error =
+      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+        [ref reason; text " is not an object."]
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let open Object in
       let msg = match tool with
         | ReadOnly -> "Cannot create an object with read-only properties from"
@@ -2053,6 +2060,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       let extra, msgs = unwrap_use_ops ((reason_op, reason), [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EInvalidTypeof (loc, typename) ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [

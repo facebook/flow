@@ -360,9 +360,10 @@ Error: type_mixed.js:18
 
 Error: type_string.js:1
   1: type O1 = {..."foo"}; // error
-               ^^^^^^^^^^ O1. Cannot spread properties from
-  1: type O1 = {..."foo"}; // error
-                   ^^^^^ string literal `foo`
+                   ^^^^^ string literal `foo` [1] is not an object.
+  References:
+    1: type O1 = {..."foo"}; // error
+                     ^^^^^ [1]: string literal `foo`
 
 Error: type_void.js:12
  12: (o1: {||}); // error

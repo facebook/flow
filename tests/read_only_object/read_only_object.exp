@@ -146,9 +146,10 @@ Error: test.js:95
 
 Error: test.js:99
  99: type readOnlyNum = $ReadOnly<number>;
-                        ^^^^^^^^^^^^^^^^^ readOnlyNum. Cannot create an object with read-only properties from
- 99: type readOnlyNum = $ReadOnly<number>;
-                                  ^^^^^^ number
+                                  ^^^^^^ Cannot instantiate `$ReadOnly` because number [1] is not an object.
+  References:
+   99: type readOnlyNum = $ReadOnly<number>;
+                                    ^^^^^^ [1]: number
 
 
 Found 25 errors

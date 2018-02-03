@@ -149,12 +149,6 @@ Error: classes.js:57
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ props. Cannot use React default props from
- 78: FooLegacy.defaultProps = 0;
-                              ^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                      ^^^^^^^^^ Cannot assign `<FooLegacy />` to `foo_legacy` because in property `type`, statics of React component [1] is incompatible with number [2].
   References:
                        v------------------
@@ -166,6 +160,13 @@ Error: classes.js:79
        -^ [1]: statics of React component
    79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                             ^^^^^^ [2]: number
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                     ^^^^^^^^^ Cannot create `FooLegacy` element because number [1] is not an object.
+  References:
+   78: FooLegacy.defaultProps = 0;
+                                ^ [1]: number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
