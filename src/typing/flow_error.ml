@@ -1038,9 +1038,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
       | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
         let repos_small_reason loc reason = function
-        (* If we are checking a JSX element then don't reposition to the
-         * props object type which does not contain the children. *)
-        | Frame (ReactConfigCheck, _) -> repos_reason loc reason
         (* If we are checking class extensions or implementations then the
          * object reason will point to the class name. So don't reposition with
          * this reason. *)

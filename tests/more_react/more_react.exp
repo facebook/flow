@@ -2,15 +2,21 @@ Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
          ^^^^^^^^ Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1].
   References:
+         v-------------------------------------------------------------------
     8:   <App y={42}> // error, y: number but foo expects string in App.react
-         ^^^^^^^^^^^^ [1]: `React.Element`. See: JSX.js:8
+    9:     Some text.
+   10:   </App>;
+         -----^ [1]: `React.Element`. See: JSX.js:8
 
 Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
          ^^^^^^^^ Cannot call `app.setState` because property `setState` is missing in `React.Element` [1].
   References:
+         v-------------------------------------------------------------------
     8:   <App y={42}> // error, y: number but foo expects string in App.react
-         ^^^^^^^^^^^^ [1]: `React.Element`. See: JSX.js:8
+    9:     Some text.
+   10:   </App>;
+         -----^ [1]: `React.Element`. See: JSX.js:8
 
 Error: App.react.js:36
  36:         {foo(z,x)} // error, since z: number
