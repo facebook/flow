@@ -1206,6 +1206,12 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       )
   in
 
+  let mk_prop_friendly_message = function
+  | None | Some "$key" | Some "$value" -> [text "an indexer property"]
+  | Some "$call" -> [text "a callable signature"]
+  | Some prop -> [text "property "; code prop]
+  in
+
   (* When we fail to find a property on an object we use this function to create
    * an error. prop_loc should be the position of the use which caused this
    * error. The use_op represents how we got to this error.
@@ -1223,13 +1229,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     (* Otherwise this is a general property missing error. *)
     | _ -> (prop_loc, lower, None, use_op)
     in
-    let prop_message = match prop with
-    | None | Some "$key" | Some "$value" -> [text "an indexer property"]
-    | Some "$call" -> [text "a callable signature"]
-    | Some prop -> [text "property "; code prop]
-    in
     (* If we were subtyping that add to the error message so our user knows what
      * object required the missing property. *)
+    let prop_message = mk_prop_friendly_message prop in
     let message = match upper with
     | Some upper ->
       prop_message @ [text " is missing in "; ref lower; text " but exists in "] @
@@ -1297,6 +1299,45 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
        to throw on a use type, so mark the error instead *)
     | IncompatibleUnclassified ctor
       -> nope (spf "is not supported by unclassified use %s" ctor)
+  in
+
+  (* When an object property has a polarity that is incompatible with another
+   * error then we create one of these errors. We use terms like "read-only" and
+   * "write-only" to better reflect how the user thinks about these properties.
+   * Other terminology could include "contravariant", "covariant", and
+   * "invariant". Generally these terms are impenatrable to the average
+   * JavaScript developer. If we had more documentation explaining these terms
+   * it may be fair to use them in error messages. *)
+  let mk_prop_polarity_mismatch_friendly_error prop (lower, lpole) (upper, upole) use_op =
+    (* Remove redundant PropertyCompatibility if one exists. *)
+    let use_op = match use_op with
+    | Frame (PropertyCompatibility c, use_op) when c.prop = prop -> use_op
+    | _ ->
+      use_op
+    in
+    let expected = match lpole with
+    | Positive -> "read-only"
+    | Negative -> "write-only"
+    | Neutral ->
+      (match upole with
+      | Negative -> "readable"
+      | Positive -> "writable"
+      | Neutral -> failwith "unreachable")
+    in
+    let actual = match upole with
+    | Positive -> "read-only"
+    | Negative -> "write-only"
+    | Neutral ->
+      (match lpole with
+      | Negative -> "readable"
+      | Positive -> "writable"
+      | Neutral -> failwith "unreachable")
+    in
+    unwrap_use_ops_friendly (loc_of_reason lower) use_op (
+      mk_prop_friendly_message prop @
+      [text (" is " ^ expected ^ " in "); ref lower; text " but "] @
+      [text (actual ^ " in "); ref upper; text "."]
+    )
   in
 
   function
@@ -1508,9 +1549,17 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error msg reasons
 
   | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
+    let (lreason, ureason) = reasons in
+    let friendly_error =
+      mk_prop_polarity_mismatch_friendly_error
+        x (lreason, p1) (ureason, p2) use_op in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let reasons, msg = prop_polarity_error_msg x reasons p1 p2 in
       let extra, msgs = unwrap_use_ops (reasons, [], msg) use_op in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       mk_error ~trace_infos [mk_info reason [spf

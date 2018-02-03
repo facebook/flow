@@ -42,14 +42,14 @@ Error: a.js:70
 
 Error: a.js:74
  74: class G extends F {
-           ^ G. Cannot extend
- 74: class G extends F {
-                     ^ F
-  Property `prop` is incompatible:
-     74: class G extends F {
-               ^ G. Contravariant property `prop` incompatible with covariant use in
-     65: class F extends A {
-                         ^ A
+           ^ Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2] but read-only in `A` [3].
+  References:
+   74: class G extends F {
+                       ^ [1]: `F`
+   74: class G extends F {
+             ^ [2]: `G`
+    4: class A {
+             ^ [3]: `A`
 
 
 Found 7 errors

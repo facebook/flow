@@ -571,5 +571,41 @@ Error: order.js:10
    10:   b: ('foo': empty),
                     ^^^^^ [2]: empty
 
+Error: prop-variance.js:12
+ 12: ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
+            ^^^^^^^ Cannot cast `any` to object type because property `p` is read-only in object type [1] but writable in object type [2].
+  References:
+   12: ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
+              ^^^^^^^ [1]: object type
+   12: ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
+                        ^^^^^^ [2]: object type
 
-Found 61 errors
+Error: prop-variance.js:14
+ 14: ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
+            ^^^^^^^ Cannot cast `any` to object type because property `p` is read-only in object type [1] but write-only in object type [2].
+  References:
+   14: ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
+              ^^^^^^^ [1]: object type
+   14: ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
+                        ^^^^^^^ [2]: object type
+
+Error: prop-variance.js:15
+ 15: ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
+            ^^^^^^^ Cannot cast `any` to object type because property `p` is write-only in object type [1] but readable in object type [2].
+  References:
+   15: ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
+              ^^^^^^^ [1]: object type
+   15: ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
+                        ^^^^^^ [2]: object type
+
+Error: prop-variance.js:16
+ 16: ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
+            ^^^^^^^ Cannot cast `any` to object type because property `p` is write-only in object type [1] but read-only in object type [2].
+  References:
+   16: ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
+              ^^^^^^^ [1]: object type
+   16: ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
+                        ^^^^^^^ [2]: object type
+
+
+Found 65 errors
