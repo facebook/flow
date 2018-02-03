@@ -577,6 +577,10 @@ let has_ast = ASTHeap.mem
 
 let get_ast = ASTHeap.get
 
+let retrieve_docblock = DocblockHeap.get
+
+let get_file_sig = FileSigHeap.get
+
 let get_ast_unsafe file =
   try ASTHeap.find_unsafe file
   with Not_found -> raise (Ast_not_found (File_key.to_string file))
