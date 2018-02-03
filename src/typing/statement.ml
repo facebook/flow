@@ -3772,7 +3772,7 @@ and jsx_fragment cx = Ast.JSX.(
 )
 
 and jsx_title cx openingElement children locs = Ast.JSX.(
-  let _, loc_opening, _ = locs in
+  let loc_element, loc_opening, _ = locs in
   let _, { Opening.name; attributes; _ } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
@@ -3789,9 +3789,9 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
    *)
   | (Identifier (loc, { Identifier.name }), _, Some Options.CSX) ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
-    then AnyT.at loc_opening
+    then AnyT.at loc_element
     else begin
-      let reason = mk_reason (RJSXElement (Some name)) loc_opening in
+      let reason = mk_reason (RJSXElement (Some name)) loc_element in
       let c = identifier cx name loc in
       (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
       let o = jsx_mk_props cx reason c name attributes children in
@@ -4039,7 +4039,7 @@ and jsx_desugar cx name component_t props attributes children locs =
         ))
       )
   | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
-      let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_opening in
+      let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
 
       (* A JSX element with no attributes should pass in null as the second
        * arg *)
@@ -4052,6 +4052,10 @@ and jsx_desugar cx name component_t props attributes children locs =
           | UnresolvedArg c -> Arg c
           | UnresolvedSpreadArg c -> SpreadArg c
         ) children) in
+      let use_op = Op (JSXCreateElement {
+        op = reason;
+        component = reason_of_t component_t;
+      }) in
       Ast.Expression.(match jsx_expr with
       | _, Member {
         Member._object;
@@ -4059,17 +4063,18 @@ and jsx_desugar cx name component_t props attributes children locs =
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr loc_opening _object in
-          let use_op = unknown_use in (* TODO *)
           method_call cx reason ~use_op ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr loc_opening jsx_expr in
-          let use_op = unknown_use in (* TODO *)
           func_call cx reason ~use_op ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
-      let reason = mk_reason (RJSXFunctionCall name) loc_opening in
-      let use_op = unknown_use in (* TODO *)
+      let reason = mk_reason (RJSXFunctionCall name) loc_element in
+      let use_op = Op (JSXCreateElement {
+        op = reason;
+        component = reason_of_t component_t;
+      }) in
       func_call cx reason ~use_op ~call_strict_arity:false component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that

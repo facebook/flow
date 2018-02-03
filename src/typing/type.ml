@@ -304,6 +304,7 @@ module rec TypeTerm : sig
     | GeneratorYield of { value: reason }
     | GetProperty of reason
     | Internal of internal_use_op
+    | JSXCreateElement of { op: reason; component: reason }
     | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
     | ReactGetIntrinsic of { literal: reason }
     | TypeApplication of { type': reason }
@@ -2499,6 +2500,7 @@ let loc_of_root_use_op = function
 | FunImplicitReturn {upper=op; _}
 | GeneratorYield {value=op}
 | GetProperty op
+| JSXCreateElement {op; _}
 | ReactCreateElementCall {op; _}
 | TypeApplication {type'=op}
 | SetProperty {value=op; _}
@@ -2624,6 +2626,7 @@ let string_of_root_use_op = function
 | GeneratorYield _ -> "GeneratorYield"
 | GetProperty _ -> "GetProperty"
 | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
+| JSXCreateElement _ -> "JSXCreateElement"
 | ReactCreateElementCall _ -> "ReactCreateElementCall"
 | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
 | TypeApplication _ -> "TypeApplication"

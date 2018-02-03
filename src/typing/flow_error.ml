@@ -871,7 +871,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | Frame (FunMissingArg { op; def; _ }, use_op) ->
     let msg = "Too few arguments passed to" in
     unwrap_use_ops ~force:true ((op, def), [], msg) use_op
-  | Op (ReactCreateElementCall _) ->
+  | Op (ReactCreateElementCall _) | Op (JSXCreateElement _) ->
     extra, typecheck_msgs msg reasons
   | Op (ReactGetIntrinsic {literal}) ->
     let msg = "Is not a valid React JSX intrinsic" in
@@ -990,6 +990,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `Root (prop, None,
           [text "Cannot get "; desc prop])
 
+      | Frame (FunParam _, Op (JSXCreateElement {op; component; _}))
+      | Op (JSXCreateElement {op; component; _}) ->
+        `Root (op, Some component,
+          [text "Cannot create "; desc component; text " element"])
+
       | Op (ReactCreateElementCall {op; component; _}) ->
         `Root (op, Some component,
           [text "Cannot create "; desc component; text " element"])
@@ -1033,7 +1038,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
       | Frame (PropertyCompatibility {prop=Some prop; lower; _}, use_op) ->
         let repos_small_reason loc reason = function
-        (* If we are checking the React config then don't reposition to the
+        (* If we are checking a JSX element then don't reposition to the
          * props object type which does not contain the children. *)
         | Frame (ReactConfigCheck, _) -> repos_reason loc reason
         (* If we are checking class extensions or implementations then the
