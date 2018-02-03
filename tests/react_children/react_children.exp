@@ -1031,25 +1031,12 @@ Error: tuple.js:9
 
 Error: tuple.js:12
  12: <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
-     ^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     12: <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
-                ^^^^^^^^^^^^^^^^^^^^^^^ children array. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                ^^^^^^^^^^^^^^^ children array. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+            ^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 4 but tuple type [2] has an arity of 3.
+  References:
+   12: <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]: children array
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1059,6 +1046,15 @@ Error: tuple.js:13
               ^^ [1]: JSX text
     6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                              ^^^^^^^ [2]: boolean
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+            ^^^^^^^^^^^^^^^ Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 4 but tuple type [2] has an arity of 3.
+  References:
+   13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+              ^^^^^^^^^^^^^^^ [1]: children array
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1080,25 +1076,21 @@ Error: tuple.js:13
 
 Error: tuple.js:14
  14: <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
-     ^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     14: <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
-                ^^^^^^^^^^^^^^^ children array. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+            ^^^^^^^^^^^^^^^ Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 4 but tuple type [2] has an arity of 3.
+  References:
+   14: <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
+              ^^^^^^^^^^^^^^^ [1]: children array
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error: tuple.js:16
  16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-     ^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ children array. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 2 but tuple type [2] has an arity of 3.
+  References:
+   16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: children array
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error: tuple.js:16
  16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
@@ -1120,14 +1112,12 @@ Error: tuple.js:16
 
 Error: tuple.js:18
  18: <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
-     ^^^^^^^ props. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     18: <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
-                 ^^^^^^^^^^^^^^^^^^^^^^^ array literal. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
-      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
+             ^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `Tuple` element because in property `children`, array literal [1] has an arity of 4 but tuple type [2] has an arity of 3.
+  References:
+   18: <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
+               ^^^^^^^^^^^^^^^^^^^^^^^ [1]: array literal
+    6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error: tuple.js:34
  34: <TupleOne>{true}</TupleOne>; // Error: A single expression is not an array.

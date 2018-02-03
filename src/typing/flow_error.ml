@@ -1340,6 +1340,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     )
   in
 
+  let mk_tuple_arity_mismatch_friendly_error
+    (lower, length_lower) (upper, length_upper) use_op =
+    unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+      ref lower; text (spf " has an arity of %d but " length_lower); ref upper;
+      text (spf " has an arity of %d." length_upper);
+    ]
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, lower_kind);
@@ -1615,6 +1623,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error "This type cannot be compared to" reasons
 
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
+    let (lreason, ureason) = reasons in
+    let friendly_error =
+      mk_tuple_arity_mismatch_friendly_error
+        (lreason, l1) (ureason, l2) use_op
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let msg = spf
         "Tuple arity mismatch. This tuple has %d elements and cannot flow to \
         the %d elements of"
@@ -1624,6 +1640,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op
       in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | ENonLitArrayToTuple reasons ->
       let msg =

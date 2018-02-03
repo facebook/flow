@@ -54,15 +54,21 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 3 elements of
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
+                      ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 1 but tuple type [2] has an arity of 3.
+            References:
+              4:       let foo = [0];
+                                 ^^^ [1]: array literal
+              8:       (foo: [0, 1, 2]);
+                             ^^^^^^^^^ [2]: tuple type
 
           test.js:8
             8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
+                      ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 2 but tuple type [2] has an arity of 3.
+            References:
+              6:         foo = [...foo, x];
+                               ^^^^^^^^^^^ [1]: array literal
+              8:       (foo: [0, 1, 2]);
+                             ^^^^^^^^^ [2]: tuple type
 
           test.js:8
             8:       (foo: [0, 1, 2]);

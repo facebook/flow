@@ -139,15 +139,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function foo(x: [1, 2]): [1] { return x; }
-                                                           ^ tuple type. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 1 elements of
-            4:       function foo(x: [1, 2]): [1] { return x; }
-                                              ^^^ tuple type
+                                                           ^ Cannot return \`x\` because tuple type [1] has an arity of 2 but tuple type [2] has an arity of 1.
+            References:
+              4:       function foo(x: [1, 2]): [1] { return x; }
+                                       ^^^^^^ [1]: tuple type
+              4:       function foo(x: [1, 2]): [1] { return x; }
+                                                ^^^ [2]: tuple type
 
           test.js:5
             5:       function bar(x: [1]): [1, 2] { return x; }
-                                                           ^ tuple type. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
-            5:       function bar(x: [1]): [1, 2] { return x; }
-                                           ^^^^^^ tuple type
+                                                           ^ Cannot return \`x\` because tuple type [1] has an arity of 1 but tuple type [2] has an arity of 2.
+            References:
+              5:       function bar(x: [1]): [1, 2] { return x; }
+                                       ^^^ [1]: tuple type
+              5:       function bar(x: [1]): [1, 2] { return x; }
+                                             ^^^^^^ [2]: tuple type
         `,
       )
   ]),
@@ -159,9 +165,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:       (foo: [1]);
-                      ^^^ tuple type. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 1 elements of
-            5:       (foo: [1]);
-                           ^^^ tuple type
+                      ^^^ Cannot cast \`foo\` to tuple type because tuple type [1] has an arity of 0 but tuple type [2] has an arity of 1.
+            References:
+              4:       const foo: [] = [];
+                                  ^^ [1]: tuple type
+              5:       (foo: [1]);
+                             ^^^ [2]: tuple type
         `,
       ),
   ]),
@@ -254,15 +263,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:       (arr: [1,2]);
-                      ^^^ array literal. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 2 elements of
-            9:       (arr: [1,2]);
-                           ^^^^^ tuple type
+                      ^^^ Cannot cast \`arr\` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 2.
+            References:
+              4:       const arr = [1,2,3];
+                                   ^^^^^^^ [1]: array literal
+              9:       (arr: [1,2]);
+                             ^^^^^ [2]: tuple type
 
           test.js:10
            10:       (arr: [1,2,3,4]);
-                      ^^^ array literal. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 4 elements of
-           10:       (arr: [1,2,3,4]);
-                           ^^^^^^^^^ tuple type
+                      ^^^ Cannot cast \`arr\` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+            References:
+              4:       const arr = [1,2,3];
+                                   ^^^^^^^ [1]: array literal
+             10:       (arr: [1,2,3,4]);
+                             ^^^^^^^^^ [2]: tuple type
         `,
       ).because('Arity is enforced'),
   ]),

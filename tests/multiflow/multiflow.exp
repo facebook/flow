@@ -27,19 +27,21 @@ Error: apply.js:19
 
 Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
-                     ^^^^^^ array literal
-  4:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
+                     ^^^^^^ Cannot call `apply` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 1 but tuple type [2] has an arity of 2.
+  References:
+    4:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [1]: rest array
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                  ^^^^^^^^^^^ [2]: tuple type
 
 Error: apply.js:21
  21: apply(withRest, ['hi', 123, false]); // Error - too many args
-                     ^^^^^^^^^^^^^^^^^^ array literal
-  4:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 2 elements of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
+                     ^^^^^^^^^^^^^^^^^^ Cannot call `apply` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 3 but tuple type [2] has an arity of 2.
+  References:
+    4:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [1]: rest array
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                  ^^^^^^^^^^^ [2]: tuple type
 
 Error: apply.js:31
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
@@ -70,19 +72,21 @@ Error: apply.js:38
 
 Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args
-                         ^^^^^^ array literal
- 25:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
+                         ^^^^^^ Cannot call `applyType` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 1 but tuple type [2] has an arity of 2.
+  References:
+   25:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [1]: rest array
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                  ^^^^^^^^^^^ [2]: tuple type
 
 Error: apply.js:40
  40: applyType(withRest, ['hi', 123, false]); // Error - too many args
-                         ^^^^^^^^^^^^^^^^^^ array literal
- 25:   fn: (...Args) => Ret,
-           ^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 3 elements and cannot flow to the 2 elements of
- 17: function withRest(...rest: ['hi', 123]): true { return true; }
-                                ^^^^^^^^^^^ tuple type
+                         ^^^^^^^^^^^^^^^^^^ Cannot call `applyType` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 3 but tuple type [2] has an arity of 2.
+  References:
+   25:   fn: (...Args) => Ret,
+             ^^^^^^^^^^^^^^^^ [1]: rest array
+   17: function withRest(...rest: ['hi', 123]): true { return true; }
+                                  ^^^^^^^^^^^ [2]: tuple type
 
 Error: jsx.js:30
  30: (<AcceptsWhatever />: number); // Error string ~> number
@@ -131,25 +135,21 @@ Error: jsx.js:37
 
 Error: jsx.js:38
  38: (<ExpectsChildrenTuple />); // Error - missing child
-       ^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with the bound on type parameter `C`:
- 10:   C: (props: {}, children: Children) => Elem
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  The second parameter is incompatible:
-     38: (<ExpectsChildrenTuple />); // Error - missing child
-          ^^^^^^^^^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 1 elements of
-     37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
-                                                                     ^^^^^^^^ tuple type
+      ^^^^^^^^^^^^^^^^^^^^^^^^ In type argument `C`, rest array [1] has an arity of 0 but tuple type [2] has an arity of 1.
+  References:
+   38: (<ExpectsChildrenTuple />); // Error - missing child
+        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: rest array
+   37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
+                                                                   ^^^^^^^^ [2]: tuple type
 
 Error: jsx.js:41
  41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
-       ^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with the bound on type parameter `C`:
- 10:   C: (props: {}, children: Children) => Elem
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  The second parameter is incompatible:
-     41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
-          ^^^^^^^^^^^^^^^^^^^^^^ rest array. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 1 elements of
-     37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
-                                                                     ^^^^^^^^ tuple type
+      ^^^^^^^^^^^^^^^^^^^^^^ In type argument `C`, rest array [1] has an arity of 2 but tuple type [2] has an arity of 1.
+  References:
+   41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]: rest array
+   37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
+                                                                   ^^^^^^^^ [2]: tuple type
 
 Error: jsx.js:43
  43: declare function ExpectsChildrenArray(props: any, children: Array<string>): string;
