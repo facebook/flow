@@ -183,9 +183,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props. Inexact type is incompatible with exact type
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
+                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
+          References:
+            8:       <Bar {...params} />;
+                     ^^^^^^^^^^^^^^^^^^^ [1]: props
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [2]: \`Props\`
       `,
     ),
   ]),
@@ -211,18 +214,21 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props. Inexact type is incompatible with exact type
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ Props
-
-        test.js:8
-          8:       <Bar {...params} />;
                     ^^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
           References:
             7:       const params = {x: 23};
                                         ^^ [1]: number
             5:       type Props = {|x: string|};
                                        ^^^^^^ [2]: string
+
+        test.js:8
+          8:       <Bar {...params} />;
+                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
+          References:
+            8:       <Bar {...params} />;
+                     ^^^^^^^^^^^^^^^^^^^ [1]: props
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [2]: \`Props\`
       `,
     ),
   ]),

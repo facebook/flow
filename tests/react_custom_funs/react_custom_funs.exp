@@ -4,9 +4,12 @@ Error: clone_element.js:22
 
 Error: clone_element.js:23
  23: React.cloneElement('nope'); // Error: Not a valid element type.
-                        ^^^^^^ string. Inexact type is incompatible with exact type
- 23: React.cloneElement('nope'); // Error: Not a valid element type.
-                        ^^^^^^ React.Element
+                        ^^^^^^ Inexact string [1] is incompatible with exact `React.Element` [2].
+  References:
+   23: React.cloneElement('nope'); // Error: Not a valid element type.
+                          ^^^^^^ [1]: string
+   23: React.cloneElement('nope'); // Error: Not a valid element type.
+                          ^^^^^^ [2]: `React.Element`
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.

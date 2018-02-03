@@ -1700,11 +1700,20 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       ]
 
   | EIncompatibleWithExact (reasons, use_op) ->
+    let (lower, upper) = reasons in
+    let friendly_error =
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op
+        [text "inexact "; ref lower; text " is incompatible with exact "; ref upper; text "."]
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let msg = "Inexact type is incompatible with exact type" in
       let extra, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op
       in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons

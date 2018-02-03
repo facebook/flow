@@ -54,15 +54,21 @@ Error: type.js:26
 
 Error: type.js:30
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-                    ^^^^^ object type. Inexact type is incompatible with exact type
- 30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-               ^^^^^^^^^^^^ O3
+                    ^^^^^ Inexact object type [1] is incompatible with exact `O3` [2].
+  References:
+   30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
+                      ^^^^^ [1]: object type
+   30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
+                 ^^^^^^^^^^^^ [2]: `O3`
 
 Error: type.js:36
  36: (o4: {|p:T|}); // error: not exact
-      ^^ object type. Inexact type is incompatible with exact type
- 36: (o4: {|p:T|}); // error: not exact
-          ^^^^^^^ object type
+      ^^ Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   34: declare var o4: O4;
+                       ^^ [1]: object type
+   36: (o4: {|p:T|}); // error: not exact
+            ^^^^^^^ [2]: object type
 
 Error: type.js:37
  37: ({}: O4); // error: property `p` not found
@@ -129,9 +135,12 @@ Error: type.js:57
 
 Error: type.js:62
  62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-                    ^^^^^ object type. Inexact type is incompatible with exact type
- 62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-               ^^^^^^^^^^^^^^^^^^^^^^^ O7
+                    ^^^^^ Inexact object type [1] is incompatible with exact `O7` [2].
+  References:
+   62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
+                      ^^^^^ [1]: object type
+   62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]: `O7`
 
 Error: type.js:68
  68: (o8.p: T); // error: U ~> T
@@ -357,9 +366,12 @@ Error: type_string.js:1
 
 Error: type_void.js:12
  12: (o1: {||}); // error
-      ^^ O1. Inexact type is incompatible with exact type
- 12: (o1: {||}); // error
-          ^^^^ object type
+      ^^ Cannot cast `o1` to object type because inexact `O1` [1] is incompatible with exact object type [2].
+  References:
+   10: declare var o1: O1;
+                       ^^ [1]: `O1`
+   12: (o1: {||}); // error
+            ^^^^ [2]: object type
 
 Error: type_void.js:13
  13: (o1: {p:T}); // error
@@ -381,9 +393,12 @@ Error: type_void.js:21
 
 Error: type_void.js:22
  22: ({}: O2); // error
-      ^^ object literal. Inexact type is incompatible with exact type
- 22: ({}: O2); // error
-          ^^ O2
+      ^^ Cannot cast object literal to `O2` because inexact object literal [1] is incompatible with exact `O2` [2].
+  References:
+   22: ({}: O2); // error
+        ^^ [1]: object literal
+   22: ({}: O2); // error
+            ^^ [2]: `O2`
 
 Error: type_void.js:23
  23: ({p:x}: O2); // error
@@ -396,9 +411,12 @@ Error: type_void.js:23
 
 Error: type_void.js:28
  28: (o3: {||}); // error
-      ^^ O3. Inexact type is incompatible with exact type
- 28: (o3: {||}); // error
-          ^^^^ object type
+      ^^ Cannot cast `o3` to object type because inexact `O3` [1] is incompatible with exact object type [2].
+  References:
+   26: declare var o3: O3;
+                       ^^ [1]: `O3`
+   28: (o3: {||}); // error
+            ^^^^ [2]: object type
 
 Error: type_void.js:29
  29: (o3: {p:T}); // error
@@ -420,9 +438,12 @@ Error: type_void.js:37
 
 Error: type_void.js:38
  38: ({}: O4); // error
-      ^^ object literal. Inexact type is incompatible with exact type
- 38: ({}: O4); // error
-          ^^ O4
+      ^^ Cannot cast object literal to `O4` because inexact object literal [1] is incompatible with exact `O4` [2].
+  References:
+   38: ({}: O4); // error
+        ^^ [1]: object literal
+   38: ({}: O4); // error
+            ^^ [2]: `O4`
 
 Error: type_void.js:39
  39: ({p:x}: O4); // error

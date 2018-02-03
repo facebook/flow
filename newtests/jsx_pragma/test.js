@@ -318,9 +318,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:       <Bar {...props} />;
-                     ^^^^^^^^^^^^^^^^^^ props. Inexact type is incompatible with exact type
-            5:       function Foo(elem: number, props: {| x: string |}) {}
-                                                       ^^^^^^^^^^^^^^^ object type
+                      ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact object type [2].
+            References:
+              9:       <Bar {...props} />;
+                       ^^^^^^^^^^^^^^^^^^ [1]: props
+              5:       function Foo(elem: number, props: {| x: string |}) {}
+                                                         ^^^^^^^^^^^^^^^ [2]: object type
         `,
       ),
   ]),

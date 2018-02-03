@@ -54,9 +54,12 @@ Error: type.js:15
 
 Error: type.js:16
  16: ({}: O1); // Error: missing x
-      ^^ object literal. Inexact type is incompatible with exact type
- 16: ({}: O1); // Error: missing x
-          ^^ object type
+      ^^ Cannot cast object literal to `O1` because inexact object literal [1] is incompatible with exact object type [2].
+  References:
+   16: ({}: O1); // Error: missing x
+        ^^ [1]: object literal
+   16: ({}: O1); // Error: missing x
+            ^^ [2]: object type
 
 Error: type.js:16
  16: ({}: O1); // Error: missing x
@@ -177,9 +180,12 @@ Error: type.js:32
 
 Error: type.js:33
  33: ({}: O3); // OK
-      ^^ object literal. Inexact type is incompatible with exact type
- 33: ({}: O3); // OK
-          ^^ object type
+      ^^ Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
+  References:
+   33: ({}: O3); // OK
+        ^^ [1]: object literal
+   33: ({}: O3); // OK
+            ^^ [2]: object type
 
 Error: type.js:36
  36: ({x: y}: O3); // Error: Y ~> X
@@ -264,9 +270,12 @@ Error: type.js:45
 
 Error: type.js:46
  46: ({}: O4); // Error: missing x
-      ^^ object literal. Inexact type is incompatible with exact type
- 46: ({}: O4); // Error: missing x
-          ^^ object type
+      ^^ Cannot cast object literal to `O4` because inexact object literal [1] is incompatible with exact object type [2].
+  References:
+   46: ({}: O4); // Error: missing x
+        ^^ [1]: object literal
+   46: ({}: O4); // Error: missing x
+            ^^ [2]: object type
 
 Error: type.js:46
  46: ({}: O4); // Error: missing x
@@ -288,9 +297,12 @@ Error: type.js:49
 
 Error: type.js:53
  53: (o5: {|x?: X|}); // Error: inexact ~> exact
-      ^^ object type. Inexact type is incompatible with exact type
- 53: (o5: {|x?: X|}); // Error: inexact ~> exact
-          ^^^^^^^^^ object type
+      ^^ Cannot cast `o5` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   52: declare var o5: O5;
+                       ^^ [1]: object type
+   53: (o5: {|x?: X|}); // Error: inexact ~> exact
+            ^^^^^^^^^ [2]: object type
 
 Error: type.js:55
  55: (o5: {x: X}); // Error: x is optional
@@ -357,9 +369,12 @@ Error: type.js:63
 
 Error: type.js:67
  67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-      ^^ object type. Inexact type is incompatible with exact type
- 67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^^^^^^^^ object type
+      ^^ Cannot cast `o6` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   66: declare var o6: O6;
+                       ^^ [1]: object type
+   67: (o6: {|x?: X, y?: Y|}); // Error: inexact ~> exact
+            ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: type.js:69
  69: (o6: {x: X}); // Error: x is optional
@@ -408,9 +423,12 @@ Error: type.js:77
 
 Error: type.js:81
  81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-      ^^ object type. Inexact type is incompatible with exact type
- 81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^^^^^^^^ object type
+      ^^ Cannot cast `o7` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   80: declare var o7: O7;
+                       ^^ [1]: object type
+   81: (o7: {|x?: X, y?: Y|}); // Error: inexact ~> exact
+            ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error: type.js:83
  83: (o7: {x: X}); // Error: x is optional
@@ -531,9 +549,12 @@ Error: type_dict.js:13
 
 Error: type_dict.js:14
  14: ({}: O1); // OK
-      ^^ object literal. Inexact type is incompatible with exact type
- 14: ({}: O1); // OK
-          ^^ object type
+      ^^ Cannot cast object literal to `O1` because inexact object literal [1] is incompatible with exact object type [2].
+  References:
+   14: ({}: O1); // OK
+        ^^ [1]: object literal
+   14: ({}: O1); // OK
+            ^^ [2]: object type
 
 Error: type_dict.js:16
  16: ({y: x}: O1); // Error: X ~> Y
@@ -582,9 +603,12 @@ Error: type_dict.js:27
 
 Error: type_dict.js:28
  28: ({}: O3); // OK
-      ^^ object literal. Inexact type is incompatible with exact type
- 28: ({}: O3); // OK
-          ^^ object type
+      ^^ Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
+  References:
+   28: ({}: O3); // OK
+        ^^ [1]: object literal
+   28: ({}: O3); // OK
+            ^^ [2]: object type
 
 Error: type_dict.js:30
  30: ({y: x}: O3); // Error: X ~> Y
@@ -597,9 +621,12 @@ Error: type_dict.js:30
 
 Error: type_dict.js:34
  34: (o4: {|y?: Y|}); // Error: inexact ~> exact
-      ^^ object type. Inexact type is incompatible with exact type
- 34: (o4: {|y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^ object type
+      ^^ Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   33: declare var o4: O4;
+                       ^^ [1]: object type
+   34: (o4: {|y?: Y|}); // Error: inexact ~> exact
+            ^^^^^^^^^ [2]: object type
 
 Error: type_dict.js:36
  36: (o4: {y: Y}); // Error: y is optional
@@ -630,9 +657,12 @@ Error: type_dict.js:42
 
 Error: type_dict.js:46
  46: (o5: {|y?: Y|}); // Error: inexact ~> exact
-      ^^ object type. Inexact type is incompatible with exact type
- 46: (o5: {|y?: Y|}); // Error: inexact ~> exact
-          ^^^^^^^^^ object type
+      ^^ Cannot cast `o5` to object type because inexact object type [1] is incompatible with exact object type [2].
+  References:
+   45: declare var o5: O5;
+                       ^^ [1]: object type
+   46: (o5: {|y?: Y|}); // Error: inexact ~> exact
+            ^^^^^^^^^ [2]: object type
 
 Error: type_dict.js:48
  48: (o5: {y: Y}); // Error: y is optional
