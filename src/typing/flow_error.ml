@@ -2209,13 +2209,26 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       ]]
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
-    let msg = match param_count with
-    | 0 -> "No arguments are expected by"
-    | 1 -> "No more than 1 argument is expected by"
-    | n -> spf "No more than %d arguments are expected by" n
+    let friendly_error =
+      let msg = match param_count with
+      | 0 -> "no arguments are expected by"
+      | 1 -> "no more than 1 argument is expected by"
+      | n -> spf "no more than %d arguments are expected by" n
+      in
+      unwrap_use_ops_friendly (loc_of_reason unused_reason) use_op
+        [text msg; text " "; ref def_reason; text "."]
     in
-    let extra, msgs = unwrap_use_ops ((unused_reason, def_reason), [], msg) use_op in
-    typecheck_error_with_core_infos ~extra msgs
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
+      let msg = match param_count with
+      | 0 -> "No arguments are expected by"
+      | 1 -> "No more than 1 argument is expected by"
+      | n -> spf "No more than %d arguments are expected by" n
+      in
+      let extra, msgs = unwrap_use_ops ((unused_reason, def_reason), [], msg) use_op in
+      typecheck_error_with_core_infos ~extra msgs
+    )
 
   | EUnsupportedSetProto reason ->
       mk_error ~trace_infos [mk_info reason [

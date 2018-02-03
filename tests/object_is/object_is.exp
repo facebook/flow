@@ -9,9 +9,10 @@ Error: object_is.js:20
 
 Error: object_is.js:22
  22: var d: boolean = Object.is('a', 'b', 'c'); // Error - 'c' is unused
-                                          ^^^ unused function argument. No more than 2 arguments are expected by
- 41:     static is(a: any, b: any): boolean;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:41
+                                          ^^^ Cannot call method `is` because no more than 2 arguments are expected by function type [1].
+  References:
+   41:     static is(a: any, b: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function type. See lib: <BUILTINS>/core.js:41
 
 
 Found 2 errors

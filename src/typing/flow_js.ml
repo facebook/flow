@@ -9754,16 +9754,16 @@ and multiflow_partial =
     begin match rest_param with
     | None ->
       if is_strict && Context.enforce_strict_call_arity cx
-      then begin
-        List.iter (fun unused_arg ->
-          FlowError.EFunctionCallExtraArg (
-            mk_reason RFunctionUnusedArgument (loc_of_t unused_arg),
-            def_reason,
-            List.length parlist,
-            use_op
-          )
-          |> add_output cx ~trace
-        ) unused_arglist
+      then begin match unused_arglist with
+      | [] -> ()
+      | first_unused_arg :: _ ->
+        FlowError.EFunctionCallExtraArg (
+          mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg),
+          def_reason,
+          List.length parlist,
+          use_op
+        )
+        |> add_output cx ~trace
       end;
       (* Flow the args and params after we add the EFunctionCallExtraArg error.
        * This improves speculation error reporting. *)

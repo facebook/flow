@@ -162,9 +162,17 @@ Error: jsx.js:46
 
 Error: spread.js:7
   7: fun(...['hi'], ...[], ...[123], ...[true]); // Error - true is unused
-                                         ^^^^ unused function argument. No more than 2 arguments are expected by
-  3: function fun(x: 'hi', y: 123) {}
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+                                         ^^^^ Cannot call `fun` because no more than 2 arguments are expected by function [1].
+  References:
+    3: function fun(x: 'hi', y: 123) {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
+
+Error: spread.js:8
+  8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
+                                   ^^^ Cannot call `fun` because no more than 2 arguments are expected by function [1].
+  References:
+    3: function fun(x: 'hi', y: 123) {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error: spread.js:8
   8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
@@ -174,12 +182,6 @@ Error: spread.js:8
                           ^^^^ [1]: boolean
     3: function fun(x: 'hi', y: 123) {}
                                 ^^^ [2]: number literal `123`
-
-Error: spread.js:8
-  8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
-                                   ^^^ unused function argument. No more than 2 arguments are expected by
-  3: function fun(x: 'hi', y: 123) {}
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: spread.js:19
  19: funWithRestArray(...['hi'], ...[true], ...[123]); // Error: true ~> 123
