@@ -18,8 +18,8 @@ Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
   References:
-   13: declare var undefined: void;
-                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+    6:     var name = id ? 'John' : undefined;
+                                    ^^^^^^^^^ [1]: undefined
     7:     (name: boolean); // error, string or void
                   ^^^^^^^ [2]: boolean
 

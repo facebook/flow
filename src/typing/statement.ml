@@ -2462,6 +2462,13 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Ast.Expression.Literal lit ->
       literal cx loc lit
 
+  (* Treat the identifier `undefined` as an annotation for error reporting
+   * purposes. Like we do with other literals. Otherwise we end up pointing to
+   * `void` in `core.js`. While possible to re-declare `undefined`, it is
+   * unlikely. The tradeoff is worth it. *)
+  | Identifier (_, "undefined") ->
+      mod_reason_of_t annot_reason (identifier cx "undefined" loc)
+
   | Identifier (_, name) ->
       identifier cx name loc
 

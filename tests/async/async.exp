@@ -77,8 +77,8 @@ Error: async_return_void.js:8
   8:   return undefined;
               ^^^^^^^^^ Cannot return `undefined` because in type argument `R`, undefined [1] is incompatible with string [2].
   References:
-   13: declare var undefined: void;
-                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+    8:   return undefined;
+                ^^^^^^^^^ [1]: undefined
     7: async function foo2(): Promise<string> {
                                       ^^^^^^ [2]: string
 

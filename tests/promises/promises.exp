@@ -241,8 +241,8 @@ Error: resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
                       ^^^^^^^^^ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R`, undefined [1] is incompatible with number [2].
   References:
-   13: declare var undefined: void;
-                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+    5: (Promise.resolve(undefined): Promise<number>); // error
+                        ^^^^^^^^^ [1]: undefined
     5: (Promise.resolve(undefined): Promise<number>); // error
                                             ^^^^^^ [2]: number
 
