@@ -4,9 +4,10 @@ Error: iter.js:7
 
 Error: iter.js:8
   8:     foo(a[k]); // k is a string, which shouldn't be used for array access
-             ^^^^ computed property. Element cannot be accessed with
-  8:     foo(a[k]); // k is a string, which shouldn't be used for array access
-               ^ string
+             ^^^^ Cannot get `a[k]` because string [1] is not an array index.
+  References:
+    7: for (var k in a) {
+                ^ [1]: string
 
 Error: iter.js:22
  22: for (var n in (d = a)) {
@@ -14,9 +15,10 @@ Error: iter.js:22
 
 Error: iter.js:23
  23:     foo(d[n]); // d is a string, which shouldn't be used for array access
-             ^^^^ computed property. Element cannot be accessed with
- 23:     foo(d[n]); // d is a string, which shouldn't be used for array access
-               ^ string
+             ^^^^ Cannot get `d[n]` because string [1] is not an array index.
+  References:
+   22: for (var n in (d = a)) {
+                ^ [1]: string
 
 
 Found 4 errors

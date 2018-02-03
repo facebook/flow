@@ -1,44 +1,51 @@
 Error: constructor.js:15
  15:     this.y; // error (no super call)
-              ^ property `y`. Property cannot be accessed on possibly undefined value
- 15:     this.y; // error (no super call)
-         ^^^^ uninitialized this (expected super constructor call)
+              ^ Cannot get `this.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   12: class D extends A {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:16
  16:     this.x; // error (no super call)
-              ^ property `x`. Property cannot be accessed on possibly undefined value
- 16:     this.x; // error (no super call)
-         ^^^^ uninitialized this (expected super constructor call)
+              ^ Cannot get `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   12: class D extends A {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:30
  30:   f.y; // error
-         ^ property `y`. Property cannot be accessed on possibly undefined value
- 30:   f.y; // error
-       ^ uninitialized this (expected super constructor call)
+         ^ Cannot get `f.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   33: class F extends A {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:31
  31:   f.x; // error
-         ^ property `x`. Property cannot be accessed on possibly undefined value
- 31:   f.x; // error
-       ^ uninitialized this (expected super constructor call)
+         ^ Cannot get `f.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   33: class F extends A {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:45
  45:     super.x; // error (no super call)
-               ^ property `x`. Property cannot be accessed on possibly undefined value
- 45:     super.x; // error (no super call)
-         ^^^^^ uninitialized this (expected super constructor call)
+               ^ Cannot get `super.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   43: class G extends A {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:63
  63:     leaked_this.foo()
-         ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
- 63:     leaked_this.foo()
-         ^^^^^^^^^^^ uninitialized this (expected super constructor call)
+                     ^^^ Cannot call `leaked_this.foo` because property `foo` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   67: class I extends I_ {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: constructor.js:83
  83:     super(() => this.foo()); // error (no super call yet)
-                     ^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
- 83:     super(() => this.foo()); // error (no super call yet)
-                     ^^^^ uninitialized this (expected super constructor call)
+                          ^^^ Cannot call `this.foo` because property `foo` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+   81: class J extends J_ {
+             ^ [1]: uninitialized this (expected super constructor call)
 
 Error: super.js:10
  10:     super(x);

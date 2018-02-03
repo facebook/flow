@@ -186,21 +186,24 @@ Error: classes.js:56
 
 Error: non_object.js:3
   3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
-            ^^^^^^^^^^^^^^^^ values type. Expected object instead of
-  3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
-                    ^^^^^^^ boolean
+            ^^^^^^^^^^^^^^^^ boolean [1] is not an object.
+  References:
+    3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
+                      ^^^^^^^ [1]: boolean
 
 Error: non_object.js:5
   5: (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
-           ^^^^^^^^^^^^^^^^ values type. Expected object instead of
-  5: (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
-                   ^^^^^^^ boolean
+           ^^^^^^^^^^^^^^^^ boolean [1] is not an object.
+  References:
+    5: (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
+                     ^^^^^^^ [1]: boolean
 
 Error: non_object.js:7
   7: (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
-            ^^^^^^^^^^^^^^^^ values type. Expected object instead of
-  7: (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
-                    ^^^^^^^ boolean
+            ^^^^^^^^^^^^^^^^ boolean [1] is not an object.
+  References:
+    7: (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
+                      ^^^^^^^ [1]: boolean
 
 Error: object_types.js:6
   6: (123: NoProps); // Error: There are no props.

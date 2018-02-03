@@ -18,39 +18,24 @@ Error: assignment.js:16
 
 Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
-                    ^^^^^^ property `parent`. Property cannot be accessed on possibly null value
- 22:   while (x = x.parent) { // x.parent might be null
-                  ^ null or undefined
-
-Error: assignment.js:22
- 22:   while (x = x.parent) { // x.parent might be null
-                    ^^^^^^ property `parent`. Property cannot be accessed on possibly undefined value
- 22:   while (x = x.parent) { // x.parent might be null
-                  ^ null or undefined
+                    ^^^^^^ Cannot get `x.parent` because property `parent` is missing in null or undefined [1].
+  References:
+   21: function bar1(x : ?Bar) {
+                         ^^^^ [1]: null or undefined
 
 Error: bool.js:12
  12:   x[0]; // error on null and undefined
-       ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
- 12:   x[0]; // error on null and undefined
-       ^ null or undefined
-
-Error: bool.js:12
- 12:   x[0]; // error on null and undefined
-       ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 12:   x[0]; // error on null and undefined
-       ^ null or undefined
+         ^ Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
+  References:
+    3: function foo(x: ?bool) {
+                       ^^^^^ [1]: null or undefined
 
 Error: bool.js:18
  18:       x[0]; // error on null and undefined
-           ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
- 18:       x[0]; // error on null and undefined
-           ^ null or undefined
-
-Error: bool.js:18
- 18:       x[0]; // error on null and undefined
-           ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 18:       x[0]; // error on null and undefined
-           ^ null or undefined
+             ^ Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
+  References:
+   15: function bar(x: ?bool) {
+                       ^^^^^ [1]: null or undefined
 
 Error: bool.js:24
  24:   if (100 * false) {
@@ -163,9 +148,10 @@ Error: cond_prop.js:48
 
 Error: cond_prop.js:54
  54:     if (o.p) {} // error: property `p` not found on null
-               ^ property `p`. Property cannot be accessed on possibly null value
- 54:     if (o.p) {} // error: property `p` not found on null
-             ^ null
+               ^ Property `p` is missing in null [1].
+  References:
+   53:   function(o: null|{}) {
+                     ^^^^ [1]: null
 
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
@@ -187,15 +173,17 @@ Error: eq.js:19
 
 Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
-       ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  4:   x.y(); // error: could be undefined
-       ^^^ undefined
+         ^ Cannot call `x.y` because undefined [1] is not a function.
+  References:
+    3: function foo(x:{y?:() => void}) {
+                          ^^^^^^^^^^ [1]: undefined
 
 Error: hasOwnProperty.js:6
   6:     x.y(); // error: still could be undefined
-         ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  6:     x.y(); // error: still could be undefined
-         ^^^ undefined
+           ^ Cannot call `x.y` because undefined [1] is not a function.
+  References:
+    3: function foo(x:{y?:() => void}) {
+                          ^^^^^^^^^^ [1]: undefined
 
 Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
@@ -278,9 +266,10 @@ Error: heap_defassign.js:73
 
 Error: missing-property-cond.js:11
  11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
-              ^ property `x`. Property cannot be accessed on
- 11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
-         ^^^^ property `p2` of unknown type
+              ^ Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1].
+  References:
+   10:   if (o.p2) { // OK
+             ^^^^ [1]: property `p2` of unknown type
 
 Error: missing-property-cond.js:16
  16:   o.p3.x; // usual error outside conditional
@@ -291,9 +280,10 @@ Error: missing-property-cond.js:16
 
 Error: missing-property-cond.js:23
  23:     o.p4.x; // error
-              ^ property `x`. Property cannot be accessed on possibly undefined value
- 23:     o.p4.x; // error
-         ^^^^ property `p4` does not exist
+              ^ Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1].
+  References:
+   20:   if (o.p4) { // OK
+             ^^^^ [1]: property `p4` does not exist
 
 Error: missing-property-cond.js:37
  37:   if (o.bar) {} // error, any lookup on mixed is unsafe
@@ -311,9 +301,10 @@ Error: missing-property-cond.js:41
 
 Error: missing-property-cond.js:65
  65:   if (null.q) {} // error: property `q` on null
-                ^ property `q`. Property cannot be accessed on possibly null value
- 65:   if (null.q) {} // error: property `q` on null
-           ^^^^ null
+                ^ Property `q` is missing in null [1].
+  References:
+   65:   if (null.q) {} // error: property `q` on null
+             ^^^^ [1]: null
 
 Error: mixed.js:8
   8:     takesString(x); // error
@@ -505,22 +496,17 @@ Error: not.js:5
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
-         ^^^^ computed property. Computed property/element cannot be accessed on possibly null value
- 11:     x[0]; // should error for null, void and number (0)
-         ^ null or undefined
-
-Error: not.js:11
- 11:     x[0]; // should error for null, void and number (0)
-         ^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 11:     x[0]; // should error for null, void and number (0)
-         ^ null or undefined
-
-Error: not.js:11
- 11:     x[0]; // should error for null, void and number (0)
          ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
   References:
     9: function bar(x: ?number) {
                         ^^^^^^ [1]: `Number`
+
+Error: not.js:11
+ 11:     x[0]; // should error for null, void and number (0)
+           ^ Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
+  References:
+    9: function bar(x: ?number) {
+                       ^^^^^^^ [1]: null or undefined
 
 Error: not.js:21
  21:     x[0]; // should error for number (0)
@@ -980,9 +966,10 @@ Error: switch.js:51
 
 Error: tagged_union.js:20
  20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
-                ^^^^^^^^^^^^^^^^^ call of method `charAt`. Method cannot be called on possibly undefined value
- 20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
-                ^^^^^^^ undefined
+                        ^^^^^^ Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1].
+  References:
+    3:   prop1?: string
+                 ^^^^^^ [1]: undefined. See: ast_node.js:3
 
 Error: tagged_union.js:34
  34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
@@ -1043,15 +1030,17 @@ Error: tagged_union.js:96
 
 Error: tagged_union.js:101
 101:     if (x.kind === (null).toString()) {} // error, method on null
-                        ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
-101:     if (x.kind === (null).toString()) {} // error, method on null
-                         ^^^^ null
+                               ^^^^^^^^ Cannot call `null.toString` because property `toString` is missing in null [1].
+  References:
+  101:     if (x.kind === (null).toString()) {} // error, method on null
+                           ^^^^ [1]: null
 
 Error: tagged_union.js:102
 102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
-                                ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
-102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
-                                 ^^^^ null
+                                       ^^^^^^^^ Cannot call `null.toString` because property `toString` is missing in null [1].
+  References:
+  102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
+                                   ^^^^ [1]: null
 
 Error: tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
@@ -1336,27 +1325,31 @@ Error: typeof.js:12
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
-       ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
- 23:   BAZ.stuff(123); // error, refinement is gone
-       ^^^^^^^^^ undefined
+           ^^^^^ Cannot call `BAZ.stuff` because undefined [1] is not a function.
+  References:
+    3: declare var BAZ: {stuff?: (x: number) => void} | void;
+                                 ^^^^^^^^^^^^^^^^^^^ [1]: undefined. See lib: lib.js:3
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
-       ^^^^^^^^^^^^^^ call of method `stuff`. Method cannot be called on possibly undefined value
- 23:   BAZ.stuff(123); // error, refinement is gone
-       ^^^ undefined
+           ^^^^^ Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1].
+  References:
+    3: declare var BAZ: {stuff?: (x: number) => void} | void;
+                                                        ^^^^ [1]: undefined. See lib: lib.js:3
 
 Error: typeof.js:26
  26:   BAZ.stuff; // error, could be undefined
-           ^^^^^ property `stuff`. Property cannot be accessed on possibly undefined value
- 26:   BAZ.stuff; // error, could be undefined
-       ^^^ undefined
+           ^^^^^ Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1].
+  References:
+    3: declare var BAZ: {stuff?: (x: number) => void} | void;
+                                                        ^^^^ [1]: undefined. See lib: lib.js:3
 
 Error: typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
-         ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
- 30:     BAZ.stuff(123); // error, refinement is gone
-         ^^^^^^^^^ undefined
+             ^^^^^ Cannot call `BAZ.stuff` because undefined [1] is not a function.
+  References:
+    3: declare var BAZ: {stuff?: (x: number) => void} | void;
+                                 ^^^^^^^^^^^^^^^^^^^ [1]: undefined. See lib: lib.js:3
 
 Error: typeof.js:49
  49:   if (typeof x === "foo") { // error
@@ -1474,4 +1467,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 193 errors
+Found 189 errors

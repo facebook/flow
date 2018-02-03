@@ -72,15 +72,17 @@ Error: HTMLElement.js:16
 
 Error: HTMLFormElement.js:23
  23: el.className // invalid
-        ^^^^^^^^^ property `className`. Property cannot be accessed on possibly null value
- 23: el.className // invalid
-     ^^ null
+        ^^^^^^^^^ Cannot get `el.className` because property `className` is missing in null [1].
+  References:
+  2469:   [index: number | string]: HTMLElement | null;
+                                                  ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:2469
 
 Error: HTMLFormElement.js:27
  27: el.className // invalid
-        ^^^^^^^^^ property `className`. Property cannot be accessed on possibly null value
- 27: el.className // invalid
-     ^^ null
+        ^^^^^^^^^ Cannot get `el.className` because property `className` is missing in null [1].
+  References:
+  2469:   [index: number | string]: HTMLElement | null;
+                                                  ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:2469
 
 Error: HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
@@ -102,21 +104,24 @@ Error: HTMLInputElement.js:10
 
 Error: HTMLSelectElement.js:11
  11: form.action // invalid
-          ^^^^^^ property `action`. Property cannot be accessed on possibly null value
- 11: form.action // invalid
-     ^^^^ null
+          ^^^^^^ Cannot get `form.action` because property `action` is missing in null [1].
+  References:
+  2861:   form: HTMLFormElement | null;
+                                  ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:2861
 
 Error: HTMLSelectElement.js:19
  19: item.value // invalid
-          ^^^^^ property `value`. Property cannot be accessed on possibly null value
- 19: item.value // invalid
-     ^^^^ null
+          ^^^^^ Cannot get `item.value` because property `value` is missing in null [1].
+  References:
+  2876:   item(index: number): HTMLOptionElement | null;
+                                                   ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:2876
 
 Error: HTMLSelectElement.js:22
  22: item.value // invalid
-          ^^^^^ property `value`. Property cannot be accessed on possibly null value
- 22: item.value // invalid
-     ^^^^ null
+          ^^^^^ Cannot get `item.value` because property `value` is missing in null [1].
+  References:
+  2877:   namedItem(name: string): HTMLOptionElement | null;
+                                                       ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:2877
 
 Error: URL.js:8
   8: const e: string = c.path; // not correct
@@ -127,15 +132,17 @@ Error: URL.js:8
 
 Error: eventtarget.js:9
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `attachEvent`. Function cannot be called on possibly undefined value
-  9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^ undefined
+                 ^^^^^^^^^^^ Cannot call `target.attachEvent` because undefined [1] is not a function.
+  References:
+  183:   attachEvent?: (type: string, listener: EventListener) => void;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined. See lib: <BUILTINS>/dom.js:183
 
 Error: eventtarget.js:16
  16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `detachEvent`. Function cannot be called on possibly undefined value
- 16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^ undefined
+                 ^^^^^^^^^^^ Cannot call `target.detachEvent` because undefined [1] is not a function.
+  References:
+  193:   detachEvent?: (type: string, listener: EventListener) => void;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined. See lib: <BUILTINS>/dom.js:193
 
 Error: path2d.js:9
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid

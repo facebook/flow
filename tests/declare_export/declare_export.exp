@@ -140,9 +140,10 @@ Error: es6modules.js:67
 
 Error: es6modules.js:70
  70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-     ^^^^^^^^^^^^^^^^^^^^^^^^ new `CJS_Clobb_Class_NS`. Constructor cannot be called on
- 70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-         ^^^^^^^^^^^^^^^^^^ module `CommonJS_Clobbering_Class`
+         ^^^^^^^^^^^^^^^^^^ Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` [1] is not a function.
+  References:
+   69: import * as CJS_Clobb_Class_NS from "CommonJS_Clobbering_Class";
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `CommonJS_Clobbering_Class`
 
 Error: es6modules.js:71
  71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object

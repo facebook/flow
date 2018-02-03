@@ -717,15 +717,17 @@ Error: type_generic.js:1
 
 Error: type_generic.js:2
   2:   const {p, ...o} = a;
-              ^ property `p`. Property cannot be accessed on
-  2:   const {p, ...o} = a;
-                         ^ A
+              ^ Property `p` is missing in `A` [1].
+  References:
+    1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                ^ [1]: `A`
 
 Error: type_generic.js:2
   2:   const {p, ...o} = a;
-                 ^^^^ o. Expected object instead of
-  2:   const {p, ...o} = a;
-                         ^ A
+                 ^^^^ `A` [1] is not an object.
+  References:
+    1: function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                ^ [1]: `A`
 
 Error: type_generic.js:7
   7: (o: {|x: string|});

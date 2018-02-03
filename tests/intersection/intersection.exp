@@ -9,9 +9,10 @@ Error: pred.js:17
 
 Error: proper_blaming.js:9
   9: x.nope; // error here
-       ^^^^ property `nope`. Property cannot be accessed on possibly null value
-  9: x.nope; // error here
-     ^ null
+       ^^^^ Cannot get `x.nope` because property `nope` is missing in null [1].
+  References:
+    5: type O = {p: null} & E;
+                    ^^^^ [1]: null
 
 Error: test_obj.js:29
  29: var e: E = c; // error

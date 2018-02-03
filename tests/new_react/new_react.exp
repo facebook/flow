@@ -251,9 +251,10 @@ Error: new_react.js:20
 
 Error: new_react.js:21
  21:         this.props.y[0];
-             ^^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 21:         this.props.y[0];
-             ^^^^^^^^^^^^ undefined
+                          ^ Cannot get `this.props.y[0]` because an indexer property is missing in undefined [1].
+  References:
+    7:         y: React.PropTypes.array,
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
 
 Error: new_react.js:29
  29: var element = <C x = {0}/>;
@@ -479,15 +480,10 @@ Error: props4.js:19
 
 Error: state.js:19
  19:                 {this.state.bar.qux}
-                                     ^^^ property `qux`. Property cannot be accessed on possibly null value
- 19:                 {this.state.bar.qux}
-                      ^^^^^^^^^^^^^^ null or undefined
-
-Error: state.js:19
- 19:                 {this.state.bar.qux}
-                                     ^^^ property `qux`. Property cannot be accessed on possibly undefined value
- 19:                 {this.state.bar.qux}
-                      ^^^^^^^^^^^^^^ null or undefined
+                                     ^^^ Cannot get `this.state.bar.qux` because property `qux` is missing in null or undefined [1].
+  References:
+    6:     bar: ?{ qux: string; };
+                ^^^^^^^^^^^^^^^^^ [1]: null or undefined
 
 Error: state3.js:11
  11:         var a: number = this.state.x; // error
@@ -523,9 +519,10 @@ Error: state4.js:10
 
 Error: state5.js:5
   5:     return this.state.x; // error: need to declare type of state
-                           ^ property `x`. Property cannot be accessed on possibly undefined value
-  5:     return this.state.x; // error: need to declare type of state
-                ^^^^^^^^^^ undefined
+                           ^ Cannot get `this.state.x` because property `x` is missing in undefined [1].
+  References:
+   26: declare class React$Component<Props, State = void> {
+                                                    ^^^^ [1]: undefined. See lib: <BUILTINS>/react.js:26
 
 Error: state6.js:30
  30:       bar: '42',
@@ -566,4 +563,4 @@ Error: state6.js:47
                          ^^^^^ State
 
 
-Found 61 errors
+Found 60 errors

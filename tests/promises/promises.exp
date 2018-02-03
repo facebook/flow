@@ -223,9 +223,10 @@ Error: resolve_global.js:35
 
 Error: resolve_global.js:40
  40:   return 0;
-       ^^^^^^^^^ number. Expected polymorphic type instead of
- 39: async function baz(): Promise<number> {
-                           ^^^^^^^^^^^^^^^ statics of `Promise`
+              ^ Cannot return `0` because `Promise` [1] is not a polymorphic type.
+  References:
+   39: async function baz(): Promise<number> {
+                             ^^^^^^^^^^^^^^^ [1]: `Promise`
 
 Error: resolve_void.js:3
   3: (Promise.resolve(): Promise<number>); // error

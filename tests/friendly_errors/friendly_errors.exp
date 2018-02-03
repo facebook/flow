@@ -521,6 +521,29 @@ Error: loc-reference.js:41
    41:   (x: number); // T ~> number. Ref should point to `x: T`.
              ^^^^^^ [2]: number
 
+Error: misc-incompatibles.js:8
+  8: declare class X mixins Y {}
+                            ^ number [1] is not a class.
+  References:
+    6: const Y = 42;
+                 ^^ [1]: number
+
+Error: misc-incompatibles.js:11
+ 11: interface B extends A {}
+               ^ Cannot extend `A` [1] with `B` because number [2] is not inheritable.
+  References:
+   11: interface B extends A {}
+                           ^ [1]: `A`
+   11: interface B extends A {}
+                           ^ [2]: number
+
+Error: misc-incompatibles.js:11
+ 11: interface B extends A {}
+                         ^ number [1] is not supported by unclassified use GetStaticsT.
+  References:
+   11: interface B extends A {}
+                           ^ [1]: number
+
 Error: order.js:9
   9:   a: 42,
           ^^ Cannot cast object literal to object type because in property `a`, number [1] is incompatible with boolean [2].
@@ -549,4 +572,4 @@ Error: order.js:10
                     ^^^^^ [2]: empty
 
 
-Found 58 errors
+Found 61 errors

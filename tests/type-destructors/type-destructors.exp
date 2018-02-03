@@ -20,18 +20,6 @@ Error: element_type.js:18
    18: ('hello world': Obj_Elem);
                        ^^^^^^^^ [2]: number
 
-Error: errors.js:9
-  9: declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
-                                    ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property cannot be accessed on possibly null value
- 25: fn3(null); // We should get an error on this line.
-         ^^^^ null
-
-Error: errors.js:10
- 10: declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
-                                     ^^^^^^^^^^^^^^^^^^^^^ property `p`. Property cannot be accessed on possibly null value
- 28: fn4(null)(); // We should get an error on this line.
-         ^^^^ null
-
 Error: errors.js:12
  12: type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
               ^^^^^^^^^^^^^^^^^^^^^^ Property `p` is missing in object type [1].
@@ -55,11 +43,10 @@ Error: errors.js:18
 
 Error: errors.js:19
  19: fn1(null); // We should get an error on this line.
-     ^^^^^^^^^ fn1(...)
-  7: declare function fn1<O>(l: O): $ElementType<O, 'p'>;
-                                    ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
- 19: fn1(null); // We should get an error on this line.
-         ^^^^ null
+     ^^^ Cannot call `fn1` because an indexer property is missing in null [1].
+  References:
+   19: fn1(null); // We should get an error on this line.
+           ^^^^ [1]: null
 
 Error: errors.js:21
  21: fn2({x: 42})(); // We should get an error on this line.
@@ -70,11 +57,10 @@ Error: errors.js:21
 
 Error: errors.js:22
  22: fn2(null)(); // We should get an error on this line.
-     ^^^^^^^^^ fn2(...)
-  8: declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
-                                     ^^^^^^^^^^^^^^^^^^^^ $ElementType. Computed property/element cannot be accessed on possibly null value
- 22: fn2(null)(); // We should get an error on this line.
-         ^^^^ null
+     ^^^ Cannot call `fn2` because an indexer property is missing in null [1].
+  References:
+   22: fn2(null)(); // We should get an error on this line.
+           ^^^^ [1]: null
 
 Error: errors.js:24
  24: fn3({x: 42}); // We should get an error on this line.
@@ -83,12 +69,26 @@ Error: errors.js:24
    24: fn3({x: 42}); // We should get an error on this line.
            ^^^^^^^ [1]: object literal
 
+Error: errors.js:25
+ 25: fn3(null); // We should get an error on this line.
+     ^^^ Cannot call `fn3` because property `p` is missing in null [1].
+  References:
+   25: fn3(null); // We should get an error on this line.
+           ^^^^ [1]: null
+
 Error: errors.js:27
  27: fn4({x: 42})(); // We should get an error on this line.
      ^^^ Cannot call `fn4` because property `p` is missing in object literal [1].
   References:
    27: fn4({x: 42})(); // We should get an error on this line.
            ^^^^^^^ [1]: object literal
+
+Error: errors.js:28
+ 28: fn4(null)(); // We should get an error on this line.
+     ^^^ Cannot call `fn4` because property `p` is missing in null [1].
+  References:
+   28: fn4(null)(); // We should get an error on this line.
+           ^^^^ [1]: null
 
 Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error

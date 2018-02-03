@@ -36,9 +36,10 @@ Error: enum_client.js:21
 
 Error: number.js:6
   6:   return -x;
-              ^^ x. Expected number instead of
-  6:   return -x;
-               ^ string
+              ^^ string [1] is not a number.
+  References:
+    5: function test2(x: string): number {
+                         ^^^^^^ [1]: string
 
 
 Found 5 errors

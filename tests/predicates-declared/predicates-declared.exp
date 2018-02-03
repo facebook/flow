@@ -13,15 +13,17 @@ Error: sanity-fall-through.js:12
 
 Error: sanity-invalid-calls.js:10
  10:   if ((1)(s)) {
-           ^^^^^^ call of number. Function cannot be called on
- 10:   if ((1)(s)) {
-            ^ number
+            ^ Cannot call `1` because number [1] is not a function.
+  References:
+   10:   if ((1)(s)) {
+              ^ [1]: number
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-           ^^^^^^^^^^^^^^^ call of `pred` + number. Function cannot be called on
- 14:   if ((pred + 1)("s")) {
-            ^^^^^^^^ number
+            ^^^^^^^^ Cannot call `pred + 1` because number [1] is not a function.
+  References:
+   14:   if ((pred + 1)("s")) {
+              ^^^^^^^^ [1]: number
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {

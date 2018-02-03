@@ -25,15 +25,17 @@ Error: sanity-ordering.js:7
 
 Error: sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
-                ^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
- 15:     head = head[key] || create && (head[key] = {});
-                ^^^^ undefined
+                     ^^^ Cannot get `head[key]` because an indexer property is missing in undefined [1].
+  References:
+    6: if (dotAccess(obj)) {
+           ^^^^^^^^^^^^^^ [1]: undefined
 
 Error: sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
-                                        ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
- 15:     head = head[key] || create && (head[key] = {});
-                                        ^^^^^^^^^ undefined
+                                             ^^^ Cannot assign object literal to `head[key]` because an indexer property is missing in undefined [1].
+  References:
+    6: if (dotAccess(obj)) {
+           ^^^^^^^^^^^^^^ [1]: undefined
 
 Error: sanity-unbound-var.js:13
  13:     return x;

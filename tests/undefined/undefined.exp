@@ -1,8 +1,9 @@
 Error: undefined.js:3
   3:     x.foo();
-         ^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
-  3:     x.foo();
-         ^ uninitialized variable
+           ^^^ Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1].
+  References:
+    2:     var x;
+               ^ [1]: uninitialized variable
 
 Error: undefined2.js:7
   7:     (name: boolean); // error, string or void

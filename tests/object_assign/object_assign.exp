@@ -54,21 +54,24 @@ Error: B.js:12
 
 Error: non_objects.js:3
   3: Object.assign("123", {a: "foo"});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a` of object literal. Property cannot be assigned on
-  3: Object.assign("123", {a: "foo"});
-                   ^^^^^ string
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `a` is missing in string [1].
+  References:
+    3: Object.assign("123", {a: "foo"});
+                     ^^^^^ [1]: string
 
 Error: non_objects.js:4
   4: Object.assign(123, {a: "foo"});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a` of object literal. Property cannot be assigned on
-  4: Object.assign(123, {a: "foo"});
-                   ^^^ number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `a` is missing in number [1].
+  References:
+    4: Object.assign(123, {a: "foo"});
+                     ^^^ [1]: number
 
 Error: non_objects.js:5
   5: Object.assign({a: "foo"}, 123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `assign`. Expected object instead of
-  5: Object.assign({a: "foo"}, 123);
-                               ^^^ number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
+  References:
+    5: Object.assign({a: "foo"}, 123);
+                                 ^^^ [1]: number
 
 Error: spread.js:7
   7: (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number

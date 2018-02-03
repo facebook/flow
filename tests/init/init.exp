@@ -1,32 +1,37 @@
 Error: hoisted.js:10
  10:   f(); // error, possibly undefined
-       ^^^ call of `f`. Function cannot be called on possibly undefined value
- 10:   f(); // error, possibly undefined
-       ^ possibly uninitialized variable
+       ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
+  References:
+    8:     var f = function () {};
+               ^ [1]: possibly uninitialized variable
 
 Error: hoisted.js:17
  17:   f(); // error, possibly undefined
-       ^^^ call of `f`. Function cannot be called on possibly undefined value
- 17:   f(); // error, possibly undefined
-       ^ possibly uninitialized variable
+       ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
+  References:
+   15:     var f = function () {};
+               ^ [1]: possibly uninitialized variable
 
 Error: hoisted.js:31
  31:   f(); // error, possibly undefined
-       ^^^ call of `f`. Function cannot be called on possibly undefined value
- 31:   f(); // error, possibly undefined
-       ^ uninitialized variable
+       ^ Cannot call `f` because uninitialized variable [1] is not a function.
+  References:
+   29:     var f = function () {};
+               ^ [1]: uninitialized variable
 
 Error: hoisted.js:38
  38:   f(); // error, possibly undefined
-       ^^^ call of `f`. Function cannot be called on possibly undefined value
- 38:   f(); // error, possibly undefined
-       ^ possibly uninitialized variable
+       ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
+  References:
+   36:     var f = function () {};
+               ^ [1]: possibly uninitialized variable
 
 Error: hoisted.js:45
  45:   f(); // error, possibly undefined
-       ^^^ call of `f`. Function cannot be called on possibly undefined value
- 45:   f(); // error, possibly undefined
-       ^ possibly uninitialized variable
+       ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
+  References:
+   43:     var f = function () {};
+               ^ [1]: possibly uninitialized variable
 
 Error: hoisted2.js:17
  17:   var y:number = x; // error

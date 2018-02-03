@@ -20,9 +20,10 @@ Error: Foo.js:21
 
 Error: Foo.js:10
  10:     this.x = x;
-              ^ property `x`. Property cannot be assigned on possibly undefined value
- 10:     this.x = x;
-         ^^^^ uninitialized this (expected super constructor call)
+              ^ Cannot assign `x` to `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+  References:
+    7: class Foo extends Qux {
+             ^^^ [1]: uninitialized this (expected super constructor call)
 
 Error: Foo.js:13
  13:   foo(y:string,z):number {

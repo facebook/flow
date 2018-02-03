@@ -54,9 +54,10 @@ Error: array_rest.js:10
 
 Error: array_rest.js:12
  12: let [...e] = 0;
-          ^^^^ e. Expected array instead of
- 12: let [...e] = 0;
-                  ^ number
+          ^^^^ number [1] is not an array.
+  References:
+   12: let [...e] = 0;
+                    ^ [1]: number
 
 Error: computed.js:2
   2: (val1: void); // error: string ~> void
@@ -249,27 +250,31 @@ Error: defaults.js:59
 
 Error: defaults.js:61
  61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
-                            ^ property `x`. Property cannot be accessed on possibly null value
- 61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
-                                   ^^^^ null
+                            ^ Property `x` is missing in null [1].
+  References:
+   61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
+                                     ^^^^ [1]: null
 
 Error: defaults.js:62
  62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                            ^^^^ rest of object pattern. Expected object instead of
- 62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                                  ^ number
+                            ^^^^ number [1] is not an object.
+  References:
+   62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
+                                    ^ [1]: number
 
 Error: defaults.js:63
  63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
-                            ^ element 0. Computed property/element cannot be accessed on possibly null value
- 63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
-                               ^^^^ null
+                            ^ An indexer property is missing in null [1].
+  References:
+   63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
+                                 ^^^^ [1]: null
 
 Error: defaults.js:64
  64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
-                            ^^^^ rest of array pattern. Expected array instead of possibly null value
- 64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
-                                  ^^^^ null
+                            ^^^^ null [1] is not an array.
+  References:
+   64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
+                                    ^^^^ [1]: null
 
 Error: defaults.js:75
  75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
@@ -532,9 +537,10 @@ Error: destructuring_param.js:5
 
 Error: eager.js:2
   2: ({x} = null); // error, property `x` can not be accessed on `null`
-       ^ property `x`. Property cannot be accessed on possibly null value
-  2: ({x} = null); // error, property `x` can not be accessed on `null`
-            ^^^^ null
+       ^ Property `x` is missing in null [1].
+  References:
+    2: ({x} = null); // error, property `x` can not be accessed on `null`
+              ^^^^ [1]: null
 
 Error: object_rest.js:5
   5: o1_rest.x = 0; // error: rest result is sealed

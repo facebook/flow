@@ -146,9 +146,10 @@ Error: object_prototype.js:43
 
 Error: object_prototype.js:49
  49: (123).toString = function() {}; // error
-           ^^^^^^^^ property `toString`. Property cannot be assigned on
- 49: (123).toString = function() {}; // error
-      ^^^ number
+           ^^^^^^^^ Cannot assign function to `123.toString` because property `toString` is missing in number [1].
+  References:
+   49: (123).toString = function() {}; // error
+        ^^^ [1]: number
 
 Error: object_prototype.js:51
  51: (123).toString('foo'); // error

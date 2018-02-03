@@ -125,15 +125,17 @@ Error: optional_param4.js:13
 
 Error: undefined.js:8
   8:     return x.duck;
-                  ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
-  8:     return x.duck;
-                ^ undefined
+                  ^^^^ Cannot get `x.duck` because property `duck` is missing in undefined [1].
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
 
 Error: undefined2.js:8
   8:     return x.duck;
-                  ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
-  8:     return x.duck;
-                ^ undefined
+                  ^^^^ Cannot get `x.duck` because property `duck` is missing in undefined [1].
+  References:
+    3: function foo(bar?) {
+                    ^^^^ [1]: undefined
 
 
 Found 22 errors

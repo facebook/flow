@@ -402,9 +402,10 @@ Error: function.js:54
 
 Error: rest.js:36
  36:   return xs.pop(); // Error - no bound on T
-              ^^^^^^^^ call of method `pop`. Method cannot be called on
- 36:   return xs.pop(); // Error - no bound on T
-              ^^ T
+                 ^^^ Cannot call `xs.pop` because property `pop` is missing in `T` [1].
+  References:
+   35: function bad_unbound_rest_t<T>(...xs: T): T {
+                                             ^ [1]: `T`
 
 Error: rest.js:38
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
@@ -442,19 +443,17 @@ Error: rest.js:64
 
 Error: rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
-         ^^^ number
- 14: function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
-                                                    ^ T. Expected array instead of
- 15:   f(123); // Error - number ~> array - luckily this errors
-         ^^^ number
+         ^^^ Cannot call `f` with `123` bound to `x` because number [1] is not an array.
+  References:
+   15:   f(123); // Error - number ~> array - luckily this errors
+           ^^^ [1]: number
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
-       ^^^^^^^^^^ f(...)
- 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
-                                  ^^^^^^ string. Expected array instead of
- 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
-                                  ^^^^^^ string
+       ^ Cannot call `f` because string [1] is not an array.
+  References:
+   18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                    ^^^^^^ [1]: string
 
 Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors

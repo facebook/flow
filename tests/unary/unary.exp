@@ -1,8 +1,9 @@
 Error: unary.js:8
   8:   return -y; // error, we don't allow coercion here
-              ^^ y. Expected number instead of
-  8:   return -y; // error, we don't allow coercion here
-               ^ string
+              ^^ string [1] is not a number.
+  References:
+    7: function x1(y: string): number {
+                      ^^^^^^ [1]: string
 
 Error: unary.js:12
  12:   return ~y;  // error, we don't allow coercion here

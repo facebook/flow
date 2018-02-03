@@ -18,9 +18,10 @@ Error: typecheck.js:21
 
 Error: unreachable.js:5
   5:   return bar(x) + baz(y);
-                       ^^^^^^ call of `baz`. Function cannot be called on possibly undefined value
-  5:   return bar(x) + baz(y);
-                       ^^^ uninitialized variable
+                       ^^^ Cannot call `baz` because uninitialized variable [1] is not a function.
+  References:
+   13:   var baz = function (why) {
+             ^^^ [1]: uninitialized variable
 
 Error: unreachable.js:13
                  v---------------

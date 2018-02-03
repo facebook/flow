@@ -2316,17 +2316,17 @@ let dump_flow_error =
   | MergeJobException _ -> "MergeJobException"
   in
   let dump_upper_kind = function
-  | IncompatibleGetPropT -> "IncompatibleGetPropT"
-  | IncompatibleSetPropT -> "IncompatibleSetPropT"
-  | IncompatibleMethodT -> "IncompatibleMethodT"
+  | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
+  | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
+  | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
+  | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
+  | IncompatibleMethodT _ -> "IncompatibleMethodT"
   | IncompatibleCallT -> "IncompatibleCallT"
   | IncompatibleConstructorT -> "IncompatibleConstructorT"
-  | IncompatibleGetElemT -> "IncompatibleGetElemT"
-  | IncompatibleSetElemT -> "IncompatibleSetElemT"
-  | IncompatibleCallElemT -> "IncompatibleCallElemT"
-  | IncompatibleElemTRead -> "IncompatibleElemTRead"
-  | IncompatibleElemTWrite -> "IncompatibleElemTWrite"
-  | IncompatibleElemTCall -> "IncompatibleElemTCall"
+  | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
+  | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
+  | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
+  | IncompatibleElemTOfArrT -> "IncompatibleElemTOfArrT"
   | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
   | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
   | IncompatibleObjRestT -> "IncompatibleObjRestT"
@@ -2338,10 +2338,9 @@ let dump_flow_error =
   | IncompatibleThisSpecializeT -> "IncompatibleThisSpecializeT"
   | IncompatibleVarianceCheckT -> "IncompatibleVarianceCheckT"
   | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
-  | IncompatibleHasOwnPropT -> "IncompatibleHasOwnPropT"
+  | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
   | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
   | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
-  | IncompatibleMapTypeTTuple -> "IncompatibleMapTypeTTuple"
   | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
   | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
   | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
@@ -2367,14 +2366,6 @@ let dump_flow_error =
           (dump_reason cx reason_upper)
     | EIncompatibleProp { reason_prop; reason_obj; special=_; prop=_; use_op=_ } ->
         spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-    | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleGetProp { reason_prop = %s; reason_obj = %s; special = _ }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-    | EIncompatibleSetProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleSetProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) ->

@@ -1,14 +1,16 @@
 Error: example1.js:3
   3: function pipe(x, f) { f(x); }
-                           ^^^^ call of `f`. Function cannot be called on possibly null value
-  3: function pipe(x, f) { f(x); }
-                           ^ null
+                           ^ Cannot call `f` because null [1] is not a function.
+  References:
+    6: pipe("hello", null); // error
+                     ^^^^ [1]: null
 
 Error: example5.js:12
  12:   return x.kind; // error
-                ^^^^ property `kind`. Property cannot be accessed on possibly null value
- 12:   return x.kind; // error
-              ^ null
+                ^^^^ Cannot get `x.kind` because property `kind` is missing in null [1].
+  References:
+    9:   let reset = () => { x = null; }
+                                 ^^^^ [1]: null
 
 Error: example6.js:9
   9: onString(id);

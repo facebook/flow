@@ -168,9 +168,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:17
            17: Object.assign({}, ...[1])
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`assign\`. Expected object instead of
-           17: Object.assign({}, ...[1])
-                                     ^ number
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
+            References:
+             17: Object.assign({}, ...[1])
+                                       ^ [1]: number
         `,
       )
       .because('But this is an error since the array contains non-objects'),

@@ -14,15 +14,10 @@ export default suite(({addFile, addFiles, addCode}) => [
                               `
                                 test.js:8
                                   8: obj1.a.b.c;
-                                            ^ property \`b\`. Property cannot be accessed on possibly null value
-                                  8: obj1.a.b.c;
-                                     ^^^^^^ null or undefined
-
-                                test.js:8
-                                  8: obj1.a.b.c;
-                                            ^ property \`b\`. Property cannot be accessed on possibly undefined value
-                                  8: obj1.a.b.c;
-                                     ^^^^^^ null or undefined
+                                            ^ Cannot get \`obj1.a.b\` because property \`b\` is missing in null or undefined [1].
+                                  References:
+                                    6: declare var obj1: {a: ?{b: {c: number}}};
+                                                             ^^^^^^^^^^^^^^^^^ [1]: null or undefined
                               `,
                             ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?number);\n').noNewErrors(),

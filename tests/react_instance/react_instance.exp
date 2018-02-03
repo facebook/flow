@@ -28,9 +28,10 @@ Error: class.js:15
 
 Error: function.js:7
   7: (any: React$ElementRef<typeof Foo>).nope; // Error
-                                         ^^^^ property `nope`. Property cannot be accessed on possibly undefined value
-  7: (any: React$ElementRef<typeof Foo>).nope; // Error
-                            ^^^^^^^^^^ undefined
+                                         ^^^^ Cannot get `any.nope` because property `nope` is missing in undefined [1].
+  References:
+    7: (any: React$ElementRef<typeof Foo>).nope; // Error
+                              ^^^^^^^^^^ [1]: undefined
 
 Error: intrinsic.js:6
   6: (any: React$ElementRef<'foo'>).yep2; // Error

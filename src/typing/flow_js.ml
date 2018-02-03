@@ -6159,34 +6159,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
 
-    | _, GetPropT (_, _, propref, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleGetProp {
-        reason_prop = reason_of_propref propref;
-        reason_obj = reason_of_t l;
-        special = flow_error_kind_of_lower l;
-      })
-
-    | _, GetPrivatePropT (_, r, _, _, _, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleGetProp {
-        reason_prop = r;
-        reason_obj = reason_of_t l;
-        special = flow_error_kind_of_lower l;
-      })
-
-    | _, SetPropT (_, _, propref, _, _, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleSetProp {
-        reason_prop = reason_of_propref propref;
-        reason_obj = reason_of_t l;
-        special = flow_error_kind_of_lower l;
-      })
-
-    | _, SetPrivatePropT (_, r, _, _, _, _, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleSetProp {
-        reason_prop = r;
-        reason_obj = reason_of_t l;
-        special = flow_error_kind_of_lower l;
-      })
-
     | _, LookupT (_, _, _, propref, lookup_action) ->
       let use_op = use_op_of_lookup_action lookup_action in
       add_output cx ~trace (FlowError.EIncompatibleProp {
@@ -6220,17 +6192,20 @@ and flow_error_kind_of_lower = function
   | _ -> None
 
 and flow_error_kind_of_upper = function
-  | GetPropT _ -> FlowError.IncompatibleGetPropT
-  | SetPropT _ -> FlowError.IncompatibleSetPropT
-  | MethodT _ -> FlowError.IncompatibleMethodT
+  | GetPropT (_, _, Named (r, name), _) -> FlowError.IncompatibleGetPropT (loc_of_reason r, Some name)
+  | GetPropT (_, _, Computed t, _) -> FlowError.IncompatibleGetPropT (loc_of_t t, None)
+  | GetPrivatePropT (_, _, _, _, _, _) -> FlowError.IncompatibleGetPrivatePropT
+  | SetPropT (_, _, Named (r, name), _, _, _) -> FlowError.IncompatibleSetPropT (loc_of_reason r, Some name)
+  | SetPropT (_, _, Computed t, _, _, _) -> FlowError.IncompatibleSetPropT (loc_of_t t, None)
+  | SetPrivatePropT (_, _, _, _, _, _, _) -> FlowError.IncompatibleSetPrivatePropT
+  | MethodT (_, _, _, Named (r, name), _, _) -> FlowError.IncompatibleMethodT (loc_of_reason r, Some name)
+  | MethodT (_, _, _, Computed t, _, _) -> FlowError.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> FlowError.IncompatibleCallT
   | ConstructorT _ -> FlowError.IncompatibleConstructorT
-  | GetElemT _ -> FlowError.IncompatibleGetElemT
-  | SetElemT _ -> FlowError.IncompatibleSetElemT
-  | CallElemT _ -> FlowError.IncompatibleCallElemT
-  | ElemT (_, _, _, ReadElem _) -> FlowError.IncompatibleElemTRead
-  | ElemT (_, _, _, WriteElem _) -> FlowError.IncompatibleElemTWrite
-  | ElemT (_, _, _, CallElem _) -> FlowError.IncompatibleElemTCall
+  | GetElemT (_, _, t, _) -> FlowError.IncompatibleGetElemT (loc_of_t t)
+  | SetElemT (_, _, t, _, _) -> FlowError.IncompatibleSetElemT (loc_of_t t)
+  | CallElemT (_, _, t, _) -> FlowError.IncompatibleCallElemT (loc_of_t t)
+  | ElemT (_, _, DefT (_, ArrT _), _) -> FlowError.IncompatibleElemTOfArrT
   | ObjAssignFromT (_, _, _, ObjSpreadAssign) -> FlowError.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> FlowError.IncompatibleObjAssignFromT
   | ObjRestT _ -> FlowError.IncompatibleObjRestT
@@ -6243,10 +6218,10 @@ and flow_error_kind_of_upper = function
   | ThisSpecializeT _ -> FlowError.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> FlowError.IncompatibleVarianceCheckT
   | GetKeysT _ -> FlowError.IncompatibleGetKeysT
-  | HasOwnPropT _ -> FlowError.IncompatibleHasOwnPropT
+  | HasOwnPropT (r, Literal (_, name)) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
+  | HasOwnPropT (r, _) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, None)
   | GetValuesT _ -> FlowError.IncompatibleGetValuesT
   | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
-  | MapTypeT (_, TupleMap _, _) -> FlowError.IncompatibleMapTypeTTuple
   | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> FlowError.IncompatibleTypeAppVarianceCheckT
   | use_t -> FlowError.IncompatibleUnclassified (string_of_use_ctor use_t)

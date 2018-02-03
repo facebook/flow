@@ -22,24 +22,19 @@ Error: annot.js:6
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly null value
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^ null or undefined
-
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^ null or undefined
-
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
   References:
   301:     match(regexp: string | RegExp): ?Array<string>;
                                                   ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
     7: var x1: number = "".match(0)[0];
                ^^^^^^ [2]: number
+
+Error: overload.js:7
+  7: var x1: number = "".match(0)[0];
+                                  ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
+  References:
+  301:     match(regexp: string | RegExp): ?Array<string>;
+                                           ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
@@ -52,24 +47,19 @@ Error: overload.js:7
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly null value
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^ null or undefined
-
-Error: overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ computed property. Computed property/element cannot be accessed on possibly undefined value
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^ null or undefined
-
-Error: overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
   References:
   301:     match(regexp: string | RegExp): ?Array<string>;
                                                   ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
     8: var x2: number = "".match(/pattern/)[0];
                ^^^^^^ [2]: number
+
+Error: overload.js:8
+  8: var x2: number = "".match(/pattern/)[0];
+                                          ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
+  References:
+  301:     match(regexp: string | RegExp): ?Array<string>;
+                                           ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
 
 Error: overload.js:10
  10: var x4: number = "".split(/pattern/)[0];
@@ -180,4 +170,4 @@ Error: test2.js:7
                          ^^^^^^ [2]: number
 
 
-Found 13 errors
+Found 11 errors

@@ -40,16 +40,6 @@ type error_message =
       special: lower_kind option;
       use_op: use_op option;
     }
-  | EIncompatibleGetProp of {
-      reason_prop: reason;
-      reason_obj: reason;
-      special: lower_kind option;
-    }
-  | EIncompatibleSetProp of {
-      reason_prop: reason;
-      reason_obj: reason;
-      special: lower_kind option;
-    }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
@@ -235,17 +225,17 @@ and lower_kind =
   | Incompatible_intersection
 
 and upper_kind =
-  | IncompatibleGetPropT
-  | IncompatibleSetPropT
-  | IncompatibleMethodT
+  | IncompatibleGetPropT of Loc.t * string option
+  | IncompatibleSetPropT of Loc.t * string option
+  | IncompatibleGetPrivatePropT
+  | IncompatibleSetPrivatePropT
+  | IncompatibleMethodT of Loc.t * string option
   | IncompatibleCallT
   | IncompatibleConstructorT
-  | IncompatibleGetElemT
-  | IncompatibleSetElemT
-  | IncompatibleCallElemT
-  | IncompatibleElemTRead
-  | IncompatibleElemTWrite
-  | IncompatibleElemTCall
+  | IncompatibleGetElemT of Loc.t
+  | IncompatibleSetElemT of Loc.t
+  | IncompatibleCallElemT of Loc.t
+  | IncompatibleElemTOfArrT
   | IncompatibleObjAssignFromTSpread
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
@@ -257,10 +247,9 @@ and upper_kind =
   | IncompatibleThisSpecializeT
   | IncompatibleVarianceCheckT
   | IncompatibleGetKeysT
-  | IncompatibleHasOwnPropT
+  | IncompatibleHasOwnPropT of Loc.t * string option
   | IncompatibleGetValuesT
   | IncompatibleUnaryMinusT
-  | IncompatibleMapTypeTTuple
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleUnclassified of string
@@ -294,8 +283,6 @@ let util_use_op_of_msg nope util = function
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
 | EIncompatibleDefs {reason_lower=_; reason_upper=_; extras=_}
-| EIncompatibleGetProp {reason_prop=_; reason_obj=_; special=_}
-| EIncompatibleSetProp {reason_prop=_; reason_obj=_; special=_}
 | EDebugPrint (_, _)
 | EImportValueAsType (_, _)
 | EImportTypeAsTypeof (_, _)
@@ -557,17 +544,17 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   (* only on use-types - guard calls with is_use t *)
   let err_msg_use special u =
     let msg = match u with
-    | IncompatibleGetPropT -> "Property cannot be accessed on"
-    | IncompatibleSetPropT -> "Property cannot be assigned on"
-    | IncompatibleMethodT -> "Method cannot be called on"
+    | IncompatibleGetPropT _ -> "Property cannot be accessed on"
+    | IncompatibleGetPrivatePropT -> "Property cannot be accessed on"
+    | IncompatibleSetPropT _ -> "Property cannot be assigned on"
+    | IncompatibleSetPrivatePropT -> "Property cannot be assigned on"
+    | IncompatibleMethodT _ -> "Method cannot be called on"
     | IncompatibleCallT -> "Function cannot be called on"
     | IncompatibleConstructorT -> "Constructor cannot be called on"
-    | IncompatibleGetElemT -> "Computed property/element cannot be accessed on"
-    | IncompatibleSetElemT -> "Computed property/element cannot be assigned on"
-    | IncompatibleCallElemT -> "Computed property/element cannot be called on"
-    | IncompatibleElemTRead -> "Element cannot be accessed with"
-    | IncompatibleElemTWrite -> "Element cannot be assigned with"
-    | IncompatibleElemTCall -> "Element cannot be called with"
+    | IncompatibleGetElemT _ -> "Computed property/element cannot be accessed on"
+    | IncompatibleSetElemT _ -> "Computed property/element cannot be assigned on"
+    | IncompatibleCallElemT _ -> "Computed property/element cannot be called on"
+    | IncompatibleElemTOfArrT -> "Element cannot be accessed with"
     | IncompatibleObjAssignFromTSpread -> "Expected array instead of"
     | IncompatibleObjAssignFromT -> "Expected object instead of"
     | IncompatibleObjRestT -> "Expected object instead of"
@@ -579,10 +566,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     | IncompatibleThisSpecializeT -> "Expected class instead of"
     | IncompatibleVarianceCheckT -> "Expected polymorphic type instead of"
     | IncompatibleGetKeysT -> "Expected object instead of"
-    | IncompatibleHasOwnPropT -> "Property not found in"
+    | IncompatibleHasOwnPropT _ -> "Property not found in"
     | IncompatibleGetValuesT -> "Expected object instead of"
     | IncompatibleUnaryMinusT -> "Expected number instead of"
-    | IncompatibleMapTypeTTuple -> "Expected Iterable instead of"
     | IncompatibleMapTypeTObject -> "Expected object instead of"
     | IncompatibleTypeAppVarianceCheckT -> "Expected polymorphic type instead of"
     (* unreachable or unclassified use-types. until we have a mechanical way
@@ -1142,6 +1128,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       )
   in
 
+  (* An error between two incompatible types. A "lower" type and an "upper"
+   * type. The use_op describes the path which we followed to find
+   * this incompatibility.
+   *
+   * This is a specialization of mk_incompatible_use_friendly_error. *)
   let mk_incompatible_friendly_error lower upper use_op =
     let ((lower, upper), use_op) = dedupe_by_flip (lower, upper) use_op in
     let ((lower, upper), use_op) = flip_contravariant (lower, upper) use_op in
@@ -1225,6 +1216,64 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     unwrap_use_ops_friendly loc use_op message
   in
 
+  (* An error that occurs when some arbitrary "use" is incompatible with the
+   * "lower" type. The use_op describes the path which we followed to find this
+   * incompatibility.
+   *
+   * Similar to mk_incompatible_friendly_error except with any arbitrary *use*
+   * instead of specifically an upper type. This error handles all use
+   * incompatibilities in general. *)
+  let mk_incompatible_use_friendly_error use_loc use_kind lower use_op =
+    let nope msg =
+      unwrap_use_ops_friendly use_loc use_op
+        [ref lower; text (" " ^ msg ^ ".")]
+    in
+    match use_kind with
+    | IncompatibleElemTOfArrT
+      -> nope "is not an array index"
+    | IncompatibleGetPrivatePropT
+    | IncompatibleSetPrivatePropT
+      -> nope "is not a class with private properties"
+    | IncompatibleCallT
+    | IncompatibleConstructorT
+      -> nope "is not a function"
+    | IncompatibleObjAssignFromTSpread
+    | IncompatibleArrRestT
+      -> nope "is not an array"
+    | IncompatibleObjAssignFromT
+    | IncompatibleObjRestT
+    | IncompatibleObjSealT
+    | IncompatibleGetKeysT
+    | IncompatibleGetValuesT
+    | IncompatibleMapTypeTObject
+      -> nope "is not an object"
+    | IncompatibleMixinT
+    | IncompatibleThisSpecializeT
+      -> nope "is not a class"
+    | IncompatibleSpecializeT
+    | IncompatibleVarianceCheckT
+    | IncompatibleTypeAppVarianceCheckT
+      -> nope "is not a polymorphic type"
+    | IncompatibleSuperT
+      -> nope "is not inheritable"
+    | IncompatibleUnaryMinusT
+      -> nope "is not a number"
+    | IncompatibleGetPropT (prop_loc, prop)
+    | IncompatibleSetPropT (prop_loc, prop)
+    | IncompatibleHasOwnPropT (prop_loc, prop)
+    | IncompatibleMethodT (prop_loc, prop)
+      -> mk_prop_missing_friendly_error prop_loc prop lower use_op
+    | IncompatibleGetElemT prop_loc
+    | IncompatibleSetElemT prop_loc
+    | IncompatibleCallElemT prop_loc
+      -> mk_prop_missing_friendly_error prop_loc None lower use_op
+    (* unreachable or unclassified use-types. until we have a mechanical way
+       to verify that all legit use types are listed above, we can't afford
+       to throw on a use type, so mark the error instead *)
+    | IncompatibleUnclassified ctor
+      -> nope (spf "is not supported by unclassified use %s" ctor)
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, lower_kind);
@@ -1232,6 +1281,17 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       use_op;
       extras;
     } ->
+    let friendly_error = if extras <> []
+      then None
+      else mk_incompatible_use_friendly_error
+        (loc_of_reason reason_upper)
+        upper_kind
+        reason_lower
+        (Option.value ~default:unknown_use use_op)
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       (match use_op with
       | Some use_op ->
         let extra = speculation_extras extras in
@@ -1243,6 +1303,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         let extra = speculation_extras extras in
         typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
       )
+    )
 
   | EIncompatibleDefs { reason_lower; reason_upper; extras=[] } ->
     (match (mk_incompatible_friendly_error reason_lower reason_upper unknown_use) with
@@ -1273,14 +1334,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         typecheck_error msg reasons
       end
     )
-
-  | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
-      let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
-      typecheck_error msg (reason_prop, reason_obj)
-
-  | EIncompatibleSetProp { reason_prop; reason_obj; special } ->
-      let msg = spf "Property cannot be assigned on%s" (special_suffix special) in
-      typecheck_error msg (reason_prop, reason_obj)
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]

@@ -25,9 +25,10 @@ Error: poly.js:20
 
 Error: poly.js:24
  24:   y();
-       ^^^ call of `y`. Function cannot be called on
- 24:   y();
-       ^ U
+       ^ Cannot call `y` because `U` [1] is not a function.
+  References:
+   22: function foo8<U>(x:U,y):U {
+                          ^ [1]: `U`
 
 
 Found 4 errors
