@@ -148,7 +148,7 @@ Error: import.js:22
 
 Error: interface.js:1
   1: interface I { xs: Array<this>; }
-                             ^^^^ Unexpected use of `this` type
+                             ^^^^ Unexpected use of `this` type.
 
 Error: self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error

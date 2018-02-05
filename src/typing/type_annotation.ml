@@ -764,7 +764,10 @@ let rec convert cx tparams_map = Ast.Type.(function
             let polarity = if _method then Positive else polarity variance in
             let props = SMap.add name (Field (Some loc, t, polarity)) props in
             props, proto
-      | _ ->
+      | Ast.Expression.Object.Property.Literal (loc, _)
+      | Ast.Expression.Object.Property.PrivateName (loc, _)
+      | Ast.Expression.Object.Property.Computed (loc, _)
+          ->
         Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
         props, proto
       end

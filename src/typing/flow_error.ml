@@ -86,7 +86,6 @@ type error_message =
   | EIdxUse1 of reason
   | EIdxUse2 of reason
   | EUnexpectedThisType of Loc.t
-  | EInvalidRestParam of reason
   | ETypeParamArity of Loc.t * int
   | ETypeParamMinArity of Loc.t * int
   | ETooManyTypeArgs of reason * reason * int
@@ -308,7 +307,6 @@ let util_use_op_of_msg nope util = function
 | EIdxUse1 (_)
 | EIdxUse2 (_)
 | EUnexpectedThisType (_)
-| EInvalidRestParam (_)
 | ETypeParamArity (_, _)
 | ETypeParamMinArity (_, _)
 | ETooManyTypeArgs (_, _, _)
@@ -1822,9 +1820,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
-  | EUnsupportedExact reasons ->
-      typecheck_error "Unsupported exact type" reasons
+  | EUnsupportedExact (_, lower) ->
+    mk_friendly_error ~trace_infos (loc_of_reason lower)
+      [text "Cannot create exact type from "; ref lower; text "."]
 
   | EIdxArity reason ->
     mk_friendly_error ~trace_infos (loc_of_reason reason) [
@@ -1844,15 +1842,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       text "only access properties on the callback parameter.";
     ]
 
-  (* TODO: friendlify *)
   | EUnexpectedThisType loc ->
-      mk_error ~trace_infos [loc, ["Unexpected use of `this` type"]]
-
-  (* TODO: friendlify *)
-  | EInvalidRestParam reason ->
-      mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
-        "rest parameter should have an array type"
-      ]]
+    mk_friendly_error ~trace_infos loc
+      [text "Unexpected use of "; code "this"; text " type."]
 
   | EPropertyTypeAnnot loc ->
     mk_friendly_error ~trace_infos loc [
@@ -1914,24 +1906,21 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       ]
     )
 
-  (* TODO: friendlify *)
   | EUnsupportedKeyInObjectType loc ->
-      mk_error ~trace_infos [loc, ["Unsupported key in object type"]]
+    mk_friendly_error ~trace_infos loc
+      [text "Unsupported key in object type."]
 
-  (* TODO: friendlify *)
   | EPredAnnot loc ->
-      let msg =
-        "expected number of refined variables (currently only supporting \
-         one variable)"
-      in
-      mk_error ~trace_infos [loc, [msg]]
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use "; code "$Pred"; text " because the first ";
+      text "type argument must be a number literal.";
+    ]
 
-  (* TODO: friendlify *)
   | ERefineAnnot loc ->
-      let msg =
-        "expected base type and predicate type as arguments to $Refine"
-      in
-      mk_error ~trace_infos [loc, [msg]]
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use "; code "$Refine"; text " because the third ";
+      text "type argument must be a number literal.";
+    ]
 
   | EUnexpectedTypeof loc ->
     mk_friendly_error ~trace_infos ~kind:InferWarning loc

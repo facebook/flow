@@ -2519,8 +2519,6 @@ let dump_flow_error =
         spf "EIdxUse2 (%s)" (dump_reason cx reason)
     | EUnexpectedThisType loc ->
         spf "EUnexpectedThisType (%s)" (string_of_loc loc)
-    | EInvalidRestParam reason ->
-        spf "EInvalidRestParam (%s)" (dump_reason cx reason)
     | ETypeParamArity (loc, expected) ->
         spf "ETypeParamArity (%s, %d)" (string_of_loc loc) expected
     | ETypeParamMinArity (loc, expected) ->
