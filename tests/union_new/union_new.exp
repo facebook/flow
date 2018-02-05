@@ -95,7 +95,7 @@ Error: test10.js:38
  38: check_fun((x) => x);
                ^^^^^^^^ function. Could not decide which case to select
  35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
   Case 1 may work:
    35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
                               ^^^^^^^^^^^^^^^^^^^^^ function type
@@ -326,7 +326,7 @@ Error: test33.js:7
   7: foo(bar); // error: ambiguous speculation
          ^^^ function. Could not decide which case to select
   5: function foo(cb: (() => string) | (() => number)) {}
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
   Case 1 may work:
     5: function foo(cb: (() => string) | (() => number)) {}
                          ^^^^^^^^^^^^ function type
@@ -359,7 +359,7 @@ Error: test5.js:14
  14: fun(a1);
          ^^ function. Could not decide which case to select
  11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
   Case 1 may work:
    11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
                         ^^^^^^^^^^^^^^^^^^^^^ function type

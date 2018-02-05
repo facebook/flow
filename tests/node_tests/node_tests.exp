@@ -30,7 +30,7 @@ Error: crypto/crypto.js:12
             ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because null or undefined [1] is incompatible with number [2].
   References:
   1428:   read(size?: number): ?(string | Buffer);
-                               ^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/node.js:1428
+                               ^^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/node.js:1428
    12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                            ^^^^^^ [2]: number
 
