@@ -76,15 +76,11 @@ Error: array_lib.js:47
 
 Error: length.js:7
   7: r.length = 6; //ng
-       ^^^^^^ property `length`. Covariant property `length` incompatible with contravariant use in
-  7: r.length = 6; //ng
-     ^^^^^^^^ assignment of property `length`
+       ^^^^^^ Cannot assign `6` to `r.length` because property `length` is not writable.
 
 Error: length.js:10
  10: t.length = 7; //ng
-       ^^^^^^ property `length`. Covariant property `length` incompatible with contravariant use in
- 10: t.length = 7; //ng
-     ^^^^^^^^ assignment of property `length`
+       ^^^^^^ Cannot assign `7` to `t.length` because property `length` is not writable.
 
 
 Found 12 errors

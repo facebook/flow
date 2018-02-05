@@ -49,7 +49,6 @@ type error_message =
   | ENoNamedExport of reason * string * string * string option
   | EMissingTypeArgs of { reason_tapp: reason; reason_arity: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
-  | EMutationNotAllowed of { reason: reason; reason_op: reason }
   | EExpectedStringLit of (reason * reason) * string * string Type.literal * use_op
   | EExpectedNumberLit of
       (reason * reason) *
@@ -58,7 +57,7 @@ type error_message =
       use_op
   | EExpectedBooleanLit of (reason * reason) * bool * bool option * use_op
   | EPropNotFound of string option * (reason * reason) * use_op
-  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
+  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw * use_op
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
   | EPolarityMismatch of {
       reason: reason;
@@ -270,6 +269,7 @@ let util_use_op_of_msg nope util = function
 | EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
 | EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
 | EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
+| EPropAccess (rs, prop, p, rw, op) -> util op (fun op -> EPropAccess (rs, prop, p, rw, op))
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
@@ -292,8 +292,6 @@ let util_use_op_of_msg nope util = function
 | ENoNamedExport (_, _, _, _)
 | EMissingTypeArgs {reason_tapp=_; reason_arity=_; min_arity=_; max_arity=_}
 | EValueUsedAsType (_, _)
-| EMutationNotAllowed {reason=_; reason_op=_}
-| EPropAccess (_, _, _, _)
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
 | EPrivateLookupFailed (_, _)
@@ -1523,10 +1521,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       text "a value use "; code "typeof"; text ".";
     ]
 
-  (* TODO: friendlify *)
-  | EMutationNotAllowed { reason; reason_op } ->
-      typecheck_error "Mutation not allowed on" (reason_op, reason)
-
   | EExpectedStringLit (reasons, expected, actual, use_op) ->
     let (reason_lower, reason_upper) = reasons in
     (match (mk_incompatible_friendly_error reason_lower reason_upper use_op) with
@@ -1602,10 +1596,22 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
-  | EPropAccess (reasons, x, polarity, rw) ->
+  | EPropAccess (reasons, x, polarity, rw, use_op) ->
+    let friendly_error =
+      let (reason_prop, _) = reasons in
+      let rw = match rw with
+      | Read -> "readable"
+      | Write _ -> "writable"
+      in
+      unwrap_use_ops_friendly (loc_of_reason reason_prop) use_op
+        (mk_prop_friendly_message x @ [text (spf " is not %s." rw)])
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
       let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
       typecheck_error msg reasons
+    )
 
   | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
     let (lreason, ureason) = reasons in

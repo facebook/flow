@@ -2393,10 +2393,6 @@ let dump_flow_error =
         spf "EValueUsedAsType (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EMutationNotAllowed { reason; reason_op } ->
-        spf "EMutationNotAllowed { reason = %s; reason_op = %s }"
-          (dump_reason cx reason)
-          (dump_reason cx reason_op)
     | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Literal (_, str) -> spf "%S" str
@@ -2438,8 +2434,8 @@ let dump_flow_error =
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
           (string_of_use_op use_op)
-    | EPropAccess ((reason1, reason2), x, _, _) ->
-        spf "EPropAccess ((%s, %s), %s, _, _)"
+    | EPropAccess ((reason1, reason2), x, _, _, _) ->
+        spf "EPropAccess ((%s, %s), %s, _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")

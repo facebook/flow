@@ -119,9 +119,7 @@ Error: test.js:27
 
 Error: typeapp-test.js:5
   5:   foo2.p = null; // Error, covariant property p
-       ^^^^ object type. Covariant property `p` incompatible with contravariant use in
-  5:   foo2.p = null; // Error, covariant property p
-       ^^^^^^ assignment of property `p`
+            ^ Cannot assign `null` to `foo2.p` because property `p` is not writable.
 
 
 Found 15 errors

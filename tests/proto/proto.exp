@@ -149,9 +149,7 @@ Error: literal.js:6
 
 Error: literal.js:10
  10: (o_set.__proto__: empty); // error: read from contravariant prop
-      ^^^^^ object literal. Contravariant property `__proto__` incompatible with covariant use in
- 10: (o_set.__proto__: empty); // error: read from contravariant prop
-      ^^^^^^^^^^^^^^^ property `__proto__`
+            ^^^^^^^^^ Cannot get `o_set.__proto__` because property `__proto__` is not readable.
 
 Error: literal.js:13
  13: (o_method.__proto__: empty); // error: function ~> empty

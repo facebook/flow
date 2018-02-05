@@ -208,9 +208,7 @@ Found 1 error
 Test i:
 Error: i2.js:5
   5: foo.p = 0;
-     ^^^ object type. Covariant property `p` incompatible with contravariant use in
-  5: foo.p = 0;
-     ^^^^^ assignment of property `p`
+         ^ Cannot assign `0` to `foo.p` because property `p` is not writable.
 
 
 Found 1 error
@@ -218,9 +216,7 @@ Found 1 error
 Test j:
 Error: j2.js:5
   5: foo.p = 0;
-     ^^^ object type. Covariant property `p` incompatible with contravariant use in
-  5: foo.p = 0;
-     ^^^^^ assignment of property `p`
+         ^ Cannot assign `0` to `foo.p` because property `p` is not writable.
 
 
 Found 1 error

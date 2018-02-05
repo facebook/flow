@@ -790,9 +790,7 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:46
           46: (woA: $Shape<RWA>);
-               ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
-          46: (woA: $Shape<RWA>);
-                           ^^^ RWA
+               ^^^ Cannot cast \`woA\` to \`RWA\` because property \`p\` is not readable.
        `,
      ),
 
@@ -808,9 +806,7 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:52
           52: (woB: $Shape<RWA>);
-               ^^^ WOB. Contravariant property \`p\` incompatible with covariant use in
-          52: (woB: $Shape<RWA>);
-                           ^^^ RWA
+               ^^^ Cannot cast \`woB\` to \`RWA\` because property \`p\` is not readable.
        `,
      ),
 
@@ -850,9 +846,7 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:58
           58: (woA: $Shape<RWB>);
-               ^^^ WOA. Contravariant property \`p\` incompatible with covariant use in
-          58: (woA: $Shape<RWB>);
-                           ^^^ RWB
+               ^^^ Cannot cast \`woA\` to \`RWB\` because property \`p\` is not readable.
        `,
      ),
   ]),

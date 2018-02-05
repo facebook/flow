@@ -113,9 +113,7 @@ Error: object_missing.js:5
 
 Error: object_prototype.js:31
  31: b.toString = function(): string { return 'foo'; };
-     ^^^^^^^^^^ Object. Covariant property `toString` incompatible with contravariant use in
- 31: b.toString = function(): string { return 'foo'; };
-     ^^^^^^^^^^ assignment of property `toString`
+       ^^^^^^^^ Cannot assign function to `b.toString` because property `toString` is not writable.
 
 Error: object_prototype.js:38
  38: var xToString : number = x.toString; // error
@@ -171,9 +169,7 @@ Error: object_prototype.js:52
 
 Error: object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };
-     ^^^^^^^^^^^^^^^^ Object. Covariant property `hasOwnProperty` incompatible with contravariant use in
- 68: b.hasOwnProperty = function() { return false; };
-     ^^^^^^^^^^^^^^^^ assignment of property `hasOwnProperty`
+       ^^^^^^^^^^^^^^ Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is not writable.
 
 Error: object_prototype.js:71
  71: var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -204,9 +200,7 @@ Error: object_prototype.js:76
 
 Error: object_prototype.js:93
  93: b.propertyIsEnumerable = function() { return false; };
-     ^^^^^^^^^^^^^^^^^^^^^^ Object. Covariant property `propertyIsEnumerable` incompatible with contravariant use in
- 93: b.propertyIsEnumerable = function() { return false; };
-     ^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propertyIsEnumerable`
+       ^^^^^^^^^^^^^^^^^^^^ Cannot assign function to `b.propertyIsEnumerable` because property `propertyIsEnumerable` is not writable.
 
 Error: object_prototype.js:96
  96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -237,9 +231,7 @@ Error: object_prototype.js:102
 
 Error: object_prototype.js:119
 119: b.valueOf = function() { return {}; };
-     ^^^^^^^^^ Object. Covariant property `valueOf` incompatible with contravariant use in
-119: b.valueOf = function() { return {}; };
-     ^^^^^^^^^ assignment of property `valueOf`
+       ^^^^^^^ Cannot assign function to `b.valueOf` because property `valueOf` is not writable.
 
 Error: object_prototype.js:122
 122: var xValueOf : number = x.valueOf; // error
@@ -261,9 +253,7 @@ Error: object_prototype.js:126
 
 Error: object_prototype.js:147
 147: b.toLocaleString = function() { return 'derp'; };
-     ^^^^^^^^^^^^^^^^ Object. Covariant property `toLocaleString` incompatible with contravariant use in
-147: b.toLocaleString = function() { return 'derp'; };
-     ^^^^^^^^^^^^^^^^ assignment of property `toLocaleString`
+       ^^^^^^^^^^^^^^ Cannot assign function to `b.toLocaleString` because property `toLocaleString` is not writable.
 
 Error: object_prototype.js:150
 150: var xToLocaleString : number = x.toLocaleString; // error

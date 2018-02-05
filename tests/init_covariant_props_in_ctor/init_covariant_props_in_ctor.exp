@@ -1,8 +1,6 @@
 Error: a.js:13
  13: a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
-       ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
- 13: a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
-     ^^^^^^ assignment of property `prop`
+       ^^^^ Cannot assign `2` to `a.prop` because property `prop` is not writable.
 
 Error: a.js:20
  20:     this.prop = prop;         // ERROR: we should not be assigning a string here
@@ -15,21 +13,15 @@ Error: a.js:20
 
 Error: a.js:21
  21:     this.m = () => {};        // ERORR: cannot assign method
-              ^ property `m`. Covariant property `m` incompatible with contravariant use in
- 21:     this.m = () => {};        // ERORR: cannot assign method
-         ^^^^^^ assignment of property `m`
+              ^ Cannot assign function to `this.m` because property `m` is not writable.
 
 Error: a.js:47
  47:       this.prop = prop;       // ERROR: the initilized object can only be
-                ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
- 47:       this.prop = prop;       // ERROR: the initilized object can only be
-           ^^^^^^^^^ assignment of property `prop`
+                ^^^^ Cannot assign `prop` to `this.prop` because property `prop` is not writable.
 
 Error: a.js:61
  61:     this.prop = 1;            // ERROR
-              ^^^^ property `prop`. Covariant property `prop` incompatible with contravariant use in
- 61:     this.prop = 1;            // ERROR
-         ^^^^^^^^^ assignment of property `prop`
+              ^^^^ Cannot assign `1` to `this.prop` because property `prop` is not writable.
 
 Error: a.js:70
  70:     this.prop = "";           // ERROR

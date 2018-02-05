@@ -597,51 +597,35 @@ Error: es6modules.js:296
 
 Error: test_imports_are_frozen.js:9
   9: DefaultA.numberValue1 = 123; // Error: DefaultA is frozen
-     ^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
-  9: DefaultA.numberValue1 = 123; // Error: DefaultA is frozen
-     ^^^^^^^^ module `A`
+              ^^^^^^^^^^^^ Cannot assign `123` to `DefaultA.numberValue1` because property `numberValue1` is not writable.
 
 Error: test_imports_are_frozen.js:13
  13: ES6_Named1.varDeclNumber1 = 123; // Error: ES6_Named1 is frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `varDeclNumber1`. Mutation not allowed on
- 13: ES6_Named1.varDeclNumber1 = 123; // Error: ES6_Named1 is frozen
-     ^^^^^^^^^^ module `ES6_Named1`
+                ^^^^^^^^^^^^^^ Cannot assign `123` to `ES6_Named1.varDeclNumber1` because property `varDeclNumber1` is not writable.
 
 Error: test_imports_are_frozen.js:17
  17: CommonJS_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
- 17: CommonJS_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^ module `CommonJS_Clobbering_Lit`
+                   ^^^^^^^^^^^^ Cannot assign `123` to `CommonJS_Star.numberValue1` because property `numberValue1` is not writable.
 
 Error: test_imports_are_frozen.js:25
  25: CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
- 25: CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^ module `CommonJS_Clobbering_Frozen`
+                          ^^^^^^^^^^^^ Cannot assign `123` to `CommonJS_Frozen_Star.numberValue1` because property `numberValue1` is not writable.
 
 Error: test_imports_are_frozen.js:26
  26: CommonJS_Frozen_Star.default.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
- 26: CommonJS_Frozen_Star.default.numberValue1 = 123; // Error: frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ frozen object literal
+                                  ^^^^^^^^^^^^ Cannot assign `123` to `CommonJS_Frozen_Star.default.numberValue1` because property `numberValue1` is not writable.
 
 Error: test_imports_are_frozen.js:29
  29: CommonJS_Clobbering_Frozen.numberValue1 = 123; // Error: exports are frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
- 29: CommonJS_Clobbering_Frozen.numberValue1 = 123; // Error: exports are frozen
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ frozen object literal
+                                ^^^^^^^^^^^^ Cannot assign `123` to `CommonJS_Clobbering_Frozen.numberValue1` because property `numberValue1` is not writable.
 
 Error: test_imports_are_frozen.js:43
  43:   ES6_Named1.numberValue = 123; // error, es6 exports are frozen
-       ^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue`. Mutation not allowed on
- 43:   ES6_Named1.numberValue = 123; // error, es6 exports are frozen
-       ^^^^^^^^^^ module `ES6_Named1`
+                  ^^^^^^^^^^^ Cannot assign `123` to `ES6_Named1.numberValue` because property `numberValue` is not writable.
 
 Error: test_imports_are_frozen.js:51
  51:   CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `numberValue1`. Mutation not allowed on
- 51:   CommonJS_Frozen_Star.numberValue1 = 123; // Error: frozen
-       ^^^^^^^^^^^^^^^^^^^^ frozen object literal
+                            ^^^^^^^^^^^^ Cannot assign `123` to `CommonJS_Frozen_Star.numberValue1` because property `numberValue1` is not writable.
 
 
 Found 82 errors
