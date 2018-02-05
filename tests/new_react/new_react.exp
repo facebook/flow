@@ -1,14 +1,16 @@
 Error: bad_default_props.js:15
  15: class C3 extends React.Component { // error
-                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
- 26: declare class React$Component<Props, State = void> {
-                                   ^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:26
+                      ^^^^^^^^^^^^^^^ Cannot use property `Component` [1] with less than 1 type argument.
+  References:
+   26: declare class React$Component<Props, State = void> {
+                                     ^^^^^^^^^^^^ [1]: property `Component`. See lib: <BUILTINS>/react.js:26
 
 Error: bad_default_props.js:20
  20: class C4 extends React.Component { // error
-                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
- 26: declare class React$Component<Props, State = void> {
-                                   ^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:26
+                      ^^^^^^^^^^^^^^^ Cannot use property `Component` [1] with less than 1 type argument.
+  References:
+   26: declare class React$Component<Props, State = void> {
+                                     ^^^^^^^^^^^^ [1]: property `Component`. See lib: <BUILTINS>/react.js:26
 
 Error: classes.js:7
      v------------------------------------------------

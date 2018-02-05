@@ -45,15 +45,15 @@ Error: generics.js:39
 
 Error: generics.js:41
  41: var obj : Object<string, string> = {} // error, arity 0
-               ^^^^^^^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
+               ^^^^^^^^^^^^^^^^^^^^^^ Cannot apply type because it is not a polymorphic type.
 
 Error: generics.js:42
  42: var fn : Function<string> = function() { return 'foo'; } // error, arity 0
-              ^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
+              ^^^^^^^^^^^^^^^^ Cannot apply type because it is not a polymorphic type.
 
 Error: generics.js:43
  43: var fn : function<string> = function() { return 'foo'; } // error, arity 0
-              ^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
+              ^^^^^^^^^^^^^^^^ Cannot apply type because it is not a polymorphic type.
 
 
 Found 8 errors

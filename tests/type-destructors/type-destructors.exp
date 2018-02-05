@@ -1,6 +1,6 @@
 Error: element_type.js:1
   1: type BadArity = $ElementType<number, number, number>;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 2)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot use type without exactly 2 type arguments.
 
 Error: element_type.js:7
   7: ('hello world': Arr_Elem);

@@ -47,7 +47,7 @@ type error_message =
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string * string
   | ENoNamedExport of reason * string * string * string option
-  | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
+  | EMissingTypeArgs of { reason_tapp: reason; reason_arity: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
   | EMutationNotAllowed of { reason: reason; reason_op: reason }
   | EExpectedStringLit of (reason * reason) * string * string Type.literal * use_op
@@ -290,7 +290,7 @@ let util_use_op_of_msg nope util = function
 | ENoDefaultExport (_, _, _)
 | EOnlyDefaultExport (_, _, _)
 | ENoNamedExport (_, _, _, _)
-| EMissingTypeArgs {reason=_; min_arity=_; max_arity=_}
+| EMissingTypeArgs {reason_tapp=_; reason_arity=_; min_arity=_; max_arity=_}
 | EValueUsedAsType (_, _)
 | EMutationNotAllowed {reason=_; reason_op=_}
 | EPropAccess (_, _, _, _)
@@ -1474,16 +1474,46 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
     )
 
-  (* TODO: friendlify *)
-  | EMissingTypeArgs { reason; min_arity; max_arity } ->
-      let arity, args = if min_arity = max_arity
-        then spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
-        else spf "%d-%d" min_arity max_arity, "arguments"
-      in
-      mk_error ~trace_infos [mk_info reason [spf
-        "Application of polymorphic type needs \
-         <list of %s %s>. (Can use `*` for inferrable ones)"
-        arity args]]
+  | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+    let arity, args =
+      if min_arity = max_arity then
+        spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
+      else
+        spf "%d-%d" min_arity max_arity, "arguments"
+    in
+    let reason_arity = replace_reason_const (desc_of_reason reason_tapp) reason_arity in
+    mk_friendly_error ~trace_infos (loc_of_reason reason_tapp)
+      [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
+
+  | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
+    let reason_arity = replace_reason_const (desc_of_reason reason_tapp) reason_arity in
+    mk_friendly_error ~trace_infos (loc_of_reason reason_tapp) [
+      text "Cannot use "; ref reason_arity; text " with more than ";
+      text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))
+    ]
+
+  | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
+    let reason_arity = replace_reason_const (desc_of_reason reason_tapp) reason_arity in
+    mk_friendly_error ~trace_infos (loc_of_reason reason_tapp) [
+      text "Cannot use "; ref reason_arity; text " with less than ";
+      text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))
+    ]
+
+  | ETypeParamArity (loc, n) ->
+    if n = 0 then
+      mk_friendly_error ~trace_infos loc
+        [text "Cannot apply type because it is not a polymorphic type."]
+    else
+      mk_friendly_error ~trace_infos loc [
+        text "Cannot use type without exactly ";
+        text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
+      ]
+
+  | ETypeParamMinArity (loc, n) ->
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use type without at least ";
+      text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
+    ]
 
   (* TODO: friendlify *)
   | EValueUsedAsType reasons ->
@@ -1776,40 +1806,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
         "rest parameter should have an array type"
       ]]
-
-  (* TODO: friendlify *)
-  | ETypeParamArity (loc, n) ->
-      let msg = spf "Incorrect number of type parameters (expected %n)" n in
-      mk_error ~trace_infos [loc, [msg]]
-
-  (* TODO: friendlify *)
-  | ETypeParamMinArity (loc, n) ->
-      let msg = spf
-        "Incorrect number of type parameters (expected at least %n)" n
-      in
-      mk_error ~trace_infos [loc, [msg]]
-
-  (* TODO: friendlify *)
-  | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
-      let msg = spf
-        "Too many type arguments. Expected at most %d"
-        maximum_arity
-      in
-      mk_error ~trace_infos [
-        mk_info reason_tapp [msg];
-        mk_info reason_arity [];
-      ]
-
-  (* TODO: friendlify *)
-  | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
-      let msg = spf
-        "Too few type arguments. Expected at least %d"
-        minimum_arity
-      in
-      mk_error ~trace_infos [
-        mk_info reason_tapp [msg];
-        mk_info reason_arity [];
-      ]
 
   (* TODO: friendlify *)
   | EPropertyTypeAnnot loc ->

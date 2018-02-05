@@ -92,9 +92,10 @@ Error: contra.js:53
 
 Error: generics.js:6
   6: class ImplicitNumber extends Implicit { arg: number; }
-                                  ^^^^^^^^ Implicit. Too few type arguments. Expected at least 1
-  5: class Implicit<X> { arg: X; val: X; }
-                    ^ See type parameters of definition here
+                                  ^^^^^^^^ Cannot use `Implicit` [1] with less than 1 type argument.
+  References:
+    5: class Implicit<X> { arg: X; val: X; }
+                      ^ [1]: `Implicit`
 
 Error: import.js:8
   8:   foo(): B1 { return new B1(); } // error

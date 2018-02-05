@@ -2383,9 +2383,10 @@ let dump_flow_error =
         spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
     | ENoNamedExport (reason, module_name, export_name, _) ->
         spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
-    | EMissingTypeArgs { reason; min_arity; max_arity } ->
-        spf "EMissingTypeArgs { reason=%s; min_arity=%d; max_arity=%d }"
-          (dump_reason cx reason)
+    | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+        spf "EMissingTypeArgs { reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
           min_arity
           max_arity
     | EValueUsedAsType (reason1, reason2) ->

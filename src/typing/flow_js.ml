@@ -3812,7 +3812,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | UseT (use_op, DefT (_, TypeT _)) ->
         ignore use_op; (* TODO: add use op to missing type arg error? *)
         add_output cx ~trace (FlowError.EMissingTypeArgs {
-          reason = reason_op;
+          reason_tapp = reason_tapp;
+          reason_arity = mk_poly_arity_reason ids;
           min_arity = poly_minimum_arity ids;
           max_arity = List.length ids;
         })
@@ -7301,10 +7302,7 @@ and instantiate_poly_with_targs
   =
   let minimum_arity = poly_minimum_arity xs in
   let maximum_arity = List.length xs in
-  let reason_arity =
-    let x1, xN = List.hd xs, List.hd (List.rev xs) in
-    let loc = Loc.btwn (loc_of_reason x1.reason) (loc_of_reason xN.reason) in
-    mk_reason (RCustom "See type parameters of definition here") loc in
+  let reason_arity = mk_poly_arity_reason xs in
   if List.length ts > maximum_arity
   then add_output cx ~trace
     (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
@@ -7374,6 +7372,11 @@ and instantiate_poly_param_upper_bounds cx typeparams =
       SMap.add name t map, t :: list
     ) (SMap.empty, []) typeparams in
   List.rev revlist
+
+and mk_poly_arity_reason xs =
+  let x1, xN = List.hd xs, List.hd (List.rev xs) in
+  let loc = Loc.btwn (loc_of_reason x1.reason) (loc_of_reason xN.reason) in
+  mk_reason (RCustom "See type parameters of definition here") loc
 
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and

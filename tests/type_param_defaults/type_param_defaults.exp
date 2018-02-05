@@ -90,15 +90,17 @@ Error: classes.js:34
 
 Error: classes.js:40
  40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-                         ^^^ D. Too few type arguments. Expected at least 1
- 36: class D<S, T = string> extends A<T> {}
-             ^^^^ See type parameters of definition here
+                         ^^^ Cannot use `D` [1] with less than 1 type argument.
+  References:
+   36: class D<S, T = string> extends A<T> {}
+               ^^^^ [1]: `D`
 
 Error: classes.js:41
  41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ D. Too many type arguments. Expected at most 2
- 36: class D<S, T = string> extends A<T> {}
-             ^^^^ See type parameters of definition here
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot use `D` [1] with more than 2 type arguments.
+  References:
+   36: class D<S, T = string> extends A<T> {}
+               ^^^^ [1]: `D`
 
 Error: classes.js:42
  42: var d_star: D<*> = new D(10); // error, number ~> string

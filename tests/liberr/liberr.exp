@@ -1,7 +1,7 @@
 Library type error:
 libs/type_error.js:2
   2: declare function foo(x: number): Array;
-                                      ^^^^^ Incorrect number of type parameters (expected 1)
+                                      ^^^^^ Cannot use type without exactly 1 type argument.
 
 Error: a.js:5
   5: var x: string = 0;

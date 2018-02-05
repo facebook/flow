@@ -35,13 +35,17 @@ let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
 
 let check_type_param_arity cx loc params n f =
-  let num_params = match params with
-  | None -> 0
-  | Some l -> List.length l in
-  if num_params = n
-  then f ()
-  else
-    error_type cx loc (FlowError.ETypeParamArity (loc, n))
+  match params with
+  | None ->
+    if n = 0 then
+      f ()
+    else
+      error_type cx loc (FlowError.ETypeParamArity (loc, n))
+  | Some l ->
+    if n = List.length l && n <> 0 then
+      f ()
+    else
+      error_type cx loc (FlowError.ETypeParamArity (loc, n))
 
 let mk_custom_fun cx loc typeParameters kind =
   check_type_param_arity cx loc typeParameters 0 (fun () ->

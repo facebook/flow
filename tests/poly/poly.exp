@@ -1,8 +1,9 @@
 Error: annot.js:3
   3: class B extends A { } // OK, same as above
-                     ^ A. Too few type arguments. Expected at least 1
-  1: class A<X> { }
-             ^ See type parameters of definition here
+                     ^ Cannot use `A` [1] with less than 1 type argument.
+  References:
+    1: class A<X> { }
+               ^ [1]: `A`
 
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);

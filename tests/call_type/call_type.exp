@@ -18,11 +18,11 @@ Error: intersection.js:11
 
 Error: test.js:7
   7: type A = $Call; // Error: one or more arguments are required.
-              ^^^^^ Incorrect number of type parameters (expected at least 1)
+              ^^^^^ Cannot use type without at least 1 type argument.
 
 Error: test.js:8
   8: type B = $Call<>; // Error: one or more arguments are required.
-              ^^^^^^^ Incorrect number of type parameters (expected at least 1)
+              ^^^^^^^ Cannot use type without at least 1 type argument.
 
 Error: test.js:13
  13: ((null: mixed): C); // Error: mixed ~> number
