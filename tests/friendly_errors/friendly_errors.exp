@@ -607,5 +607,9 @@ Error: prop-variance.js:16
    16: ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
                         ^^^^^^^ [2]: object type
 
+Error: typeof-unexpected.js:6
+  6: (null: typeof 42);
+                   ^^ `typeof` can only be used to get the type of variables.
 
-Found 65 errors
+
+Found 66 errors

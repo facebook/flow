@@ -63,11 +63,11 @@ Error: optional.js:1
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
-                  ^ x. Missing annotation
+                  ^ Missing type annotation for `x`.
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
-                               ^ rest parameter `y`. Missing annotation
+                               ^ Missing type annotation for rest parameter `y`.
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }

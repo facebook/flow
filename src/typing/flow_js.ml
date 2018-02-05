@@ -4455,8 +4455,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, DefT (ru, TypeT _)) ->
-      let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
-      add_output cx ~trace (FlowError.EValueUsedAsType reasons)
+      add_output cx ~trace (FlowError.EValueUsedAsType (reason_of_t l, ru))
 
     | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u)) ->
       rec_flow cx trace (

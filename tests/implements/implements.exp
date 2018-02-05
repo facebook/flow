@@ -67,7 +67,7 @@ Error: test.js:21
 
 Error: test.js:26
  26: class C7 implements C1 {} // error: C1 is a class, expected an interface
-                         ^^ C1. Argument to implements clause must be an interface
+                         ^^ Cannot implement `C1` because it is not an interface.
 
 
 Found 8 errors

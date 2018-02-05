@@ -1,10 +1,10 @@
 Error: Fun.js:8
   8: function fix(fold) {
-                  ^^^^ fold. Missing annotation
+                  ^^^^ Missing type annotation for `fold`.
 
 Error: Fun.js:19
  19:     return function(n) {
-                         ^ n. Missing annotation
+                         ^ Missing type annotation for `n`.
 
 Error: Fun.js:20
  20:       if (eq (n, 1)) { return 1; }
@@ -35,7 +35,7 @@ Error: Fun.js:21
 
 Error: Ycombinator.js:4
   4: function Y(f) {
-                ^ f. Missing annotation
+                ^ Missing type annotation for `f`.
 
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }

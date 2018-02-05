@@ -120,7 +120,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let reason = mk_reason (RTypeof (qualified_name qualification)) loc in
       let valtype = mod_reason_of_t (fun _ -> reason) valtype in
       Flow.mk_typeof_annotation cx reason valtype
-  | _ ->
+  | (loc, _) ->
     error_type cx loc (FlowError.EUnexpectedTypeof loc)
   end
 

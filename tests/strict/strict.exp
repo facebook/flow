@@ -4,7 +4,7 @@ Error: annot.js:1
 
 Error: annot.js:5
   5:   bar(x) { }
-           ^ x. Missing annotation
+           ^ Missing type annotation for `x`.
 
 Error: fun.js:11
  11: var x:string = f(0);

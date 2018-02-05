@@ -1515,12 +1515,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
     ]
 
-  (* TODO: friendlify *)
   | EValueUsedAsType reasons ->
-      typecheck_error
-        "Ineligible value used in/as type annotation \
-         (did you forget 'typeof'?)"
-        reasons
+    let (value, _) = reasons in
+    mk_friendly_error ~trace_infos (loc_of_reason value) [
+      text "Cannot use "; desc value; text " as a type because ";
+      desc value; text " is a value. To get the type of ";
+      text "a value use "; code "typeof"; text ".";
+    ]
 
   (* TODO: friendlify *)
   | EMutationNotAllowed { reason; reason_op } ->
@@ -1861,11 +1862,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [loc, [msg]]
 
-  (* TODO: friendlify *)
   | EUnexpectedTypeof loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        "Unexpected typeof expression"
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc
+      [code "typeof"; text " can only be used to get the type of variables."]
 
   (* TODO: friendlify *)
   | ECustom (reasons, msg) ->
@@ -1987,9 +1986,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         "Use array literal instead of new Array(..)"
       ]]
 
-  (* TODO: friendlify *)
   | EMissingAnnotation reason ->
-      mk_error ~trace_infos [mk_info reason ["Missing annotation"]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason)
+      [text "Missing type annotation for "; desc reason; text "."]
 
   (* TODO: friendlify *)
   | EBindingError (binding_error, loc, x, entry) ->
@@ -2088,9 +2087,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          statement and module.exports are used in the same module!"
       ]]
 
-  (* TODO: friendlify *)
   | EUnreachable loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc
+      [text "Unreachable code."]
 
   | EInvalidObjectKit { tool; reason; reason_op; use_op } ->
     let friendly_error =
@@ -2119,12 +2118,12 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
   | EInvalidTypeof (loc, typename) ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        spf "string literal `%s`" typename;
-        "This value is not a valid `typeof` return value"
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text "Cannot compare the result of "; code "typeof"; text " to string ";
+      text "literal "; code typename; text " because it is not a valid ";
+      code "typeof"; text " return value.";
+    ]
 
   (* TODO: friendlify *)
   | EArithmeticOperand reason ->
@@ -2178,10 +2177,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
   | EUnsupportedImplements reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "Argument to implements clause must be an interface"]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason)
+      [text "Cannot implement "; desc reason; text " because it is not an interface."]
 
   | EReactKit (reasons, tool, use_op) ->
     let open React in

@@ -13,7 +13,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: export class Foo { a; }
-                                  ^^ property \`a\`. Missing annotation
+                                  ^^ Missing type annotation for property \`a\`.
         `,
       )
   ]),
@@ -34,7 +34,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: export class Foo { a = (p) => 42; }
-                                       ^ p. Missing annotation
+                                       ^ Missing type annotation for \`p\`.
         `,
       ),
     addCode('export class Bar { a = (p: number) => 42; }')

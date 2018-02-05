@@ -51,9 +51,7 @@ Error: typeof.js:73
 
 Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                      ^^^ object literal. Ineligible value used in/as type annotation (did you forget 'typeof'?)
- 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                      ^^^ Map
+                      ^^^ Cannot use object literal as a type because object literal is a value. To get the type of a value use `typeof`.
 
 Error: union.js:9
   9: (null: typeof x); // error: null ~> number|string

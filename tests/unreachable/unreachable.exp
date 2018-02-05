@@ -28,15 +28,15 @@ Error: unreachable.js:13
  13:   var baz = function (why) {
  14:     return y + why;
  15:   };
-       ^ unreachable code
+       ^ Unreachable code.
 
 Error: unreachable.js:22
  22:       u = 5,
-               ^ unreachable code
+               ^ Unreachable code.
 
 Error: unreachable.js:24
  24:       w = 7;
-               ^ unreachable code
+               ^ Unreachable code.
 
 
 Found 6 errors
