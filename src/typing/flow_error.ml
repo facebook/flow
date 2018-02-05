@@ -98,7 +98,8 @@ type error_message =
   | EPredAnnot of Loc.t
   | ERefineAnnot of Loc.t
   | EUnexpectedTypeof of Loc.t
-  | ECustom of (reason * reason) * string
+  | EFunPredCustom of (reason * reason) * string
+  | EFunctionIncompatibleWithShape of reason * reason * use_op
   | EInternal of Loc.t * internal_error
   | EUnsupportedSyntax of Loc.t * unsupported_syntax
   | EIllegalName of Loc.t
@@ -283,6 +284,8 @@ let util_use_op_of_msg nope util = function
 | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
 | EInvalidCharSet {invalid; valid; use_op} ->
   util use_op (fun use_op -> EInvalidCharSet {invalid; valid; use_op})
+| EFunctionIncompatibleWithShape (l, u, use_op) ->
+  util use_op (fun use_op -> EFunctionIncompatibleWithShape (l, u, use_op))
 | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
@@ -318,7 +321,7 @@ let util_use_op_of_msg nope util = function
 | EPredAnnot (_)
 | ERefineAnnot (_)
 | EUnexpectedTypeof (_)
-| ECustom (_, _)
+| EFunPredCustom (_, _)
 | EInternal (_, _)
 | EUnsupportedSyntax (_, _)
 | EIllegalName (_)
@@ -1402,9 +1405,8 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       end
     )
 
-  (* TODO: friendlify *)
   | EDebugPrint (r, str) ->
-      mk_error ~trace_infos [mk_info r [str]]
+    mk_friendly_error ~trace_infos (loc_of_reason r) [text str]
 
   | EImportValueAsType (r, export_name) ->
     mk_friendly_error ~trace_infos (loc_of_reason r) [
@@ -1927,58 +1929,68 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       [code "typeof"; text " can only be used to get the type of variables."]
 
   (* TODO: friendlify *)
-  | ECustom (reasons, msg) ->
-      typecheck_error msg reasons
+  | EFunPredCustom (reasons, msg) ->
+    typecheck_error msg reasons
 
-  (* TODO: friendlify *)
+  | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
+    let friendly_error =
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+        ref lower; text " is incompatible with "; code "$Shape"; text " of ";
+        ref upper; text ".";
+      ]
+    in
+    (match friendly_error with
+    | Some friendly_error -> friendly_error
+    | None ->
+      typecheck_error "Is not allowed as the shape of object type" (lower, upper))
+
   | EInternal (loc, internal_error) ->
-      let msg = match internal_error with
-      | PackageHeapNotFound pkg ->
-          spf "Package %S was not found in the PackageHeap!" pkg
-      | AbnormalControlFlow ->
-          "abnormal control flow"
-      | MethodNotAFunction ->
-          "expected function type"
-      | OptionalMethod ->
-          "optional methods are not supported"
-      | OpenPredWithoutSubst ->
-          "OpenPredT ~> OpenPredT without substitution"
-      | PredFunWithoutParamNames ->
-          "FunT -> FunT no params"
-      | UnsupportedGuardPredicate pred ->
-          spf "Unsupported guard predicate (%s)" pred
-      | BreakEnvMissingForCase ->
-          "break env missing for case"
-      | PropertyDescriptorPropertyCannotBeRead ->
-          "Unexpected property in properties object"
-      | ForInLHS ->
-          "unexpected LHS in for...in"
-      | ForOfLHS ->
-          "unexpected LHS in for...of"
-      | InstanceLookupComputed ->
-          "unexpected computed property lookup on InstanceT"
-      | PropRefComputedOpen ->
-          "unexpected open computed property element type"
-      | PropRefComputedLiteral ->
-          "unexpected literal computed property element type"
-      | ShadowReadComputed ->
-          "unexpected shadow read on computed property"
-      | ShadowWriteComputed ->
-          "unexpected shadow write on computed property"
-      | RestParameterNotIdentifierPattern ->
-          "unexpected rest parameter, expected an identifier pattern"
-      | InterfaceTypeSpread ->
-          "unexpected spread property in interface"
-      | DebugThrow ->
-          "debug throw"
-      | MergeTimeout s ->
-          spf "merge job timed out after %0.2f seconds" s
-      | MergeJobException exc ->
-          "uncaught exception: "^(Utils_js.fmt_exc exc)
-      in
-      mk_error ~trace_infos ~kind:InternalError [loc, [
-        spf "Internal error: %s" msg
-      ]]
+    let msg = match internal_error with
+    | PackageHeapNotFound pkg ->
+        spf "package %S was not found in the PackageHeap!" pkg
+    | AbnormalControlFlow ->
+        "abnormal control flow"
+    | MethodNotAFunction ->
+        "expected function type"
+    | OptionalMethod ->
+        "optional methods are not supported"
+    | OpenPredWithoutSubst ->
+        "OpenPredT ~> OpenPredT without substitution"
+    | PredFunWithoutParamNames ->
+        "FunT -> FunT no params"
+    | UnsupportedGuardPredicate pred ->
+        spf "unsupported guard predicate (%s)" pred
+    | BreakEnvMissingForCase ->
+        "break env missing for case"
+    | PropertyDescriptorPropertyCannotBeRead ->
+        "unexpected property in properties object"
+    | ForInLHS ->
+        "unexpected LHS in for...in"
+    | ForOfLHS ->
+        "unexpected LHS in for...of"
+    | InstanceLookupComputed ->
+        "unexpected computed property lookup on InstanceT"
+    | PropRefComputedOpen ->
+        "unexpected open computed property element type"
+    | PropRefComputedLiteral ->
+        "unexpected literal computed property element type"
+    | ShadowReadComputed ->
+        "unexpected shadow read on computed property"
+    | ShadowWriteComputed ->
+        "unexpected shadow write on computed property"
+    | RestParameterNotIdentifierPattern ->
+        "unexpected rest parameter, expected an identifier pattern"
+    | InterfaceTypeSpread ->
+        "unexpected spread property in interface"
+    | DebugThrow ->
+        "debug throw"
+    | MergeTimeout s ->
+        spf "merge job timed out after %0.2f seconds" s
+    | MergeJobException exc ->
+        "uncaught exception: "^(Utils_js.fmt_exc exc)
+    in
+    mk_friendly_error ~trace_infos ~kind:InternalError loc
+      [text (spf "Internal error: %s" msg)]
 
   (* TODO: friendlify *)
   | EUnsupportedSyntax (loc, unsupported_syntax) ->

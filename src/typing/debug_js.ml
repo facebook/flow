@@ -2552,11 +2552,16 @@ let dump_flow_error =
         spf "ERefineAnnot (%s)" (string_of_loc loc)
     | EUnexpectedTypeof loc ->
         spf "EUnexpectedTypeof (%s)" (string_of_loc loc)
-    | ECustom ((reason1, reason2), msg) ->
-        spf "ECustom (%s, %s, %S)"
+    | EFunPredCustom ((reason1, reason2), msg) ->
+        spf "EFunPredCustom (%s, %s, %S)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           msg
+    | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
+        spf "EFunctionIncompatibleWithShape (%s, %s, %s)"
+          (dump_reason cx lower)
+          (dump_reason cx upper)
+          (string_of_use_op use_op)
     | EInternal (loc, err) ->
         spf "EInternal (%s, %s)" (string_of_loc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) ->

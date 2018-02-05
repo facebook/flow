@@ -2829,8 +2829,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace err)
 
     | DefT (reason_o, InstanceT (_, _, _, _)), HasOwnPropT(reason_op, _) ->
-        let msg = "Expected string literal" in
-        add_output cx ~trace (FlowError.ECustom ((reason_op, reason_o), msg))
+        let err = FlowError.EPropNotFound (None, (reason_op, reason_o), unknown_use) in
+        add_output cx ~trace err
 
     (* AnyObjT has every prop *)
     | DefT (_, AnyObjT), HasOwnPropT _ -> ()
@@ -3584,7 +3584,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace FlowError.(EInternal
           (loc, PredFunWithoutParamNames))
       | Error (msg, reasons) ->
-        add_output cx ~trace (FlowError.ECustom (reasons, msg));
+        add_output cx ~trace (FlowError.EFunPredCustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
 
 
@@ -3909,7 +3909,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not ft1.is_predicate then
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
-          add_output cx ~trace (FlowError.ECustom (
+          add_output cx ~trace (FlowError.EFunPredCustom (
             (lreason, ureason),
             "Function is incompatible with"))
         else
@@ -3928,7 +3928,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 RCustom (spf "predicate function with %d arguments" n)
               ) in
               let n2 = n + (List.length ps2) in
-              Error (FlowError.ECustom (
+              Error (FlowError.EFunPredCustom (
                 (mod_reason n lreason,
                  mod_reason n2 ureason),
                 "Predicate function is incompatible with"))
@@ -4309,9 +4309,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * this. Note that ObjTs with a $call property are, however, allowed.
      *
      * This invariant is important for the React setState() type definition. *)
-    | DefT (_, FunT _), UseT (_, ShapeT o) ->
-        add_output cx ~trace (FlowError.ECustom ((reason_of_t l, reason_of_t o),
-          "Is not allowed as the shape of object type"))
+    | DefT (_, FunT _), UseT (use_op, ShapeT o) ->
+        add_output cx ~trace
+          (FlowError.EFunctionIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in

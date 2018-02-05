@@ -559,9 +559,12 @@ Error: state6.js:41
 
 Error: state6.js:47
  47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
-       ^^^^^^^^ function. Is not allowed as the shape of object type
- 47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
-                         ^^^^^ State
+       ^^^^^^^^ Cannot cast function to `State` because function [1] is incompatible with `$Shape` of `State` [2].
+  References:
+   47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
+         ^^^^^^^^ [1]: function
+   47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
+                           ^^^^^ [2]: `State`
 
 
 Found 60 errors
