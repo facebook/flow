@@ -259,7 +259,10 @@ Error: test17.js:7
 
 Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^ string. The operand of an arithmetic operation must be a number.
+                              ^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   14: [""].reduce((acc,str) => acc * str.length);
+        ^^ [1]: string
 
 Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
@@ -389,11 +392,17 @@ Error: test5.js:25
 
 Error: test9.js:12
  12:   return x * x;
-              ^ null or undefined. The operand of an arithmetic operation must be a number.
+              ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   15: function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]: null or undefined
 
 Error: test9.js:12
  12:   return x * x;
-                  ^ null or undefined. The operand of an arithmetic operation must be a number.
+                  ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   15: function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]: null or undefined
 
 
 Found 27 errors

@@ -62,7 +62,7 @@ Trace:
 
 Error: Traces.js:14
  14: f2(function(x) { return x * x });
-                             ^ string. The operand of an arithmetic operation must be a number.
+                             ^ Cannot perform arithmetic operation because string [1] is not a number.
 Trace:
 * path 1:
  14: f2(function(x) { return x * x });
@@ -85,10 +85,13 @@ Trace:
                           ^^^^^^ StrT [string]
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+  References:
+   12: function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]: string
 
 Error: Traces.js:14
  14: f2(function(x) { return x * x });
-                                 ^ string. The operand of an arithmetic operation must be a number.
+                                 ^ Cannot perform arithmetic operation because string [1] is not a number.
 Trace:
 * path 1:
  14: f2(function(x) { return x * x });
@@ -111,10 +114,13 @@ Trace:
                           ^^^^^^ StrT [string]
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+  References:
+   12: function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]: string
 
 Error: Traces.js:19
  19: function double(n) { return n * 2 }
-                                 ^ string. The operand of an arithmetic operation must be a number.
+                                 ^ Cannot perform arithmetic operation because string [1] is not a number.
 Trace:
 * path 1:
  19: function double(n) { return n * 2 }
@@ -137,6 +143,9 @@ Trace:
                           ^^^^^^ StrT [string]
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+  References:
+   17: function g3(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]: string
 
 Error: Traces2.js:18
  18:     return <B bar="hey"/>;

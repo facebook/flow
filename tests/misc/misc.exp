@@ -61,7 +61,10 @@ Error: E.js:8
 
 Error: F.js:1
   1: function fn2(x) { return x.length * 4; }
-                              ^^^^^^^^ string. The operand of an arithmetic operation must be a number.
+                              ^^^^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+    2: fn2({length: 'hi'});
+                    ^^^^ [1]: string
 
 Error: F.js:5
   5:   return x.length;

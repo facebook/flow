@@ -2463,8 +2463,10 @@ let dump_flow_error =
           (dump_reason cx reason2)
           x
           (string_of_use_op use_op)
-    | EAdditionMixed reason ->
-        spf "EAdditionMixed (%s)" (dump_reason cx reason)
+    | EAdditionMixed (reason, use_op) ->
+        spf "EAdditionMixed (%s, %s)"
+          (dump_reason cx reason)
+          (string_of_use_op use_op)
     | EComparison (reason1, reason2) ->
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)

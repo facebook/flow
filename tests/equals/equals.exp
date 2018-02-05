@@ -1,14 +1,20 @@
 Error: equals.js:7
   7: (1 == ""); // error
-      ^ number. This type cannot be compared to
-  7: (1 == ""); // error
-           ^^ string
+      ^ Cannot compare number [1] to string [2].
+  References:
+    7: (1 == ""); // error
+        ^ [1]: number
+    7: (1 == ""); // error
+             ^^ [2]: string
 
 Error: equals.js:8
   8: ("" == 1); // error
-      ^^ string. This type cannot be compared to
-  8: ("" == 1); // error
-            ^ number
+      ^^ Cannot compare string [1] to number [2].
+  References:
+    8: ("" == 1); // error
+        ^^ [1]: string
+    8: ("" == 1); // error
+              ^ [2]: number
 
 
 Found 2 errors

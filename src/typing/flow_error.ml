@@ -67,7 +67,7 @@ type error_message =
     }
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason) * string * use_op
-  | EAdditionMixed of reason
+  | EAdditionMixed of reason * use_op
   | EComparison of (reason * reason)
   | ETupleArityMismatch of (reason * reason) * int * int * use_op
   | ENonLitArrayToTuple of (reason * reason) * use_op
@@ -274,6 +274,7 @@ let util_use_op_of_msg nope util = function
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
 | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
+| EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
 | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
 | ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
@@ -298,7 +299,6 @@ let util_use_op_of_msg nope util = function
 | EValueUsedAsType (_, _)
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
-| EAdditionMixed (_)
 | EComparison (_, _)
 | ESpeculationAmbiguous (_, _, _, _)
 | EUnsupportedExact (_, _)
@@ -1677,15 +1677,22 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error "Property not found in" reasons
     )
 
-  (* TODO: friendlify *)
-  | EAdditionMixed reason ->
+  | EAdditionMixed (reason, use_op) ->
+    let friendly_error =
+      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+        [ref reason; text " could either behave like a string or like a number."]
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       mk_error ~trace_infos [mk_info reason [
         "This type cannot be used in an addition because it is unknown \
          whether it behaves like a string or a number."]]
+    )
 
-  (* TODO: friendlify *)
-  | EComparison reasons ->
-      typecheck_error "This type cannot be compared to" reasons
+  | EComparison (lower, upper) ->
+    mk_friendly_error ~trace_infos (loc_of_reason lower)
+      [text "Cannot compare "; ref lower; text " to "; ref upper; text "."]
 
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let friendly_error =
@@ -2163,45 +2170,42 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       code "typeof"; text " return value.";
     ]
 
-  (* TODO: friendlify *)
   | EArithmeticOperand reason ->
-      let msg = "The operand of an arithmetic operation must be a number." in
-      mk_error ~trace_infos [mk_info reason [msg]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot perform arithmetic operation because "; ref reason; text " ";
+      text "is not a number.";
+    ]
 
-  (* TODO: friendlify *)
   | EBinaryInLHS reason ->
-      (* TODO: or symbol *)
-      let msg =
-        "The left-hand side of an `in` expression must be a \
-         string or number." in
-      mk_error ~trace_infos [mk_info reason [msg]]
+    (* TODO: or symbol *)
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot use "; code "in"; text " because on the left-hand side, ";
+      ref reason; text " must be a string or number.";
+    ]
 
-  (* TODO: friendlify *)
   | EBinaryInRHS reason ->
-      let msg =
-        "The right-hand side of an `in` expression must be an \
-         object or array." in
-      mk_error ~trace_infos [mk_info reason [msg]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot use "; code "in"; text " because on the right-hand side, ";
+      ref reason; text " must be an object or array.";
+    ]
 
-  (* TODO: friendlify *)
   | EForInRHS reason ->
-      let msg =
-        "The right-hand side of a `for...in` statement must be an \
-         object, null or undefined." in
-      mk_error ~trace_infos [mk_info reason [msg]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot iterate using a "; code "for...in"; text " statement ";
+      text "because "; ref reason; text " is not an object, null, or undefined.";
+    ]
 
-  (* TODO: friendlify *)
-  | EObjectComputedPropertyAccess reasons ->
-      typecheck_error "Computed property cannot be accessed with" reasons
+  | EObjectComputedPropertyAccess (_, reason_prop) ->
+    mk_friendly_error ~trace_infos (loc_of_reason reason_prop)
+      [text "Cannot access computed property using "; ref reason_prop; text "."]
 
-  (* TODO: friendlify *)
-  | EObjectComputedPropertyAssign reasons ->
-      typecheck_error "Computed property cannot be assigned with" reasons
+  | EObjectComputedPropertyAssign (_, reason_prop) ->
+    mk_friendly_error ~trace_infos (loc_of_reason reason_prop)
+      [text "Cannot assign computed property using "; ref reason_prop; text "."]
 
-  (* TODO: friendlify *)
   | EInvalidLHSInAssignment loc ->
-      let msg = "Invalid left-hand side in assignment expression" in
-      mk_error ~trace_infos [loc, [msg]]
+    mk_friendly_error ~trace_infos loc
+      [text "Invalid left-hand side in assignment expression."]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
     (match (mk_incompatible_friendly_error l_reason u_reason use_op) with

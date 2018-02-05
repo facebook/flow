@@ -54,7 +54,10 @@ Error: array_lib.js:21
 
 Error: array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                 ^^^ string. The operand of an arithmetic operation must be a number.
+                                 ^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+          ^^ [1]: string
 
 Error: array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
@@ -65,7 +68,10 @@ Error: array_lib.js:46
 
 Error: array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                      ^^^ string. The operand of an arithmetic operation must be a number.
+                                      ^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+          ^^ [1]: string
 
 Error: array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number

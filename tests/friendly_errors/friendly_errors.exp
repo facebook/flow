@@ -544,6 +544,24 @@ Error: misc-incompatibles.js:11
    11: interface B extends A {}
                            ^ [1]: number
 
+Error: misc-incompatibles.js:14
+ 14: o[true];
+       ^^^^ Cannot access computed property using boolean [1].
+  References:
+   14: o[true];
+         ^^^^ [1]: boolean
+
+Error: misc-incompatibles.js:15
+ 15: o[true] = 42;
+       ^^^^ Cannot assign computed property using boolean [1].
+  References:
+   15: o[true] = 42;
+         ^^^^ [1]: boolean
+
+Error: misc-incompatibles.js:17
+ 17: [nope] += 1;
+     ^^^^^^ Invalid left-hand side in assignment expression.
+
 Error: order.js:9
   9:   a: 42,
           ^^ Cannot cast object literal to object type because in property `a`, number [1] is incompatible with boolean [2].
@@ -612,4 +630,4 @@ Error: typeof-unexpected.js:6
                    ^^ `typeof` can only be used to get the type of variables.
 
 
-Found 66 errors
+Found 69 errors

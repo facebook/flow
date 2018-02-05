@@ -31,7 +31,10 @@ Error: basic.js:10
 
 Error: basic.js:11
  11:   n => n * 5, // Error: string cannot be multiplied.
-            ^ string. The operand of an arithmetic operation must be a number.
+            ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+  144:     toString(radix?: number): string;
+                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
 
 Error: basic.js:15
       v--------------

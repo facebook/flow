@@ -1,10 +1,16 @@
 Error: switch.js:28
  28:         x = x*x;
-                 ^ string. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   23:     var x = b? 0: "";
+                         ^^ [1]: string
 
 Error: switch.js:28
  28:         x = x*x;
-                   ^ string. The operand of an arithmetic operation must be a number.
+                   ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   23:     var x = b? 0: "";
+                         ^^ [1]: string
 
 Error: switch_default_fallthrough.js:16
  16:     (a : string); // error, string | number ~/> string

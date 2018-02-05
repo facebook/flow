@@ -27,39 +27,66 @@ Error: loop.js:5
 
 Error: nullable.js:17
  17:     x.y++; // should error
-         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   15: function optionalNullable3(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: null or undefined
 
 Error: nullable.js:17
  17:     x.y++; // should error
-         ^^^ undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   15: function optionalNullable3(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: undefined
 
 Error: nullable.js:23
  23:     x.y++; // should error
-         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   21: function optionalNullable4(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: null or undefined
 
 Error: nullable.js:23
  23:     x.y++; // should error
-         ^^^ undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   21: function optionalNullable4(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: undefined
 
 Error: nullable.js:29
  29:     x.y++; // should error
-         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   27: function optionalNullable5(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: null or undefined
 
 Error: nullable.js:29
  29:     x.y++; // should error
-         ^^^ undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   27: function optionalNullable5(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: undefined
 
 Error: nullable.js:35
  35:     x.y++; // should error
-         ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   33: function optionalNullable6(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: null or undefined
 
 Error: nullable.js:35
  35:     x.y++; // should error
-         ^^^ undefined. The operand of an arithmetic operation must be a number.
+         ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   33: function optionalNullable6(x: {y?: ?number}) {
+                                          ^^^^^^^ [1]: undefined
 
 Error: optional.js:1
   1: function bar(x?,y?) { x * 0; }
-                           ^ undefined. The operand of an arithmetic operation must be a number.
+                           ^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+    1: function bar(x?,y?) { x * 0; }
+                    ^^ [1]: undefined
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }

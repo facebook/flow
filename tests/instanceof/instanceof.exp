@@ -27,7 +27,10 @@ Error: instanceof.js:51
 
 Error: instanceof.js:83
  83:     x++; // error
-         ^ array type. The operand of an arithmetic operation must be a number.
+         ^ Cannot perform arithmetic operation because array type [1] is not a number.
+  References:
+   81: function foo1(x: Array<number> | number) {
+                        ^^^^^^^^^^^^^ [1]: array type
 
 Error: instanceof.js:85
  85:     x[0] = 123; // error

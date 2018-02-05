@@ -6292,7 +6292,7 @@ and flow_addition cx trace use_op reason flip l r u =
 
   | DefT (reason, MixedT _), _
   | _, DefT (reason, MixedT _) ->
-    add_output cx ~trace (FlowError.EAdditionMixed reason)
+    add_output cx ~trace (FlowError.EAdditionMixed (reason, use_op))
 
   | DefT (_, (NumT _ | BoolT _ | NullT | VoidT)),
     DefT (_, (NumT _ | BoolT _ | NullT | VoidT)) ->

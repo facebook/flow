@@ -39,7 +39,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: var boom = myNum * myStr;
-                                  ^^^^^ string. The operand of an arithmetic operation must be a number.
+                                  ^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
+            References:
+              5: var myStr = "hello";
+                             ^^^^^^^ [1]: string
         `,
       )
   ]),

@@ -39,11 +39,17 @@ Error: bool.js:18
 
 Error: bool.js:24
  24:   if (100 * false) {
-                 ^^^^^ boolean. The operand of an arithmetic operation must be a number.
+                 ^^^^^ Cannot perform arithmetic operation because boolean [1] is not a number.
+  References:
+   24:   if (100 * false) {
+                   ^^^^^ [1]: boolean
 
 Error: bool.js:27
  27:   if (false * 100) {
-           ^^^^^ boolean. The operand of an arithmetic operation must be a number.
+           ^^^^^ Cannot perform arithmetic operation because boolean [1] is not a number.
+  References:
+   27:   if (false * 100) {
+             ^^^^^ [1]: boolean
 
 Error: bool.js:37
  37:     return x.result; // error
@@ -155,21 +161,30 @@ Error: cond_prop.js:54
 
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
-             ^ string. This type cannot be compared to
-  5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
-                  ^ number
+             ^ Cannot compare string [1] to number [2].
+  References:
+    4:   function(x: string, y: number) {
+                     ^^^^^^ [1]: string
+    4:   function(x: string, y: number) {
+                                ^^^^^^ [2]: number
 
 Error: eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^ string literal `bar`. This type cannot be compared to
- 19:     if (x.y == 123) {} // error
-                    ^^^ number
+             ^^^ Cannot compare string literal `bar` [1] to number [2].
+  References:
+   18:   function(x: { y: 'foo' } | { y: 'bar' }) {
+                                         ^^^^^ [1]: string literal `bar`
+   19:     if (x.y == 123) {} // error
+                      ^^^ [2]: number
 
 Error: eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^ string literal `foo`. This type cannot be compared to
- 19:     if (x.y == 123) {} // error
-                    ^^^ number
+             ^^^ Cannot compare string literal `foo` [1] to number [2].
+  References:
+   18:   function(x: { y: 'foo' } | { y: 'bar' }) {
+                          ^^^^^ [1]: string literal `foo`
+   19:     if (x.y == 123) {} // error
+                      ^^^ [2]: number
 
 Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
@@ -470,11 +485,17 @@ Error: mixed.js:119
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
-         ^ boolean. The operand of an arithmetic operation must be a number.
+         ^ Cannot perform arithmetic operation because boolean [1] is not a number.
+  References:
+    3: function foo(x: ?bool) {
+                        ^^^^ [1]: boolean
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
-         ^ null or undefined. The operand of an arithmetic operation must be a number.
+         ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+    3: function foo(x: ?bool) {
+                       ^^^^^ [1]: null or undefined
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
@@ -544,11 +565,17 @@ Error: not.js:47
 
 Error: null.js:4
   4:   if (100 * null) {
-                 ^^^^ null. The operand of an arithmetic operation must be a number.
+                 ^^^^ Cannot perform arithmetic operation because null [1] is not a number.
+  References:
+    4:   if (100 * null) {
+                   ^^^^ [1]: null
 
 Error: null.js:7
   7:   if (null * 100) {
-           ^^^^ null. The operand of an arithmetic operation must be a number.
+           ^^^^ Cannot perform arithmetic operation because null [1] is not a number.
+  References:
+    7:   if (null * 100) {
+             ^^^^ [1]: null
 
 Error: number.js:8
   8:       (x: void); // error
@@ -962,7 +989,10 @@ Error: switch.js:37
 
 Error: switch.js:51
  51:       return (text++) + '';
-                   ^^^^ string. The operand of an arithmetic operation must be a number.
+                   ^^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   43: function corge(text: string | number | Array<string>): string {
+                            ^^^^^^ [1]: string
 
 Error: tagged_union.js:20
  20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
@@ -1379,31 +1409,52 @@ Error: typeof.js:77
 
 Error: undef.js:31
  31:     var y = x * 1000;
-                 ^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   29: function undef_var_fail(x: ?number) {
+                                  ^^^^^^^ [1]: null or undefined
 
 Error: undef.js:38
  38:     var y = x * 1000;
-                 ^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   35: function undef_var_fail_rev(x: ?number) {
+                                      ^^^^^^^ [1]: null or undefined
 
 Error: undef.js:44
  44:     var y = x.x * 1000;
-                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   42: function undef_prop_fail(x: { x: ?number }) {
+                                        ^^^^^^^ [1]: null or undefined
 
 Error: undef.js:51
  51:     var y = x.x * 1000;
-                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   48: function undef_prop_fail_rev(x: { x: ?number }) {
+                                            ^^^^^^^ [1]: null or undefined
 
 Error: undef.js:69
  69:     var b = y * 1000; // error
-                 ^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   64: function undef_var_nonstrict(x: ?number, y: ?number) {
+                                                   ^^^^^^^ [1]: null or undefined
 
 Error: undef.js:74
  74:   if (100 * undefined) {
-                 ^^^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+                 ^^^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
 
 Error: undef.js:77
  77:   if (undefined * 100) {
-           ^^^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+           ^^^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   13: declare var undefined: void;
+                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
 
 Error: union.js:7
   7:     x[0]; // error on boolean
@@ -1428,43 +1479,73 @@ Error: union.js:19
 
 Error: void.js:31
  31:     var y = x * 1000;
-                 ^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   29: function void_var_fail(x: ?number) {
+                                 ^^^^^^^ [1]: null or undefined
 
 Error: void.js:38
  38:     var y = x * 1000;
-                 ^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   35: function void_var_fail_rev(x: ?number) {
+                                     ^^^^^^^ [1]: null or undefined
 
 Error: void.js:44
  44:     var y = x.x * 1000;
-                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   42: function void_pro_fail(x: { x: ?number }) {
+                                      ^^^^^^^ [1]: null or undefined
 
 Error: void.js:51
  51:     var y = x.x * 1000;
-                 ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                 ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   48: function void_pro_fail_rev(x: { x: ?number }) {
+                                          ^^^^^^^ [1]: null or undefined
 
 Error: void.js:56
  56:   if (x !== null && x !== void(x * 1000)) {
-                                    ^ null or undefined. The operand of an arithmetic operation must be a number.
+                                    ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   55: function void_var_side_effect(x: ?number) {
+                                        ^^^^^^^ [1]: null or undefined
 
 Error: void.js:62
  62:   if (x === null || x === void(x * 1000)) {
-                                    ^ null or undefined. The operand of an arithmetic operation must be a number.
+                                    ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   61: function void_var_side_effect_rev(x: ?number) {
+                                            ^^^^^^^ [1]: null or undefined
 
 Error: void.js:69
  69:   if (x.x !== null && x.x !== void(x.x * 1000)) {
-                                        ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                                        ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   68: function void_prop_side_effect(x: { x: ?number }) {
+                                              ^^^^^^^ [1]: null or undefined
 
 Error: void.js:75
  75:   if (x.x === null || x.x === void(x.x * 1000)) {
-                                        ^^^ null or undefined. The operand of an arithmetic operation must be a number.
+                                        ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
+  References:
+   74: function void_prop_side_effect_rev(x: { x: ?number }) {
+                                                  ^^^^^^^ [1]: null or undefined
 
 Error: void.js:82
  82:   if (100 * void(0)) {
-                 ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+                 ^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   82:   if (100 * void(0)) {
+                   ^^^^^^^ [1]: undefined
 
 Error: void.js:85
  85:   if (void(0) * 100) {
-           ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+           ^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
+  References:
+   85:   if (void(0) * 100) {
+             ^^^^^^^ [1]: undefined
 
 
 Found 189 errors

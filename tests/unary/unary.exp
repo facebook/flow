@@ -25,7 +25,10 @@ Error: unary.js:19
 
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
-         ^ string. The operand of an arithmetic operation must be a number.
+         ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   11:   function(y: string) {
+                     ^^^^^^ [1]: string
 
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
@@ -47,7 +50,10 @@ Error: update.js:14
 
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
-         ^ string. The operand of an arithmetic operation must be a number.
+         ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   17:   function(y: string) {
+                     ^^^^^^ [1]: string
 
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
@@ -69,7 +75,10 @@ Error: update.js:22
 
 Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
-           ^ string. The operand of an arithmetic operation must be a number.
+           ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   21:   function(y: string) {
+                     ^^^^^^ [1]: string
 
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here
@@ -82,7 +91,10 @@ Error: update.js:26
 
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here
-           ^ string. The operand of an arithmetic operation must be a number.
+           ^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   25:   function(y: string) {
+                     ^^^^^^ [1]: string
 
 Error: update.js:31
  31:     y++; // error, can't update const

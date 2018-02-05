@@ -30,7 +30,10 @@ Error: Good.js:15
 
 Error: Good.js:17
  17:     buz: buz * 2,
-              ^^^ string. The operand of an arithmetic operation must be a number.
+              ^^^ Cannot perform arithmetic operation because string [1] is not a number.
+  References:
+   10: <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
+                         ^^^^^^ [1]: string. See: Good_use.js:10
 
 Error: Good.js:18
  18:     qux,
