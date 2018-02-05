@@ -1357,6 +1357,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       use_op;
       extras;
     } ->
+    (* TODO: friendlify when there are "extras" *)
     let friendly_error = if extras <> []
       then None
       else mk_incompatible_use_friendly_error
@@ -1389,6 +1390,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error "This type is incompatible with" reasons
     )
 
+  (* TODO: friendlify *)
   | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
     let reasons = ordered_reasons (reason_lower, reason_upper) in
     let extra = speculation_extras extras in
@@ -1411,9 +1413,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       end
     )
 
+  (* TODO: friendlify *)
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
 
+  (* TODO: friendlify *)
   | EImportValueAsType (r, export_name) ->
       mk_error ~trace_infos [mk_info r [spf
         "The %s export is a value, but not a type. `import type` only works \
@@ -1422,6 +1426,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          typeof` instead."
         (msg_export export_name)]]
 
+  (* TODO: friendlify *)
   | EImportTypeAsTypeof (r, export_name) ->
       mk_error ~trace_infos [mk_info r [spf
         "The %s export is a type, but not a value. `import typeof` only \
@@ -1430,12 +1435,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          type` instead."
         (msg_export export_name)]]
 
+  (* TODO: friendlify *)
   | EImportTypeAsValue (r, export_name) ->
       mk_error ~trace_infos [mk_info r [spf
         "`%s` is a type, but not a value. In order to import it, please use \
          `import type`."
         export_name]]
 
+  (* TODO: friendlify *)
   | ENoDefaultExport (r, module_name, suggestion) ->
       let msg = "This module has no default export." in
       let msg = match suggestion with
@@ -1445,12 +1452,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [mk_info r [msg]]
 
+  (* TODO: friendlify *)
   | EOnlyDefaultExport (r, export_name) ->
       mk_error ~trace_infos [mk_info r [spf
         "This module only has a default export. Did you mean \
          `import %s from ...`?"
         export_name]]
 
+  (* TODO: friendlify *)
   | ENoNamedExport (r, export_name, suggestion) ->
       let msg =
         spf "This module has no named export called `%s`." export_name in
@@ -1460,6 +1469,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [mk_info r [msg]]
 
+  (* TODO: friendlify *)
   | EMissingTypeArgs { reason; min_arity; max_arity } ->
       let arity, args = if min_arity = max_arity
         then spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
@@ -1470,12 +1480,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          <list of %s %s>. (Can use `*` for inferrable ones)"
         arity args]]
 
+  (* TODO: friendlify *)
   | EValueUsedAsType reasons ->
       typecheck_error
         "Ineligible value used in/as type annotation \
          (did you forget 'typeof'?)"
         reasons
 
+  (* TODO: friendlify *)
   | EMutationNotAllowed { reason; reason_op } ->
       typecheck_error "Mutation not allowed on" (reason_op, reason)
 
@@ -1554,6 +1566,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EPropAccess (reasons, x, polarity, rw) ->
       let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
       typecheck_error msg reasons
@@ -1571,6 +1584,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       mk_error ~trace_infos [mk_info reason [spf
         "%s position (expected `%s` to occur only %sly)"
@@ -1585,6 +1599,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
        `builtin_reason` instead of an actual location (see `Init_js.init`). *)
     if is_builtin_reason lreason
     then
+      (* TODO: friendlify *)
       let msg = match x with
       | Some x when is_internal_module_name x -> "Required module not found"
       | _ -> "Could not resolve name"
@@ -1613,14 +1628,17 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         end
       )
 
+  (* TODO: friendlify *)
   | EPrivateLookupFailed reasons ->
       typecheck_error "Property not found in" reasons
 
+  (* TODO: friendlify *)
   | EAdditionMixed reason ->
       mk_error ~trace_infos [mk_info reason [
         "This type cannot be used in an addition because it is unknown \
          whether it behaves like a string or a number."]]
 
+  (* TODO: friendlify *)
   | EComparison reasons ->
       typecheck_error "This type cannot be compared to" reasons
 
@@ -1644,11 +1662,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | ENonLitArrayToTuple reasons ->
       let msg =
         "Only tuples and array literals with known elements can flow to" in
       typecheck_error msg reasons
 
+  (* TODO: friendlify *)
   | ETupleOutOfBounds (reasons, length, index) ->
       let msg = spf
         "Out of bound access. This tuple has %d elements and you tried to \
@@ -1657,12 +1677,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         index in
       typecheck_error msg reasons
 
+  (* TODO: friendlify *)
   | ETupleUnsafeWrite (reasons) ->
       let msg = spf
         "Flow will only let you modify a tuple if it knows exactly which \
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
+  (* TODO: friendlify *)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
       let extra, msgs =
         let reasons = ordered_reasons (reason, reason_op) in
@@ -1672,6 +1694,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       typecheck_error_with_core_infos ~extra msgs
 
+  (* TODO: friendlify *)
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->
       let infos = List.map info_of_reason case_rs in
       let extra = [
@@ -1715,44 +1738,53 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons
 
+  (* TODO: friendlify *)
   | EIdxArity reason ->
       mk_error ~trace_infos [mk_info reason [
         "idx() function takes exactly two params!"
       ]]
 
+  (* TODO: friendlify *)
   | EIdxUse1 reason ->
       mk_error ~trace_infos [mk_info reason [
         "idx() callback functions may not be annotated and they may only \
          access properties on the callback parameter!"
       ]]
 
+  (* TODO: friendlify *)
   | EIdxUse2 reason ->
       mk_error ~trace_infos [mk_info reason [
         "idx() callbacks may only access properties on the callback \
          parameter!"
       ]]
 
+  (* TODO: friendlify *)
   | EUnexpectedThisType loc ->
       mk_error ~trace_infos [loc, ["Unexpected use of `this` type"]]
 
+  (* TODO: friendlify *)
   | EInvalidRestParam reason ->
       mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
         "rest parameter should have an array type"
       ]]
 
+  (* TODO: friendlify *)
   | ETypeParamArity (loc, n) ->
       let msg = spf "Incorrect number of type parameters (expected %n)" n in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | ETypeParamMinArity (loc, n) ->
       let msg = spf
         "Incorrect number of type parameters (expected at least %n)" n
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
       let msg = spf
         "Too many type arguments. Expected at most %d"
@@ -1763,6 +1795,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         mk_info reason_arity [];
       ]
 
+  (* TODO: friendlify *)
   | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
       let msg = spf
         "Too few type arguments. Expected at least %d"
@@ -1773,6 +1806,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         mk_info reason_arity [];
       ]
 
+  (* TODO: friendlify *)
   | EPropertyTypeAnnot loc ->
       let msg =
         "expected object type and string literal as arguments to \
@@ -1780,12 +1814,15 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | EExportsAnnot loc ->
       mk_error ~trace_infos [loc, ["$Exports requires a string literal"]]
 
+  (* TODO: friendlify *)
   | ECharSetAnnot loc ->
       mk_error ~trace_infos [loc, ["$CharSet requires a string literal"]]
 
+  (* TODO: friendlify *)
   | EInvalidCharSet {
       invalid = (invalid_reason, invalid_chars);
       valid = valid_reason;
@@ -1804,9 +1841,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         mk_info valid_reason [];
       ]
 
+  (* TODO: friendlify *)
   | EUnsupportedKeyInObjectType loc ->
       mk_error ~trace_infos [loc, ["Unsupported key in object type"]]
 
+  (* TODO: friendlify *)
   | EPredAnnot loc ->
       let msg =
         "expected number of refined variables (currently only supporting \
@@ -1814,20 +1853,24 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | ERefineAnnot loc ->
       let msg =
         "expected base type and predicate type as arguments to $Refine"
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | EUnexpectedTypeof loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Unexpected typeof expression"
       ]]
 
+  (* TODO: friendlify *)
   | ECustom (reasons, msg) ->
       typecheck_error msg reasons
 
+  (* TODO: friendlify *)
   | EInternal (loc, internal_error) ->
       let msg = match internal_error with
       | PackageHeapNotFound pkg ->
@@ -1877,6 +1920,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         spf "Internal error: %s" msg
       ]]
 
+  (* TODO: friendlify *)
   | EUnsupportedSyntax (loc, unsupported_syntax) ->
       let msg = match unsupported_syntax with
         | ComprehensionExpression
@@ -1932,17 +1976,21 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | EIllegalName loc ->
       mk_error ~trace_infos [loc, ["illegal name"]]
 
+  (* TODO: friendlify *)
   | EUseArrayLiteral loc ->
       mk_error ~trace_infos [loc, [
         "Use array literal instead of new Array(..)"
       ]]
 
+  (* TODO: friendlify *)
   | EMissingAnnotation reason ->
       mk_error ~trace_infos [mk_info reason ["Missing annotation"]]
 
+  (* TODO: friendlify *)
   | EBindingError (binding_error, loc, x, entry) ->
       let msg =
         match binding_error with
@@ -1968,9 +2016,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         ]
       ]
 
+  (* TODO: friendlify *)
   | ERecursionLimit reasons ->
       typecheck_error ~kind:RecursionLimitError "*** Recursion limit exceeded ***" reasons
 
+  (* TODO: friendlify *)
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
       let msg = spf
         "This modules resolves to %S, which is outside both your root \
@@ -1983,6 +2033,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       in
       mk_error ~trace_infos [loc, [msg]]
 
+  (* TODO: friendlify *)
   | EExperimentalDecorators loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Experimental decorator usage";
@@ -1991,6 +2042,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          of decorators at this time."
       ]]
 
+  (* TODO: friendlify *)
   | EExperimentalClassProperties (loc, static) ->
       let config_name, config_key =
         if static
@@ -2008,6 +2060,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           config_key
       ]]
 
+  (* TODO: friendlify *)
   | EUnsafeGetSet loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Potentially unsafe get/set usage";
@@ -2017,6 +2070,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          of your .flowconfig.";
       ]]
 
+  (* TODO: friendlify *)
   | EExperimentalExportStarAs loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Experimental `export * as` usage";
@@ -2026,12 +2080,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          of your .flowconfig";
       ]]
 
+  (* TODO: friendlify *)
   | EIndeterminateModuleType loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Unable to determine module type (CommonJS vs ES) if both an export \
          statement and module.exports are used in the same module!"
       ]]
 
+  (* TODO: friendlify *)
   | EUnreachable loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
 
@@ -2062,16 +2118,19 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EInvalidTypeof (loc, typename) ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [
         spf "string literal `%s`" typename;
         "This value is not a valid `typeof` return value"
       ]]
 
+  (* TODO: friendlify *)
   | EArithmeticOperand reason ->
       let msg = "The operand of an arithmetic operation must be a number." in
       mk_error ~trace_infos [mk_info reason [msg]]
 
+  (* TODO: friendlify *)
   | EBinaryInLHS reason ->
       (* TODO: or symbol *)
       let msg =
@@ -2079,24 +2138,29 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
          string or number." in
       mk_error ~trace_infos [mk_info reason [msg]]
 
+  (* TODO: friendlify *)
   | EBinaryInRHS reason ->
       let msg =
         "The right-hand side of an `in` expression must be an \
          object or array." in
       mk_error ~trace_infos [mk_info reason [msg]]
 
+  (* TODO: friendlify *)
   | EForInRHS reason ->
       let msg =
         "The right-hand side of a `for...in` statement must be an \
          object, null or undefined." in
       mk_error ~trace_infos [mk_info reason [msg]]
 
+  (* TODO: friendlify *)
   | EObjectComputedPropertyAccess reasons ->
       typecheck_error "Computed property cannot be accessed with" reasons
 
+  (* TODO: friendlify *)
   | EObjectComputedPropertyAssign reasons ->
       typecheck_error "Computed property cannot be assigned with" reasons
 
+  (* TODO: friendlify *)
   | EInvalidLHSInAssignment loc ->
       let msg = "Invalid left-hand side in assignment expression" in
       mk_error ~trace_infos [loc, [msg]]
@@ -2113,6 +2177,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
         "Argument to implements clause must be an interface"]]
@@ -2203,6 +2268,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EReactElementFunArity (reason, fn, n) ->
       mk_error ~trace_infos [mk_info reason [
         "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
@@ -2230,10 +2296,12 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
+  (* TODO: friendlify *)
   | EUnsupportedSetProto reason ->
       mk_error ~trace_infos [mk_info reason [
         "Prototype mutation not allowed"]]
 
+  (* TODO: friendlify *)
   | EDuplicateModuleProvider {module_name; provider; conflict} ->
       mk_error ~kind:DuplicateProviderError [
         Loc.({ none with source = Some conflict }), [
@@ -2242,9 +2310,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           "current provider"]
       ]
 
+  (* TODO: friendlify *)
   | EParseError (loc, parse_error) ->
     mk_error ~kind:ParseError [loc, [Parse_error.PP.error parse_error]]
 
+  (* TODO: friendlify *)
   | EDocblockError (loc, err) ->
     let msg = match err with
     | MultipleFlowAttributes ->
@@ -2262,6 +2332,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     in
     mk_error ~kind:ParseError [loc, [msg]]
 
+  (* TODO: friendlify *)
   | EUntypedTypeImport (loc, module_name) ->
     mk_error
       ~kind:(LintError Lints.UntypedTypeImport)
@@ -2270,6 +2341,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 
+  (* TODO: friendlify *)
   | EUntypedImport (loc, module_name) ->
     mk_error
       ~kind:(LintError Lints.UntypedImport)
@@ -2278,28 +2350,35 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 
+  (* TODO: friendlify *)
   | ENonstrictImport loc ->
     mk_error
       ~kind:(LintError Lints.NonstrictImport)
       [loc, ["Dependencies of a `@flow strict` module must also be `@flow strict`"]]
 
+  (* TODO: friendlify *)
   | EUnclearType loc ->
     mk_error
       ~kind:(LintError Lints.UnclearType)
       [loc, ["Unclear type. Using `any`, `Object` or `Function` types is not safe!"]]
+
+  (* TODO: friendlify *)
   | EUnsafeGettersSetters loc ->
     mk_error
       ~kind:(LintError Lints.UnsafeGettersSetters)
       [loc, ["Getters and Setters can have side effects and are unsafe"]]
 
+  (* TODO: friendlify *)
   | EDeprecatedDeclareExports loc ->
     mk_error
       ~kind:(LintError Lints.DeprecatedDeclareExports)
       [loc, ["Deprecated syntax. Use `declare module.exports` instead."]]
 
+  (* TODO: friendlify *)
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
 
+  (* TODO: friendlify *)
   | ELintSetting (loc, kind) ->
     let msg = match kind with
     | LintSettings.Redundant_argument ->
@@ -2319,6 +2398,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     in
     mk_error ~kind: ParseError [loc, [msg]]
 
+  (* TODO: friendlify *)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     let type_str, value_str = match kind with
     | Lints.SketchyBool -> "boolean", "Potentially false"
@@ -2334,6 +2414,8 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         null_loc, ["Potentially null/undefined value."];
         falsy_loc, [spf "%s value." value_str]
       ]]
+
+  (* TODO: friendlify *)
   | EInvalidPrototype reason ->
       mk_error ~trace_infos [mk_info reason [
         "Invalid prototype. Expected an object or null."]]
