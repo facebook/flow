@@ -3019,22 +3019,6 @@ module.exports = {
         }
       },
       'var a: (A | B)',
-      {
-        content: 'var a: number & (string | bool)',
-        explanation: 'Esprima counts the parens in the type locs',
-        expected_differences: {
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.1': {
-            type: 'Wrong number',
-            expected: 31,
-            actual: 30
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.end.column': {
-            type: 'Wrong number',
-            expected: 31,
-            actual: 30,
-          }
-        }
-      },
       'var a: (typeof A)',
       'var a: Array<(number)>',
       'var a: ([]) = []',
