@@ -2457,8 +2457,12 @@ let dump_flow_error =
           (dump_reason cx reason)
           (match x with Some x -> spf "Some %S" x | None -> "None")
           (match use_op with Some _ -> "Some use_op" | None -> "None")
-    | EPrivateLookupFailed (reason1, reason2) ->
-        spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
+        spf "EPrivateLookupFailed ((%s, %s), %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          x
+          (string_of_use_op use_op)
     | EAdditionMixed reason ->
         spf "EAdditionMixed (%s)" (dump_reason cx reason)
     | EComparison (reason1, reason2) ->

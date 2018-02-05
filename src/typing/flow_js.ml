@@ -4642,8 +4642,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         fields tin prop_t;
 
     | DefT (reason_c, InstanceT _),
-      SetPrivatePropT (_, reason_op, _, [], _, _, _) ->
-      add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+      SetPrivatePropT (use_op, reason_op, x, [], _, _, _) ->
+      add_output cx ~trace (FlowError.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
 
     | DefT (reason_c, InstanceT (_, _, _, instance)),
       SetPrivatePropT (use_op, reason_op, x, scope::scopes, static, tin, prop_t) ->
@@ -4659,7 +4659,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         match SMap.get x (Context.find_props cx map) with
         | None ->
-          add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+          add_output cx ~trace (FlowError.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | Some p ->
           let action = RWProp (use_op, l, tin, Write (Normal, prop_t)) in
           let propref = Named (reason_op, x) in
@@ -4692,8 +4692,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       get_prop cx trace ~use_op reason_prop reason_op strict l super x fields tout
 
     | DefT (reason_c, InstanceT _),
-      GetPrivatePropT (_, reason_op, _, [], _, _) ->
-      add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+      GetPrivatePropT (use_op, reason_op, x, [], _, _) ->
+      add_output cx ~trace (FlowError.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
 
     | DefT (reason_c, InstanceT (_, _, _, instance)),
       GetPrivatePropT (use_op, reason_op, x, scope::scopes, static, tout) ->
@@ -4707,7 +4707,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         (match SMap.get x (Context.find_props cx map) with
         | None ->
-          add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+          add_output cx ~trace (FlowError.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | Some p ->
           let action = RWProp (use_op, l, tout, Read) in
           let propref = Named (reason_op, x) in

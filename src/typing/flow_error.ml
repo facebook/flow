@@ -66,7 +66,7 @@ type error_message =
       actual_polarity: Type.polarity;
     }
   | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
-  | EPrivateLookupFailed of (reason * reason)
+  | EPrivateLookupFailed of (reason * reason) * string * use_op
   | EAdditionMixed of reason
   | EComparison of (reason * reason)
   | ETupleArityMismatch of (reason * reason) * int * int * use_op
@@ -273,6 +273,7 @@ let util_use_op_of_msg nope util = function
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
+| EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
@@ -294,7 +295,6 @@ let util_use_op_of_msg nope util = function
 | EValueUsedAsType (_, _)
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
-| EPrivateLookupFailed (_, _)
 | EAdditionMixed (_)
 | EComparison (_, _)
 | ENonLitArrayToTuple (_, _)
@@ -1674,9 +1674,16 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         end
       )
 
-  (* TODO: friendlify *)
-  | EPrivateLookupFailed reasons ->
+  | EPrivateLookupFailed (reasons, x, use_op) ->
+    let friendly_error =
+      mk_prop_missing_friendly_error
+        (loc_of_reason (fst reasons)) (Some ("#" ^ x)) (snd reasons) use_op
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       typecheck_error "Property not found in" reasons
+    )
 
   (* TODO: friendlify *)
   | EAdditionMixed reason ->
