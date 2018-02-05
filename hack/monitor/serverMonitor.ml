@@ -90,8 +90,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       let pid, proc_stat = SC.wait_pid process in
       (match pid, proc_stat with
         | 0, _ ->
+          (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
           server
         | _, _ ->
+          (* "pid<>0" means the pid has died or received a stop signal *)
           let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
           let was_oom = match proc_stat with
           | Unix.WEXITED code when code = oom_code -> true
@@ -386,19 +388,21 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let env, consecutive_throws =
       try check_and_run_loop_ env monitor_config socket, 0 with
       | Unix.Unix_error (Unix.ECHILD, _, _) ->
+        let stack = Printexc.get_backtrace () in
         ignore (Hh_logger.log
-          "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
+          "check_and_run_loop_ threw with Unix.ECHILD. Exiting. - %s" stack);
         Exit_status.exit Exit_status.No_server_running
       | Exit_status.Exit_with _ as e -> raise e
       | e ->
+        let stack = Printexc.get_backtrace () in
         if consecutive_throws > 500 then begin
           Hh_logger.log "Too many consecutive exceptions.";
-          Hh_logger.log "Probably an uncaught exception being rethrown on each retry. Now Exiting.";
+          Hh_logger.log "Probably an uncaught exception rethrown each retry. Exiting. %s" stack;
           HackEventLogger.uncaught_exception e;
           Exit_status.exit Exit_status.Uncaught_exception
         end;
-        Hh_logger.log "check_and_run_loop_ threw with exception: %s"
-          (Printexc.to_string e);
+        Hh_logger.log "check_and_run_loop_ threw with exception: %s - %s"
+          (Printexc.to_string e) stack;
         env, consecutive_throws + 1
       in
       check_and_run_loop ~consecutive_throws env monitor_config socket
