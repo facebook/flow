@@ -41,10 +41,14 @@ let get_dependents options workers env file_key content =
     ~new_or_changed:(FilenameSet.singleton file_key)
     ~changed_modules:(Modulename.Set.singleton modulename)
 
+let lazy_mode_focus genv env path =
+  Nel.one path
+  |> Lazy_mode_utils.focus_and_check genv env
+  |> fst
+
 module VariableRefs: sig
   val find_refs:
-    Options.t ->
-    Worker.t list option ->
+    ServerEnv.genv ->
     ServerEnv.env ref ->
     File_key.t ->
     content: string ->
@@ -101,7 +105,10 @@ end = struct
       let name = Def.(def.actual_name) in
       Ok (Some (name, sorted_locs))
 
-  let find_external_refs options workers env file_key ~content ~name local_refs =
+  let find_external_refs genv env file_key ~content ~name local_refs =
+    let {options; workers} = genv in
+    File_key.to_path file_key >>= fun path ->
+    env := lazy_mode_focus genv !env path;
     let _, direct_dependents = get_dependents options workers env file_key content in
     (* Get a map from dependent file path to locations where the symbol in question is imported in
     that file *)
@@ -134,7 +141,7 @@ end = struct
     all_external_locations >>= fun all_external_locations ->
     Ok (all_external_locations @ local_refs, FilenameSet.cardinal direct_dependents)
 
-  let find_refs options workers env file_key ~content loc ~global =
+  let find_refs genv env file_key ~content loc ~global =
     (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
     first *)
     local_find_refs file_key content loc >>= function
@@ -151,7 +158,7 @@ end = struct
                   | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
                       if List.mem loc refs then
-                        let all_refs_result = find_external_refs options workers env file_key content name refs in
+                        let all_refs_result = find_external_refs genv env file_key content name refs in
                         all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
                       else
                         Ok (Some (name, refs, None))
@@ -408,11 +415,7 @@ end = struct
             let last_def_loc = Nel.nth def_locs ((Nel.length def_locs) - 1) in
             Result.of_option Loc.(last_def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
             File_key.to_path file_key >>= fun path ->
-            env := begin
-              Nel.one path
-              |> Lazy_mode_utils.focus_and_check genv !env
-              |> fst
-            end;
+            env := lazy_mode_focus genv !env path;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput >>= fun content ->
             find_refs_in_file options content file_key def_locs name >>= fun refs ->
@@ -435,7 +438,6 @@ let sort_find_refs_result = function
   | x -> x
 
 let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
-  let options, workers = genv.options, genv.workers in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
@@ -443,7 +445,7 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
   | Error err -> Error err, None
   | Ok content ->
     let result =
-      VariableRefs.find_refs options workers env file_key ~content loc ~global >>= function
+      VariableRefs.find_refs genv env file_key ~content loc ~global >>= function
         | Some _ as result -> Ok result
         | None -> PropertyRefs.find_refs genv env ~profiling ~content file_key loc ~global
     in
