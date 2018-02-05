@@ -159,7 +159,7 @@ Error: non_maybe_type.js:10
 
 Error: property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot use `$PropertyType` because the second type argument must be a string literal.
 
 Error: property_type.js:6
   6: (42: Obj_Prop_x);

@@ -94,7 +94,7 @@ type error_message =
   | EPropertyTypeAnnot of Loc.t
   | EExportsAnnot of Loc.t
   | ECharSetAnnot of Loc.t
-  | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason }
+  | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason; use_op: use_op }
   | EUnsupportedKeyInObjectType of Loc.t
   | EPredAnnot of Loc.t
   | ERefineAnnot of Loc.t
@@ -282,6 +282,8 @@ let util_use_op_of_msg nope util = function
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
 | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
+| EInvalidCharSet {invalid; valid; use_op} ->
+  util use_op (fun use_op -> EInvalidCharSet {invalid; valid; use_op})
 | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
@@ -314,7 +316,6 @@ let util_use_op_of_msg nope util = function
 | EPropertyTypeAnnot (_)
 | EExportsAnnot (_)
 | ECharSetAnnot (_)
-| EInvalidCharSet {invalid=_; valid=_}
 | EUnsupportedKeyInObjectType (_)
 | EPredAnnot (_)
 | ERefineAnnot (_)
@@ -1825,25 +1826,23 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons
 
-  (* TODO: friendlify *)
   | EIdxArity reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "idx() function takes exactly two params!"
-      ]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot call "; code "idx(...)"; text " because only exactly two ";
+      text "arguments are allowed."
+    ]
 
-  (* TODO: friendlify *)
   | EIdxUse1 reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "idx() callback functions may not be annotated and they may only \
-         access properties on the callback parameter!"
-      ]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot call "; code "idx(...)"; text " because the callback ";
+      text "argument must not be annotated.";
+    ]
 
-  (* TODO: friendlify *)
   | EIdxUse2 reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "idx() callbacks may only access properties on the callback \
-         parameter!"
-      ]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot call "; code "idx(...)"; text " because the callback must ";
+      text "only access properties on the callback parameter.";
+    ]
 
   (* TODO: friendlify *)
   | EUnexpectedThisType loc ->
@@ -1855,40 +1854,65 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         "rest parameter should have an array type"
       ]]
 
-  (* TODO: friendlify *)
   | EPropertyTypeAnnot loc ->
-      let msg =
-        "expected object type and string literal as arguments to \
-         $PropertyType"
-      in
-      mk_error ~trace_infos [loc, [msg]]
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use "; code "$PropertyType"; text " because the second ";
+      text "type argument must be a string literal.";
+    ]
 
-  (* TODO: friendlify *)
   | EExportsAnnot loc ->
-      mk_error ~trace_infos [loc, ["$Exports requires a string literal"]]
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use "; code "$Exports"; text " because the first type ";
+      text "argument must be a string literal.";
+    ]
 
-  (* TODO: friendlify *)
   | ECharSetAnnot loc ->
-      mk_error ~trace_infos [loc, ["$CharSet requires a string literal"]]
+    mk_friendly_error ~trace_infos loc [
+      text "Cannot use "; code "$CharSet"; text " because the first type ";
+      text "argument must be a string literal.";
+    ]
 
-  (* TODO: friendlify *)
   | EInvalidCharSet {
       invalid = (invalid_reason, invalid_chars);
       valid = valid_reason;
+      use_op;
     } ->
-      let def_loc = def_loc_of_reason invalid_reason in
-      let extra =
+    let friendly_error =
+      let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
+      let invalids =
         InvalidCharSetSet.fold (fun c acc ->
           match c with
-          | InvalidChar c -> InfoLeaf [def_loc, [spf "`%c` is not a member of the set" c]]::acc
-          | DuplicateChar c -> InfoLeaf [def_loc, [spf "`%c` is duplicated" c]]::acc
+          | InvalidChar c ->
+            [code (String.make 1 c); text " is not a member of the set"] :: acc
+          | DuplicateChar c ->
+            [code (String.make 1 c); text " is duplicated"] :: acc
         ) invalid_chars []
         |> List.rev
       in
+      unwrap_use_ops_friendly (loc_of_reason invalid_reason) use_op (
+        [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "] @
+        Friendly.conjunction_concat ~conjunction:"and" invalids @
+        [text "."]
+      )
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
+      let invalids =
+        InvalidCharSetSet.fold (fun c acc ->
+          match c with
+          | InvalidChar c -> (spf "`%c` is not a member of the set" c)::acc
+          | DuplicateChar c -> (spf "`%c` is duplicated" c)::acc
+        ) invalid_chars []
+        |> List.rev
+      in
+      let def_loc = def_loc_of_reason invalid_reason in
+      let extra = List.map (fun invalid -> InfoLeaf [def_loc, [invalid]]) invalids in
       mk_error ~trace_infos ~extra [
         mk_info invalid_reason ["This type is incompatible with"];
         mk_info valid_reason [];
       ]
+    )
 
   (* TODO: friendlify *)
   | EUnsupportedKeyInObjectType loc ->

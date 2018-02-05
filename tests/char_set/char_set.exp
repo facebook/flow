@@ -1,36 +1,38 @@
 Error: test.js:14
  14:   ("aaaa": $CharSet<"ab">); // error
-        ^^^^^^ string literal `aaaa`. This type is incompatible with
- 14:   ("aaaa": $CharSet<"ab">); // error
-                ^^^^^^^^^^^^^^ character set `ab`
+        ^^^^^^ Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` [1] is incompatible with character set `ab` [2] since `a` is duplicated.
+  References:
    14:   ("aaaa": $CharSet<"ab">); // error
-          ^^^^^^ `a` is duplicated
+          ^^^^^^ [1]: string literal `aaaa`
+   14:   ("aaaa": $CharSet<"ab">); // error
+                  ^^^^^^^^^^^^^^ [2]: character set `ab`
 
 Error: test.js:15
  15:   ("c": $CharSet<"ab">); // error
-        ^^^ string literal `c`. This type is incompatible with
- 15:   ("c": $CharSet<"ab">); // error
-             ^^^^^^^^^^^^^^ character set `ab`
+        ^^^ Cannot cast `"c"` to character set `ab` because string literal `c` [1] is incompatible with character set `ab` [2] since `c` is not a member of the set.
+  References:
    15:   ("c": $CharSet<"ab">); // error
-          ^^^ `c` is not a member of the set
+          ^^^ [1]: string literal `c`
+   15:   ("c": $CharSet<"ab">); // error
+               ^^^^^^^^^^^^^^ [2]: character set `ab`
 
 Error: test.js:16
  16:   ("ac": $CharSet<"ab">); // error
-        ^^^^ string literal `ac`. This type is incompatible with
- 16:   ("ac": $CharSet<"ab">); // error
-              ^^^^^^^^^^^^^^ character set `ab`
+        ^^^^ Cannot cast `"ac"` to character set `ab` because string literal `ac` [1] is incompatible with character set `ab` [2] since `c` is not a member of the set.
+  References:
    16:   ("ac": $CharSet<"ab">); // error
-          ^^^^ `c` is not a member of the set
+          ^^^^ [1]: string literal `ac`
+   16:   ("ac": $CharSet<"ab">); // error
+                ^^^^^^^^^^^^^^ [2]: character set `ab`
 
 Error: test.js:20
  20:   new C(x);
-             ^ string literal `abcd`. This type is incompatible with
-  6:     constructor(flags?: C$flags): C;
-                             ^^^^^^^ C$flags
+             ^ Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is incompatible with `C$flags` [2] since `c` is not a member of the set and `d` is not a member of the set.
+  References:
    22: g("abcd");
-         ^^^^^^ `c` is not a member of the set
-   22: g("abcd");
-         ^^^^^^ `d` is not a member of the set
+         ^^^^^^ [1]: string literal `abcd`
+    3: type C$flags = $CharSet<"ab">
+                      ^^^^^^^^^^^^^^ [2]: `C$flags`
 
 Error: test.js:25
  25:   (x: "foo");

@@ -2541,10 +2541,11 @@ let dump_flow_error =
         spf "EExportsAnnot (%s)" (string_of_loc loc)
     | ECharSetAnnot loc ->
         spf "ECharSetAnnot (%s)" (string_of_loc loc)
-    | EInvalidCharSet { invalid = (reason, _); valid } ->
-        spf "EInvalidCharSet { invalid = (%s, _); valid = %s }"
+    | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
+        spf "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx valid)
+          (string_of_use_op use_op)
     | EUnsupportedKeyInObjectType loc ->
         spf "EUnsupportedKeyInObjectType (%s)" (string_of_loc loc)
     | EPredAnnot loc ->

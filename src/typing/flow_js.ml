@@ -4008,7 +4008,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (BoolT.why reason_op, call_tout)
 
     | DefT (reason, StrT (Literal (_, str))),
-      UseT (_, DefT (reason_op, CharSetT chars)) ->
+      UseT (use_op, DefT (reason_op, CharSetT chars)) ->
         let module CharSet = String_utils.CharSet in
         let open Flow_error in
         let invalid, _ = String_utils.fold_left ~f:(fun (invalid, seen) chr ->
@@ -4026,6 +4026,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               invalid
             );
             valid = reason_op;
+            use_op;
           })
 
     | DefT (reason, CharSetT _), _ ->

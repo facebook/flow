@@ -72,7 +72,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                   `
                                                     test.js:29
                                                      29: idx(obj1, obj => obj.a = null);
-                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of \`idx\`. idx() callbacks may only access properties on the callback parameter!
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
                                                   `,
                                                 ),
     addCode('declare var obj2: {a?: {b: {c: number}}};').noNewErrors(),
@@ -140,7 +140,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                     `
                                                       test.js:21
                                                        21: idx(new Foo1(), o => o.a = null);
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of \`idx\`. idx() callbacks may only access properties on the callback parameter!
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
                                                     `,
                                                   ),
   ]),
@@ -193,7 +193,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                   `
                                                                     test.js:6
                                                                       6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
-                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of \`idx\`. idx() callback functions may not be annotated and they may only access properties on the callback parameter!
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback argument must not be annotated.
                                                                   `,
                                                                 ),
 
@@ -203,7 +203,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                          `
                                            test.js:9
                                              9: idx({}, obj => obj());
-                                                ^^^^^^^^^^^^^^^^^^^^^ call of \`idx\`. idx() callbacks may only access properties on the callback parameter!
+                                                ^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
                                          `,
                                        ),
   ]),

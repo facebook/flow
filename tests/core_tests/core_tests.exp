@@ -63,19 +63,21 @@ Error: map.js:30
 
 Error: regexp.js:26
  26:     RegExp('foo', 'z'); // error
-                       ^^^ string literal `z`. This type is incompatible with
-333:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                   ^^^^^^^^^^^^ RegExp$flags. See lib: <BUILTINS>/core.js:333
+                       ^^^ Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2] since `z` is not a member of the set.
+  References:
    26:     RegExp('foo', 'z'); // error
-                         ^^^ `z` is not a member of the set
+                         ^^^ [1]: string literal `z`
+  330: type RegExp$flags = $CharSet<"gimsuy">
+                           ^^^^^^^^^^^^^^^^^^ [2]: `RegExp$flags`. See lib: <BUILTINS>/core.js:330
 
 Error: regexp.js:27
  27:     new RegExp('foo', 'z'); // error
-                           ^^^ string literal `z`. This type is incompatible with
-335:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                       ^^^^^^^^^^^^ RegExp$flags. See lib: <BUILTINS>/core.js:335
+                           ^^^ Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2] since `z` is not a member of the set.
+  References:
    27:     new RegExp('foo', 'z'); // error
-                             ^^^ `z` is not a member of the set
+                             ^^^ [1]: string literal `z`
+  330: type RegExp$flags = $CharSet<"gimsuy">
+                           ^^^^^^^^^^^^^^^^^^ [2]: `RegExp$flags`. See lib: <BUILTINS>/core.js:330
 
 Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
