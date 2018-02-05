@@ -31,7 +31,7 @@ Error: es_declare_module.js:10
 
 Error: es_declare_module.js:12
  12: import {num2} from "CJS_Clobbered"; // Error: No such export!
-             ^^^^ Named import from module `CJS_Clobbered`. This module has no named export called `num2`.
+             ^^^^ Cannot import `num2` because there is no `num2` export in `CJS_Clobbered`.
 
 Error: es_declare_module.js:15
  15: (numExport: string); // Error: number ~> string
@@ -53,7 +53,7 @@ Error: es_declare_module.js:18
 
 Error: es_declare_module.js:20
  20: import {strHidden} from "ES"; // Error: No such export!
-             ^^^^^^^^^ Named import from module `ES`. This module has no named export called `strHidden`.
+             ^^^^^^^^^ Cannot import `strHidden` because there is no `strHidden` export in `ES`.
 
 Error: es_declare_module.js:23
  23: (str3: number); // Error: string ~> number
@@ -93,7 +93,7 @@ Error: es_declare_module.js:34
 
 Error: es_declare_module.js:36
  36: import {T} from "ES"; // Error: T is a type import, not a value
-             ^ Named import from module `ES`. `T` is a type, but not a value. In order to import it, please use `import type`.
+             ^ Cannot import the type `T` as a value. Use `import type` instead.
 
 Error: es_declare_module.js:39
  39: ('asdf': T2); // Error: string ~> number
@@ -106,7 +106,7 @@ Error: es_declare_module.js:39
 
 Error: es_declare_module.js:41
  41: import {exports as nope} from "ES"; // Error: Not an export
-             ^^^^^^^ Named import from module `ES`. This module has no named export called `exports`.
+             ^^^^^^^ Cannot import `exports` because there is no `exports` export in `ES`.
 
 
 Found 14 errors

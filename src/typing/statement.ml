@@ -1806,7 +1806,7 @@ and statement cx = Ast.Statement.(
           then ImportDefaultT
             (get_reason, import_kind, (local_name, module_name), t, Context.is_strict cx)
           else ImportNamedT
-            (get_reason, import_kind, remote_export_name, t, Context.is_strict cx)
+            (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
         in
         Context.add_imported_t cx local_name t;
         Flow.flow cx (module_t, import_type)

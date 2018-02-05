@@ -704,10 +704,10 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ImportDefaultT (r, import, s, t'', is_strict)
-    | ImportNamedT (r, import, s, t', is_strict) ->
+    | ImportNamedT (r, import, s, m, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImportNamedT (r, import, s, t'', is_strict)
+        else ImportNamedT (r, import, s, m, t'', is_strict)
     | ImportTypeT (r, s, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

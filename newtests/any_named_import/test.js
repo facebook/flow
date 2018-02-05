@@ -121,11 +121,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import {x, y} from "string";
-                       ^ Named import from module \`string\`. This module only has a default export. Did you mean \`import x from ...\`?
+                       ^ Cannot import \`x\` because there is no \`x\` export in \`string\`. Did you mean \`import x from "..."\`?
 
           test.js:3
             3: import {x, y} from "string";
-                          ^ Named import from module \`string\`. This module only has a default export. Did you mean \`import y from ...\`?
+                          ^ Cannot import \`y\` because there is no \`y\` export in \`string\`. Did you mean \`import y from "..."\`?
         `,
       ),
   ]),

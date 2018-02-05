@@ -216,13 +216,17 @@ module Friendly = struct
     in
     {
       messages = [BlameM (loc, message)];
-      extra =
-        (InfoLeaf [(Loc.none, ["References:"])])::
-        (references
-        |> RefMap.bindings
-        |> List.sort (fun (_, a) (_, b) -> a - b)
-        |> List.map (fun ((loc, reference), n) ->
-          InfoLeaf [(loc, ["[" ^ string_of_int n ^ "]: " ^ reference])]));
+      extra = (
+        if not (RefMap.is_empty references) then
+          (InfoLeaf [(Loc.none, ["References:"])])::
+          (references
+          |> RefMap.bindings
+          |> List.sort (fun (_, a) (_, b) -> a - b)
+          |> List.map (fun ((loc, reference), n) ->
+            InfoLeaf [(loc, ["[" ^ string_of_int n ^ "]: " ^ reference])]))
+        else
+          []
+      );
     }
 end
 
@@ -259,7 +263,8 @@ let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
 let mk_friendly_error
   ?(kind=InferError)
   ?trace_infos
-  (loc, message)
+  loc
+  message
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in

@@ -672,9 +672,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "module_name", JSON_String module_name;
       "t_out", _json_of_t json_cx t;
     ]
-  | ImportNamedT (_, import_kind, export_name, t, _) -> [
+  | ImportNamedT (_, import_kind, export_name, module_name, t, _) -> [
       "import_kind", _json_of_import_kind import_kind;
       "export_name", JSON_String export_name;
+      "module_name", JSON_String module_name;
       "t_out", _json_of_t json_cx t;
     ]
   | ImportTypeT (_, export_name, t)
@@ -2378,10 +2379,10 @@ let dump_flow_error =
         spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
     | ENoDefaultExport (reason, module_name, _) ->
         spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
-    | EOnlyDefaultExport (reason, export_name) ->
-        spf "EOnlyDefaultExport (%s, %s)" (dump_reason cx reason) export_name
-    | ENoNamedExport (reason, export_name, _) ->
-        spf "ENoNamedExport (%s, %s)" (dump_reason cx reason) export_name
+    | EOnlyDefaultExport (reason, module_name, export_name) ->
+        spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+    | ENoNamedExport (reason, module_name, export_name, _) ->
+        spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
     | EMissingTypeArgs { reason; min_arity; max_arity } ->
         spf "EMissingTypeArgs { reason=%s; min_arity=%d; max_arity=%d }"
           (dump_reason cx reason)

@@ -41,16 +41,20 @@ export default suite(({addFile, addFiles, addCode}) => [
 
 
 
-    addCode('import type {nope} from "./forward_only";').newErrors(`
-      test.js:10
-        10: import type {nope} from "./forward_only";
-                         ^^^^ Named import from module ${'`'}./forward_only${'`'}. This module has no named export called ${'`'}nope${'`'}.
-    `),
-    addCode('import {aNum} from "./forward_only";').newErrors(`
-      test.js:12
-        12: import {aNum} from "./forward_only";
-                        ^^^^ Named import from module ${'`'}./forward_only${'`'}. This module has no named export called ${'`'}aNum${'`'}.
-    `),
+    addCode('import type {nope} from "./forward_only";').newErrors(
+                                                          `
+                                                            test.js:10
+                                                             10: import type {nope} from "./forward_only";
+                                                                              ^^^^ Cannot import \`nope\` because there is no \`nope\` export in \`./forward_only\`.
+                                                          `,
+                                                        ),
+    addCode('import {aNum} from "./forward_only";').newErrors(
+                                                     `
+                                                       test.js:12
+                                                        12: import {aNum} from "./forward_only";
+                                                                    ^^^^ Cannot import \`aNum\` because there is no \`aNum\` export in \`./forward_only\`.
+                                                     `,
+                                                   ),
   ]),
 
   test('forwards types alongside existing type exports', [
@@ -64,11 +68,13 @@ export default suite(({addFile, addFiles, addCode}) => [
         middleString,
       } from "./forward_with_exports";
     `).noNewErrors(),
-    addCode('import {aNum} from "./forward_with_exports";').newErrors(`
-      test.js:11
-        11: import {aNum} from "./forward_with_exports";
-                    ^^^^ Named import from module ${'`'}./forward_with_exports${'`'}. This module has no named export called ${'`'}aNum${'`'}.
-    `),
+    addCode('import {aNum} from "./forward_with_exports";').newErrors(
+                                                             `
+                                                               test.js:11
+                                                                11: import {aNum} from "./forward_with_exports";
+                                                                            ^^^^ Cannot import \`aNum\` because there is no \`aNum\` export in \`./forward_with_exports\`.
+                                                             `,
+                                                           ),
   ]),
 
   test('local exports override remote exports', [

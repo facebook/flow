@@ -14,7 +14,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           importer.js:2
             2: import {a} from "./exporter";
-                       ^ Named import from module \`./exporter\`. This module only has a default export. Did you mean \`import a from ...\`?
+                       ^ Cannot import \`a\` because there is no \`a\` export in \`./exporter\`. Did you mean \`import a from "..."\`?
         `,
       ),
   ]),

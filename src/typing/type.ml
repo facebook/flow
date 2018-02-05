@@ -518,7 +518,7 @@ module rec TypeTerm : sig
     | CJSRequireT of reason * t * bool (* is_strict *)
     | ImportModuleNsT of reason * t * bool (* is_strict *)
     | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
-    | ImportNamedT of reason * import_kind * string * t * bool (* is_strict *)
+    | ImportNamedT of reason * import_kind * string * string * t * bool (* is_strict *)
     | ImportTypeT of reason * string * t
     | ImportTypeofT of reason * string * t
     | AssertImportIsValueT of reason * string
@@ -1869,7 +1869,7 @@ end = struct
     | ImplementsT (_, t) -> reason_of_t t
     | ImportDefaultT (reason, _, _, _, _) -> reason
     | ImportModuleNsT (reason, _, _) -> reason
-    | ImportNamedT (reason, _, _, _, _) -> reason
+    | ImportNamedT (reason, _, _, _, _, _) -> reason
     | ImportTypeofT (reason, _, _) -> reason
     | ImportTypeT (reason, _, _) -> reason
     | IntersectionPreprocessKitT (reason, _) -> reason
@@ -2024,8 +2024,8 @@ end = struct
     | ImportDefaultT (reason, import_kind, name, t, is_strict) ->
         ImportDefaultT (f reason, import_kind, name, t, is_strict)
     | ImportModuleNsT (reason, t, is_strict) -> ImportModuleNsT (f reason, t, is_strict)
-    | ImportNamedT (reason, import_kind, name, t, is_strict) ->
-        ImportNamedT (f reason, import_kind, name, t, is_strict)
+    | ImportNamedT (reason, import_kind, name, t, module_name, is_strict) ->
+        ImportNamedT (f reason, import_kind, name, t, module_name, is_strict)
     | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
     | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
     | IntersectionPreprocessKitT (reason, tool) ->
@@ -2157,7 +2157,7 @@ end = struct
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
   | ImportDefaultT (_, _, _, _, _)
-  | ImportNamedT (_, _, _, _, _)
+  | ImportNamedT (_, _, _, _, _, _)
   | ImportTypeT (_, _, _)
   | ImportTypeofT (_, _, _)
   | AssertImportIsValueT (_, _)

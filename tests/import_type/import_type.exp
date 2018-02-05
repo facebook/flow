@@ -72,7 +72,7 @@ Error: import_type.js:57
 
 Error: import_type.js:71
  71: import type {numValue} from "./ExportsANumber"; // Error: Cannot import-type a number value
-                  ^^^^^^^^ Named import from module `./ExportsANumber`. The `numValue` export is a value, but not a type. `import type` only works on type exports like type aliases, interfaces, and classes. If you intended to import the type *of* a value, please use `import typeof` instead.
+                  ^^^^^^^^ Cannot import the value `numValue` as a type. `import type` only works on type exports. Like type aliases, interfaces, and classes. If you intended to import the type of a value use `import typeof` instead.
 
 Error: import_type.js:81
  81:   ClassFoo6; // Error: Not a value binding

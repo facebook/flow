@@ -200,7 +200,7 @@ No errors!
 Test h:
 Error: h2.js:3
   3: import type { Foo } from './h1';
-                   ^^^ Named import from module `./h1`. This module has no named export called `Foo`.
+                   ^^^ Cannot import `Foo` because there is no `Foo` export in `./h1`.
 
 
 Found 1 error

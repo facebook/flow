@@ -426,7 +426,7 @@ class ['a] t = object(self)
   | CJSRequireT (_, t, _)
   | ImportModuleNsT (_, t, _)
   | ImportDefaultT (_, _, _, t, _)
-  | ImportNamedT (_, _, _, t, _)
+  | ImportNamedT (_, _, _, _, t, _)
   | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t)
     -> self#type_ cx Negative acc t

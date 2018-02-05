@@ -48,7 +48,7 @@ Error: import_typeof.js:45
 
 Error: import_typeof.js:51
  51: import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
-                    ^^^^^^^^^ Named import from module `./ExportNamed_Alias`. The `AliasFoo3` export is a type, but not a value. `import typeof` only works on value exports like classes, vars, lets, etc. If you intended to import a type alias or interface, please use `import type` instead.
+                    ^^^^^^^^^ Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports. Like variables, functions, and classes. If you intended to import a type use `import type` instead.
 
 Error: import_typeof.js:68
  68: var f2: num_default = 'asdf'; // Error: string ~> number

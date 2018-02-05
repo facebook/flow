@@ -2111,7 +2111,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* import {X} from 'SomeModule'; *)
     | ModuleT(_, exports, imported_is_strict),
-      ImportNamedT(reason, import_kind, export_name, t, is_strict) ->
+      ImportNamedT(reason, import_kind, export_name, module_name, t, is_strict) ->
         check_nonstrict_import cx trace is_strict imported_is_strict reason;
         (**
          * When importing from a CommonJS module, we shadow any potential named
@@ -2159,11 +2159,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let msg =
               if num_exports = 1 && has_default_export
               then
-                FlowError.EOnlyDefaultExport (reason, export_name)
+                FlowError.EOnlyDefaultExport (reason, module_name, export_name)
               else
                 let known_exports = SMap.keys exports_tmap in
                 let suggestion = typo_suggestion known_exports export_name in
-                FlowError.ENoNamedExport (reason, export_name, suggestion)
+                FlowError.ENoNamedExport (reason, module_name, export_name, suggestion)
             in
             add_output cx ~trace msg;
             AnyT.why reason
@@ -2176,7 +2176,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ( CJSRequireT(reason, t, _)
         | ImportModuleNsT(reason, t, _)
         | ImportDefaultT(reason, _, _, t, _)
-        | ImportNamedT(reason, _, _, t, _)
+        | ImportNamedT(reason, _, _, _, t, _)
         ) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
@@ -2208,7 +2208,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (lreason, AnyT), ImportNamedT(reason, import_kind, _, t, _) ->
+    | DefT (lreason, AnyT), ImportNamedT(reason, import_kind, _, _, t, _) ->
       let () = match import_kind, desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed type import
          * from an untyped module and an any-typed type import from a nonexistent module. *)

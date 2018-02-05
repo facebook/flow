@@ -45,8 +45,8 @@ type error_message =
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
   | ENoDefaultExport of reason * string * string option
-  | EOnlyDefaultExport of reason * string
-  | ENoNamedExport of reason * string * string option
+  | EOnlyDefaultExport of reason * string * string
+  | ENoNamedExport of reason * string * string * string option
   | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
   | EMutationNotAllowed of { reason: reason; reason_op: reason }
@@ -288,8 +288,8 @@ let util_use_op_of_msg nope util = function
 | EImportTypeAsTypeof (_, _)
 | EImportTypeAsValue (_, _)
 | ENoDefaultExport (_, _, _)
-| EOnlyDefaultExport (_, _)
-| ENoNamedExport (_, _, _)
+| EOnlyDefaultExport (_, _, _)
+| ENoNamedExport (_, _, _, _)
 | EMissingTypeArgs {reason=_; min_arity=_; max_arity=_}
 | EValueUsedAsType (_, _)
 | EMutationNotAllowed {reason=_; reason_op=_}
@@ -599,12 +599,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       spf "Type is incompatible with (unclassified use type: %s)" ctor
     in
     spf "%s%s" msg (special_suffix special) in
-
-  let msg_export export_name =
-    if export_name = "default"
-    then export_name
-    else spf "`%s`" export_name
-  in
 
   let typecheck_error_with_core_infos ?kind ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
@@ -1150,8 +1144,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
             (root_loc, root_message @ [Inline [Text " because"]])
             (loc, final_message)
         | None ->
-          mk_friendly_error ~trace_infos
-            (loc, capitalize final_message)
+          mk_friendly_error ~trace_infos loc (capitalize final_message)
       )
   in
 
@@ -1350,6 +1343,13 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     ]
   in
 
+  let msg_export export_name =
+    if export_name = "default" then
+      text "the default export"
+    else
+      code export_name
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, lower_kind);
@@ -1417,57 +1417,62 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
 
-  (* TODO: friendlify *)
   | EImportValueAsType (r, export_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "The %s export is a value, but not a type. `import type` only works \
-         on type exports like type aliases, interfaces, and classes. If you \
-         intended to import the type *of* a value, please use `import \
-         typeof` instead."
-        (msg_export export_name)]]
+    mk_friendly_error ~trace_infos (loc_of_reason r) [
+      text "Cannot import the value "; msg_export export_name; text " as a type. ";
+      code "import type"; text " only works on type exports. Like type aliases, ";
+      text "interfaces, and classes. If you intended to import the type of a ";
+      text "value use "; code "import typeof"; text " instead.";
+    ]
 
-  (* TODO: friendlify *)
   | EImportTypeAsTypeof (r, export_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "The %s export is a type, but not a value. `import typeof` only \
-         works on value exports like classes, vars, lets, etc. If you \
-         intended to import a type alias or interface, please use `import \
-         type` instead."
-        (msg_export export_name)]]
+    mk_friendly_error ~trace_infos (loc_of_reason r) [
+      text "Cannot import the type "; msg_export export_name; text " as a type. ";
+      code "import typeof"; text " only works on value exports. Like variables, ";
+      text "functions, and classes. If you intended to import a type use ";
+      code "import type"; text " instead.";
+    ]
 
-  (* TODO: friendlify *)
   | EImportTypeAsValue (r, export_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "`%s` is a type, but not a value. In order to import it, please use \
-         `import type`."
-        export_name]]
+    mk_friendly_error ~trace_infos (loc_of_reason r) [
+      text "Cannot import the type "; msg_export export_name; text " as a value. ";
+      text "Use "; code "import type"; text " instead.";
+    ]
 
-  (* TODO: friendlify *)
   | ENoDefaultExport (r, module_name, suggestion) ->
-      let msg = "This module has no default export." in
-      let msg = match suggestion with
-      | None -> msg
-      | Some x ->
-        msg ^ (spf " Did you mean `import {%s} from \"%s\"`?" x module_name)
-      in
-      mk_error ~trace_infos [mk_info r [msg]]
+    mk_friendly_error ~trace_infos (loc_of_reason r) (
+      [
+        text "Cannot import a default export because there is no default export ";
+        text "in "; code module_name; text ".";
+      ] @
+      match suggestion with
+      | None -> []
+      | Some suggestion -> [text " ";
+          text "Did you mean ";
+          code (spf "import {%s} from \"%s\"" suggestion module_name);
+          text "?";
+        ]
+    )
 
-  (* TODO: friendlify *)
-  | EOnlyDefaultExport (r, export_name) ->
-      mk_error ~trace_infos [mk_info r [spf
-        "This module only has a default export. Did you mean \
-         `import %s from ...`?"
-        export_name]]
+  | EOnlyDefaultExport (r, module_name, export_name) ->
+    mk_friendly_error ~trace_infos (loc_of_reason r) [
+      text "Cannot import "; code export_name; text " because ";
+      text "there is no "; code export_name; text " export in ";
+      code module_name; text ". Did you mean ";
+      code (spf "import %s from \"...\"" export_name); text "?";
+    ]
 
-  (* TODO: friendlify *)
-  | ENoNamedExport (r, export_name, suggestion) ->
-      let msg =
-        spf "This module has no named export called `%s`." export_name in
-      let msg = match suggestion with
-      | None -> msg
-      | Some x -> msg ^ (spf " Did you mean `%s`?" x)
-      in
-      mk_error ~trace_infos [mk_info r [msg]]
+  | ENoNamedExport (r, module_name, export_name, suggestion) ->
+    mk_friendly_error ~trace_infos (loc_of_reason r) (
+      [
+        text "Cannot import "; code export_name; text " because ";
+        text "there is no "; code export_name; text " export in ";
+        code module_name; text ".";
+      ] @
+      match suggestion with
+      | None -> []
+      | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
+    )
 
   (* TODO: friendlify *)
   | EMissingTypeArgs { reason; min_arity; max_arity } ->

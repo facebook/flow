@@ -60,7 +60,8 @@ val mk_error:
 val mk_friendly_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  (Loc.t * Friendly.message) ->
+  Loc.t ->
+  Friendly.message ->
   error
 
 val mk_friendly_error_with_root:
