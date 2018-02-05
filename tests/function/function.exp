@@ -263,7 +263,7 @@ Error: call.js:59
 
 Error: function.js:21
  21:   <MyThing />;
-       ^^^^^^^^^^^ React. Could not resolve name
+       ^^^^^^^^^^^ Cannot resolve name `React`.
 
 Error: function.js:29
  29:   var a: number = x; // Error

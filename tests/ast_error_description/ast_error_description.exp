@@ -450,7 +450,7 @@ Error: expression.js:38
 
 Error: expression.js:38
  38: (((import('fs'): empty): T).p: empty);
-               ^^^^ fs. Required module not found
+               ^^^^ Cannot resolve module `fs`.
 
 Error: expression.js:39
  39: (((<MyComponent />: empty): T).p: empty);
@@ -463,19 +463,19 @@ Error: expression.js:39
 
 Error: expression.js:39
  39: (((<MyComponent />: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^ React key. Could not resolve name
+        ^^^^^^^^^^^^^^^ Cannot resolve name `React$Element`.
 
 Error: expression.js:39
  39: (((<MyComponent />: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^ React ref. Could not resolve name
+        ^^^^^^^^^^^^^^^ Cannot resolve name `React$Key`.
 
 Error: expression.js:39
  39: (((<MyComponent />: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^ React.Element. Could not resolve name
+        ^^^^^^^^^^^^^^^ Cannot resolve name `React$Node`.
 
 Error: expression.js:39
  39: (((<MyComponent />: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^ `MyComponent` element. Could not resolve name
+        ^^^^^^^^^^^^^^^ Cannot resolve name `React$Ref`.
 
 Error: expression.js:40
  40: (((<>foo</>: empty): T).p: empty);
@@ -488,14 +488,6 @@ Error: expression.js:40
 
 Error: expression.js:40
  40: (((<>foo</>: empty): T).p: empty);
-        ^^ React key. Could not resolve name
-
-Error: expression.js:40
- 40: (((<>foo</>: empty): T).p: empty);
-        ^^ React ref. Could not resolve name
-
-Error: expression.js:40
- 40: (((<>foo</>: empty): T).p: empty);
         ^^ Cannot get `React.Fragment` because property `Fragment` is missing in object type [1].
   References:
    12: declare var React: {createElement: React$CreateElement};
@@ -503,7 +495,15 @@ Error: expression.js:40
 
 Error: expression.js:40
  40: (((<>foo</>: empty): T).p: empty);
-        ^^^^^^^^ React.Element. Could not resolve name
+        ^^ Cannot resolve name `React$Key`.
+
+Error: expression.js:40
+ 40: (((<>foo</>: empty): T).p: empty);
+        ^^ Cannot resolve name `React$Ref`.
+
+Error: expression.js:40
+ 40: (((<>foo</>: empty): T).p: empty);
+        ^^^^^^^^ Cannot resolve name `React$Element`.
 
 Error: expression.js:41
  41: ((('foo': empty): T).p: empty);

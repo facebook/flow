@@ -5,7 +5,7 @@ No errors!
 Clear A.js:
 Error: B.js:5
   5: require('A');
-             ^^^ A. Required module not found
+             ^^^ Cannot resolve module `A`.
 
 
 Found 1 error

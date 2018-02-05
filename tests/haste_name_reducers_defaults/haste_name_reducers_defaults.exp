@@ -27,7 +27,7 @@ Error: index.js:4
 
 Error: index.js:5
   5: require('Module3');
-             ^^^^^^^^^ Module3. Required module not found
+             ^^^^^^^^^ Cannot resolve module `Module3`.
 
 
 Found 4 errors

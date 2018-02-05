@@ -18,11 +18,11 @@ Error: es6modules.js:15
 
 Error: es6modules.js:18
  18: import DefaultC from "C"; // Error: No such module
-                          ^^^ C. Required module not found
+                          ^^^ Cannot resolve module `C`.
 
 Error: es6modules.js:21
  21: import DefaultD from "./D"; // Error: No such module
-                          ^^^^^ ./D. Required module not found
+                          ^^^^^ Cannot resolve module `./D`.
 
 Error: es6modules.js:27
  27: import {doesntExist1} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding

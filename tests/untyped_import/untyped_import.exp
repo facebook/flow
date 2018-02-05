@@ -20,11 +20,11 @@ Error: imports.js:14
 
 Error: imports.js:22
  22: import {BeepObj} from './nonexistent.js';
-                           ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+                           ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 Error: imports.js:23
  23: import BoopObj from './nonexistent.js';
-                         ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+                         ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 
 Found 7 errors

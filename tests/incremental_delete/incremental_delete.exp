@@ -207,7 +207,7 @@ current provider. See: dupe1.js:0
 
 Error: requires_unchecked.js:5
   5: var unchecked = require('Unchecked');
-                             ^^^^^^^^^^^ Unchecked. Required module not found
+                             ^^^^^^^^^^^ Cannot resolve module `Unchecked`.
 
 
 Found 5 errors

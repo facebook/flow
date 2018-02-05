@@ -1639,18 +1639,22 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
        the error to say that `x` doesn't exist. We can tell this is the
        global object because that should be the only object created with
        `builtin_reason` instead of an actual location (see `Init_js.init`). *)
-    if is_builtin_reason lreason
-    then
-      (* TODO: friendlify *)
+    if is_builtin_reason lreason then
+      let (reason, _) = reasons in
       let msg = match x with
-      | Some x when is_internal_module_name x -> "Required module not found"
-      | _ -> "Could not resolve name"
+      | Some x when is_internal_module_name x ->
+        [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+      | None -> [text "Cannot resolve name "; desc reason; text "."]
+      | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
+      | Some x -> [text "Cannot resolve name "; code x; text "."]
       in
-      mk_error ~trace_infos [mk_info (fst reasons) [msg]]
+      mk_friendly_error ~trace_infos (loc_of_reason reason) msg
     else
       let (reason_prop, reason_obj) = reasons in
-      let friendly_error = mk_prop_missing_friendly_error
-        (loc_of_reason reason_prop) x reason_obj (Option.value ~default:unknown_use use_op) in
+      let friendly_error =
+        mk_prop_missing_friendly_error
+          (loc_of_reason reason_prop) x reason_obj (Option.value ~default:unknown_use use_op)
+      in
       (match friendly_error with
       | Some error -> error
       | None ->

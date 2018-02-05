@@ -1,6 +1,6 @@
 Error: copyProperties.js:6
   6:     (copyProperties()); // error, unknown global
-          ^^^^^^^^^^^^^^ copyProperties. Could not resolve name
+          ^^^^^^^^^^^^^^ Cannot resolve name `copyProperties`.
 
 Error: copyProperties.js:31
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
@@ -13,11 +13,11 @@ Error: copyProperties.js:31
 
 Error: invariant.js:6
   6:     invariant(x, 'truthy only'); // error, forgot to require invariant
-         ^^^^^^^^^ invariant. Could not resolve name
+         ^^^^^^^^^ Cannot resolve name `invariant`.
 
 Error: mergeInto.js:6
   6:     (mergeInto()); // error, unknown global
-          ^^^^^^^^^ mergeInto. Could not resolve name
+          ^^^^^^^^^ Cannot resolve name `mergeInto`.
 
 Error: test.js:6
   6:     var x: string = this.x;

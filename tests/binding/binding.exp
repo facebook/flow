@@ -333,7 +333,7 @@ Error: scope.js:42
 
 Error: scope.js:45
  45:   a = ""; // error: a no longer in scope
-       ^ a. Could not resolve name
+       ^ Cannot resolve name `a`.
 
 Error: scope.js:66
  66:   for (var a = "" /* error: string ~> number */;;) {}
@@ -409,7 +409,7 @@ Error: scope.js:103
 
 Error: scope.js:105
 105:   function f1(x = b /* error: cannot resolve b */): number {
-                       ^ b. Could not resolve name
+                       ^ Cannot resolve name `b`.
 
 Error: tdz.js:25
  25:   var v = x * c;  // errors, let + const referenced before decl

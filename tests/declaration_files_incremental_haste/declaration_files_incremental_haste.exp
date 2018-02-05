@@ -370,7 +370,7 @@ Error: foo/bar/nested_test.js:9
 
 Error: test.js:3
   3: var Implicit = require('ImplicitProvidesModule');
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ ImplicitProvidesModule. Required module not found
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `ImplicitProvidesModule`.
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -477,7 +477,7 @@ Error: foo/bar/nested_test.js:9
 
 Error: test.js:3
   3: var Implicit = require('ImplicitProvidesModule');
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ ImplicitProvidesModule. Required module not found
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `ImplicitProvidesModule`.
 
 Error: test.js:7
   7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean

@@ -9,11 +9,11 @@ Error: test.js:12
 
 Error: test.js:22
  22: var buffer2 = require("./buffer");
-                           ^^^^^^^^^^ ./buffer. Required module not found
+                           ^^^^^^^^^^ Cannot resolve module `./buffer`.
 
 Error: test.js:25
  25: var buffer3 = require("./buffer.js");
-                           ^^^^^^^^^^^^^ ./buffer.js. Required module not found
+                           ^^^^^^^^^^^^^ Cannot resolve module `./buffer.js`.
 
 
 Found 3 errors

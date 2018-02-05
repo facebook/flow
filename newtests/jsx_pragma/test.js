@@ -51,7 +51,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       // @jsx Foo['Bar']
-                             ^^^ Foo. Could not resolve name
+                             ^^^ Cannot resolve name \`Foo\`.
         `,
       ),
   ]),
@@ -67,7 +67,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:        * @jsx Foo['Bar']
-                             ^^^ Foo. Could not resolve name
+                             ^^^ Cannot resolve name \`Foo\`.
         `,
       ),
   ]),
@@ -81,7 +81,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       <Bar />;
-                     ^^^^^^^ Foo. Could not resolve name
+                     ^^^^^^^ Cannot resolve name \`Foo\`.
         `,
       ),
   ]),
@@ -95,7 +95,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       <Bar />;
-                     ^^^^^^^ Foo. Could not resolve name
+                     ^^^^^^^ Cannot resolve name \`Foo\`.
         `,
       ),
   ]),
@@ -284,7 +284,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar y="hi" />;
-                      ^^^ Bar. Could not resolve name
+                      ^^^ Cannot resolve name \`Bar\`.
         `,
       ),
   ]),

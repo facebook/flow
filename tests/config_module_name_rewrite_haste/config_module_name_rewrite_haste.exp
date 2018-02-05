@@ -1,10 +1,10 @@
 Error: A.js:12
  12: var m2 = require('2DoesntExist'); // Error
-                      ^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
+                      ^^^^^^^^^^^^^^ Cannot resolve module `Exists3`.
 
 Error: A.js:13
  13: import {numVal as numVal2} from '3DoesntExist'; // Error
-                                     ^^^^^^^^^^^^^^ 3DoesntExist. Required module not found
+                                     ^^^^^^^^^^^^^^ Cannot resolve module `Exists4`.
 
 
 Found 2 errors

@@ -9,7 +9,7 @@ Error: test.js:6
 
 Error: test.js:9
   9: const nonexistent = require('./untyped/bogus'); // error, missing module
-                                 ^^^^^^^^^^^^^^^^^ ./untyped/bogus. Required module not found
+                                 ^^^^^^^^^^^^^^^^^ Cannot resolve module `./untyped/bogus`.
 
 Error: typed/foo.js:3
   3: ("string": number); // Error

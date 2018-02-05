@@ -380,7 +380,7 @@ Error: destructuring.js:14
 
 Error: destructuring.js:15
  15:     b = z;
-             ^ z. Could not resolve name
+             ^ Cannot resolve name `z`.
 
 Error: destructuring.js:16
  16:     c = r;

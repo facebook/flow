@@ -176,7 +176,7 @@ Error: classes.js:56
 
 Error: classes.js:58
  58: class H<S = T, T = string> {} // Error - can't refer to T before it's defined
-                 ^ T. Could not resolve name
+                 ^ Cannot resolve name `T`.
 
 Error: classes.js:62
  62: var i_number: I<number> = new I(123); // Error number ~> ?string

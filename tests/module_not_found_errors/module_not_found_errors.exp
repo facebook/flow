@@ -1,10 +1,10 @@
 Error: index.js:3
   3: require('module_completely_absent');
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ module_completely_absent. Required module not found
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `module_completely_absent`.
 
 Error: index.js:7
   7: require('module_outside_of_root');
-             ^^^^^^^^^^^^^^^^^^^^^^^^ module_outside_of_root. Required module not found
+             ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `module_outside_of_root`.
 
 
 Found 2 errors

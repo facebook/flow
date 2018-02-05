@@ -9,7 +9,7 @@ Error: any.js:8
 
 Error: flowfixme.js:14
  14: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
-                               ^^^^^^^ nnumber. Could not resolve name
+                               ^^^^^^^ Cannot resolve name `nnumber`.
 
 Error: flowfixme.js:17
  17: var y:string = bar(0);
@@ -22,7 +22,7 @@ Error: flowfixme.js:17
 
 Error: flowissue.js:14
  14: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
-                               ^^^^^^^ nnumber. Could not resolve name
+                               ^^^^^^^ Cannot resolve name `nnumber`.
 
 Error: flowissue.js:17
  17: var y:string = bar(0);

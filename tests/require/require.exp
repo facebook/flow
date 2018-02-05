@@ -18,11 +18,11 @@ Error: require.js:14
 
 Error: require.js:17
  17: require("C");
-             ^^^ C. Required module not found
+             ^^^ Cannot resolve module `C`.
 
 Error: require.js:20
  20: require("./D");
-             ^^^^^ ./D. Required module not found
+             ^^^^^ Cannot resolve module `./D`.
 
 Error: require.js:25
  25: E.stringValue; // Error: The E exports obj has no 'stringValue' property

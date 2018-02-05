@@ -2100,7 +2100,7 @@ export default suite(({
         `
           Error: focused.js:1
             1: import dependency from './dependency';
-                                      ^^^^^^^^^^^^^^ ./dependency. Required module not found
+                                      ^^^^^^^^^^^^^^ Cannot resolve module \`./dependency\`.
 
           Error: focused.js:3
             3: var focusedError: string = 123;

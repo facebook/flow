@@ -20,15 +20,15 @@ Error: imports.js:15
 
 Error: imports.js:24
  24: import type {BeepType} from './nonexistent.js';
-                                 ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+                                 ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 Error: imports.js:25
  25: import typeof {BeepObj} from './nonexistent.js';
-                                  ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+                                  ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 Error: imports.js:27
  27: import typeof BoopObj from './nonexistent.js';
-                                ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
+                                ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 
 Found 8 errors

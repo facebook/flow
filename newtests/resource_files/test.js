@@ -20,7 +20,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './foo'
-                      ^^^^^^^ ./foo. Required module not found
+                      ^^^^^^^ Cannot resolve module \`./foo\`.
         `,
       ),
   ]),
@@ -65,7 +65,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './bar'
-                      ^^^^^^^ ./bar. Required module not found
+                      ^^^^^^^ Cannot resolve module \`./bar\`.
         `,
       ),
   ]),

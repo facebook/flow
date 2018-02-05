@@ -36,11 +36,11 @@ Error: requireLazy.js:14
 
 Error: requireLazy.js:17
  17: var notA: Object = A;
-                        ^ A. Could not resolve name
+                        ^ Cannot resolve name `A`.
 
 Error: requireLazy.js:18
  18: var notB: Object = B;
-                        ^ B. Could not resolve name
+                        ^ Cannot resolve name `B`.
 
 Error: requireLazy.js:20
  20: requireLazy(); // Error: No args

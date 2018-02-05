@@ -610,6 +610,12 @@ let internal_module_name name =
 let is_internal_module_name name =
   string_starts_with name ".$module__"
 
+let uninternal_module_name name =
+  if is_internal_module_name name then
+    String.sub name 10 (String.length name - 10)
+  else
+    name
+
 let internal_pattern_name loc =
   spf ".$pattern__%s" (string_of_loc loc)
 

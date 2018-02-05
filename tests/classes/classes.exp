@@ -86,11 +86,11 @@ Error: class_shapes.js:35
 
 Error: expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
-                 ^^^ Baz. Could not resolve name
+                 ^^^ Cannot resolve name `Baz`.
 
 Error: expr.js:17
  17: var c: Qux = new C(); // error: Qux is not a type in this scope
-            ^^^ Qux. Could not resolve name
+            ^^^ Cannot resolve name `Qux`.
 
 Error: expr.js:29
  29: var alias1: Alias = new _Alias(); // error: bad pun

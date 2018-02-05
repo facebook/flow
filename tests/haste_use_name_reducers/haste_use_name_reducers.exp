@@ -9,7 +9,7 @@ Error: index.js:3
 
 Error: index.js:6
   6: require('Module4');
-             ^^^^^^^^^ Module4. Required module not found
+             ^^^^^^^^^ Cannot resolve module `Module4`.
 
 
 Found 2 errors

@@ -5,7 +5,7 @@ No errors!
 Delete non-@flow file foo.js:
 Error: test.js:5
   5: require('Foo');
-             ^^^^^ Foo. Required module not found
+             ^^^^^ Cannot resolve module `Foo`.
 
 
 Found 1 error
