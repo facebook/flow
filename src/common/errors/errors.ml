@@ -462,7 +462,18 @@ let locs_of_error =
         let loc, _ = to_pp message in
         loc::acc
       ) extra_locs messages
-    | Friendly { Friendly.loc; _ } -> [loc]
+    | Friendly { Friendly.loc; root; message; } -> Friendly.(
+      let message =
+        (match root with Some { root_message; _ } -> root_message | None -> []) @
+        message
+      in
+      let acc = loc ::
+        (match root with Some { root_loc; _ } -> [root_loc] | None -> []) in
+      (List.fold_left (fun acc feature ->
+        match feature with
+        | Inline _ -> acc
+        | Reference (_, loc) -> loc :: acc
+      ) acc message))
 
 let infos_of_error (_, _, error) =
   match error with

@@ -7,24 +7,6 @@ Error: A.js:16
    16: var test4: string = 123; // This error is NOT suppressed
                   ^^^^^^ [2]: string
 
-Error: D.js:8
-  8: x = y;
-         ^ Cannot assign `y` to `x` because in property `x`, property `bar` is missing in object type [1] but exists in object type [2].
-  References:
-    2:   x: { foo: string }
-            ^^^^^^^^^^^^^^^ [1]: object type
-    6:   x: { bar: number }
-            ^^^^^^^^^^^^^^^ [2]: object type
-
-Error: D.js:8
-  8: x = y;
-         ^ Cannot assign `y` to `x` because in property `x`, property `foo` is missing in object type [1] but exists in object type [2].
-  References:
-    6:   x: { bar: number }
-            ^^^^^^^^^^^^^^^ [1]: object type
-    2:   x: { foo: string }
-            ^^^^^^^^^^^^^^^ [2]: object type
-
 Error: versions.js:7
   7: (123: string); // should not be suppressed
       ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
@@ -38,9 +20,5 @@ Warning: A.js:14
  14: // $FlowFixMe Error unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-Warning: D.js:5
-  5:   // $FlowFixMe - this location is only mentioned in the extra section
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-
-Found 4 errors and 2 warnings
+Found 2 errors and 1 warning
