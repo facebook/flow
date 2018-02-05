@@ -48,12 +48,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       (foo: [0, 1, 2]);
-                      ^^^ array literal. Only tuples and array literals with known elements can flow to
-            8:       (foo: [0, 1, 2]);
-                           ^^^^^^^^^ tuple type
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 1 but tuple type [2] has an arity of 3.
             References:
               4:       let foo = [0];
@@ -64,6 +58,15 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 2 but tuple type [2] has an arity of 3.
+            References:
+              6:         foo = [...foo, x];
+                               ^^^^^^^^^^^ [1]: array literal
+              8:       (foo: [0, 1, 2]);
+                             ^^^^^^^^^ [2]: tuple type
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
             References:
               6:         foo = [...foo, x];
                                ^^^^^^^^^^^ [1]: array literal
@@ -287,9 +290,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       (nonTup: [1,2,3]);
-                      ^^^^^^ array literal. Only tuples and array literals with known elements can flow to
-            6:       (nonTup: [1,2,3]);
-                              ^^^^^^^ tuple type
+                      ^^^^^^ Cannot cast \`nonTup\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
+            References:
+              5:       const nonTup = [...tup];
+                                      ^^^^^^^^ [1]: array literal
+              6:       (nonTup: [1,2,3]);
+                                ^^^^^^^ [2]: tuple type
         `,
       )
   ]),
@@ -302,9 +308,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       (nonTup: [1,2,3]);
-                      ^^^^^^ array literal. Only tuples and array literals with known elements can flow to
-            6:       (nonTup: [1,2,3]);
-                              ^^^^^^^ tuple type
+                      ^^^^^^ Cannot cast \`nonTup\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
+            References:
+              5:       const nonTup = [...tup];
+                                      ^^^^^^^^ [1]: array literal
+              6:       (nonTup: [1,2,3]);
+                                ^^^^^^^ [2]: tuple type
         `,
       )
   ]),

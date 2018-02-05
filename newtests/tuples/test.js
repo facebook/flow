@@ -180,9 +180,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 2 of
-            3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^ tuple type
+                                                       ^^^^ Cannot get \`x[2]\` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+            References:
+              3: function foo(x: [1,2]): number { return x[2]; }
+                                 ^^^^^ [1]: tuple type
 
           test.js:3
             3: function foo(x: [1,2]): number { return x[2]; }
@@ -200,9 +201,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index -1 of
-            5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^ tuple type
+                                                       ^^^^^ Cannot get \`x[-1]\` because tuple type [1] only has 2 elements, so index -1 is out of bounds.
+            References:
+              5: function foo(x: [1,2]): number { return x[-1]; }
+                                 ^^^^^ [1]: tuple type
 
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
@@ -221,9 +223,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ computed property. Out of bound access. This tuple has 1 elements and you tried to access index 2 of
-            3: function foo(x: [1]): string { return x[2]; }
-                                                     ^ tuple type
+                                                     ^^^^ Cannot get \`x[2]\` because tuple type [1] only has 1 element, so index 2 is out of bounds.
+            References:
+              3: function foo(x: [1]): string { return x[2]; }
+                                 ^^^ [1]: tuple type
 
           test.js:3
             3: function foo(x: [1]): string { return x[2]; }
@@ -288,9 +291,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function foo(arr: Array<number>): [number, number] { return arr; }
-                                                                                 ^^^ array type. Only tuples and array literals with known elements can flow to
-            4:       function foo(arr: Array<number>): [number, number] { return arr; }
-                                                       ^^^^^^^^^^^^^^^^ tuple type
+                                                                                 ^^^ Cannot return \`arr\` because array type [1] has an unknown number of elements, so is incompatible with tuple type [2].
+            References:
+              4:       function foo(arr: Array<number>): [number, number] { return arr; }
+                                         ^^^^^^^^^^^^^ [1]: array type
+              4:       function foo(arr: Array<number>): [number, number] { return arr; }
+                                                         ^^^^^^^^^^^^^^^^ [2]: tuple type
         `,
       ),
   ]),
@@ -448,9 +454,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:           return tup[3];
-                                ^^^^^^ computed property. Out of bound access. This tuple has 2 elements and you tried to access index 3 of
-            6:           return tup[3];
-                                ^^^ tuple type
+                                ^^^^^^ Cannot get \`tup[3]\` because tuple type [1] only has 2 elements, so index 3 is out of bounds.
+            References:
+              4:       function foo(tup: ?[number, number]): number {
+                                          ^^^^^^^^^^^^^^^^ [1]: tuple type
 
           test.js:6
             6:           return tup[3];

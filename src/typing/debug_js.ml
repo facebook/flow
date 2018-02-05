@@ -2475,19 +2475,22 @@ let dump_flow_error =
           (dump_reason cx reason2)
           arity1 arity2
           (string_of_use_op use_op)
-    | ENonLitArrayToTuple (reason1, reason2) ->
-        spf "ENonLitArrayToTuple (%s, %s)"
+    | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
+        spf "ENonLitArrayToTuple ((%s, %s), %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2) ->
-        spf "ETupleOutOfBounds (%s, %s, %d, %d)"
+          (string_of_use_op use_op)
+    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2, use_op) ->
+        spf "ETupleOutOfBounds (%s, %s, %d, %d, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
-    | ETupleUnsafeWrite (reason1, reason2) ->
-        spf "ETupleUnsafeWrite (%s, %s)"
+          (string_of_use_op use_op)
+    | ETupleUnsafeWrite ((reason1, reason2), use_op) ->
+        spf "ETupleUnsafeWrite (%s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
           (string_of_use_op use_op)

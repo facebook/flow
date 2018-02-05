@@ -4385,9 +4385,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Arrays with known elements can flow to tuples *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
-      UseT (_, DefT (r2, ArrT (TupleAT _))) ->
+      UseT (use_op, DefT (r2, ArrT (TupleAT _))) ->
       begin match ts1 with
-      | None -> add_output cx ~trace (FlowError.ENonLitArrayToTuple (r1, r2))
+      | None -> add_output cx ~trace (FlowError.ENonLitArrayToTuple ((r1, r2), use_op))
       | Some ts1 ->
           rec_flow cx trace (DefT (r1, ArrT (TupleAT (t1, ts1))), u)
       end
@@ -5188,7 +5188,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 if is_tuple then begin
                   let reasons = (reason, reason_tup) in
                   let error =
-                    FlowError.ETupleOutOfBounds (reasons, List.length ts, index)
+                    FlowError.ETupleOutOfBounds (reasons, List.length ts, index, use_op)
                   in
                   add_output cx ~trace error;
                   true, DefT (mk_reason RTupleOutOfBoundsAccess (loc_of_reason reason), VoidT)
@@ -5207,7 +5207,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             add_output
               cx
               ~trace
-              (FlowError.ETupleUnsafeWrite reasons)
+              (FlowError.ETupleUnsafeWrite (reasons, use_op))
       end;
 
       perform_elem_action cx trace ~use_op reason arr value action

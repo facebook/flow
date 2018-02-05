@@ -1,6 +1,6 @@
 Error: clone_element.js:22
  22: React.cloneElement(); // Error: Needs a minimum of two arguments.
-     ^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`. React.cloneElement() must be passed at least 1 arguments.
+     ^^^^^^^^^^^^^^^^^^^^ Cannot call `React.cloneElement` without at least 1 argument.
 
 Error: clone_element.js:23
  23: React.cloneElement('nope'); // Error: Not a valid element type.
@@ -188,7 +188,7 @@ Error: clone_element.js:67
 
 Error: create_element.js:7
   7: React.createElement(); // Error: Needs a minimum of two arguments.
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least 1 arguments.
+     ^^^^^^^^^^^^^^^^^^^^^ Cannot call `React.createElement` without at least 1 argument.
 
 Error: create_element.js:9
   9: React.createElement(42); // Error: Number is not a valid component type.

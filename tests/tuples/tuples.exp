@@ -1,8 +1,15 @@
 Error: array.js:4
   4:   return x; // Error, can't enforce arity when flowing array to tuple
-              ^ array type. Only tuples and array literals with known elements can flow to
-  3: function foo(x: Array<number>): [number, ?number] {
-                                     ^^^^^^^^^^^^^^^^^ tuple type
+              ^ Cannot return `x` because array type [1] has an unknown number of elements, so is incompatible with tuple type [2].
+  References:
+    3: function foo(x: Array<number>): [number, ?number] {
+                       ^^^^^^^^^^^^^ [1]: array type
+    3: function foo(x: Array<number>): [number, ?number] {
+                                       ^^^^^^^^^^^^^^^^^ [2]: tuple type
+
+Error: number-index.js:7
+  7: tup[(0: number)] = 123;
+     ^^^^^^^^^^^^^^^^ Cannot assign `123` to `tup[0]` because the index must be statically known to write a tuple element.
 
 Error: optional.js:4
   4: ([0]: [number, ?string]); // Error, arity is enforced
@@ -59,4 +66,4 @@ Error: tuples.js:6
                        ^^^^^^ [2]: string
 
 
-Found 7 errors
+Found 8 errors

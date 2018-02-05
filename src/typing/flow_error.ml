@@ -70,9 +70,9 @@ type error_message =
   | EAdditionMixed of reason
   | EComparison of (reason * reason)
   | ETupleArityMismatch of (reason * reason) * int * int * use_op
-  | ENonLitArrayToTuple of (reason * reason)
-  | ETupleOutOfBounds of (reason * reason) * int * int
-  | ETupleUnsafeWrite of (reason * reason)
+  | ENonLitArrayToTuple of (reason * reason) * use_op
+  | ETupleOutOfBounds of (reason * reason) * int * int * use_op
+  | ETupleUnsafeWrite of (reason * reason) * use_op
   | EUnionSpeculationFailed of {
       use_op: use_op;
       reason: reason;
@@ -275,6 +275,9 @@ let util_use_op_of_msg nope util = function
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
 | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
+| ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
+| ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
+| ETupleUnsafeWrite (rs, op) -> util op (fun op -> ETupleUnsafeWrite (rs, op))
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
 | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
@@ -297,9 +300,6 @@ let util_use_op_of_msg nope util = function
 | EStrictLookupFailed (_, _, _, None)
 | EAdditionMixed (_)
 | EComparison (_, _)
-| ENonLitArrayToTuple (_, _)
-| ETupleOutOfBounds (_, _, _)
-| ETupleUnsafeWrite (_, _)
 | ESpeculationAmbiguous (_, _, _, _)
 | EUnsupportedExact (_, _)
 | EIdxArity (_)
@@ -1333,14 +1333,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     )
   in
 
-  let mk_tuple_arity_mismatch_friendly_error
-    (lower, length_lower) (upper, length_upper) use_op =
-    unwrap_use_ops_friendly (loc_of_reason lower) use_op [
-      ref lower; text (spf " has an arity of %d but " length_lower); ref upper;
-      text (spf " has an arity of %d." length_upper);
-    ]
-  in
-
   let msg_export export_name =
     if export_name = "default" then
       text "the default export"
@@ -1696,13 +1688,15 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error "This type cannot be compared to" reasons
 
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
-    let (lreason, ureason) = reasons in
     let friendly_error =
-      mk_tuple_arity_mismatch_friendly_error
-        (lreason, l1) (ureason, l2) use_op
+      let (lower, upper) = reasons in
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+        ref lower; text (spf " has an arity of %d but " l1); ref upper;
+        text (spf " has an arity of %d." l2);
+      ]
     in
     (match friendly_error with
-    | Some friendly_error -> friendly_error
+    | Some error -> error
     | None ->
       let msg = spf
         "Tuple arity mismatch. This tuple has %d elements and cannot flow to \
@@ -1715,27 +1709,56 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
-  | ENonLitArrayToTuple reasons ->
+  | ENonLitArrayToTuple (reasons, use_op) ->
+    let friendly_error =
+      let (lower, upper) = reasons in
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+        ref lower; text " has an unknown number of elements, so is ";
+        text "incompatible with "; ref upper; text ".";
+      ]
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let msg =
         "Only tuples and array literals with known elements can flow to" in
       typecheck_error msg reasons
+    )
 
-  (* TODO: friendlify *)
-  | ETupleOutOfBounds (reasons, length, index) ->
+  | ETupleOutOfBounds (reasons, length, index, use_op) ->
+    let friendly_error =
+      let (lower, upper) = reasons in
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+        ref upper;
+        text (spf " only has %d element%s, so index %d is out of bounds."
+          length (if length == 1 then "" else "s") index);
+      ]
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let msg = spf
         "Out of bound access. This tuple has %d elements and you tried to \
         access index %d of"
         length
         index in
       typecheck_error msg reasons
+    )
 
-  (* TODO: friendlify *)
-  | ETupleUnsafeWrite (reasons) ->
+  | ETupleUnsafeWrite (reasons, use_op) ->
+    let friendly_error =
+      let (lower, _) = reasons in
+      unwrap_use_ops_friendly (loc_of_reason lower) use_op
+        [text "the index must be statically known to write a tuple element."]
+    in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let msg = spf
         "Flow will only let you modify a tuple if it knows exactly which \
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
+    )
 
   (* TODO: friendlify *)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
@@ -1997,11 +2020,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | EIllegalName loc ->
       mk_error ~trace_infos [loc, ["illegal name"]]
 
-  (* TODO: friendlify *)
   | EUseArrayLiteral loc ->
-      mk_error ~trace_infos [loc, [
-        "Use array literal instead of new Array(..)"
-      ]]
+    mk_friendly_error ~trace_infos loc
+      [text "Use an array literal instead of "; code "new Array(...)"; text "."]
 
   | EMissingAnnotation reason ->
     mk_friendly_error ~trace_infos (loc_of_reason reason)
@@ -2284,11 +2305,11 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
   | EReactElementFunArity (reason, fn, n) ->
-      mk_error ~trace_infos [mk_info reason [
-        "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
-      ]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot call "; code ("React." ^ fn); text " ";
+      text (spf "without at least %d argument%s." n (if n == 1 then "" else "s"));
+    ]
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
     let friendly_error =
