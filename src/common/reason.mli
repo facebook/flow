@@ -37,6 +37,7 @@ type reason_desc =
   | RJSXElementProps of string
   | RJSXElement of string option
   | RJSXText
+  | RFbt
   | RUnaryOperator of string * reason_desc
   | RBinaryOperator of string * reason_desc * reason_desc
   | RLogical of string * reason_desc * reason_desc

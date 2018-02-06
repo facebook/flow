@@ -85,6 +85,7 @@ type reason_desc =
   | RJSXElementProps of string
   | RJSXElement of string option
   | RJSXText
+  | RFbt
   | RUnaryOperator of string * reason_desc
   | RBinaryOperator of string * reason_desc * reason_desc
   | RLogical of string * reason_desc * reason_desc
@@ -423,6 +424,7 @@ let rec string_of_desc = function
     | None -> "JSX element")
   | RJSXElementProps _ -> "props"
   | RJSXText -> spf "JSX text"
+  | RFbt -> "`<fbt/>`"
   | RUnaryOperator (operator, value) ->
     spf "%s %s" operator (string_of_desc value)
   | RBinaryOperator (operator, left, right) ->
@@ -1005,6 +1007,7 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RNumberLit _
 | RBooleanLit _
 | RJSXText
+| RFbt
 | RTemplateString
 | RUnknownString
 | RStringEnum
@@ -1183,6 +1186,7 @@ let is_array_reason r = match desc_of_reason ~unwrap:true r with
 | RJSXElementProps _
 | RJSXElement _
 | RJSXText
+| RFbt
 | RUnaryOperator _
 | RBinaryOperator _
 | RLogical _

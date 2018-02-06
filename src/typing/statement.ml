@@ -3780,7 +3780,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
   match (name, facebook_fbt, jsx_mode) with
   | (Identifier (_, { Identifier.name }), Some facebook_fbt, _)
       when name = "fbt" ->
-    let fbt_reason = mk_reason (RCustom "`<fbt/>`") loc_element in
+    let fbt_reason = mk_reason RFbt loc_element in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
   (**
