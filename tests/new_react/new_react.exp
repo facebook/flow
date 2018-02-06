@@ -28,12 +28,12 @@ Error: classes.js:7
          23:   setState(o: { y_: string }): void { }
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
           Property `y_` is incompatible:
              23:   setState(o: { y_: string }): void { }
                                ^^^^^^^^^^^^^^ property `y_`. Property not found in
              35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ State. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:7
   7: class Foo extends React.Component<Props, State> {
@@ -53,12 +53,12 @@ Error: classes.js:7
          23:   setState(o: { y_: string }): void { }
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
           Property `y_` is incompatible:
              23:   setState(o: { y_: string }): void { }
                                ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
              35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:15
  15:     var _: string = this.props.x;
@@ -184,12 +184,12 @@ Error: classes.js:43
          64:   setState(o: { y_: string }): void { },
                            ^^^^^^^^^^^^^^ object type. This type is incompatible with
          35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
           Property `y_` is incompatible:
              64:   setState(o: { y_: string }): void { },
                                ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
              35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
 
 Error: classes.js:57
  57:     var _: string = this.props.x;

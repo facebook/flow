@@ -20,13 +20,13 @@ Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
                                                   ^ number. This type is incompatible with
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                     ^^^^^^^^ num
+                                                     ^^^^^^^^^ num
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
                                                                         ^ number. This type is incompatible with the expected return type of
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                      ^^^^^^^^ num
+                                      ^^^^^^^^^ num
 
 
 Found 5 errors
