@@ -1,3 +1,36 @@
+### 0.65.0
+
+Likely to cause new Flow errors:
+
+#### New Features:
+* Improved inference of `const` bindings (`let`s and `var`s that are never reassigned), and introduced similar inference for function params. This allows Flow to be less pessimistic about refinements, especially inside closures. For example:
+
+  ```js
+  function f(val) {
+    if (val == null) return () => 42;
+    return () => val; // OK, since val cannot be null
+  }
+  ```
+
+#### Notable bug fixes:
+* Fixed regression in recheck performance
+
+#### Misc:
+* `implements` now works on `declare class` in addition to `class`
+* `declare module` library definitions are now considered `@flow strict`
+* Fixed non-`@flow strict` import rule when in a cycle
+* Fixed incorrect spreading call properties and indexer properties from interface types
+* Fixed `type-at-pos` and `coverage` commands when they encounter `Object.prototype` and `Function.prototype`
+* Fixed a crash when hit with more than 1024 concurrent connections, by returning an error instead
+* Fixed the --timeout flag to work properly now that it connects instantly to the server monitor
+* Added an exit code (5) for when the server goes unused for a week and shuts itself down
+* Added a `merge_timeout` .flowconfig option to mirror the `--merge-timeout` CLI flag added in 0.64
+
+#### Parser:
+* Fixed location of types containing trailing parens
+* Added `implements` to `DeclareClass` nodes
+
+
 ### 0.64.0
 
 Likely to cause new Flow errors:
