@@ -12,14 +12,19 @@ module Result = Core_result
 let (>>=) = Result.(>>=)
 let (>>|) = Result.(>>|)
 
-let get_docblock file content =
+let compute_docblock file content =
   let open Parsing_service_js in
   let max_tokens = docblock_max_tokens in
   let _errors, docblock = get_docblock ~max_tokens file content in
   docblock
 
-let get_ast_result file content =
-  let docblock = get_docblock file content in
+(* We use compute_ast_result (as opposed to get_ast_result) when the file contents we have might be
+ * different from what's on disk (and what is therefore stored in shared memory). This can be the
+ * case for local find-refs requests, where the client may pipe in file contents rather than just
+ * specifying a filename. For global find-refs, we assume that all dependent files are the same as
+ * what's on disk, so we can grab the AST from the heap instead. *)
+let compute_ast_result file content =
+  let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
@@ -30,8 +35,26 @@ let get_ast_result file content =
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
+let get_ast_result file : (Loc.t Ast.program * File_sig.t * Docblock.t, string) result =
+  let open Parsing_service_js in
+  let get_result f kind =
+    let error =
+      Printf.sprintf "Expected %s to be available for %s"
+        kind
+        (File_key.to_string file)
+    in
+    Result.of_option ~error (f file)
+  in
+  let ast_result = get_result get_ast "AST" in
+  let file_sig_result = get_result get_file_sig "file sig" in
+  let docblock_result = get_result retrieve_docblock "docblock" in
+  ast_result >>= fun ast ->
+  file_sig_result >>= fun file_sig ->
+  docblock_result >>= fun docblock ->
+  Ok (ast, file_sig, docblock)
+
 let get_dependents options workers env file_key content =
-  let docblock = get_docblock file_key content in
+  let docblock = compute_docblock file_key content in
   let modulename = Module_js.exported_module options file_key docblock in
   Dep_service.dependent_files
     workers
@@ -58,10 +81,7 @@ module VariableRefs: sig
 end = struct
   let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t list, string) result =
     let open File_sig in
-    File_key.to_path dep_file_key >>= fun path ->
-    let dep_fileinput = File_input.FileName path in
-    File_input.content_of_file_input dep_fileinput >>= fun content ->
-    get_ast_result dep_file_key content >>| fun (_, file_sig, _) ->
+    get_ast_result dep_file_key >>| fun (_, file_sig, _) ->
     let is_relevant mref =
       let resolved = Module_js.find_resolved_module
         ~audit:Expensive.warn
@@ -91,7 +111,7 @@ end = struct
 
   let local_find_refs file_key ~content loc =
     let open Scope_api in
-    get_ast_result file_key content >>= fun (ast, _, _) ->
+    compute_ast_result file_key content >>= fun (ast, _, _) ->
     let scope_info = Scope_builder.program ast in
     let all_uses = all_uses scope_info in
     let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
@@ -148,7 +168,7 @@ end = struct
       | None -> Ok None
       | Some (name, refs) ->
           if global then
-            get_ast_result file_key content >>= fun (_, file_sig, _) ->
+            compute_ast_result file_key content >>= fun (_, file_sig, _) ->
             let open File_sig in
             begin match file_sig.module_sig.module_kind with
               (* TODO support CommonJS *)
@@ -326,27 +346,25 @@ end = struct
       >>|
       List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
 
-  let find_refs_in_file options content file_key def_locs name =
+  let find_refs_in_file options ast_info file_key def_locs name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
-    get_ast_result file_key content
-    >>= begin fun (ast, file_sig, info) ->
-      let local_defs =
-        Nel.to_list def_locs
-        |> List.filter (fun loc -> loc.Loc.source = Some file_key)
+    let (ast, file_sig, info) = ast_info in
+    let local_defs =
+      Nel.to_list def_locs
+      |> List.filter (fun loc -> loc.Loc.source = Some file_key)
+    in
+    let has_symbol = check_for_matching_prop name ast in
+    if not has_symbol then
+      Ok local_defs
+    else begin
+      set_get_refs_hook potential_refs name;
+      let cx =
+        let ensure_checked = fun _ -> () in
+        Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
       in
-      let has_symbol = check_for_matching_prop name ast in
-      if not has_symbol then
-        Ok local_defs
-      else begin
-        set_get_refs_hook potential_refs name;
-        let cx =
-          let ensure_checked = fun _ -> () in
-          Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-        in
-        unset_hooks ();
-        filter_refs cx !potential_refs file_key def_locs name
-        >>| (@) local_defs
-      end
+      unset_hooks ();
+      filter_refs cx !potential_refs file_key def_locs name
+      >>| (@) local_defs
     end
 
   let find_external_refs genv all_deps def_locs name =
@@ -358,9 +376,8 @@ end = struct
         (* Yay for global mutable state *)
         Files.node_modules_containers := node_modules_containers;
         deps |> List.map begin fun dep ->
-          File_key.to_path dep >>= fun path ->
-          File_input.FileName path |> File_input.content_of_file_input >>= fun content ->
-          find_refs_in_file options content dep def_locs name
+          get_ast_result dep >>= fun ast_info ->
+          find_refs_in_file options ast_info dep def_locs name
         end
       end
       ~merge: (fun refs acc -> refs::acc)
@@ -375,7 +392,7 @@ end = struct
       let props_access_info = ref None in
       set_def_loc_hook props_access_info loc;
       let cx_result =
-        get_ast_result file_key content
+        compute_ast_result file_key content
         >>| fun (ast, file_sig, info) ->
           Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
             let ensure_checked =
@@ -418,7 +435,8 @@ end = struct
             env := lazy_mode_focus genv !env path;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput >>= fun content ->
-            find_refs_in_file options content file_key def_locs name >>= fun refs ->
+            compute_ast_result file_key content >>= fun ast_info ->
+            find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
             let all_deps, _ = get_dependents options workers env file_key content in
             let dependent_file_count = FilenameSet.cardinal all_deps in
             Hh_logger.info
@@ -427,7 +445,8 @@ end = struct
             find_external_refs genv all_deps def_locs name >>| fun external_refs ->
             Some (name, List.concat (refs::external_refs), Some dependent_file_count)
           else
-            find_refs_in_file options content file_key def_locs name >>= fun refs ->
+            compute_ast_result file_key content >>= fun ast_info ->
+            find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
             Ok (Some (name, refs, None))
 end
 
