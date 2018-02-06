@@ -83,12 +83,10 @@ printf "travis_fold:start:yarn_install\nInstalling yarn dependencies\n"
   printf "Using yarn version $(yarn --version)\n"
 
   printf "travis_fold:start:yarn_install_tool\nRunning yarn install for tool\n"
-    yarn install | cat
+    yarn install --cwd packages/flow-dev-tools | cat
   printf "travis_fold:end:yarn_install_tool\n"
 
   printf "travis_fold:start:yarn_install_parser\nRunning yarn install for the parser\n"
-    pushd src/parser >/dev/null
-      yarn install | cat
-    popd >/dev/null
+    yarn install --cwd src/parser | cat
   printf "travis_fold:end:yarn_install_parser\n"
 printf "travis_fold:end:yarn_install\n"
