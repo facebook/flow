@@ -75,12 +75,12 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 9 4
 printf "Instance method on a superclass: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 3
 printf "Call of instance method on subclass which does not override: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 18 10
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 20 10
 printf "Instance method on a subclass which does override: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 10 3
 printf "Call of instance method on a subclass which does override: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 19 10
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 21 10
 printf "Definition of a method in a parameterized class: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 23 3
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 25 3
 printf "Call of an instance method on an upcasted class: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 29 15
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 31 15

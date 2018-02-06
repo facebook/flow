@@ -11,7 +11,9 @@ class C1 extends B {
 }
 
 class C2 extends B {
-  bar(): void { }
+  bar(): void {
+    super.bar();
+  }
 }
 
 new A().bar();
