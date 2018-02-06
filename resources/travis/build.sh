@@ -28,7 +28,8 @@ bin/flow check packages/flow-dev-tools
 printf "travis_fold:end:flow_check\n"
 
 printf "travis_fold:start:test_tool\nRunning tests for tool\n"
-FLOW_BIN=bin/flow make -C packages/flow-dev-tools test
+# FLOW_BIN is relative to packages/flow-dev-tools
+FLOW_BIN=../../bin/flow make -C packages/flow-dev-tools test
 printf "travis_fold:end:test_tool\n"
 
 printf "travis_fold:start:runtests\nRunning flow tests\n"
