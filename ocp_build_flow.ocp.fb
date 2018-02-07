@@ -133,6 +133,8 @@ begin library "flow-common-ty"
   files = begin fb-glob "src/common/ty"
   end
   requires = [
+    "flow-common"
+    "flow-common-monad"
     "flow-common-utils"
     "hh-utils"
     "hh-utils-collections"
