@@ -128,6 +128,19 @@ begin library "flow-common-tarjan"
   ]
 end
 
+begin library "flow-common-ty"
+  sort = true
+  files = begin fb-glob "src/common/ty"
+  end
+  requires = [
+    "flow-common-utils"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "tp-core"
+  ]
+end
+
 begin library "flow-common-span"
   sort = true
   files = begin fb-glob "src/common/span"
@@ -616,6 +629,7 @@ begin library "flow-typing"
     "flow-common-errors"
     "flow-common-lints"
     "flow-common-tarjan"
+    "flow-common-ty"
     "flow-common-utils"
     "flow-common-xx"
     "flow-parser"
