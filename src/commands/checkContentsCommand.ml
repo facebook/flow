@@ -100,7 +100,7 @@ let main option_values json pretty root error_flags strip_root verbose from
           ();
         (* Return a successful exit code if there were only warnings. *)
         let open FlowExitStatus in
-        if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
+        exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
       )
   | ServerProt.Response.NO_ERRORS ->
       if json then

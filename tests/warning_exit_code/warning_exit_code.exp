@@ -10,6 +10,17 @@ Warning: test.js:4
 
 Found 1 warning
 
+Check Existing Server With Warnings and --max-warnings 0 (nonzero exit code):
+Warning: test.js:4
+  4: if (x) {}
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+    3: var x: ?number = 0;
+              ^^^^^^^ Potentially null/undefined value.
+    3: var x: ?number = 0;
+               ^^^^^^ Potentially 0 value.
+
+
+Found 1 warning
 Check Existing Server With Errors (nonzero exit code):
 Error: test.js:4
   4: if (x) {}
@@ -24,6 +35,26 @@ Found 1 error
 
 
 Status (Running Server) With Warnings (zero exit code):
+Warning: test.js:4
+  4: if (x) {}
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+    3: var x: ?number = 0;
+              ^^^^^^^ Potentially null/undefined value.
+    3: var x: ?number = 0;
+               ^^^^^^ Potentially 0 value.
+
+
+Found 1 warning
+Warning: test.js:4
+  4: if (x) {}
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+    3: var x: ?number = 0;
+              ^^^^^^^ Potentially null/undefined value.
+    3: var x: ?number = 0;
+               ^^^^^^ Potentially 0 value.
+
+
+Found 1 warning
 Warning: test.js:4
   4: if (x) {}
          ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
@@ -74,6 +105,16 @@ Found 1 error
 
 
 Check Contents With Warnings (zero exit code):
+Warning: test.js:4
+  4: if (x) {}
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+    3: var x: ?number = 0;
+              ^^^^^^^ Potentially null/undefined value.
+    3: var x: ?number = 0;
+               ^^^^^^ Potentially 0 value.
+
+
+Found 1 warning
 Warning: test.js:4
   4: if (x) {}
          ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?

@@ -136,8 +136,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           ~warnings
           ()
       end;
-      let open FlowExitStatus in
-      if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
+      FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()

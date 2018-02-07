@@ -101,6 +101,7 @@ module Cli_output : sig
   type error_flags = {
     color: Tty.color_mode;
     include_warnings: bool;
+    max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
   }

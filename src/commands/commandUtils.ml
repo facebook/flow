@@ -73,7 +73,7 @@ let expand_path file =
       FlowExitStatus.(exit ~msg Input_error)
     end
 
-let collect_error_flags main color include_warnings one_line show_all_errors =
+let collect_error_flags main color include_warnings max_warnings one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
@@ -81,12 +81,18 @@ let collect_error_flags main color include_warnings one_line show_all_errors =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Errors.Cli_output.color; include_warnings; one_line; show_all_errors; }
+  let include_warnings = match max_warnings with
+  | Some _ -> true
+  | None -> include_warnings
+  in
+  main { Errors.Cli_output.color; include_warnings; max_warnings; one_line; show_all_errors; }
 
-let include_warnings_flag prev = CommandSpec.ArgSpec.(
+let warning_flags prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--include-warnings" no_arg
     ~doc:"Include warnings in the error output (warnings are excluded by default)"
+  |> flag "--max-warnings" int
+    ~doc:"Warnings above this number will cause a nonzero exit code (implies --include-warnings)"
 )
 
 let error_flags prev = CommandSpec.ArgSpec.(
@@ -94,7 +100,7 @@ let error_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_error_flags
   |> flag "--color" (enum ["auto"; "never"; "always"])
       ~doc:"Display terminal output in color. never, always, auto (default: auto)"
-  |> include_warnings_flag
+  |> warning_flags
   |> flag "--one-line" no_arg
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
@@ -536,6 +542,7 @@ module Options_flags = struct
     debug: bool;
     flowconfig_flags: flowconfig_params;
     include_warnings: bool;
+    max_warnings: int option;
     max_workers: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
@@ -570,7 +577,7 @@ let parse_lints_flag =
 let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
-    include_warnings flowconfig_flags verbose strip_root temp_dir quiet
+    include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
     merge_timeout file_watcher =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -591,6 +598,7 @@ let options_flags =
       munge_underscore_members;
       max_workers;
       include_warnings;
+      max_warnings;
       flowconfig_flags;
       verbose;
       strip_root;
@@ -620,7 +628,7 @@ let options_flags =
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
-    |> include_warnings_flag
+    |> warning_flags
     |> flowconfig_flags
     |> verbose_flags
     |> strip_root_flag
@@ -705,7 +713,10 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
-    opt_include_warnings = options_flags.include_warnings || FlowConfig.include_warnings flowconfig;
+    opt_include_warnings =
+      options_flags.include_warnings
+      || options_flags.max_warnings <> None
+      || FlowConfig.include_warnings flowconfig;
     opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
     opt_esproposal_class_instance_fields =
       FlowConfig.esproposal_class_instance_fields flowconfig;
@@ -944,3 +955,13 @@ let failwith_bad_response ~request ~response =
     (ServerProt.Request.to_string request)
     (ServerProt.Response.to_string response) in
   failwith msg
+
+let get_check_or_status_exit_code errors warnings max_warnings =
+  let open FlowExitStatus in
+  let open Errors in
+  if ErrorSet.is_empty errors then begin
+    match max_warnings with
+    | Some x when ErrorSet.cardinal warnings > x -> Type_error
+    | None | Some _ -> No_error
+  end else
+    Type_error

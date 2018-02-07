@@ -108,9 +108,7 @@ module CheckCommand = struct
       if json || pretty then Json { pretty } else Cli error_flags in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     Flow_server_profile.print_url ();
-    if Errors.ErrorSet.is_empty errors
-      then FlowExitStatus.(exit No_error)
-      else FlowExitStatus.(exit Type_error)
+    FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main
 end
@@ -187,9 +185,6 @@ module FocusCheckCommand = struct
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
-    if Errors.ErrorSet.is_empty errors
-      then FlowExitStatus.(exit No_error)
-      else FlowExitStatus.(exit Type_error)
-
+    FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
   let command = CommandSpec.command spec main
 end

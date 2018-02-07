@@ -636,6 +636,9 @@ module Cli_output = struct
   type error_flags = {
     color: Tty.color_mode;
     include_warnings: bool;
+    (* This has to do with the exit code, which is not controlled by this module, but it's
+    convenient to keep the flags about errors co-located *)
+    max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
   }
@@ -643,6 +646,7 @@ module Cli_output = struct
   let default_error_flags = {
     color = Tty.Color_Auto;
     include_warnings = false;
+    max_warnings = None;
     one_line = false;
     show_all_errors = false;
   }
