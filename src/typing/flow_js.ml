@@ -2426,6 +2426,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
+    | DefT (_, MaybeT t), ObjAssignFromT (_, _, _, ObjAssign) ->
+      (* This isn't correct, but matches the existing incorrectness of spreads
+       * today. In particular, spreading `null` and `void` become {}. The wrong
+       * part is that spreads should distribute through unions, so `{...?T}`
+       * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
+      rec_flow cx trace (t, u)
+
     | DefT (_, MaybeT t), UseT (_, DefT (_, MaybeT _)) ->
       rec_flow cx trace (t, u)
 
@@ -2448,6 +2455,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+
+    | DefT (_, OptionalT t), ObjAssignFromT (_, _, _, ObjAssign) ->
+      (* This isn't correct, but matches the existing incorrectness of spreads
+       * today. In particular, spreading `null` and `void` become {}. The wrong
+       * part is that spreads should distribute through unions, so `{...?T}`
+       * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
+      rec_flow cx trace (t, u)
 
     | DefT (r, OptionalT t), _ ->
       rec_flow cx trace (VoidT.why r, u);
