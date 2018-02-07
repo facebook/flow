@@ -71,6 +71,7 @@ MODULES=\
   src/common/audit\
   src/common/errors\
   src/common/lints\
+  src/common/monad\
   src/common/profiling\
   src/common/span\
   src/common/tarjan\

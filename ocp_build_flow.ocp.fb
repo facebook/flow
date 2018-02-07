@@ -141,6 +141,16 @@ begin library "flow-common-ty"
   ]
 end
 
+begin library "flow-common-monad"
+  sort = true
+  files = begin fb-glob "src/common/monad"
+  end
+  requires = [
+    "flow-common"
+    "tp-core"
+  ]
+end
+
 begin library "flow-common-span"
   sort = true
   files = begin fb-glob "src/common/span"
@@ -628,6 +638,7 @@ begin library "flow-typing"
     "flow-common"
     "flow-common-errors"
     "flow-common-lints"
+    "flow-common-monad"
     "flow-common-tarjan"
     "flow-common-ty"
     "flow-common-utils"
