@@ -80,7 +80,7 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
           true
         else
           let (_, docblock) = Parsing_service_js.(
-            get_docblock docblock_max_tokens (File_key.SourceFile file) content)
+            parse_docblock docblock_max_tokens (File_key.SourceFile file) content)
           in
           Docblock.is_flow docblock
       in

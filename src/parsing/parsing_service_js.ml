@@ -339,7 +339,7 @@ let extract_docblock =
         ) ([], info) comments
     | None -> [], info
 
-let get_docblock
+let parse_docblock
   ~max_tokens file content
 : docblock_error list * Docblock.t =
   match file with
@@ -419,7 +419,7 @@ let reducer
       None in
   match content with
   | Some content ->
-      begin match get_docblock ~max_tokens:max_header_tokens file content with
+      begin match parse_docblock ~max_tokens:max_header_tokens file content with
       | [], info ->
         let info =
           if noflow file then { info with Docblock.flow = Some Docblock.OptOut }

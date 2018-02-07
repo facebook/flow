@@ -114,7 +114,7 @@ val get_file_sig_unsafe: File_key.t -> File_sig.t
 (* remove asts and docblocks for given file set. *)
 val remove_batch: FilenameSet.t -> unit
 
-val get_docblock:
+val parse_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   File_key.t ->
   string ->

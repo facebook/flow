@@ -56,7 +56,7 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
       true
     else
       let (_, docblock) =
-        Parsing_service_js.(get_docblock docblock_max_tokens file content) in
+        Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file

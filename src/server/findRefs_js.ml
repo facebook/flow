@@ -15,7 +15,7 @@ let (>>|) = Result.(>>|)
 let compute_docblock file content =
   let open Parsing_service_js in
   let max_tokens = docblock_max_tokens in
-  let _errors, docblock = get_docblock ~max_tokens file content in
+  let _errors, docblock = parse_docblock ~max_tokens file content in
   docblock
 
 (* We use compute_ast_result (as opposed to get_ast_result) when the file contents we have might be
