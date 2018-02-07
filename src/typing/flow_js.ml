@@ -4811,6 +4811,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
+    | proto, ObjAssignToT (reason, from, t, kind) ->
+      rec_flow cx trace (from, ObjAssignFromT (reason, proto, t, kind))
+
     (** When some object-like type O1 flows to
         ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
         O2, and O2 is linked to X to signal that the copying is done; the
@@ -4880,8 +4883,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign) ->
       rec_flow_t cx trace (DefT (reason, AnyObjT), t)
 
-    | (ObjProtoT _, ObjAssignFromT (_, proto, t, ObjAssign)) ->
+    | ObjProtoT _, ObjAssignFromT (_, proto, t, ObjAssign) ->
       rec_flow_t cx trace (proto, t)
+
+    (* Object.assign semantics *)
+    | DefT (_, (NullT | VoidT)), ObjAssignFromT (_, proto, tout, ObjAssign) ->
+      rec_flow_t cx trace (proto, tout)
+
+    (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
+    | DefT (reason, MixedT _), ObjAssignFromT (_, _, _, ObjAssign) ->
+      let dict = {
+        dict_name = None;
+        key = StrT.make reason;
+        value = l;
+        dict_polarity = Neutral;
+      } in
+      let o = Obj_type.mk_with_proto cx reason
+        (ObjProtoT reason)
+        ~dict
+        ~sealed:true ~exact:true
+      in
+      rec_flow cx trace (o, u)
 
     | DefT (arr_r, ArrT arrtype), ObjAssignFromT (r, o, t, ObjSpreadAssign) ->
       begin match arrtype with
@@ -4899,27 +4921,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
         rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, ObjAssign))
       end
-
-    | (proto, ObjAssignToT(reason, from, t, kind)) ->
-      rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, kind))
-
-    (* Object.assign semantics *)
-    | DefT (_, (NullT | VoidT)), ObjAssignFromT _ -> ()
-
-    (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
-    | DefT (reason, MixedT _), ObjAssignFromT _ ->
-      let dict = {
-        dict_name = None;
-        key = StrT.make reason;
-        value = l;
-        dict_polarity = Neutral;
-      } in
-      let o = Obj_type.mk_with_proto cx reason
-        (ObjProtoT reason)
-        ~dict
-        ~sealed:true ~exact:true
-      in
-      rec_flow cx trace (o, u)
 
     (*************************)
     (* objects can be copied *)
