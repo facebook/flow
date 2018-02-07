@@ -378,6 +378,8 @@ let add_require_tvars =
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities ~file_sig cx filename ast =
+  assert (Context.is_checked cx);
+
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
@@ -390,8 +392,6 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
     try Context.set_use_def cx @@ Ssa_builder.program_with_scope ast
     with _ -> ()
   end;
-
-  let checked = Context.is_checked cx in
 
   let reason_exports_module =
     let desc = Reason.RCustom (
@@ -429,37 +429,33 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
-  if checked then (
-    let init_exports = Obj_type.mk cx reason in
-    ImpExp.set_module_exports cx file_loc init_exports;
+  let init_exports = Obj_type.mk cx reason in
+  ImpExp.set_module_exports cx file_loc init_exports;
 
-    (* infer *)
-    Flow_js.flow_t cx (init_exports, local_exports_var);
-    infer_core cx statements;
+  (* infer *)
+  Flow_js.flow_t cx (init_exports, local_exports_var);
+  infer_core cx statements;
 
-    scan_for_suppressions cx lint_severities comments;
+  scan_for_suppressions cx lint_severities comments;
 
-    let module_t = Context.(
-      match Context.module_kind cx with
-      (* CommonJS with a clobbered module.exports *)
-      | CommonJSModule(Some(loc)) ->
-        let module_exports_t = ImpExp.get_module_exports cx file_loc in
-        let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
-        ImpExp.mk_commonjs_module_t cx reason_exports_module
-          reason module_exports_t
+  let module_t = Context.(
+    match Context.module_kind cx with
+    (* CommonJS with a clobbered module.exports *)
+    | CommonJSModule(Some(loc)) ->
+      let module_exports_t = ImpExp.get_module_exports cx file_loc in
+      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
+      ImpExp.mk_commonjs_module_t cx reason_exports_module
+        reason module_exports_t
 
-      (* CommonJS with a mutated 'exports' object *)
-      | CommonJSModule(None) ->
-        ImpExp.mk_commonjs_module_t cx reason_exports_module
-          reason local_exports_var
+    (* CommonJS with a mutated 'exports' object *)
+    | CommonJSModule(None) ->
+      ImpExp.mk_commonjs_module_t cx reason_exports_module
+        reason local_exports_var
 
-      (* Uses standard ES module exports *)
-      | ESModule -> ImpExp.mk_module_t cx reason_exports_module
-    ) in
-    Flow_js.flow_t cx (module_t, initial_module_t)
-  ) else (
-    Flow_js.unify cx initial_module_t Type.Locationless.AnyT.t
-  );
+    (* Uses standard ES module exports *)
+    | ESModule -> ImpExp.mk_module_t cx reason_exports_module
+  ) in
+  Flow_js.flow_t cx (module_t, initial_module_t);
 
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
