@@ -333,7 +333,7 @@ let run cx trace ~use_op reason_op l u
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
-  let create_element shape config children_args tout =
+  let create_element clone config children_args tout =
     let component = l in
     (* If our config is void or null then we want to replace it with an
      * empty object. *)
@@ -353,9 +353,9 @@ let run cx trace ~use_op reason_op l u
     let children = coerce_children_args children_args in
     (* Create a type variable for our props. *)
     let props = Tvar.mk_where cx reason_op tin_to_props in
-    (* If we only want to check the shape of the props then wrap our final
-     * props type in a ShapeT. *)
-    let props = if shape
+    (* If we are cloning an existing element, the config does not need to
+     * provide the entire props type. *)
+    let props = if clone
       then ShapeT props
       else props
     in
@@ -1101,8 +1101,8 @@ let run cx trace ~use_op reason_op l u
   in
 
   match u with
-  | CreateElement (shape, config, children, tout) ->
-    create_element shape config children tout
+  | CreateElement (clone, config, children, tout) ->
+    create_element clone config children tout
   | GetProps tout -> props_to_tout tout
   | GetConfig tout -> get_config tout
   | GetRef tout -> get_instance tout
