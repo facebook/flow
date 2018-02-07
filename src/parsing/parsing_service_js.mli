@@ -101,9 +101,7 @@ val reparse_with_defaults:
 val has_ast: File_key.t -> bool
 
 val get_ast: File_key.t -> Loc.t Ast.program option
-(* Should probably be named get_docblock but that name is already taken for the thing that computes
- * the docblock *)
-val retrieve_docblock: File_key.t -> Docblock.t option
+val get_docblock: File_key.t -> Docblock.t option
 val get_file_sig: File_key.t -> File_sig.t option
 
 (* after parsing, retrieves ast and docblock by filename (unsafe) *)

@@ -47,7 +47,7 @@ let get_ast_result file : (Loc.t Ast.program * File_sig.t * Docblock.t, string) 
   in
   let ast_result = get_result get_ast "AST" in
   let file_sig_result = get_result get_file_sig "file sig" in
-  let docblock_result = get_result retrieve_docblock "docblock" in
+  let docblock_result = get_result get_docblock "docblock" in
   ast_result >>= fun ast ->
   file_sig_result >>= fun file_sig ->
   docblock_result >>= fun docblock ->

@@ -577,7 +577,7 @@ let has_ast = ASTHeap.mem
 
 let get_ast = ASTHeap.get
 
-let retrieve_docblock = DocblockHeap.get
+let get_docblock = DocblockHeap.get
 
 let get_file_sig = FileSigHeap.get
 
