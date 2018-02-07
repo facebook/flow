@@ -74,3 +74,6 @@ React.cloneElement(e, {foo: 1}); // OK
 React.cloneElement(e, {foo: 1, bar: 2}); // OK
 React.cloneElement(e, {foo: undefined, bar: 2}); // Error: undefined ~> number
 React.cloneElement(e, {foo: 1, bar: undefined}); // OK: `bar` has a default.
+
+function SFC(props: { p: number }) { return null };
+React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number

@@ -352,12 +352,11 @@ let run cx trace ~use_op reason_op l u
     (* Create the optional children input type from the children arguments. *)
     let children = coerce_children_args children_args in
     (* Create a type variable for our props. *)
-    let props = Tvar.mk_where cx reason_op tin_to_props in
     (* If we are cloning an existing element, the config does not need to
      * provide the entire props type. *)
     let props = if clone
-      then ShapeT props
-      else props
+      then ShapeT (Tvar.mk_where cx reason_op props_to_tout)
+      else Tvar.mk_where cx reason_op tin_to_props
     in
     (* Check the type of React keys in the config input.
      *
