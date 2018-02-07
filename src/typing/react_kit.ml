@@ -182,9 +182,11 @@ let run cx trace ~use_op reason_op l u
     match component with
     (* Class components or legacy components. *)
     | DefT (_, ClassT _) ->
-      (* This direction works since tin is unified given the variance of
-       * React$Component. *)
-      rec_flow_t cx trace (component, component_class tin)
+      (* The Props type parameter is invariant, but we only want to create a
+       * constraint tin <: props. *)
+      let props = Tvar.mk cx reason_op in
+      rec_flow_t cx trace (tin, props);
+      rec_flow_t cx trace (component, component_class props)
 
     (* Stateless functional components. *)
     | DefT (_, FunT _) ->
@@ -214,7 +216,9 @@ let run cx trace ~use_op reason_op l u
     match component with
     (* Class components or legacy components. *)
     | DefT (_, ClassT _) ->
-      rec_flow_t cx trace (component, component_class tout)
+      let props = Tvar.mk cx reason_op in
+      rec_flow_t cx trace (props, tout);
+      rec_flow_t cx trace (component, component_class props)
 
     (* Stateless functional components. *)
     | DefT (_, FunT _) ->
