@@ -213,7 +213,7 @@ var num: number = method.call(42);
 var str: string = method.call(42);
 ```
 
-### Predicate Functions <a class="toc" id="toc-function-checks" href="#toc-predicate-functions"></a>
+### Predicate Functions <a class="toc" id="toc-predicate-functions" href="#toc-predicate-functions"></a>
 
 Sometimes you will want to move the condition from an `if` statement into a function:
 
