@@ -58,6 +58,7 @@ let file_exists = Sys.file_exists
 let getcwd = Sys.getcwd
 let chdir = Sys.chdir
 let mkdir = Unix.mkdir
+let readdir = Sys.readdir
 let rename old target =
   if not (file_exists old) then
     raise (No_such_file_or_directory old)
