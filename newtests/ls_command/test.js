@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 const files = [
   'other/explicitly_included.js',

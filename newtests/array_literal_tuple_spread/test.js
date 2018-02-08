@@ -1,7 +1,7 @@
 /* @flow */
 
 
-import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test("any flowing to spreads", [

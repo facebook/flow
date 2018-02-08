@@ -5,7 +5,7 @@ echo "Build folder is: $env:APPVEYOR_BUILD_FOLDER"
 echo "Installing npm dependencies..."
 pushd $PSScriptRoot\..\..
 try {
-  yarn install --cwd packages\flow-dev-tools 2>&1 | %{ "$_" }
+  yarn install 2>&1 | %{ "$_" }
   if ($LASTEXITCODE -gt 0) {
     Throw "yarn install exited with the error code: $LASTEXITCODE"
   }

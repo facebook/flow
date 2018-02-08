@@ -157,7 +157,7 @@ async function convert(
 
   await writeFile(join(dest, "test.js"),
 `/* @flow */
-import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFiles}) => [
   test('legacy test', [

@@ -1,5 +1,6 @@
 [include]
 ../../newtests/
+../../node_modules
 
 [ignore]
 .*/json5/test/parse-cases/.*

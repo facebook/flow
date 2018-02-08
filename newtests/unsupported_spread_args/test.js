@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../packages/flow-dev-tools/src/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 /* This test suite documents a bunch of places where using spread arguments
  * doesn't work, either intentionally or due to us being lazy */
