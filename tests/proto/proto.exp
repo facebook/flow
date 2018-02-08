@@ -120,7 +120,10 @@ Error: annot.js:37
 
 Error: annot.js:40
  40: type O_invalid = { __proto__: number }; // error: number is not a valid proto
-                                   ^^^^^^ number. Invalid prototype. Expected an object or null.
+                                   ^^^^^^ Cannot use number [1] as a prototype. Expected an object or null.
+  References:
+   40: type O_invalid = { __proto__: number }; // error: number is not a valid proto
+                                     ^^^^^^ [1]: number
 
 Error: literal.js:2
   2: (o.p: empty); // error: number ~> empty
@@ -169,7 +172,7 @@ Error: literal.js:17
 
 Error: literal.js:20
  20: var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
-                      ^^^^^^^^^^^^^^^^^^^^ object literal. Prototype mutation not allowed
+                      ^^^^^^^^^^^^^^^^^^^^ Mutating this prototype is unsupported.
 
 Error: literal.js:21
  21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
@@ -182,7 +185,10 @@ Error: literal.js:21
 
 Error: literal.js:23
  23: var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
-                                     ^^^^^^ uninitialized variable. Invalid prototype. Expected an object or null.
+                                     ^^^^^^ Cannot use uninitialized variable [1] as a prototype. Expected an object or null.
+  References:
+   23: var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+           ^^^^^^ [1]: uninitialized variable
 
 Error: literal.js:24
  24: (o_loop.p: empty); // error: number ~> empty
@@ -202,7 +208,10 @@ Error: literal.js:25
 
 Error: literal.js:27
  27: var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
-                                  ^ number. Invalid prototype. Expected an object or null.
+                                  ^ Cannot use number [1] as a prototype. Expected an object or null.
+  References:
+   27: var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
+                                    ^ [1]: number
 
 Error: null.js:5
   5: o_null.toString(); // property `toString` not found

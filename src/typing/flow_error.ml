@@ -1618,13 +1618,20 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
-      mk_error ~trace_infos [mk_info reason [spf
-        "%s position (expected `%s` to occur only %sly)"
-        (Polarity.string actual_polarity)
-        name
-        (Polarity.string expected_polarity)]]
+    let polarity_string = function
+    | Positive -> "output"
+    | Negative -> "input"
+    | Neutral -> "input/output"
+    in
+    let expected_polarity = polarity_string expected_polarity in
+    let actual_polarity = polarity_string actual_polarity in
+    let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
+    mk_friendly_error ~trace_infos (loc_of_reason reason) [
+      text "Cannot use "; ref reason_targ; text (" in an " ^ actual_polarity ^ " ");
+      text "position because "; ref reason_targ; text " is expected to occur only in ";
+      text (expected_polarity ^ " positions.");
+    ]
 
   | EStrictLookupFailed (reasons, lreason, x, use_op) ->
     (* if we're looking something up on the global/builtin object, then tweak
@@ -2357,10 +2364,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
   | EUnsupportedSetProto reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "Prototype mutation not allowed"]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason)
+      [text "Mutating this prototype is unsupported."]
 
   | EDuplicateModuleProvider {module_name; provider; conflict} ->
     let (loc1, loc2) = Loc.(
@@ -2482,7 +2488,6 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
     ]
 
-  (* TODO: friendlify *)
   | EInvalidPrototype reason ->
-      mk_error ~trace_infos [mk_info reason [
-        "Invalid prototype. Expected an object or null."]]
+    mk_friendly_error ~trace_infos (loc_of_reason reason)
+      [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]

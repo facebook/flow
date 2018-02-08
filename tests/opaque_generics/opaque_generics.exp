@@ -117,19 +117,31 @@ Error: importtest.js:27
 
 Error: test-polarity.js:12
  12: opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type
-                                ^ T. covariant position (expected `T` to occur only contravariantly)
+                                ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+  References:
+   12: opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type
+                         ^ [1]: `T`
 
 Error: test-polarity.js:13
  13: opaque type Bad2<+T> = Bar<T>; // Error: Bar expects contravariant type
-                                ^ T. contravariant position (expected `T` to occur only covariantly)
+                                ^ Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+  References:
+   13: opaque type Bad2<+T> = Bar<T>; // Error: Bar expects contravariant type
+                         ^ [1]: `T`
 
 Error: test-polarity.js:14
  14: opaque type Bad3<-T> = Baz<T>; // Error: Baz expects invariant type
-                                ^ T. invariant position (expected `T` to occur only contravariantly)
+                                ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+  References:
+   14: opaque type Bad3<-T> = Baz<T>; // Error: Baz expects invariant type
+                         ^ [1]: `T`
 
 Error: test-polarity.js:15
  15: opaque type Bad4<+T> = Baz<T>; // Error: Baz expects invariant type
-                                ^ T. invariant position (expected `T` to occur only covariantly)
+                                ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+  References:
+   15: opaque type Bad4<+T> = Baz<T>; // Error: Baz expects invariant type
+                         ^ [1]: `T`
 
 Error: test.js:7
   7:     return x;
