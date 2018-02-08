@@ -79,7 +79,14 @@ module VariableRefs: sig
     global: bool ->
     ((string * Loc.t list * int option) option, string) result
 end = struct
-  let get_imported_locations symbol file_key (dep_file_key: File_key.t) : (Loc.t list, string) result =
+
+  (* Sometimes we want to find a specific symbol in a dependent file, but other
+   * times we know that we want whatever symbol the import is assigned to. *)
+  type import_query =
+    | Symbol of string
+    | CJSIdent
+
+  let get_imported_locations (query: import_query) file_key (dep_file_key: File_key.t) : (Loc.t list, string) result =
     let open File_sig in
     get_ast_result dep_file_key >>| fun (_, file_sig, _) ->
     let is_relevant mref =
@@ -97,13 +104,13 @@ end = struct
       | Require { source = (_, mref); bindings = Some bindings; _ } ->
         if not (is_relevant mref) then acc else
         begin match bindings with
-        | BindIdent (loc, name) ->
-          if symbol = name
+        | BindIdent (loc, _) ->
+          if query = CJSIdent
           then loc::acc
           else acc
         | BindNamed bindings ->
           SMap.fold (fun _ (local_loc, (_, remote)) acc ->
-            if symbol = remote
+            if query = Symbol remote
             then local_loc::acc
             else acc
           ) bindings acc
@@ -113,24 +120,38 @@ end = struct
       | Import0 _ -> acc
       | Import { source = (_, mref); named; _ } ->
         if not (is_relevant mref) then acc else
-        match SMap.get symbol named with
-        | None -> acc
-        | Some local_name_to_locs ->
-          SMap.fold (fun _ locs acc ->
-            List.rev_append (Nel.to_list locs) acc
-          ) local_name_to_locs acc
+        match query with
+        | Symbol symbol -> begin match SMap.get symbol named with
+          | None -> acc
+          | Some local_name_to_locs ->
+            SMap.fold (fun _ locs acc ->
+              List.rev_append (Nel.to_list locs) acc
+            ) local_name_to_locs acc
+          end
+        | _ -> acc
     ) [] file_sig.module_sig.requires in
     List.fast_sort Loc.compare locs
 
 
   let local_find_refs file_key ~content loc =
+    let open File_sig in
     let open Scope_api in
-    compute_ast_result file_key content >>= fun (ast, _, _) ->
+    compute_ast_result file_key content >>= fun (ast, file_sig, _) ->
     let scope_info = Scope_builder.program ast in
     let all_uses = all_uses scope_info in
     let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
     let num_matching_uses = LocSet.cardinal matching_uses in
-    if num_matching_uses = 0 then Ok None
+    if num_matching_uses = 0 then begin match file_sig.module_sig.module_kind with
+    | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) }
+      when Loc.contains id_loc loc -> Ok (Some (id_name, [id_loc]))
+    | CommonJS { exports = Some (CJSExportProps props) } ->
+      let props = SMap.filter (fun _ (CJSExport prop) -> Loc.contains prop.loc loc) props in
+      begin match SMap.choose props with
+      | Some (prop_name, CJSExport prop) -> Ok (Some (prop_name, [prop.loc]))
+      | None -> Ok None
+      end
+    | _ -> Ok None
+    end
     else if num_matching_uses > 1 then Error "Multiple identifiers were unexpectedly matched"
     else
       let use = LocSet.choose matching_uses in
@@ -139,7 +160,7 @@ end = struct
       let name = Def.(def.actual_name) in
       Ok (Some (name, sorted_locs))
 
-  let find_external_refs genv env file_key ~content ~name local_refs =
+  let find_external_refs genv env file_key ~content ~query local_refs =
     let {options; workers} = genv in
     File_key.to_path file_key >>= fun path ->
     env := lazy_mode_focus genv !env path;
@@ -148,7 +169,7 @@ end = struct
     that file *)
     let imported_locations_result: (Loc.t list, string) result =
       FilenameSet.elements direct_dependents |>
-        List.map (get_imported_locations name file_key) |>
+        List.map (get_imported_locations query file_key) |>
         Result.all >>= fun loc_lists ->
         Ok (List.concat loc_lists)
     in
@@ -184,26 +205,29 @@ end = struct
           if global then
             compute_ast_result file_key content >>= fun (_, file_sig, _) ->
             let open File_sig in
-            let find_exported_loc loc =
+            let find_exported_loc loc query =
               if List.mem loc refs then
-                let all_refs_result = find_external_refs genv env file_key content name refs in
+                let all_refs_result = find_external_refs genv env file_key content query refs in
                 all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
               else
                 Ok (Some (name, refs, None)) in
             begin match file_sig.module_sig.module_kind with
               | CommonJS { exports = None } -> Ok (Some (name, refs, None))
-              | CommonJS { exports = Some (CJSExportIdent _) } -> Ok (Some (name, refs, None))
+              | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) } ->
+                if id_name = name
+                then find_exported_loc id_loc CJSIdent
+                else Ok (Some (name, refs, None))
               | CommonJS { exports = Some CJSExportOther } -> Ok (Some (name, refs, None))
               | CommonJS { exports = Some (CJSExportProps props) } ->
                 begin match SMap.get name props with
                   | None -> Ok (Some (name, refs, None))
-                  | Some (CJSExport { loc; _ }) -> find_exported_loc loc
+                  | Some (CJSExport { loc; _ }) -> find_exported_loc loc (Symbol name)
                 end
               | ES {named; _} -> begin match SMap.get name named with
                   | None -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
-                      find_exported_loc loc
+                      find_exported_loc loc (Symbol name)
                 end
             end
           else
