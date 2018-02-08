@@ -1,7 +1,7 @@
 Library lint error (deprecated-declare-exports):
 flow-typed/libs.js:21
  21:   declare var exports: number;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ deprecated-declare-exports: Deprecated syntax. Use `declare module.exports` instead.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deprecated syntax. Use `declare module.exports` instead. (`deprecated-declare-exports`)
 
 Error: main.js:5
   5: (declare_module_exports: string); // Error: number ~> string

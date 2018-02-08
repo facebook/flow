@@ -268,8 +268,12 @@ let mk_friendly_error
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+  let message = match kind with
+  | LintError kind -> message @ [text " ("; code (Lints.string_of_kind kind); text ")"]
+  | _ -> message
+  in
   (kind, trace, Friendly {
-    root=None;
+    root = None;
     loc;
     message;
   })
@@ -282,8 +286,12 @@ let mk_friendly_error_with_root
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+  let message = match kind with
+  | LintError kind -> message @ [text " ("; code (Lints.string_of_kind kind); text ")"]
+  | _ -> message
+  in
   (kind, trace, Friendly {
-    root=Some { root_loc; root_message };
+    root = Some { root_loc; root_message };
     loc;
     message;
   })

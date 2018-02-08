@@ -1187,32 +1187,22 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]: boolean",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1235,12 +1225,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]: null or undefined",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",
@@ -1313,32 +1331,22 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]: boolean",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1361,12 +1369,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]: null or undefined",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",
@@ -1474,32 +1510,22 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]: boolean",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1522,12 +1548,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]: null or undefined",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",

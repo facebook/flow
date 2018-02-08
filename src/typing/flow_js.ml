@@ -8448,7 +8448,12 @@ and update_sketchy_null cx opt_loc t =
     match opt_loc with
     | None -> ()
     | Some loc ->
-      let t_loc = Some (loc_of_t t) in
+      let t_loc =
+        let reason = reason_of_t t in
+        match annot_loc_of_reason reason with
+        | Some loc -> Some loc
+        | None -> Some (def_loc_of_reason reason)
+      in
       let exists_checks = Context.exists_checks cx in
       let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match Type_filter.maybe t with

@@ -1,6 +1,6 @@
 File "test.js", line 10, characters 5-5
-Warning: sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+Warning: Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
 
 File "test.js", line 13, characters 5-5
-Error: sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+Error: Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
 

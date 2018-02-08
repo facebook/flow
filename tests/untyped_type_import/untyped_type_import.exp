@@ -1,22 +1,22 @@
 Error: imports.js:5
   5: import type {FooType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+                  ^^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
 Error: imports.js:6
   6: import typeof {FooObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+                    ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
 Error: imports.js:10
  10: import typeof BarObj from './untyped_exports.js'; //Error
-                   ^^^^^^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+                   ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
 Error: imports.js:14
  14: import type {BazType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+                  ^^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
 Error: imports.js:15
  15: import typeof {BazObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+                    ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
 Error: imports.js:24
  24: import type {BeepType} from './nonexistent.js';
