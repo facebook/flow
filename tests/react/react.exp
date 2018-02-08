@@ -1123,8 +1123,8 @@ Error: portals.js:12
   References:
   623:   getElementById(elementId: string): HTMLElement | null;
                                                           ^^^^ [1]: null. See lib: <BUILTINS>/dom.js:623
-   24:     container: Element,
-                      ^^^^^^^ [2]: `Element`. See lib: <BUILTINS>/react-dom.js:24
+   30:     container: Element,
+                      ^^^^^^^ [2]: `Element`. See lib: <BUILTINS>/react-dom.js:30
 
 Error: proptype_arrayOf.js:13
  13: var fail_missing = <Example />
@@ -1874,8 +1874,8 @@ Error: test-utils.js:34
  34:   child => child.tagName === 'BUTTON',
                       ^^^^^^^ Cannot get `child.tagName` because property `tagName` is missing in `React.Component` [1].
   References:
-   79:     test: (child: React$Component<any, any>) => boolean,
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Component`. See lib: <BUILTINS>/react-dom.js:79
+   85:     test: (child: React$Component<any, any>) => boolean,
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Component`. See lib: <BUILTINS>/react-dom.js:85
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
