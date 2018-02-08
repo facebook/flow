@@ -62,9 +62,59 @@ let tests = "require" >::: [
     let source = "const Foo = require('foo')" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Require {source = (source_loc, "foo"); require_loc}] ->
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = Some (BindIdent (ident_loc, "Foo"))
+      }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
+      assert_substring_equal ~ctxt "Foo" source ident_loc
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_deep_requires" >:: begin fun ctxt ->
+    let source = "let foo = {x: require('bar')}; func(foo, require('baz'));" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [ Require {
+        source = (baz_loc, "baz");
+        require_loc = req_baz_loc;
+        bindings = None;
+        }
+      ; Require {
+        source = (bar_loc, "bar");
+        require_loc = req_bar_loc;
+        bindings = None;
+        }
+      ] ->
+      assert_substring_equal ~ctxt "'bar'" source bar_loc;
+      assert_substring_equal ~ctxt "require('bar')" source req_bar_loc;
+      assert_substring_equal ~ctxt "'baz'" source baz_loc;
+      assert_substring_equal ~ctxt "require('baz')" source req_baz_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_deep_requires_plus_bindings" >:: begin fun ctxt ->
+    let source = "const Foo = require('foo'); func(Foo, require('bar'));" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [ Require {
+        source = (bar_loc, "bar");
+        require_loc = req_bar_loc;
+        bindings = None;
+        }
+      ; Require {
+        source = (foo_loc, "foo");
+        require_loc = req_foo_loc;
+        bindings = Some (BindIdent (foo_id_loc, "Foo"));
+        }
+      ] ->
+      assert_substring_equal ~ctxt "'foo'" source foo_loc;
+      assert_substring_equal ~ctxt "require('foo')" source req_foo_loc;
+      assert_substring_equal ~ctxt "Foo" source foo_id_loc;
+      assert_substring_equal ~ctxt "'bar'" source bar_loc;
+      assert_substring_equal ~ctxt "require('bar')" source req_bar_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -72,9 +122,89 @@ let tests = "require" >::: [
     let source = "const Foo = require(`foo`)" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Require {source = (source_loc, "foo"); require_loc}] ->
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = Some (BindIdent (ident_loc, "Foo"))
+      }] ->
       assert_substring_equal ~ctxt "`foo`" source source_loc;
       assert_substring_equal ~ctxt "require(`foo`)" source require_loc;
+      assert_substring_equal ~ctxt "Foo" source ident_loc
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_require_named" >:: begin fun ctxt ->
+    let source = "const {foo, bar: baz} = require('foo');" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = Some (BindNamed map)
+      }] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "require('foo')" source require_loc;
+      assert_equal ~ctxt 2 (SMap.cardinal map);
+      let foo_loc, foo_loc' = match SMap.find_unsafe "foo" map with
+      | (loc, (loc', "foo")) -> loc, loc'
+      | _ -> assert_failure "Unexpected requires"
+      in
+      let baz_loc, bar_loc = match SMap.find_unsafe "baz" map with
+      | (loc, (loc', "bar")) -> loc, loc'
+      | _ -> assert_failure "Unexpected requires"
+      in
+      assert_substring_equal ~ctxt "foo" source foo_loc;
+      assert_substring_equal ~ctxt "foo" source foo_loc';
+      assert_substring_equal ~ctxt "bar" source bar_loc;
+      assert_substring_equal ~ctxt "baz" source baz_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_require_duplicate_remote" >:: begin fun ctxt ->
+    let source = "const {foo: bar, foo: baz} = require('foo');" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = Some (BindNamed map)
+      }] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "require('foo')" source require_loc;
+      assert_equal ~ctxt 2 (SMap.cardinal map);
+      let bar_loc, foo_loc = match SMap.find_unsafe "bar" map with
+      | (loc, (loc', "foo")) -> loc, loc'
+      | _ -> assert_failure "Unexpected requires"
+      in
+      let baz_loc, foo_loc' = match SMap.find_unsafe "baz" map with
+      | (loc, (loc', "foo")) -> loc, loc'
+      | _ -> assert_failure "Unexpected requires"
+      in
+      assert_substring_equal ~ctxt "foo" source foo_loc;
+      assert_substring_equal ~ctxt "foo" source foo_loc';
+      assert_substring_equal ~ctxt "bar" source bar_loc;
+      assert_substring_equal ~ctxt "baz" source baz_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_require_duplicate_local" >:: begin fun ctxt ->
+    let source = "const {foo: bar, baz: bar} = require('foo');" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = Some (BindNamed map)
+      }] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "require('foo')" source require_loc;
+      assert_equal ~ctxt 1 (SMap.cardinal map);
+      let bar_loc, baz_loc = match SMap.find_unsafe "bar" map with
+      | (loc, (loc', "baz")) -> loc, loc'
+      | _ -> assert_failure "Unexpected requires"
+      in
+      assert_substring_equal ~ctxt "bar" source bar_loc;
+      assert_substring_equal ~ctxt "baz" source baz_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 

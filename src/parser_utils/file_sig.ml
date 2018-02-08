@@ -20,7 +20,11 @@ and module_sig = {
 }
 
 and require =
-  | Require of { source: ident; require_loc: Loc.t }
+  | Require of {
+    source: ident;
+    require_loc: Loc.t;
+    bindings: require_bindings option;
+  }
   | ImportDynamic of { source: ident; import_loc: Loc.t }
   | Import0 of ident
   | Import of {
@@ -31,6 +35,10 @@ and require =
     typesof: Loc.t Nel.t SMap.t SMap.t;
     typesof_ns: Loc.t Nel.t SMap.t;
   }
+
+and require_bindings =
+  | BindIdent of ident
+  | BindNamed of (Loc.t * ident) SMap.t
 
 and module_kind =
   | CommonJS of {
@@ -208,6 +216,10 @@ class requires_calculator ~ast = object(this)
 
   val mutable curr_declare_module: module_sig option = None;
 
+  (* This ensures that we do not add `require`s to `module_sig.requires` twice:
+   * once in `variable_declarator`/`assignment` and once in `call`. *)
+  val mutable visited_requires: Utils_js.LocSet.t = Utils_js.LocSet.empty;
+
   method private update_module_sig f =
     match curr_declare_module with
     | Some m ->
@@ -242,36 +254,7 @@ class requires_calculator ~ast = object(this)
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
     let { Call.callee; arguments } = expr in
-    begin match callee, arguments with
-    | ((_, Identifier (loc, "require")), [Expression (source_loc, (
-        Literal { Ast.Literal.value = Ast.Literal.String name; _ } |
-        TemplateLiteral { TemplateLiteral.
-          quasis = [_, { TemplateLiteral.Element.
-            value = { TemplateLiteral.Element.cooked = name; _ }; _
-          }]; _
-        }
-      ))]) ->
-      if not (Scope_api.is_local_use scope_info loc)
-      then
-        this#add_require (Require {
-          source = (source_loc, name);
-          require_loc = call_loc;
-        })
-    | ((_, Identifier (loc, "requireLazy")),
-       [Expression (_, Array ({ Array.elements })); Expression (_);])
-      ->
-      let element = function
-        | Some (Expression (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
-          if not (Scope_api.is_local_use scope_info loc)
-          then
-            this#add_require (Require {
-              source = (source_loc, name);
-              require_loc = call_loc;
-            })
-        | _ -> () in
-      List.iter element elements
-    | _ -> ()
-    end;
+    this#handle_call call_loc callee arguments None;
     super#call call_loc expr
 
   method! import import_loc (expr: Loc.t Ast.Expression.t) =
@@ -460,6 +443,8 @@ class requires_calculator ~ast = object(this)
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
     let { operator; left; right } = expr in
+
+    (* Handle exports *)
     begin match operator, left with
     (* exports = ... *)
     | Assign, (mod_exp_loc as module_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
@@ -515,7 +500,81 @@ class requires_calculator ~ast = object(this)
       end
     | _ -> ()
     end;
+
+    (* Handle imports *)
+    begin match operator with
+    | Assign -> this#handle_require left right
+    | _ -> ()
+    end;
     super#assignment expr
+
+  method! variable_declarator ~kind (decl: Loc.t Ast.Statement.VariableDeclaration.Declarator.t) =
+    begin match decl with
+    | _, { Ast.Statement.VariableDeclaration.Declarator.id; init = Some init } ->
+      this#handle_require id init
+    | _ -> ()
+    end;
+    super#variable_declarator ~kind decl
+
+  method private handle_require (left: Loc.t Ast.Pattern.t) (right: Loc.t Ast.Expression.t) =
+    let open Ast.Expression in
+    let bindings = begin match left with
+    | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
+    | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
+      Some (BindNamed (List.fold_left (fun acc prop ->
+        match prop with
+        | Ast.Pattern.Object.Property (_, {
+            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier remote;
+            pattern = _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (local_loc, local_name); _ };
+            _
+          }) ->
+          SMap.add local_name (local_loc, remote) acc
+        | _ -> acc
+      ) SMap.empty properties))
+    | _ -> None
+    end in
+    begin match right with
+    | call_loc, Call { Call.callee; arguments } ->
+      this#handle_call call_loc callee arguments bindings
+    | _ -> ()
+    end
+
+  method private handle_call call_loc callee arguments bindings =
+    let open Ast.Expression in
+    if not (Utils_js.LocSet.mem call_loc visited_requires) then begin
+      visited_requires <- Utils_js.LocSet.add call_loc visited_requires;
+      match callee, arguments with
+      | ((_, Identifier (loc, "require")), [Expression (source_loc, (
+          Literal { Ast.Literal.value = Ast.Literal.String name; _ } |
+          TemplateLiteral { TemplateLiteral.
+            quasis = [_, { TemplateLiteral.Element.
+              value = { TemplateLiteral.Element.cooked = name; _ }; _
+            }]; _
+          }
+        ))]) ->
+        if not (Scope_api.is_local_use scope_info loc)
+        then
+          this#add_require (Require {
+            source = (source_loc, name);
+            require_loc = call_loc;
+            bindings;
+          })
+      | ((_, Identifier (loc, "requireLazy")),
+         [Expression (_, Array ({ Array.elements })); Expression (_);])
+        ->
+        let element = function
+          | Some (Expression (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
+            if not (Scope_api.is_local_use scope_info loc)
+            then
+              this#add_require (Require {
+                source = (source_loc, name);
+                require_loc = call_loc;
+                bindings;
+              })
+          | _ -> () in
+        List.iter element elements
+      | _ -> ()
+    end
 
   method! declare_module loc (m: Loc.t Ast.Statement.DeclareModule.t) =
     let name = Ast.Statement.DeclareModule.(match m.id with
