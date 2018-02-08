@@ -15,8 +15,8 @@ export default suite(({addFile, addFiles, addCode}) => [
       .newErrors(
         `
           test.js:5
-            5: // @csx
-                  ^^^^ Unexpected @jsx declaration. Only one per file is allowed.
+            5:       // @csx
+                        ^^^^ Unexpected \`@jsx\` declaration. Only one per file is allowed.
         `,
       ),
   ]),

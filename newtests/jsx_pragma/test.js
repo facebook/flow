@@ -13,7 +13,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: // @jsx
-                  ^^^^ Invalid @jsx declaration. Should have form \`@jsx LeftHandSideExpression\` with no spaces.
+                  ^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces.
         `,
       ),
   ]),
@@ -23,7 +23,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: // @jsx (x)=>x
-                       ^^^^^^ Invalid @jsx declaration. Should have form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>
+                       ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>.
         `,
       ),
   ]),
@@ -37,7 +37,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:            (x)=>x
-                          ^^^^^^ Invalid @jsx declaration. Should have form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>
+                          ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>.
         `,
       ),
   ]),

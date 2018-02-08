@@ -104,25 +104,25 @@ Error: simple_sketchies.js:155
 
 Warning: simple_sketchies.js:2
   2: /*flowlint sketchy-null:off*/ //unused suppression
-                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: simple_sketchies.js:51
  51:  * sketchy-null-mixed:off
-        ^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+        ^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: simple_sketchies.js:62
         v-----------------
  62:  * sketchy-null-bool:
  63:  *    off
-      -------^ Error suppressing comment. Unused suppression
+      -------^ Unused suppression comment.
 
 Warning: simple_sketchies.js:110
 110:   /*flowlint sketchy-null:off*/ //Unused suppression
-                  ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                  ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: simple_sketchies.js:144
 144: /*flowlint sketchy-null:off*/ //Unused suppression
-                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 16 errors and 5 warnings

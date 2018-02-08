@@ -18,7 +18,7 @@ Error: versions.js:7
 
 Warning: A.js:14
  14: // $FlowFixMe Error unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 errors and 1 warning

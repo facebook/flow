@@ -20,7 +20,7 @@ No errors!
 After fixing the lint error, leaving the suppression:
 Warning: test.js:4
   4: //flowlint-next-line sketchy-null:off
-                          ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                          ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 1 warning

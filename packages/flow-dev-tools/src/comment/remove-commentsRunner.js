@@ -20,10 +20,12 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
     args.root,
   );
 
-  const errors = result.errors.filter(error =>
+  const errors = result.errors.filter(error => (
     error.message[0].descr === "Error suppressing comment" &&
     error.message[1].descr === "Unused suppression"
-  );
+  ) || (
+    error.message[0].descr === "Unused suppression comment."
+  ));
 
   const errorsByFile = new Map();;
   for (const error of errors) {

@@ -9,19 +9,19 @@ Error: license_with_flow.js:4
 
 Error: multiple_flows_1.js:2
   2: /* @flow */
-        ^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+        ^^^^^ Unexpected `@flow` declaration. Only one per file is allowed.
 
 Error: multiple_flows_2.js:3
   3:  * @noflow
-        ^^^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+        ^^^^^^^ Unexpected `@flow` declaration. Only one per file is allowed.
 
 Error: multiple_providesModule_1.js:3
   3:  * @providesModule Bar
-        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
+        ^^^^^^^^^^^^^^^ Unexpected `@providesModule` declaration. Only one per file is allowed.
 
 Error: multiple_providesModule_2.js:6
   6:  * @providesModule Bar
-        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
+        ^^^^^^^^^^^^^^^ Unexpected `@providesModule` declaration. Only one per file is allowed.
 
 Error: use_strict_with_flow.js:4
   4: ("": void); // error

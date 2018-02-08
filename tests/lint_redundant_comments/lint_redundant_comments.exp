@@ -100,43 +100,43 @@ Error: test.js:61
 
 Warning: test.js:15
  15: /*flowlint sketchy-null:off*/ //Unused suppression
-                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:43
  43: /*flowlint sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
-                                    ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                    ^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:44
  44: /*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
-                                         ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                         ^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:53
  53: /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
-                                                         ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                                         ^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:66
  66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                    ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                    ^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:66
  66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:66
  66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:67
  67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                         ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                         ^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:67
  67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                                ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: test.js:67
  67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 25 errors and 10 warnings

@@ -20,7 +20,7 @@ No errors!
 After fixing the error, leaving the suppression:
 Warning: test.js:3
   3: // $FlowIssue
-     ^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 1 warning
