@@ -34,11 +34,22 @@ and require =
 
 and module_kind =
   | CommonJS of {
-    clobbered: Loc.t option;
+    exports: cjs_exports option;
   }
   | ES of {
     named: export SMap.t;
     star: export_star SMap.t;
+  }
+
+and cjs_exports =
+  | CJSExportIdent of ident
+  | CJSExportProps of cjs_export SMap.t
+  | CJSExportOther
+
+and cjs_export =
+  | CJSExport of {
+    loc: Loc.t;
+    local: ident option;
   }
 
 and export =
@@ -70,7 +81,7 @@ type error =
 
 let empty_module_sig = {
   requires = [];
-  module_kind = CommonJS { clobbered = None };
+  module_kind = CommonJS { exports = None };
   type_exports_named = SMap.empty;
   type_exports_star = SMap.empty;
 }
@@ -152,8 +163,8 @@ let add_type_exports named star msig =
 
 let add_es_exports loc named star msig =
   let result = match msig.module_kind with
-  | CommonJS { clobbered = Some _; _ } -> Error (IndeterminateModuleType loc)
-  | CommonJS { clobbered = None } -> Ok (SMap.empty, SMap.empty)
+  | CommonJS { exports = Some _ } -> Error (IndeterminateModuleType loc)
+  | CommonJS { exports = None } -> Ok (SMap.empty, SMap.empty)
   | ES { named; star } -> Ok (named, star)
   in
   match result with
@@ -168,13 +179,24 @@ let add_es_exports loc named star msig =
     let module_kind = ES { named; star } in
     Ok ({ msig with module_kind })
 
-let clobber_cjs_exports loc msig =
+let assert_cjs ~update_exports mod_exp_loc msig =
   match msig.module_kind with
-  | CommonJS { clobbered = _ } ->
-    let clobbered = Some loc in
-    let module_kind = CommonJS { clobbered } in
-    Ok ({ msig with module_kind })
-  | ES _ -> Error (IndeterminateModuleType loc)
+  | CommonJS { exports } ->
+    let exports = Some (update_exports @@ Option.value exports ~default:(CJSExportProps SMap.empty)) in
+    let module_kind = CommonJS { exports } in
+    Ok { msig with module_kind }
+  | ES _ -> Error (IndeterminateModuleType mod_exp_loc)
+
+let set_cjs_exports exports mod_exp_loc msig =
+  assert_cjs mod_exp_loc msig ~update_exports:(Fn.const exports)
+
+let add_cjs_export name loc local mod_exp_loc msig =
+  assert_cjs mod_exp_loc msig ~update_exports:(function
+    | CJSExportProps exports -> CJSExportProps (SMap.add name (CJSExport { loc; local }) exports)
+    (* TODO: What do we do if we see `module.exports = ...` and then
+     * 'module.exports.foo = ...'? *)
+    | x -> x
+  )
 
 (* Subclass of the AST visitor class that calculates requires. Initializes with
    the scope builder class.
@@ -211,8 +233,11 @@ class requires_calculator ~ast = object(this)
     ) in
     this#update_module_sig (add named batch)
 
-  method private clobber_cjs_exports loc =
-    this#update_module_sig (clobber_cjs_exports loc)
+  method private set_cjs_exports exports mod_exp_loc =
+    this#update_module_sig (set_cjs_exports exports mod_exp_loc)
+
+  method private add_cjs_export name loc local mod_exp_loc =
+    this#update_module_sig (add_cjs_export name loc local mod_exp_loc)
 
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
@@ -377,7 +402,7 @@ class requires_calculator ~ast = object(this)
     super#export_named_declaration stmt_loc decl
 
   method! declare_module_exports loc (annot: Loc.t Ast.Type.annotation) =
-    this#clobber_cjs_exports loc;
+    this#set_cjs_exports (CJSExportProps SMap.empty) loc;
     super#declare_module_exports loc annot
 
   method! declare_export_declaration stmt_loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
@@ -431,19 +456,63 @@ class requires_calculator ~ast = object(this)
     super#declare_export_declaration stmt_loc decl
 
   method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
+    (* TODO: Check for shadowing *)
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
-    (* module.exports = e *)
-    let { operator; left; _ } = expr in
+    let { operator; left; right } = expr in
     begin match operator, left with
-    | Assign, (assign_loc, Ast.Pattern.Expression (_, Member { Member.
-        _object = module_loc, Ast.Expression.Identifier (_, "module");
+    (* exports = ... *)
+    | Assign, (mod_exp_loc as module_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+      name = (_, "exports"); _
+    })
+    (* module.exports = ... *)
+    | Assign, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
+        _object = module_loc, Identifier (_, "module");
         property = Member.PropertyIdentifier (_, "exports"); _
       })) ->
       (* expressions not allowed in declare module body *)
       assert (curr_declare_module = None);
       if not (Scope_api.is_local_use scope_info module_loc)
-      then this#clobber_cjs_exports assign_loc
+      then this#set_cjs_exports (CJSExportProps SMap.empty) mod_exp_loc;
+      begin match right with
+      | _, Identifier id -> this#set_cjs_exports (CJSExportIdent id) mod_exp_loc
+      | _, Object { Object.properties } ->
+        List.iter (function
+          | Object.Property (_, Object.Property.Init { key; value; _ }) ->
+            begin match key with
+            | Object.Property.Identifier (loc, name) ->
+              begin match value with
+              | _, Identifier id -> this#add_cjs_export name loc (Some id) mod_exp_loc
+              | _ -> this#add_cjs_export name loc None mod_exp_loc
+              end
+            | _ -> ()
+            end
+          | _ -> ()
+        ) properties
+      | _ -> this#set_cjs_exports CJSExportOther mod_exp_loc
+      end
+    (* exports.foo = ... *)
+    | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
+        _object = mod_exp_loc as module_loc, Identifier (_, "exports");
+        property = Member.PropertyIdentifier (loc, name); _
+      }))
+    (* module.exports.foo = ... *)
+    | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
+        _object = mod_exp_loc, Member { Member.
+          _object = module_loc, Identifier (_, "module");
+          property = Member.PropertyIdentifier (_, "exports"); _
+        };
+        property = Member.PropertyIdentifier (loc, name); _
+      })) ->
+      (* expressions not allowed in declare module body *)
+      assert (curr_declare_module = None);
+      if not (Scope_api.is_local_use scope_info module_loc)
+      then begin match right with
+      | _, Identifier id ->
+        this#add_cjs_export name loc (Some id) mod_exp_loc
+      | _ ->
+        this#add_cjs_export name loc None mod_exp_loc
+      end
     | _ -> ()
     end;
     super#assignment expr
