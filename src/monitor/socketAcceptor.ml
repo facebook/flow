@@ -110,8 +110,9 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
 
     (* Don't start the connection until we add it to the persistent connection map *)
     Lwt.async (fun () ->
-      PersistentConnectionMap.add ~client_id ~client:conn
-      >|= (fun () -> start ())
+      PersistentConnectionMap.add ~client_id ~client:conn;
+      start ();
+      Lwt.return_unit
     )
   )
 

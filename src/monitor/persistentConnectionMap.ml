@@ -9,24 +9,18 @@
  * to be super thin, the Flow server manages most of the persistent connection state. All the
  * monitor really needs to do is keep track of which connection goes with which ID *)
 
-let mutex = Lwt_mutex.create ()
 let map = ref IMap.empty
 
 let add ~client_id ~client =
-  (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
-  Lwt_mutex.with_lock mutex (fun () ->
-    map := IMap.add client_id client !map;
-    Lwt.return_unit
-  )
+  map := IMap.add client_id client !map
 
 let get ~client_id =
-  (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
-  Lwt_mutex.with_lock mutex (fun () ->
-    Lwt.return (IMap.get client_id !map)
-  )
+  IMap.get client_id !map
 
 let remove ~client_id =
   map := IMap.remove client_id !map
 
 let cardinal () =
   IMap.cardinal !map
+
+let get_all_clients () = IMap.bindings !map |> List.map snd

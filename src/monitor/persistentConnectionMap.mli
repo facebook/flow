@@ -8,11 +8,11 @@
 val add:
   client_id:Persistent_connection_prot.client_id ->
   client:PersistentConnection.t ->
-  unit Lwt.t
+  unit
 
 val get:
   client_id:Persistent_connection_prot.client_id ->
-  PersistentConnection.t option Lwt.t
+  PersistentConnection.t option
 
 val remove:
   client_id:Persistent_connection_prot.client_id ->
@@ -21,3 +21,7 @@ val remove:
 val cardinal:
   unit ->
   int
+
+val get_all_clients:
+  unit ->
+  PersistentConnection.t list

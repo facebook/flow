@@ -89,11 +89,10 @@ end = struct
       StatusStream.update ~status;
       Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
-      PersistentConnectionMap.get client_id
-      >|= (function
+      (match PersistentConnectionMap.get client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id
-      | Some connection -> PersistentConnection.write ~msg:response connection
-      )
+      | Some connection -> PersistentConnection.write ~msg:response connection);
+      Lwt.return_unit
 
   module CommandLoop = LwtLoop.Make (struct
     type acc = ServerConnection.t
@@ -368,10 +367,19 @@ module KeepAliveLoop = LwtLoop.Make (struct
       Lwt.return (push_to_command_stream (Some (Write_ephemeral_request {request; client;})))
     )
 
+  (* Ephemeral commands are stateless, so they can survive a server restart. However a persistent
+   * connection might have state, so it's wrong to allow it to survive. Maybe in the future we can
+   * tell the persistent connection that the server has died and let it adjust its state, but for
+   * now lets close all persistent connections *)
+  let killall_persistent_connections () =
+    PersistentConnectionMap.get_all_clients ()
+    |> Lwt_list.iter_p PersistentConnection.close_immediately
+
   let main monitor_options =
     requeue_stalled_requests ()
     >>= (fun () -> ServerInstance.start monitor_options)
     >>= (wait_for_server_to_die monitor_options)
+    >>= killall_persistent_connections
     >|= (fun () -> monitor_options)
 
   let catch _ exn =
