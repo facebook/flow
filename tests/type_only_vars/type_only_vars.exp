@@ -1,116 +1,135 @@
 Error: bad_shadowing.js:13
  13: var A: string = "Hello";
-         ^ A. name is already bound
-  5: import typeof A from "./A.js";
-                   ^ type A
+         ^ Cannot declare `A` [1] because the name is already bound.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: bad_shadowing.js:14
  14: var Foo: string = "Goodbye";
-         ^^^ Foo. name is already bound
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                  ^^^ type Foo
+         ^^^ Cannot declare `Foo` [1] because the name is already bound.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                    ^^^ [1]: `Foo`
 
 Error: bad_shadowing.js:15
  15: var Baz: string = "Go away please";
-         ^^^ Baz. name is already bound
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                       ^^^^^^^^^^ type Baz
+         ^^^ Cannot declare `Baz` [1] because the name is already bound.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                         ^^^^^^^^^^ [1]: `Baz`
 
 Error: bad_shadowing.js:18
  18: var duck: string = "quack";
-         ^^^^ duck. name is already bound
-  8: type duck = {
-          ^^^^ type duck
+         ^^^^ Cannot declare `duck` [1] because the name is already bound.
+  References:
+    8: type duck = {
+            ^^^^ [1]: `duck`
 
 Error: good_shadowing.js:8
   8: var A = require('./A.js');
-         ^ A. name is already bound
-  5: import typeof A from "./A.js";
-                   ^ type A
+         ^ Cannot declare `A` [1] because the name is already bound.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: good_shadowing.js:9
   9: var Foo = A.Foo;
-         ^^^ Foo. name is already bound
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                  ^^^ type Foo
+         ^^^ Cannot declare `Foo` [1] because the name is already bound.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                    ^^^ [1]: `Foo`
 
 Error: good_shadowing.js:9
   9: var Foo = A.Foo;
-               ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+               ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: good_shadowing.js:10
  10: var Baz = A.Bar;
-         ^^^ Baz. name is already bound
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                       ^^^^^^^^^^ type Baz
+         ^^^ Cannot declare `Baz` [1] because the name is already bound.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                         ^^^^^^^^^^ [1]: `Baz`
 
 Error: good_shadowing.js:10
  10: var Baz = A.Bar;
-               ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+               ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: good_shadowing.js:13
  13: var m = A;
-             ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+             ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: good_shadowing.js:14
  14: var n = Foo;
-             ^^^ Foo. type referenced from value position
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                  ^^^ type Foo
+             ^^^ Cannot reference type `Foo` [1] from a value position.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                    ^^^ [1]: `Foo`
 
 Error: good_shadowing.js:15
  15: var o = Baz;
-             ^^^ Baz. type referenced from value position
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                       ^^^^^^^^^^ type Baz
+             ^^^ Cannot reference type `Baz` [1] from a value position.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                         ^^^^^^^^^^ [1]: `Baz`
 
 Error: good_shadowing.js:18
  18: var a: Foo = new Foo();
-                      ^^^ Foo. type referenced from value position
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                  ^^^ type Foo
+                      ^^^ Cannot reference type `Foo` [1] from a value position.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                    ^^^ [1]: `Foo`
 
 Error: good_shadowing.js:19
  19: var b: Foo = new A.Foo();
-                      ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+                      ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: good_shadowing.js:20
  20: (new A.Bar(): Baz);
-          ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+          ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: import_type.js:11
  11: var m = A;
-             ^ A. type referenced from value position
-  5: import typeof A from "./A.js";
-                   ^ type A
+             ^ Cannot reference type `A` [1] from a value position.
+  References:
+    5: import typeof A from "./A.js";
+                     ^ [1]: `A`
 
 Error: import_type.js:12
  12: var n = Foo;
-             ^^^ Foo. type referenced from value position
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                  ^^^ type Foo
+             ^^^ Cannot reference type `Foo` [1] from a value position.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                    ^^^ [1]: `Foo`
 
 Error: import_type.js:13
  13: var o = Baz;
-             ^^^ Baz. type referenced from value position
-  6: import type {Foo, Bar as Baz} from "./A.js";
-                       ^^^^^^^^^^ type Baz
+             ^^^ Cannot reference type `Baz` [1] from a value position.
+  References:
+    6: import type {Foo, Bar as Baz} from "./A.js";
+                         ^^^^^^^^^^ [1]: `Baz`
 
 Error: type_alias.js:8
   8: var x = Foo;
-             ^^^ Foo. type referenced from value position
-  5: type Foo = number;
-          ^^^ type Foo
+             ^^^ Cannot reference type `Foo` [1] from a value position.
+  References:
+    5: type Foo = number;
+            ^^^ [1]: `Foo`
 
 
 Found 19 errors

@@ -1,8 +1,9 @@
 Error: test.js:17
  17:   x = "hey"; // error, const param cannot be reassigned
-       ^ x. const param cannot be reassigned
- 16: function cannot_reassign(x: string) {
-                              ^^^^^^^^^ const param x
+       ^ Cannot reassign constant `x` [1].
+  References:
+   16: function cannot_reassign(x: string) {
+                                ^^^^^^^^^ [1]: `x`
 
 
 Found 1 error

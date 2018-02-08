@@ -661,7 +661,7 @@ Error: fun.js:142
 
 Error: spread.js:7
   7: <Foo>{...["a", "b"]}</Foo>
-          ^^^^^^^^^^^^^^^ A spread argument is unsupported here
+          ^^^^^^^^^^^^^^^ A spread argument is unsupported here.
 
 Error: tabs.js:26
  26: <TabBar />; // Error: `children` is required.

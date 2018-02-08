@@ -39,6 +39,7 @@ module Friendly : sig
     | Text of string
     | Code of string
 
+  val message_of_string: string -> message
   val text: string -> message_feature
   val code: string -> message_feature
   val ref: ?loc:bool -> Reason.reason -> message_feature

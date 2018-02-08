@@ -45,9 +45,10 @@ Error: typeof.js:61
 
 Error: typeof.js:73
  73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
-                   ^^^^^^^^^^^ numberAlias. type referenced from value position
- 67: type numberAlias = number;
-          ^^^^^^^^^^^ type numberAlias
+                   ^^^^^^^^^^^ Cannot reference type `numberAlias` [1] from a value position.
+  References:
+   67: type numberAlias = number;
+            ^^^^^^^^^^^ [1]: `numberAlias`
 
 Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno

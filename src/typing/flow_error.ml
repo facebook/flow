@@ -1991,63 +1991,67 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     mk_friendly_error ~trace_infos ~kind:InternalError loc
       [text (spf "Internal error: %s" msg)]
 
-  (* TODO: friendlify *)
   | EUnsupportedSyntax (loc, unsupported_syntax) ->
-      let msg = match unsupported_syntax with
-        | ComprehensionExpression
-        | GeneratorExpression
-        | MetaPropertyExpression ->
-            "not (sup)ported"
-        | ObjectPropertyLiteralNonString ->
-            "non-string literal property keys not supported"
-        | ObjectPropertyGetSet ->
-            "get/set properties not yet supported"
-        | ObjectPropertyComputedGetSet ->
-            "computed getters and setters are not yet supported"
-        | InvariantSpreadArgument ->
-            "unsupported arguments in call to invariant()"
-        | ClassPropertyLiteral ->
-            "literal properties not yet supported"
-        | ClassPropertyComputed ->
-            "computed property keys not supported"
-        | ReactCreateClassPropertyNonInit ->
-            "unsupported property specification in createClass"
-        | RequireDynamicArgument ->
-            "The parameter passed to require() must be a literal string."
-        | ImportDynamicArgument ->
-            "The parameter passed to import() must be a literal string."
-        | RequireLazyDynamicArgument ->
-            "The first arg to requireLazy() must be a literal array of \
-             string literals!"
-        | CatchParameterAnnotation ->
-            "type annotations for catch params not yet supported"
-        | CatchParameterDeclaration ->
-            "unsupported catch parameter declaration"
-        | DestructuringObjectPropertyLiteralNonString ->
-            "unsupported non-string literal object property in destructuring"
-        | DestructuringExpressionPattern ->
-            "unsupported expression pattern in destructuring"
-        | PredicateDeclarationForImplementation ->
-            "Cannot declare predicate when a function body is present."
-        | PredicateDeclarationWithoutExpression ->
-            "Predicate function declarations need to declare a predicate \
-             expression."
-        | PredicateDeclarationAnonymousParameters ->
-            "Predicate function declarations cannot use anonymous function \
-             parameters."
-        | PredicateInvalidBody ->
-            "Invalid body for predicate function. Expected a simple return \
-             statement as body."
-        | PredicateVoidReturn ->
-            "Predicate functions need to return non-void."
-        | MultipleIndexers ->
-            "multiple indexers are not supported"
-        | SpreadArgument ->
-            "A spread argument is unsupported here"
-        | IllegalName ->
-            "Illegal name."
-      in
-      mk_error ~trace_infos [loc, [msg]]
+    let msg = match unsupported_syntax with
+      | ComprehensionExpression
+      | GeneratorExpression
+      | MetaPropertyExpression ->
+        [text "Not supported."]
+      | ObjectPropertyLiteralNonString ->
+        [text "Non-string literal property keys not supported."]
+      | ObjectPropertyGetSet ->
+        [text "Get/set properties not yet supported."]
+      | ObjectPropertyComputedGetSet ->
+        [text "Computed getters and setters are not yet supported."]
+      | InvariantSpreadArgument ->
+        [text "Unsupported arguments in call to "; code "invariant"; text "."]
+      | ClassPropertyLiteral ->
+        [text "Literal properties not yet supported."]
+      | ClassPropertyComputed ->
+        [text "Computed property keys not supported."]
+      | ReactCreateClassPropertyNonInit ->
+        [text "Unsupported property specification in "; code "createClass"; text "."]
+      | RequireDynamicArgument ->
+        [text "The parameter passed to "; code "require"; text " must be a string literal."]
+      | ImportDynamicArgument ->
+        [text "The parameter passed to "; code "import"; text " must be a string literal."]
+      | RequireLazyDynamicArgument -> [
+          text "The first argument to "; code "requireLazy"; text " must be an ";
+          text "array literal of string literals and the second argument must ";
+          text "be a callback.";
+        ]
+      | CatchParameterAnnotation ->
+        [text "Type annotations for catch parameters are not yet supported."]
+      | CatchParameterDeclaration ->
+        [text "Unsupported catch parameter declaration."]
+      | DestructuringObjectPropertyLiteralNonString ->
+        [text "Unsupported non-string literal object property in destructuring."]
+      | DestructuringExpressionPattern ->
+        [text "Unsupported expression pattern in destructuring."]
+      | PredicateDeclarationForImplementation ->
+        [text "Cannot declare predicate when a function body is present."]
+      | PredicateDeclarationWithoutExpression -> [
+          text "Predicate function declarations need to declare a ";
+          text "predicate expression."
+        ]
+      | PredicateDeclarationAnonymousParameters -> [
+          text "Predicate function declarations cannot use anonymous ";
+          text "function parameters.";
+        ]
+      | PredicateInvalidBody -> [
+          text "Invalid body for predicate function. Expected a simple return ";
+          text "statement as body."
+        ]
+      | PredicateVoidReturn ->
+        [text "Predicate functions need to return non-void."]
+      | MultipleIndexers ->
+        [text "Multiple indexers are not supported."]
+      | SpreadArgument ->
+        [text "A spread argument is unsupported here."]
+      | IllegalName ->
+        [text "Illegal name."]
+    in
+    mk_friendly_error ~trace_infos loc msg
 
   | EUseArrayLiteral loc ->
     mk_friendly_error ~trace_infos loc
@@ -2057,31 +2061,25 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     mk_friendly_error ~trace_infos (loc_of_reason reason)
       [text "Missing type annotation for "; desc reason; text "."]
 
-  (* TODO: friendlify *)
   | EBindingError (binding_error, loc, x, entry) ->
-      let msg =
-        match binding_error with
-        | ENameAlreadyBound ->
-            "name is already bound"
-        | EReferencedBeforeDeclaration ->
-            spf
-              "%s referenced before declaration, or after skipped declaration"
-              (Scope.Entry.string_of_kind entry)
-        | ETypeInValuePosition ->
-            "type referenced from value position"
-        | ETypeAliasInValuePosition ->
-            "type alias referenced from value position"
-        | EConstReassigned
-        | EConstParamReassigned
-        | EImportReassigned ->
-            spf "%s cannot be reassigned" (Scope.Entry.string_of_kind entry)
-      in
-      mk_error ~trace_infos [
-        loc, [x; msg];
-        Scope.Entry.entry_loc entry, [
-          spf "%s %s" (Scope.Entry.string_of_kind entry) x
-        ]
+    let x = mk_reason (RIdentifier x) (Scope.Entry.entry_loc entry) in
+    let msg = match binding_error with
+    | ENameAlreadyBound ->
+      [text "Cannot declare "; ref x; text " because the name is already bound."]
+    | EReferencedBeforeDeclaration -> [
+        text "Cannot use variable "; ref x; text " because the declaration ";
+        text "either comes later or was skipped.";
       ]
+    | ETypeInValuePosition
+    | ETypeAliasInValuePosition
+      -> [text "Cannot reference type "; ref x; text " from a value position."]
+    | EConstReassigned
+    | EConstParamReassigned
+      -> [text "Cannot reassign constant "; ref x; text "."]
+    | EImportReassigned ->
+      [text "Cannot reassign import "; ref x; text "."]
+    in
+    mk_friendly_error ~trace_infos loc msg
 
   | ERecursionLimit (r, _) ->
     mk_friendly_error ~kind:RecursionLimitError (loc_of_reason r)
@@ -2378,9 +2376,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       text ".";
     ]
 
-  (* TODO: friendlify *)
   | EParseError (loc, parse_error) ->
-    mk_error ~kind:ParseError [loc, [Parse_error.PP.error parse_error]]
+    mk_friendly_error ~kind:ParseError loc
+      (Friendly.message_of_string (Parse_error.PP.error parse_error))
 
   | EDocblockError (loc, err) ->
     let msg = match err with

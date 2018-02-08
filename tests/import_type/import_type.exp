@@ -9,9 +9,10 @@ Error: import_type.js:13
 
 Error: import_type.js:14
  14: new ClassFoo1(); // Error: ClassFoo1 is not a value-identifier
-         ^^^^^^^^^ ClassFoo1. type referenced from value position
-  9: import type ClassFoo1 from "./ExportDefault_Class";
-                 ^^^^^^^^^ type ClassFoo1
+         ^^^^^^^^^ Cannot reference type `ClassFoo1` [1] from a value position.
+  References:
+    9: import type ClassFoo1 from "./ExportDefault_Class";
+                   ^^^^^^^^^ [1]: `ClassFoo1`
 
 Error: import_type.js:24
  24: var b2: number = foo2Inst; // Error: ClassFoo2 ~> number
@@ -24,15 +25,17 @@ Error: import_type.js:24
 
 Error: import_type.js:25
  25: new ClassFoo2(); // Error: ClassFoo2 is not a value-identifier
-         ^^^^^^^^^ ClassFoo2. type referenced from value position
- 20: import type {ClassFoo2} from "./ExportNamed_Class";
-                  ^^^^^^^^^ type ClassFoo2
+         ^^^^^^^^^ Cannot reference type `ClassFoo2` [1] from a value position.
+  References:
+   20: import type {ClassFoo2} from "./ExportNamed_Class";
+                    ^^^^^^^^^ [1]: `ClassFoo2`
 
 Error: import_type.js:34
  34: new ClassFoo3T(); // Error: ClassFoo3 is not a value-identifier
-         ^^^^^^^^^^ ClassFoo3T. type referenced from value position
- 31: import type ClassFoo3T from "./ExportCJSDefault_Class";
-                 ^^^^^^^^^^ type ClassFoo3T
+         ^^^^^^^^^^ Cannot reference type `ClassFoo3T` [1] from a value position.
+  References:
+   31: import type ClassFoo3T from "./ExportCJSDefault_Class";
+                   ^^^^^^^^^^ [1]: `ClassFoo3T`
 
 Error: import_type.js:44
  44: var d2: number = foo4Inst; // Error: ClassFoo4 ~> number
@@ -45,15 +48,17 @@ Error: import_type.js:44
 
 Error: import_type.js:45
  45: new ClassFoo4(); // Error: ClassFoo4 is not a value-identifier
-         ^^^^^^^^^ ClassFoo4. type referenced from value position
- 40: import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
-                  ^^^^^^^^^ type ClassFoo4
+         ^^^^^^^^^ Cannot reference type `ClassFoo4` [1] from a value position.
+  References:
+   40: import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
+                    ^^^^^^^^^ [1]: `ClassFoo4`
 
 Error: import_type.js:47
  47: var d3: typeof ClassFoo5 = foo5Inst; // Error: Can't typeof a type alias
-                    ^^^^^^^^^ ClassFoo5. type referenced from value position
- 40: import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
-                             ^^^^^^^^^ type ClassFoo5
+                    ^^^^^^^^^ Cannot reference type `ClassFoo5` [1] from a value position.
+  References:
+   40: import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
+                               ^^^^^^^^^ [1]: `ClassFoo5`
 
 Error: import_type.js:56
  56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
@@ -66,9 +71,10 @@ Error: import_type.js:56
 
 Error: import_type.js:57
  57: var e3: typeof AliasFoo3 = givesAFoo3Obj(); // Error: Can't typeof a type alias
-                    ^^^^^^^^^ AliasFoo3. type referenced from value position
- 53: import type {AliasFoo3} from "./ExportNamed_Alias";
-                  ^^^^^^^^^ type AliasFoo3
+                    ^^^^^^^^^ Cannot reference type `AliasFoo3` [1] from a value position.
+  References:
+   53: import type {AliasFoo3} from "./ExportNamed_Alias";
+                    ^^^^^^^^^ [1]: `AliasFoo3`
 
 Error: import_type.js:71
  71: import type {numValue} from "./ExportsANumber"; // Error: Cannot import-type a number value
@@ -76,9 +82,10 @@ Error: import_type.js:71
 
 Error: import_type.js:81
  81:   ClassFoo6; // Error: Not a value binding
-       ^^^^^^^^^ ClassFoo6. type referenced from value position
- 79: import type ClassFoo6 from "./issue-359";
-                 ^^^^^^^^^ type ClassFoo6
+       ^^^^^^^^^ Cannot reference type `ClassFoo6` [1] from a value position.
+  References:
+   79: import type ClassFoo6 from "./issue-359";
+                   ^^^^^^^^^ [1]: `ClassFoo6`
 
 
 Found 12 errors
