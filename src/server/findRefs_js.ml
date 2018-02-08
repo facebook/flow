@@ -94,6 +94,20 @@ end = struct
     in
     let locs = List.fold_left (fun acc require ->
       match require with
+      | Require { source = (_, mref); bindings = Some bindings; _ } ->
+        if not (is_relevant mref) then acc else
+        begin match bindings with
+        | BindIdent (loc, name) ->
+          if symbol = name
+          then loc::acc
+          else acc
+        | BindNamed bindings ->
+          SMap.fold (fun _ (local_loc, (_, remote)) acc ->
+            if symbol = remote
+            then local_loc::acc
+            else acc
+          ) bindings acc
+        end
       | Require _
       | ImportDynamic _
       | Import0 _ -> acc
