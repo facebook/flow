@@ -529,18 +529,18 @@ Error: incompatible.js:55
    55:   (x.foo: string); // error
                  ^^^^^^ [2]: string
 
-Error: test.js:5
-  5:   foo(params) {
-                  ^ Cannot assign object literal to `o` because in property `foo` and then the return value, number [1] is incompatible with string [2].
+Error: test.js:6
+  6:     return params.count; // error, number ~/~ string
+                ^^^^^^^^^^^^ Cannot assign object literal to `o` because in property `foo` and then the return value, number [1] is incompatible with string [2].
   References:
     1: type Params = {count: number; [name: string]: string};
                              ^^^^^^ [1]: number
     2: type QueryFunction = (params: Params) => string;
                                                 ^^^^^^ [2]: string
 
-Error: test_client.js:3
-  3: o.foo = function (params) {
-                              ^ Cannot assign function to `o.foo` because in the return value, number [1] is incompatible with string [2].
+Error: test_client.js:4
+  4:   return params.count; // error, number ~/~ string
+              ^^^^^^^^^^^^ Cannot assign function to `o.foo` because in the return value, number [1] is incompatible with string [2].
   References:
     1: type Params = {count: number; [name: string]: string};
                              ^^^^^^ [1]: number. See: test.js:1
