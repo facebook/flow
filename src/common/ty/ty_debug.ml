@@ -145,4 +145,209 @@ let dump_binding (v, ty) =
 
 let dump_env_t s = List.map dump_binding s |> String.concat "\n"
 
-let json_of_ty _ = Hh_json.JSON_String "TODO Ty_debug.json_of_ty"
+let string_of_polarity = function
+  | Negative -> "Negative"
+  | Neutral -> "Neutral"
+  | Positive -> "Positive"
+
+let string_of_ctor = function
+  | ID _ -> "ID"
+  | Generic _ -> "Generic"
+  | Any -> "Any"
+  | AnyObj -> "AnyObj"
+  | AnyFun -> "AnyFun"
+  | Top -> "Top"
+  | Bot -> "Bot"
+  | Void -> "Void"
+  | Null -> "Null"
+  | Num -> "Num"
+  | Str -> "Str"
+  | Bool -> "Bool"
+  | NumLit _ -> "NumLit"
+  | StrLit _ -> "StrLit"
+  | BoolLit _ -> "BoolLit"
+  | Fun _ -> "Fun"
+  | Obj _ -> "Obj"
+  | Arr _ -> "Arr"
+  | Tup _ -> "Tup"
+  | Union _ -> "Union"
+  | Inter _ -> "Inter"
+  | TypeAlias _ -> "TypeAlias"
+  | TypeOf _ -> "Typeof"
+  | Class _ -> "Class"
+  | This -> "This"
+  | Exists -> "Exists"
+  | Mu _ -> "Mu"
+
+let rec json_of_t t = Hh_json.(
+  JSON_Object ([
+    "kind", JSON_String (string_of_ctor t)
+  ] @
+  match t with
+  | ID v -> json_of_tvar v
+  | Generic (s, str, targs_opt) -> (
+    match targs_opt with
+      | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
+      | None -> []
+    ) @ [
+      "type", JSON_String s;
+      "structural", JSON_Bool str;
+    ]
+  | Any | AnyObj | AnyFun
+  | Top | Bot
+  | Void | Null
+  | Num | Str | Bool -> []
+  | NumLit s
+  | StrLit s -> [
+      "literal", JSON_String s
+    ]
+  | BoolLit b -> [
+      "literal", JSON_Bool b
+    ]
+  | Fun f -> json_of_fun_t f
+  | Obj { obj_exact; obj_props } -> [
+      "exact", JSON_Bool obj_exact;
+      "props", JSON_Array (List.map json_of_prop obj_props);
+    ]
+  | Arr t -> [
+      "type", json_of_t t;
+    ]
+  | Tup ts -> [
+      "types", JSON_Array (List.map json_of_t ts);
+    ]
+  | Union (t0,t1,ts) -> [
+      "types", JSON_Array (List.map json_of_t (t0::t1::ts));
+    ]
+  | Inter (t0,t1,ts) -> [
+      "types", JSON_Array (List.map json_of_t (t0::t1::ts));
+    ]
+  | TypeAlias { ta_name; ta_imported; ta_tparams; ta_type } -> [
+      "name", JSON_String ta_name;
+      "imported", (
+        match ta_imported with
+        | Some name -> JSON_String name
+        | _ -> JSON_Null
+      );
+      "typeParams", json_of_type_params ta_tparams;
+      "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
+    ]
+  | TypeOf name -> [
+      "name", JSON_String name;
+    ]
+  | Class (name, structural, tparams) -> [
+      "name", JSON_String name;
+      "structural", JSON_Bool structural;
+      "typeParams", json_of_type_params tparams;
+    ]
+  | This
+  | Exists -> []
+  | Mu (v, t) ->
+    json_of_tvar v @ [
+      "type", json_of_t t;
+    ]
+  )
+)
+
+and json_of_tvar (TVar id) = Hh_json.([
+  "id", int_ id
+])
+
+and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
+  Hh_json.(
+    [
+      "typeParams", json_of_type_params fun_type_params;
+    ] @ [
+      "paramTypes",
+      JSON_Array (List.map (fun (_, t, _) -> json_of_t t) fun_params)
+    ] @ [
+      "paramNames", JSON_Array (List.rev_map (function
+        | (Some n, _, _) -> JSON_String n
+        | (None, _, _) -> JSON_String "_"
+        ) fun_params);
+    ] @ [
+      "restParam", (match fun_rest_param with
+      | None -> JSON_Null
+      | Some (name, t) -> JSON_Object (
+        [
+          "restParamType", json_of_t t;
+        ] @ (match name with
+          | None -> []
+          | Some name -> ["restParamName", JSON_String name])));
+      "returnType", json_of_t fun_return;
+    ]
+  )
+
+and json_of_type_params ps = Hh_json.(
+  match ps with
+  | None -> JSON_Null
+  | Some tparams -> JSON_Array (List.map json_of_typeparam tparams)
+)
+
+and json_of_typeparam  {
+  tp_name: string;
+  tp_bound: t option;
+  tp_polarity: polarity;
+  tp_default: t option;
+} = Hh_json.(
+  JSON_Object ([
+    "name", JSON_String tp_name;
+    "bound", Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null;
+    "polarity", json_of_polarity tp_polarity;
+  ] @
+  Option.value_map tp_default ~default:[] ~f:(fun t -> ["default", json_of_t t])
+  )
+)
+
+and json_of_polarity polarity =
+  Hh_json.JSON_String (string_of_polarity polarity)
+
+and json_of_prop prop = Hh_json.(
+  JSON_Object (match prop with
+  | NamedProp (name, p) -> [
+      "kind", JSON_String "NamedProp";
+      "prop", JSON_Object [
+          "name", JSON_String name;
+          "prop", json_of_named_prop p;
+        ];
+    ]
+  | IndexProp d -> [
+      "kind", JSON_String "IndexProp";
+      "prop", json_of_dict d;
+    ]
+  | CallProp ft -> [
+      "kind", JSON_String "NamedProp";
+      "prop", JSON_Object (json_of_fun_t ft);
+    ]
+  )
+)
+
+and json_of_dict { dict_polarity; dict_name; dict_key; dict_value } = Hh_json.(
+  JSON_Object [
+    "polarity", json_of_polarity dict_polarity;
+    "name", JSON_String (Option.value dict_name ~default:"_");
+    "key", json_of_t dict_key;
+    "value", json_of_t dict_value;
+  ]
+)
+
+and json_of_named_prop p = Hh_json.(JSON_Object (
+  match p with
+  | Field (t, { fld_polarity; fld_optional }) -> [
+      "kind", JSON_String "field";
+      "type", json_of_t t;
+      "polarity", json_of_polarity fld_polarity;
+      "optional", JSON_Bool fld_optional;
+    ]
+  | Method t -> [
+      "kind", JSON_String "Method";
+      "funtype", JSON_Object (json_of_fun_t t);
+    ]
+  | Get t -> [
+      "kind", JSON_String "Get";
+      "type", json_of_t t;
+    ]
+  | Set t -> [
+      "kind", JSON_String "Set";
+      "type", json_of_t t;
+    ]
+))
