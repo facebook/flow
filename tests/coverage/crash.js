@@ -8,4 +8,4 @@ declare module foo {
 declare module bar {
 }
 
-// TODO
+// TODO(easy) there is currently no normalized type for a module
