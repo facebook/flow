@@ -86,3 +86,12 @@ module Make(M: Monoid.S)(E: Env) = struct
   end
 
 end
+
+module MakeUnitEnv(M: Monoid.S) = Make(M)(struct
+  type t = unit
+  let descend _ () = ()
+end)
+
+module MakeAny(E: Env) = Make(Monoid.Any)(E)
+module UnitVisitor = MakeUnitEnv(Monoid.Unit)
+module AnyVisitor = MakeUnitEnv(Monoid.Any)
