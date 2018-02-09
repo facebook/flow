@@ -55,6 +55,7 @@ val check_polarity:
 
 (* selectors *)
 
+val eval_selector : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> int -> Type.t
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 (* ... *)
