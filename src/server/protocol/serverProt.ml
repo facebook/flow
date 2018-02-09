@@ -116,7 +116,7 @@ module Response = struct
   type get_def_response = (Loc.t, string) result
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
   type infer_type_response = (
-    Loc.t * string option * Reason.t list,
+    Loc.t * string option,
     string
   ) result
   (* map of files to `Ok (line, col, annotation)` or `Error msg` *)

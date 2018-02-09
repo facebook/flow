@@ -14,4 +14,4 @@ val fold_coverage: (Loc.t -> Type.t -> 'a -> 'a) -> t -> 'a -> 'a
 val find_unsafe_coverage: t -> Loc.t -> Type.t
 val reset: t -> unit
 val copy: t -> t
-val find_all_type_info: (Loc.t -> Type.t -> bool) -> t -> (Loc.t * Type.t) list
+val find_type_info: pred:(Loc.t -> bool) -> t -> (Loc.t * Type.t) option

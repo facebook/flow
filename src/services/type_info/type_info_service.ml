@@ -17,30 +17,28 @@ let mk_loc file line col =
 
 let type_at_pos ~options ~workers ~env ~profiling file content line col =
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-  |> map_error ~f:(fun str -> str, None)
-  >>| fun (cx, _info) ->
+  |> map_error ~f:(fun str -> str, None) >>| fun (cx, _info) ->
     let loc = mk_loc file line col in
-    let json_data, loc, ground_t, possible_ts =
-      let mk_data result_str loc ty = Hh_json.JSON_Object [
+    let json_data, loc, ty =
+      let mk_data result_str loc ty_json = Hh_json.JSON_Object [
         "result", Hh_json.JSON_String result_str;
         "loc", Reason.json_of_loc loc;
-        "type", Debug_js.json_of_t ~depth:3 cx ty;
+        "type", ty_json;
       ] in
       Query_types.(match query_type cx loc with
         | FailureNoMatch ->
-          Hh_json.JSON_Object ["result", Hh_json.JSON_String "FAILURE_NO_MATCH"], Loc.none, None, []
-        | FailureUnparseable (loc, gt, possible_ts) ->
-          mk_data "FAILURE_UNPARSEABLE" loc gt, loc, None, possible_ts
-        | Success (loc, gt, possible_ts) ->
-          mk_data "SUCCESS" loc gt, loc, Some gt, possible_ts
+          Hh_json.JSON_Object ["result", Hh_json.JSON_String "FAILURE_NO_MATCH"], Loc.none, None
+        | FailureUnparseable (loc, gt, _) ->
+          mk_data "FAILURE_UNPARSEABLE" loc (Debug_js.json_of_t cx gt), loc, None
+        | Success (loc, ty) ->
+          (* TODO use Ty_debug.json_of_t after making it faster using
+             count_calls *)
+          mk_data "SUCCESS" loc (Hh_json.JSON_String (Ty_printer.string_of_t ty)),
+            loc, Some ty
       )
     in
-    let ty = match ground_t with
-      | None -> None
-      | Some t -> Some (Type_printer.string_of_t cx t)
-    in
-    let reasons = List.map Type.reason_of_t possible_ts in
-    (loc, ty, reasons), Some json_data
+    let ty = Option.map ~f:Ty_printer.string_of_t ty in
+    (loc, ty), Some json_data
 
 let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)

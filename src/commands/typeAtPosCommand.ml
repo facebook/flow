@@ -61,7 +61,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
+let handle_response (loc, t) ~json ~pretty ~strip_root =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
@@ -72,15 +72,7 @@ let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
     let open Reason in
     let json_assoc = (
         ("type", JSON_String ty) ::
-        ("reasons", JSON_Array
-          (List.map (fun r ->
-              let r_loc = loc_of_reason r in
-              JSON_Object (
-                  ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
-                  ("loc", json_of_loc ~strip_root r_loc) ::
-                  (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
-                )
-            ) reasons)) ::
+        ("reasons", JSON_Array []) ::
         ("loc", json_of_loc ~strip_root loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
@@ -91,15 +83,7 @@ let handle_response (loc, t, reasons) ~json ~pretty ~strip_root =
       if loc = Loc.none then ""
       else spf "\n%s" (range_string_of_loc ~strip_root loc)
     in
-    let pty =
-      if reasons = [] then ""
-      else "\n\nSee the following locations:\n" ^ (
-        reasons
-        |> List.map (Reason.string_of_reason ~strip_root)
-        |> String.concat "\n"
-      )
-    in
-    print_endline (ty^range^pty)
+    print_endline (ty^range)
   )
 
 let handle_error err ~json ~pretty =

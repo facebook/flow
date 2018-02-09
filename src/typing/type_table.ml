@@ -35,9 +35,7 @@ let copy {coverage; type_info} = {
   type_info = Hashtbl.copy type_info;
 }
 
-let find_all_type_info f t =
-  let r = ref [] in
-  Hashtbl.iter (fun k v ->
-    if f k v then r := (k, v) :: !r
-  ) t.type_info;
-  !r
+let find_type_info ~pred t =
+  Hashtbl.fold (fun k v a ->
+    if pred k then Some (k, v) else a
+  ) t.type_info None
