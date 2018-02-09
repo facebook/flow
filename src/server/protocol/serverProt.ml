@@ -105,7 +105,7 @@ module Response = struct
   ) result
 
   type dump_types_response = (
-    (Loc.t * string * string * Reason.t list) list,
+    (Loc.t * string) list,
     string
   ) result
 

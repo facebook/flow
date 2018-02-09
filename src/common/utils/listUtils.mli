@@ -25,8 +25,6 @@ val range_with : (int -> 'a) -> int -> int -> 'a list
 val range : int -> int -> int list
 val repeat : int -> 'a -> 'a list
 val cat_maybes : 'a option list -> 'a list
-val cat_ok : ('a, 'b) result list -> 'a list
-val filter_map : ('a -> 'b option) -> 'a list -> 'b list
 val fold_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b list -> 'a * 'c list
 val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 

@@ -42,11 +42,11 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
 
 let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
-  let printer = Type_printer.string_of_t in
+  let printer = Ty_printer.string_of_t in
 
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
   >>| fun (cx, _info) ->
-    Query_types.dump_types printer cx
+    Query_types.dump_types ~printer cx
 
 let coverage ~options ~workers ~env ~profiling ~force file content =
   let should_check =
