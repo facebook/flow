@@ -6767,12 +6767,12 @@ and union_of_ts reason ts =
 and generate_tests =
   (* make bot type for given param *)
   let mk_bot reason _ { name; _ } =
-    let desc = RPolyTest (RIncompatibleInstantiation name) in
+    let desc = RPolyTest (name, RIncompatibleInstantiation name) in
     DefT (replace_reason_const desc reason, EmptyT)
   in
   (* make bound type for given param and argument map *)
-  let mk_bound cx prev_args { bound; _ } =
-    mod_reason_of_t (replace_reason (fun d -> RPolyTest d))
+  let mk_bound cx prev_args { bound; name; _ } =
+    mod_reason_of_t (replace_reason (fun d -> RPolyTest (name, d)))
       (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)

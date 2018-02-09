@@ -110,7 +110,7 @@ type reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RPolyTest of reason_desc
+  | RPolyTest of string * reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
