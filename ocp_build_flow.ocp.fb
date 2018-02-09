@@ -328,6 +328,10 @@ begin library "flow-monitor"
     "hh-utils-lsp"
     "lwt"
     "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 

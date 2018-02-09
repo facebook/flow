@@ -138,6 +138,7 @@ FINDLIB_PACKAGES=\
   lwt\
   lwt.log\
   lwt.unix\
+  lwt_ppx\
   unix\
   str\
   bigarray

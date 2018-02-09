@@ -23,6 +23,7 @@ depends: [
   "ocamlbuild" {build}
   "sedlex" { >= "1.99.4" }
   "lwt" { >= "3.0.0" }
+  "lwt_ppx" { >= "1.0.1" }
   "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
