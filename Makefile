@@ -213,6 +213,9 @@ clean-ocp: clean
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
+	# https://github.com/ocsigen/lwt/issues/453
+	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
 	ocamlbuild \
 		-use-ocamlfind\
 		-no-links  $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
