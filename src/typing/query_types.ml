@@ -31,8 +31,6 @@
    necessary.
 *)
 
-open Utils_js
-
 type result =
 | FailureNoMatch
 | FailureUnparseable of Loc.t * Type.t * string
@@ -97,13 +95,17 @@ let covered_types cx =
 (* Fill *)
 (********)
 
+module FillTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
 let fill_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  Hashtbl.fold Loc.(fun loc t list ->
-    let line = loc._end.line in
-    let end_ = loc._end.column in
-    let t = Type_normalizer.normalize_type cx t in
-    if Type_printer.is_printed_type_parsable cx t then
-      (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
-    else list
-  ) (Context.annot_table cx) []
+  Type_table.coverage_to_list (Context.type_table cx)
+  |> FillTypeNormalizer.from_types ~cx
+  |> Core_list.filter_map ~f:(function
+   | l, Ok s -> Some (l, s)
+   | _ -> None
+   )
+  |> List.map Loc.(fun (l, t) -> (l._end.line, l._end.column, t))

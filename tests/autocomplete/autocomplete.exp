@@ -159,11 +159,8 @@ str.js = {
     },
     {
       "name":"concat",
-      "type":"(...strings: Array<string>) => string",
-      "func_details":{
-        "return_type":"string",
-        "params":[{"name":"...strings","type":"Array<string>"}]
-      },
+      "type":"(...strings: string[]) => string",
+      "func_details":{"return_type":"string","params":[{"name":"...strings","type":"string[]"}]},
       "path":"[LIB] core.js",
       "line":293,
       "endline":293,
@@ -244,12 +241,12 @@ str.js = {
     },
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: string | Array<string>, options?: Object) => number",
+      "type":"(that: string, locales?: (string | string[]), options?: Object) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {"name":"that","type":"string"},
-          {"name":"locales?","type":"string | Array<string>"},
+          {"name":"locales?","type":"string | string[]"},
           {"name":"options?","type":"Object"}
         ]
       },
@@ -261,9 +258,9 @@ str.js = {
     },
     {
       "name":"match",
-      "type":"(regexp: string | RegExp) => ?Array<string>",
+      "type":"(regexp: (string | RegExp)) => ?string[]",
       "func_details":{
-        "return_type":"?Array<string>",
+        "return_type":"?string[]",
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
@@ -320,14 +317,14 @@ str.js = {
     },
     {
       "name":"replace",
-      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
       "func_details":{
         "return_type":"string",
         "params":[
           {"name":"searchValue","type":"string | RegExp"},
           {
             "name":"replaceValue",
-            "type":"string | ((substring: string, ...args: Array<any>) => string)"
+            "type":"string | ((substring: string, ...args: any[]) => string)"
           }
         ]
       },
@@ -339,7 +336,7 @@ str.js = {
     },
     {
       "name":"search",
-      "type":"(regexp: string | RegExp) => number",
+      "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
       "line":307,
@@ -362,9 +359,9 @@ str.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: string | RegExp, limit?: number) => Array<string>",
+      "type":"(separator?: (string | RegExp), limit?: number) => string[]",
       "func_details":{
-        "return_type":"Array<string>",
+        "return_type":"string[]",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
@@ -531,15 +528,12 @@ num.js = {
     },
     {
       "name":"toLocaleString",
-      "type":"(locales?: string | Array<string>, options?: {currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}) => string",
+      "type":"(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
       "func_details":{
         "return_type":"string",
         "params":[
-          {"name":"locales?","type":"string | Array<string>"},
-          {
-            "name":"options?",
-            "type":"{currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}"
-          }
+          {"name":"locales?","type":"string | string[]"},
+          {"name":"options?","type":"Number$LocaleOptions"}
         ]
       },
       "path":"[LIB] core.js",
@@ -769,10 +763,10 @@ function_builtins.js = {
     },
     {
       "name":"bind",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "type":"(thisArg: any, ...argArray: any[]) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
       },
       "path":"[LIB] core.js",
       "line":95,
@@ -782,10 +776,10 @@ function_builtins.js = {
     },
     {
       "name":"call",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "type":"(thisArg: any, ...argArray: any[]) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
       },
       "path":"[LIB] core.js",
       "line":96,
@@ -795,7 +789,7 @@ function_builtins.js = {
     },
     {
       "name":"caller",
-      "type":"null | Function",
+      "type":"Function | null",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":98,
@@ -912,10 +906,10 @@ fun.js = {
     },
     {
       "name":"bind",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "type":"(thisArg: any, ...argArray: any[]) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
       },
       "path":"[LIB] core.js",
       "line":95,
@@ -925,10 +919,10 @@ fun.js = {
     },
     {
       "name":"call",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
+      "type":"(thisArg: any, ...argArray: any[]) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
       },
       "path":"[LIB] core.js",
       "line":96,
@@ -938,7 +932,7 @@ fun.js = {
     },
     {
       "name":"caller",
-      "type":"null | Function",
+      "type":"Function | null",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":98,
@@ -1086,15 +1080,12 @@ typeparams.js = {
     },
     {
       "name":"toLocaleString",
-      "type":"(locales?: string | Array<string>, options?: {currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}) => string",
+      "type":"(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
       "func_details":{
         "return_type":"string",
         "params":[
-          {"name":"locales?","type":"string | Array<string>"},
-          {
-            "name":"options?",
-            "type":"{currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}"
-          }
+          {"name":"locales?","type":"string | string[]"},
+          {"name":"options?","type":"Number$LocaleOptions"}
         ]
       },
       "path":"[LIB] core.js",
@@ -1293,7 +1284,7 @@ optional.js = {
     },
     {
       "name":"x",
-      "type":"string | void",
+      "type":"void | string",
       "func_details":null,
       "path":"optional.js",
       "line":3,
@@ -1475,10 +1466,10 @@ customfun.js = {
     },
     {
       "name":"objectAssign",
-      "type":"(target: any, ...sources: Array<any>) => any",
+      "type":"(target: any, ...sources: any[]) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"target","type":"any"},{"name":"...sources","type":"Array<any>"}]
+        "params":[{"name":"target","type":"any"},{"name":"...sources","type":"any[]"}]
       },
       "path":"customfun.js",
       "line":9,
@@ -1488,10 +1479,10 @@ customfun.js = {
     },
     {
       "name":"mixin",
-      "type":"(...objects: Array<Object>) => [class: Object]",
+      "type":"(...objects: Object[]) => class Object",
       "func_details":{
-        "return_type":"[class: Object]",
-        "params":[{"name":"...objects","type":"Array<Object>"}]
+        "return_type":"class Object",
+        "params":[{"name":"...objects","type":"Object[]"}]
       },
       "path":"customfun.js",
       "line":7,
@@ -1501,13 +1492,10 @@ customfun.js = {
     },
     {
       "name":"mergeInto",
-      "type":"(target: Object, ...objects: Array<Object>) => void",
+      "type":"(target: Object, ...objects: Object[]) => void",
       "func_details":{
         "return_type":"void",
-        "params":[
-          {"name":"target","type":"Object"},
-          {"name":"...objects","type":"Array<Object>"}
-        ]
+        "params":[{"name":"target","type":"Object"},{"name":"...objects","type":"Object[]"}]
       },
       "path":"customfun.js",
       "line":6,
@@ -1517,13 +1505,10 @@ customfun.js = {
     },
     {
       "name":"mergeDeepInto",
-      "type":"(target: Object, ...objects: Array<Object>) => void",
+      "type":"(target: Object, ...objects: Object[]) => void",
       "func_details":{
         "return_type":"void",
-        "params":[
-          {"name":"target","type":"Object"},
-          {"name":"...objects","type":"Array<Object>"}
-        ]
+        "params":[{"name":"target","type":"Object"},{"name":"...objects","type":"Object[]"}]
       },
       "path":"customfun.js",
       "line":5,
@@ -1533,11 +1518,8 @@ customfun.js = {
     },
     {
       "name":"merge",
-      "type":"(...objects: Array<Object>) => Object",
-      "func_details":{
-        "return_type":"Object",
-        "params":[{"name":"...objects","type":"Array<Object>"}]
-      },
+      "type":"(...objects: Object[]) => Object",
+      "func_details":{"return_type":"Object","params":[{"name":"...objects","type":"Object[]"}]},
       "path":"customfun.js",
       "line":4,
       "endline":4,
@@ -1546,10 +1528,13 @@ customfun.js = {
     },
     {
       "name":"idx",
-      "type":"",
+      "type":"<IdxObject: Object, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
       "func_details":{
         "return_type":"?IdxResult",
-        "params":[{"name":"obj","type":"IdxObject"},{"name":"pathCallback","type":""}]
+        "params":[
+          {"name":"obj","type":"IdxObject"},
+          {"name":"pathCallback","type":"(demaybefiedObj: IdxObject) => IdxResult"}
+        ]
       },
       "path":"customfun.js",
       "line":3,
@@ -1559,7 +1544,7 @@ customfun.js = {
     },
     {
       "name":"exports",
-      "type":"{}",
+      "type":"{||}",
       "func_details":null,
       "path":"",
       "line":0,
@@ -1657,11 +1642,8 @@ if.js = {
     },
     {
       "name":"concat",
-      "type":"(...strings: Array<string>) => string",
-      "func_details":{
-        "return_type":"string",
-        "params":[{"name":"...strings","type":"Array<string>"}]
-      },
+      "type":"(...strings: string[]) => string",
+      "func_details":{"return_type":"string","params":[{"name":"...strings","type":"string[]"}]},
       "path":"[LIB] core.js",
       "line":293,
       "endline":293,
@@ -1742,12 +1724,12 @@ if.js = {
     },
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: string | Array<string>, options?: Object) => number",
+      "type":"(that: string, locales?: (string | string[]), options?: Object) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {"name":"that","type":"string"},
-          {"name":"locales?","type":"string | Array<string>"},
+          {"name":"locales?","type":"string | string[]"},
           {"name":"options?","type":"Object"}
         ]
       },
@@ -1759,9 +1741,9 @@ if.js = {
     },
     {
       "name":"match",
-      "type":"(regexp: string | RegExp) => ?Array<string>",
+      "type":"(regexp: (string | RegExp)) => ?string[]",
       "func_details":{
-        "return_type":"?Array<string>",
+        "return_type":"?string[]",
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
@@ -1818,14 +1800,14 @@ if.js = {
     },
     {
       "name":"replace",
-      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
       "func_details":{
         "return_type":"string",
         "params":[
           {"name":"searchValue","type":"string | RegExp"},
           {
             "name":"replaceValue",
-            "type":"string | ((substring: string, ...args: Array<any>) => string)"
+            "type":"string | ((substring: string, ...args: any[]) => string)"
           }
         ]
       },
@@ -1837,7 +1819,7 @@ if.js = {
     },
     {
       "name":"search",
-      "type":"(regexp: string | RegExp) => number",
+      "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
       "line":307,
@@ -1860,9 +1842,9 @@ if.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: string | RegExp, limit?: number) => Array<string>",
+      "type":"(separator?: (string | RegExp), limit?: number) => string[]",
       "func_details":{
-        "return_type":"Array<string>",
+        "return_type":"string[]",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
