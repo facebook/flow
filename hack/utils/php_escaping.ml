@@ -173,7 +173,7 @@ let unescape_single_or_nowdoc ~is_nowdoc s =
     if c <> '\\' then Buffer.add_char buf c else begin
       let c = next () in
       match c with
-      | '\'' ->Buffer.add_char buf '\''
+      | '\'' when not is_nowdoc -> Buffer.add_char buf '\''
       | '\\' when not is_nowdoc -> Buffer.add_char buf '\\'
       (* unrecognized escapes are just copied over *)
       | c ->
