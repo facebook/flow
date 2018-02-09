@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 let spf = Printf.sprintf
 
 module Logger = FlowServerMonitorLogger
@@ -120,37 +118,34 @@ let lwt_level_of_hh_logger_level = function
 let handle_waiting_start_command waiting_fd =
   (* Close the fd, but don't worry if it's already closed *)
   let close () =
-    Lwt.catch
-    (fun () -> Lwt_unix.close waiting_fd)
-    (fun exn -> Lwt.return (
-      match exn with
-      (* If the waiting process decided not to wait and the fd is closed, then that's fine *)
-      | Unix.Unix_error(Unix.EBADF, _, _) -> ()
-      | exn ->
-        Logger.error ~exn "Unexpected exception when closing connection to waiting start command"
-    ))
+    try%lwt
+      Lwt_unix.close waiting_fd
+    with
+    (* If the waiting process decided not to wait and the fd is closed, then that's fine *)
+    | Unix.Unix_error(Unix.EBADF, _, _) -> Lwt.return_unit
+    | exn ->
+      Logger.error ~exn "Unexpected exception when closing connection to waiting start command";
+      Lwt.return_unit
   in
 
   (* Send a message to the fd, but don't worry if it's already closed *)
   let send_message msg =
-    Lwt.catch
-      (fun () -> Marshal_tools_lwt.to_fd_with_preamble waiting_fd msg)
-      (fun exn ->
-        begin match exn with
-        (* If the waiting process decided not to wait and closed the pipe, then that's fine *)
-        | Unix.Unix_error(Unix.EPIPE, _, _) -> ()
-        | Sys_error msg when msg = "Broken pipe"  || msg = "Invalid argument" -> ()
-        | exn ->
-          Logger.error ~exn "Unexpected exception when talking to waiting start command"
-        end;
-        close ()
-      )
+    try%lwt
+      Marshal_tools_lwt.to_fd_with_preamble waiting_fd msg
+    with
+    (* If the waiting process decided not to wait and closed the pipe, then that's fine *)
+    | Unix.Unix_error(Unix.EPIPE, _, _) -> close ()
+    | Sys_error msg when msg = "Broken pipe"  || msg = "Invalid argument" -> close ()
+    | exn ->
+      Logger.error ~exn "Unexpected exception when talking to waiting start command";
+      close ()
 
     in
 
-    send_message FlowServerMonitorDaemon.Starting
-    >>= (fun () ->
-      StatusStream.call_on_free ~f:(fun () -> send_message FlowServerMonitorDaemon.Ready >>= close)
+    let%lwt () = send_message FlowServerMonitorDaemon.Starting in
+    StatusStream.call_on_free ~f:(fun () ->
+      let%lwt () = send_message FlowServerMonitorDaemon.Ready in
+      close ()
     )
 
 (* The EventLogger needs to be periodically flushed. The server flushes it during its main serve
@@ -160,8 +155,9 @@ module LogFlusher = LwtLoop.Make (struct
   type acc = unit
 
   let main () =
-    Lwt_unix.sleep 5.0
-    >|= fun () -> EventLogger.flush ()
+    let%lwt () = Lwt_unix.sleep 5.0 in
+    EventLogger.flush ();
+    Lwt.return_unit
 
   let catch () exn =
     Logger.fatal ~exn "LogFlusher somehow hit an exception";
@@ -247,8 +243,8 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
 
   (* Don't start the server until we've set up the threads to handle the waiting channel *)
   Lwt.async (fun () ->
-    handle_waiting_start_command
-    >>= (fun () -> FlowServerMonitorServer.start monitor_options)
+    let%lwt () = handle_waiting_start_command in
+    FlowServerMonitorServer.start monitor_options
   );
 
   (* We can start up the socket acceptor even before the server starts *)
