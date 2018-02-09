@@ -950,6 +950,17 @@ class ssa_builder = object(this)
     end;
     super#statement stmt
 
+  (* Function declarations are hoisted to the top of a block, so that they may be considered
+     initialized before they are read. *)
+  method! statement_list (stmts: Loc.t Ast.Statement.t list) =
+    let open Ast.Statement in
+    let function_decls, other_stmts = List.partition (function
+      | (_, FunctionDeclaration _) -> true
+      | _ -> false
+    ) stmts in
+    ignore @@ super#statement_list (function_decls @ other_stmts);
+    stmts
+
 end
 
 let program program =
