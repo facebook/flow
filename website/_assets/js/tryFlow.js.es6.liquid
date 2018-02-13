@@ -376,8 +376,8 @@ function createEditor(
         '-', value, cursor.line + 1, cursor.ch
       ))
       .then(typeAtPos => {
-        typeAtPosNode.title = typeAtPos ? typeAtPos[1].c : '';
-        typeAtPosNode.textContent = typeAtPos ? typeAtPos[1].c : '';
+        typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
+        typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
       })
       .catch(() => {
         typeAtPosNode.title = '';
