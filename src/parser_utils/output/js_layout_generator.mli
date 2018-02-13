@@ -29,3 +29,8 @@ val statement:
   ?pretty_semicolon:bool ->
   Loc.t Ast.Statement.t -> Layout.layout_node
 val object_property: Loc.t Ast.Expression.Object.property -> Layout.layout_node
+
+val better_quote: string -> string
+val utf8_escape: quote:string -> string -> string
+val wrap_in_parens: Layout.layout_node -> Layout.layout_node
+val with_semicolon: Layout.layout_node -> Layout.layout_node
