@@ -239,21 +239,12 @@ let infer_type filename content line col =
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
-      let loc = mk_loc filename line col in
-      let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
-        | FailureNoMatch -> Loc.none, None, []
-        | FailureUnparseable (loc, _, possible_ts) -> loc, None, possible_ts
-        | Success (loc, gt, possible_ts) -> loc, Some gt, possible_ts
-      ) in
-      let ty = match ground_t with
-        | None -> None
-        | Some t -> Some (Type_printer.string_of_t cx t)
-      in
-      let reasons =
-        possible_ts
-        |> List.map Type.reason_of_t
-      in
-      (None, Some (loc, ty, reasons))
+      let loc = mk_loc filename line col in Query_types.(
+        match query_type cx loc with
+        | FailureNoMatch -> Loc.none, Error "No match"
+        | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
+        | Success (loc, t) -> loc, Ok (Ty_printer.string_of_t t)
+      )
 
 let types_to_json types ~strip_root =
   let open Hh_json in
@@ -295,17 +286,13 @@ let dump_types js_file js_content =
 
       js_of_json types_json
 
-let handle_inferred_result (_, inferred, _) =
-  inferred
-
 let type_at_pos js_file js_content js_line js_col =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
   match infer_type filename content line col with
-  | (Some err, None) -> err
-  | (None, Some resp) -> handle_inferred_result resp
+  | (_, Ok resp) -> resp
   | (_, _) ->  failwith "Error"
 
 let exports =

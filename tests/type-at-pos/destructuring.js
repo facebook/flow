@@ -14,6 +14,6 @@ export const X = {
   },
 
   test: function() {
-    let [a, b] = this.returnsATuple();
+    let [a, b] = this.returnsATuple(); // TODO what do we expect here?
   }
 };

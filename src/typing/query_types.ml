@@ -35,26 +35,26 @@ open Utils_js
 
 type result =
 | FailureNoMatch
-| FailureUnparseable of Loc.t * Type.t * Type.t list
-| Success of Loc.t * Type.t * Type.t list
+| FailureUnparseable of Loc.t * Type.t * string
+| Success of Loc.t * Ty.t
+
+module QueryTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
 
 let query_type cx loc =
-  let matching_entries = Type_table.find_all_type_info
-    (fun range _ -> Reason.in_range loc range)
-    (Context.type_table cx)
-  in
-  let handle_result (range, t) =
-    Type_normalizer.suggested_type_cache := IMap.empty;
-    let ground_t = Type_normalizer.normalize_type cx t in
-    let possible_ts = Flow_js.possible_types_of_type cx t in
-    if Type_printer.is_printed_type_parsable cx ground_t
-      then Success (range, ground_t, possible_ts)
-      else FailureUnparseable (range, ground_t, possible_ts)
+  let pred = fun range -> Reason.in_range loc range in
+  let type_table = Context.type_table cx in
+  match Type_table.find_type_info ~pred type_table with
+  | None -> FailureNoMatch
+  | Some (loc, t) ->
+    (match QueryTypeNormalizer.from_type ~cx t with
+    | Ok ty -> Success (loc, ty)
+    | Error msg ->
+      FailureUnparseable (loc, t, Ty_normalizer.error_to_string msg))
 
-  in
-  match matching_entries with
-  | [] -> FailureNoMatch
-  | x::_ -> handle_result x
 
 let dump_types printer cx =
   Type_normalizer.suggested_type_cache := IMap.empty;
