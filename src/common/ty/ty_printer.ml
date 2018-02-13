@@ -338,7 +338,7 @@ let type_ ?(size=5000) t =
    - IfPretty to allow spaces after punctuation.
    We still maintain a single line format.
 *)
-let print ~source_maps node =
+let print ~force_single_line ~source_maps node =
   let rec print_node src = function
     (* this printer does not output locations *)
     | SourceLocation _ -> src
@@ -347,7 +347,9 @@ let print ~source_maps node =
       | [] -> acc
       | [n] -> print_node acc n
       | n::ns ->
-        go (Source.add_newline (print_node acc n)) ns
+        if force_single_line
+          then go (Source.add_space 1 (print_node acc n)) ns
+          else go (Source.add_newline (print_node acc n)) ns
       in
       go src nodes
     | IfPretty (node, _) -> print_node src node
@@ -360,5 +362,5 @@ let print ~source_maps node =
     in
   print_node (Source.create ~source_maps ()) node
 
-let string_of_t (ty: Ty.t) : string =
-  print ~source_maps:None (type_ ty) |> Source.contents
+let string_of_t ?(force_single_line=false) (ty: Ty.t) : string =
+  print ~force_single_line ~source_maps:None (type_ ty) |> Source.contents
