@@ -6,8 +6,14 @@
  *)
 
 open Autocomplete_js
-open Type_printer
+open Core_result
 open ServerProt.Response
+
+module AutocompleteTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = true
+  let expand_internal_types = true
+  let expand_annots = false
+end)
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
@@ -60,50 +66,34 @@ let autocomplete_response_to_json ~strip_root response =
       in
       JSON_Object ["result", JSON_Array results]
 
-let print_type cx type_ =
-  if is_printed_type_parsable ~weak:true cx type_
-  then string_of_t cx type_
-  else ""
+let parameter_name is_opt name =
+  let opt = if is_opt then "?" else "" in
+  (Option.value name ~default:"_") ^ opt
 
-let rec autocomplete_create_result cx name type_ loc =
-  Type.(match type_ with
-  | DefT (_, FunT (_, _, {params; rest_param; return_t = return; _})) ->
-      let param_tys = List.map (fun (name, type_) ->
-        let param_name = parameter_name cx name type_ in
-        let param_ty =
-          if is_printed_param_type_parsable ~weak:true cx type_
-          then string_of_param_t cx type_
-          else ""
-        in
+let autocomplete_create_result ((name, loc), ty) =
+  Ty.(match ty with
+  | Fun {fun_params; fun_rest_param; fun_return; _} ->
+      let param_tys = List.map (fun (n, t, fp) ->
+        let param_name = parameter_name fp.prm_optional n in
+        let param_ty = Ty_printer.string_of_t t in
         { param_name; param_ty }
-      ) params in
-      let param_tys = match rest_param with
+      ) fun_params in
+      let param_tys = match fun_rest_param with
       | None -> param_tys
-      | Some (name, _, t) ->
-          let param_name = rest_parameter_name cx name t in
-          let param_ty =
-            if is_printed_param_type_parsable ~weak:true cx t
-            then string_of_param_t cx t
-            else ""
-          in
-          param_tys @ [ { param_name; param_ty; }] in
-      let return = print_type cx return in
+      | Some (name, t) ->
+        let param_name = "..." ^ parameter_name false name in
+        let param_ty = Ty_printer.string_of_t t in
+        param_tys @ [{ param_name; param_ty; }]
+      in
+      let return = Ty_printer.string_of_t fun_return in
       { res_loc = loc;
         res_name = name;
-        res_ty = (print_type cx type_);
+        res_ty = Ty_printer.string_of_t ty;
         func_details = Some { param_tys; return_ty = return } }
-  | DefT (_, PolyT (_, sub_type, _)) ->
-      let result = autocomplete_create_result cx name sub_type loc in
-      (* This is not exactly pretty but we need to replace the type to
-         be sure to use the same format for poly types as print_type *)
-      { res_loc = result.res_loc;
-        res_name = result.res_name;
-        res_ty = (print_type cx type_);
-        func_details = result.func_details; }
   | _ ->
       { res_loc = loc;
         res_name = name;
-        res_ty = (print_type cx type_);
+        res_ty = Ty_printer.string_of_t ty;
         func_details = None }
   )
 
@@ -153,12 +143,14 @@ let autocomplete_member ~ac_type cx this ac_name ac_loc docblock = Flow_js.(
   | Ok result_map ->
     let result = result_map
     |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) ->
-        let loc = Type.loc_of_t t in
-        let gt = Type_normalizer.normalize_type cx t in
-        autocomplete_create_result cx name gt loc
-      )
+    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t), t))
     |> SMap.values
+    |> AutocompleteTypeNormalizer.from_types ~cx
+    |> Core_list.filter_map ~f:(function
+     | l, Ok s -> Some (l, s)
+     | _ -> None
+     )
+    |> List.map autocomplete_create_result
     |> List.rev in
     Ok (result, Some json_data_to_log)
 )
@@ -183,10 +175,9 @@ let autocomplete_id cx env =
       in
 
       let type_ = Scope.Entry.actual_type entry in
-      let type_ = Type_normalizer.normalize_type cx type_ in
-      let result =
-        autocomplete_create_result cx name type_ loc in
-      result :: acc
+      match AutocompleteTypeNormalizer.from_type ~cx type_ with
+      | Ok t -> autocomplete_create_result ((name, loc), t) :: acc
+      | Error _ -> acc
     )
   ) env [] in
   Ok (result, None)
@@ -208,8 +199,6 @@ let autocomplete_jsx cx cls ac_name ac_loc docblock = Flow_js.(
   )
 
 let autocomplete_get_results cx state docblock =
-  (* FIXME: See #5375467 *)
-  Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
     autocomplete_id cx env

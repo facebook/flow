@@ -284,13 +284,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "concat",
-               "type": "(...strings: Array<string>) => string",
+               "type": "(...strings: string[]) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "...strings",
-                     "type": "Array<string>"
+                     "type": "string[]"
                    }
                  ]
                },
@@ -418,7 +418,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "localeCompare",
-               "type": "(that: string, locales?: string | Array<string>, options?: Object) => number",
+               "type": "(that: string, locales?: (string | string[]), options?: Object) => number",
                "func_details": {
                  "return_type": "number",
                  "params": [
@@ -428,7 +428,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "locales?",
-                     "type": "string | Array<string>"
+                     "type": "string | string[]"
                    },
                    {
                      "name": "options?",
@@ -444,9 +444,9 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "match",
-               "type": "(regexp: string | RegExp) => ?Array<string>",
+               "type": "(regexp: (string | RegExp)) => ?string[]",
                "func_details": {
-                 "return_type": "?Array<string>",
+                 "return_type": "?string[]",
                  "params": [
                    {
                      "name": "regexp",
@@ -542,7 +542,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "replace",
-               "type": "(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string",
+               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
@@ -552,7 +552,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "replaceValue",
-                     "type": "string | ((substring: string, ...args: Array<any>) => string)"
+                     "type": "string | ((substring: string, ...args: any[]) => string)"
                    }
                  ]
                },
@@ -564,7 +564,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "search",
-               "type": "(regexp: string | RegExp) => number",
+               "type": "(regexp: (string | RegExp)) => number",
                "func_details": {
                  "return_type": "number",
                  "params": [
@@ -604,9 +604,9 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "split",
-               "type": "(separator?: string | RegExp, limit?: number) => Array<string>",
+               "type": "(separator?: (string | RegExp), limit?: number) => string[]",
                "func_details": {
-                 "return_type": "Array<string>",
+                 "return_type": "string[]",
                  "params": [
                    {
                      "name": "separator?",
@@ -859,17 +859,17 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: string | Array<string>, options?: {currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}) => string",
+               "type": "(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "locales?",
-                     "type": "string | Array<string>"
+                     "type": "string | string[]"
                    },
                    {
                      "name": "options?",
-                     "type": "{currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}"
+                     "type": "Number$LocaleOptions"
                    }
                  ]
                },
@@ -1240,7 +1240,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "bind",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
+               "type": "(thisArg: any, ...argArray: any[]) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1250,7 +1250,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "Array<any>"
+                     "type": "any[]"
                    }
                  ]
                },
@@ -1262,7 +1262,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
+               "type": "(thisArg: any, ...argArray: any[]) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1272,7 +1272,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "Array<any>"
+                     "type": "any[]"
                    }
                  ]
                },
@@ -1284,7 +1284,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "caller",
-               "type": "null | Function",
+               "type": "Function | null",
                "func_details": null,
                "path": "[LIB] core.js",
                "line": 98,
@@ -1453,7 +1453,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "bind",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
+               "type": "(thisArg: any, ...argArray: any[]) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1463,7 +1463,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "Array<any>"
+                     "type": "any[]"
                    }
                  ]
                },
@@ -1475,7 +1475,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
+               "type": "(thisArg: any, ...argArray: any[]) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1485,7 +1485,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "Array<any>"
+                     "type": "any[]"
                    }
                  ]
                },
@@ -1497,7 +1497,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "caller",
-               "type": "null | Function",
+               "type": "Function | null",
                "func_details": null,
                "path": "[LIB] core.js",
                "line": 98,
@@ -1720,17 +1720,17 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: string | Array<string>, options?: {currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}) => string",
+               "type": "(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "locales?",
-                     "type": "string | Array<string>"
+                     "type": "string | string[]"
                    },
                    {
                      "name": "options?",
-                     "type": "{currency?: string, currencyDisplay?: string, localeMatcher?: string, maximumFractionDigits?: number, maximumSignificantDigits?: number, minimumFractionDigits?: number, minimumIntegerDigits?: number, minimumSignificantDigits?: number, style?: string, useGrouping?: boolean}"
+                     "type": "Number$LocaleOptions"
                    }
                  ]
                },
@@ -2043,7 +2043,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "x",
-               "type": "string | void",
+               "type": "void | string",
                "func_details": null,
                "path": "optional.js",
                "line": 3,
@@ -2329,7 +2329,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "objectAssign",
-               "type": "(target: any, ...sources: Array<any>) => any",
+               "type": "(target: any, ...sources: any[]) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -2339,7 +2339,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...sources",
-                     "type": "Array<any>"
+                     "type": "any[]"
                    }
                  ]
                },
@@ -2351,13 +2351,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mixin",
-               "type": "(...objects: Array<Object>) => [class: Object]",
+               "type": "(...objects: Object[]) => class Object",
                "func_details": {
-                 "return_type": "[class: Object]",
+                 "return_type": "class Object",
                  "params": [
                    {
                      "name": "...objects",
-                     "type": "Array<Object>"
+                     "type": "Object[]"
                    }
                  ]
                },
@@ -2369,7 +2369,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mergeInto",
-               "type": "(target: Object, ...objects: Array<Object>) => void",
+               "type": "(target: Object, ...objects: Object[]) => void",
                "func_details": {
                  "return_type": "void",
                  "params": [
@@ -2379,7 +2379,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...objects",
-                     "type": "Array<Object>"
+                     "type": "Object[]"
                    }
                  ]
                },
@@ -2391,7 +2391,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mergeDeepInto",
-               "type": "(target: Object, ...objects: Array<Object>) => void",
+               "type": "(target: Object, ...objects: Object[]) => void",
                "func_details": {
                  "return_type": "void",
                  "params": [
@@ -2401,7 +2401,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...objects",
-                     "type": "Array<Object>"
+                     "type": "Object[]"
                    }
                  ]
                },
@@ -2413,13 +2413,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "merge",
-               "type": "(...objects: Array<Object>) => Object",
+               "type": "(...objects: Object[]) => Object",
                "func_details": {
                  "return_type": "Object",
                  "params": [
                    {
                      "name": "...objects",
-                     "type": "Array<Object>"
+                     "type": "Object[]"
                    }
                  ]
                },
@@ -2431,7 +2431,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "idx",
-               "type": "",
+               "type": "<IdxObject: Object, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
                "func_details": {
                  "return_type": "?IdxResult",
                  "params": [
@@ -2441,7 +2441,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "pathCallback",
-                     "type": ""
+                     "type": "(demaybefiedObj: IdxObject) => IdxResult"
                    }
                  ]
                },
@@ -2453,7 +2453,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "exports",
-               "type": "{}",
+               "type": "{||}",
                "func_details": null,
                "path": "",
                "line": 0,
@@ -2657,7 +2657,7 @@ export default suite(({addFile, flowCmd}) => [
             },
             {
               "name": "exports",
-              "type": "{}",
+              "type": "{||}",
               "func_details": null,
               "path": "",
               "line": 0,

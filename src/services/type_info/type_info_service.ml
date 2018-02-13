@@ -71,6 +71,7 @@ let suggest ~options ~workers ~env ~profiling file region content =
   >>| fun (cx, _info) ->
     Query_types.fill_types cx
     |> List.sort Pervasives.compare
+    |> List.map (fun (l,c,t) -> (l, c, Ty_printer.string_of_t t))
     |> match region with
       | [] -> fun insertions -> insertions
       | [l1;c1;l2;c2] ->
