@@ -158,7 +158,6 @@ let concat_fold f acc items =
   ) (acc, []) items in
   acc, List.concat lists
 
-
 (** Monadic versions of previous folding operations
 
     It's unfortunate that we have to replicate the definitions for
@@ -212,3 +211,7 @@ module Monad2 (M : M_.S2) = struct
     ) (return (init, [])) items >>| fun (acc, lists) ->
     (acc, List.concat lists)
 end
+
+(* Stringify a list given a separator and a printer for the element type *)
+let to_string separator printer list =
+  String.concat separator @@ List.map printer list

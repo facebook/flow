@@ -835,7 +835,7 @@ class ['a] t = object(self)
     acc
 
   method private try_flow_spec cx acc = function
-  | UnionCases (_, t, ts) ->
+  | UnionCases (_, t, _rep, ts) ->
     let acc = self#type_ cx pole_TODO acc t in
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
     acc

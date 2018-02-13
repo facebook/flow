@@ -7603,7 +7603,7 @@ and try_union cx trace use_op l reason rep =
   (* fully resolve the collected types *)
   resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
-    try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, ts))
+    try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, rep, ts))
 
 and try_intersection cx trace u reason rep =
   let ts = InterRep.members rep in
@@ -7956,7 +7956,8 @@ and speculative_match cx trace branch l u =
 *)
 and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
   (* explore optimization opportunities *)
-  optimize_spec cx spec;
+  let continue = optimize_spec_try_quick_mem cx trace r spec in
+  if continue then begin
   (* extract stuff to ignore while considering actions *)
   let ignore = ignore_of_spec spec in
   (* split spec into a list of pairs of types to try speculative matching on *)
@@ -8052,7 +8053,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     ) (List.length msgs - 1, min_int, []) msgs in
     (* Add the error. *)
     begin match spec with
-      | UnionCases (use_op, l, us) ->
+      | UnionCases (use_op, l, _rep, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
         add_output cx ~trace (
@@ -8086,6 +8087,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     end
 
   in loop (Speculation.NoMatch []) trials
+  end
 )
 
 (* Make an informative error message that points out the ambiguity, and where
@@ -8114,7 +8116,7 @@ and blame_unresolved cx trace prev_i i cases case_r r tvars =
   ))
 
 and trials_of_spec = function
-  | UnionCases (_use_op, l, us) ->
+  | UnionCases (_use_op, l, _rep, us) ->
     (* NB: Even though we know the use_op for the original constraint, don't
        embed it in the nested constraints to avoid unnecessary verbosity. We
        will unwrap the original use_op once in EUnionSpeculationFailed. *)
@@ -8123,7 +8125,7 @@ and trials_of_spec = function
     List.mapi (fun i l -> (i, reason_of_use_t u, l, u)) ls
 
 and choices_of_spec = function
-  | UnionCases (_, _, ts)
+  | UnionCases (_, _, _, ts)
   | IntersectionCases (ts, _)
     -> ts
 
@@ -8135,17 +8137,40 @@ and ignore_of_spec = function
   | _ -> None
 
 (* spec optimization *)
-(* Currently, the only optimization we do is for disjoint unions. Specifically,
-   when an object type is checked against an union of object types, we try to
-   guess and record sentinel properties across object types in the union. By
-   checking sentinel properties first, we force immediate match failures in the
-   vast majority of cases without having to do any useless additional work. *)
-and optimize_spec cx = function
-  | UnionCases (_, l, ts) -> begin match l with
-    | DefT (_, ObjT _) -> guess_and_record_sentinel_prop cx ts
-    | _ -> ()
+(* Currently, the only optimizations we do are for enums and for disjoint unions.
+
+   When a literal type is checked against a union of literal types, we hope the union is an enum and
+   try to optimize the representation of the union as such. We also try to use our optimization to
+   do a quick membership check, potentially avoiding the speculative matching process altogether.
+
+   When an object type is checked against an union of object types, we hope the union is a disjoint
+   union and try to guess and record sentinel properties across object types in the union. Later,
+   during speculative matching, by checking sentinel properties first we force immediate match
+   failures in the vast majority of cases without having to do any useless additional work.
+*)
+and optimize_spec_try_quick_mem cx trace reason_op = function
+  | UnionCases (use_op, l, rep, ts) -> begin match l with
+    | DefT (_, (StrT _ | NumT _ | SingletonStrT _ | SingletonNumT _)) ->
+      enum_optimize cx rep ts;
+      begin match UnionRep.quick_mem l rep with
+        | Some true -> (* membership check succeeded *)
+          false (* Our work here is done, so no need to continue. *)
+        | Some false -> (* membership check failed *)
+          let reason = reason_of_t l in
+          add_output cx ~trace
+            (Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches = [] });
+          false (* Our work here is done, so no need to continue. *)
+        | _ -> (* membership check was inconclusive *)
+          true (* Continue to speculative matching. *)
+      end
+    | DefT (_, ObjT _) ->
+      guess_and_record_sentinel_prop cx ts;
+      (* No quick mem check for this case yet. The benefits of this optimization will kick in during
+         speculative matching. *)
+      true
+    | _ -> true
     end
-  | IntersectionCases _ -> ()
+  | IntersectionCases _ -> true
 
 and guess_and_record_sentinel_prop cx ts =
 
@@ -8208,6 +8233,28 @@ and guess_and_record_sentinel_prop cx ts =
       | _ -> ()
     ) ts
 
+and enum_optimize cx rep ts =
+  if not (UnionRep.is_optimized rep) then
+    let ts' = union_flatten cx (ref ISet.empty) ts in
+    UnionRep.optimize ts' rep
+
+(* NOTE: While union flattening could be performed at any time, it is most effective when we know
+   that all tvars have been resolved. *)
+and union_flatten' cx seen t = match t with
+  | OpenT (_, id)
+  | AnnotT ((_, id), _) ->
+    if ISet.mem id !seen then []
+    else begin
+      seen := ISet.add id !seen;
+      match find_graph cx id with
+        | Resolved (DefT (_, UnionT rep)) -> union_flatten cx seen @@ UnionRep.members rep
+        | _ -> [t]
+    end
+  | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
+  | _ -> [t]
+and union_flatten cx seen ts =
+  List.flatten @@ List.map (union_flatten' cx seen) ts
+
 (* When we fire_actions we also need to reconstruct the use_op for each action
  * since before beginning speculation we replaced each use_op with
  * an UnknownUse. *)
@@ -8215,14 +8262,14 @@ and fire_actions cx trace spec = List.iter (function
   | _, Speculation.Action.Flow (l, u) -> (match spec with
     | IntersectionCases (_, _) ->
       rec_flow cx trace (l, u)
-    | UnionCases (use_op, _, _) ->
+    | UnionCases (use_op, _, _, _) ->
       rec_flow cx trace (l,
         mod_use_op_of_use_t (replace_unknown_root_use_op use_op) u)
     )
   | _, Speculation.Action.Unify (use_op, t1, t2) -> (match spec with
     | IntersectionCases (_, _) ->
       rec_unify cx trace t1 t2 ~use_op
-    | UnionCases (use_op', _, _) ->
+    | UnionCases (use_op', _, _, _) ->
       rec_unify cx trace t1 t2
         ~use_op:(replace_unknown_root_use_op use_op' use_op)
     )
