@@ -7917,10 +7917,12 @@ and speculative_match cx trace branch l u =
    error messages and to ignore unresolved tvars that are deemed irrelevant to
    choice-making.
 *)
-and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
+and speculative_matches cx trace r speculation_id spec =
   (* explore optimization opportunities *)
-  let continue = optimize_spec_try_quick_mem cx trace r spec in
-  if continue then begin
+  if optimize_spec_try_quick_mem cx trace r spec then ()
+  else long_path_speculative_matches cx trace r speculation_id spec
+
+and long_path_speculative_matches cx trace r speculation_id spec = Speculation.Case.(
   (* extract stuff to ignore while considering actions *)
   let ignore = ignore_of_spec spec in
   (* split spec into a list of pairs of types to try speculative matching on *)
@@ -8050,7 +8052,6 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     end
 
   in loop (Speculation.NoMatch []) trials
-  end
 )
 
 (* Make an informative error message that points out the ambiguity, and where
@@ -8114,26 +8115,26 @@ and ignore_of_spec = function
 and optimize_spec_try_quick_mem cx trace reason_op = function
   | UnionCases (use_op, l, rep, ts) -> begin match l with
     | DefT (_, (StrT _ | NumT _ | SingletonStrT _ | SingletonNumT _)) ->
-      enum_optimize cx rep ts;
+      enum_optimize cx rep;
       begin match UnionRep.quick_mem l rep with
         | Some true -> (* membership check succeeded *)
-          false (* Our work here is done, so no need to continue. *)
+          true (* Our work here is done, so no need to continue. *)
         | Some false -> (* membership check failed *)
           let reason = reason_of_t l in
           add_output cx ~trace
             (Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches = [] });
-          false (* Our work here is done, so no need to continue. *)
+          true (* Our work here is done, so no need to continue. *)
         | _ -> (* membership check was inconclusive *)
-          true (* Continue to speculative matching. *)
+          false (* Continue to speculative matching. *)
       end
     | DefT (_, ObjT _) ->
       guess_and_record_sentinel_prop cx ts;
       (* No quick mem check for this case yet. The benefits of this optimization will kick in during
          speculative matching. *)
-      true
-    | _ -> true
+      false
+    | _ -> false
     end
-  | IntersectionCases _ -> true
+  | IntersectionCases _ -> false
 
 and guess_and_record_sentinel_prop cx ts =
 
@@ -8196,27 +8197,9 @@ and guess_and_record_sentinel_prop cx ts =
       | _ -> ()
     ) ts
 
-and enum_optimize cx rep ts =
-  if not (UnionRep.is_optimized rep) then
-    let ts' = union_flatten cx (ref ISet.empty) ts in
-    UnionRep.optimize ts' rep
-
-(* NOTE: While union flattening could be performed at any time, it is most effective when we know
-   that all tvars have been resolved. *)
-and union_flatten' cx seen t = match t with
-  | OpenT (_, id)
-  | AnnotT ((_, id), _) ->
-    if ISet.mem id !seen then []
-    else begin
-      seen := ISet.add id !seen;
-      match Context.find_graph cx id with
-        | Resolved (DefT (_, UnionT rep)) -> union_flatten cx seen @@ UnionRep.members rep
-        | _ -> [t]
-    end
-  | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
-  | _ -> [t]
-and union_flatten cx seen ts =
-  List.flatten @@ List.map (union_flatten' cx seen) ts
+and enum_optimize cx rep =
+  if not (UnionRep.is_optimized_finally rep) then
+    UnionRep.optimize ~flatten:(Type_mapper.union_flatten cx) rep
 
 (* When we fire_actions we also need to reconstruct the use_op for each action
  * since before beginning speculation we replaced each use_op with

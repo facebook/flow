@@ -17,6 +17,26 @@ let maybe_known f x =
     | Unknown x -> Unknown x
   end
 
+(* NOTE: While union flattening could be performed at any time, it is most effective when we know
+   that all tvars have been resolved. *)
+let union_flatten =
+  let rec union_flatten cx seen ts =
+    List.flatten @@ List.map (flatten cx seen) ts
+  and flatten cx seen t = match t with
+    | OpenT (_, id)
+    | AnnotT ((_, id), _) ->
+      if ISet.mem id !seen then []
+      else begin
+        seen := ISet.add id !seen;
+        match Context.find_graph cx id with
+        | Constraint.Resolved (DefT (_, UnionT rep)) -> union_flatten cx seen @@ UnionRep.members rep
+        | _ -> [t]
+      end
+    | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
+    | _ -> [t]
+  in
+  fun cx ts -> union_flatten cx (ref ISet.empty) ts
+
 (* This class should be used when trying to perform some mapping function on
  * a type. It will recurse through the structure of the type, applying it to
  * each sub-part.
@@ -204,7 +224,7 @@ class ['a] t = object(self)
           if irep == irep' then t
           else IntersectionT irep'
       | UnionT urep ->
-          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
+          let urep' = UnionRep.ident_map (self#type_ cx map_cx) ~flatten:(union_flatten cx) urep in
           if urep' == urep then t
           else UnionT urep'
       | AnyObjT
