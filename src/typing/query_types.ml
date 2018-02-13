@@ -73,19 +73,25 @@ let dump_types printer cx =
   )
 
 let is_covered = function
-  | Type.DefT (_, Type.AnyT)
-  | Type.DefT (_, Type.EmptyT) -> false
+  | Ty.Any
+  | Ty.Bot -> false
   | _ -> true
 
+module CoverageTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = true
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
 let covered_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold_coverage (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    (loc, is_covered ground_t)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc
+  Context.type_table cx
+  |> Type_table.coverage_to_list
+  |> CoverageTypeNormalizer.from_types ~cx
+  |> List.map (function
+    | (l, Ok t) -> (l, is_covered t)
+    | (l, Error _) -> (l, false)
   )
+  |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
 
 
 (********)

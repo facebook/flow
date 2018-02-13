@@ -15,3 +15,4 @@ val find_unsafe_coverage: t -> Loc.t -> Type.t
 val reset: t -> unit
 val copy: t -> t
 val find_type_info: pred:(Loc.t -> bool) -> t -> (Loc.t * Type.t) option
+val coverage_to_list: t -> (Loc.t * Type.t) list
