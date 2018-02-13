@@ -158,7 +158,7 @@ type reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RPolyTest of reason_desc
+  | RPolyTest of string * reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -514,7 +514,7 @@ let rec string_of_desc = function
   | RCustom x -> x
   | RPolyType (RStatics d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
-  | RPolyTest d -> string_of_desc d
+  | RPolyTest (_, d) -> string_of_desc d
   | RExactType d -> string_of_desc d
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
@@ -592,7 +592,7 @@ let dump_reason ?(strip_root=None) r =
 let desc_of_reason =
   let rec loop = function
   | RTypeAlias (_, desc)
-  | RPolyTest desc
+  | RPolyTest (_, desc)
     -> loop desc
   | desc
     -> desc
