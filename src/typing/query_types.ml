@@ -56,21 +56,20 @@ let query_type cx loc =
       FailureUnparseable (loc, t, Ty_normalizer.error_to_string msg))
 
 
-let dump_types printer cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold_coverage (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    let possible_ts = Flow_js.possible_types_of_type cx t in
-    let possible_reasons = possible_ts
-      |> List.map Type.reason_of_t
-    in
-    let ctor = Type.string_of_ctor ground_t in
-    let pretty = printer cx ground_t in
-    (loc, ctor, pretty, possible_reasons)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _, _, _) (b_loc, _, _, _) -> Loc.compare a_loc b_loc
+module DumpTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
+let dump_types ~printer cx =
+  Type_table.coverage_to_list (Context.type_table cx)
+  |> DumpTypeNormalizer.from_types ~cx
+  |> Core_list.filter_map ~f:(function
+    | l, Ok t -> Some (l, printer t)
+    | _ -> None
   )
+  |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
 
 let is_covered = function
   | Ty.Any

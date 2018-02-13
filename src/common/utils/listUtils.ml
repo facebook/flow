@@ -140,11 +140,6 @@ let rec cat_maybes = function
   | (Some y) :: ys -> y :: cat_maybes ys
   | None :: ys -> cat_maybes ys
 
-let filter_map f xs =
-  xs |> List.map f |> cat_maybes
-
-let cat_ok xs = filter_map Core_result.ok xs
-
 (** fold over the elements of a list while keeping the results of
     each iteration and returning it in the end along with the
     accumulator

@@ -249,20 +249,10 @@ let infer_type filename content line col =
 let types_to_json types ~strip_root =
   let open Hh_json in
   let open Reason in
-  let types_json = types |> List.map (fun (loc, _ctor, str, reasons) ->
+  let types_json = types |> List.map (fun (loc, str) ->
     let json_assoc = (
       ("type", JSON_String str) ::
-      ("reasons", JSON_Array (List.map (fun r ->
-        let r_loc = loc_of_reason r in
-        let r_def_loc = def_loc_of_reason r in
-        JSON_Object (
-          ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
-          ("loc", json_of_loc ~strip_root r_loc) ::
-          ((if r_def_loc = r_loc then [] else [
-            "def_loc", json_of_loc ~strip_root r_def_loc
-          ]) @ (Errors.deprecated_json_props_of_loc ~strip_root r_loc))
-        )
-      ) reasons)) ::
+      ("reasons", JSON_Array []) ::
       ("loc", json_of_loc ~strip_root loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
@@ -278,9 +268,8 @@ let dump_types js_file js_content =
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
-      let printer = Type_printer.string_of_t in
-      let types = Query_types.dump_types printer cx in
-
+      let printer = Ty_printer.string_of_t in
+      let types = Query_types.dump_types ~printer cx in
       let strip_root = None in
       let types_json = types_to_json types ~strip_root in
 

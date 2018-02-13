@@ -24,7 +24,7 @@ val dump_types :
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
-  ((Loc.t * string * string * Reason.reason list) list, string) Core_result.t
+  ((Loc.t * string) list, string) Core_result.t
 
 val coverage :
   options:Options.t ->
