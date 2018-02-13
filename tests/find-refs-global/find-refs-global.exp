@@ -155,3 +155,203 @@ class method that overrides a superclass implementation:
     }
   ]
 }
+local exported as CJS property:
+{
+  "kind":"symbol-found",
+  "name":"a",
+  "locs":[
+    {
+      "source":"cjs-1.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":7,"offset":15},
+      "end":{"line":2,"column":7,"offset":16}
+    },
+    {
+      "source":"cjs-1.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":22,"offset":43},
+      "end":{"line":3,"column":22,"offset":44}
+    }
+  ]
+}
+CJS property exporting local:
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"cjs-1.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":16,"offset":37},
+      "end":{"line":3,"column":18,"offset":40}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":8,"offset":16},
+      "end":{"line":2,"column":10,"offset":19}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":1,"offset":130},
+      "end":{"line":5,"column":3,"offset":133}
+    }
+  ]
+}
+CJS property exporting literal:
+{
+  "kind":"symbol-found",
+  "name":"foo2",
+  "locs":[
+    {
+      "source":"cjs-1.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":16,"offset":61},
+      "end":{"line":4,"column":19,"offset":65}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":13,"offset":21},
+      "end":{"line":2,"column":16,"offset":25}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":1,"offset":135},
+      "end":{"line":6,"column":4,"offset":139}
+    }
+  ]
+}
+local exported in CJS object:
+{
+  "kind":"symbol-found",
+  "name":"b",
+  "locs":[
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":7,"offset":15},
+      "end":{"line":2,"column":7,"offset":16}
+    },
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":24,"offset":64},
+      "end":{"line":4,"column":24,"offset":65}
+    }
+  ]
+}
+CJS object exporting local:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":19,"offset":59},
+      "end":{"line":4,"column":21,"offset":62}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":13,"offset":61},
+      "end":{"line":3,"column":13,"offset":62}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":1,"offset":141},
+      "end":{"line":7,"column":1,"offset":142}
+    }
+  ]
+}
+CJS object exporting literal:
+{
+  "kind":"symbol-found",
+  "name":"bar2",
+  "locs":[
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":27,"offset":67},
+      "end":{"line":4,"column":30,"offset":71}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":16,"offset":64},
+      "end":{"line":3,"column":19,"offset":68}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":1,"offset":144},
+      "end":{"line":8,"column":4,"offset":148}
+    }
+  ]
+}
+CJS object exporting shorthand:
+{
+  "kind":"symbol-found",
+  "name":"bar3",
+  "locs":[
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":7,"offset":28},
+      "end":{"line":3,"column":10,"offset":32}
+    },
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":37,"offset":77},
+      "end":{"line":4,"column":40,"offset":81}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":22,"offset":70},
+      "end":{"line":3,"column":25,"offset":74}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":1,"offset":150},
+      "end":{"line":9,"column":4,"offset":154}
+    }
+  ]
+}
+CJS ident exports/imports:
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"cjs-3.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":7,"offset":15},
+      "end":{"line":2,"column":9,"offset":18}
+    },
+    {
+      "source":"cjs-3.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":18,"offset":46},
+      "end":{"line":3,"column":20,"offset":49}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":7,"offset":104},
+      "end":{"line":4,"column":9,"offset":107}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":1,"offset":156},
+      "end":{"line":10,"column":3,"offset":159}
+    }
+  ]
+}
