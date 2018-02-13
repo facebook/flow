@@ -25,5 +25,3 @@ val last_line: env -> string
 val get_lines: env -> string list
 
 val set_lines: env -> string list -> unit
-
-val is_tailing_current_file: env -> bool
