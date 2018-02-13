@@ -170,18 +170,26 @@ end = struct
           if global then
             compute_ast_result file_key content >>= fun (_, file_sig, _) ->
             let open File_sig in
+            let find_exported_loc loc =
+              if List.mem loc refs then
+                let all_refs_result = find_external_refs genv env file_key content name refs in
+                all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
+              else
+                Ok (Some (name, refs, None)) in
             begin match file_sig.module_sig.module_kind with
-              (* TODO support CommonJS *)
-              | CommonJS _ -> Ok (Some (name, refs, None))
+              | CommonJS { exports = None } -> Ok (Some (name, refs, None))
+              | CommonJS { exports = Some (CJSExportIdent _) } -> Ok (Some (name, refs, None))
+              | CommonJS { exports = Some CJSExportOther } -> Ok (Some (name, refs, None))
+              | CommonJS { exports = Some (CJSExportProps props) } ->
+                begin match SMap.get name props with
+                  | None -> Ok (Some (name, refs, None))
+                  | Some (CJSExport { loc; _ }) -> find_exported_loc loc
+                end
               | ES {named; _} -> begin match SMap.get name named with
                   | None -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs, None))
                   | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
-                      if List.mem loc refs then
-                        let all_refs_result = find_external_refs genv env file_key content name refs in
-                        all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
-                      else
-                        Ok (Some (name, refs, None))
+                      find_exported_loc loc
                 end
             end
           else
