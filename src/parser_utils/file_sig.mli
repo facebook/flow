@@ -36,8 +36,18 @@ and module_sig = {
  * resolved modules yet, so we don't know where the ref actually points.
  *)
 and require =
-  (* require('foo') *)
-  | Require of { source: ident; require_loc: Loc.t }
+  (* require('foo'); *)
+  | Require of {
+    (* location of module ref *)
+    source: ident;
+
+    require_loc: Loc.t;
+
+    (* Note: These are best-effort.
+     * DO NOT use these for typechecking. *)
+    bindings: require_bindings option;
+
+  }
 
   (* import('foo').then(...) *)
   | ImportDynamic of { source: ident; import_loc: Loc.t }
@@ -81,6 +91,15 @@ and require =
      * result: {X:[loc]} *)
     typesof_ns: Loc.t Nel.t SMap.t;
   }
+
+and require_bindings =
+  (* source: const bar = require('./foo');
+   * result: bar *)
+  | BindIdent of ident
+  (* map from local name to (local_loc, remote name)
+   * source: const {a, b: c} = require('./foo');
+   * result: {a: (a_loc, a), c: (c_loc, b)} *)
+  | BindNamed of (Loc.t * ident) SMap.t
 
 (* All modules are assumed to be CommonJS to start with, but if we see an ES
  * module-style export, we switch to ES. *)
