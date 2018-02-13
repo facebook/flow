@@ -27,4 +27,8 @@ module type S = sig
   val from_keys: key list -> f:(key -> 'a) -> 'a t
   val ident_map: ('a -> 'a) -> 'a t -> 'a t
   val ident_map_key: ?combine: ('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
+  val make_pp:
+    (Format.formatter -> key -> unit) ->
+    (Format.formatter -> 'a -> unit) ->
+    Format.formatter -> 'a t -> unit
 end
