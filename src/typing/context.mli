@@ -166,3 +166,11 @@ val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id
 val make_export_map: t -> Type.Exports.t -> Type.Exports.id
 val make_nominal: t -> int
+
+val find_constraints:
+  t ->
+  Constraint.ident ->
+  Constraint.ident * Constraint.constraints
+val find_graph: t -> Constraint.ident -> Constraint.constraints
+val replace_node: t -> Constraint.ident -> Constraint.node -> unit
+val find_root: t -> Constraint.ident -> Constraint.ident * Constraint.root

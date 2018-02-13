@@ -466,3 +466,41 @@ let from_cache ~options local =
     global = { Global.metadata = global_metadata_of_options options };
     local;
   }
+
+(* Find the constraints of a type variable in the graph.
+
+   Recall that type variables are either roots or goto nodes. (See
+   Constraint for details.) If the type variable is a root, the
+   constraints are stored with the type variable. Otherwise, the type variable
+   is a goto node, and it points to another type variable: a linked list of such
+   type variables must be traversed until a root is reached. *)
+let rec find_graph cx id =
+  let _, constraints = find_constraints cx id in
+  constraints
+
+and find_constraints cx id =
+  let root_id, root = find_root cx id in
+  root_id, root.Constraint.constraints
+
+(* Find the root of a type variable, potentially traversing a chain of type
+   variables, while short-circuiting all the type variables in the chain to the
+   root during traversal to speed up future traversals. *)
+and find_root cx id =
+  let open Constraint in
+  match IMap.get id (graph cx) with
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then replace_node cx id (Goto root_id) else ();
+      root_id, root
+
+  | Some (Root root) ->
+      id, root
+
+  | None ->
+      let msg = Utils_js.spf "find_root: tvar %d not found in file %s" id
+        (File_key.to_string @@ file cx)
+      in
+      Utils_js.assert_false msg
+
+(* Replace the node associated with a type variable in the graph. *)
+and replace_node cx id node = set_tvar cx id node

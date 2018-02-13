@@ -417,7 +417,7 @@ module ContextOptimizer = struct
       self#type_ cx Neutral { quotient with reduced_module_map } export
 
     method! tvar cx pole quotient r id =
-      let root_id, _ = Flow_js.find_constraints cx id in
+      let root_id, _ = Context.find_constraints cx id in
       if id == root_id then
         let { reduced_graph; _ } = quotient in
         if IMap.mem id reduced_graph then
