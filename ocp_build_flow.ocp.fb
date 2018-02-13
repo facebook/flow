@@ -128,18 +128,61 @@ begin library "flow-common-tarjan"
   ]
 end
 
+begin library "ocaml-vlq"
+  sort = true
+  files = begin fb-glob "src/third-party/ocaml-vlq/src"
+  end
+  requires = [
+  ]
+end
+
+begin library "ocaml-sourcemaps"
+  sort = true
+  files = begin fb-glob "src/third-party/ocaml-sourcemaps/src"
+  end
+  requires = [
+    "ocaml-vlq"
+  ]
+end
+
+begin library "flow-parser-utils-output"
+  sort = true
+  files = begin fb-glob "src/parser_utils/output"
+  end
+  requires = [
+    "dtoa"
+    "flow-common-utils"
+    "flow-parser"
+    "flow-parser-utils"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "ocaml-sourcemaps"
+    "ocaml-vlq"
+    "tp-core"
+    "wtf8"
+  ]
+end
+
 begin library "flow-common-ty"
   sort = true
   files = begin fb-glob "src/common/ty"
   end
   requires = [
+    "dtoa"
     "flow-common"
     "flow-common-monad"
     "flow-common-utils"
+    "flow-parser"
+    "flow-parser-utils"
+    "flow-parser-utils-output"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "ocaml-sourcemaps"
+    "ocaml-vlq"
     "tp-core"
+    "wtf8"
   ]
 end
 
