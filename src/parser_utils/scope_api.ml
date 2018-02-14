@@ -32,6 +32,7 @@ module Def = struct
   let is x t =
     List.mem x t.locs
 end
+module DefMap = MyMap.Make(Def)
 
 type use_def_map = Def.t LocMap.t
 module Scope = struct
@@ -62,6 +63,14 @@ let defs_of_all_uses { scopes; _ } =
   IMap.fold (fun _ scope acc ->
     LocMap.union scope.Scope.locals acc
   ) scopes LocMap.empty
+
+let uses_of_all_defs info =
+  let use_def_map = defs_of_all_uses info in
+  LocMap.fold (fun use def def_uses_map ->
+    match DefMap.get def def_uses_map with
+      | None -> DefMap.add def (LocSet.singleton use) def_uses_map
+      | Some uses -> DefMap.add def (LocSet.add use uses) def_uses_map
+  ) use_def_map DefMap.empty
 
 let def_of_use { scopes; _ } use =
   let def_opt = IMap.fold (fun _ scope acc ->
