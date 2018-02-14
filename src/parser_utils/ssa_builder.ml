@@ -19,7 +19,7 @@ open Scope_builder
 module Val : sig
   type t
 
-  val mk_unresolved: unit -> t
+  val mk_unresolved: int -> t
   val empty: t
   val uninitialized: t
   val merge: t -> t -> t
@@ -30,15 +30,11 @@ module Val : sig
   val resolve: unresolved:t -> t -> unit
   val simplify: t -> Ssa_api.write_loc list
 end = struct
-  module WriteLocSet = Set.Make (struct
-    type t = Ssa_api.write_loc
-    let compare = Pervasives.compare
-  end)
-
   type ref_state =
-    | Unresolved
+    (* different unresolved vars are distinguished by their ids, which enables using structural
+       equality for computing normal forms: see below *)
+    | Unresolved of int
     | Resolved of t
-    | Simplified of WriteLocSet.t
 
   and t =
     | Uninitialized
@@ -46,41 +42,55 @@ end = struct
     | PHI of t list
     | REF of ref_state ref
 
-  let mk_unresolved () =
-    REF (ref Unresolved)
+  let mk_unresolved id =
+    REF (ref (Unresolved id))
 
   let empty = PHI []
 
   let uninitialized = Uninitialized
 
-  let merge =
-    (* Merging can easily lead to exponential blowup in size of terms if we're
-       not careful. Ideally we'd keep terms in "normal form," as sets of
-       "atomic" terms, so that merging would correspond to set union. (Atomic
-       terms include Uninitialized, Loc _, and REF { contents = None }.) For now
-       we implement something simpler, where merging optimizes only the special
-       case where one term is physically contained in the other. (This implies
-       that the set of atomic terms denoted by one term is contained in the set
-       of atomic terms denoted by the other.) *)
-    let rec occurs t1 t2 =
-      t1 == t2 || begin match t2 with
-        | Uninitialized -> false
-        | Loc _ -> false
-        | PHI ts -> List.exists (occurs t1) ts
-        | REF { contents = Unresolved } -> false
-        | REF { contents = Resolved t } -> occurs t1 t
-        | REF { contents = Simplified _ } -> failwith "did not expect simplified REF in occurs check"
-      end in
-    fun t1 t2 ->
-      if occurs t1 t2 then t2
-      else if occurs t2 t1 then t1
-      else PHI [t1;t2]
+  let join = function
+    | [] -> empty
+    | [t] -> t
+    | ts -> PHI ts
+
+  module ValSet = Set.Make (struct
+    type nonrec t = t
+    let compare = Pervasives.compare
+  end)
+
+  let rec normalize t = match t with
+    | Uninitialized
+    | Loc _
+    | REF { contents = Unresolved _ }
+      -> ValSet.singleton t
+    | PHI ts ->
+      List.fold_left (fun vals' t ->
+        let vals = normalize t in
+        ValSet.union vals' vals
+      ) ValSet.empty ts
+    | REF ({ contents = Resolved t } as r) ->
+      let vals = normalize t in
+      let t' = join (ValSet.elements vals) in
+      r := Resolved t';
+      vals
+
+  let merge t1 t2 =
+    (* Merging can easily lead to exponential blowup in size of terms if we're not careful. We
+       amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
+       correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
+       Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
+       resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
+       expect (and have experimentally validated that) the cost of computing normal forms becomes
+       smaller over time as terms remain close to their final normal forms. *)
+    let vals = ValSet.union (normalize t1) (normalize t2) in
+    join (ValSet.elements vals)
 
   let one loc =
     Loc loc
 
   let all locs =
-    PHI (List.map (fun loc -> Loc loc) locs)
+    join (List.map (fun loc -> Loc loc) locs)
 
   (* Resolving unresolved to t essentially models an equation of the form
      unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -89,7 +99,7 @@ end = struct
      unresolved = t is the same as unresolved = t'. *)
   let rec resolve ~unresolved t =
     match unresolved with
-      | REF r when !r = Unresolved ->
+      | REF ({ contents = Unresolved _ } as r) ->
         r := Resolved (erase r t)
       | _ -> failwith "Only an unresolved REF can be resolved"
   and erase r t = match t with
@@ -103,34 +113,24 @@ end = struct
       else begin
         let t_opt = !r' in
         let t_opt' = match t_opt with
-          | Unresolved -> t_opt
+          | Unresolved _ -> t_opt
           | Resolved t -> let t' = erase r t in if t == t' then t_opt else Resolved t'
-          | Simplified _ -> failwith "did not expect simplified REF in erasure" in
+        in
         if t_opt != t_opt' then r' := t_opt';
         t
       end
 
   (* Simplification converts a Val.t to a list of locations. *)
-  let rec simplify t = match t with
-    | Uninitialized -> WriteLocSet.singleton (Ssa_api.Uninitialized)
-    | Loc loc -> WriteLocSet.singleton (Ssa_api.Write loc)
-    | PHI ts ->
-      List.fold_left (fun locs' t ->
-        let locs = simplify t in
-        WriteLocSet.union locs' locs
-      ) WriteLocSet.empty ts
-    | REF r ->
-      begin match !r with
-        | Unresolved -> failwith "An unresolved REF cannot be simplified"
-        | Resolved t ->
-          let locs = simplify t in
-          r := Simplified locs;
-          locs
-        | Simplified locs -> locs
-      end
-
-  let simplify t = WriteLocSet.elements (simplify t)
-
+  let simplify t =
+    let vals = normalize t in
+    List.map (function
+      | Uninitialized -> Ssa_api.Uninitialized
+      | Loc loc -> Ssa_api.Write loc
+      | REF { contents = Unresolved _ } -> failwith "An unresolved REF cannot be simplified"
+      | PHI _
+      | REF { contents = Resolved _ }
+        -> failwith "A normalized value cannot be a PHI or a resolved REF"
+    ) (ValSet.elements vals)
 end
 
 (* An environment is a map from variables to values. *)
@@ -202,6 +202,11 @@ class ssa_builder = object(this)
   method values: Ssa_api.values =
     LocMap.map Val.simplify values
 
+  val mutable id = 0
+  method mk_unresolved =
+    id <- id + 1;
+    Val.mk_unresolved id
+
   (* Utils to manipulate single-static-assignment (SSA) environments.
 
      TODO: These low-level operations should probably be replaced by
@@ -236,7 +241,7 @@ class ssa_builder = object(this)
       val_ref := value
     ) ssa_env env0
   method fresh_ssa_env: Env.t =
-    SMap.map (fun _ -> Val.mk_unresolved ()) ssa_env
+    SMap.map (fun _ -> this#mk_unresolved) ssa_env
   method assert_ssa_env (env0: Env.t): unit =
     let env0 = SMap.values env0 in
     let ssa_env = SMap.values ssa_env in
@@ -262,7 +267,7 @@ class ssa_builder = object(this)
   method private mk_ssa_env =
     SMap.map (fun _ -> {
       val_ref = ref Val.uninitialized;
-      havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = [] }
+      havoc = Havoc.{ unresolved = this#mk_unresolved; locs = [] }
     })
 
   method private push_ssa_env bindings =
