@@ -30,6 +30,11 @@ module Val : sig
   val resolve: unresolved:t -> t -> unit
   val simplify: t -> Ssa_api.write_loc list
 end = struct
+  module WriteLocSet = Set.Make (struct
+    type t = Ssa_api.write_loc
+    let compare = Pervasives.compare
+  end)
+
   type t =
     | Uninitialized
     | Loc of Loc.t
@@ -98,17 +103,17 @@ end = struct
 
   (* Simplification converts a Val.t to a list of locations. *)
   let rec simplify t = match t with
-    | Uninitialized -> [Ssa_api.Uninitialized]
-    | Loc loc -> [Ssa_api.Write loc]
+    | Uninitialized -> WriteLocSet.singleton (Ssa_api.Uninitialized)
+    | Loc loc -> WriteLocSet.singleton (Ssa_api.Write loc)
     | PHI ts ->
-      let locs' = List.fold_left (fun locs' t ->
+      List.fold_left (fun locs' t ->
         let locs = simplify t in
-        List.rev_append locs locs'
-      ) [] ts in
-      List.sort_uniq Pervasives.compare locs'
+        WriteLocSet.union locs' locs
+      ) WriteLocSet.empty ts
     | REF { contents = Some t } -> simplify t
     | _ ->
       failwith "An unresolved REF cannot be simplified"
+  let simplify t = WriteLocSet.elements (simplify t)
 
 end
 
