@@ -271,14 +271,20 @@ end = struct
       end;
       ret
     in
-    let def_hook _ctxt ty name loc =
+    let class_def_hook _ctxt ty name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (`Def (ty, name))
+        prop_access_info := Some (`Class_def (ty, name))
     in
+    let obj_def_hook _ctxt name loc =
+      if Loc.contains loc target_loc then
+        prop_access_info := Some (`Obj_def (loc, name))
+    in
+
     Type_inference_hooks_js.set_member_hook (use_hook false);
     Type_inference_hooks_js.set_call_hook (use_hook ());
-    Type_inference_hooks_js.set_class_method_decl_hook def_hook;
-    Type_inference_hooks_js.set_class_prop_decl_hook def_hook
+    Type_inference_hooks_js.set_class_method_decl_hook class_def_hook;
+    Type_inference_hooks_js.set_class_prop_decl_hook class_def_hook;
+    Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook
 
   let set_get_refs_hook potential_refs target_name =
     let hook ret _ctxt name loc ty =
@@ -318,18 +324,28 @@ end = struct
         let type_string = string_of_ctor resolved in
         Error ("Expected a class type to extract an instance type from, got " ^ type_string)
 
+  (* Must be called with the result from Flow_js.Members.extract_type *)
+  let get_def_loc_from_extracted_type cx extracted_type name =
+    extracted_type
+    |> Flow_js.Members.extract_members cx
+    |> Flow_js.Members.to_command_result
+    >>= fun map -> match SMap.get name map with
+      | None -> Ok None
+      | Some (None, _) -> Error "Expected a location associated with the definition"
+      | Some (Some loc, _) -> Ok (Some loc)
+
   let rec extract_def_loc cx ty name : (def_loc, string) result =
     let resolved = Flow_js.resolve_type cx ty in
     extract_def_loc_resolved cx resolved name
 
+  (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
+   * definitions of the member in superclasses and returns those as well *)
   and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, string) result =
-    extracted_type
-    |> Flow_js.Members.extract_members cx
-    |> Flow_js.Members.to_command_result
-    >>= begin fun map -> match SMap.get name map with
+    let current_class_def_loc = get_def_loc_from_extracted_type cx extracted_type name in
+    current_class_def_loc
+    >>= begin function
       | None -> Ok NoDefFound
-      | Some (None, _) -> Error "Expected a location associated with the definition"
-      | Some (Some loc, _) ->
+      | Some loc ->
         extract_def_loc cx super name
         >>| begin function
           | Found lst ->
@@ -356,6 +372,12 @@ end = struct
     match Flow_js.Members.extract_type cx ty with
       | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
           extract_def_loc_from_instancet cx extracted_type super name
+      | Success (DefT (_, ObjT _)) as extracted_type ->
+          get_def_loc_from_extracted_type cx extracted_type name
+          >>| begin function
+            | None -> NoDefFound
+            | Some loc -> Found (Nel.one loc)
+          end
       | Success _
       | SuccessModule _
       | FailureNullishType
@@ -450,7 +472,9 @@ end = struct
       cx_result >>= fun cx ->
       match !props_access_info with
         | None -> Ok None
-        | Some (`Def (ty, name)) ->
+        | Some (`Obj_def (loc, name)) ->
+            Ok (Some (Nel.one loc, name))
+        | Some (`Class_def (ty, name)) ->
             (* We get the type of the class back here, so we need to extract the type of an instance *)
             extract_instancet cx ty >>= fun ty ->
             begin extract_def_loc_resolved cx ty name >>= function

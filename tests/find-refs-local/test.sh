@@ -64,14 +64,6 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 90 16
 printf "Method call within a class that has type params: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 96 10
 
-# TODO get find-refs working for object type aliases
-printf "Method declaration in an object type alias: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 4 4
-printf "Property declaration in an object type alias: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 5 4
-printf "Method call on an object type alias: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 9 4
-
 printf "Instance method on a superclass: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 3
 printf "Call of instance method on subclass which does not override: "
@@ -84,3 +76,33 @@ printf "Definition of a method in a parameterized class: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 25 3
 printf "Call of an instance method on an upcasted class: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 31 15
+
+printf "Method declaration in an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 4 4
+printf "Property declaration in an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 5 4
+printf "Method call on an object type alias: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 9 4
+
+printf "Property access on an object without an annotation: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 15 4
+printf "Property definition on an object without an annotation: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 14 12
+
+printf "Introduction of a shadow property via a write: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 19 4
+printf "Use of a shadow property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 20 4
+
+printf "Introduction of a shadow property via a read: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 23 4
+printf "Write of a shadow property introduced via a read: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 24 4
+
+printf "Introduction of a shadow property that is never written: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 27 4
+printf "Read of a shadow property that is never written: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 28 4
+
+printf "Use of a property that came through type spread: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 35 25

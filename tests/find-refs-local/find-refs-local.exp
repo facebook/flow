@@ -585,9 +585,6 @@ Method call within a class that has type params: {
     }
   ]
 }
-Method declaration in an object type alias: {"kind":"no-symbol-found"}
-Property declaration in an object type alias: {"kind":"no-symbol-found"}
-Method call on an object type alias: {"kind":"no-symbol-found"}
 Instance method on a superclass: {
   "kind":"symbol-found",
   "name":"bar",
@@ -810,3 +807,199 @@ Call of an instance method on an upcasted class: {
     }
   ]
 }
+Method declaration in an object type alias: {
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":27},
+      "end":{"line":4,"column":5,"offset":30}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":3,"offset":100},
+      "end":{"line":9,"column":5,"offset":103}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":3,"offset":109},
+      "end":{"line":10,"column":5,"offset":112}
+    }
+  ]
+}
+Property declaration in an object type alias: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":3,"offset":42},
+      "end":{"line":5,"column":5,"offset":45}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":11,"column":3,"offset":118},
+      "end":{"line":11,"column":5,"offset":121}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":3,"offset":125},
+      "end":{"line":12,"column":5,"offset":128}
+    }
+  ]
+}
+Method call on an object type alias: {
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":27},
+      "end":{"line":4,"column":5,"offset":30}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":3,"offset":100},
+      "end":{"line":9,"column":5,"offset":103}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":3,"offset":109},
+      "end":{"line":10,"column":5,"offset":112}
+    }
+  ]
+}
+Property access on an object without an annotation: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":12,"offset":142},
+      "end":{"line":14,"column":14,"offset":145}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":3,"offset":154},
+      "end":{"line":15,"column":5,"offset":157}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":3,"offset":161},
+      "end":{"line":16,"column":5,"offset":164}
+    }
+  ]
+}
+Property definition on an object without an annotation: {"kind":"no-symbol-found"}
+Introduction of a shadow property via a write: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":3,"offset":183},
+      "end":{"line":19,"column":5,"offset":186}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":3,"offset":183},
+      "end":{"line":19,"column":5,"offset":186}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":3,"offset":194},
+      "end":{"line":20,"column":5,"offset":197}
+    }
+  ]
+}
+Use of a shadow property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":3,"offset":183},
+      "end":{"line":19,"column":5,"offset":186}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":3,"offset":183},
+      "end":{"line":19,"column":5,"offset":186}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":3,"offset":194},
+      "end":{"line":20,"column":5,"offset":197}
+    }
+  ]
+}
+Introduction of a shadow property via a read: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":23,"column":3,"offset":216},
+      "end":{"line":23,"column":5,"offset":219}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":23,"column":3,"offset":216},
+      "end":{"line":23,"column":5,"offset":219}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":3,"offset":223},
+      "end":{"line":24,"column":5,"offset":226}
+    }
+  ]
+}
+Write of a shadow property introduced via a read: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":23,"column":3,"offset":216},
+      "end":{"line":23,"column":5,"offset":219}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":23,"column":3,"offset":216},
+      "end":{"line":23,"column":5,"offset":219}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":3,"offset":223},
+      "end":{"line":24,"column":5,"offset":226}
+    }
+  ]
+}
+Introduction of a shadow property that is never written: {"kind":"no-symbol-found"}
+Read of a shadow property that is never written: {"kind":"no-symbol-found"}
+Use of a property that came through type spread: {"kind":"no-symbol-found"}

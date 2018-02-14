@@ -744,6 +744,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | Ast.Expression.Object.Property.Literal
           (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
       | Ast.Expression.Object.Property.Identifier (loc, name) ->
+          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
           let t = convert cx tparams_map value in
           if name = "__proto__" && not (_method || optional) && variance = None
           then

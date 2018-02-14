@@ -3,10 +3,33 @@
 type Alias = {
   foo(): void,
   bar: string,
-}
+};
 
-const x: Alias = { foo() {}, bar: ''};
-x.foo();
-x.foo();
-x.bar;
-x.bar;
+const a: Alias = { foo() {}, bar: ''};
+a.foo();
+a.foo();
+a.bar;
+a.bar;
+
+const b = {bar: ''};
+b.bar;
+b.bar;
+
+const c = {};
+c.bar = 4;
+c.bar;
+
+const d = {};
+d.bar;
+d.bar = 4;
+
+const e = {};
+e.bar;
+e.bar;
+
+type Spreaded = {
+  ...Alias,
+};
+
+const f: Spreaded = { foo() {}, bar: '', baz: 5 };
+if (f.foo != null) { f.foo() };
