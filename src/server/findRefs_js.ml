@@ -282,8 +282,7 @@ end = struct
 
     Type_inference_hooks_js.set_member_hook (use_hook false);
     Type_inference_hooks_js.set_call_hook (use_hook ());
-    Type_inference_hooks_js.set_class_method_decl_hook class_def_hook;
-    Type_inference_hooks_js.set_class_prop_decl_hook class_def_hook;
+    Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
     Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook
 
   let set_get_refs_hook potential_refs target_name =

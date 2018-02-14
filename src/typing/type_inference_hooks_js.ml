@@ -19,9 +19,7 @@ let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
-let class_method_decl_nop _ _ _ _ = ()
-
-let class_prop_decl_nop _ _ _ _ = ()
+let class_member_decl_nop _ _ _ _ = ()
 
 let obj_prop_decl_nop _ _ _ = ()
 
@@ -100,13 +98,7 @@ type hook_state_t = {
        Loc.t ->
        unit);
 
-  class_method_decl_hook:
-     (Context.t ->
-      Type.t (* self *) ->
-      string -> Loc.t ->
-      unit);
-
-  class_prop_decl_hook:
+  class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
       string -> Loc.t ->
@@ -129,8 +121,7 @@ let nop_hook_state = {
   import_hook = import_nop;
   jsx_hook = jsx_nop;
   ref_hook = ref_nop;
-  class_method_decl_hook = class_method_decl_nop;
-  class_prop_decl_hook = class_prop_decl_nop;
+  class_member_decl_hook = class_member_decl_nop;
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
 }
@@ -158,11 +149,8 @@ let set_jsx_hook hook =
 let set_ref_hook hook =
   hook_state := { !hook_state with ref_hook = hook }
 
-let set_class_method_decl_hook hook =
-  hook_state := { !hook_state with class_method_decl_hook = hook }
-
-let set_class_prop_decl_hook hook =
-  hook_state := { !hook_state with class_prop_decl_hook = hook }
+let set_class_member_decl_hook hook =
+  hook_state := { !hook_state with class_member_decl_hook = hook }
 
 let set_obj_prop_decl_hook hook =
   hook_state := { !hook_state with obj_prop_decl_hook = hook }
@@ -194,11 +182,8 @@ let dispatch_jsx_hook cx name loc this_t =
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
 
-let dispatch_class_method_decl_hook cx self name loc =
-  !hook_state.class_method_decl_hook cx self name loc
-
-let dispatch_class_prop_decl_hook cx self name loc =
-  !hook_state.class_prop_decl_hook cx self name loc
+let dispatch_class_member_decl_hook cx self name loc =
+  !hook_state.class_member_decl_hook cx self name loc
 
 let dispatch_obj_prop_decl_hook cx name loc =
   !hook_state.obj_prop_decl_hook cx name loc
