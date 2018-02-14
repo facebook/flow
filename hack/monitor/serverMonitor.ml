@@ -84,24 +84,36 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   (** Kill command from client is handled by server server, so the monitor
    * needs to check liveness of the server process to know whether
    * to stop itself. *)
-  let update_status_ (server: ServerProcess.server_process) monitor_config =
-    match server with
-    | Alive process ->
-      let pid, proc_stat = SC.wait_pid process in
-      (match pid, proc_stat with
-        | 0, _ ->
-          (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
-          server
-        | _, _ ->
-          (* "pid<>0" means the pid has died or received a stop signal *)
-          let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
-          let was_oom = match proc_stat with
-          | Unix.WEXITED code when code = oom_code -> true
-          | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
-          SC.on_server_exit monitor_config;
-          ServerProcessTools.check_exit_status proc_stat process monitor_config;
-          Died_unexpectedly (proc_stat, was_oom))
-    | _ -> server
+  let update_status_ (env: env) monitor_config =
+    let env = match env.server with
+      | Alive process ->
+        let pid, proc_stat = SC.wait_pid process in
+        (match pid, proc_stat with
+          | 0, _ ->
+            (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
+            env
+          | _, _ ->
+            (* "pid<>0" means the pid has died or received a stop signal *)
+            let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
+            let was_oom = match proc_stat with
+            | Unix.WEXITED code when code = oom_code -> true
+            | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
+            SC.on_server_exit monitor_config;
+            ServerProcessTools.check_exit_status proc_stat process monitor_config;
+            { env with server = Died_unexpectedly (proc_stat, was_oom) })
+      | _ -> env
+    in
+    let exit_status, server_state = match env.server with
+      | Alive _ ->
+        None, Informant_sig.Server_alive
+      | Died_unexpectedly ((Unix.WEXITED c), _) ->
+        Some c, Informant_sig.Server_dead
+      | Not_yet_started ->
+        None, Informant_sig.Server_not_yet_started
+      | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
+      | Informant_killed ->
+        None, Informant_sig.Server_dead in
+    env, exit_status, server_state
 
   let start_server ?target_mini_state ~informant_managed options exit_status =
     let server_process = SC.start_server
@@ -151,18 +163,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     }
 
   let update_status env monitor_config =
-     let server = update_status_ env.server monitor_config in
-     let env = { env with server = server } in
-     let exit_status, server_state = match server with
-       | Alive _ ->
-         None, Informant_sig.Server_alive
-       | Died_unexpectedly ((Unix.WEXITED c), _) ->
-         Some c, Informant_sig.Server_dead
-       | Not_yet_started ->
-         None, Informant_sig.Server_not_yet_started
-       | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
-       | Informant_killed ->
-         None, Informant_sig.Server_dead in
+     let env, exit_status, server_state = update_status_ env monitor_config in
      let informant_report = Informant.report env.informant server_state in
      let is_watchman_fresh_instance = match exit_status with
        | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
@@ -212,7 +213,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         restart_server env exit_status
       end
        else
-         { env with server = server }
+         env
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
