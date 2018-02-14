@@ -35,14 +35,19 @@ end = struct
     let compare = Pervasives.compare
   end)
 
-  type t =
+  type ref_state =
+    | Unresolved
+    | Resolved of t
+    | Simplified of WriteLocSet.t
+
+  and t =
     | Uninitialized
     | Loc of Loc.t
     | PHI of t list
-    | REF of t option ref
+    | REF of ref_state ref
 
   let mk_unresolved () =
-    REF (ref None)
+    REF (ref Unresolved)
 
   let empty = PHI []
 
@@ -62,8 +67,9 @@ end = struct
         | Uninitialized -> false
         | Loc _ -> false
         | PHI ts -> List.exists (occurs t1) ts
-        | REF { contents = None } -> false
-        | REF { contents = Some t } -> occurs t1 t
+        | REF { contents = Unresolved } -> false
+        | REF { contents = Resolved t } -> occurs t1 t
+        | REF { contents = Simplified _ } -> failwith "did not expect simplified REF in occurs check"
       end in
     fun t1 t2 ->
       if occurs t1 t2 then t2
@@ -83,8 +89,8 @@ end = struct
      unresolved = t is the same as unresolved = t'. *)
   let rec resolve ~unresolved t =
     match unresolved with
-      | REF r when !r = None ->
-        r := Some (erase r t)
+      | REF r when !r = Unresolved ->
+        r := Resolved (erase r t)
       | _ -> failwith "Only an unresolved REF can be resolved"
   and erase r t = match t with
     | Uninitialized -> t
@@ -96,7 +102,10 @@ end = struct
       if r == r' then empty
       else begin
         let t_opt = !r' in
-        let t_opt' = OptionUtils.ident_map (erase r) t_opt in
+        let t_opt' = match t_opt with
+          | Unresolved -> t_opt
+          | Resolved t -> let t' = erase r t in if t == t' then t_opt else Resolved t'
+          | Simplified _ -> failwith "did not expect simplified REF in erasure" in
         if t_opt != t_opt' then r' := t_opt';
         t
       end
@@ -110,9 +119,16 @@ end = struct
         let locs = simplify t in
         WriteLocSet.union locs' locs
       ) WriteLocSet.empty ts
-    | REF { contents = Some t } -> simplify t
-    | _ ->
-      failwith "An unresolved REF cannot be simplified"
+    | REF r ->
+      begin match !r with
+        | Unresolved -> failwith "An unresolved REF cannot be simplified"
+        | Resolved t ->
+          let locs = simplify t in
+          r := Simplified locs;
+          locs
+        | Simplified locs -> locs
+      end
+
   let simplify t = WriteLocSet.elements (simplify t)
 
 end
