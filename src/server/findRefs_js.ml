@@ -277,8 +277,8 @@ end = struct
     in
     Type_inference_hooks_js.set_member_hook (use_hook false);
     Type_inference_hooks_js.set_call_hook (use_hook ());
-    Type_inference_hooks_js.set_method_decl_hook def_hook;
-    Type_inference_hooks_js.set_prop_decl_hook def_hook
+    Type_inference_hooks_js.set_class_method_decl_hook def_hook;
+    Type_inference_hooks_js.set_class_prop_decl_hook def_hook
 
   let set_get_refs_hook potential_refs target_name =
     let hook ret _ctxt name loc ty =
