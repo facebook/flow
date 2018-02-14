@@ -30,7 +30,7 @@ let spec = {
     |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
-    |> flag "--global" no_arg ~doc:"Search for references in other files (much slower; under development)"
+    |> flag "--global" no_arg ~doc:"Search for references in other files (beta)"
     |> anon "args" (required (list_of string))
         ~doc:"[FILE] LINE COL"
   )
