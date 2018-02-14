@@ -3231,6 +3231,7 @@ and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
          meanwhile, here we must hijack the property selection normally
          performed by the flow algorithm itself. *)
       Env.havoc_heap_refinements ();
+      Type_table.set_info (Context.type_table cx) prop_loc f;
       Tvar.mk_where cx reason (fun t ->
         let frame = Env.peek_frame () in
         let app =

@@ -269,6 +269,12 @@ assert_ok "$FLOW" type-at-pos recursive.js 41 17 --strip-root --pretty
 printf "recursive.js:58:1 = "
 assert_ok "$FLOW" type-at-pos recursive.js 58 1 --strip-root --pretty
 
+# refinement.js
+printf "refinement.js:7:25 = "
+assert_ok "$FLOW" type-at-pos refinement.js 7 25 --strip-root --pretty
+printf "refinement.js:8:25 = "
+assert_ok "$FLOW" type-at-pos refinement.js 8 25 --strip-root --pretty
+
 # test.js
 printf "test.js:5:1 = "
 assert_ok "$FLOW" type-at-pos test.js 5 1 --strip-root --pretty

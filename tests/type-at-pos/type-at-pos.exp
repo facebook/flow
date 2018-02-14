@@ -1483,6 +1483,36 @@ recursive.js:58:1 = {
   "start":1,
   "end":1
 }
+refinement.js:7:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":24,"offset":74},
+    "end":{"line":7,"column":26,"offset":77}
+  },
+  "path":"refinement.js",
+  "line":7,
+  "endline":7,
+  "start":24,
+  "end":26
+}
+refinement.js:8:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":24,"offset":104},
+    "end":{"line":8,"column":26,"offset":107}
+  },
+  "path":"refinement.js",
+  "line":8,
+  "endline":8,
+  "start":24,
+  "end":26
+}
 test.js:5:1 = {
   "type":"number",
   "reasons":[],
