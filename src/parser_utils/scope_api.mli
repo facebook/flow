@@ -14,13 +14,15 @@ module Def: sig
     name: int;
     actual_name: string;
   }
+  val compare: t -> t -> int
 end
+type use_def_map = Def.t Utils_js.LocMap.t
 module Scope: sig
   type t = {
     lexical: bool;
     parent: int option;
     defs: Def.t SMap.t;
-    locals: Def.t Utils_js.LocMap.t;
+    locals: use_def_map;
     globals: SSet.t;
   }
 end
@@ -32,6 +34,7 @@ type info = {
 val scope: info -> scope -> Scope.t
 
 val all_uses: info -> uses
+val defs_of_all_uses: info -> use_def_map
 val def_of_use: info -> use -> Def.t
 val use_is_def: info -> use -> bool
 val uses_of_def: info -> ?exclude_def:bool -> Def.t -> uses

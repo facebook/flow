@@ -18,15 +18,28 @@ module Def = struct
     name: int;
     actual_name: string;
   }
-  let mem_loc x t = List.mem x t.locs
+  let compare =
+    let rec iter locs1 locs2 = match locs1, locs2 with
+      | [], [] -> 0
+      | [], _ -> -1
+      | _, [] -> 1
+      | loc1::locs1, loc2::locs2 ->
+        let i = Loc.compare loc1 loc2 in
+        if i = 0 then iter locs1 locs2
+        else i
+    in fun t1 t2 -> iter t1.locs t2.locs
+
+  let is x t =
+    List.mem x t.locs
 end
 
+type use_def_map = Def.t LocMap.t
 module Scope = struct
   type t = {
     lexical: bool;
     parent: int option;
     defs: Def.t SMap.t;
-    locals: Def.t LocMap.t;
+    locals: use_def_map;
     globals: SSet.t;
   }
 end
@@ -45,6 +58,11 @@ let all_uses { scopes; _ } =
     ) scope.Scope.locals acc
   ) scopes LocSet.empty
 
+let defs_of_all_uses { scopes; _ } =
+  IMap.fold (fun _ scope acc ->
+    LocMap.union scope.Scope.locals acc
+  ) scopes LocMap.empty
+
 let def_of_use { scopes; _ } use =
   let def_opt = IMap.fold (fun _ scope acc ->
     match acc with
@@ -57,13 +75,13 @@ let def_of_use { scopes; _ } use =
 
 let use_is_def info use =
   let def = def_of_use info use in
-  Def.mem_loc use def
+  Def.is use def
 
 let uses_of_def { scopes; _ } ?(exclude_def=false) def =
   IMap.fold (fun _ scope acc ->
     LocMap.fold (fun use def' uses ->
-      if exclude_def && Def.mem_loc use def' then uses
-      else if Def.(def.locs = def'.locs) then LocSet.add use uses else uses
+      if exclude_def && Def.is use def' then uses
+      else if Def.compare def def' = 0 then LocSet.add use uses else uses
     ) scope.Scope.locals acc
   ) scopes LocSet.empty
 
