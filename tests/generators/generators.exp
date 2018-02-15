@@ -1,178 +1,183 @@
 Error ------------------------------------------------------------ class.js:4:11
 
-Cannot yield empty string because string is incompatible with number.
+Cannot yield empty string because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ class.js:15:8
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- class.js:24:12
 
-Cannot return empty string because in type argument `Return`, string is
-incompatible with number.
+Cannot return empty string because in type argument `Return`, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- class.js:28:22
 
-Cannot assign `yield 0` to `x` because number is incompatible with boolean.
+Cannot assign `yield 0` to `x` because number [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------------- class.js:49:23
 
-Cannot assign `yield` to `x` because string is incompatible with number.
+Cannot assign `yield` to `x` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- class.js:67:21
 
-Cannot assign `yield* inner()` to `x` because string is incompatible with
-number.
+Cannot assign `yield* inner()` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- class.js:72:12
 
 Cannot yield `xs` because in property `@@iterator`, the return value, and then
-type argument `Next`; undefined is incompatible with string.
+type argument `Next`; undefined [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- class.js:98:41
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- class.js:104:4
 
-Cannot cast `infer_stmt_next` to boolean because string is incompatible with
-boolean.
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------------- class.js:122:4
 
-Cannot cast `x` to number because string is incompatible with number.
+Cannot cast `x` to number because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- class.js:128:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------- class_failure.js:5:22
 
-Cannot assign `yield 0` to `x` because number is incompatible with boolean.
+Cannot assign `yield 0` to `x` because number [1] is incompatible with
+boolean [2].
 
 
 Error --------------------------------------------------- class_failure.js:12:41
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------- class_failure.js:19:4
 
-Cannot cast `infer_stmt_next` to boolean because string is incompatible with
-boolean.
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error -------------------------------------------------------- generators.js:3:9
 
-Cannot yield empty string because string is incompatible with number.
+Cannot yield empty string because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- generators.js:14:6
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------ generators.js:23:10
 
-Cannot return empty string because in type argument `Return`, string is
-incompatible with number.
+Cannot return empty string because in type argument `Return`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------ generators.js:27:20
 
-Cannot assign `yield 0` to `x` because number is incompatible with boolean.
+Cannot assign `yield 0` to `x` because number [1] is incompatible with
+boolean [2].
 
 
 Error ------------------------------------------------------ generators.js:30:32
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------- generators.js:35:4
 
-Cannot cast `infer_stmt_next` to boolean because string is incompatible with
-boolean.
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ------------------------------------------------------ generators.js:65:21
 
-Cannot assign `yield` to `x` because string is incompatible with number.
+Cannot assign `yield` to `x` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- generators.js:79:4
 
-Cannot cast `x` to number because string is incompatible with number.
+Cannot cast `x` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------ generators.js:87:19
 
-Cannot assign `yield* inner()` to `x` because string is incompatible with
-number.
+Cannot assign `yield* inner()` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ generators.js:92:10
 
 Cannot yield `xs` because in property `@@iterator`, the return value, and then
-type argument `Next`; undefined is incompatible with string.
+type argument `Next`; undefined [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------ generators.js:100:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------ generators.js:128:4
 
 Cannot cast `multiple_return_result.value` to undefined because:
- - number is incompatible with undefined.
- - string is incompatible with undefined.
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
 
 
 Error -------------------------------------------------------------- refi.js:5:4
 
-Cannot cast `x.a` to string because undefined is incompatible with string.
+Cannot cast `x.a` to string because undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- refi.js:22:4
 
-Cannot cast `x.a` to string because undefined is incompatible with string.
+Cannot cast `x.a` to string because undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ return.js:5:4
 
 Cannot cast `ret.value` to undefined because:
- - number is incompatible with undefined.
- - string is incompatible with undefined.
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
 
 
 Error ----------------------------------------------------------- return.js:20:4
 
 Cannot cast `refuse_return_result.value` to string because:
- - number is incompatible with string.
- - undefined is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - undefined [3] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ throw.js:11:4
 
-Cannot cast `catch_return_value` to string because number is incompatible with
-string.
+Cannot cast `catch_return_value` to string because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------ throw.js:24:4
 
-Cannot cast `yield_return_value` to string because number is incompatible with
-string.
+Cannot cast `yield_return_value` to string because number [1] is incompatible
+with string [2].
 
 
 

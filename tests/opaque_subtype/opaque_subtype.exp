@@ -1,73 +1,74 @@
 Error --------------------------------------------------------- decltest.js:2:33
 
-Cannot use `T` in an input/output position because `T` is expected to occur only
-in output positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to
+occur only in output positions.
 
 
 Error ------------------------------------------------------- importtest.js:7:12
 
-Cannot return `y` because number is incompatible with `SuperOpaque`.
+Cannot return `y` because number [1] is incompatible with `SuperOpaque` [2].
 
 
 Error ------------------------------------------------------ importtest.js:15:12
 
-Cannot return `x` because number is incompatible with `Counter`.
+Cannot return `x` because number [1] is incompatible with `Counter` [2].
 
 
 Error ------------------------------------------------------ importtest.js:27:12
 
-Cannot return `x` because `PolyFoo` is incompatible with `PolyBar`.
+Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2].
 
 
 Error ------------------------------------------------------ importtest.js:31:12
 
-Cannot return `x` because in type argument `T`, number is incompatible with
-string.
+Cannot return `x` because in type argument `T`, number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ importtest.js:39:12
 
-Cannot assign number to `x` because number is incompatible with `SuperType`.
+Cannot assign number to `x` because number [1] is incompatible with
+`SuperType` [2].
 
 
 Error ------------------------------------------------------ importtest.js:39:12
 
-Cannot return `x++` because number is incompatible with `SuperType`.
+Cannot return `x++` because number [1] is incompatible with `SuperType` [2].
 
 
 Error ------------------------------------------------------ importtest.js:52:12
 
-Cannot return `x + y` because string is incompatible with number.
+Cannot return `x + y` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:7:48
 
-number is incompatible with `SuperType`.
+number [1] is incompatible with `SuperType` [2].
 
 
 Error ------------------------------------------------------------ test.js:12:36
 
-`Foo` is incompatible with `Bar`.
+`Foo` [1] is incompatible with `Bar` [2].
 
 
 Error ------------------------------------------------------------ test.js:17:45
 
-`PolyFoo` is incompatible with `PolyBar`.
+`PolyFoo` [1] is incompatible with `PolyBar` [2].
 
 
 Error ------------------------------------------------------------ test.js:19:27
 
-Cannot use `PolyFoo` with less than 1 type argument.
+Cannot use `PolyFoo` [1] with less than 1 type argument.
 
 
 Error ------------------------------------------------------------ test.js:21:47
 
-`PolyFoo` is incompatible with `PolyBar2`.
+`PolyFoo` [1] is incompatible with `PolyBar2` [2].
 
 
 Error ------------------------------------------------------------ test.js:27:65
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------ typeapp-test.js:5:8

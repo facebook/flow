@@ -1,21 +1,22 @@
 Error ------------------------------------------------------------- poly.js:3:36
 
-Cannot return `x` because `T` is incompatible with `S`.
+Cannot return `x` because `T` [1] is incompatible with `S` [2].
 
 
 Error ------------------------------------------------------------ poly.js:10:38
 
-Cannot return `x` because in type argument `T`, `T` is incompatible with `T`.
+Cannot return `x` because in type argument `T`, `T` [1] is incompatible with
+`T` [1].
 
 
 Error ------------------------------------------------------------ poly.js:20:34
 
-Cannot return `foo5()` because array type is incompatible with `R`.
+Cannot return `foo5()` because array type [1] is incompatible with `R` [2].
 
 
 Error ------------------------------------------------------------- poly.js:24:3
 
-Cannot call `y` because `U` is not a function.
+Cannot call `y` because `U` [1] is not a function.
 
 
 

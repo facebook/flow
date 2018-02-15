@@ -1,39 +1,40 @@
 Error ------------------------------------------------------------- test.js:3:21
 
-Cannot assign `x` to `y` because number is incompatible with string.
+Cannot assign `x` to `y` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- test.js:9:16
 
-Cannot return `x` because number is incompatible with `T`.
+Cannot return `x` because number [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------ test.js:13:25
 
-Cannot assign `x` to `y` because number is incompatible with string.
+Cannot assign `x` to `y` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test.js:22:10
 
-Cannot instantiate `C` because in type argument `T`, string is incompatible with
-number.
+Cannot instantiate `C` because in type argument `T`, string [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------------------ test.js:22:20
 
-Cannot assign `new C()` to `c` because in type argument `T`, string is
-incompatible with number.
+Cannot assign `new C()` to `c` because in type argument `T`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:23:17
 
-Cannot assign `c.qux(...)` to `q` because string is incompatible with number.
+Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ test.js:23:23
 
-Cannot call `c.qux` because in type argument `U`, number is incompatible with
-string.
+Cannot call `c.qux` because in type argument `U`, number [1] is incompatible
+with string [2].
 
 
 

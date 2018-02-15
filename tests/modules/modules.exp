@@ -1,13 +1,13 @@
 Error -------------------------------------------------------------- cli2.js:5:3
 
-Cannot call `f` with `"..."` bound to `x` because string is incompatible with
-number.
+Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible
+with number [2].
 
 
 Error -------------------------------------------------------------- lib.js:7:33
 
-Cannot call `g` with `x` bound to `x` because number is incompatible with
-string.
+Cannot call `g` with `x` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 

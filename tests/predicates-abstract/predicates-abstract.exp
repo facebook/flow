@@ -1,15 +1,16 @@
 Error ---------------------------------------------- sanity-filter-union.js:6:71
 
-object with property `kind` that matches string literal `A` is incompatible with
-string literal `B`.
+object with property `kind` that matches string literal `A` [1] is incompatible
+with string literal `B` [2].
 
 
 Error ---------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because:
- - in type argument `T` and then property `kind`, string literal `A` is
-   incompatible with string literal `B`.
- - in type argument `T`, property `v` is missing in `A` but exists in `B`.
+ - in type argument `T` and then property `kind`, string literal `A` [1] is
+   incompatible with string literal `B` [2].
+ - in type argument `T`, property `v` is missing in `A` [3] but exists in
+   `B` [4].
 
 
 Error: sanity-filter-union.js:17
@@ -51,8 +52,8 @@ Error: sanity-filter-union.js:17
 
 Error ----------------------------------------------------- sanity-filter.js:8:2
 
-Cannot cast `b` to array type because in type argument `T`, string is
-incompatible with number.
+Cannot cast `b` to array type because in type argument `T`, string [1] is
+incompatible with number [2].
 
 
 Error: sanity-filter.js:13
@@ -63,8 +64,8 @@ Error: sanity-filter.js:13
 
 Error ---------------------------------------------------- sanity-filter.js:14:2
 
-Cannot cast `d` to array type because in type argument `T`, mixed is
-incompatible with string.
+Cannot cast `d` to array type because in type argument `T`, mixed [1] is
+incompatible with string [2].
 
 
 Error: sanity-refine.js:4
@@ -75,7 +76,7 @@ Error: sanity-refine.js:4
 
 Error ----------------------------------------------------- sanity-refine.js:8:2
 
-Cannot cast `b` to string because mixed is incompatible with string.
+Cannot cast `b` to string because mixed [1] is incompatible with string [2].
 
 
 Error: sanity-refine.js:19
@@ -92,7 +93,7 @@ Error: sanity-refine.js:28
 
 Error ---------------------------------------------------- sanity-refine.js:30:2
 
-Cannot cast `e` to number because mixed is incompatible with number.
+Cannot cast `e` to number because mixed [1] is incompatible with number [2].
 
 
 

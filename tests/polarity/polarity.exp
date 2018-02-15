@@ -1,73 +1,73 @@
 Error -------------------------------------------------------------- fun.js:3:19
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 Error -------------------------------------------------------------- fun.js:4:24
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error -------------------------------------------------------------- fun.js:7:25
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error ------------------------------------------------------------- fun.js:10:30
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 Error -------------------------------------------------------------- obj.js:2:25
 
-Cannot use `T` in an input/output position because `T` is expected to occur only
-in input positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to
+occur only in input positions.
 
 
 Error -------------------------------------------------------------- obj.js:3:25
 
-Cannot use `T` in an input/output position because `T` is expected to occur only
-in output positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to
+occur only in output positions.
 
 
 Error -------------------------------------------------------------- obj.js:5:29
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error -------------------------------------------------------------- obj.js:8:34
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 Error ------------------------------------------------------------- obj.js:11:29
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 Error ------------------------------------------------------------- obj.js:12:34
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error ------------------------------------------------------------- obj.js:15:29
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error ------------------------------------------------------------- obj.js:19:28
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 

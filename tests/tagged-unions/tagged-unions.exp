@@ -1,13 +1,13 @@
 Error --------------------------------------------------- interfaces-neg.js:25:4
 
 Cannot cast `data` to `ISystemData` because in property `kind`, string literal
-`user` is incompatible with string literal `system`.
+`user` [1] is incompatible with string literal `system` [2].
 
 
 Error --------------------------------------------------- type-decls-neg.js:29:4
 
 Cannot cast `data` to `SystemData` because in property `kind`, string literal
-`user` is incompatible with string literal `system`.
+`user` [1] is incompatible with string literal `system` [2].
 
 
 

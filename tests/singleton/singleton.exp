@@ -1,25 +1,25 @@
 Error ---------------------------------------------------------- boolean.js:8:34
 
 Cannot call `veryOptimistic` with `false` bound to `isThisAwesome` because
-boolean is incompatible with boolean literal `true`.
+boolean [1] is incompatible with boolean literal `true` [2].
 
 
 Error --------------------------------------------------------- boolean.js:15:35
 
 Cannot call `veryPessimistic` with `false` bound to `isThisAwesome` because
-boolean is incompatible with boolean literal `true`.
+boolean [1] is incompatible with boolean literal `true` [2].
 
 
 Error --------------------------------------------------------- boolean.js:21:12
 
-Cannot return `x` because boolean literal `true` is incompatible with boolean
-literal `false`.
+Cannot return `x` because boolean literal `true` [1] is incompatible with
+boolean literal `false` [2].
 
 
 Error --------------------------------------------------------- boolean.js:23:12
 
-Cannot return `!x` because boolean literal `true` is incompatible with boolean
-literal `false`.
+Cannot return `!x` because boolean literal `true` [1] is incompatible with
+boolean literal `false` [2].
 
 
 Error: boolean.js:29
@@ -46,14 +46,14 @@ Error: boolean.js:29
 
 Error ----------------------------------------------------------- number.js:8:12
 
-Cannot call `highlander` with `2` bound to `howMany` because number is
-incompatible with number literal `1`.
+Cannot call `highlander` with `2` bound to `howMany` because number [1] is
+incompatible with number literal `1` [2].
 
 
 Error ----------------------------------------------------------- number.js:19:5
 
-Cannot call `bar` with `3` bound to `num` because number is incompatible with
-number enum.
+Cannot call `bar` with `3` bound to `num` because number [1] is incompatible
+with number enum [2].
 
 
 

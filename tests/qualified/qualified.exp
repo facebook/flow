@@ -1,11 +1,12 @@
 Error -------------------------------------------------------- qualified.js:4:13
 
-Cannot assign `0` to `x` because number is incompatible with `C`.
+Cannot assign `0` to `x` because number [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------- qualified.js:12:14
 
-Cannot assign `'asdf'` to `b` because string is incompatible with number.
+Cannot assign `'asdf'` to `b` because string [1] is incompatible with
+number [2].
 
 
 

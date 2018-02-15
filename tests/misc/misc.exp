@@ -1,70 +1,73 @@
 Error ---------------------------------------------------------------- A.js:13:7
 
-Cannot assign `A.y` to `A.x` because string is incompatible with boolean.
+Cannot assign `A.y` to `A.x` because string [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------------- A.js:14:3
 
-Cannot call `f` with `A.x` bound to `x` because string is incompatible with
-boolean.
+Cannot call `f` with `A.x` bound to `x` because string [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------------------- C.js:9:7
 
-Cannot get `o.b` because property `b` is missing in new object.
+Cannot get `o.b` because property `b` is missing in new object [1].
 
 
 Error ---------------------------------------------------------------- C.js:10:5
 
-Cannot call `f` with `o.s` bound to `x` because number is incompatible with
-boolean.
+Cannot call `f` with `o.s` bound to `x` because number [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------------- D.js:6:30
 
-Cannot return `this.i` because boolean is incompatible with string.
+Cannot return `this.i` because boolean [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------------- D.js:12:3
 
-Cannot call `f` with `i` bound to `x` because string is incompatible with
-boolean.
+Cannot call `f` with `i` bound to `x` because string [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------------------- E.js:8:6
 
-Cannot call `o.fn` with `false` bound to `x` because boolean is incompatible
-with number.
+Cannot call `o.fn` with `false` bound to `x` because boolean [1] is incompatible
+with number [2].
 
 
 Error ---------------------------------------------------------------- F.js:1:26
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ---------------------------------------------------------------- F.js:5:10
 
-Cannot return `x.length` because number is incompatible with string.
+Cannot return `x.length` because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------------- G.js:2:12
 
-Cannot assign `123` to `a.length` because number is incompatible with string.
+Cannot assign `123` to `a.length` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------------- G.js:3:3
 
-Cannot call `a.length` because number is not a function.
+Cannot call `a.length` because number [1] is not a function.
 
 
 Error ---------------------------------------------------------------- G.js:6:12
 
-Cannot assign `"duck"` to `b.length` because string is incompatible with number.
+Cannot assign `"duck"` to `b.length` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------------- G.js:7:3
 
-Cannot call `b.length` because string is not a function.
+Cannot call `b.length` because string [1] is not a function.
 
 
 

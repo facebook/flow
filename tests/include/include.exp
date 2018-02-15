@@ -1,12 +1,12 @@
 Error ------------------------------------------------ ../foo/batman/baz.js:3:17
 
-Cannot assign `"not a number"` to `x` because string is incompatible with
-number.
+Cannot assign `"not a number"` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------- ../included/test.js:1:2
 
-Cannot cast `123` to string because number is incompatible with string.
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 
 

@@ -1,278 +1,280 @@
 Error ------------------------------------------------------- base_class.js:9:46
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------ base_class.js:16:53
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- base_class.js:33:2
 
-Cannot cast `o.annotatedField` to string because number is incompatible with
-string.
+Cannot cast `o.annotatedField` to string because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------- base_class.js:35:2
 
-Cannot cast `Base.annotatedField` to string because number is incompatible with
-string.
+Cannot cast `Base.annotatedField` to string because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------- base_class.js:41:2
 
-Cannot cast `o.initializedField` to string because number is incompatible with
-string.
+Cannot cast `o.initializedField` to string because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------- base_class.js:43:2
 
-Cannot cast `Base.initializedField` to number because string is incompatible
-with number.
+Cannot cast `Base.initializedField` to number because string [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------------- base_class.js:49:2
 
-Cannot cast `o.initializedFieldWithThis` to string because number is
-incompatible with string.
+Cannot cast `o.initializedFieldWithThis` to string because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------- base_class.js:51:2
 
-Cannot cast `Base.initializedFieldWithThis` to number because string is
-incompatible with number.
+Cannot cast `Base.initializedFieldWithThis` to number because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- base_class.js:59:2
 
 Cannot cast `o.annotatedInitializedFieldValid` to number because null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- base_class.js:61:2
 
 Cannot cast `Base.annotatedInitializedFieldValid` to number because null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- base_class.js:70:2
 
-Cannot cast `o.annotatedInitializedFieldInvalid` to string because number is
-incompatible with string.
+Cannot cast `o.annotatedInitializedFieldInvalid` to string because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------- base_class.js:72:2
 
-Cannot cast `Base.annotatedInitializedFieldInvalid` to string because number is
-incompatible with string.
+Cannot cast `Base.annotatedInitializedFieldInvalid` to string because number [1]
+is incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:9:51
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:16:58
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:28:52
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:35:59
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ---------------------------------------------------- derived_class.js:61:2
 
-Cannot cast `o.base_annotatedField` to string because number is incompatible
-with string.
+Cannot cast `o.base_annotatedField` to string because number [1] is incompatible
+with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:63:2
 
-Cannot cast `Child.base_annotatedField` to string because number is incompatible
-with string.
+Cannot cast `Child.base_annotatedField` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:66:2
 
-Cannot cast `o.child_annotatedField` to string because number is incompatible
-with string.
+Cannot cast `o.child_annotatedField` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:68:2
 
-Cannot cast `Child.child_annotatedField` to string because number is
-incompatible with string.
+Cannot cast `Child.child_annotatedField` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:74:2
 
-Cannot cast `o.base_initializedField` to string because number is incompatible
-with string.
+Cannot cast `o.base_initializedField` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:76:2
 
-Cannot cast `Child.base_initializedField` to number because string is
-incompatible with number.
+Cannot cast `Child.base_initializedField` to number because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------- derived_class.js:79:2
 
-Cannot cast `o.child_initializedField` to string because number is incompatible
-with string.
+Cannot cast `o.child_initializedField` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:81:2
 
-Cannot cast `Child.child_initializedField` to number because string is
-incompatible with number.
+Cannot cast `Child.child_initializedField` to number because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------- derived_class.js:87:2
 
-Cannot cast `o.base_initializedFieldWithThis` to string because number is
-incompatible with string.
+Cannot cast `o.base_initializedFieldWithThis` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:89:2
 
-Cannot cast `Child.base_initializedFieldWithThis` to number because string is
-incompatible with number.
+Cannot cast `Child.base_initializedFieldWithThis` to number because string [1]
+is incompatible with number [2].
 
 
 Error ---------------------------------------------------- derived_class.js:92:2
 
-Cannot cast `o.child_initializedFieldWithThis` to string because number is
-incompatible with string.
+Cannot cast `o.child_initializedFieldWithThis` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- derived_class.js:94:2
 
-Cannot cast `Child.child_initializedFieldWithThis` to number because string is
-incompatible with number.
+Cannot cast `Child.child_initializedFieldWithThis` to number because string [1]
+is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:102:2
 
 Cannot cast `o.base_annotatedInitializedFieldValid` to number because null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:104:2
 
 Cannot cast `Child.base_annotatedInitializedFieldValid` to number because null
-or undefined is incompatible with number.
+or undefined [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:107:2
 
 Cannot cast `o.child_annotatedInitializedFieldValid` to number because null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:109:2
 
 Cannot cast `Child.child_annotatedInitializedFieldValid` to number because null
-or undefined is incompatible with number.
+or undefined [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- derived_class.js:118:2
 
-Cannot cast `o.base_annotatedInitializedFieldInvalid` to string because number
-is incompatible with string.
+Cannot cast `o.base_annotatedInitializedFieldInvalid` to string because
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------- derived_class.js:120:2
 
 Cannot cast `Child.base_annotatedInitializedFieldInvalid` to string because
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------- derived_class.js:123:2
 
-Cannot cast `o.child_annotatedInitializedFieldInvalid` to string because number
-is incompatible with string.
+Cannot cast `o.child_annotatedInitializedFieldInvalid` to string because
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------- derived_class.js:125:2
 
 Cannot cast `Child.child_annotatedInitializedFieldInvalid` to string because
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------- derived_class.js:132:2
 
-Cannot cast `o.inherited_initializer` to string because number is incompatible
-with string.
+Cannot cast `o.inherited_initializer` to string because number [1] is
+incompatible with string [2].
 
 
 Error --------------------------------------------------- derived_class.js:134:2
 
-Cannot cast `Child.inherited_initializer` to string because number is
-incompatible with string.
+Cannot cast `Child.inherited_initializer` to string because number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------- generic_class.js:15:2
 
-Cannot cast `o1.p` to string because number is incompatible with string.
+Cannot cast `o1.p` to string because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------- generic_class.js:18:2
 
-Cannot cast `ClassAnnotated.p` to string because number is incompatible with
-string.
+Cannot cast `ClassAnnotated.p` to string because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------- generic_class.js:26:16
 
-number is incompatible with `T`.
+number [1] is incompatible with `T` [2].
 
 
 Error --------------------------------------------------- generic_class.js:29:23
 
-number is incompatible with `T`.
+number [1] is incompatible with `T` [2].
 
 
 Error ---------------------------------------------------------- scoping.js:24:2
 
-Cannot cast `new Foo().outer` to string because number is incompatible with
-string.
+Cannot cast `new Foo().outer` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- scoping.js:26:2
 
-Cannot cast `Foo.outer` to string because number is incompatible with string.
+Cannot cast `Foo.outer` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- scoping.js:33:2
 
-Cannot cast `new Foo().selfTyped` to number because `Foo` is incompatible with
-number.
+Cannot cast `new Foo().selfTyped` to number because `Foo` [1] is incompatible
+with number [2].
 
 
 Error ---------------------------------------------------------- scoping.js:35:2
 
-Cannot cast `Foo.selfTyped` to number because `Foo` is incompatible with number.
+Cannot cast `Foo.selfTyped` to number because `Foo` [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- scoping.js:38:2
 
-Cannot cast `new Foo().selfTypedInit` to number because `Foo` is incompatible
-with number.
+Cannot cast `new Foo().selfTypedInit` to number because `Foo` [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------------- scoping.js:40:2
 
-Cannot cast `Foo.selfTypedInit` to number because `Foo` is incompatible with
-number.
+Cannot cast `Foo.selfTypedInit` to number because `Foo` [1] is incompatible with
+number [2].
 
 
 

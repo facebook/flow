@@ -1,29 +1,29 @@
 Error ------------------------------------------------------------- test.js:8:59
 
-Cannot return `x` because number is incompatible with `Queue`.
+Cannot return `x` because number [1] is incompatible with `Queue` [2].
 
 
 Error ------------------------------------------------------------- test.js:9:58
 
-Cannot return `q` because `Queue` is incompatible with number.
+Cannot return `q` because `Queue` [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:13:19
 
-Cannot call `counter_to_number` with `y` bound to `c` because number is
-incompatible with `Counter`.
+Cannot call `counter_to_number` with `y` bound to `c` because number [1] is
+incompatible with `Counter` [2].
 
 
 Error ------------------------------------------------------------ test.js:22:12
 
-Cannot return `x` because in type argument `T`, number is incompatible with
-string.
+Cannot return `x` because in type argument `T`, number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ test.js:27:12
 
-Cannot return `x` because in type argument `T`, number is incompatible with
-string.
+Cannot return `x` because in type argument `T`, number [1] is incompatible with
+string [2].
 
 
 

@@ -1,37 +1,37 @@
 Error ------------------------------------------------------------ Sigma.js:13:7
 
-Cannot call `x.c` because property `c` is missing in `B`.
+Cannot call `x.c` because property `c` is missing in `B` [1].
 
 
 Error ------------------------------------------------------------ Sigma.js:15:5
 
-Cannot assign number to `x` because number is incompatible with `B`.
+Cannot assign number to `x` because number [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------------ Sigma.js:15:5
 
-number is incompatible with `B`.
+number [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------------ Sigma.js:24:7
 
-Cannot call `x.d` because property `d` is missing in `C`.
+Cannot call `x.d` because property `d` is missing in `C` [1].
 
 
 Error ------------------------------------------------------------ Sigma.js:27:7
 
-Cannot call `x.c` because property `c` is missing in `A`.
+Cannot call `x.c` because property `c` is missing in `A` [1].
 
 
 Error ----------------------------------------------------------- Sigma.js:35:20
 
-`A` is incompatible with `D`.
+`A` [1] is incompatible with `D` [2].
 
 
 Error ------------------------------------------------------------ test.js:11:16
 
 Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in
-`ChildClass`.
+`ChildClass` [1].
 
 
 

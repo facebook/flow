@@ -1,182 +1,182 @@
 Error ---------------------------------------------------------- hoisted.js:10:3
 
-Cannot call `f` because possibly uninitialized variable is not a function.
+Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
 
 Error ---------------------------------------------------------- hoisted.js:17:3
 
-Cannot call `f` because possibly uninitialized variable is not a function.
+Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
 
 Error ---------------------------------------------------------- hoisted.js:31:3
 
-Cannot call `f` because uninitialized variable is not a function.
+Cannot call `f` because uninitialized variable [1] is not a function.
 
 
 Error ---------------------------------------------------------- hoisted.js:38:3
 
-Cannot call `f` because possibly uninitialized variable is not a function.
+Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
 
 Error ---------------------------------------------------------- hoisted.js:45:3
 
-Cannot call `f` because possibly uninitialized variable is not a function.
+Cannot call `f` because possibly uninitialized variable [1] is not a function.
 
 
 Error -------------------------------------------------------- hoisted2.js:17:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- hoisted2.js:33:20
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- hoisted2.js:39:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- hoisted2.js:50:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------- hoisted2.js:69:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------- hoisted2.js:94:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:124:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:137:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:146:22
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:160:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:171:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:184:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:208:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:219:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:232:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:243:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:256:18
 
-Cannot assign `x` to `y` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- hoisted2.js:267:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- let.js:17:18
 
-Cannot assign `x` to `z` because uninitialized variable is incompatible with
-number.
+Cannot assign `x` to `z` because uninitialized variable [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- let.js:24:11
 
-Cannot use variable `x` because the declaration either comes later or was
+Cannot use variable `x` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- let.js:33:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- let.js:58:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- let.js:83:22
 
-Cannot use variable `x` because the declaration either comes later or was
+Cannot use variable `x` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- let.js:93:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ let.js:111:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ let.js:120:18
 
-Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
-with number.
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is
+incompatible with number [2].
 
 
 

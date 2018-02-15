@@ -66,7 +66,7 @@ Error: disjoint_union.js:34
 
 Error ------------------------------------------------------------- enum.js:8:25
 
-number literal `2` is incompatible with number enum.
+number literal `2` [1] is incompatible with number enum [2].
 
 
 

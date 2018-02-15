@@ -1,35 +1,35 @@
 Error --------------------------------------------------- import_typeof.js:13:22
 
-Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` is incompatible with
-statics of `ClassFoo1`.
+Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible
+with statics of `ClassFoo1` [2].
 
 
 Error ---------------------------------------------------- import_typeof.js:14:5
 
-Cannot reference type `ClassFoo1T` from a value position.
+Cannot reference type `ClassFoo1T` [1] from a value position.
 
 
 Error --------------------------------------------------- import_typeof.js:24:22
 
-Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` is incompatible with
-statics of `ClassFoo2`.
+Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible
+with statics of `ClassFoo2` [2].
 
 
 Error ---------------------------------------------------- import_typeof.js:25:5
 
-Cannot reference type `ClassFoo2T` from a value position.
+Cannot reference type `ClassFoo2T` [1] from a value position.
 
 
 Error --------------------------------------------------- import_typeof.js:35:22
 
-Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` is incompatible with
-statics of `ClassFoo3`.
+Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible
+with statics of `ClassFoo3` [2].
 
 
 Error --------------------------------------------------- import_typeof.js:45:22
 
-Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` is incompatible with
-statics of `ClassFoo4`.
+Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible
+with statics of `ClassFoo4` [2].
 
 
 Error --------------------------------------------------- import_typeof.js:51:16
@@ -41,28 +41,32 @@ a type use `import type` instead.
 
 Error --------------------------------------------------- import_typeof.js:68:23
 
-Cannot assign `'asdf'` to `f2` because string is incompatible with number.
+Cannot assign `'asdf'` to `f2` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------- import_typeof.js:77:21
 
-Cannot assign `'asdf'` to `g2` because string is incompatible with number.
+Cannot assign `'asdf'` to `g2` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------- import_typeof.js:86:27
 
-Cannot assign `'asdf'` to `h2` because string is incompatible with number.
+Cannot assign `'asdf'` to `h2` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------- import_typeof.js:95:25
 
-Cannot assign `'asdf'` to `i2` because string is incompatible with number.
+Cannot assign `'asdf'` to `i2` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------- import_typeof.js:103:39
 
-Cannot assign object literal to `j2` because in property `str`, number is
-incompatible with string.
+Cannot assign object literal to `j2` because in property `str`, number [1] is
+incompatible with string [2].
 
 
 

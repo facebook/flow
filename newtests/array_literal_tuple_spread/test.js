@@ -51,54 +51,54 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 1 but tuple type [2] has an arity of 3.
             References:
               4:       let foo = [0];
-                                 ^^^ [1]: array literal
+                                 ^^^ [1]
               8:       (foo: [0, 1, 2]);
-                             ^^^^^^^^^ [2]: tuple type
+                             ^^^^^^^^^ [2]
 
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 2 but tuple type [2] has an arity of 3.
             References:
               6:         foo = [...foo, x];
-                               ^^^^^^^^^^^ [1]: array literal
+                               ^^^^^^^^^^^ [1]
               8:       (foo: [0, 1, 2]);
-                             ^^^^^^^^^ [2]: tuple type
+                             ^^^^^^^^^ [2]
 
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
             References:
               6:         foo = [...foo, x];
-                               ^^^^^^^^^^^ [1]: array literal
+                               ^^^^^^^^^^^ [1]
               8:       (foo: [0, 1, 2]);
-                             ^^^^^^^^^ [2]: tuple type
+                             ^^^^^^^^^ [2]
 
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because in index 1, number [1] is incompatible with number literal \`1\` [2].
             References:
               5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]: number
+                                              ^^^ [1]
               8:       (foo: [0, 1, 2]);
-                                 ^ [2]: number literal \`1\`
+                                 ^ [2]
 
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because in index 2, number [1] is incompatible with number literal \`2\` [2].
             References:
               5:       for (let x = 1; x < 3; x++) {
-                                    ^ [1]: number
+                                    ^ [1]
               8:       (foo: [0, 1, 2]);
-                                    ^ [2]: number literal \`2\`
+                                    ^ [2]
 
           test.js:8
             8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because in index 2, number [1] is incompatible with number literal \`2\` [2].
             References:
               5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]: number
+                                              ^^^ [1]
               8:       (foo: [0, 1, 2]);
-                                    ^ [2]: number literal \`2\`
+                                    ^ [2]
         `,
       ),
   ]),
@@ -118,9 +118,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`ret\` to undefined because array type [1] is incompatible with undefined [2].
             References:
               4:       function foo<T: Array<*>>(arr: T) {
-                                                      ^ [1]: array type
+                                                      ^ [1]
              11: (ret: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       )
       .because('The constant folding should turn the tuple into an array'),
@@ -135,18 +135,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
               6:         return foo([...arr, 1]);
-                                             ^ [1]: number
+                                             ^ [1]
              15:       (ret[5]: 2);
-                                ^ [2]: number literal \`2\`
+                                ^ [2]
 
           test.js:15
            15:       (ret[5]: 2);
                       ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
               8:       const ret = foo([1]);
-                                        ^ [1]: number
+                                        ^ [1]
              15:       (ret[5]: 2);
-                                ^ [2]: number literal \`2\`
+                                ^ [2]
         `,
       )
       .because('The element type should be `1`'),
@@ -167,18 +167,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2].
             References:
               6:         return foo([...arr, 1]);
-                                    ^^^^^^^^^^^ [1]: array literal
+                                    ^^^^^^^^^^^ [1]
              11: (ret: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
 
           test.js:11
            11: (ret: void);
                 ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2].
             References:
               8:       const ret = foo([1]);
-                                       ^^^ [1]: array literal
+                                       ^^^ [1]
              11: (ret: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       )
       .because('The constant folding should turn the tuple into an array'),
@@ -193,9 +193,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
               8:       const ret = foo([1]);
-                                        ^ [1]: number
+                                        ^ [1]
              15:       (ret[5]: 2);
-                                ^ [2]: number literal \`2\`
+                                ^ [2]
         `,
       )
       .because('The element type should be `1`'),
@@ -212,27 +212,27 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                ^^^^^^^^^^^^^^^^^^^^^ Cannot assign array literal to \`x\` because in index 1, number [1] is incompatible with number literal \`20\` [2].
             References:
               4:       var a = [2];
-                                ^ [1]: number
+                                ^ [1]
               6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                 ^^ [2]: number literal \`20\`
+                                 ^^ [2]
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
                                                          ^ Cannot assign array literal to \`x\` because in index 2, number [1] is incompatible with number literal \`30\` [2].
             References:
               6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                           ^ [1]: number
+                                                           ^ [1]
               6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                    ^^ [2]: number literal \`30\`
+                                    ^^ [2]
 
           test.js:6
             6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
                                                                   ^ Cannot assign array literal to \`x\` because in index 5, number [1] is incompatible with number literal \`60\` [2].
             References:
               6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                                                    ^ [1]: number
+                                                                    ^ [1]
               6:       var x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6];
-                                           ^^ [2]: number literal \`60\`
+                                           ^^ [2]
         `,
       )
   ]),
@@ -260,9 +260,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^^^ Cannot cast \`ret1[0]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
               8:       const ret2 = foo([3]);
-                                         ^ [1]: number
+                                         ^ [1]
              11: (ret1[0]: 2);
-                           ^ [2]: number literal \`2\`
+                           ^ [2]
         `,
       )
       .because('Flow infers the return type to [2,1] | [3,1]'),
@@ -274,9 +274,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^^^ Cannot cast \`ret2[0]\` to number literal \`3\` because number [1] is incompatible with number literal \`3\` [2].
             References:
               7:       const ret1 = foo([2]);
-                                         ^ [1]: number
+                                         ^ [1]
              13: (ret2[0]: 3);
-                           ^ [2]: number literal \`3\`
+                           ^ [2]
         `,
       )
       .because('Flow infers the return type to [2,1] | [3,1]'),
@@ -293,9 +293,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^^^^ Cannot cast \`nonTup\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
             References:
               5:       const nonTup = [...tup];
-                                      ^^^^^^^^ [1]: array literal
+                                      ^^^^^^^^ [1]
               6:       (nonTup: [1,2,3]);
-                                ^^^^^^^ [2]: tuple type
+                                ^^^^^^^ [2]
         `,
       )
   ]),
@@ -311,9 +311,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^^^^ Cannot cast \`nonTup\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2].
             References:
               5:       const nonTup = [...tup];
-                                      ^^^^^^^^ [1]: array literal
+                                      ^^^^^^^^ [1]
               6:       (nonTup: [1,2,3]);
-                                ^^^^^^^ [2]: tuple type
+                                ^^^^^^^ [2]
         `,
       )
   ]),
@@ -326,9 +326,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                           ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
             References:
             288:     @@iterator(): Iterator<string>;
-                                            ^^^^^^ [1]: string. See lib: [LIB] core.js:288
+                                            ^^^^^^ [1]. See lib: [LIB] core.js:288
               3: const arr: Array<number> = [..."hello"];
-                                  ^^^^^^ [2]: number
+                                  ^^^^^^ [2]
         `,
       )
       .because('String is an Iterable<string>'),
@@ -346,9 +346,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                 ^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
             References:
               4:       function *foo(): Generator<string, void, void> {
-                                                  ^^^^^^ [1]: string
+                                                  ^^^^^^ [1]
               7:       const arr: Array<number> = [...foo()];
-                                        ^^^^^^ [2]: number
+                                        ^^^^^^ [2]
         `,
       )
       .because('Generators are iterables too!'),
@@ -365,9 +365,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^^^^ Cannot return array literal because in type argument \`T\`, string [1] is incompatible with number [2].
             References:
               4:       function test(iter: Iterable<string>): Array<number> {
-                                                    ^^^^^^ [1]: string
+                                                    ^^^^^^ [1]
               4:       function test(iter: Iterable<string>): Array<number> {
-                                                                    ^^^^^^ [2]: number
+                                                                    ^^^^^^ [2]
         `,
       )
       .because('Spec says you can spread iterables')

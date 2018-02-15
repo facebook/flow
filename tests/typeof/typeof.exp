@@ -1,33 +1,36 @@
 Error ------------------------------------------------------------- maybe.js:9:2
 
-Cannot cast `'foo'` to `typeof x` because string is incompatible with number.
+Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- optional.js:9:2
 
-Cannot cast `null` to `typeof x` because null is incompatible with number.
+Cannot cast `null` to `typeof x` because null [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- typeof.js:43:19
 
-Cannot assign `MyClass1` to `b` because statics of `MyClass1` is incompatible
-with `MyClass1`.
+Cannot assign `MyClass1` to `b` because statics of `MyClass1` [1] is
+incompatible with `MyClass1` [2].
 
 
 Error ---------------------------------------------------------- typeof.js:53:26
 
-Cannot assign `new MyClass2()` to `c` because `MyClass2` is incompatible with
-`typeof MyClass2`.
+Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible
+with `typeof MyClass2` [2].
 
 
 Error ---------------------------------------------------------- typeof.js:61:26
 
-Cannot assign `'asdf'` to `e` because string is incompatible with number.
+Cannot assign `'asdf'` to `e` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- typeof.js:73:15
 
-Cannot reference type `numberAlias` from a value position.
+Cannot reference type `numberAlias` [1] from a value position.
 
 
 Error ---------------------------------------------------------- typeof.js:82:18

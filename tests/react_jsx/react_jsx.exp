@@ -1,791 +1,844 @@
 Error ------------------------------------------------------------- test.js:31:2
 
 Cannot create `ClassExact_NoProps` element because property `foo` is missing in
-`Props_NoProps` but exists in props.
+`Props_NoProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------- test.js:43:2
 
 Cannot create `FunctionExact_NoProps` element because property `foo` is missing
-in `Props_NoProps` but exists in props.
+in `Props_NoProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------- test.js:51:2
 
 Cannot create `AbstractExact_NoProps` element because property `foo` is missing
-in `Props_NoProps` but exists in props.
+in `Props_NoProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------- test.js:86:1
 
 Cannot create `Legacy_ManyProps` element because:
- - property `boolean1` is missing in props but exists in propTypes of React
-   component.
- - property `boolean2` is missing in props but exists in propTypes of React
-   component.
- - property `number` is missing in props but exists in propTypes of React
-   component.
- - property `string1` is missing in props but exists in propTypes of React
-   component.
- - property `string2` is missing in props but exists in propTypes of React
-   component.
+ - property `boolean1` is missing in props [1] but exists in propTypes of React
+   component [2].
+ - property `boolean2` is missing in props [1] but exists in propTypes of React
+   component [2].
+ - property `number` is missing in props [1] but exists in propTypes of React
+   component [2].
+ - property `string1` is missing in props [1] but exists in propTypes of React
+   component [2].
+ - property `string2` is missing in props [1] but exists in propTypes of React
+   component [2].
 
 
 Error ------------------------------------------------------------ test.js:104:1
 
 Cannot create `Legacy_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [2].
+ - in property `boolean1`, null [4] is incompatible with boolean [5].
+ - in property `boolean2`, null [6] is incompatible with boolean [5].
+ - in property `number`, null [7] is incompatible with number [8].
 
 
 Error ------------------------------------------------------------ test.js:123:2
 
 Cannot create `Legacy_ManyProps` element because property `number` is missing in
-props but exists in propTypes of React component.
+props [1] but exists in propTypes of React component [2].
 
 
 Error ----------------------------------------------------------- test.js:135:54
 
 Cannot create `Legacy_ManyProps` element because in property `number`, null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:144:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:148:1
 
 Cannot create `Class_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:166:1
 
 Cannot create `Class_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:185:2
 
 Cannot create `Class_ManyProps` element because property `number` is missing in
-props but exists in `Props_ManyProps`.
+props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:197:54
 
 Cannot create `Class_ManyProps` element because in property `number`, null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:206:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:210:1
 
 Cannot create `ClassExact_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:218:1
 
 Cannot create `ClassExact_ManyProps` element because:
- - property `a` is missing in `Props_ManyProps` but exists in props.
- - property `b` is missing in `Props_ManyProps` but exists in props.
- - property `c` is missing in `Props_ManyProps` but exists in props.
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------ test.js:228:1
 
 Cannot create `ClassExact_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:235:2
 
-Cannot create `ClassExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `ClassExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:242:2
 
-Cannot create `ClassExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `ClassExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:247:1
 
 Cannot create `ClassExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [3].
 
 
 Error ------------------------------------------------------------ test.js:251:2
 
-Cannot create `ClassExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `ClassExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:258:1
 
 Cannot create `ClassExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - in property `number`, null or undefined is incompatible with number.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - in property `number`, null or undefined [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------------ test.js:264:2
 
-Cannot create `ClassExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `ClassExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:268:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:272:1
 
 Cannot create `ClassPure_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:290:1
 
 Cannot create `ClassPure_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:309:2
 
 Cannot create `ClassPure_ManyProps` element because property `number` is missing
-in props but exists in `Props_ManyProps`.
+in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:321:54
 
 Cannot create `ClassPure_ManyProps` element because in property `number`, null
-or undefined is incompatible with number.
+or undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:330:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:334:1
 
 Cannot create `Function_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:352:1
 
 Cannot create `Function_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:371:2
 
 Cannot create `Function_ManyProps` element because property `number` is missing
-in props but exists in `Props_ManyProps`.
+in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:383:54
 
 Cannot create `Function_ManyProps` element because in property `number`, null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:392:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:396:1
 
 Cannot create `FunctionExact_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:404:1
 
 Cannot create `FunctionExact_ManyProps` element because:
- - property `a` is missing in `Props_ManyProps` but exists in props.
- - property `b` is missing in `Props_ManyProps` but exists in props.
- - property `c` is missing in `Props_ManyProps` but exists in props.
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------ test.js:414:1
 
 Cannot create `FunctionExact_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:421:2
 
-Cannot create `FunctionExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `FunctionExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:428:2
 
-Cannot create `FunctionExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `FunctionExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:433:1
 
 Cannot create `FunctionExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [3].
 
 
 Error ------------------------------------------------------------ test.js:437:2
 
-Cannot create `FunctionExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `FunctionExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:444:1
 
 Cannot create `FunctionExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - in property `number`, null or undefined is incompatible with number.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - in property `number`, null or undefined [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------------ test.js:450:2
 
-Cannot create `FunctionExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `FunctionExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:454:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:458:1
 
 Cannot create `Abstract_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:476:1
 
 Cannot create `Abstract_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:495:2
 
 Cannot create `Abstract_ManyProps` element because property `number` is missing
-in props but exists in `Props_ManyProps`.
+in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:507:54
 
 Cannot create `Abstract_ManyProps` element because in property `number`, null or
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:516:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:521:1
 
 Cannot create `AbstractExact_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:529:1
 
 Cannot create `AbstractExact_ManyProps` element because:
- - property `a` is missing in `Props_ManyProps` but exists in props.
- - property `b` is missing in `Props_ManyProps` but exists in props.
- - property `c` is missing in `Props_ManyProps` but exists in props.
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
 
 Error ------------------------------------------------------------ test.js:539:1
 
 Cannot create `AbstractExact_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:546:2
 
-Cannot create `AbstractExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `AbstractExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:553:2
 
-Cannot create `AbstractExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `AbstractExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:558:1
 
 Cannot create `AbstractExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [3].
 
 
 Error ------------------------------------------------------------ test.js:562:2
 
-Cannot create `AbstractExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `AbstractExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:569:1
 
 Cannot create `AbstractExact_ManyProps` element because:
- - inexact props is incompatible with exact `Props_ManyProps`.
- - in property `number`, null or undefined is incompatible with number.
+ - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+ - in property `number`, null or undefined [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------------ test.js:575:2
 
-Cannot create `AbstractExact_ManyProps` element because inexact props is
-incompatible with exact `Props_ManyProps`.
+Cannot create `AbstractExact_ManyProps` element because inexact props [1] is
+incompatible with exact `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:579:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:583:1
 
 Cannot create `Member_ManyProps.prop` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:601:1
 
 Cannot create `Member_ManyProps.prop` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:620:2
 
 Cannot create `Member_ManyProps.prop` element because property `number` is
-missing in props but exists in `Props_ManyProps`.
+missing in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:632:54
 
 Cannot create `Member_ManyProps.prop` element because in property `number`, null
-or undefined is incompatible with number.
+or undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:641:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:645:1
 
 Cannot create `EnhancedClass_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:663:1
 
 Cannot create `EnhancedClass_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:682:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `number` is
-missing in props but exists in `Props_ManyProps`.
+missing in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:694:54
 
 Cannot create `EnhancedClass_ManyProps` element because in property `number`,
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:703:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:707:1
 
 Cannot create `EnhancedFunction_ManyProps` element because:
- - property `boolean1` is missing in props but exists in `Props_ManyProps`.
- - property `boolean2` is missing in props but exists in `Props_ManyProps`.
- - property `number` is missing in props but exists in `Props_ManyProps`.
- - property `string1` is missing in props but exists in `Props_ManyProps`.
- - property `string2` is missing in props but exists in `Props_ManyProps`.
+ - property `boolean1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `boolean2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `number` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string1` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
+ - property `string2` is missing in props [1] but exists in
+   `Props_ManyProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:725:1
 
 Cannot create `EnhancedFunction_ManyProps` element because:
- - in property `string1`, null is incompatible with string.
- - in property `string2`, null is incompatible with string.
- - in property `boolean1`, null is incompatible with boolean.
- - in property `boolean2`, null is incompatible with boolean.
- - in property `number`, null is incompatible with number.
+ - in property `string1`, null [1] is incompatible with string [2].
+ - in property `string2`, null [3] is incompatible with string [4].
+ - in property `boolean1`, null [5] is incompatible with boolean [6].
+ - in property `boolean2`, null [7] is incompatible with boolean [8].
+ - in property `number`, null [9] is incompatible with number [10].
 
 
 Error ------------------------------------------------------------ test.js:744:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `number` is
-missing in props but exists in `Props_ManyProps`.
+missing in props [1] but exists in `Props_ManyProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:756:54
 
 Cannot create `EnhancedFunction_ManyProps` element because in property `number`,
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test.js:765:54
 
-null or undefined is incompatible with number.
+null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:780:2
 
 Cannot create `Legacy_OptionalProps` element because property `foo` is missing
-in props but exists in propTypes of React component.
+in props [1] but exists in propTypes of React component [2].
 
 
 Error ----------------------------------------------------------- test.js:782:28
 
 Cannot create `Legacy_OptionalProps` element because in property `foo`,
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:788:7
 
-Cannot create `Legacy_OptionalProps` element because in property `foo`, string
-is incompatible with number.
+Cannot create `Legacy_OptionalProps` element because in property `foo`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:793:7
 
-Cannot create `Legacy_OptionalProps` element because in property `bar`, string
-is incompatible with number.
+Cannot create `Legacy_OptionalProps` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:797:2
 
 Cannot create `Class_OptionalProps` element because property `foo` is missing in
-props but exists in `Props_OptionalProps`.
+props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:805:7
 
-Cannot create `Class_OptionalProps` element because in property `foo`, string is
-incompatible with number.
+Cannot create `Class_OptionalProps` element because in property `foo`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:810:7
 
-Cannot create `Class_OptionalProps` element because in property `bar`, string is
-incompatible with number.
+Cannot create `Class_OptionalProps` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:815:2
 
 Cannot create `ClassExact_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:823:7
 
 Cannot create `ClassExact_OptionalProps` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:828:7
 
 Cannot create `ClassExact_OptionalProps` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:833:2
 
 Cannot create `ClassPure_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:841:7
 
 Cannot create `ClassPure_OptionalProps` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:846:7
 
 Cannot create `ClassPure_OptionalProps` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:850:2
 
 Cannot create `Function_OptionalProps` element because property `foo` is missing
-in props but exists in `Props_OptionalProps`.
+in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:858:7
 
-Cannot create `Function_OptionalProps` element because in property `foo`, string
-is incompatible with number.
+Cannot create `Function_OptionalProps` element because in property `foo`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:863:7
 
-Cannot create `Function_OptionalProps` element because in property `bar`, string
-is incompatible with number.
+Cannot create `Function_OptionalProps` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:867:2
 
 Cannot create `FunctionExact_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:875:7
 
 Cannot create `FunctionExact_OptionalProps` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:880:7
 
 Cannot create `FunctionExact_OptionalProps` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:884:2
 
 Cannot create `Abstract_OptionalProps` element because property `foo` is missing
-in props but exists in `Props_OptionalProps`.
+in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:892:7
 
-Cannot create `Abstract_OptionalProps` element because in property `foo`, string
-is incompatible with number.
+Cannot create `Abstract_OptionalProps` element because in property `foo`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:897:7
 
-Cannot create `Abstract_OptionalProps` element because in property `bar`, string
-is incompatible with number.
+Cannot create `Abstract_OptionalProps` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:902:2
 
 Cannot create `AbstractExact_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:910:7
 
 Cannot create `AbstractExact_OptionalProps` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:915:7
 
 Cannot create `AbstractExact_OptionalProps` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:919:2
 
 Cannot create `Member_OptionalProps.prop` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:927:7
 
 Cannot create `Member_OptionalProps.prop` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:932:7
 
 Cannot create `Member_OptionalProps.prop` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:936:2
 
 Cannot create `EnhancedClass_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:944:7
 
 Cannot create `EnhancedClass_OptionalProps` element because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:949:7
 
 Cannot create `EnhancedClass_OptionalProps` element because in property `bar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:953:2
 
 Cannot create `EnhancedFunction_OptionalProps` element because property `foo` is
-missing in props but exists in `Props_OptionalProps`.
+missing in props [1] but exists in `Props_OptionalProps` [2].
 
 
 Error ------------------------------------------------------------ test.js:961:7
 
 Cannot create `EnhancedFunction_OptionalProps` element because in property
-`foo`, string is incompatible with number.
+`foo`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:966:7
 
 Cannot create `EnhancedFunction_OptionalProps` element because in property
-`bar`, string is incompatible with number.
+`bar`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test.js:994:2
 
 Cannot create `Legacy_DefaultProps` element because property `bar` is missing in
-props but exists in propTypes of React component.
+props [1] but exists in propTypes of React component [2].
 
 
 Error ----------------------------------------------------------- test.js:1010:2
 
 Cannot create `Class_DefaultProps` element because property `bar` is missing in
-props but exists in `Props_DefaultProps`.
+props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1027:2
 
 Cannot create `ClassExact_DefaultProps` element because property `bar` is
-missing in props but exists in `Props_DefaultProps`.
+missing in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1043:2
 
 Cannot create `ClassPure_DefaultProps` element because property `bar` is missing
-in props but exists in `Props_DefaultProps`.
+in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1060:2
 
 Cannot create `Function_DefaultProps` element because property `bar` is missing
-in props but exists in `Props_DefaultProps`.
+in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1077:2
 
 Cannot create `FunctionExact_DefaultProps` element because property `bar` is
-missing in props but exists in `Props_DefaultProps`.
+missing in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1089:2
 
 Cannot create `Member_DefaultProps.prop` element because property `bar` is
-missing in props but exists in `Props_DefaultProps`.
+missing in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1101:2
 
 Cannot create `EnhancedClass_DefaultProps` element because property `bar` is
-missing in props but exists in `Props_DefaultProps`.
+missing in props [1] but exists in `Props_DefaultProps` [2].
 
 
 Error ----------------------------------------------------------- test.js:1113:2
 
 Cannot create `EnhancedFunction_DefaultProps` element because property `bar` is
-missing in props but exists in `Props_DefaultProps`.
+missing in props [1] but exists in `Props_DefaultProps` [2].
 
 
 

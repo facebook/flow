@@ -1,22 +1,24 @@
 Error --------------------------------------------------------- generics.js:4:32
 
-Cannot assign `x` to `r` because `X` is incompatible with number.
+Cannot assign `x` to `r` because `X` [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------- import_class.js:3:15
 
-Cannot call `C` with empty string bound to `x` because string is incompatible
-with number.
+Cannot call `C` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------------- objects.js:5:17
 
-Cannot assign `c.foo()` to `x` because number is incompatible with string.
+Cannot assign `c.foo()` to `x` because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------- objects.js:13:17
 
-Cannot assign `o2.bar()` to `y` because string is incompatible with number.
+Cannot assign `o2.bar()` to `y` because string [1] is incompatible with
+number [2].
 
 
 

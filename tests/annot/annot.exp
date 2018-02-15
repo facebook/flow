@@ -1,65 +1,65 @@
 Error ------------------------------------------------------------ annot.js:4:44
 
-Cannot assign `foo` to `bar` because in the first argument, string is
-incompatible with number.
+Cannot assign `foo` to `bar` because in the first argument, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ annot.js:6:58
 
-Cannot return `foo(...)` because string is incompatible with number.
+Cannot return `foo(...)` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ annot.js:8:46
 
 Cannot assign object literal to `obj` because:
- - property `j` is missing in object literal but exists in object type.
- - in property `i`, string is incompatible with number.
+ - property `j` is missing in object literal [1] but exists in object type [2].
+ - in property `i`, string [3] is incompatible with number [4].
 
 
 Error ----------------------------------------------------------- annot.js:10:31
 
-Cannot assign array literal to `arr` because in type argument `T`, string is
-incompatible with number.
+Cannot assign array literal to `arr` because in type argument `T`, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- annot.js:13:28
 
-Cannot assign array literal to `array` because in type argument `T`, string is
-incompatible with number.
+Cannot assign array literal to `array` because in type argument `T`, string [1]
+is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- annot.js:27:25
 
 Cannot assign object literal to `test_obj` because property `foo-bar` is missing
-in object literal but exists in `ObjType`.
+in object literal [1] but exists in `ObjType` [2].
 
 
 Error ------------------------------------------------------------ annot.js:31:7
 
-Cannot assign `"hey"` to `n` because string is incompatible with number.
+Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- annot.js:46:14
 
 Cannot assign `batchRequests.map(...)` to `batchRequests` because in type
-argument `T`, property `path` is missing in object literal but exists in object
-type.
+argument `T`, property `path` is missing in object literal [1] but exists in
+object type [2].
 
 
 Error ----------------------------------------------------------- annot.js:55:18
 
-Cannot assign `3` to `toz` because number is incompatible with null.
+Cannot assign `3` to `toz` because number [1] is incompatible with null [2].
 
 
 Error ------------------------------------------------------ forward_ref.js:1:32
 
-Cannot assign `null` to `myClassInstance` because null is incompatible with
-`MyClass`.
+Cannot assign `null` to `myClassInstance` because null [1] is incompatible with
+`MyClass` [2].
 
 
 Error ------------------------------------------------------ forward_ref.js:4:10
 
-Cannot return `null` because null is incompatible with `MyClass`.
+Cannot return `null` because null [1] is incompatible with `MyClass` [2].
 
 
 

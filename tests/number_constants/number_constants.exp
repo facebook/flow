@@ -1,36 +1,37 @@
 Error ------------------------------------------------- number_constants.js:2:17
 
-Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number is incompatible
-with string.
+Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------- number_constants.js:4:17
 
-Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number is incompatible
-with string.
+Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------- number_constants.js:6:17
 
-Cannot assign `Number.MAX_VALUE` to `f` because number is incompatible with
-string.
+Cannot assign `Number.MAX_VALUE` to `f` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------- number_constants.js:8:17
 
-Cannot assign `Number.MIN_VALUE` to `h` because number is incompatible with
-string.
+Cannot assign `Number.MIN_VALUE` to `h` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------ number_constants.js:10:17
 
-Cannot assign `Number.NaN` to `j` because number is incompatible with string.
+Cannot assign `Number.NaN` to `j` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------ number_constants.js:12:17
 
-Cannot assign `Number.EPSILON` to `l` because number is incompatible with
-string.
+Cannot assign `Number.EPSILON` to `l` because number [1] is incompatible with
+string [2].
 
 
 

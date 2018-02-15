@@ -22,9 +22,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^ Cannot cast \`"str"\` to \`T\` because string [1] is incompatible with number [2].
             References:
               9: ("str": T);
-                  ^^^^^ [1]: string
+                  ^^^^^ [1]
               9: ("str": T);
-                         ^ [2]: number
+                         ^ [2]
         `,
       ),
   ]),
@@ -44,9 +44,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^ Cannot cast \`"str"\` to \`U\` because string [1] is incompatible with number [2].
             References:
               9: ("str": U);
-                  ^^^^^ [1]: string
+                  ^^^^^ [1]
               9: ("str": U);
-                         ^ [2]: number
+                         ^ [2]
         `,
       ),
   ]),
@@ -66,9 +66,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with statics of \`C\` [2].
             References:
               9: ("str": C);
-                  ^^^^^ [1]: string
+                  ^^^^^ [1]
               9: ("str": C);
-                         ^ [2]: statics of \`C\`
+                         ^ [2]
         `,
       ),
   ]),
@@ -88,9 +88,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
             References:
               9: ("str": CPrime);
-                  ^^^^^ [1]: string
+                  ^^^^^ [1]
               9: ("str": CPrime);
-                         ^^^^^^ [2]: statics of \`C\`
+                         ^^^^^^ [2]
         `,
       ),
   ]),

@@ -1,8 +1,8 @@
 Without --include-warnings
 Error -------------------------------------------------------------- test.js:7:5
 
-Sketchy null check on number which is potentially 0. Perhaps you meant to check
-for null or undefined? (`sketchy-null-number`)
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to
+check for null or undefined [2]? (`sketchy-null-number`)
 
 
 
@@ -12,14 +12,14 @@ Found 1 error
 With --include-warnings
 Error -------------------------------------------------------------- test.js:7:5
 
-Sketchy null check on number which is potentially 0. Perhaps you meant to check
-for null or undefined? (`sketchy-null-number`)
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to
+check for null or undefined [2]? (`sketchy-null-number`)
 
 
 Warning ----------------------------------------------------------- test.js:10:5
 
-Sketchy null check on number which is potentially 0. Perhaps you meant to check
-for null or undefined? (`sketchy-null-number`)
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to
+check for null or undefined [2]? (`sketchy-null-number`)
 
 
 
@@ -52,7 +52,7 @@ JSON without --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -72,7 +72,7 @@ JSON without --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[2]: null or undefined",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -139,7 +139,7 @@ JSON with --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -159,7 +159,7 @@ JSON with --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[2]: null or undefined",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -218,7 +218,7 @@ JSON with --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -238,7 +238,7 @@ JSON with --include-warnings
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[2]: null or undefined",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",

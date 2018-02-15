@@ -1,26 +1,26 @@
 Error ------------------------------------------------------------ test2.js:4:12
 
-Cannot return `x` because number is incompatible with `ID`.
+Cannot return `x` because number [1] is incompatible with `ID` [2].
 
 
 Error ------------------------------------------------------------ test2.js:8:12
 
-Cannot return `show(...)` because number is incompatible with `ID`.
+Cannot return `show(...)` because number [1] is incompatible with `ID` [2].
 
 
 Error ----------------------------------------------------------- test2.js:12:12
 
-Cannot return `opaquify(...)` because `ID` is incompatible with number.
+Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test3.js:5:46
 
-Cannot cast `x` to `typeof y` because number is incompatible with `num`.
+Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2].
 
 
 Error ------------------------------------------------------------ test3.js:5:68
 
-Cannot return `x` because number is incompatible with `num`.
+Cannot return `x` because number [1] is incompatible with `num` [2].
 
 
 

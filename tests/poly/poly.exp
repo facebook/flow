@@ -1,87 +1,89 @@
 Error ------------------------------------------------------------ annot.js:3:17
 
-Cannot use `A` with less than 1 type argument.
+Cannot use `A` [1] with less than 1 type argument.
 
 
 Error ----------------------------------------------------------- annot.js:10:36
 
 Cannot return `new A() || new A()` because in type argument `X`, property `x` is
-missing in object type but exists in object type.
+missing in object type [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- error.js:8:8
 
-Cannot call `newFn1` with `'string'` bound to the first parameter because string
-is incompatible with number.
+Cannot call `newFn1` with `'string'` bound to the first parameter because
+string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- error.js:12:12
 
 Cannot call `newFn2` with function bound to the first parameter because in the
-first argument, string is incompatible with number.
+first argument, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ error.js:15:5
 
-Cannot call `fn3` with `42` bound to `x` because number is incompatible with
-string.
+Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ error.js:20:2
 
-Cannot cast `newVal4` to string because number is incompatible with string.
+Cannot cast `newVal4` to string because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------- implicit_bounded_instantiation.js:15:8
 
 Cannot instantiate `C` because:
- - in type argument `T`, `Base` is incompatible with `Middle`.
- - in type argument `T`, number is incompatible with `Middle`.
+ - in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
+ - in type argument `T`, number [3] is incompatible with `Middle` [2].
 
 
 Error ----------------------------------- implicit_bounded_instantiation.js:19:8
 
-Cannot call `a.meth` with `42` bound to `a` because number is incompatible with
-`Middle`.
+Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible
+with `Middle` [2].
 
 
 Error ----------------------------------- implicit_bounded_instantiation.js:20:8
 
-Cannot call `a.meth` with `new Base()` bound to `a` because `Base` is
-incompatible with `Middle`.
+Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is
+incompatible with `Middle` [2].
 
 
 Error ----------------------------------------------------------- phantom.js:7:2
 
-Cannot cast `a` to `B` because in type argument `Phantom`, number is
-incompatible with string.
+Cannot cast `a` to `B` because in type argument `Phantom`, number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------------- phantom.js:15:2
 
-Cannot cast `c` to `D` because in type argument `Phantom`, number is
-incompatible with string.
+Cannot cast `c` to `D` because in type argument `Phantom`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------ poly.js:17:16
 
 Cannot assign `foo.x` to `x` because:
- - number is incompatible with string.
- - number is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ poly.js:18:31
 
-Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string is
-incompatible with number.
+Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------------- test.js:7:1
 
-Cannot extend `C` with `D` because:
- - in property `foo` and then the first argument, number is incompatible with
-   `X`.
- - in property `foo` and then the return value, number is incompatible with `X`.
+Cannot extend `C` [1] with `D` because:
+ - in property `foo` and then the first argument, number [2] is incompatible
+   with `X` [3].
+ - in property `foo` and then the return value, number [4] is incompatible with
+   `X` [5].
 
 
 

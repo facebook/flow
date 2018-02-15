@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------ array.js:4:10
 
-Cannot return `x` because array type has an unknown number of elements, so is
-incompatible with tuple type.
+Cannot return `x` because array type [1] has an unknown number of elements, so
+is incompatible with tuple type [2].
 
 
 Error ------------------------------------------------------ number-index.js:7:1
@@ -12,38 +12,38 @@ write a tuple element.
 
 Error ---------------------------------------------------------- optional.js:4:2
 
-Cannot cast array literal to tuple type because array literal has an arity of 1
-but tuple type has an arity of 2.
+Cannot cast array literal to tuple type because array literal [1] has an arity
+of 1 but tuple type [2] has an arity of 2.
 
 
 Error ---------------------------------------------------------- optional.js:6:2
 
-Cannot cast array literal to tuple type because empty array literal has an arity
-of 0 but tuple type has an arity of 2.
+Cannot cast array literal to tuple type because empty array literal [1] has an
+arity of 0 but tuple type [2] has an arity of 2.
 
 
 Error ----------------------------------------------------------- too-few.js:5:5
 
-Cannot call `foo` with array literal bound to `a` because array literal has an
-arity of 1 but tuple type has an arity of 2.
+Cannot call `foo` with array literal bound to `a` because array literal [1] has
+an arity of 1 but tuple type [2] has an arity of 2.
 
 
 Error ----------------------------------------------------------- tuples.js:2:13
 
-Cannot assign array literal to `b` because array literal has an arity of 1 but
-tuple type has an arity of 0.
+Cannot assign array literal to `b` because array literal [1] has an arity of 1
+but tuple type [2] has an arity of 0.
 
 
 Error ----------------------------------------------------------- tuples.js:3:19
 
-Cannot assign array literal to `c` because empty array literal has an arity of 0
-but tuple type has an arity of 1.
+Cannot assign array literal to `c` because empty array literal [1] has an arity
+of 0 but tuple type [2] has an arity of 1.
 
 
 Error ----------------------------------------------------------- tuples.js:6:33
 
-Cannot assign array literal to `f` because in index 1, number is incompatible
-with string.
+Cannot assign array literal to `f` because in index 1, number [1] is
+incompatible with string [2].
 
 
 

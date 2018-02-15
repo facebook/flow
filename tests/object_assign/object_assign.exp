@@ -1,72 +1,76 @@
 Error --------------------------------------------------------------- A.js:13:19
 
-Cannot assign `Bad.foo()` to `bad` because string is incompatible with number.
+Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------------------- A.js:21:20
 
-Cannot assign `Good.foo()` to `good` because string is incompatible with number.
+Cannot assign `Good.foo()` to `good` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------------- B.js:7:20
 
-Cannot assign `A.Good.foo()` to `good` because string is incompatible with
-number.
+Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------------------- B.js:10:20
 
-Cannot assign `f()` to `bad_` because string is incompatible with number.
+Cannot assign `f()` to `bad_` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------------------- B.js:10:20
 
-Cannot call `f` because property `foo` is missing in global object but exists in
-object literal.
+Cannot call `f` because property `foo` is missing in global object [1] but
+exists in object literal [2].
 
 
 Error --------------------------------------------------------------- B.js:12:19
 
-Cannot assign `A.Bad.foo()` to `bad` because string is incompatible with number.
+Cannot assign `A.Bad.foo()` to `bad` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- non_objects.js:3:1
 
-Property `a` is missing in string.
+Property `a` is missing in string [1].
 
 
 Error ------------------------------------------------------- non_objects.js:4:1
 
-Property `a` is missing in number.
+Property `a` is missing in number [1].
 
 
 Error ------------------------------------------------------- non_objects.js:5:1
 
-number is not an object.
+number [1] is not an object.
 
 
 Error ------------------------------------------------------------ spread.js:7:2
 
 Cannot cast `Object.assign(...)` to object type because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ spread.js:8:2
 
 Cannot cast `Object.assign(...)` to object type because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ spread.js:9:2
 
 Cannot cast `Object.assign(...)` to object type because in property `bar`,
-number is incompatible with boolean.
+number [1] is incompatible with boolean [2].
 
 
 Error ---------------------------------------------------------- spread.js:13:19
 
-Cannot cast `Object.assign(...)` to object type because in property `b`, string
-is incompatible with boolean literal `true`.
+Cannot cast `Object.assign(...)` to object type because in property `b`,
+string [1] is incompatible with boolean literal `true` [2].
 
 
 

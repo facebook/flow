@@ -1,240 +1,240 @@
 ======Start off with the .js files but without the .flow file======
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with
+boolean [2].
 
 
 
@@ -244,240 +244,240 @@ Found 13 errors
 ======Start off with the .js files and the .flow file======
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Implementation` [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Implementation` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 
@@ -487,240 +487,240 @@ Found 13 errors
 ======Start off without the .js files and with the .flow file======
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 
 Found 13 errors
 Error ----------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:25:2
 
-Cannot cast `B1.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:29:2
 
-Cannot cast `B2.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `B2.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:32:2
 
-Cannot cast `C.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `C.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:35:2
 
-Cannot cast `D.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `D.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:38:2
 
-Cannot cast `E.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `E.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------- test_absolute.js:41:2
 
-Cannot cast `F.fun()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `F.fun()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- test_relative.js:3:2
 
-Cannot cast `foo()` to boolean because `Definition` is incompatible with
-boolean.
+Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with
+boolean [2].
 
 
 

@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------- fun.js:5:19
 
-Cannot assign function to `f0` because in the return value, number is
-incompatible with undefined.
+Cannot assign function to `f0` because in the return value, number [1] is
+incompatible with undefined [2].
 
 
 Error ----------------------------------------------------------- indexer.js:9:3
@@ -11,78 +11,79 @@ Multiple indexers are not supported.
 
 Error -------------------------------------------------------- interface.js:3:17
 
-Cannot assign `new C().x` to `x` because number is incompatible with string.
+Cannot assign `new C().x` to `x` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- interface.js:7:13
 
-Cannot reference type `I` from a value position.
+Cannot reference type `I` [1] from a value position.
 
 
 Error -------------------------------------------------------- interface.js:10:6
 
-Cannot get `o.name` because property `name` is missing in `I`.
+Cannot get `o.name` because property `name` is missing in `I` [1].
 
 
 Error ------------------------------------------------------------- test.js:6:17
 
-Cannot assign object literal to `k` because in property `x`, string is
-incompatible with number.
+Cannot assign object literal to `k` because in property `x`, string [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------------- test.js:7:2
 
-Cannot cast `k.x` to string because number is incompatible with string.
+Cannot cast `k.x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test.js:17:20
 
 Cannot assign object literal to `e` because:
- - in property `x`, string is incompatible with number.
- - in property `z`, string is incompatible with number.
+ - in property `x`, string [1] is incompatible with number [2].
+ - in property `z`, string [3] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:18:2
 
-Cannot cast `e.x` to string because number is incompatible with string.
+Cannot cast `e.x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- test.js:20:2
 
-Cannot cast `e.z` to string because number is incompatible with string.
+Cannot cast `e.z` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test2.js:5:34
 
-Cannot get `l.z` because property `z` is missing in `L`.
+Cannot get `l.z` because property `z` is missing in `L` [1].
 
 
 Error ------------------------------------------------------------ test3.js:3:31
 
-Cannot extend `I` with `K` because in property `x`, string is incompatible with
-number.
+Cannot extend `I` [1] with `K` because in property `x`, string [2] is
+incompatible with number [3].
 
 
 Error ------------------------------------------------------------- test3.js:5:4
 
-Cannot cast `k.x` to number because string is incompatible with number.
+Cannot cast `k.x` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test3.js:6:4
 
-Cannot cast `k.y` to number because string is incompatible with number.
+Cannot cast `k.y` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test4.js:2:2
 
-Cannot cast function to `I` because property `foo` is missing in function but
-exists in `I`.
+Cannot cast function to `I` because property `foo` is missing in function [1]
+but exists in `I` [2].
 
 
 Error ------------------------------------------------------------ test4.js:9:17
 
 Cannot call `new C().bar` with function bound to `f` because in the first
-argument, string is incompatible with number.
+argument, string [1] is incompatible with number [2].
 
 
 

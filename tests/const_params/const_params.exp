@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------- test.js:17:3
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 

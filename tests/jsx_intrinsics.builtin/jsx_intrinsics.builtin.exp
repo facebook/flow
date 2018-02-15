@@ -1,24 +1,24 @@
 Error ------------------------------------------------------------- main.js:12:4
 
 Cannot assign `<CustomComponent />` to `b` because in property `type`,
-`CustomComponent` is incompatible with `CustomComponentNope`.
+`CustomComponent` [1] is incompatible with `CustomComponentNope` [2].
 
 
 Error ------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because:
- - in property `props`, property `prop1` is missing in object type but exists in
-   object type.
+ - in property `props`, property `prop1` is missing in object type [1] but
+   exists in object type [2].
  - in property `type` and then type argument `Props`, property `prop` is missing
-   in object type but exists in object type.
+   in object type [2] but exists in object type [1].
  - in property `type` and then type argument `Props`, property `prop1` is
-   missing in object type but exists in object type.
+   missing in object type [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ main.js:21:27
 
-Cannot assign `<div />` to `e` because in property `type`, `div` is incompatible
-with string literal `span`.
+Cannot assign `<div />` to `e` because in property `type`, `div` [1] is
+incompatible with string literal `span` [2].
 
 
 

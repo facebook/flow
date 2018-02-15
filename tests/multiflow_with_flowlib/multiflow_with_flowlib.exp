@@ -1,9 +1,10 @@
 Error ----------------------------------------------------------- spread.js:14:1
 
 Cannot call `funWithRestArray` because:
- - in the rest argument and then type argument `T`, string is incompatible with
-   number.
- - in the rest argument, string is incompatible with number literal `123`.
+ - in the rest argument and then type argument `T`, string [1] is incompatible
+   with number [2].
+ - in the rest argument, string [1] is incompatible with number literal
+   `123` [3].
 
 
 

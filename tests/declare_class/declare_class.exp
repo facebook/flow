@@ -1,29 +1,31 @@
 Error --------------------------------------------------------- lib/test.js:8:10
 
-Cannot extend mixins `_module.C` with `D` because in property `foo` and then the
-return value, string is incompatible with number.
+Cannot extend mixins `_module.C` [1] with `D` because in property `foo` and then
+the return value, string [2] is incompatible with number [3].
 
 
 Error ----------------------------------------------------- declare_class.js:8:7
 
-Cannot assign empty string to `C.x` because string is incompatible with number.
+Cannot assign empty string to `C.x` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------- declare_class.js:9:7
 
-Cannot call `C.foo` with empty string bound to `x` because string is
-incompatible with number.
+Cannot call `C.foo` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------- declare_class.js:12:2
 
-Cannot cast `C.name` to number because string is incompatible with number.
+Cannot cast `C.name` to number because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------- declare_class.js:15:7
 
-Cannot call `D` with `123` bound to `x` because number is incompatible with
-string.
+Cannot call `D` with `123` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 

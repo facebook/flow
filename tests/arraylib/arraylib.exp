@@ -1,46 +1,46 @@
 Error -------------------------------------------------------- array_lib.js:5:34
 
-Cannot call `foo` with `x` bound to `x` because number is incompatible with
-string.
+Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- array_lib.js:8:17
 
-Cannot assign `b[0]` to `d` because string is incompatible with number.
+Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- array_lib.js:10:23
 
-Cannot assign `a.reverse()` to `e` because in type argument `T`, number is
-incompatible with string.
+Cannot assign `a.reverse()` to `e` because in type argument `T`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------- array_lib.js:21:24
 
 Cannot assign `h.concat(...)` to `n` because:
- - in type argument `T`, string is incompatible with number.
- - in type argument `T`, string is incompatible with number.
- - in type argument `T`, string is incompatible with number.
+ - in type argument `T`, string [1] is incompatible with number [2].
+ - in type argument `T`, string [3] is incompatible with number [2].
+ - in type argument `T`, string [4] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- array_lib.js:46:29
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ------------------------------------------------------- array_lib.js:46:39
 
-Cannot get `str.length` because property `length` is missing in `Number`.
+Cannot get `str.length` because property `length` is missing in `Number` [1].
 
 
 Error ------------------------------------------------------- array_lib.js:47:34
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ------------------------------------------------------- array_lib.js:47:44
 
-Cannot get `str.length` because property `length` is missing in `Number`.
+Cannot get `str.length` because property `length` is missing in `Number` [1].
 
 
 Error ------------------------------------------------------------ length.js:7:3

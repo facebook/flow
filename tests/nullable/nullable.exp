@@ -1,21 +1,21 @@
 Error ------------------------------------------------------------- error.js:8:8
 
-Cannot cast `any` to number because null or undefined is incompatible with
-number.
+Cannot cast `any` to number because null or undefined [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- error.js:9:3
 
 Cannot cast `any` to null because:
- - null or undefined is incompatible with null.
- - number is incompatible with null.
+ - null or undefined [1] is incompatible with null [2].
+ - number [3] is incompatible with null [2].
 
 
 Error ------------------------------------------------------------ error.js:10:3
 
 Cannot cast `any` to undefined because:
- - null or undefined is incompatible with undefined.
- - number is incompatible with undefined.
+ - null or undefined [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
 
 
 Error: error.js:16
@@ -64,31 +64,32 @@ Error: error.js:17
 
 Error ------------------------------------------------------------ maybe.js:5:11
 
-Cannot cast `123` to nullable string because number is incompatible with string.
+Cannot cast `123` to nullable string because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------- nullable.js:1:32
 
-Cannot return `null` because null is incompatible with string.
+Cannot return `null` because null [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- nullable.js:11:22
 
-Cannot call `corge` with `x` bound to `x` because string is incompatible with
-number.
+Cannot call `corge` with `x` bound to `x` because string [1] is incompatible
+with number [2].
 
 
 Error -------------------------------------------------------- nullable.js:15:17
 
 Cannot call `qux` with `x` bound to `x` because:
- - null is incompatible with string.
- - null or undefined is incompatible with string.
+ - null [1] is incompatible with string [2].
+ - null or undefined [3] is incompatible with string [2].
 
 
 Error --------------------------------------------------- simple_nullable.js:4:5
 
-Cannot call `bar` with `'hmm'` bound to `x` because string is incompatible with
-number.
+Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible
+with number [2].
 
 
 

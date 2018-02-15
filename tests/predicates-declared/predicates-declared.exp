@@ -5,33 +5,34 @@ Unexpected token =
 
 Error --------------------------------------------- sanity-fall-through.js:12:10
 
-Cannot return `1` because number is incompatible with string.
+Cannot return `1` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------- sanity-invalid-calls.js:10:8
 
-Cannot call `1` because number is not a function.
+Cannot call `1` because number [1] is not a function.
 
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
 
-Cannot call `pred + 1` because number is not a function.
+Cannot call `pred + 1` because number [1] is not a function.
 
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
 
-Cannot add `pred` and `1` because function type is incompatible with number.
+Cannot add `pred` and `1` because function type [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------- sanity-is-string-bug.js:13:14
 
-Cannot call `x.join` because property `join` is missing in `String`.
+Cannot call `x.join` because property `join` is missing in `String` [1].
 
 
 Error ---------------------------------------- sanity-parameter-mismatch.js:10:8
 
-Cannot call `foo` with `3` bound to `types` because number is incompatible with
-string.
+Cannot call `foo` with `3` bound to `types` because number [1] is incompatible
+with string [2].
 
 
 Error -------------------------------------------- sanity-pred-with-body.js:6:34
@@ -41,7 +42,8 @@ Cannot declare predicate when a function body is present.
 
 Error ----------------------------------------------- sanity-return-type.js:3:47
 
-Cannot return `Array.isArray(...)` because boolean is incompatible with string.
+Cannot return `Array.isArray(...)` because boolean [1] is incompatible with
+string [2].
 
 
 

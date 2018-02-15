@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------- Rel.js:4:3
 
-Cannot call `f` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `f` with `0` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 

@@ -1,23 +1,24 @@
 Error ------------------------------------------------------------ class.js:3:15
 
-Cannot get `A.bar` because property `bar` is missing in statics of `A`.
+Cannot get `A.bar` because property `bar` is missing in statics of `A` [1].
 
 
 Error ------------------------------------------------------------ class.js:5:21
 
-Cannot assign `A.name` to `test3` because string is incompatible with number.
+Cannot assign `A.name` to `test3` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ class.js:8:27
 
 Cannot get `a.constructor.bar` because property `bar` is missing in statics of
-`A`.
+`A` [1].
 
 
 Error ----------------------------------------------------------- class.js:10:21
 
-Cannot assign `a.constructor.name` to `test6` because string is incompatible
-with number.
+Cannot assign `a.constructor.name` to `test6` because string [1] is incompatible
+with number [2].
 
 
 

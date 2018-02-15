@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------ test.js:12:18
 
-Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number is incompatible
-with boolean.
+Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is
+incompatible with boolean [2].
 
 
 Error ------------------------------------------------------------ test.js:22:23

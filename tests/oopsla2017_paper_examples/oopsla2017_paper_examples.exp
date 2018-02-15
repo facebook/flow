@@ -1,11 +1,11 @@
 Error --------------------------------------------------------- example1.js:3:23
 
-Cannot call `f` because null is not a function.
+Cannot call `f` because null [1] is not a function.
 
 
 Error -------------------------------------------------------- example5.js:12:12
 
-Cannot get `x.kind` because property `kind` is missing in null.
+Cannot get `x.kind` because property `kind` is missing in null [1].
 
 
 Error: example6.js:9
@@ -28,7 +28,7 @@ Error: example6.js:9
 Error -------------------------------------------------------- example7.js:14:39
 
 Cannot call `stringIsString` with object literal bound to `x` because in
-property `val`, number is incompatible with string.
+property `val`, number [1] is incompatible with string [2].
 
 
 

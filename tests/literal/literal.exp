@@ -1,28 +1,28 @@
 Error ------------------------------------------------------- enum_client.js:6:5
 
-Property `LOCATION` is missing in object literal.
+Property `LOCATION` is missing in object literal [1].
 
 
 Error ------------------------------------------------------ enum_client.js:10:5
 
-Property `name` is missing in object type.
+Property `name` is missing in object type [1].
 
 
 Error ----------------------------------------------------- enum_client.js:17:19
 
-Cannot assign `object[APIKeys.NAME]` to `name` because string is incompatible
-with number.
+Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------- enum_client.js:21:18
 
-Cannot assign `tuple[indices.red]` to `red` because number is incompatible with
-string.
+Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------------- number.js:6:10
 
-string is not a number.
+string [1] is not a number.
 
 
 

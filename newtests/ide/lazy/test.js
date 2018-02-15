@@ -110,7 +110,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -138,7 +138,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -228,7 +228,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -256,7 +256,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -350,7 +350,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -378,7 +378,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -444,7 +444,7 @@ export default suite(({
         `
           Error ------------------------------------------------------------- test.js:3:17
 
-          Cannot assign \`123\` to \`x\` because number is incompatible with string.
+          Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
 
 
 
@@ -462,9 +462,9 @@ export default suite(({
                                         ^^^ Cannot assign \`123\` to \`anotherError\` because number [1] is incompatible with boolean [2].
             References:
               5: var anotherError: bool = 123
-                                          ^^^ [1]: number
+                                          ^^^ [1]
               5: var anotherError: bool = 123
-                                   ^^^^ [2]: boolean
+                                   ^^^^ [2]
         `,
       )
       .because('Changes are still noticed'),
@@ -569,7 +569,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var dependencyError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "dependency.js",
@@ -597,7 +597,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var dependencyError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "dependency.js",
@@ -683,7 +683,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var focusedError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "focused.js",
@@ -711,7 +711,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var focusedError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "focused.js",
@@ -801,7 +801,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var dependencyError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "dependency.js",
@@ -829,7 +829,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var dependencyError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "dependency.js",
@@ -904,7 +904,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var focusedError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "focused.js",
@@ -932,7 +932,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var focusedError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "focused.js",
@@ -999,14 +999,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -1023,9 +1023,9 @@ export default suite(({
                                             ^^^ Cannot assign \`123\` to \`dependentError\` because number [1] is incompatible with string [2].
             References:
               3: var dependentError: string = 123;
-                                              ^^^ [1]: number
+                                              ^^^ [1]
               3: var dependentError: string = 123;
-                                     ^^^^^^ [2]: string
+                                     ^^^^^^ [2]
         `,
       )
       .because('Adding a new dependency will correctly recheck that dependency'),
@@ -1107,7 +1107,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1135,7 +1135,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1225,7 +1225,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1253,7 +1253,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1343,7 +1343,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1371,7 +1371,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1461,7 +1461,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1489,7 +1489,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "errors.js",
@@ -1555,9 +1555,9 @@ export default suite(({
                                ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
             References:
               2: var x: string = 123;
-                                 ^^^ [1]: number
+                                 ^^^ [1]
               2: var x: string = 123;
-                        ^^^^^^ [2]: string
+                        ^^^^^^ [2]
         `,
       )
       .because('File is open and has @flow so we should get the error'),
@@ -1619,9 +1619,9 @@ export default suite(({
                                ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
             References:
               2: var x: string = 123;
-                                 ^^^ [1]: number
+                                 ^^^ [1]
               2: var x: string = 123;
-                        ^^^^^^ [2]: string
+                        ^^^^^^ [2]
         `,
       )
       .because('Reverting back to @flow should show the error again'),
@@ -1725,7 +1725,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "focusedWithCyclicDependency.js",
@@ -1753,7 +1753,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "focusedWithCyclicDependency.js",
@@ -1843,7 +1843,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "focusedWithCyclicDependency.js",
@@ -1871,7 +1871,7 @@ export default suite(({
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "focusedWithCyclicDependency.js",
@@ -1935,7 +1935,7 @@ export default suite(({
         `
           Error -------------------------------------- focusedWithCyclicDependency.js:3:17
 
-          Cannot assign \`123\` to \`x\` because number is incompatible with string.
+          Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
 
 
 
@@ -1979,8 +1979,8 @@ export default suite(({
         `
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -1994,8 +1994,8 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2052,14 +2052,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2079,8 +2079,8 @@ export default suite(({
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2095,14 +2095,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2158,18 +2158,18 @@ export default suite(({
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
             References:
               3: var dependencyError: string = 123;
-                                               ^^^ [1]: number
+                                               ^^^ [1]
               3: var dependencyError: string = 123;
-                                      ^^^^^^ [2]: string
+                                      ^^^^^^ [2]
 
           focused.js:3
             3: var focusedError: string = 123;
                                           ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
             References:
               3: var focusedError: string = 123;
-                                            ^^^ [1]: number
+                                            ^^^ [1]
               3: var focusedError: string = 123;
-                                   ^^^^^^ [2]: string
+                                   ^^^^^^ [2]
         `,
       )
       .because('Other dependent is a dependent of a dependency, so is not checked'),
@@ -2182,20 +2182,20 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
           Error --------------------------------------------------- otherDependent.js:3:35
 
-          Cannot assign \`123\` to \`otherDependentError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
+          with string [2].
 
 
 
@@ -2249,14 +2249,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2271,14 +2271,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2332,14 +2332,14 @@ export default suite(({
         `
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
 
@@ -2354,20 +2354,20 @@ export default suite(({
 
           Error ------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
+          string [2].
 
 
           Error ---------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
 
 
           Error --------------------------------------------------- otherDependent.js:3:35
 
-          Cannot assign \`123\` to \`otherDependentError\` because number is incompatible with
-          string.
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
+          with string [2].
 
 
 

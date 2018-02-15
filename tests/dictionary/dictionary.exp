@@ -1,332 +1,349 @@
 Error -------------------------------------------------------------- any.js:5:21
 
-Cannot assign `dict[k]` to `val` because number is incompatible with string.
+Cannot assign `dict[k]` to `val` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------- dictionary.js:47:9
 
-Cannot assign `new A()` to `o.p` because `A` is incompatible with `B`.
+Cannot assign `new A()` to `o.p` because `A` [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------- dictionary.js:58:4
 
-Cannot cast `o.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------- dictionary.js:66:3
 
-string `prop` is incompatible with number.
+string `prop` [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- dictionary.js:94:4
 
-Cannot cast `o.toString()` to boolean because string is incompatible with
-boolean.
+Cannot cast `o.toString()` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------- dictionary.js:110:34
 
 Cannot assign `x` to `a` because in type argument `T` and then the indexer
-property, `B` is incompatible with `A`.
+property, `B` [1] is incompatible with `A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:115:34
 
 Cannot assign `x` to `c` because in type argument `T` and then the indexer
-property, `B` is incompatible with `C`.
+property, `B` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:116:4
 
-Cannot cast `x[0].p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:122:27
 
-Cannot assign `x` to `a` because in the indexer property, `B` is incompatible
-with `A`.
+Cannot assign `x` to `a` because in the indexer property, `B` [1] is
+incompatible with `A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:127:27
 
-Cannot assign `x` to `c` because in the indexer property, `B` is incompatible
-with `C`.
+Cannot assign `x` to `c` because in the indexer property, `B` [1] is
+incompatible with `C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:128:4
 
-Cannot cast `x.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:139:8
 
-Cannot assign object literal to `b` because in property `a`, `A` is incompatible
-with `B`.
+Cannot assign object literal to `b` because in property `a`, `A` [1] is
+incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:144:27
 
 Cannot assign object literal to `c` because:
- - in property `a`, `A` is incompatible with `C`.
- - in property `b`, `B` is incompatible with `C`.
+ - in property `a`, `A` [1] is incompatible with `C` [2].
+ - in property `b`, `B` [3] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:159:31
 
 Cannot assign `x` to `a` because in type argument `T` and then the indexer
-property's key, `B` is incompatible with `A`.
+property's key, `B` [1] is incompatible with `A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:161:31
 
 Cannot assign `x` to `c` because in type argument `T` and then the indexer
-property's key, `B` is incompatible with `C`.
+property's key, `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:167:24
 
-Cannot assign `x` to `a` because in the indexer property's key, `B` is
-incompatible with `A`.
+Cannot assign `x` to `a` because in the indexer property's key, `B` [1] is
+incompatible with `A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:169:24
 
-Cannot assign `x` to `c` because in the indexer property's key, `B` is
-incompatible with `C`.
+Cannot assign `x` to `c` because in the indexer property's key, `B` [1] is
+incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:175:39
 
-Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A`
-is incompatible with `B`.
+Cannot assign `x` to `a` because in type argument `T` and then property `p`,
+`A` [1] is incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:180:39
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C`
-is incompatible with `B`.
+Cannot assign `x` to `c` because in type argument `T` and then property `p`,
+`C` [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:181:4
 
-Cannot cast `x[0].p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:189:34
 
 Cannot assign `xa` to `a` because in type argument `T` and then property `p`,
-`B` is incompatible with `A`.
+`B` [1] is incompatible with `A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:194:34
 
 Cannot assign `xc` to `c` because in type argument `T` and then property `p`,
-`B` is incompatible with `C`.
+`B` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:195:4
 
-Cannot cast `xc[0].p` to `C` because `B` is incompatible with `C`.
+Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:201:32
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:206:32
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:207:4
 
-Cannot cast `x.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:215:27
 
-Cannot assign `xa` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `xa` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:220:27
 
-Cannot assign `xc` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `xc` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:221:4
 
-Cannot cast `xc.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:227:10
 
 Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type but exists in object type.
+in object type [1] but exists in object type [2].
 
 
 Error ----------------------------------------------------- dictionary.js:233:10
 
 Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type but exists in object type.
+in object type [1] but exists in object type [2].
 
 
 Error ----------------------------------------------------- dictionary.js:239:18
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:244:18
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:245:4
 
-Cannot cast `x.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:251:27
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:256:27
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ------------------------------------------------------ dictionary.js:257:4
 
-Cannot cast `x.p` to `C` because `B` is incompatible with `C`.
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:265:31
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:267:31
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:273:39
 
-Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A`
-is incompatible with `B`.
+Cannot assign `x` to `a` because in type argument `T` and then property `p`,
+`A` [1] is incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:275:39
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C`
-is incompatible with `B`.
+Cannot assign `x` to `c` because in type argument `T` and then property `p`,
+`C` [1] is incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:281:32
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:283:32
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:289:19
 
-Cannot assign `x` to `a` because in property `p`, `B` is incompatible with `A`.
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
+`A` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:301:19
 
-Cannot assign `x` to `c` because in property `p`, `B` is incompatible with `C`.
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
+`C` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:307:10
 
-Cannot return `x` because in property `p`, `A` is incompatible with `B`.
+Cannot return `x` because in property `p`, `A` [1] is incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- dictionary.js:319:10
 
-Cannot return `x` because in property `p`, `C` is incompatible with `B`.
+Cannot return `x` because in property `p`, `C` [1] is incompatible with `B` [2].
 
 
 Error ----------------------------------------------------- incompatible.js:4:35
 
-Cannot assign `x` to `y` because in the indexer property, string is incompatible
-with number.
+Cannot assign `x` to `y` because in the indexer property, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------- incompatible.js:5:35
 
-Cannot assign `x` to `z` because in the indexer property's key, string is
-incompatible with number.
+Cannot assign `x` to `z` because in the indexer property's key, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------- incompatible.js:8:35
 
-Cannot assign `a` to `b` because in the indexer property, null or undefined is
-incompatible with string.
+Cannot assign `a` to `b` because in the indexer property, null or undefined [1]
+is incompatible with string [2].
 
 
 Error ----------------------------------------------------- incompatible.js:9:36
 
-Cannot assign `b` to `c` because in the indexer property, string is incompatible
-with null or undefined.
+Cannot assign `b` to `c` because in the indexer property, string [1] is
+incompatible with null or undefined [2].
 
 
 Error ---------------------------------------------------- incompatible.js:13:10
 
 Cannot return `x` because in type argument `T` and then the indexer property,
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------- incompatible.js:20:10
 
 Cannot return `x` because in type argument `T` and then property `fooBar`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ---------------------------------------------------- incompatible.js:27:10
 
 Cannot return `x` because in type argument `T` and then property `fooBar`,
-string is incompatible with mixed.
+string [1] is incompatible with mixed [2].
 
 
 Error ---------------------------------------------------- incompatible.js:37:10
 
-Cannot return `x` because in property `foo`, number is incompatible with string.
+Cannot return `x` because in property `foo`, number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------- incompatible.js:42:10
 
 Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type but exists in object type.
+in object type [1] but exists in object type [2].
 
 
 Error ---------------------------------------------------- incompatible.js:47:10
 
 Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type but exists in object type.
+in object type [1] but exists in object type [2].
 
 
 Error ----------------------------------------------------- incompatible.js:55:4
 
-Cannot cast `x.foo` to string because number is incompatible with string.
+Cannot cast `x.foo` to string because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- test.js:6:12
 
 Cannot assign object literal to `o` because in property `foo` and then the
-return value, number is incompatible with string.
+return value, number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------ test_client.js:4:10
 
-Cannot assign function to `o.foo` because in the return value, number is
-incompatible with string.
+Cannot assign function to `o.foo` because in the return value, number [1] is
+incompatible with string [2].
 
 
 

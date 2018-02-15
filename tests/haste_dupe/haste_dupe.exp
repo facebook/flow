@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------- dupe2.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the
-current module provider.
+current module provider [1].
 
 
 

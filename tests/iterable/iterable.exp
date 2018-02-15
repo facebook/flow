@@ -1,51 +1,52 @@
 Error ------------------------------------------------------------- array.js:7:2
 
 Cannot cast array literal to `Iterable` because in property `@@iterator`, the
-return value, and then type argument `Yield`; string is incompatible with
-number.
+return value, and then type argument `Yield`; string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- array.js:8:2
 
 Cannot cast array literal to `Iterable` because in property `@@iterator`, the
-return value, and then type argument `Yield`; number is incompatible with
-string.
+return value, and then type argument `Yield`; number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- caching_bug.js:21:79
 
 Cannot return `x` because in property `@@iterator`, the return value, and then
-type argument `Yield`; number is incompatible with string.
+type argument `Yield`; number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------- iterator_result.js:23:18
 
-Cannot return object literal because in property `done`, boolean is incompatible
-with boolean literal `false`.
+Cannot return object literal because in property `done`, boolean [1] is
+incompatible with boolean literal `false` [2].
 
 
 Error ------------------------------------------------- iterator_result.js:25:18
 
-Cannot return object literal because in property `done`, boolean is incompatible
-with boolean literal `true`.
+Cannot return object literal because in property `done`, boolean [1] is
+incompatible with boolean literal `true` [2].
 
 
 Error ------------------------------------------------------------- map.js:14:10
 
 Cannot return `map` because in property `@@iterator`, the return value, and then
-type argument `Yield`; tuple type is incompatible with string.
+type argument `Yield`; tuple type [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- set.js:14:10
 
 Cannot return `set` because in property `@@iterator`, the return value, and then
-type argument `Yield`; string is incompatible with number.
+type argument `Yield`; string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ string.js:5:2
 
 Cannot cast `"hi"` to `Iterable` because in property `@@iterator`, the return
-value, and then type argument `Yield`; string is incompatible with number.
+value, and then type argument `Yield`; string [1] is incompatible with
+number [2].
 
 
 

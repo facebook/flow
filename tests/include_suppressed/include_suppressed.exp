@@ -1,7 +1,7 @@
 Without --include-suppressed
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast `123` to string because number is incompatible with string.
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 
 Warning ------------------------------------------------------------ test.js:8:1
@@ -16,12 +16,12 @@ Found 1 error and 1 warning
 With --include-suppressed
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast `123` to string because number is incompatible with string.
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- test.js:6:2
 
-Cannot cast `123` to string because number is incompatible with string.
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 
 Warning ------------------------------------------------------------ test.js:8:1
@@ -59,7 +59,7 @@ JSON without --include-suppressed
           "message":[
             {
               "context":"(123: string); // Normal error",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -79,7 +79,7 @@ JSON without --include-suppressed
           "message":[
             {
               "context":"(123: string); // Normal error",
-              "descr":"[2]: string",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -169,7 +169,7 @@ JSON with --include-suppressed
           "message":[
             {
               "context":"(123: string); // Normal error",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -189,7 +189,7 @@ JSON with --include-suppressed
           "message":[
             {
               "context":"(123: string); // Normal error",
-              "descr":"[2]: string",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -280,7 +280,7 @@ JSON with --include-suppressed
           "message":[
             {
               "context":"(123: string); // Suppressed error",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -300,7 +300,7 @@ JSON with --include-suppressed
           "message":[
             {
               "context":"(123: string); // Suppressed error",
-              "descr":"[2]: string",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",

@@ -1,31 +1,33 @@
 Error ------------------------------------------------------------- forof.js:7:6
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ forof.js:13:6
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ forof.js:25:6
 
-Cannot cast `x` to number because string is incompatible with number.
+Cannot cast `x` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ forof.js:32:6
 
-Cannot cast `elem` to number because tuple type is incompatible with number.
+Cannot cast `elem` to number because tuple type [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ forof.js:39:6
 
-Cannot cast `elem` to number because tuple type is incompatible with number.
+Cannot cast `elem` to number because tuple type [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ forof.js:45:6
 
-Cannot cast `x` to number because string is incompatible with number.
+Cannot cast `x` to number because string [1] is incompatible with number [2].
 
 
 

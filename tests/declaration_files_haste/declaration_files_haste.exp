@@ -5,42 +5,44 @@ Cannot resolve module `annotation`.
 
 Error ---------------------------------------------- foo/bar/nested_test.js:12:2
 
-Cannot cast `docblock.fun()` to string because number is incompatible with
-string.
+Cannot cast `docblock.fun()` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------- foo/bar/nested_test.js:13:2
 
-Cannot cast `min.fun()` to string because number is incompatible with string.
+Cannot cast `min.fun()` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------- foo/bar/nested_test.js:14:2
 
-Cannot cast `corge.fun()` to string because number is incompatible with string.
+Cannot cast `corge.fun()` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------- foo/bar/nested_test.js:15:2
 
-Cannot cast `SomeOtherModule.fun()` to string because number is incompatible
-with string.
+Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible
+with string [2].
 
 
 Error -------------------------------------------------------------- test.js:4:2
 
-Cannot cast `Implicit.fun()` to string because number is incompatible with
-string.
+Cannot cast `Implicit.fun()` to string because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------------- test.js:7:2
 
-Cannot cast `ExplicitSameName.fun()` to string because number is incompatible
-with string.
+Cannot cast `ExplicitSameName.fun()` to string because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- test.js:10:2
 
-Cannot cast `ExplicitDifferentName.fun()` to string because number is
-incompatible with string.
+Cannot cast `ExplicitDifferentName.fun()` to string because number [1] is
+incompatible with string [2].
 
 
 

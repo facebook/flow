@@ -1,28 +1,30 @@
 Error ------------------------------------------------------ instanceof.js:17:34
 
-Cannot assign `'1337'` to `g.foo` because string is incompatible with number.
+Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ instanceof.js:34:42
 
-Cannot assign `'1337'` to `g.bar.foo` because string is incompatible with
-number.
+Cannot assign `'1337'` to `g.bar.foo` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ instanceof.js:51:50
 
-Cannot assign `'1337'` to `g.baz.bar.foo` because string is incompatible with
-number.
+Cannot assign `'1337'` to `g.baz.bar.foo` because string [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------------- instanceof.js:83:5
 
-Cannot perform arithmetic operation because array type is not a number.
+Cannot perform arithmetic operation because array type [1] is not a number.
 
 
 Error ------------------------------------------------------- instanceof.js:85:7
 
-Cannot assign `123` to `x[0]` because an indexer property is missing in number.
+Cannot assign `123` to `x[0]` because an indexer property is missing in
+number [1].
 
 
 

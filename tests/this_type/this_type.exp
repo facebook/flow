@@ -1,161 +1,161 @@
 Error ------------------------------------------------------- class_expr.js:6:10
 
-Cannot assign `123` to `this.x` because property `x` is missing in `Thing`.
+Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1].
 
 
 Error ------------------------------------------------------------ contra.js:4:9
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:15:10
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:19:10
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:25:22
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:26:21
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:27:22
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:29:22
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:30:21
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:31:22
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:38:18
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:39:17
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:40:18
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:44:25
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:45:26
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:48:41
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:52:29
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:52:34
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:53:30
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:53:35
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error ---------------------------------------------------------- contra.js:53:40
 
-Cannot use `this` in an input/output position because `this` is expected to
-occur only in output positions.
+Cannot use `this` [1] in an input/output position because `this` [1] is expected
+to occur only in output positions.
 
 
 Error --------------------------------------------------------- generics.js:6:30
 
-Cannot use `Implicit` with less than 1 type argument.
+Cannot use `Implicit` [1] with less than 1 type argument.
 
 
 Error ----------------------------------------------------------- import.js:8:10
 
-Cannot extend `A1` with `B1` because in property `foo` and then the return
-value, `B1` is incompatible with `this`.
+Cannot extend `A1` [1] with `B1` because in property `foo` and then the return
+value, `B1` [2] is incompatible with `this` [3].
 
 
 Error ---------------------------------------------------------- import.js:14:10
 
-Cannot extend `A3` with `B3` because in property `foo` and then the return
-value, `B3` is incompatible with `this`.
+Cannot extend `A3` [1] with `B3` because in property `foo` and then the return
+value, `B3` [2] is incompatible with `this` [3].
 
 
 Error ----------------------------------------------------------- import.js:18:2
 
-Cannot cast `new B3().qux(...)` to string because number is incompatible with
-string.
+Cannot cast `new B3().qux(...)` to string because number [1] is incompatible
+with string [2].
 
 
 Error ---------------------------------------------------------- import.js:21:22
 
-Cannot cast `new B3().bar()` to `A2` because in type argument `X`, string is
-incompatible with number.
+Cannot cast `new B3().bar()` to `A2` because in type argument `X`, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- import.js:22:2
 
-Cannot cast `new B3().qux(...)` to string because number is incompatible with
-string.
+Cannot cast `new B3().qux(...)` to string because number [1] is incompatible
+with string [2].
 
 
 Error -------------------------------------------------------- interface.js:1:25
@@ -165,55 +165,55 @@ Unexpected use of `this` type.
 
 Error ------------------------------------------------------------- self.js:4:24
 
-Cannot return `new A().foo()` because `A` is incompatible with `this`.
+Cannot return `new A().foo()` because `A` [1] is incompatible with `this` [2].
 
 
 Error ---------------------------------------------------------- statics.js:17:2
 
-Cannot cast `A.make()` to `B` because `A` is incompatible with `B`.
+Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------------- test.js:23:2
 
 Cannot cast `new Inherit().foo()` to `Inherit` because:
- - `Base` is incompatible with `Inherit`.
- - `Override` is incompatible with `Inherit`.
+ - `Base` [1] is incompatible with `Inherit` [2].
+ - `Override` [3] is incompatible with `Inherit` [2].
 
 
 Error ------------------------------------------------------------- test.js:29:2
 
 Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because:
- - `Base` is incompatible with `InheritOverride`.
- - `Override` is incompatible with `InheritOverride`.
+ - `Base` [1] is incompatible with `InheritOverride` [2].
+ - `Override` [3] is incompatible with `InheritOverride` [2].
 
 
 Error ------------------------------------------------------------ test.js:41:15
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ------------------------------------------------------------- test.js:47:1
 
-Cannot extend `Base2` with `Override2` because:
- - in property `bar` and then the return value, `Override2` is incompatible with
-   `this`.
- - in property `grault` and then the first argument, `Override2` is incompatible
-   with `Base2`.
- - in property `grault` and then the first argument, `this` is incompatible with
-   `Base2`.
+Cannot extend `Base2` [1] with `Override2` because:
+ - in property `bar` and then the return value, `Override2` [2] is incompatible
+   with `this` [3].
+ - in property `grault` and then the first argument, `Override2` [4] is
+   incompatible with `Base2` [5].
+ - in property `grault` and then the first argument, `this` [4] is incompatible
+   with `Base2` [5].
 
 
 Error ------------------------------------------------------------ test.js:54:15
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 Error ------------------------------------------------------------ test.js:56:16
 
-Cannot use `this` in an input position because `this` is expected to occur only
-in output positions.
+Cannot use `this` [1] in an input position because `this` [1] is expected to
+occur only in output positions.
 
 
 

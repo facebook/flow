@@ -1,61 +1,61 @@
 Error ------------------------------------------------------------ break.js:6:24
 
-Cannot assign `x` to `y` because boolean is incompatible with number.
+Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ break.js:8:20
 
 Cannot assign `z` to `w` because:
- - possibly uninitialized variable is incompatible with number.
- - string is incompatible with number.
+ - possibly uninitialized variable [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:16:24
 
-Cannot assign `x` to `y` because boolean is incompatible with number.
+Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:19:24
 
 Cannot assign `x` to `z` because:
- - boolean is incompatible with number.
- - string is incompatible with number.
+ - boolean [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:23:20
 
 Cannot assign `x` to `w` because:
- - boolean is incompatible with number.
- - string is incompatible with number.
+ - boolean [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:31:22
 
-Cannot assign `x` to `y` because boolean is incompatible with number.
+Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:35:22
 
 Cannot assign `x` to `z` because:
- - boolean is incompatible with number.
- - string is incompatible with number.
+ - boolean [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:40:20
 
 Cannot assign `x` to `w` because:
- - boolean is incompatible with number.
- - string is incompatible with number.
+ - boolean [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:46:24
 
-Cannot assign `z` to `y` because string is incompatible with number.
+Cannot assign `z` to `y` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- break.js:50:20
 
-Cannot assign `z` to `w` because string is incompatible with number.
+Cannot assign `z` to `w` because string [1] is incompatible with number [2].
 
 
 

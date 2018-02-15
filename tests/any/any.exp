@@ -1,6 +1,7 @@
 Error -------------------------------------------------------------- any.js:8:16
 
-Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------- flowfixme.js:14:27
@@ -10,7 +11,8 @@ Cannot resolve name `nnumber`.
 
 Error ------------------------------------------------------- flowfixme.js:17:16
 
-Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------- flowissue.js:14:27
@@ -20,22 +22,23 @@ Cannot resolve name `nnumber`.
 
 Error ------------------------------------------------------- flowissue.js:17:16
 
-Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------- propagate.js:10:10
 
-Cannot return `c.bar(...)` because number is incompatible with string.
+Cannot return `c.bar(...)` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- propagate.js:16:6
 
-Cannot cast `x` to boolean because mixed is incompatible with boolean.
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
 
 
 Error -------------------------------------------------------- propagate.js:23:6
 
-Cannot cast `x` to boolean because mixed is incompatible with boolean.
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
 
 
 

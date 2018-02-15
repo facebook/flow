@@ -15,9 +15,9 @@ export default suite(({addFile}) => [
                                ^^^^^^^^^^^^^^ Cannot assign \`"not a number"\` to \`x\` because string [1] is incompatible with number [2].
             References:
               1: var x: number = "not a number";
-                                 ^^^^^^^^^^^^^^ [1]: string
+                                 ^^^^^^^^^^^^^^ [1]
               1: var x: number = "not a number";
-                        ^^^^^^ [2]: number
+                        ^^^^^^ [2]
         `,
       )
       .because('We read files even if they are missing @flow'),

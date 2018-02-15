@@ -1,73 +1,74 @@
 Error -------------------------------------------------------------- test.js:7:3
 
 Cannot assign function to `A.qux` because property `qux` is missing in statics
-of `A`.
+of `A` [1].
 
 
 Error -------------------------------------------------------------- test.js:9:1
 
-Cannot extend `A` with `B` because:
- - in property `x`, string is incompatible with number.
- - in property `foo` and then the first argument, string is incompatible with
-   number.
+Cannot extend `A` [1] with `B` because:
+ - in property `x`, string [2] is incompatible with number [3].
+ - in property `foo` and then the first argument, string [4] is incompatible
+   with number [5].
 
 
 Error ------------------------------------------------------------ test.js:13:11
 
-Cannot assign `0` to `B.x` because number is incompatible with string.
+Cannot assign `0` to `B.x` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test.js:15:11
 
-Cannot call `B.foo` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------ test.js:17:11
 
-Cannot assign `0` to `B.y` because number is incompatible with string.
+Cannot assign `0` to `B.y` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test.js:18:11
 
-Cannot call `B.bar` with `0` bound to `y` because number is incompatible with
-string.
+Cannot call `B.bar` with `0` bound to `y` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------- test.js:19:7
 
-Cannot call `B.qux` because property `qux` is missing in statics of `B`.
+Cannot call `B.qux` because property `qux` is missing in statics of `B` [1].
 
 
 Error ------------------------------------------------------------ test.js:26:12
 
-Cannot return `new this()` because `B` is incompatible with number.
+Cannot return `new this()` because `B` [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:40:7
 
-Cannot call `D.foo` because property `foo` is missing in statics of `D`.
+Cannot call `D.foo` because property `foo` is missing in statics of `D` [1].
 
 
 Error ------------------------------------------------------------ test.js:42:11
 
-Cannot call `D.bar` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `D.bar` with `0` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------- test.js:47:2
 
-Cannot cast `new A()` to `typeof A` because `A` is incompatible with `typeof A`.
+Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with
+`typeof A` [2].
 
 
 Error ------------------------------------------------------------ test.js:53:10
 
-Cannot call `this.bar` because property `bar` is missing in statics of `E`.
+Cannot call `this.bar` because property `bar` is missing in statics of `E` [1].
 
 
 Error ------------------------------------------------------------ test.js:54:12
 
-Cannot return `this.x` because number is incompatible with string.
+Cannot return `this.x` because number [1] is incompatible with string [2].
 
 
 

@@ -10,12 +10,13 @@ Missing type annotation for `x`.
 
 Error ------------------------------------------------------------- fun.js:11:16
 
-Cannot assign `f(...)` to `x` because number is incompatible with string.
+Cannot assign `f(...)` to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- obj.js:10:16
 
-Cannot assign `o.x` to `x` because number is incompatible with string.
+Cannot assign `o.x` to `x` because number [1] is incompatible with string [2].
 
 
 

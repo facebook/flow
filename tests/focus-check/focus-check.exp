@@ -3,22 +3,25 @@ Stop any already-running server.
 Full check:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string is incompatible with number.
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number is incompatible with string.
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -27,22 +30,25 @@ Found 4 errors
 Full focus-check:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string is incompatible with number.
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number is incompatible with string.
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -51,7 +57,8 @@ Found 4 errors
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -60,7 +67,8 @@ Found 1 error
 Focused check on a file with no local errors but a dependency:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -69,7 +77,8 @@ Found 1 error
 Focused check on a file with no local errors but a reverse dependency:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -78,7 +87,8 @@ Found 1 error
 Focused check on two files with overlapping errors:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -87,12 +97,14 @@ Found 1 error
 Focused check on multiple files with disjoint sets of errors:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -101,12 +113,14 @@ Found 2 errors
 Focused check on a file and a directory:
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string is incompatible with number.
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------------- test.js:3:2
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 
@@ -115,12 +129,14 @@ Found 2 errors
 Focused check on files specified in list.txt:
 Error ----------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string is incompatible with number.
+Cannot cast `require(...)` to number because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
-Cannot assign `3 + "string"` to `x` because string is incompatible with number.
+Cannot assign `3 + "string"` to `x` because string [1] is incompatible with
+number [2].
 
 
 
@@ -129,12 +145,12 @@ Found 2 errors
 Focused check guessing root by looking at first file:
 Error ----------------------------------- other_root/other_root_dependent.js:5:2
 
-Cannot cast `foo` to string because number is incompatible with string.
+Cannot cast `foo` to string because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number is incompatible with string.
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
 
 
 
@@ -143,7 +159,7 @@ Found 2 errors
 Focused check with explicit root:
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
-Cannot assign `123` to `x` because number is incompatible with string.
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
 
 
 

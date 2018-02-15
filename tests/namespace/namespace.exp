@@ -1,28 +1,31 @@
 Error ----------------------------------------------------------- client.js:3:19
 
-Cannot assign `ns.foo` to `bar` because number is incompatible with string.
+Cannot assign `ns.foo` to `bar` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- namespace.js:3:23
 
-Cannot assign function to `f` because in the first argument, string is
-incompatible with number.
+Cannot assign function to `f` because in the first argument, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------- namespace.js:11:16
 
-Cannot assign `bar(...)` to `y` because string is incompatible with number.
+Cannot assign `bar(...)` to `y` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- namespace.js:15:16
 
 Cannot assign array literal to `s2` because in type argument `T` and then type
-argument `T`, string is incompatible with number.
+argument `T`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------- namespace.js:17:26
 
-Cannot cast empty string to number because string is incompatible with number.
+Cannot cast empty string to number because string [1] is incompatible with
+number [2].
 
 
 

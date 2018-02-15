@@ -1,37 +1,37 @@
 Error ----------------------------------------------------------------- B.js:6:6
 
-Cannot extend `A` with `B` because in property `c`, `C` is incompatible with
-string.
+Cannot extend `A` [1] with `B` because in property `c`, `C` [2] is incompatible
+with string [3].
 
 
 Error ----------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` with `C` because in property `b`, `B` is incompatible with
-number.
+Cannot extend `A` [1] with `C` because in property `b`, `B` [2] is incompatible
+with number [3].
 
 
 
 Found 2 errors
 Error ----------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` with `C` because in property `b`, string is incompatible with
-number.
+Cannot extend `A` [1] with `C` because in property `b`, string [2] is
+incompatible with number [3].
 
 
 
 Found 1 error
 Error ----------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` with `C` because in property `b`, string is incompatible with
-number.
+Cannot extend `A` [1] with `C` because in property `b`, string [2] is
+incompatible with number [3].
 
 
 
 Found 1 error
 Error ----------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` with `C` because in property `b`, string is incompatible with
-number.
+Cannot extend `A` [1] with `C` because in property `b`, string [2] is
+incompatible with number [3].
 
 
 

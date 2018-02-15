@@ -1,147 +1,149 @@
 Error ---------------------------------------------------------- Profile.js:19:6
 
-Cannot cast `this.props.foo` to empty because number is incompatible with empty.
+Cannot cast `this.props.foo` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------------- Profile.js:20:6
 
-Cannot cast `this.props.user.id` to empty because string is incompatible with
-empty.
+Cannot cast `this.props.user.id` to empty because string [1] is incompatible
+with empty [2].
 
 
 Error ---------------------------------------------------------- Profile.js:21:6
 
-Cannot cast `this.props.user.name` to empty because string is incompatible with
-empty.
+Cannot cast `this.props.user.name` to empty because string [1] is incompatible
+with empty [2].
 
 
 Error ---------------------------------------------------------- Profile.js:22:6
 
-Cannot cast `this.props.user.pic.id` to empty because string is incompatible
-with empty.
+Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible
+with empty [2].
 
 
 Error --------------------------------------------------------- Profile.js:23:24
 
-Cannot create `ProfilePic` element because in property `image`, object literal
-is incompatible with `ProfilePic_imageRef`.
+Cannot create `ProfilePic` element because in property `image`, object
+literal [1] is incompatible with `ProfilePic_imageRef` [2].
 
 
 Error ------------------------------------------------------- ProfilePic.js:17:6
 
-Cannot cast `this.props.image.url` to empty because string is incompatible with
-empty.
+Cannot cast `this.props.image.url` to empty because string [1] is incompatible
+with empty [2].
 
 
 Error ------------------------------------------------------------- main.js:15:2
 
-Cannot create `Profile` element because property `foo` is missing in props but
-exists in object type.
+Cannot create `Profile` element because property `foo` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- main.js:16:2
 
-Cannot create `Profile` element because property `user` is missing in props but
-exists in object type.
+Cannot create `Profile` element because property `user` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------ main.js:17:29
 
-Cannot create `Profile` element because in property `foo`, string is
-incompatible with number.
+Cannot create `Profile` element because in property `foo`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- main.js:18:1
 
 Cannot create `Profile` element because:
- - property `foo` is missing in props but exists in object type.
- - property `user` is missing in props but exists in object type.
+ - property `foo` is missing in props [1] but exists in object type [2].
+ - property `user` is missing in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ main.js:19:16
 
-Cannot create `Profile` element because in property `user`, object type is
-incompatible with `Profile_userRef`.
+Cannot create `Profile` element because in property `user`, object type [1] is
+incompatible with `Profile_userRef` [2].
 
 
 Error ------------------------------------------------------------- main.js:20:1
 
 Cannot create `Profile` element because:
- - in property `user`, object type is incompatible with `Profile_userRef`.
- - in property `foo`, string is incompatible with number.
+ - in property `user`, object type [1] is incompatible with
+   `Profile_userRef` [2].
+ - in property `foo`, string [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------------- main.js:21:1
 
 Cannot create `Profile` element because:
- - in property `user`, mixed is incompatible with `Profile_userRef`.
- - in property `foo`, mixed is incompatible with number.
+ - in property `user`, mixed [1] is incompatible with `Profile_userRef` [2].
+ - in property `foo`, mixed [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------------ more.js:92:45
 
-Cannot create `SingularTest` element because in property `user`, null is
-incompatible with object type.
+Cannot create `SingularTest` element because in property `user`, null [1] is
+incompatible with object type [2].
 
 
 Error ------------------------------------------------------------- more.js:95:2
 
-Cannot create `SingularTest` element because property `user` is missing in props
-but exists in object type.
+Cannot create `SingularTest` element because property `user` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- more.js:98:1
 
 Cannot create `SingularTest` element because:
- - in property `user.__fragments` and then type argument `T`, `FragmentTypeof`
-   is incompatible with object type.
- - in property `user.__fragments` and then type argument `T`, object type is
-   incompatible with `FragmentTypeof`.
+ - in property `user.__fragments` and then type argument `T`,
+   `FragmentTypeof` [1] is incompatible with object type [2].
+ - in property `user.__fragments` and then type argument `T`, object type [2] is
+   incompatible with `FragmentTypeof` [3].
 
 
 Error ----------------------------------------------------------- more.js:126:17
 
-Cannot create `SingularTest` element because in property `optionalUser`, null is
-incompatible with object type.
+Cannot create `SingularTest` element because in property `optionalUser`,
+null [1] is incompatible with object type [2].
 
 
 Error ----------------------------------------------------------- more.js:144:20
 
-Cannot create `PluralTest` element because in property `users`, null is
-incompatible with read-only array type.
+Cannot create `PluralTest` element because in property `users`, null [1] is
+incompatible with read-only array type [2].
 
 
 Error ------------------------------------------------------------ more.js:147:2
 
-Cannot create `PluralTest` element because property `users` is missing in props
-but exists in object type.
+Cannot create `PluralTest` element because property `users` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ more.js:150:1
 
 Cannot create `PluralTest` element because:
  - in property `users`, type argument `T`, property `__fragments`, and then type
-   argument `T`; `FragmentTypeof` is incompatible with object type.
+   argument `T`; `FragmentTypeof` [1] is incompatible with object type [2].
  - in property `users`, type argument `T`, property `__fragments`, and then type
-   argument `T`; object type is incompatible with `FragmentTypeof`.
+   argument `T`; object type [2] is incompatible with `FragmentTypeof` [3].
 
 
 Error ----------------------------------------------------------- more.js:174:66
 
-Cannot create `PluralTest` element because in property `optionalUsers`, null is
-incompatible with read-only array type.
+Cannot create `PluralTest` element because in property `optionalUsers`, null [1]
+is incompatible with read-only array type [2].
 
 
 Error ----------------------------------------------------------- more.js:177:24
 
-Cannot create `SingularTest` element because in property `onClick`, string is
-incompatible with function type.
+Cannot create `SingularTest` element because in property `onClick`, string [1]
+is incompatible with function type [2].
 
 
 Error ----------------------------------------------------------- more.js:180:36
 
-Cannot create `SingularTest` element because in property `string`, number is
-incompatible with string.
+Cannot create `SingularTest` element because in property `string`, number [1] is
+incompatible with string [2].
 
 
 

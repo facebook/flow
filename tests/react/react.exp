@@ -1,605 +1,639 @@
 Error -------------------------------- createElementRequiredProp_string.js:17:14
 
-Cannot create `Cmp` element because property `test` is missing in props but
-exists in object type.
+Cannot create `Cmp` element because property `test` is missing in props [1] but
+exists in object type [2].
 
 
 Error ------------------------------------------------------ create_class.js:7:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------------------------------ create_class.js:8:6
 
-Cannot cast `this.props.bar` to empty because number is incompatible with empty.
+Cannot cast `this.props.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:15:14
 
-Cannot assign `0` to `this.p` because number is incompatible with string.
+Cannot assign `0` to `this.p` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- create_class.js:48:6
 
-Cannot cast `this.foo` to string because number is incompatible with string.
+Cannot cast `this.foo` to string because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------- create_class.js:71:11
 
 Cannot get `this.mixins` because property `mixins` is missing in React
-component.
+component [1].
 
 
 Error ---------------------------------------------------- create_class.js:72:11
 
 Cannot get `this.autobind` because property `autobind` is missing in React
-component.
+component [1].
 
 
 Error ---------------------------------------------------- create_class.js:73:11
 
 Cannot get `this.statics` because property `statics` is missing in React
-component.
+component [1].
 
 
 Error ----------------------------------------------------- create_class.js:80:6
 
-Cannot cast `this.q` to empty because number is incompatible with empty.
+Cannot cast `this.q` to empty because number [1] is incompatible with empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:104:6
 
-Cannot cast `this.state.foo` to empty because number is incompatible with empty.
+Cannot cast `this.state.foo` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:117:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:118:6
 
-Cannot cast `this.state.foo` to empty because string is incompatible with empty.
+Cannot cast `this.state.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:133:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:137:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:141:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:142:6
 
-Cannot cast `nextProps.foo` to empty because string is incompatible with empty.
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:146:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:147:6
 
-Cannot cast `this.state.bar` to empty because number is incompatible with empty.
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:148:6
 
-Cannot cast `nextProps.foo` to empty because string is incompatible with empty.
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:149:6
 
-Cannot cast `nextState.bar` to empty because number is incompatible with empty.
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error --------------------------------------------------- create_class.js:150:12
 
-Cannot return `0` because number is incompatible with boolean.
+Cannot return `0` because number [1] is incompatible with boolean [2].
 
 
 Error ---------------------------------------------------- create_class.js:153:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:154:6
 
-Cannot cast `this.state.bar` to empty because number is incompatible with empty.
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:155:6
 
-Cannot cast `nextProps.foo` to empty because string is incompatible with empty.
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:156:6
 
-Cannot cast `nextState.bar` to empty because number is incompatible with empty.
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:160:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:161:6
 
-Cannot cast `this.state.bar` to empty because number is incompatible with empty.
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:162:6
 
-Cannot cast `nextProps.foo` to empty because string is incompatible with empty.
+Cannot cast `nextProps.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:163:6
 
-Cannot cast `nextState.bar` to empty because number is incompatible with empty.
+Cannot cast `nextState.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:167:6
 
-Cannot cast `this.props.foo` to empty because string is incompatible with empty.
+Cannot cast `this.props.foo` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------- create_class.js:168:6
 
-Cannot cast `this.state.bar` to empty because number is incompatible with empty.
+Cannot cast `this.state.bar` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error --------------------------------------------------- create_class.js:173:19
 
-Cannot call `React.createClass` because object literal is not an exact object.
+Cannot call `React.createClass` because object literal [1] is not an exact
+object.
 
 
 Error --------------------------------------------------- create_class.js:174:24
 
-Cannot call `React.createClass` because object type is not an exact object.
+Cannot call `React.createClass` because object type [1] is not an exact object.
 
 
 Error --------------------------------- create_class_initial_state_sealed.js:9:6
 
-Cannot cast `this.state.q` to empty because number is incompatible with empty.
+Cannot cast `this.state.q` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error -------------------------------- create_class_initial_state_sealed.js:22:6
 
-Cannot cast `this.state.q` to empty because number is incompatible with empty.
+Cannot cast `this.state.q` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error -------------------------------- create_class_initial_state_sealed.js:35:6
 
-Cannot cast `this.state.q` to empty because number is incompatible with empty.
+Cannot cast `this.state.q` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------- create_class_initial_state_sealed.js:45:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because
-in property `q`, property `q` is missing in object type.
+in property `q`, property `q` is missing in object type [1].
 
 
 Error ------------------------------- create_class_initial_state_sealed.js:48:17
 
-Cannot get `this.state.q` because property `q` is missing in object type.
+Cannot get `this.state.q` because property `q` is missing in object type [1].
 
 
 Error -------------------------------- create_class_initial_state_sealed.js:66:6
 
-Cannot cast `this.state.baz` to empty because number is incompatible with empty.
+Cannot cast `this.state.baz` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------- create_class_initial_state_sealed.js:81:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because
-in property `baz`, property `baz` is missing in object type.
+in property `baz`, property `baz` is missing in object type [1].
 
 
 Error ------------------------------- create_class_initial_state_sealed.js:84:17
 
-Cannot get `this.state.baz` because property `baz` is missing in object type.
+Cannot get `this.state.baz` because property `baz` is missing in object
+type [1].
 
 
 Error --------------------------------------- create_class_statics_sealed.js:5:2
 
-Cannot cast `A.bar` to empty because number is incompatible with empty.
+Cannot cast `A.bar` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:12:2
 
-Cannot cast `B.foo` to empty because number is incompatible with empty.
+Cannot cast `B.foo` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:13:2
 
-Cannot cast `B.bar` to empty because number is incompatible with empty.
+Cannot cast `B.bar` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:20:2
 
-Cannot cast `C.foo` to empty because number is incompatible with empty.
+Cannot cast `C.foo` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:21:2
 
-Cannot cast `C.bar` to empty because number is incompatible with empty.
+Cannot cast `C.bar` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:28:2
 
-Cannot cast `D.foo` to empty because number is incompatible with empty.
+Cannot cast `D.foo` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:29:4
 
-Cannot get `D.bar` because property `bar` is missing in statics of React class.
+Cannot get `D.bar` because property `bar` is missing in statics of React
+class [1].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:30:3
 
 Cannot assign `0` to `D.bar` because property `bar` is missing in statics of
-React class.
+React class [1].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:39:2
 
-Cannot cast `E.foo` to empty because number is incompatible with empty.
+Cannot cast `E.foo` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:40:2
 
-Cannot cast `E.bar` to empty because number is incompatible with empty.
+Cannot cast `E.bar` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:41:2
 
-Cannot cast `E.baz` to empty because number is incompatible with empty.
+Cannot cast `E.baz` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:51:2
 
-Cannot cast `F.foo` to empty because number is incompatible with empty.
+Cannot cast `F.foo` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:52:2
 
-Cannot cast `F.bar` to empty because number is incompatible with empty.
+Cannot cast `F.bar` to empty because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:53:4
 
-Cannot get `F.baz` because property `baz` is missing in statics of React class.
+Cannot get `F.baz` because property `baz` is missing in statics of React
+class [1].
 
 
 Error -------------------------------------- create_class_statics_sealed.js:54:3
 
 Cannot assign `0` to `F.baz` because property `baz` is missing in statics of
-React class.
+React class [1].
 
 
 Error ----------------------------------------- default_props_undefined.js:10:10
 
-Cannot create `Foo` element because in property `bar`, string is incompatible
-with number.
+Cannot create `Foo` element because in property `bar`, string [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------- element_config.js:15:29
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------- element_config.js:31:25
 
-Property `p` is missing in object literal but exists in object type.
+Property `p` is missing in object literal [1] but exists in object type [2].
 
 
 Error -------------------------------------------------- element_config.js:39:29
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------- element_config.js:47:35
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:52:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:56:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:58:2
 
 Cannot cast object literal to `ElementConfig` because property `p` is missing in
-object literal but exists in object type.
+object literal [1] but exists in object type [2].
 
 
 Error --------------------------------------------------- element_config.js:60:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:62:2
 
 Cannot cast object literal to `ElementConfig` because property `p` is missing in
-object literal but exists in object type.
+object literal [1] but exists in object type [2].
 
 
 Error --------------------------------------------------- element_config.js:64:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:71:2
 
 Cannot cast object literal to `ElementConfig` because property `p` is missing in
-object type but exists in object literal.
+object type [1] but exists in object literal [2].
 
 
 Error --------------------------------------------------- element_config.js:72:2
 
 Cannot cast object literal to `ElementConfig` because property `p` is missing in
-object type but exists in object literal.
+object type [1] but exists in object literal [2].
 
 
 Error --------------------------------------------------- element_config.js:76:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:80:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:84:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------- element_config.js:88:6
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string is
-incompatible with number.
+Cannot cast object literal to `ElementConfig` because in property `p`,
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------- element_with_component_type.js:8:3
 
 Cannot cast `<Foo />` to `Element` because in property `type` and then type
-argument `Props`, property `b` is missing in object type but exists in object
-type.
+argument `Props`, property `b` is missing in object type [1] but exists in
+object type [2].
 
 
 Error -------------------------------------------------------------- hoc.js:11:7
 
 Cannot create `Component` element because:
- - property `bar` is missing in props but exists in object type.
- - property `foo` is missing in props but exists in object type.
+ - property `bar` is missing in props [1] but exists in object type [2].
+ - property `foo` is missing in props [1] but exists in object type [2].
 
 
 Error -------------------------------------------------------------- hoc.js:12:8
 
-Cannot create `Component` element because property `bar` is missing in props but
-exists in object type.
+Cannot create `Component` element because property `bar` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- hoc.js:35:49
 
 Cannot call `myHOC` with `class { ... }` bound to `Component` because in type
-argument `Props` and then property `foo`, string is incompatible with number.
+argument `Props` and then property `foo`, string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- hoc.js:36:35
 
 Cannot call `myHOC` with function bound to `Component` because in the first
-argument and then property `foo`, string is incompatible with number.
+argument and then property `foo`, string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------------- hoc.js:41:2
 
-Cannot create `Wrapped` element because property `foo` is missing in props but
-exists in object type.
+Cannot create `Wrapped` element because property `foo` is missing in props [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- hoc.js:43:2
 
-Cannot create `WrappedFun` element because property `foo` is missing in props
-but exists in object type.
+Cannot create `WrappedFun` element because property `foo` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- hoc2.js:6:34
 
-Property `a` is missing in object type but exists in object type.
+Property `a` is missing in object type [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- hoc2.js:6:34
 
-Property `b` is missing in object type but exists in object type.
+Property `b` is missing in object type [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- hoc2.js:18:6
 
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ hoc2.js:23:37
 
-In type argument `Props`, number is incompatible with string.
+In type argument `Props`, number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ hoc2.js:23:37
 
-In type argument `Props`, property `a` is missing in object type but exists in
-object type.
+In type argument `Props`, property `a` is missing in object type [1] but exists
+in object type [2].
 
 
 Error ------------------------------------------------------------ hoc2.js:23:37
 
-In type argument `Props`, property `b` is missing in object type but exists in
-object type.
+In type argument `Props`, property `b` is missing in object type [1] but exists
+in object type [2].
 
 
 Error ------------------------------------------------------------- hoc3.js:26:1
 
 Cannot create `MyEnhancedComponent` element because:
- - property `a` is missing in props but exists in object type.
- - property `b` is missing in props but exists in object type.
+ - property `a` is missing in props [1] but exists in object type [2].
+ - property `b` is missing in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc3.js:28:24
 
-Cannot create `MyEnhancedComponent` element because in property `a`, string is
-incompatible with number.
+Cannot create `MyEnhancedComponent` element because in property `a`, string [1]
+is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- hoc3.js:30:1
 
 Cannot create `MyEnhancedFunctionComponent` element because:
- - property `a` is missing in props but exists in object type.
- - property `b` is missing in props but exists in object type.
+ - property `a` is missing in props [1] but exists in object type [2].
+ - property `b` is missing in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc3.js:32:32
 
 Cannot create `MyEnhancedFunctionComponent` element because in property `a`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- hoc4.js:26:1
 
 Cannot create `MyEnhancedComponent` element because:
- - property `a` is missing in props but exists in object type.
- - property `b` is missing in props but exists in object type.
+ - property `a` is missing in props [1] but exists in object type [2].
+ - property `b` is missing in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc4.js:28:24
 
-Cannot create `MyEnhancedComponent` element because in property `a`, string is
-incompatible with number.
+Cannot create `MyEnhancedComponent` element because in property `a`, string [1]
+is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- hoc4.js:30:1
 
 Cannot create `MyEnhancedFunctionComponent` element because:
- - property `a` is missing in props but exists in object type.
- - property `b` is missing in props but exists in object type.
+ - property `a` is missing in props [1] but exists in object type [2].
+ - property `b` is missing in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc4.js:32:32
 
 Cannot create `MyEnhancedFunctionComponent` element because in property `a`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- hoc5.js:21:2
 
-Cannot create `MyComponent1` element because property `bar` is missing in props
-but exists in object type.
+Cannot create `MyComponent1` element because property `bar` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:23:19
 
-Cannot create `MyComponent1` element because in property `bar`, string is
-incompatible with number.
+Cannot create `MyComponent1` element because in property `bar`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:25:29
 
-Cannot create `MyComponent1` element because in property `foo`, number is
-incompatible with string.
+Cannot create `MyComponent1` element because in property `foo`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- hoc5.js:28:2
 
-Cannot create `MyComponent2` element because property `bar` is missing in props
-but exists in object type.
+Cannot create `MyComponent2` element because property `bar` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:30:19
 
-Cannot create `MyComponent2` element because in property `bar`, string is
-incompatible with number.
+Cannot create `MyComponent2` element because in property `bar`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:32:29
 
-Cannot create `MyComponent2` element because in property `foo`, number is
-incompatible with string.
+Cannot create `MyComponent2` element because in property `foo`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- hoc5.js:38:2
 
 Cannot create `MyEnhancedComponent1` element because property `bar` is missing
-in props but exists in object type.
+in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:40:27
 
-Cannot create `MyEnhancedComponent1` element because in property `bar`, string
-is incompatible with number.
+Cannot create `MyEnhancedComponent1` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:42:37
 
-Cannot create `MyEnhancedComponent1` element because in property `foo`, number
-is incompatible with string.
+Cannot create `MyEnhancedComponent1` element because in property `foo`,
+number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- hoc5.js:45:2
 
 Cannot create `MyEnhancedComponent2` element because property `bar` is missing
-in props but exists in object type.
+in props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:47:27
 
-Cannot create `MyEnhancedComponent2` element because in property `bar`, string
-is incompatible with number.
+Cannot create `MyEnhancedComponent2` element because in property `bar`,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ hoc5.js:49:37
 
-Cannot create `MyEnhancedComponent2` element because in property `foo`, number
-is incompatible with string.
+Cannot create `MyEnhancedComponent2` element because in property `foo`,
+number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------- import_react.js:7:17
 
-Cannot assign `new react.Component()` to `b` because `React.Component` is
-incompatible with number.
+Cannot assign `new react.Component()` to `b` because `React.Component` [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------- intersection_component_error.js:12:2
 
-Cannot create `MyComponent` element because property `foo` is missing in props
-but exists in object type.
+Cannot create `MyComponent` element because property `foo` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------ jsx_spread.js:11:13
 
-Cannot create `Foo` element because in property `bar`, number is incompatible
-with string.
+Cannot create `Foo` element because in property `bar`, number [1] is
+incompatible with string [2].
 
 
 Error: key.js:12
@@ -649,158 +683,160 @@ Error: key.js:21
 Error ---------------------------------------------------------- portals.js:12:7
 
 Cannot call `ReactDOM.createPortal` with `document.getElementById(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:13:21
 
-Cannot create `Example` element because property `arr` is missing in props but
-exists in propTypes of React component.
+Cannot create `Example` element because property `arr` is missing in props [1]
+but exists in propTypes of React component [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:14:36
 
-Cannot create `Example` element because in property `arr`, number is
-incompatible with array type.
+Cannot create `Example` element because in property `arr`, number [1] is
+incompatible with array type [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:15:45
 
 Cannot create `Example` element because in property `arr` and then type argument
-`T`, string is incompatible with number.
+`T`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:20:36
 
 Cannot create `Example` element because in property `arr` and then type argument
-`T`, null is incompatible with number.
+`T`, null [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:30:25
 
 Cannot create `OptionalExample` element because in property `arr` and then type
-argument `T`, string is incompatible with number.
+argument `T`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:38:19
 
-Cannot create `AnyExample` element because in property `arr`, number is
-incompatible with array type.
+Cannot create `AnyExample` element because in property `arr`, number [1] is
+incompatible with array type [2].
 
 
 Error ------------------------------------------------ proptype_arrayOf.js:43:34
 
-number is not a React propType.
+number [1] is not a React propType.
 
 
 Error ----------------------------------------- proptype_custom_validator.js:8:8
 
-Cannot cast `propName` to empty because string is incompatible with empty.
+Cannot cast `propName` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ----------------------------------------- proptype_custom_validator.js:9:8
 
-Cannot cast `componentName` to empty because string is incompatible with empty.
+Cannot cast `componentName` to empty because string [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------- proptype_custom_validator.js:10:8
 
 Cannot cast `href` to empty because:
- - string is incompatible with empty.
- - undefined is incompatible with empty.
+ - string [1] is incompatible with empty [2].
+ - undefined [1] is incompatible with empty [2].
 
 
 Error --------------------------------------- proptype_custom_validator.js:11:18
 
-Cannot return `0` because mixed is incompatible with `Error`.
+Cannot return `0` because mixed [1] is incompatible with `Error` [2].
 
 
 Error --------------------------------------------------- proptype_func.js:14:36
 
-Cannot create `Example` element because in property `func`, number is
-incompatible with function type.
+Cannot create `Example` element because in property `func`, number [1] is
+incompatible with function type [2].
 
 
 Error -------------------------------------------- proptype_incompatible.js:5:10
 
-number is not a React propType.
+number [1] is not a React propType.
 
 
 Error --------------------------------------------- proptype_instanceOf.js:14:14
 
-Cannot create `Example` element because in property `x`, `A` is incompatible
-with `B`.
+Cannot create `Example` element because in property `x`, `A` [1] is incompatible
+with `B` [2].
 
 
 Error --------------------------------------------- proptype_instanceOf.js:17:13
 
-Cannot create `Example` element because in property `x`, string is incompatible
-with `B`.
+Cannot create `Example` element because in property `x`, string [1] is
+incompatible with `B` [2].
 
 
 Error ------------------------------------------------- proptype_object.js:13:38
 
-Cannot create `Example` element because in property `object`, number is
-incompatible with object type.
+Cannot create `Example` element because in property `object`, number [1] is
+incompatible with object type [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:13:21
 
-Cannot create `Example` element because property `obj` is missing in props but
-exists in propTypes of React component.
+Cannot create `Example` element because property `obj` is missing in props [1]
+but exists in propTypes of React component [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:14:37
 
-Cannot create `Example` element because in property `obj`, number is
-incompatible with object type.
+Cannot create `Example` element because in property `obj`, number [1] is
+incompatible with object type [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:15:47
 
-Cannot create `Example` element because in property `obj.foo`, string is
-incompatible with number.
+Cannot create `Example` element because in property `obj.foo`, string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:20:38
 
-Cannot create `Example` element because in property `obj.p`, null is
-incompatible with number.
+Cannot create `Example` element because in property `obj.p`, null [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:30:27
 
-Cannot create `OptionalExample` element because in property `obj.p`, string is
-incompatible with number.
+Cannot create `OptionalExample` element because in property `obj.p`, string [1]
+is incompatible with number [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:38:19
 
-Cannot create `AnyExample` element because in property `obj`, number is
-incompatible with object type.
+Cannot create `AnyExample` element because in property `obj`, number [1] is
+incompatible with object type [2].
 
 
 Error ----------------------------------------------- proptype_objectOf.js:43:35
 
-number is not a React propType.
+number [1] is not a React propType.
 
 
 Error -------------------------------------------------- proptype_oneOf.js:14:15
 
-Cannot create `Example` element because in property `str`, string is
-incompatible with string enum.
+Cannot create `Example` element because in property `str`, string [1] is
+incompatible with string enum [2].
 
 
 Error -------------------------------------------------- proptype_oneOf.js:17:16
 
-Cannot create `Example` element because in property `num`, number is
-incompatible with number enum.
+Cannot create `Example` element because in property `num`, number [1] is
+incompatible with number enum [2].
 
 
 Error -------------------------------------------------- proptype_oneOf.js:20:17
 
-Cannot create `Example` element because in property `bool`, boolean is
-incompatible with boolean literal `true`.
+Cannot create `Example` element because in property `bool`, boolean [1] is
+incompatible with boolean literal `true` [2].
 
 
 Error: proptype_oneOf.js:24
@@ -845,25 +881,25 @@ Error: proptype_oneOf.js:24
 
 Error --------------------------------------------------- proptype_oneOf.js:32:3
 
-Cannot create `RequiredExample` element because property `p` is missing in props
-but exists in propTypes of React component.
+Cannot create `RequiredExample` element because property `p` is missing in
+props [1] but exists in propTypes of React component [2].
 
 
 Error -------------------------------------------------- proptype_oneOf.js:40:21
 
-Cannot create `EmptyExample` element because in property `nil`, number is
-incompatible with empty.
+Cannot create `EmptyExample` element because in property `nil`, number [1] is
+incompatible with empty [2].
 
 
 Error -------------------------------------------------- proptype_oneOf.js:76:30
 
-number is not an array.
+number [1] is not an array.
 
 
 Error ---------------------------------------------- proptype_oneOfType.js:23:21
 
-Cannot create `Example` element because property `prop` is missing in props but
-exists in propTypes of React component.
+Cannot create `Example` element because property `prop` is missing in props [1]
+but exists in propTypes of React component [2].
 
 
 Error: proptype_oneOfType.js:24
@@ -972,196 +1008,202 @@ Error: proptype_oneOfType.js:29
 
 Error ---------------------------------------------- proptype_oneOfType.js:41:22
 
-Cannot create `OptionalExample` element because in property `p`, number is
-incompatible with string.
+Cannot create `OptionalExample` element because in property `p`, number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------- proptype_oneOfType.js:49:21
 
-Cannot create `EmptyExample` element because in property `nil`, number is
-incompatible with empty.
+Cannot create `EmptyExample` element because in property `nil`, number [1] is
+incompatible with empty [2].
 
 
 Error ---------------------------------------------- proptype_oneOfType.js:91:34
 
-number is not an array.
+number [1] is not an array.
 
 
 Error ---------------------------------------------- proptype_oneOfType.js:99:35
 
-object literal is not a React propType.
+object literal [1] is not a React propType.
 
 
 Error -------------------------------------------------- proptype_shape.js:20:21
 
 Cannot get `this.props.foo.baz` because property `baz` is missing in object
-type.
+type [1].
 
 
 Error -------------------------------------------------- proptype_shape.js:24:20
 
 Cannot assign `0` to `this.props.foo.baz` because property `baz` is missing in
-object type.
+object type [1].
 
 
 Error ------------------------------------------------ proptypes_builtins.js:7:2
 
 Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
- - in the first argument, `ReactPropsCheckType` is incompatible with mixed.
- - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
-   empty.
+ - in the first argument, `ReactPropsCheckType` [1] is incompatible with
+   mixed [2].
+ - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible
+   with empty [4].
 
 
 Error ----------------------------------------------- proptypes_builtins.js:11:2
 
 Cannot cast `React.PropTypes.instanceOf` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+`ReactPropsChainableTypeChecker` [1] is incompatible with empty [2].
 
 
 Error ----------------------------------------------- proptypes_builtins.js:15:2
 
 Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
- - in the first argument, `ReactPropsCheckType` is incompatible with mixed.
- - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
-   empty.
+ - in the first argument, `ReactPropsCheckType` [1] is incompatible with
+   mixed [2].
+ - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible
+   with empty [4].
 
 
 Error ----------------------------------------------- proptypes_builtins.js:19:2
 
 Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
- - in the first argument, array type is incompatible with mixed.
- - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
-   empty.
+ - in the first argument, array type [1] is incompatible with mixed [2].
+ - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible
+   with empty [4].
 
 
 Error ----------------------------------------------- proptypes_builtins.js:23:2
 
 Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
- - in the first argument, array type is incompatible with mixed.
- - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
-   empty.
+ - in the first argument, array type [1] is incompatible with mixed [2].
+ - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible
+   with empty [4].
 
 
 Error ----------------------------------------------- proptypes_builtins.js:27:2
 
 Cannot cast `React.PropTypes.shape` to `NoFun` because:
- - in the first argument, object type is incompatible with mixed.
- - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
-   empty.
+ - in the first argument, object type [1] is incompatible with mixed [2].
+ - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible
+   with empty [4].
 
 
 Error ------------------------------------------------ proptypes_sealed.js:18:17
 
 Cannot get `this.props.baz` because property `baz` is missing in propTypes of
-React component.
+React component [1].
 
 
 Error ------------------------------------------------ proptypes_sealed.js:22:16
 
 Cannot assign `0` to `this.props.baz` because property `baz` is missing in
-propTypes of React component.
+propTypes of React component [1].
 
 
 Error ------------------------------------------------------------- ref.js:12:17
 
-number is incompatible with `Foo`.
+number [1] is incompatible with `Foo` [2].
 
 
 Error ------------------------------------------------------------- ref.js:13:19
 
-Cannot cast `foo` to `Foo` because null is incompatible with `Foo`.
+Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
 
 
 Error ------------------------------------------------------------- ref.js:15:19
 
-Cannot cast `foo` to union type because `Foo` is incompatible with `Bar`.
+Cannot cast `foo` to union type because `Foo` [1] is incompatible with
+`Bar` [2].
 
 
 Error ------------------------------------------------------------- ref.js:23:22
 
-number is incompatible with `FooExact`.
+number [1] is incompatible with `FooExact` [2].
 
 
 Error ------------------------------------------------------------- ref.js:24:24
 
-Cannot cast `foo` to `FooExact` because null is incompatible with `FooExact`.
+Cannot cast `foo` to `FooExact` because null [1] is incompatible with
+`FooExact` [2].
 
 
 Error ------------------------------------------------------------- ref.js:26:24
 
-Cannot cast `foo` to union type because `FooExact` is incompatible with `Bar`.
+Cannot cast `foo` to union type because `FooExact` [1] is incompatible with
+`Bar` [2].
 
 
 Error ------------------------------------------------- render_callback.js:13:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:17:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:22:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:22:62
 
-Cannot call `ReactDOM.render` with `1` bound to `callback` because number is
-incompatible with function type.
+Cannot call `ReactDOM.render` with `1` bound to `callback` because number [1] is
+incompatible with function type [2].
 
 
 Error ------------------------------------------------- render_callback.js:23:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:23:62
 
 Cannot call `ReactDOM.render` with object literal bound to `callback` because a
-callable signature is missing in object literal but exists in function type.
+callable signature is missing in object literal [1] but exists in function
+type [2].
 
 
 Error ------------------------------------------------- render_callback.js:24:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:24:62
 
 Cannot call `ReactDOM.render` with empty string bound to `callback` because
-string is incompatible with function type.
+string [1] is incompatible with function type [2].
 
 
 Error ------------------------------------------------- render_callback.js:25:29
 
 Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to
-`container` because null is incompatible with `Element`.
+`container` because null [1] is incompatible with `Element` [2].
 
 
 Error ------------------------------------------------- render_callback.js:25:62
 
-Cannot call `ReactDOM.render` with `null` bound to `callback` because null is
-incompatible with function type.
+Cannot call `ReactDOM.render` with `null` bound to `callback` because null [1]
+is incompatible with function type [2].
 
 
 Error ------------------------------------------------------ test-utils.js:34:18
 
 Cannot get `child.tagName` because property `tagName` is missing in
-`React.Component`.
+`React.Component` [1].
 
 
 Error --------------------------------------------------- undefined_prop.js:7:21
 
-Cannot create `MyComponent` element because in property `title`, undefined is
-incompatible with string.
+Cannot create `MyComponent` element because in property `title`, undefined [1]
+is incompatible with string [2].
 
 
 

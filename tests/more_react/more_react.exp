@@ -1,49 +1,49 @@
 Error --------------------------------------------------------- API.react.js:4:5
 
 Cannot call `app.setProps` because property `setProps` is missing in
-`React.Element`.
+`React.Element` [1].
 
 
 Error --------------------------------------------------------- API.react.js:5:5
 
 Cannot call `app.setState` because property `setState` is missing in
-`React.Element`.
+`React.Element` [1].
 
 
 Error ------------------------------------------------------- App.react.js:36:14
 
-Cannot call `foo` with `z` bound to `p` because number is incompatible with
-string.
+Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------- checkPropTypes.js:7:1
 
-Cannot call `checkPropTypes` because function requires another argument.
+Cannot call `checkPropTypes` because function [1] requires another argument.
 
 
 Error ---------------------------------------------------- checkPropTypes.js:8:1
 
-Cannot call `checkPropTypes` because function requires another argument.
+Cannot call `checkPropTypes` because function [1] requires another argument.
 
 
 Error -------------------------------------------------- checkPropTypes.js:10:16
 
-Property `bar` is missing in object literal.
+Property `bar` is missing in object literal [1].
 
 
 Error -------------------------------------------------- checkPropTypes.js:12:91
 
 Cannot call `checkPropTypes` with function bound to `getStack` because in the
-return value, number is incompatible with string.
+return value, number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- propTypes.js:15:1
 
 Cannot create `D` element because:
- - property `name` is missing in props but exists in propTypes of React
-   component.
- - property `title` is missing in props but exists in propTypes of React
-   component.
+ - property `name` is missing in props [1] but exists in propTypes of React
+   component [2].
+ - property `title` is missing in props [1] but exists in propTypes of React
+   component [2].
 
 
 

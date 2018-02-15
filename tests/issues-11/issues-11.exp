@@ -1,11 +1,11 @@
 Error ----------------------------------------------------------- import.js:3:17
 
-Cannot assign `e.x` to `x` because number is incompatible with string.
+Cannot assign `e.x` to `x` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- import.js:4:17
 
-Cannot assign `e.y` to `y` because string is incompatible with number.
+Cannot assign `e.y` to `y` because string [1] is incompatible with number [2].
 
 
 

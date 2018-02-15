@@ -1,7 +1,7 @@
 Error ------------------------------------------------- license_with_flow.js:4:2
 
-Cannot cast empty string to undefined because string is incompatible with
-undefined.
+Cannot cast empty string to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error -------------------------------------------------- multiple_flows_1.js:2:4
@@ -26,14 +26,14 @@ Unexpected `@providesModule` declaration. Only one per file is allowed.
 
 Error ---------------------------------------------- use_strict_with_flow.js:4:2
 
-Cannot cast empty string to undefined because string is incompatible with
-undefined.
+Cannot cast empty string to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- with_flow.js:3:2
 
-Cannot cast empty string to undefined because string is incompatible with
-undefined.
+Cannot cast empty string to undefined because string [1] is incompatible with
+undefined [2].
 
 
 

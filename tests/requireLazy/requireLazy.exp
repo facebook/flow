@@ -1,25 +1,25 @@
 Error ------------------------------------------------------ requireLazy.js:8:22
 
-Cannot assign `A.stringValueA` to `num2` because string is incompatible with
-number.
+Cannot assign `A.stringValueA` to `num2` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ requireLazy.js:9:22
 
-Cannot assign `A.numberValueA` to `str2` because number is incompatible with
-string.
+Cannot assign `A.numberValueA` to `str2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- requireLazy.js:13:22
 
-Cannot assign `B.stringValueB` to `num4` because string is incompatible with
-number.
+Cannot assign `B.stringValueB` to `num4` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------- requireLazy.js:14:22
 
-Cannot assign `B.numberValueB` to `str4` because number is incompatible with
-string.
+Cannot assign `B.numberValueB` to `str4` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- requireLazy.js:17:20

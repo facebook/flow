@@ -1,16 +1,18 @@
 Error ----------------------------------------------------------- encaps.js:3:16
 
-Cannot get `a.x` because property `x` is missing in `A`.
+Cannot get `a.x` because property `x` is missing in `A` [1].
 
 
 Error ----------------------------------------------------------- encaps.js:6:20
 
-Cannot assign `strings[0]` to `x` because string is incompatible with number.
+Cannot assign `strings[0]` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- encaps.js:16:2
 
-Cannot cast `s3.foo` to number because string is incompatible with number.
+Cannot cast `s3.foo` to number because string [1] is incompatible with
+number [2].
 
 
 

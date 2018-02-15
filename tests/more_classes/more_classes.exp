@@ -1,18 +1,19 @@
 Error ------------------------------------------------------------- Bar.js:15:19
 
-Cannot assign `"?"` to `new Qux().w` because string is incompatible with number.
+Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- Foo.js:21:12
 
-Cannot extend `Qux` with `Foo` because in property `fooqux` and then the first
-argument, string is incompatible with number.
+Cannot extend `Qux` [1] with `Foo` because in property `fooqux` and then the
+first argument, string [2] is incompatible with number [3].
 
 
 Error ------------------------------------------------------------- Foo.js:10:10
 
 Cannot assign `x` to `this.x` because property `x` is missing in uninitialized
-this (expected super constructor call).
+this (expected super constructor call) [1].
 
 
 Error ------------------------------------------------------------- Foo.js:13:16
@@ -22,19 +23,19 @@ Missing type annotation for `z`.
 
 Error ------------------------------------------------------------- Foo.js:16:21
 
-Cannot call `Bar` with `y` bound to `y` because string is incompatible with
-number.
+Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- Foo.js:18:12
 
-Cannot return `v.bar(...)` because string is incompatible with number.
+Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- Foo.js:18:20
 
-Cannot call `v.bar` with `u` bound to `u` because number is incompatible with
-string.
+Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible
+with string [2].
 
 
 

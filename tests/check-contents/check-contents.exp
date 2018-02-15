@@ -20,7 +20,7 @@ not_flow.js
 
 Error ---------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 
@@ -31,7 +31,7 @@ not_flow.js with --all
 
 Error ---------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 
@@ -47,7 +47,7 @@ not_flow.js with --respect-pragma and --all
 
 Error ---------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 

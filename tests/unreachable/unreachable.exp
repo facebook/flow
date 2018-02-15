@@ -1,16 +1,16 @@
 Error -------------------------------------------------------- typecheck.js:4:10
 
-Cannot return `bar()` because number is incompatible with string.
+Cannot return `bar()` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------- typecheck.js:21:21
 
-Cannot assign `n` to `y` because number is incompatible with string.
+Cannot assign `n` to `y` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------ unreachable.js:5:19
 
-Cannot call `baz` because uninitialized variable is not a function.
+Cannot call `baz` because uninitialized variable [1] is not a function.
 
 
 Error ----------------------------------------------------- unreachable.js:13:13

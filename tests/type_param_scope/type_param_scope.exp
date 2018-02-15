@@ -1,16 +1,19 @@
 Error ------------------------------------------------------------ class.js:4:12
 
-Cannot call `this.b` with `a` bound to `x` because `A` is incompatible with `T`.
+Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with
+`T` [2].
 
 
 Error ---------------------------------------------------- default_params.js:6:7
 
-Cannot call `h` with `c` bound to `d` because `T` is incompatible with `U`.
+Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with
+`U` [2].
 
 
 Error --------------------------------------------------- default_params.js:10:7
 
-Cannot call `g` with `0` bound to `c` because number is incompatible with `T`.
+Cannot call `g` with `0` bound to `c` because number [1] is incompatible with
+`T` [2].
 
 
 Error: method_shadow.js:42
@@ -37,13 +40,13 @@ Error: method_shadow.js:42
 
 Error ---------------------------------------------------- method_shadow.js:43:6
 
-Cannot cast `g.m(...)` to `G` because in type argument `T`, string is
-incompatible with number.
+Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is
+incompatible with number [2].
 
 
 Error --------------------------------------------------- method_shadow.js:51:18
 
-Cannot assign `x` to `this.x` because `T` is incompatible with `T`.
+Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2].
 
 
 

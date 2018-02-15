@@ -1,65 +1,65 @@
 Error ------------------------------------------------------------ test10.js:3:2
 
-Cannot cast `o.p` to empty because number is incompatible with empty.
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------------ test3.js:8:17
 
-Cannot assign `o.y` to `y` because string is incompatible with number.
+Cannot assign `o.y` to `y` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ test3.js:9:17
 
-Cannot assign `o.z` to `z` because string is incompatible with number.
+Cannot assign `o.z` to `z` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- test3.js:17:18
 
 Cannot assign `s.y` to `t` because:
- - number is incompatible with boolean.
- - string is incompatible with boolean.
+ - number [1] is incompatible with boolean [2].
+ - string [3] is incompatible with boolean [2].
 
 
 Error ------------------------------------------------------------ test6.js:10:2
 
 Cannot cast `p` to object type because property `abc` is missing in object
-literal but exists in object type.
+literal [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- test7.js:6:6
 
-Cannot cast object literal to undefined because object literal is incompatible
-with undefined.
+Cannot cast object literal to undefined because object literal [1] is
+incompatible with undefined [2].
 
 
 Error ------------------------------------------------------------- test8.js:7:2
 
-Cannot cast object literal to object type because in property `q`, string is
-incompatible with number.
+Cannot cast object literal to object type because in property `q`, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test8.js:8:2
 
-Cannot cast object literal to object type because in property `p`, number is
-incompatible with string.
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- test9.js:5:2
 
 Cannot cast object literal to object type because a callable signature is
-missing in object literal but exists in object type.
+missing in object literal [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ test9.js:11:2
 
 Cannot cast object literal to object type because an indexer property is missing
-in object literal but exists in object type.
+in object literal [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ test9.js:12:2
 
 Cannot cast object literal to object type because an indexer property is missing
-in object literal but exists in object type.
+in object literal [1] but exists in object type [2].
 
 
 

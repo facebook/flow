@@ -6,8 +6,8 @@ Deprecated syntax. Use `declare module.exports` instead.
 
 Error -------------------------------------------------------------- main.js:5:2
 
-Cannot cast `declare_module_exports` to string because number is incompatible
-with string.
+Cannot cast `declare_module_exports` to string because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------------- main.js:8:9
@@ -18,19 +18,19 @@ Cannot import `str` because there is no `str` export in
 
 Error ------------------------------------------------------------- main.js:12:2
 
-Cannot cast `42` to `str2` because number is incompatible with string.
+Cannot cast `42` to `str2` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- main.js:21:2
 
-Cannot cast `DEPRECATED__declare_var_exports` to string because number is
-incompatible with string.
+Cannot cast `DEPRECATED__declare_var_exports` to string because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- main.js:25:2
 
-Cannot cast `declare_m_e_with_declare_var_e` to string because number is
-incompatible with string.
+Cannot cast `declare_m_e_with_declare_var_e` to string because number [1] is
+incompatible with string [2].
 
 
 

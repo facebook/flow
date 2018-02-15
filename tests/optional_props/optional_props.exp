@@ -1,52 +1,53 @@
 Error ------------------------------------------------------------- test.js:2:27
 
-Cannot assign `x` to `y` because property `foo` is missing in object type but
-exists in object type.
+Cannot assign `x` to `y` because property `foo` is missing in object type [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- test.js:8:9
 
-Cannot assign `0` to `o.foo` because number is incompatible with string.
+Cannot assign `0` to `o.foo` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ test.js:12:11
 
 Cannot call `bar` with object literal bound to `config` because in property
-`foo`, string is incompatible with number.
+`foo`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test2.js:3:9
 
-Cannot assign `null` to `a.foo` because null is incompatible with string.
+Cannot assign `null` to `a.foo` because null [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- test2.js:10:34
 
-Cannot assign object literal to `d` because in property `foo`, null is
-incompatible with string.
+Cannot assign object literal to `d` because in property `foo`, null [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------------- test3.js:54:16
 
 Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object
-literal.
+literal [1].
 
 
 Error ------------------------------------------------ test3_exact_annot.js:5:38
 
-Cannot assign `a` to `b` because property `b` is missing in object type but
-exists in object type.
+Cannot assign `a` to `b` because property `b` is missing in object type [1] but
+exists in object type [2].
 
 
 Error ------------------------------------------------- test3_exact_annot.js:7:4
 
-Cannot get `a.b` because property `b` is missing in object type.
+Cannot get `a.b` because property `b` is missing in object type [1].
 
 
 Error ---------------------------------------------------- test3_failure.js:7:14
 
 Cannot assign `'hello'` to `this.o.x.b` because property `b` is missing in
-object literal.
+object literal [1].
 
 
 

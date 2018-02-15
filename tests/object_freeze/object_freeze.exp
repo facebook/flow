@@ -21,7 +21,7 @@ Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
 Error ---------------------------------------------------- object_freeze.js:12:8
 
 Cannot get `bliffl.corge` because property `corge` is missing in frozen object
-literal.
+literal [1].
 
 
 Error ---------------------------------------------------- object_freeze.js:13:8
@@ -38,8 +38,8 @@ writable.
 
 Error --------------------------------------------------- object_freeze.js:20:45
 
-Cannot assign `Object.freeze(...)` to `xx` because in property `x`, string is
-incompatible with number.
+Cannot assign `Object.freeze(...)` to `xx` because in property `x`, string [1]
+is incompatible with number [2].
 
 
 

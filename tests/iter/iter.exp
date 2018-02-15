@@ -1,23 +1,23 @@
 Error ------------------------------------------------------------- iter.js:7:15
 
-Cannot iterate using a `for...in` statement because array literal is not an
+Cannot iterate using a `for...in` statement because array literal [1] is not an
 object, null, or undefined.
 
 
 Error -------------------------------------------------------------- iter.js:8:9
 
-Cannot get `a[k]` because string is not an array index.
+Cannot get `a[k]` because string [1] is not an array index.
 
 
 Error ------------------------------------------------------------ iter.js:22:20
 
-Cannot iterate using a `for...in` statement because array literal is not an
+Cannot iterate using a `for...in` statement because array literal [1] is not an
 object, null, or undefined.
 
 
 Error ------------------------------------------------------------- iter.js:23:9
 
-Cannot get `d[n]` because string is not an array index.
+Cannot get `d[n]` because string [1] is not an array index.
 
 
 

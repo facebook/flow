@@ -1,53 +1,53 @@
 Error ------------------------------------------------------------- main.js:6:10
 
-Cannot create `div` element because in property `id`, number is incompatible
-with string.
+Cannot create `div` element because in property `id`, number [1] is incompatible
+with string [2].
 
 
 Error -------------------------------------------------------------- main.js:9:2
 
-Cannot cast `<div />.props.id` to number because string is incompatible with
-number.
+Cannot cast `<div />.props.id` to number because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- strings.js:9:2
 
-Cannot create `Div` element because property `id` is missing in props but exists
-in object type.
+Cannot create `Div` element because property `id` is missing in props [1] but
+exists in object type [2].
 
 
 Error ---------------------------------------------------------- strings.js:10:2
 
 Cannot create `bad` element because property `bad` is missing in
-`$JSXIntrinsics`.
+`$JSXIntrinsics` [1].
 
 
 Error ---------------------------------------------------------- strings.js:11:2
 
-An indexer property is missing in `$JSXIntrinsics`.
+An indexer property is missing in `$JSXIntrinsics` [1].
 
 
 Error --------------------------------------------------------- strings.js:13:28
 
-Cannot call `React.createElement` because property `id` is missing in props but
-exists in object type.
+Cannot call `React.createElement` because property `id` is missing in props [1]
+but exists in object type [2].
 
 
 Error --------------------------------------------------------- strings.js:14:21
 
 Cannot create `bad` element because property `bad` is missing in
-`$JSXIntrinsics`.
+`$JSXIntrinsics` [1].
 
 
 Error --------------------------------------------------------- strings.js:15:21
 
-An indexer property is missing in `$JSXIntrinsics`.
+An indexer property is missing in `$JSXIntrinsics` [1].
 
 
 Error --------------------------------------------------------- strings.js:18:10
 
-Cannot create `Div` element because in property `id`, number is incompatible
-with string.
+Cannot create `Div` element because in property `id`, number [1] is incompatible
+with string [2].
 
 
 

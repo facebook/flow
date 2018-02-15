@@ -1,11 +1,11 @@
 Error ------------------------------------------------------- enumerror.js:10:18
 
-Property `PAUSE` is missing in object type.
+Property `PAUSE` is missing in object type [1].
 
 
 Error ------------------------------------------------------- enumerror.js:20:19
 
-Property `PAUSE` is missing in `typeof MyStates`.
+Property `PAUSE` is missing in `typeof MyStates` [1].
 
 
 

@@ -1,50 +1,50 @@
 Error ------------------------------------------------------------- api.js:11:39
 
 Cannot call `na` with `Children.map(...)` bound to `x` because in type argument
-`T`, string is incompatible with number.
+`T`, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- api.js:11:24
 
 Cannot call `Children.map` with function bound to `fn` because in the first
-argument, string is incompatible with number.
+argument, string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- api.js:12:39
 
 Cannot call `sa` with `Children.map(...)` bound to `x` because in type argument
-`T`, number is incompatible with string.
+`T`, number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- api.js:14:18
 
 Cannot call `Children.forEach` with `a` bound to `children` because in type
-argument `T`, null or undefined is incompatible with number.
+argument `T`, null or undefined [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- api.js:16:18
 
 Cannot call `Children.forEach` with `a` bound to `children` because:
- - in type argument `T`, null or undefined is incompatible with string.
- - in type argument `T`, number is incompatible with string.
+ - in type argument `T`, null or undefined [1] is incompatible with string [2].
+ - in type argument `T`, number [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- api.js:19:3
 
-Cannot call `s` with `Children.count(...)` bound to `x` because number is
-incompatible with string.
+Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------------- api.js:22:3
 
-Cannot call `s` with `Children.only(...)` bound to `x` because number is
-incompatible with string.
+Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------------- api.js:25:4
 
 Cannot call `sa` with `Children.toArray(...)` bound to `x` because in type
-argument `T`, number is incompatible with string.
+argument `T`, number [1] is incompatible with string [2].
 
 
 Error: builtin_intrinsic.js:24
@@ -98,19 +98,19 @@ Error: builtin_intrinsic.js:24
 Error -------------------------------------------------------- component.js:15:2
 
 Cannot create `MyComponent` element because property `children` is missing in
-props but exists in object type.
+props [1] but exists in object type [2].
 
 
 Error -------------------------------------------------------- component.js:16:2
 
 Cannot create `MyComponent` element because property `children` is missing in
-props but exists in object type.
+props [1] but exists in object type [2].
 
 
 Error -------------------------------------------------------- component.js:18:2
 
 Cannot create `MyComponent` element because property `children` is missing in
-props but exists in object type.
+props [1] but exists in object type [2].
 
 
 Error: component.js:40
@@ -163,181 +163,182 @@ Error: component.js:40
 
 Error -------------------------------------------------------------- fun.js:23:2
 
-Cannot create `Fun` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Fun` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- fun.js:27:6
 
-Cannot create `Fun` element because in property `children`, children array is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, children array [1]
+is incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:29:6
 
-Cannot create `Fun` element because in property `children`, children array is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, children array [1]
+is incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:30:6
 
-Cannot create `Fun` element because in property `children`, children array is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, children array [1]
+is incompatible with `Fn` [2].
 
 
 Error ------------------------------------------------------------- fun.js:42:12
 
 Cannot create `Fun` element because in property `children` and then the return
-value, string is incompatible with number.
+value, string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------------- fun.js:40:6
 
-Cannot cast `data.bar` to string because number is incompatible with string.
+Cannot cast `data.bar` to string because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- fun.js:41:11
 
-Cannot get `data.nope` because property `nope` is missing in `Data`.
+Cannot get `data.nope` because property `nope` is missing in `Data` [1].
 
 
 Error -------------------------------------------------------------- fun.js:46:2
 
-Cannot create `Fun` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Fun` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- fun.js:47:2
 
-Cannot create `Fun` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Fun` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- fun.js:48:7
 
-Cannot create `Fun` element because in property `children`, undefined is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, undefined [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:49:7
 
-Cannot create `Fun` element because in property `children`, null is incompatible
-with `Fn`.
+Cannot create `Fun` element because in property `children`, null [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:50:7
 
-Cannot create `Fun` element because in property `children`, boolean is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, boolean [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:51:7
 
-Cannot create `Fun` element because in property `children`, boolean is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, boolean [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:52:7
 
-Cannot create `Fun` element because in property `children`, number is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, number [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:53:7
 
-Cannot create `Fun` element because in property `children`, number is
-incompatible with `Fn`.
+Cannot create `Fun` element because in property `children`, number [1] is
+incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:54:6
 
 Cannot create `Fun` element because in property `children`, a callable signature
-is missing in `React.Element` but exists in `Fn`.
+is missing in `React.Element` [1] but exists in `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:56:2
 
-Cannot create `Obj` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Obj` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error -------------------------------------------------------------- fun.js:60:1
 
 Cannot create `Obj` element because:
- - in property `children.foo`, string is incompatible with number.
- - in property `children.bar`, string is incompatible with number.
+ - in property `children.foo`, string [1] is incompatible with number [2].
+ - in property `children.bar`, string [3] is incompatible with number [4].
 
 
 Error -------------------------------------------------------------- fun.js:61:6
 
-Cannot create `Obj` element because in property `children`, children array is
-incompatible with `Data`.
+Cannot create `Obj` element because in property `children`, children array [1]
+is incompatible with `Data` [2].
 
 
 Error -------------------------------------------------------------- fun.js:63:6
 
-Cannot create `Obj` element because in property `children`, children array is
-incompatible with `Data`.
+Cannot create `Obj` element because in property `children`, children array [1]
+is incompatible with `Data` [2].
 
 
 Error -------------------------------------------------------------- fun.js:64:6
 
-Cannot create `Obj` element because in property `children`, children array is
-incompatible with `Data`.
+Cannot create `Obj` element because in property `children`, children array [1]
+is incompatible with `Data` [2].
 
 
 Error ------------------------------------------------------------- fun.js:71:16
 
-Cannot create `FunArrayOnly` element because in property `children`, function is
-incompatible with array type.
+Cannot create `FunArrayOnly` element because in property `children`,
+function [1] is incompatible with array type [2].
 
 
 Error -------------------------------------------------------------- fun.js:77:1
 
 Cannot create `FunArrayOnly` element because:
- - in property `children` and then type argument `T`, array literal is
-   incompatible with `Fn`.
- - in property `children` and then type argument `T`, array literal is
-   incompatible with `Fn`.
+ - in property `children` and then type argument `T`, array literal [1] is
+   incompatible with `Fn` [2].
+ - in property `children` and then type argument `T`, array literal [3] is
+   incompatible with `Fn` [2].
 
 
 Error ------------------------------------------------------------- fun.js:80:16
 
 Cannot create `FunArrayOnly` element because in property `children` and then
-type argument `T`, array literal is incompatible with `Fn`.
+type argument `T`, array literal [1] is incompatible with `Fn` [2].
 
 
 Error -------------------------------------------------------------- fun.js:84:4
 
-Cannot create `FunArrayOnly` element because in property `children`, function is
-incompatible with array type.
+Cannot create `FunArrayOnly` element because in property `children`,
+function [1] is incompatible with array type [2].
 
 
 Error ------------------------------------------------------------- fun.js:108:1
 
 Cannot create `FunArray` element because:
- - in property `children` and then type argument `T`, array literal is
-   incompatible with `Fn`.
- - in property `children` and then type argument `T`, array literal is
-   incompatible with `Fn`.
+ - in property `children` and then type argument `T`, array literal [1] is
+   incompatible with `Fn` [2].
+ - in property `children` and then type argument `T`, array literal [3] is
+   incompatible with `Fn` [2].
 
 
 Error ------------------------------------------------------------ fun.js:111:12
 
 Cannot create `FunArray` element because in property `children` and then type
-argument `T`, array literal is incompatible with `Fn`.
+argument `T`, array literal [1] is incompatible with `Fn` [2].
 
 
 Error ------------------------------------------------------------- fun.js:134:2
 
-Cannot create `FunArray` element because property `children` is missing in props
-but exists in object type.
+Cannot create `FunArray` element because property `children` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- fun.js:135:2
 
-Cannot create `FunArray` element because property `children` is missing in props
-but exists in object type.
+Cannot create `FunArray` element because property `children` is missing in
+props [1] but exists in object type [2].
 
 
 Error: fun.js:136
@@ -505,7 +506,7 @@ Error: fun.js:141
 Error ------------------------------------------------------------ fun.js:142:11
 
 Cannot create `FunArray` element because in property `children`, a callable
-signature is missing in `React.Element` but exists in `Fn`.
+signature is missing in `React.Element` [1] but exists in `Fn` [2].
 
 
 Error ------------------------------------------------------------ spread.js:7:6
@@ -515,8 +516,8 @@ A spread argument is unsupported here.
 
 Error ------------------------------------------------------------- tabs.js:26:2
 
-Cannot create `TabBar` element because property `children` is missing in props
-but exists in object type.
+Cannot create `TabBar` element because property `children` is missing in
+props [1] but exists in object type [2].
 
 
 Error: tabs.js:30
@@ -641,214 +642,215 @@ Error: tabs.js:32
 
 Error ------------------------------------------------------------ tabs.js:67:10
 
-Cannot create `TabBar` element because in property `children.type`, `NotTab` is
-incompatible with `Tab`.
+Cannot create `TabBar` element because in property `children.type`, `NotTab` [1]
+is incompatible with `Tab` [2].
 
 
 Error ------------------------------------------------------------- tabs.js:68:1
 
 Cannot create `TabBar` element because:
- - in property `children`, type argument `T`, and then property `type`; `NotTab`
-   is incompatible with `Tab`.
- - in property `children`, type argument `T`, and then property `type`; `NotTab`
-   is incompatible with `Tab`.
+ - in property `children`, type argument `T`, and then property `type`;
+   `NotTab` [1] is incompatible with `Tab` [2].
+ - in property `children`, type argument `T`, and then property `type`;
+   `NotTab` [1] is incompatible with `Tab` [2].
 
 
 Error ------------------------------------------------------------- tabs.js:73:4
 
 Cannot create `TabBar` element because in property `children`, type argument
-`T`, and then property `type`; `NotTab` is incompatible with `Tab`.
+`T`, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
 
 
 Error -------------------------------------------------------------- text.js:9:2
 
-Cannot create `Text` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Text` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- text.js:11:2
 
 Cannot create `TextLiteral` element because property `children` is missing in
-props but exists in object type.
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- text.js:15:2
 
-Cannot create `Text` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Text` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- text.js:18:2
 
-Cannot create `Text` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Text` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- text.js:19:2
 
-Cannot create `Text` element because property `children` is missing in props but
-exists in object type.
+Cannot create `Text` element because property `children` is missing in props [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------- text.js:20:8
 
-Cannot create `Text` element because in property `children`, undefined is
-incompatible with string.
+Cannot create `Text` element because in property `children`, undefined [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:21:8
 
-Cannot create `Text` element because in property `children`, null is
-incompatible with string.
+Cannot create `Text` element because in property `children`, null [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:22:8
 
-Cannot create `Text` element because in property `children`, boolean is
-incompatible with string.
+Cannot create `Text` element because in property `children`, boolean [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:23:8
 
-Cannot create `Text` element because in property `children`, boolean is
-incompatible with string.
+Cannot create `Text` element because in property `children`, boolean [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:24:8
 
-Cannot create `Text` element because in property `children`, number is
-incompatible with string.
+Cannot create `Text` element because in property `children`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:25:8
 
-Cannot create `Text` element because in property `children`, number is
-incompatible with string.
+Cannot create `Text` element because in property `children`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:26:7
 
-Cannot create `Text` element because in property `children`, `React.Element` is
-incompatible with string.
+Cannot create `Text` element because in property `children`, `React.Element` [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:35:7
 
-Cannot create `Text` element because in property `children`, children array is
-incompatible with string.
+Cannot create `Text` element because in property `children`, children array [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:36:7
 
-Cannot create `Text` element because in property `children`, children array is
-incompatible with string.
+Cannot create `Text` element because in property `children`, children array [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:37:7
 
-Cannot create `Text` element because in property `children`, children array is
-incompatible with string.
+Cannot create `Text` element because in property `children`, children array [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- text.js:38:7
 
-Cannot create `Text` element because in property `children`, children array is
-incompatible with string.
+Cannot create `Text` element because in property `children`, children array [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ text.js:48:14
 
-Cannot create `TextLiteral` element because in property `children`, JSX text is
-incompatible with string enum.
+Cannot create `TextLiteral` element because in property `children`, JSX text [1]
+is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------ text.js:49:15
 
-Cannot create `TextLiteral` element because in property `children`, string is
-incompatible with string enum.
+Cannot create `TextLiteral` element because in property `children`, string [1]
+is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------ text.js:50:14
 
-Cannot create `TextLiteral` element because in property `children`, JSX text is
-incompatible with string enum.
+Cannot create `TextLiteral` element because in property `children`, JSX text [1]
+is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------ text.js:51:14
 
-Cannot create `TextLiteral` element because in property `children`, JSX text is
-incompatible with string enum.
+Cannot create `TextLiteral` element because in property `children`, JSX text [1]
+is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------ text.js:52:14
 
 Cannot create `TextLiteral` element because in property `children`, children
-array is incompatible with string enum.
+array [1] is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------ text.js:53:14
 
 Cannot create `TextLiteral` element because in property `children`, children
-array is incompatible with string enum.
+array [1] is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------- tuple.js:9:2
 
-Cannot create `Tuple` element because property `children` is missing in props
-but exists in object type.
+Cannot create `Tuple` element because property `children` is missing in
+props [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------ tuple.js:12:8
 
-Cannot create `Tuple` element because in property `children`, children array has
-an arity of 4 but tuple type has an arity of 3.
+Cannot create `Tuple` element because in property `children`, children array [1]
+has an arity of 4 but tuple type [2] has an arity of 3.
 
 
 Error ------------------------------------------------------------ tuple.js:13:1
 
 Cannot create `Tuple` element because:
- - in property `children` and then index 0, JSX text is incompatible with
-   boolean.
- - in property `children`, children array has an arity of 4 but tuple type has
-   an arity of 3.
- - in property `children` and then index 1, boolean is incompatible with string.
- - in property `children` and then index 2, JSX text is incompatible with
-   number.
+ - in property `children` and then index 0, JSX text [1] is incompatible with
+   boolean [2].
+ - in property `children`, children array [3] has an arity of 4 but tuple
+   type [4] has an arity of 3.
+ - in property `children` and then index 1, boolean [5] is incompatible with
+   string [6].
+ - in property `children` and then index 2, JSX text [7] is incompatible with
+   number [8].
 
 
 Error ------------------------------------------------------------ tuple.js:14:8
 
-Cannot create `Tuple` element because in property `children`, children array has
-an arity of 4 but tuple type has an arity of 3.
+Cannot create `Tuple` element because in property `children`, children array [1]
+has an arity of 4 but tuple type [2] has an arity of 3.
 
 
 Error ------------------------------------------------------------ tuple.js:16:1
 
 Cannot create `Tuple` element because:
- - in property `children`, children array has an arity of 2 but tuple type has
-   an arity of 3.
- - in property `children` and then index 0, array literal is incompatible with
-   boolean.
- - in property `children` and then index 1, array literal is incompatible with
-   string.
+ - in property `children`, children array [1] has an arity of 2 but tuple
+   type [2] has an arity of 3.
+ - in property `children` and then index 0, array literal [3] is incompatible
+   with boolean [4].
+ - in property `children` and then index 1, array literal [5] is incompatible
+   with string [6].
 
 
 Error ------------------------------------------------------------ tuple.js:18:9
 
-Cannot create `Tuple` element because in property `children`, array literal has
-an arity of 4 but tuple type has an arity of 3.
+Cannot create `Tuple` element because in property `children`, array literal [1]
+has an arity of 4 but tuple type [2] has an arity of 3.
 
 
 Error ----------------------------------------------------------- tuple.js:34:12
 
-Cannot create `TupleOne` element because in property `children`, boolean is
-incompatible with tuple type.
+Cannot create `TupleOne` element because in property `children`, boolean [1] is
+incompatible with tuple type [2].
 
 
 Error ------------------------------------------------------------- view.js:31:2
 
 Cannot create `View` element because in property `children`, property `a` is
-missing in `React.Element` but exists in object literal.
+missing in `React.Element` [1] but exists in object literal [2].
 
 
 Error: view.js:35

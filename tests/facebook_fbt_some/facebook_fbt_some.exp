@@ -1,6 +1,7 @@
 Error -------------------------------------------------------------- main.js:4:2
 
-Cannot cast `<fbt />` to string because number is incompatible with string.
+Cannot cast `<fbt />` to string because number [1] is incompatible with
+string [2].
 
 
 

@@ -5,7 +5,8 @@ Cannot assign `2` to `a.prop` because property `prop` is not writable.
 
 Error --------------------------------------------------------------- a.js:20:17
 
-Cannot assign `prop` to `this.prop` because string is incompatible with number.
+Cannot assign `prop` to `this.prop` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------------------- a.js:21:10
@@ -25,14 +26,14 @@ Cannot assign `1` to `this.prop` because property `prop` is not writable.
 
 Error --------------------------------------------------------------- a.js:70:17
 
-Cannot assign empty string to `this.prop` because string is incompatible with
-number.
+Cannot assign empty string to `this.prop` because string [1] is incompatible
+with number [2].
 
 
 Error ---------------------------------------------------------------- a.js:74:7
 
-Cannot extend `F` with `G` because property `prop` is write-only in `G` but
-read-only in `A`.
+Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2]
+but read-only in `A` [3].
 
 
 

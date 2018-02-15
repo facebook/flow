@@ -1,48 +1,54 @@
 Error -------------------------------------------------------- importer.js:11:23
 
-Cannot assign `'asdf'` to `b` because string is incompatible with number.
+Cannot assign `'asdf'` to `b` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- importer.js:14:26
 
-Cannot assign `'asdf'` to `d` because string is incompatible with number.
+Cannot assign `'asdf'` to `d` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- importer.js:17:18
 
-Cannot assign `'asdf'` to `f` because string is incompatible with number.
+Cannot assign `'asdf'` to `f` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- importer.js:20:18
 
-Cannot assign `'asdf'` to `h` because string is incompatible with number.
+Cannot assign `'asdf'` to `h` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- importer.js:24:18
 
-Cannot assign `'asdf'` to `j` because string is incompatible with number.
+Cannot assign `'asdf'` to `j` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- importer.js:29:22
 
-Cannot assign object literal to `l` because in property `prop`, string is
-incompatible with number.
+Cannot assign object literal to `l` because in property `prop`, string [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------- importer.js:32:23
 
-Cannot assign object literal to `n` because in property `prop`, number is
-incompatible with string.
+Cannot assign object literal to `n` because in property `prop`, number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------- types_only.js:5:23
 
-Cannot assign `'asdf'` to `b` because string is incompatible with number.
+Cannot assign `'asdf'` to `b` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- types_only.js:11:9
 
-Cannot reference type `standaloneType2` from a value position.
+Cannot reference type `standaloneType2` [1] from a value position.
 
 
 

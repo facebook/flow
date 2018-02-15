@@ -1,11 +1,12 @@
 Error --------------------------------------------------------------- A.js:16:21
 
-Cannot assign `123` to `test4` because number is incompatible with string.
+Cannot assign `123` to `test4` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- versions.js:7:2
 
-Cannot cast `123` to string because number is incompatible with string.
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 
 Warning -------------------------------------------------------------- A.js:14:1

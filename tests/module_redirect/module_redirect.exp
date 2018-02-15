@@ -1,19 +1,19 @@
 Error ---------------------------------------------------------------- D.js:6:20
 
-Cannot assign `require(...)` to `bar1` because module `A` is incompatible with
-string.
+Cannot assign `require(...)` to `bar1` because module `A` [1] is incompatible
+with string [2].
 
 
 Error ---------------------------------------------------------------- D.js:7:20
 
-Cannot assign `require(...)` to `bar2` because module `A` is incompatible with
-string.
+Cannot assign `require(...)` to `bar2` because module `A` [1] is incompatible
+with string [2].
 
 
 Error ---------------------------------------------------------------- D.js:8:20
 
-Cannot assign `require(...)` to `bar3` because module `A` is incompatible with
-string.
+Cannot assign `require(...)` to `bar3` because module `A` [1] is incompatible
+with string [2].
 
 
 

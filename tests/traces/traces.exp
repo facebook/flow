@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------- Traces.js:3:21
 
-Cannot call `g0` with `x` bound to `y` because number is incompatible with
-string.
+Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with
+string [2].
 
 
 Trace:
@@ -29,8 +29,8 @@ Trace:
 
 Error ----------------------------------------------------------- Traces.js:8:27
 
-Cannot call `g1` with `y` bound to `b` because number is incompatible with
-string.
+Cannot call `g1` with `y` bound to `b` because number [1] is incompatible with
+string [2].
 
 
 Trace:
@@ -58,7 +58,7 @@ Trace:
 
 Error ---------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Trace:
@@ -86,7 +86,7 @@ Trace:
 
 Error ---------------------------------------------------------- Traces.js:14:29
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Trace:
@@ -114,7 +114,7 @@ Trace:
 
 Error ---------------------------------------------------------- Traces.js:19:29
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Trace:

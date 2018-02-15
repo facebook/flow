@@ -1,25 +1,25 @@
 Error ----------------------------------------------------------- test2.js:10:10
 
-Cannot call `check` with `new A()` bound to `inst` because `A` is incompatible
-with `B`.
+Cannot call `check` with `new A()` bound to `inst` because `A` [1] is
+incompatible with `B` [2].
 
 
 Error ----------------------------------------------------------- test2.js:12:10
 
-Cannot call `check` with `new A()` bound to `inst` because `A` is incompatible
-with `C`.
+Cannot call `check` with `new A()` bound to `inst` because `A` [1] is
+incompatible with `C` [2].
 
 
 Error ----------------------------------------------------------- test2.js:13:10
 
-Cannot call `check` with `new B()` bound to `inst` because `B` is incompatible
-with `C`.
+Cannot call `check` with `new B()` bound to `inst` because `B` [1] is
+incompatible with `C` [2].
 
 
 Error ----------------------------------------------------------- test2.js:14:10
 
-Cannot call `check` with `new C()` bound to `inst` because `C` is incompatible
-with `B`.
+Cannot call `check` with `new C()` bound to `inst` because `C` [1] is
+incompatible with `B` [2].
 
 
 

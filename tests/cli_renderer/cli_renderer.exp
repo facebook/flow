@@ -1,14 +1,122 @@
 Error ------------------------------------------------------------- basic.js:6:2
 
-Cannot cast `null` to empty because null is incompatible with empty.
+Cannot cast `null` to empty because null [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------------- group.js:6:2
 
 Cannot cast object literal to object type because:
- - in property `a`, number is incompatible with string.
- - in property `b`, number is incompatible with string.
- - in property `c`, number is incompatible with string.
+ - in property `a`, number [1] is incompatible with string [2].
+ - in property `b`, number [3] is incompatible with string [4].
+ - in property `c`, number [5] is incompatible with string [6].
+
+
+Error ------------------------------------------------------------ layout.js:8:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, object literal [9] is incompatible with empty [10].
+
+
+Error ------------------------------------------------------------ layout.js:9:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, number [9] is incompatible with empty [10].
+
+
+Error ----------------------------------------------------------- layout.js:10:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, object literal [9] is incompatible with empty [10].
+
+
+Error ----------------------------------------------------------- layout.js:11:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, object literal [9] is incompatible with empty [10].
+
+
+Error ----------------------------------------------------------- layout.js:12:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, number [9] is incompatible with empty [10].
+
+
+Error ----------------------------------------------------------- layout.js:13:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+ - in index 3, object literal [7] is incompatible with empty [8].
+ - in index 4, object literal [9] is incompatible with empty [10].
+
+
+Error ----------------------------------------------------------- layout.js:18:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, number [5] is incompatible with empty [6].
+
+
+Error ----------------------------------------------------------- layout.js:19:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, number [5] is incompatible with empty [6].
+
+
+Error ----------------------------------------------------------- layout.js:20:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
+
+
+Error ----------------------------------------------------------- layout.js:21:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, object literal [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, number [5] is incompatible with empty [6].
+
+
+Error ----------------------------------------------------------- layout.js:22:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, object literal [3] is incompatible with empty [4].
+ - in index 2, number [5] is incompatible with empty [6].
+
+
+Error ----------------------------------------------------------- layout.js:23:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+ - in index 2, object literal [5] is incompatible with empty [6].
 
 
 Error ------------------------------------------------------------ wrap.js:21:64
@@ -16,7 +124,7 @@ Error ------------------------------------------------------------ wrap.js:21:64
 Cannot cast object literal to object type because in property `this.is.going`,
 index 0, property `to.be.a.really`, index 0, property
 `long.error.message.that.hopefully`, index 0, and then property
-`breaks.on.multiple.lines`; number is incompatible with string.
+`breaks.on.multiple.lines`; number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- wrap_group.js:6:2
@@ -24,11 +132,11 @@ Error -------------------------------------------------------- wrap_group.js:6:2
 Cannot cast object literal to object type because:
  - in property `this.is.going`, index 0, property `to.be.a.really`, index 0,
    property `long.error.message.that.hopefully`, index 0, and then property
-   `breaks.on.multiple.lines.a`; number is incompatible with string.
+   `breaks.on.multiple.lines.a`; number [1] is incompatible with string [2].
  - in property `this.is.going`, index 0, property `to.be.a.really`, index 0,
    property `long.error.message.that.hopefully`, index 0, and then property
-   `breaks.on.multiple.lines.b`; number is incompatible with string.
+   `breaks.on.multiple.lines.b`; number [3] is incompatible with string [4].
 
 
 
-Found 7 errors
+Found 55 errors

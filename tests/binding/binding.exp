@@ -1,269 +1,271 @@
 Error ------------------------------------------------------------- const.js:4:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------- const.js:5:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------- const.js:6:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------- const.js:7:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------- const.js:8:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------- const.js:9:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:10:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:11:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:12:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:13:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:14:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:15:1
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 Error ------------------------------------------------------------ const.js:21:2
 
-Cannot cast `foo` to number because string is incompatible with number.
+Cannot cast `foo` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ const.js:22:2
 
-Cannot cast `bar` to number because string is incompatible with number.
+Cannot cast `bar` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ const.js:26:4
 
-Cannot cast `baz` to number because string is incompatible with number.
+Cannot cast `baz` to number because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- rebinding.js:16:8
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:21:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:26:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:31:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:36:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:41:3
 
-Cannot reference type `A` from a value position.
+Cannot reference type `A` [1] from a value position.
 
 
 Error -------------------------------------------------------- rebinding.js:48:8
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:53:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:58:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:63:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:68:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:75:8
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:80:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:85:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:90:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error -------------------------------------------------------- rebinding.js:95:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:102:8
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:107:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:112:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:117:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:122:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:127:3
 
-Cannot reassign constant `A`.
+Cannot reassign constant `A` [1].
 
 
 Error ------------------------------------------------------- rebinding.js:134:8
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:139:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:144:7
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:149:9
 
-Cannot declare `A` because the name is already bound.
+Cannot declare `A` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:167:5
 
-Cannot declare `a` because the name is already bound.
+Cannot declare `a` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------ rebinding.js:177:11
 
-Cannot declare `x` because the name is already bound.
+Cannot declare `x` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------ rebinding.js:186:12
 
-Cannot declare `x` because the name is already bound.
+Cannot declare `x` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------ rebinding.js:193:34
 
-Cannot declare `x` because the name is already bound.
+Cannot declare `x` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------- rebinding.js:195:7
 
-Cannot declare `x` because the name is already bound.
+Cannot declare `x` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------------ scope.js:6:13
 
-Cannot assign empty string to `b` because string is incompatible with number.
+Cannot assign empty string to `b` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- scope.js:16:15
 
-Cannot assign empty string to `b` because string is incompatible with number.
+Cannot assign empty string to `b` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- scope.js:19:11
 
-Cannot declare `a` because the name is already bound.
+Cannot declare `a` [1] because the name is already bound.
 
 
 Error ------------------------------------------------------------ scope.js:30:6
 
-Cannot use variable `a` because the declaration either comes later or was
+Cannot use variable `a` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ----------------------------------------------------------- scope.js:33:14
 
-Cannot use variable `a` because the declaration either comes later or was
+Cannot use variable `a` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------ scope.js:39:7
 
-Cannot use variable `a` because the declaration either comes later or was
+Cannot use variable `a` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ----------------------------------------------------------- scope.js:42:22
 
-Cannot use variable `a` because the declaration either comes later or was
+Cannot use variable `a` [1] because the declaration either comes later or was
 skipped.
 
 
@@ -274,43 +276,44 @@ Cannot resolve name `a`.
 
 Error ----------------------------------------------------------- scope.js:66:16
 
-Cannot assign empty string to `a` because string is incompatible with number.
+Cannot assign empty string to `a` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- scope.js:66:16
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- scope.js:76:12
 
-Cannot assign string to `a` because string is incompatible with number.
+Cannot assign string to `a` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- scope.js:76:12
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- scope.js:86:47
 
-Cannot assign `a` to `a` because string is incompatible with number.
+Cannot assign `a` to `a` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------- scope.js:86:47
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ scope.js:93:6
 
-Cannot assign function to `f` because in the return value, number is
-incompatible with string.
+Cannot assign function to `f` because in the return value, number [1] is
+incompatible with string [2].
 
 
 Error ---------------------------------------------------------- scope.js:103:12
 
-Cannot return `x()` because string is incompatible with number.
+Cannot return `x()` because string [1] is incompatible with number [2].
 
 
 Error ---------------------------------------------------------- scope.js:105:19
@@ -320,50 +323,50 @@ Cannot resolve name `b`.
 
 Error ------------------------------------------------------------- tdz.js:25:11
 
-Cannot use variable `x` because the declaration either comes later or was
+Cannot use variable `x` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- tdz.js:25:15
 
-Cannot use variable `c` because the declaration either comes later or was
+Cannot use variable `c` [1] because the declaration either comes later or was
 skipped.
 
 
 Error -------------------------------------------------------------- tdz.js:31:3
 
-Cannot use variable `x` because the declaration either comes later or was
+Cannot use variable `x` [1] because the declaration either comes later or was
 skipped.
 
 
 Error -------------------------------------------------------------- tdz.js:34:5
 
-Cannot use variable `y` because the declaration either comes later or was
+Cannot use variable `y` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- tdz.js:41:13
 
-Cannot use variable `x` because the declaration either comes later or was
+Cannot use variable `x` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- tdz.js:41:17
 
-Cannot use variable `c` because the declaration either comes later or was
+Cannot use variable `c` [1] because the declaration either comes later or was
 skipped.
 
 
 Error ------------------------------------------------------------- tdz.js:80:13
 
-Cannot use variable `C` because the declaration either comes later or was
+Cannot use variable `C` [1] because the declaration either comes later or was
 skipped.
 
 
 Error -------------------------------------------------------------- tdz.js:96:3
 
-Cannot call `f` with `a` bound to `n` because uninitialized variable is
-incompatible with number.
+Cannot call `f` with `a` bound to `n` because uninitialized variable [1] is
+incompatible with number [2].
 
 
 

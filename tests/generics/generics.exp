@@ -1,24 +1,24 @@
 Error -------------------------------------------------------- generics.js:19:16
 
-Cannot assign `d.x` to `s` because number is incompatible with string.
+Cannot assign `d.x` to `s` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- generics.js:20:16
 
-Cannot assign `o.u` to `n` because `T` is incompatible with number.
+Cannot assign `o.u` to `n` because `T` [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- generics.js:28:16
 
 Cannot assign `e.set(...)` to `x` because:
- - number is incompatible with string.
- - undefined is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - undefined [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- generics.js:39:41
 
 Cannot assign `h1` to `h2` because in type argument `X` and then type argument
-`T`, string is incompatible with number.
+`T`, string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- generics.js:41:11

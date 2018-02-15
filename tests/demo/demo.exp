@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------- 1/f.js:3:27
 
-Cannot perform arithmetic operation because null is not a number.
+Cannot perform arithmetic operation because null [1] is not a number.
 
 
 Error -------------------------------------------------------------- 2/A.js:5:15
@@ -15,8 +15,8 @@ Missing type annotation for `callback`.
 
 Error ------------------------------------------------------------- 2/A.js:10:21
 
-Cannot call `callback` with `this.getX()` bound to `x` because number is
-incompatible with string.
+Cannot call `callback` with `this.getX()` bound to `x` because number [1] is
+incompatible with string [2].
 
 
 

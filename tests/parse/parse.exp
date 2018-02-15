@@ -15,7 +15,7 @@ Unexpected token .
 
 Error --------------------------------------------------- no_parse_error.js:6:13
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 

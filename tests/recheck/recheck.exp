@@ -2,45 +2,47 @@
 Test a:
 Error --------------------------------------------------------------- a1.js:3:42
 
-Cannot return `5` because number is incompatible with string.
+Cannot return `5` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string is incompatible
-with number.
+Cannot call `foo` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 
 Found 2 errors
 Error --------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string is incompatible
-with number.
+Cannot call `foo` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------------------- a3.js:5:2
 
-Cannot cast `five + five` to string because number is incompatible with string.
+Cannot cast `five + five` to string because number [1] is incompatible with
+string [2].
 
 
 
 Found 2 errors
 Error ---------------------------------------------------------------- a1.js:5:5
 
-Cannot call `foo` with empty string bound to `x` because string is incompatible
-with number.
+Cannot call `foo` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 Error --------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string is incompatible
-with number.
+Cannot call `foo` with empty string bound to `x` because string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------------------- a3.js:5:2
 
-Cannot cast `five + five` to string because number is incompatible with string.
+Cannot cast `five + five` to string because number [1] is incompatible with
+string [2].
 
 
 
@@ -49,7 +51,7 @@ Found 3 errors
 Test b:
 Error ---------------------------------------------------------------- b3.js:5:2
 
-Cannot cast `new D()` to `C` because `D` is incompatible with `C`.
+Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
 
 
 
@@ -60,13 +62,13 @@ Test c:
 Error ---------------------------------------------------------------- c2.js:6:7
 
 Cannot call `foo` with object literal bound to `props` because property `x` is
-missing in object literal but exists in object type.
+missing in object literal [1] but exists in object type [2].
 
 
 Error ---------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is
-missing in object literal but exists in object type.
+missing in object literal [1] but exists in object type [2].
 
 
 
@@ -74,7 +76,7 @@ Found 2 errors
 Error ---------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is
-missing in object literal but exists in object type.
+missing in object literal [1] but exists in object type [2].
 
 
 
@@ -83,7 +85,7 @@ Found 1 error
 Test d:
 Error --------------------------------------------------------------- d2.js:4:19
 
-Cannot assign `x` to `y` because `B` is incompatible with `A`.
+Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
 
 
 
@@ -130,8 +132,8 @@ No errors!
 Test f:
 Error ---------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because in property `x`, string is incompatible
-with number.
+Cannot cast `c` to object type because in property `x`, string [1] is
+incompatible with number [2].
 
 
 
@@ -140,8 +142,8 @@ No errors!
 No errors!
 Error ---------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because in property `x`, string is incompatible
-with number.
+Cannot cast `c` to object type because in property `x`, string [1] is
+incompatible with number [2].
 
 
 
@@ -183,8 +185,8 @@ No errors!
 Test m:
 Error ---------------------------------------------------------------- m3.js:6:2
 
-Cannot cast `x` to `T` because in type argument `X`, string is incompatible with
-number.
+Cannot cast `x` to `T` because in type argument `X`, string [1] is incompatible
+with number [2].
 
 
 
@@ -193,7 +195,7 @@ Found 1 error
 Test k:
 Error ----------------------------------------------------------------- k.js:4:4
 
-Cannot get `x.p` because property `p` is missing in `LibK`.
+Cannot get `x.p` because property `p` is missing in `LibK` [1].
 
 
 
@@ -201,7 +203,7 @@ Found 1 error
 No errors!
 Error ----------------------------------------------------------------- k.js:4:4
 
-Cannot get `x.p` because property `p` is missing in `LibK`.
+Cannot get `x.p` because property `p` is missing in `LibK` [1].
 
 
 

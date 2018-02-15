@@ -16,9 +16,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                                ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
             References:
               3: var x: string = 123;
-                                 ^^^ [1]: number
+                                 ^^^ [1]
               3: var x: string = 123;
-                        ^^^^^^ [2]: string
+                        ^^^^^^ [2]
         `,
       ),
     ideStart()
@@ -57,7 +57,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -85,7 +85,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -183,7 +183,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -211,7 +211,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[2]: number",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -277,9 +277,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                                            ^^^^ Cannot assign \`true\` to \`existingError\` because boolean [1] is incompatible with number [2].
             References:
               1: var existingError: number = true;
-                                             ^^^^ [1]: boolean
+                                             ^^^^ [1]
               1: var existingError: number = true;
-                                    ^^^^^^ [2]: number
+                                    ^^^^^^ [2]
         `,
       ),
     addCode('var notAnError: number = 123;')
@@ -323,7 +323,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -351,7 +351,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[2]: number",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -445,7 +445,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -473,7 +473,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[2]: number",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -570,7 +570,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -598,7 +598,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -688,7 +688,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -716,7 +716,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[2]: number",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -791,7 +791,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -819,7 +819,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -913,7 +913,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -941,7 +941,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var existingError: number = true;",
-                            "descr": "[2]: number",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "existingError.js",
@@ -1016,7 +1016,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[1]: number",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -1044,7 +1044,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var newError: string = 123;",
-                            "descr": "[2]: string",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "test.js",
@@ -1202,7 +1202,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1230,7 +1230,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[2]: null or undefined",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1346,7 +1346,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1374,7 +1374,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[2]: null or undefined",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1525,7 +1525,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[1]: boolean",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1553,7 +1553,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "[2]: null or undefined",
+                            "descr": "[2]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1652,9 +1652,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                                ^^^ Cannot assign \`123\` to \`y\` because number [1] is incompatible with string [2].
             References:
               5: var y: string = 123
-                                 ^^^ [1]: number
+                                 ^^^ [1]
               5: var y: string = 123
-                        ^^^^^^ [2]: string
+                        ^^^^^^ [2]
         `,
       )
       .because('Stopping the flow ide command used to kill the server accidentally'),

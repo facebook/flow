@@ -6,7 +6,7 @@ Cannot resolve name `copyProperties`.
 Error -------------------------------------------------- copyProperties.js:31:28
 
 Cannot cast `copyProperties(...)` to object type because in property `foo`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------------- invariant.js:6:5
@@ -21,12 +21,14 @@ Cannot resolve name `mergeInto`.
 
 Error ------------------------------------------------------------- test.js:6:21
 
-Cannot assign `this.x` to `x` because number is incompatible with string.
+Cannot assign `this.x` to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- test.js:7:10
 
-Cannot assign empty string to `this.y` because property `y` is missing in `Foo`.
+Cannot assign empty string to `this.y` because property `y` is missing in
+`Foo` [1].
 
 
 

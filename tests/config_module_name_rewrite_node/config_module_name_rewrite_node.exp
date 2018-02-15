@@ -1,31 +1,37 @@
 Error ---------------------------------------------------------------- A.js:5:19
 
-Cannot assign `m1.numVal` to `a_2` because number is incompatible with string.
+Cannot assign `m1.numVal` to `a_2` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------------- A.js:8:19
 
-Cannot assign `numVal` to `a_4` because number is incompatible with string.
+Cannot assign `numVal` to `a_4` because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------------- A.js:14:19
 
-Cannot assign `m2.numVal` to `b_2` because number is incompatible with string.
+Cannot assign `m2.numVal` to `b_2` because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------------- A.js:17:19
 
-Cannot assign `numVal2` to `b_4` because number is incompatible with string.
+Cannot assign `numVal2` to `b_4` because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------------- A.js:22:19
 
-Cannot assign `m3.numVal` to `c_2` because number is incompatible with string.
+Cannot assign `m3.numVal` to `c_2` because number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------------------------- A.js:25:19
 
-Cannot assign `numVal3` to `c_4` because number is incompatible with string.
+Cannot assign `numVal3` to `c_4` because number [1] is incompatible with
+string [2].
 
 
 

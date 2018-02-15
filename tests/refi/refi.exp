@@ -1,151 +1,158 @@
 Error ------------------------------------------------------------ bound.js:9:22
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- bound.js:47:22
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- bound.js:53:24
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- heap.js:5:22
 
-Cannot assign `x.p` to `y` because null or undefined is incompatible with
-string.
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ heap.js:40:24
 
-Cannot assign `x.p` to `y` because null or undefined is incompatible with
-string.
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ heap.js:48:24
 
-Cannot assign `x.p` to `y` because null is incompatible with string.
+Cannot assign `x.p` to `y` because null [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:55:22
 
-Cannot assign `x.p` to `y` because null or undefined is incompatible with
-string.
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ heap.js:62:24
 
-Cannot assign `x.p` to `y` because null or undefined is incompatible with
-string.
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- heap.js:105:13
 
-Cannot assign `123` to `x.y` because number is incompatible with string.
+Cannot assign `123` to `x.y` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:107:6
 
-Cannot cast `x.y` to string because number is incompatible with string.
+Cannot cast `x.y` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:125:6
 
-Cannot cast `x.y` to string because boolean is incompatible with string.
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:135:6
 
 Cannot cast `x.y` to boolean because:
- - string is incompatible with boolean.
- - string is incompatible with boolean.
- - string is incompatible with boolean.
+ - string [1] is incompatible with boolean [2].
+ - string [3] is incompatible with boolean [2].
+ - string [4] is incompatible with boolean [2].
 
 
 Error ------------------------------------------------------------ heap.js:146:6
 
-Cannot cast `x.y` to string because null is incompatible with string.
+Cannot cast `x.y` to string because null [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:159:6
 
 Cannot cast `x.y` to string because:
- - boolean is incompatible with string.
- - boolean is incompatible with string.
+ - boolean [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:172:6
 
 Cannot cast `x.y` to string because:
- - boolean is incompatible with string.
- - number is incompatible with string.
+ - boolean [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ heap.js:188:6
 
-Cannot cast `x` to string literal `b` because string is incompatible with string
-literal `b`.
+Cannot cast `x` to string literal `b` because string [1] is incompatible with
+string literal `b` [2].
 
 
 Error ----------------------------------------------------------- heap.js:192:18
 
-Property `bar` is missing in mixed.
+Property `bar` is missing in mixed [1].
 
 
 Error ------------------------------------------------------------ heap.js:193:6
 
 Cannot cast `x` to intersection type because:
- - mixed is incompatible with number.
- - mixed is incompatible with string.
+ - mixed [1] is incompatible with number [2].
+ - mixed [1] is incompatible with string [3].
 
 
 Error --------------------------------------------------------------- lex.js:6:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:15:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:25:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:35:4
 
-Cannot cast `x` to string because number is incompatible with string.
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ local.js:5:22
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- local.js:47:22
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- local.js:54:24
 
-Cannot assign `x` to `y` because null or undefined is incompatible with string.
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- null_tests.js:150:14
 
-Cannot return `super.p` because null or undefined is incompatible with string.
+Cannot return `super.p` because null or undefined [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- switch.js:49:10
 
-Cannot return `foo` because possibly uninitialized variable is incompatible with
-number.
+Cannot return `foo` because possibly uninitialized variable [1] is incompatible
+with number [2].
 
 
 

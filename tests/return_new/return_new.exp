@@ -1,35 +1,37 @@
 Error ------------------------------------------------------------- test.js:2:19
 
-Cannot assign `new Foo()` to `foo` because object literal is incompatible with
-number.
+Cannot assign `new Foo()` to `foo` because object literal [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------------------- test.js:5:19
 
-Cannot assign `new Bar()` to `bar` because new object is incompatible with
-number.
+Cannot assign `new Bar()` to `bar` because new object [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- test.js:8:19
 
-Cannot assign `new Qux()` to `qux` because new object is incompatible with
-number.
+Cannot assign `new Qux()` to `qux` because new object [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- test.js:23:2
 
 Cannot cast `new makeUnion()` to object type because property `x` is missing in
-new object but exists in object type.
+new object [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- test2.js:7:7
 
-Cannot assign empty string to `d.x` because string is incompatible with number.
+Cannot assign empty string to `d.x` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- test2.js:9:2
 
-Cannot cast `new D()` to `D` because object type is incompatible with `D`.
+Cannot cast `new D()` to `D` because object type [1] is incompatible with
+`D` [2].
 
 
 

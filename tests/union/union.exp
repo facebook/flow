@@ -1,33 +1,34 @@
 Error -------------------------------------------------------- issue-198.js:9:20
 
-Cannot call `str.toFixed` because property `toFixed` is missing in `String`.
+Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
 
 
 Error -------------------------------------------------------- issue-324.js:8:10
 
-Cannot assign `barstr` to `foostr` because `Bar` is incompatible with `Foo`.
+Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with
+`Foo` [2].
 
 
 Error ------------------------------------------------------------- union.js:2:5
 
-Cannot call `bar` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ union.js:8:13
 
-Cannot assign `new E()` to `c` because `D` is incompatible with `C`.
+Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------------ union.js:9:19
 
-`D` is incompatible with `C`.
+`D` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------------- yuge.js:23:6
 
-Cannot cast empty string to `ErrorCode` because string is incompatible with
-number enum.
+Cannot cast empty string to `ErrorCode` because string [1] is incompatible with
+number enum [2].
 
 
 

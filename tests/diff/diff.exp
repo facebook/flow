@@ -32,41 +32,42 @@ Error: intersection.js:9
 
 Error ----------------------------------------------------- intersection.js:12:8
 
-Cannot cast `any` to `$Diff` because property `a` is missing in object type but
-exists in object type.
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1]
+but exists in object type [2].
 
 
 Error ----------------------------------------------------- intersection.js:14:8
 
-Cannot cast `any` to `$Diff` because property `a` is missing in object type but
-exists in object type.
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------------ lower.js:21:4
 
-Cannot get `y.age` because property `age` is missing in `Person`.
+Cannot get `y.age` because property `age` is missing in `Person` [1].
 
 
 Error ------------------------------------------------------------ lower.js:22:2
 
-Cannot cast `y.name` to number because string is incompatible with number.
+Cannot cast `y.name` to number because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ lower.js:23:3
 
-Cannot get `y.bla` because property `bla` is missing in `Person`.
+Cannot get `y.bla` because property `bla` is missing in `Person` [1].
 
 
 Error --------------------------------------------------------- undefined.js:8:8
 
-Cannot cast `any` to `$Diff` because property `a` is missing in object type but
-exists in object type.
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1]
+but exists in object type [2].
 
 
 Error ------------------------------------------------------- undefined.js:10:12
 
-Cannot cast `any` to `$Diff` because in property `a`, undefined is incompatible
-with `A`.
+Cannot cast `any` to `$Diff` because in property `a`, undefined [1] is
+incompatible with `A` [2].
 
 
 

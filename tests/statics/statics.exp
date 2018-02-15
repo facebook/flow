@@ -1,34 +1,35 @@
 Error ----------------------------------------------------- class_statics.js:6:3
 
 Cannot assign function to `C.g` because property `g` is missing in statics of
-`C`.
+`C` [1].
 
 
 Error ---------------------------------------------------- class_statics.js:6:32
 
-Cannot call `C.f` with `x` bound to `x` because string is incompatible with
-number.
+Cannot call `C.f` with `x` bound to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------- class_statics.js:7:5
 
-Cannot call `C.g` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `C.g` with `0` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------- class_statics.js:9:16
 
-Cannot assign `C.x` to `x` because string is incompatible with number.
+Cannot assign `C.x` to `x` because string [1] is incompatible with number [2].
 
 
 Error ---------------------------------------------------- class_statics.js:10:7
 
-Cannot assign `0` to `C.x` because number is incompatible with string.
+Cannot assign `0` to `C.x` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------- funstatics.js:5:16
 
-Cannot assign `new C().f()` to `x` because number is incompatible with string.
+Cannot assign `new C().f()` to `x` because number [1] is incompatible with
+string [2].
 
 
 

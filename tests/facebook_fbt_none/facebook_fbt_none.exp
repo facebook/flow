@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------- main.js:4:2
 
-Cannot cast `<fbt />` to number because `React.Element` is incompatible with
-number.
+Cannot cast `<fbt />` to number because `React.Element` [1] is incompatible with
+number [2].
 
 
 

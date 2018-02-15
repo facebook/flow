@@ -1,11 +1,11 @@
 Error ---------------------------------------------------- intersection.js:10:32
 
-Cannot return `x` because `B` is incompatible with `A`.
+Cannot return `x` because `B` [1] is incompatible with `A` [2].
 
 
 Error ---------------------------------------------------- intersection.js:11:32
 
-Cannot return `x` because `A` is incompatible with `B`.
+Cannot return `x` because `A` [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------------- test.js:7:10
@@ -20,37 +20,37 @@ Cannot use type without at least 1 type argument.
 
 Error ------------------------------------------------------------- test.js:13:9
 
-Cannot cast `null` to `C` because mixed is incompatible with number.
+Cannot cast `null` to `C` because mixed [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:15:2
 
-Cannot cast `c` to empty because number is incompatible with empty.
+Cannot cast `c` to empty because number [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------------- test.js:19:2
 
-Cannot cast `42` to `D` because number is incompatible with undefined.
+Cannot cast `42` to `D` because number [1] is incompatible with undefined [2].
 
 
 Error ------------------------------------------------------------- test.js:24:9
 
-Cannot cast `null` to `E` because mixed is incompatible with number.
+Cannot cast `null` to `E` because mixed [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:26:2
 
-Cannot cast `e` to empty because number is incompatible with empty.
+Cannot cast `e` to empty because number [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------------- test.js:31:9
 
-Cannot cast `null` to `F` because mixed is incompatible with number.
+Cannot cast `null` to `F` because mixed [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:33:2
 
-Cannot cast `f` to empty because number is incompatible with empty.
+Cannot cast `f` to empty because number [1] is incompatible with empty [2].
 
 
 Error: test.js:38
@@ -77,14 +77,14 @@ Error: test.js:38
 
 Error ------------------------------------------------------------- test.js:39:2
 
-Cannot cast `g` to number because string is incompatible with number.
+Cannot cast `g` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- test.js:41:2
 
 Cannot cast `g` to empty because:
- - number is incompatible with empty.
- - string is incompatible with empty.
+ - number [1] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
 
 
 Error: union.js:6
@@ -111,14 +111,14 @@ Error: union.js:6
 
 Error ------------------------------------------------------------- union.js:7:2
 
-Cannot cast `a` to number because string is incompatible with number.
+Cannot cast `a` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- union.js:9:2
 
 Cannot cast `a` to empty because:
- - number is incompatible with empty.
- - string is incompatible with empty.
+ - number [1] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
 
 
 Error: union.js:14
@@ -145,14 +145,14 @@ Error: union.js:14
 
 Error ------------------------------------------------------------ union.js:15:2
 
-Cannot cast `b` to number because string is incompatible with number.
+Cannot cast `b` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ union.js:17:2
 
 Cannot cast `b` to empty because:
- - number is incompatible with empty.
- - string is incompatible with empty.
+ - number [1] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
 
 
 Error: union.js:22
@@ -179,14 +179,14 @@ Error: union.js:22
 
 Error ------------------------------------------------------------ union.js:23:2
 
-Cannot cast `c` to number because string is incompatible with number.
+Cannot cast `c` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ union.js:25:2
 
 Cannot cast `c` to empty because:
- - number is incompatible with empty.
- - string is incompatible with empty.
+ - number [1] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
 
 
 

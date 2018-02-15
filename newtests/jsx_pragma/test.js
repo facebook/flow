@@ -119,18 +119,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2].
           References:
             5:       const Bar = 123;
-                                 ^^^ [1]: number
+                                 ^^^ [1]
             6:       function Foo(x: string) {}
-                                     ^^^^^^ [2]: string
+                                     ^^^^^^ [2]
 
         test.js:12
          12:         <Bar />;
                       ^^^ Cannot create \`Bar\` element because number [1] is incompatible with boolean [2].
           References:
             5:       const Bar = 123;
-                                 ^^^ [1]: number
+                                 ^^^ [1]
            11:         const Foo = (y: boolean) => {};
-                                       ^^^^^^^ [2]: boolean
+                                       ^^^^^^^ [2]
       `,
     ),
   ]),
@@ -148,9 +148,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                              ^^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
             References:
               8:       <Bar x={123} />;
-                               ^^^ [1]: number
+                               ^^^ [1]
               5:       function Foo(elem: number, props: { x: string }) {}
-                                                              ^^^^^^ [2]: string
+                                                              ^^^^^^ [2]
         `,
       ),
   ]),
@@ -168,9 +168,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot create \`Bar\` element because null [1] is incompatible with object type [2].
             References:
               8:       <Bar />;
-                       ^^^^^^^ [1]: null
+                       ^^^^^^^ [1]
               5:       function Foo(elem: number, props: { x: string }) {}
-                                                         ^^^^^^^^^^^^^ [2]: object type
+                                                         ^^^^^^^^^^^^^ [2]
         `,
       ),
   ]),
@@ -188,18 +188,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                            ^^^^ Cannot create \`Bar\` element because boolean [1] is incompatible with number [2].
             References:
               8:       <Bar>{true}{/regex/}</Bar>
-                             ^^^^ [1]: boolean
+                             ^^^^ [1]
               5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
-                                                                       ^^^^^^ [2]: number
+                                                                       ^^^^^^ [2]
 
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
                                  ^^^^^^^ Cannot create \`Bar\` element because \`RegExp\` [1] is incompatible with string [2].
             References:
               8:       <Bar>{true}{/regex/}</Bar>
-                                   ^^^^^^^ [1]: \`RegExp\`
+                                   ^^^^^^^ [1]
               5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
-                                                                                       ^^^^^^ [2]: string
+                                                                                       ^^^^^^ [2]
         `,
       ),
   ]).flowConfig("_flowconfig_with_flowlib"),
@@ -217,18 +217,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^ Cannot create \`Bar\` element because in property \`key\`, string [1] is incompatible with boolean [2].
             References:
               7:       <Bar key="hi" ref="bye" />;
-                                ^^^^ [1]: string
+                                ^^^^ [1]
               5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                               ^^^^^^^ [2]: boolean
+                                                               ^^^^^^^ [2]
 
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
                                        ^^^^^ Cannot create \`Bar\` element because in property \`ref\`, string [1] is incompatible with number [2].
             References:
               7:       <Bar key="hi" ref="bye" />;
-                                         ^^^^^ [1]: string
+                                         ^^^^^ [1]
               5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                                             ^^^^^^ [2]: number
+                                                                             ^^^^^^ [2]
         `,
       ),
   ]),
@@ -246,9 +246,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot create \`baz\` element because \`baz\` [1] is incompatible with string literal \`bar\` [2].
             References:
               7:       <baz />;
-                        ^^^ [1]: \`baz\`
+                        ^^^ [1]
               5:       function Foo(elem: "bar") {}
-                                          ^^^^^ [2]: string literal \`bar\`
+                                          ^^^^^ [2]
         `,
       ),
   ]).flowConfig("_flowconfig_with_flowlib"),
@@ -267,9 +267,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot create \`Bar\` element because property \`x\` is missing in props [1] but exists in object type [2].
             References:
               8:       <Bar y="hi" />;
-                       ^^^^^^^^^^^^^^ [1]: props
+                       ^^^^^^^^^^^^^^ [1]
               5:       function Foo(elem: number, props: {x: string}) {}
-                                                         ^^^^^^^^^^^ [2]: object type
+                                                         ^^^^^^^^^^^ [2]
         `,
       ),
   ]),
@@ -321,9 +321,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact object type [2].
             References:
               9:       <Bar {...props} />;
-                       ^^^^^^^^^^^^^^^^^^ [1]: props
+                       ^^^^^^^^^^^^^^^^^^ [1]
               5:       function Foo(elem: number, props: {| x: string |}) {}
-                                                         ^^^^^^^^^^^^^^^ [2]: object type
+                                                         ^^^^^^^^^^^^^^^ [2]
         `,
       ),
   ]),
@@ -354,18 +354,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                        ^^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`hello\` [2].
             References:
              16:         hi
-                         ^^ [1]: JSX text
+                         ^^ [1]
               8:         child1: 'hello',
-                                 ^^^^^^^ [2]: string literal \`hello\`
+                                 ^^^^^^^ [2]
 
           test.js:18
            18:         bye
                        ^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`bye\` [2].
             References:
              18:         bye
-                         ^ [1]: JSX text
+                         ^ [1]
              10:         child3: 'bye',
-                                 ^^^^^ [2]: string literal \`bye\`
+                                 ^^^^^ [2]
         `,
       ),
   ]),
@@ -393,36 +393,36 @@ export default suite(({addFile, addFiles, addCode}) => [
                           ^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`should be single space\` [2].
             References:
              16:       <Bar> {true}
-                            ^ [1]: JSX text
+                            ^ [1]
               8:         child1: "should be single space",
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be single space\`
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
           test.js:16
            16:       <Bar> {true}
                             ^^^^ Cannot create \`Bar\` element because boolean [1] is incompatible with string literal \`should be true\` [2].
             References:
              16:       <Bar> {true}
-                              ^^^^ [1]: boolean
+                              ^^^^ [1]
               9:         child2: "should be true",
-                                 ^^^^^^^^^^^^^^^^ [2]: string literal \`should be true\`
+                                 ^^^^^^^^^^^^^^^^ [2]
 
           test.js:17
            17:       {''} </Bar>;
                       ^^ Cannot create \`Bar\` element because string [1] is incompatible with string literal \`should be empty string\` [2].
             References:
              17:       {''} </Bar>;
-                        ^^ [1]: string
+                        ^^ [1]
              10:         child3: "should be empty string",
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be empty string\`
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
           test.js:17
            17:       {''} </Bar>;
                          ^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`should be single space\` [2].
             References:
              17:       {''} </Bar>;
-                           ^ [1]: JSX text
+                           ^ [1]
              11:         child4: "should be single space",
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal \`should be single space\`
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
         `,
       )
       .because('JSXText children with only whitespace or newlines are ignored'),
@@ -443,9 +443,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                            ^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`First Middle Last\` [2].
             References:
               9:       (<Bar>    First
-                             ^ [1]: JSX text
+                             ^ [1]
               8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
-                                                             ^^^^^^^^^^^^^^^^^^^ [2]: string literal \`First Middle Last\`
+                                                             ^^^^^^^^^^^^^^^^^^^ [2]
         `,
       )
       .because(
@@ -475,9 +475,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                      ^^^^^^^^^^^^^^^^^^^^^^^ Cannot create \`Bar\` element because JSX text [1] is incompatible with string literal \`First Middle Last\` [2].
             References:
              24: (<Bar>First    Middle    Last</Bar>)
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: JSX text
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
               8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
-                                                             ^^^^^^^^^^^^^^^^^^^ [2]: string literal \`First Middle Last\`
+                                                             ^^^^^^^^^^^^^^^^^^^ [2]
         `,
       )
       .because("Multiple spaces midline stay as multiple spaces"),

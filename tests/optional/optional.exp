@@ -1,61 +1,65 @@
 Error ---------------------------------------------------------- generic.js:1:22
 
-number is incompatible with `T`.
+number [1] is incompatible with `T` [2].
 
 
 Error ---------------------------------------------------------- generic.js:4:15
 
-number is incompatible with `T`.
+number [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- loop.js:5:33
 
-Cannot assign `y` to `x` because undefined is incompatible with `T`.
+Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2].
 
 
 Error --------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 Error --------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because undefined is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 Error --------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 Error --------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because undefined is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 Error --------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 Error --------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because undefined is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 Error --------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 Error --------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because undefined is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 Error --------------------------------------------------------- optional.js:1:23
 
-Cannot perform arithmetic operation because undefined is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 Error --------------------------------------------------------- optional.js:7:14
@@ -70,43 +74,43 @@ Missing type annotation for rest parameter `y`.
 
 Error --------------------------------------------------------- optional.js:7:43
 
-Cannot call `foo` with `x` bound to `x` because string is incompatible with
-number.
+Cannot call `foo` with `x` bound to `x` because string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------------------- optional.js:7:54
 
 Cannot return `y[0]` because:
- - number is incompatible with string.
- - number is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------- optional_param2.js:7:31
 
-Cannot assign `i.map(...)` to `j` because in type argument `V`, undefined is
-incompatible with number.
+Cannot assign `i.map(...)` to `j` because in type argument `V`, undefined [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------- optional_param4.js:12:5
 
-Cannot call `foo` with `true` bound to `x` because boolean is incompatible with
-number.
+Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------- optional_param4.js:13:10
 
 Cannot call `foo` because in the rest argument and then type argument `T`,
-boolean is incompatible with string.
+boolean [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- undefined.js:8:14
 
-Cannot get `x.duck` because property `duck` is missing in undefined.
+Cannot get `x.duck` because property `duck` is missing in undefined [1].
 
 
 Error ------------------------------------------------------- undefined2.js:8:14
 
-Cannot get `x.duck` because property `duck` is missing in undefined.
+Cannot get `x.duck` because property `duck` is missing in undefined [1].
 
 
 

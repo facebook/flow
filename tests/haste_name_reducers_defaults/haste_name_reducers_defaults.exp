@@ -1,18 +1,19 @@
 Error ----------------------------------------------------------- Module1.js:5:2
 
-Cannot cast `test` to boolean because `Test` is incompatible with boolean.
+Cannot cast `test` to boolean because `Test` [1] is incompatible with
+boolean [2].
 
 
 Error ------------------------------------------------------------- index.js:3:2
 
-Cannot cast `require(...)` to boolean because `Test` is incompatible with
-boolean.
+Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with
+boolean [2].
 
 
 Error ------------------------------------------------------------- index.js:4:2
 
-Cannot cast `require(...).foo()` to boolean because `Test2` is incompatible with
-boolean.
+Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible
+with boolean [2].
 
 
 Error ------------------------------------------------------------- index.js:5:9

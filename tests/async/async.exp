@@ -1,65 +1,65 @@
 Error ----------------------------------------------------------- async.js:12:10
 
-Cannot return `1` because in type argument `R`, number is incompatible with
-boolean.
+Cannot return `1` because in type argument `R`, number [1] is incompatible with
+boolean [2].
 
 
 Error ----------------------------------------------------------- async.js:31:10
 
-Cannot return `await p` because in type argument `R`, number is incompatible
-with boolean.
+Cannot return `await p` because in type argument `R`, number [1] is incompatible
+with boolean [2].
 
 
 Error ----------------------------------------------------------- async.js:45:22
 
-Cannot expect undefined as the return type of async function because undefined
-is incompatible with implicitly-returned `Promise`.
+Cannot expect undefined as the return type of async function because
+undefined [1] is incompatible with implicitly-returned `Promise`.
 
 
 Error ---------------------------------------------------------- async2.js:13:21
 
-Cannot assign `a` to `c` because number is incompatible with string.
+Cannot assign `a` to `c` because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- async2.js:32:30
 
-Cannot assign `voidoid1` to `voidoid3` because in the return value, `Promise` is
-incompatible with undefined.
+Cannot assign `voidoid1` to `voidoid3` because in the return value,
+`Promise` [1] is incompatible with undefined [2].
 
 
 Error ---------------------------------------------------------- async2.js:50:30
 
-Cannot expect undefined as the return type of async function because undefined
-is incompatible with implicitly-returned `Promise`.
+Cannot expect undefined as the return type of async function because
+undefined [1] is incompatible with implicitly-returned `Promise`.
 
 
 Error ---------------------------------------------------------- async2.js:57:13
 
 Cannot expect `Promise` as the return type of async function because in type
-argument `R`, number is incompatible with implicitly-returned undefined.
+argument `R`, number [1] is incompatible with implicitly-returned undefined.
 
 
 Error ---------------------------------------------------------- async3.js:31:19
 
-Cannot assign `a` to `c` because number is incompatible with string.
+Cannot assign `a` to `c` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------- async_return_void.js:4:3
 
-Cannot return undefined because in type argument `R`, undefined is incompatible
-with string.
+Cannot return undefined because in type argument `R`, undefined [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------ async_return_void.js:8:10
 
-Cannot return `undefined` because in type argument `R`, undefined is
-incompatible with string.
+Cannot return `undefined` because in type argument `R`, undefined [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------- async_return_void.js:13:10
 
-Cannot return `bar()` because in type argument `R`, undefined is incompatible
-with string.
+Cannot return `bar()` because in type argument `R`, undefined [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------ await_not_in_async.js:5:9

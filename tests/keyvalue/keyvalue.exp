@@ -1,11 +1,12 @@
 Error ---------------------------------------------------------- keyvalue.js:5:6
 
-Cannot cast `x[""]` to number because string is incompatible with number.
+Cannot cast `x[""]` to number because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- keyvalue.js:5:6
 
-empty string is incompatible with number.
+empty string [1] is incompatible with number [2].
 
 
 

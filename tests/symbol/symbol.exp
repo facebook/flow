@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------- symbol.js:4:25
 
 Cannot call `Symbol` because no more than 1 argument is expected by function
-type.
+type [1].
 
 
 

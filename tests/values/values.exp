@@ -1,58 +1,67 @@
 Error ---------------------------------------------------------- classes.js:26:2
 
-Cannot cast `'yo'` to `$Values` because string is incompatible with `$Values`.
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:27:2
 
-Cannot cast `123` to `$Values` because number is incompatible with `$Values`.
+Cannot cast `123` to `$Values` because number [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:28:3
 
-Cannot cast function to `$Values` because function is incompatible with
-`$Values`.
+Cannot cast function to `$Values` because function [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:29:2
 
-Cannot cast `true` to `$Values` because boolean is incompatible with `$Values`.
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:31:2
 
-Cannot cast `'yo'` to `$Values` because string is incompatible with `$Values`.
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:32:2
 
-Cannot cast `123` to `$Values` because number is incompatible with `$Values`.
+Cannot cast `123` to `$Values` because number [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:33:3
 
-Cannot cast function to `$Values` because function is incompatible with
-`$Values`.
+Cannot cast function to `$Values` because function [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:34:2
 
-Cannot cast `true` to `$Values` because boolean is incompatible with `$Values`.
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with
+`$Values` [2].
 
 
 Error ---------------------------------------------------------- classes.js:36:2
 
-Cannot cast `'yo'` to `$Values` because string is incompatible with number.
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- classes.js:39:3
 
-Cannot cast function to `$Values` because function is incompatible with number.
+Cannot cast function to `$Values` because function [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- classes.js:41:2
 
-Cannot cast `true` to `$Values` because boolean is incompatible with number.
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with
+number [2].
 
 
 Error: classes.js:46
@@ -117,58 +126,64 @@ Error: classes.js:48
 
 Error ---------------------------------------------------------- classes.js:51:2
 
-Cannot cast `'yo'` to `$Values` because string is incompatible with number.
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- classes.js:54:3
 
-Cannot cast function to `$Values` because function is incompatible with number.
+Cannot cast function to `$Values` because function [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- classes.js:56:2
 
-Cannot cast `true` to `$Values` because boolean is incompatible with number.
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- non_object.js:3:8
 
-boolean is not an object.
+boolean [1] is not an object.
 
 
 Error -------------------------------------------------------- non_object.js:5:7
 
-boolean is not an object.
+boolean [1] is not an object.
 
 
 Error -------------------------------------------------------- non_object.js:7:8
 
-boolean is not an object.
+boolean [1] is not an object.
 
 
 Error ------------------------------------------------------ object_types.js:6:2
 
-Cannot cast `123` to `NoProps` because number is incompatible with `NoProps`.
+Cannot cast `123` to `NoProps` because number [1] is incompatible with
+`NoProps` [2].
 
 
 Error ------------------------------------------------------ object_types.js:7:2
 
-Cannot cast `345` to `NoReadProps` because number is incompatible with
-`NoReadProps`.
+Cannot cast `345` to `NoReadProps` because number [1] is incompatible with
+`NoReadProps` [2].
 
 
 Error ----------------------------------------------------- object_types.js:11:2
 
-Cannot cast `123` to `OneProp` because number is incompatible with string.
+Cannot cast `123` to `OneProp` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- object_types.js:12:2
 
-Cannot cast `true` to `OneProp` because boolean is incompatible with string.
+Cannot cast `true` to `OneProp` because boolean [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------- object_types.js:14:16
 
-Cannot cast `null` to number because string is incompatible with number.
+Cannot cast `null` to number because string [1] is incompatible with number [2].
 
 
 Error: object_types.js:20
@@ -313,56 +328,56 @@ Error: object_types.js:43
 
 Error ----------------------------------------------------- object_types.js:71:2
 
-Cannot cast `'DIAMONDS'` to `SuiteEnum` because string is incompatible with
-string enum.
+Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with
+string enum [2].
 
 
 Error ----------------------------------------------------- object_types.js:72:2
 
-Cannot cast `'Magic'` to `SuiteEnum` because string is incompatible with string
-enum.
+Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with
+string enum [2].
 
 
 Error ---------------------------------------------------- object_types.js:73:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because string is incompatible with
-string enum.
+Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with
+string enum [2].
 
 
 Error ---------------------------------------------------- object_types.js:79:12
 
-Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string is
-incompatible with string enum.
+Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1]
+is incompatible with string enum [2].
 
 
 Error ---------------------------------------------------- object_types.js:80:12
 
-Cannot call `magicTrick` with `'Magic'` bound to `suite` because string is
-incompatible with string enum.
+Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is
+incompatible with string enum [2].
 
 
 Error ---------------------------------------------------- object_types.js:81:25
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string is
-incompatible with string enum.
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1]
+is incompatible with string enum [2].
 
 
 Error ----------------------------------------------------- object_types.js:95:2
 
-Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string is incompatible
-with string enum.
+Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible
+with string enum [2].
 
 
 Error ----------------------------------------------------- object_types.js:96:2
 
-Cannot cast `'Magic'` to `FrozenSuiteEnum` because string is incompatible with
-string enum.
+Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible
+with string enum [2].
 
 
 Error ---------------------------------------------------- object_types.js:97:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string is incompatible
-with string enum.
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible
+with string enum [2].
 
 
 

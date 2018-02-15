@@ -1,11 +1,11 @@
 Error ------------------------------------------------------------ equals.js:7:2
 
-Cannot compare number to string.
+Cannot compare number [1] to string [2].
 
 
 Error ------------------------------------------------------------ equals.js:8:2
 
-Cannot compare string to number.
+Cannot compare string [1] to number [2].
 
 
 

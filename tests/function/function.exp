@@ -1,169 +1,169 @@
 Error ------------------------------------------------------------ apply.js:2:10
 
 Cannot get `this.length` because:
- - property `length` is missing in `Number`.
- - property `length` is missing in `Number`.
- - property `length` is missing in `Number`.
+ - property `length` is missing in `Number` [1].
+ - property `length` is missing in `Number` [2].
+ - property `length` is missing in `Number` [3].
 
 
 Error ------------------------------------------------------------ apply.js:12:6
 
-Cannot call `test.apply` because function requires another argument.
+Cannot call `test.apply` because function [1] requires another argument.
 
 
 Error ----------------------------------------------------------- apply.js:15:21
 
-Cannot call `test.apply` with string bound to `b` because string is incompatible
-with number.
+Cannot call `test.apply` with string bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- apply.js:16:17
 
-Cannot call `test.apply` with number bound to `a` because number is incompatible
-with string.
+Cannot call `test.apply` with number bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------ apply.js:21:8
 
-Cannot call `test.apply` with string bound to `b` because string is incompatible
-with number.
+Cannot call `test.apply` with string bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ apply.js:22:4
 
-Cannot call `test.apply` with number bound to `a` because number is incompatible
-with string.
+Cannot call `test.apply` with number bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------------- apply.js:25:16
 
-Cannot call `test.apply` because in the rest argument, string is incompatible
-with number.
+Cannot call `test.apply` because in the rest argument, string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ apply.js:32:2
 
-Cannot cast `test.call.apply(...)` to undefined because number is incompatible
-with undefined.
+Cannot cast `test.call.apply(...)` to undefined because number [1] is
+incompatible with undefined [2].
 
 
 Error ----------------------------------------------------------- apply.js:32:28
 
-Cannot call `test.call.apply` with number bound to `a` because number is
-incompatible with string.
+Cannot call `test.call.apply` with number bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------------- apply.js:32:33
 
-Cannot call `test.call.apply` with string bound to `b` because string is
-incompatible with number.
+Cannot call `test.call.apply` with string bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- apply.js:37:28
 
-Cannot call `test.bind.apply` with number bound to `a` because number is
-incompatible with string.
+Cannot call `test.bind.apply` with number bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------------- apply.js:47:22
 
-Cannot call `x.apply` with number bound to `b` because number is incompatible
-with string.
+Cannot call `x.apply` with number bound to `b` because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------------- bind.js:7:7
 
-Cannot call `y` with `123` bound to `b` because number is incompatible with
-string.
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- bind.js:14:7
 
-Cannot call `y` with `123` bound to `b` because number is incompatible with
-string.
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- bind.js:19:7
 
-Cannot call `x.bind` because property `bind` is missing in object type.
+Cannot call `x.bind` because property `bind` is missing in object type [1].
 
 
 Error ------------------------------------------------------------ bind.js:25:13
 
-Cannot call `x.bind` with `123` bound to `a` because number is incompatible with
-string.
+Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------- call.js:4:10
 
 Cannot get `this.length` because:
- - property `length` is missing in `Number`.
- - property `length` is missing in `Number`.
+ - property `length` is missing in `Number` [1].
+ - property `length` is missing in `Number` [2].
 
 
 Error ------------------------------------------------------------- call.js:14:6
 
-Cannot call `test.call` because function requires another argument.
+Cannot call `test.call` because function [1] requires another argument.
 
 
 Error ------------------------------------------------------------ call.js:17:19
 
-Cannot call `test.call` with empty string bound to `b` because string is
-incompatible with number.
+Cannot call `test.call` with empty string bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ call.js:18:15
 
-Cannot call `test.call` with `0` bound to `a` because number is incompatible
-with string.
+Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------ call.js:21:34
 
-Cannot call `test.call` with `args[0]` bound to `a` because number is
-incompatible with string.
+Cannot call `test.call` with `args[0]` bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------ call.js:21:43
 
-Cannot call `test.call` with `args[1]` bound to `b` because string is
-incompatible with number.
+Cannot call `test.call` with `args[1]` bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ call.js:30:28
 
-Cannot call `test.apply.call` with number bound to `a` because number is
-incompatible with string.
+Cannot call `test.apply.call` with number bound to `a` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------------ call.js:30:31
 
-Cannot call `test.apply.call` with string bound to `b` because string is
-incompatible with number.
+Cannot call `test.apply.call` with string bound to `b` because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------ call.js:40:20
 
-Cannot call `x.call` with `123` bound to `b` because number is incompatible with
-string.
+Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------------ call.js:47:11
 
-Cannot call `f` with object literal bound to `y` because in property `x`, string
-is incompatible with string literal `bar`.
+Cannot call `f` with object literal bound to `y` because in property `x`,
+string [1] is incompatible with string literal `bar` [2].
 
 
 Error ------------------------------------------------------------ call.js:53:11
 
-Cannot call `f` with object literal bound to `y` because in property `x`, number
-is incompatible with number literal `123`.
+Cannot call `f` with object literal bound to `y` because in property `x`,
+number [1] is incompatible with number literal `123` [2].
 
 
 Error ------------------------------------------------------------ call.js:59:11
 
 Cannot call `f` with object literal bound to `y` because in property `x`,
-boolean is incompatible with boolean literal `false`.
+boolean [1] is incompatible with boolean literal `false` [2].
 
 
 Error --------------------------------------------------------- function.js:21:3
@@ -173,124 +173,138 @@ Cannot resolve name `React`.
 
 Error -------------------------------------------------------- function.js:29:19
 
-Cannot assign `x` to `a` because function type is incompatible with number.
+Cannot assign `x` to `a` because function type [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- function.js:30:19
 
-Cannot assign `x` to `b` because function type is incompatible with string.
+Cannot assign `x` to `b` because function type [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- function.js:31:21
 
-Cannot assign `y` to `c` because object type is incompatible with function type.
+Cannot assign `y` to `c` because object type [1] is incompatible with function
+type [2].
 
 
 Error --------------------------------------------------------- function.js:37:6
 
-Cannot cast `x.length` to undefined because number is incompatible with
-undefined.
+Cannot cast `x.length` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- function.js:38:6
 
-Cannot cast `y.length` to undefined because number is incompatible with
-undefined.
+Cannot cast `y.length` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- function.js:39:6
 
-Cannot cast `z.length` to undefined because number is incompatible with
-undefined.
+Cannot cast `z.length` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- function.js:41:6
 
-Cannot cast `x.name` to undefined because string is incompatible with undefined.
+Cannot cast `x.name` to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- function.js:42:6
 
-Cannot cast `y.name` to undefined because string is incompatible with undefined.
+Cannot cast `y.name` to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------------- function.js:43:6
 
-Cannot cast `z.name` to undefined because string is incompatible with undefined.
+Cannot cast `z.name` to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error -------------------------------------------------------- function.js:48:16
 
-Cannot assign `'foo'` to `x.length` because string is incompatible with number.
+Cannot assign `'foo'` to `x.length` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- function.js:49:16
 
-Cannot assign `'foo'` to `y.length` because string is incompatible with number.
+Cannot assign `'foo'` to `y.length` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- function.js:50:16
 
-Cannot assign `'foo'` to `z.length` because string is incompatible with number.
+Cannot assign `'foo'` to `z.length` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- function.js:52:14
 
-Cannot assign `123` to `x.name` because number is incompatible with string.
+Cannot assign `123` to `x.name` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- function.js:53:14
 
-Cannot assign `123` to `y.name` because number is incompatible with string.
+Cannot assign `123` to `y.name` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- function.js:54:14
 
-Cannot assign `123` to `z.name` because number is incompatible with string.
+Cannot assign `123` to `z.name` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------ rest.js:36:13
 
-Cannot call `xs.pop` because property `pop` is missing in `T`.
+Cannot call `xs.pop` because property `pop` is missing in `T` [1].
 
 
 Error ------------------------------------------------------------ rest.js:38:38
 
-Rest params are always arrays is incompatible with string.
+Rest params are always arrays [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- rest.js:53:2
 
-Cannot cast `empty_rest()` to empty because rest array is incompatible with
-empty.
+Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------------------------------------ rest.js:59:12
 
-Cannot return function because in the return value, rest array is incompatible
-with number.
+Cannot return function because in the return value, rest array [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------------------- rest.js:64:1
 
-Cannot call `requires_first_param` because function requires another argument.
+Cannot call `requires_first_param` because function [1] requires another
+argument.
 
 
 Error -------------------------------------------------------- rest_type.js:15:5
 
-Cannot call `f` with `123` bound to `x` because number is not an array.
+Cannot call `f` with `123` bound to `x` because number [1] is not an array.
 
 
 Error -------------------------------------------------------- rest_type.js:20:3
 
 Cannot call `f` because:
- - string is not an array.
- - in the rest argument, rest array is incompatible with string.
+ - string [1] is not an array.
+ - in the rest argument, rest array [2] is incompatible with string [1].
 
 
 Error ------------------------------------------------------- rest_type.js:31:22
 
-Cannot cast `f()` to empty because rest array is incompatible with empty.
+Cannot cast `f()` to empty because rest array [1] is incompatible with
+empty [2].
 
 
 

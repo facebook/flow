@@ -1,29 +1,30 @@
 Error -------------------------------------------------- function_return.js:7:16
 
-Cannot expect number as the return type of function because number is
+Cannot expect number as the return type of function because number [1] is
 incompatible with implicitly-returned undefined.
 
 
 Error -------------------------------------------------- function_return.js:23:3
 
-Cannot return undefined because undefined is incompatible with number.
+Cannot return undefined because undefined [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------------- implicit.js:6:22
 
-Cannot expect number as the return type of async function because number is
+Cannot expect number as the return type of async function because number [1] is
 incompatible with implicitly-returned `Promise`.
 
 
 Error --------------------------------------------------------- implicit.js:7:30
 
 Cannot expect `Promise` as the return type of async function because in type
-argument `R`, number is incompatible with implicitly-returned undefined.
+argument `R`, number [1] is incompatible with implicitly-returned undefined.
 
 
 Error ------------------------------------------------------------- void.js:12:2
 
-Cannot cast `f(...)` to undefined because string is incompatible with undefined.
+Cannot cast `f(...)` to undefined because string [1] is incompatible with
+undefined [2].
 
 
 

@@ -1,72 +1,72 @@
 Error ----------------------------------------------------- constructor.js:15:10
 
 Cannot get `this.y` because property `y` is missing in uninitialized this
-(expected super constructor call).
+(expected super constructor call) [1].
 
 
 Error ----------------------------------------------------- constructor.js:16:10
 
 Cannot get `this.x` because property `x` is missing in uninitialized this
-(expected super constructor call).
+(expected super constructor call) [1].
 
 
 Error ------------------------------------------------------ constructor.js:30:5
 
 Cannot get `f.y` because property `y` is missing in uninitialized this (expected
-super constructor call).
+super constructor call) [1].
 
 
 Error ------------------------------------------------------ constructor.js:31:5
 
 Cannot get `f.x` because property `x` is missing in uninitialized this (expected
-super constructor call).
+super constructor call) [1].
 
 
 Error ----------------------------------------------------- constructor.js:45:11
 
 Cannot get `super.x` because property `x` is missing in uninitialized this
-(expected super constructor call).
+(expected super constructor call) [1].
 
 
 Error ----------------------------------------------------- constructor.js:63:17
 
 Cannot call `leaked_this.foo` because property `foo` is missing in uninitialized
-this (expected super constructor call).
+this (expected super constructor call) [1].
 
 
 Error ----------------------------------------------------- constructor.js:83:22
 
 Cannot call `this.foo` because property `foo` is missing in uninitialized this
-(expected super constructor call).
+(expected super constructor call) [1].
 
 
 Error ----------------------------------------------------------- super.js:10:11
 
-Cannot call `super` with `x` bound to `x` because string is incompatible with
-number.
+Cannot call `super` with `x` bound to `x` because string [1] is incompatible
+with number [2].
 
 
 Error ------------------------------------------------------------ super.js:14:6
 
-Cannot cast `super.staticMethod(...)` to number because string is incompatible
-with number.
+Cannot cast `super.staticMethod(...)` to number because string [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------------------- super.js:15:12
 
 Cannot call `super.doesntExist` because property `doesntExist` is missing in
-statics of `A`.
+statics of `A` [1].
 
 
 Error ----------------------------------------------------------- super.js:19:13
 
-Cannot call `super.f` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------------- super.js:20:18
 
-Cannot get `super.g` because property `g` is missing in `A`.
+Cannot get `super.g` because property `g` is missing in `A` [1].
 
 
 

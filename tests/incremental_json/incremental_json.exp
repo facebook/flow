@@ -14,7 +14,8 @@ No errors!
 Modify data.json:
 Error ------------------------------------------------------------- test.js:5:17
 
-Cannot assign `data.x` to `x` because string is incompatible with number.
+Cannot assign `data.x` to `x` because string [1] is incompatible with
+number [2].
 
 
 

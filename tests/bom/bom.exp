@@ -1,51 +1,51 @@
 Error --------------------------------------------------------- FormData.js:5:14
 
-Cannot call `FormData` with empty string bound to `form` because string is
-incompatible with `HTMLFormElement`.
+Cannot call `FormData` with empty string bound to `form` because string [1] is
+incompatible with `HTMLFormElement` [2].
 
 
 Error --------------------------------------------------------- FormData.js:6:14
 
 Cannot call `FormData` with `document.createElement(...)` bound to `form`
-because `HTMLInputElement` is incompatible with `HTMLFormElement`.
+because `HTMLInputElement` [1] is incompatible with `HTMLFormElement` [2].
 
 
 Error -------------------------------------------------------- FormData.js:14:19
 
 Cannot assign `a.get(...)` to `d` because:
- - `File` is incompatible with string.
- - null or undefined is incompatible with string.
+ - `File` [1] is incompatible with string [2].
+ - null or undefined [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- FormData.js:15:17
 
 Cannot assign `a.get(...)` to `e` because:
- - null or undefined is incompatible with `Blob`.
- - string is incompatible with `Blob`.
+ - null or undefined [1] is incompatible with `Blob` [2].
+ - string [3] is incompatible with `Blob` [2].
 
 
 Error --------------------------------------------------------- FormData.js:17:7
 
-Cannot call `a.get` with `2` bound to `name` because number is incompatible with
-string.
+Cannot call `a.get` with `2` bound to `name` because number [1] is incompatible
+with string [2].
 
 
 Error -------------------------------------------------------- FormData.js:21:43
 
-Cannot assign `a.getAll(...)` to `a2` because in type argument `T`, string is
-incompatible with number.
+Cannot assign `a.getAll(...)` to `a2` because in type argument `T`, string [1]
+is incompatible with number [2].
 
 
 Error -------------------------------------------------------- FormData.js:22:41
 
-Cannot assign `a.getAll(...)` to `a3` because in type argument `T`, `File` is
-incompatible with `Blob`.
+Cannot assign `a.getAll(...)` to `a3` because in type argument `T`, `File` [1]
+is incompatible with `Blob` [2].
 
 
 Error -------------------------------------------------------- FormData.js:23:10
 
-Cannot call `a.getAll` with `23` bound to `name` because number is incompatible
-with string.
+Cannot call `a.getAll` with `23` bound to `name` because number [1] is
+incompatible with string [2].
 
 
 Error: FormData.js:27
@@ -146,8 +146,8 @@ Error: FormData.js:32
 
 Error -------------------------------------------------------- FormData.js:35:24
 
-Cannot call `a.set` with `2` bound to `filename` because number is incompatible
-with string.
+Cannot call `a.set` with `2` bound to `filename` because number [1] is
+incompatible with string [2].
 
 
 Error: FormData.js:39
@@ -248,95 +248,98 @@ Error: FormData.js:45
 
 Error -------------------------------------------------------- FormData.js:48:27
 
-Cannot call `a.append` with `2` bound to `filename` because number is
-incompatible with string.
+Cannot call `a.append` with `2` bound to `filename` because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------- FormData.js:52:10
 
-Cannot call `a.delete` with `3` bound to `name` because number is incompatible
-with string.
+Cannot call `a.delete` with `3` bound to `name` because number [1] is
+incompatible with string [2].
 
 
 Error -------------------------------------------------------- FormData.js:56:23
 
-Cannot assign `x` to `x` because string is incompatible with number.
+Cannot assign `x` to `x` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- FormData.js:64:52
 
-Cannot assign for-of element to variable because in index 1, `File` is
-incompatible with `Blob`.
+Cannot assign for-of element to variable because in index 1, `File` [1] is
+incompatible with `Blob` [2].
 
 
 Error -------------------------------------------------------- FormData.js:65:11
 
-Cannot assign element 0 to `x` because string is incompatible with number.
+Cannot assign element 0 to `x` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- FormData.js:65:14
 
-Cannot assign element 1 to `y` because `File` is incompatible with string.
+Cannot assign element 1 to `y` because `File` [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- FormData.js:65:38
 
 Cannot assign for-of element to variable because:
- - in index 0, string is incompatible with number.
- - in index 1, `File` is incompatible with string.
+ - in index 0, string [1] is incompatible with number [2].
+ - in index 1, `File` [3] is incompatible with string [4].
 
 
 Error -------------------------------------------------------- FormData.js:66:14
 
 Cannot assign element 1 to `y` because:
- - `File` is incompatible with number.
- - string is incompatible with number.
+ - `File` [1] is incompatible with number [2].
+ - string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- FormData.js:66:38
 
 Cannot assign for-of element to variable because:
- - in index 1, `File` is incompatible with number.
- - in index 1, string is incompatible with number.
- - in index 1, string is incompatible with number.
+ - in index 1, `File` [1] is incompatible with number [2].
+ - in index 1, string [3] is incompatible with number [2].
+ - in index 1, string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- FormData.js:67:11
 
-Cannot assign element 0 to `x` because string is incompatible with number.
+Cannot assign element 0 to `x` because string [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- FormData.js:67:14
 
 Cannot assign element 1 to `y` because:
- - `File` is incompatible with number.
- - string is incompatible with number.
+ - `File` [1] is incompatible with number [2].
+ - string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- FormData.js:67:38
 
 Cannot assign for-of element to variable because:
- - in index 0, string is incompatible with number.
- - in index 1, `File` is incompatible with number.
- - in index 1, string is incompatible with number.
- - in index 1, string is incompatible with number.
+ - in index 0, string [1] is incompatible with number [2].
+ - in index 1, `File` [3] is incompatible with number [4].
+ - in index 1, string [5] is incompatible with number [4].
+ - in index 1, string [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------- MutationObserver.js:10:5
 
-Cannot call `MutationObserver` because function requires another argument.
+Cannot call `MutationObserver` because function [1] requires another argument.
 
 
 Error ------------------------------------------------ MutationObserver.js:11:22
 
-Cannot call `MutationObserver` with `42` bound to `callback` because number is
-incompatible with function type.
+Cannot call `MutationObserver` with `42` bound to `callback` because number [1]
+is incompatible with function type [2].
 
 
 Error ------------------------------------------------ MutationObserver.js:12:26
 
 Cannot call `MutationObserver` with function bound to `callback` because in the
-first argument, number is incompatible with array type.
+first argument, number [1] is incompatible with array type [2].
 
 
 Error: MutationObserver.js:18
@@ -347,7 +350,7 @@ Error: MutationObserver.js:18
 
 Error ------------------------------------------------- MutationObserver.js:18:3
 
-Cannot call `o.observe` because function requires another argument.
+Cannot call `o.observe` because function [1] requires another argument.
 
 
 Error: MutationObserver.js:19
@@ -358,13 +361,13 @@ Error: MutationObserver.js:19
 
 Error ------------------------------------------------- MutationObserver.js:19:3
 
-Cannot call `o.observe` because function requires another argument.
+Cannot call `o.observe` because function [1] requires another argument.
 
 
 Error ------------------------------------------------ MutationObserver.js:19:11
 
-Cannot call `o.observe` with `'invalid'` bound to `target` because string is
-incompatible with `Node`.
+Cannot call `o.observe` with `'invalid'` bound to `target` because string [1] is
+incompatible with `Node` [2].
 
 
 Error: MutationObserver.js:20
@@ -375,7 +378,7 @@ Error: MutationObserver.js:20
 
 Error ------------------------------------------------- MutationObserver.js:20:3
 
-Cannot call `o.observe` because function requires another argument.
+Cannot call `o.observe` because function [1] requires another argument.
 
 
 Error: MutationObserver.js:21
@@ -471,7 +474,7 @@ Error: MutationObserver.js:22
 Error ------------------------------------------------ MutationObserver.js:23:53
 
 Cannot call `o.observe` with object literal bound to `options` because in
-property `attributeFilter`, boolean is incompatible with array type.
+property `attributeFilter`, boolean [1] is incompatible with array type [2].
 
 
 

@@ -1,28 +1,29 @@
 Error ------------------------------------------------------------ proto.js:3:16
 
-Cannot assign `o.x` to `x` because string is incompatible with number.
+Cannot assign `o.x` to `x` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ proto.js:7:16
 
 Cannot assign `o.m()` to `y` because:
- - boolean is incompatible with number.
- - string is incompatible with number.
+ - boolean [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ sealed.js:3:3
 
-Cannot assign `0` to `o.z` because property `z` is missing in object type.
+Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
 
 
 Error ------------------------------------------------------------ sealed.js:8:3
 
-Cannot assign `123` to `a.x` because property `x` is missing in new object.
+Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
 
 
 Error ------------------------------------------------------------ sealed.js:9:3
 
-Cannot assign `'abc'` to `a.y` because property `y` is missing in new object.
+Cannot assign `'abc'` to `a.y` because property `y` is missing in new
+object [1].
 
 
 

@@ -1,22 +1,22 @@
 Error ------------------------------------------------------------- test.js:5:28
 
 Cannot get `this.constructor.x` because property `x` is missing in statics of
-`C`.
+`C` [1].
 
 
 Error -------------------------------------------------------------- test.js:7:3
 
-Cannot get `C.x` because property `x` is missing in statics of `C`.
+Cannot get `C.x` because property `x` is missing in statics of `C` [1].
 
 
 Error ------------------------------------------------------------- test.js:13:6
 
-Cannot call `foo.bar` because undefined is not a function.
+Cannot call `foo.bar` because undefined [1] is not a function.
 
 
 Error ------------------------------------------------------------- test.js:16:6
 
-Cannot call `x.bar` because undefined is not a function.
+Cannot call `x.bar` because undefined [1] is not a function.
 
 
 

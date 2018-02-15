@@ -1,12 +1,13 @@
 Error ----------------------------------------------------------- Arrays.js:10:5
 
-Cannot call `foo` with `a[1]` bound to `x` because number is incompatible with
-string.
+Cannot call `foo` with `a[1]` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------ numeric_elem.js:7:2
 
-Cannot cast `arr[day]` to string because number is incompatible with string.
+Cannot cast `arr[day]` to string because number [1] is incompatible with
+string [2].
 
 
 

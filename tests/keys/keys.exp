@@ -1,46 +1,50 @@
 Error ------------------------------------------------------------- keys.js:10:4
 
-Cannot cast `123` to key set because number is incompatible with key set.
+Cannot cast `123` to key set because number [1] is incompatible with key
+set [2].
 
 
 Error ------------------------------------------------------------- keys.js:21:4
 
-Cannot cast `123` to key set because number is incompatible with key set.
+Cannot cast `123` to key set because number [1] is incompatible with key
+set [2].
 
 
 Error ------------------------------------------------------------- keys.js:26:4
 
-some string with unknown value is incompatible with string literal `hi`.
+some string with unknown value [1] is incompatible with string literal `hi` [2].
 
 
 Error ------------------------------------------------------------- keys.js:28:6
 
-some string with unknown value is incompatible with string literal `hi`.
+some string with unknown value [1] is incompatible with string literal `hi` [2].
 
 
 Error ------------------------------------------------------------- keys.js:31:4
 
-property `bye` is incompatible with string literal `hi`.
+property `bye` [1] is incompatible with string literal `hi` [2].
 
 
 Error ------------------------------------------------------------- keys.js:33:4
 
-Cannot cast `123` to key set because number is incompatible with key set.
+Cannot cast `123` to key set because number [1] is incompatible with key
+set [2].
 
 
 Error ------------------------------------------------------------- keys.js:38:4
 
-An indexer property is missing in `ObjLit`.
+An indexer property is missing in `ObjLit` [1].
 
 
 Error ------------------------------------------------------------- keys.js:40:6
 
-An indexer property is missing in `ObjLit`.
+An indexer property is missing in `ObjLit` [1].
 
 
 Error ------------------------------------------------------------- keys.js:44:4
 
-Cannot cast `123` to key set because number is incompatible with key set.
+Cannot cast `123` to key set because number [1] is incompatible with key
+set [2].
 
 
 

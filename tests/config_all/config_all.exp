@@ -1,7 +1,7 @@
 Error ------------------------------------------------------- no_at_flow.js:1:17
 
-Cannot assign `"not a number"` to `x` because string is incompatible with
-number.
+Cannot assign `"not a number"` to `x` because string [1] is incompatible with
+number [2].
 
 
 

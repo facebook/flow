@@ -1,12 +1,12 @@
 Error ------------------------------------------------------------ chain.js:19:1
 
-Cannot extend `A` with `B` because:
- - in property `_property1`, string is incompatible with number.
- - in property `_sProperty`, string is incompatible with number.
- - in property `_method1` and then the return value, string is incompatible with
-   number.
- - in property `_sMethod` and then the return value, number is incompatible with
-   string.
+Cannot extend `A` [1] with `B` because:
+ - in property `_property1`, string [2] is incompatible with number [3].
+ - in property `_sProperty`, string [4] is incompatible with number [5].
+ - in property `_method1` and then the return value, string [6] is incompatible
+   with number [7].
+ - in property `_sMethod` and then the return value, number [8] is incompatible
+   with string [9].
 
 
 

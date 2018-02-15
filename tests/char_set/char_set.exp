@@ -1,32 +1,32 @@
 Error ------------------------------------------------------------- test.js:14:4
 
-Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` is
-incompatible with character set `ab` since `a` is duplicated.
+Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` [1] is
+incompatible with character set `ab` [2] since `a` is duplicated.
 
 
 Error ------------------------------------------------------------- test.js:15:4
 
-Cannot cast `"c"` to character set `ab` because string literal `c` is
-incompatible with character set `ab` since `c` is not a member of the set.
+Cannot cast `"c"` to character set `ab` because string literal `c` [1] is
+incompatible with character set `ab` [2] since `c` is not a member of the set.
 
 
 Error ------------------------------------------------------------- test.js:16:4
 
-Cannot cast `"ac"` to character set `ab` because string literal `ac` is
-incompatible with character set `ab` since `c` is not a member of the set.
+Cannot cast `"ac"` to character set `ab` because string literal `ac` [1] is
+incompatible with character set `ab` [2] since `c` is not a member of the set.
 
 
 Error ------------------------------------------------------------- test.js:20:9
 
-Cannot call `C` with `x` bound to `flags` because string literal `abcd` is
-incompatible with `C$flags` since `c` is not a member of the set and `d` is not
-a member of the set.
+Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is
+incompatible with `C$flags` [2] since `c` is not a member of the set and `d` is
+not a member of the set.
 
 
 Error ------------------------------------------------------------- test.js:25:4
 
-Cannot cast `x` to string literal `foo` because string is incompatible with
-string literal `foo`.
+Cannot cast `x` to string literal `foo` because string [1] is incompatible with
+string literal `foo` [2].
 
 
 

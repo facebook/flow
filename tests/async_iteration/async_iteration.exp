@@ -1,46 +1,51 @@
 Error --------------------------------------------------- delegate_yield.js:3:19
 
-Cannot assign `yield` to `x` because number is incompatible with undefined.
+Cannot assign `yield` to `x` because number [1] is incompatible with
+undefined [2].
 
 
 Error --------------------------------------------------- delegate_yield.js:17:6
 
-Cannot cast `x` to undefined because number is incompatible with undefined.
+Cannot cast `x` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error -------------------------------------------------- delegate_yield.js:25:17
 
-Cannot assign `yield* inner()` to `x` because number is incompatible with
-undefined.
+Cannot assign `yield* inner()` to `x` because number [1] is incompatible with
+undefined [2].
 
 
 Error -------------------------------------------------------- generator.js:23:6
 
-Cannot cast `line` to undefined because string is incompatible with undefined.
+Cannot cast `line` to undefined because string [1] is incompatible with
+undefined [2].
 
 
 Error ------------------------------------------------------------ return.js:6:4
 
 Cannot cast `result.value` to undefined because:
- - number is incompatible with undefined.
- - string is incompatible with undefined.
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
 
 
 Error ----------------------------------------------------------- return.js:20:6
 
 Cannot cast `result.value` to string because:
- - number is incompatible with string.
- - undefined is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - undefined [3] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ throw.js:12:8
 
-Cannot cast `value` to undefined because number is incompatible with undefined.
+Cannot cast `value` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error ------------------------------------------------------------ throw.js:29:8
 
-Cannot cast `value` to undefined because number is incompatible with undefined.
+Cannot cast `value` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 

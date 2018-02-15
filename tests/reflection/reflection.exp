@@ -1,16 +1,16 @@
 Error ------------------------------------------------------------- type.js:2:19
 
-Cannot assign `"..."` to `b` because string is incompatible with number.
+Cannot assign `"..."` to `b` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- type.js:3:19
 
-Cannot assign `"..."` to `c` because string is incompatible with number.
+Cannot assign `"..."` to `c` because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- type.js:6:11
 
-Cannot assign `"..."` to `x` because string is incompatible with number.
+Cannot assign `"..."` to `x` because string [1] is incompatible with number [2].
 
 
 

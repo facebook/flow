@@ -1,24 +1,24 @@
 Error ------------------------------------------------------------ test2.js:7:14
 
-Cannot assign `new C()` to `y` because `C` is incompatible with `B`.
+Cannot assign `new C()` to `y` because `C` [1] is incompatible with `B` [2].
 
 
 Error ------------------------------------------------------------ test3.js:6:41
 
-Cannot assign `c` to `a` because in type argument `Z`, boolean is incompatible
-with array type.
+Cannot assign `c` to `a` because in type argument `Z`, boolean [1] is
+incompatible with array type [2].
 
 
 Error ------------------------------------------------------------ test4.js:7:20
 
 Cannot call `foo` with object literal bound to `x` because property `f` is
-missing in object literal but exists in `O`.
+missing in object literal [1] but exists in `O` [2].
 
 
 Error ----------------------------------------------------------- test4.js:13:12
 
 Cannot call `foo` with object literal bound to `x` because property `f` is
-missing in object literal but exists in `O`.
+missing in object literal [1] but exists in `O` [2].
 
 
 

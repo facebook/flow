@@ -6,7 +6,7 @@ Copy A.js to B.js:
 Error ----------------------------------------------------------------- B.js:1:1
 
 Duplicate module provider for `A`. Change either this module provider or the
-current module provider.
+current module provider [1].
 
 
 

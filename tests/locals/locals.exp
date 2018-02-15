@@ -1,41 +1,41 @@
 Error -------------------------------------------------------------- lex.js:11:4
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:26:4
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:37:4
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- lex.js:48:4
 
-Cannot cast `b` to number because string is incompatible with number.
+Cannot cast `b` to number because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------------- lex.js:59:4
 
-Cannot cast `b` to string because number is incompatible with string.
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- locals.js:1:16
 
-Cannot assign `0` to `x` because number is incompatible with string.
+Cannot assign `0` to `x` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ locals.js:2:7
 
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- locals.js:2:16
 
-Cannot assign `1` to `x` because number is incompatible with string.
+Cannot assign `1` to `x` because number [1] is incompatible with string [2].
 
 
 Error: locals.js:12
@@ -62,12 +62,12 @@ Error: locals.js:12
 
 Error ---------------------------------------------------------- locals.js:12:16
 
-boolean is incompatible with number.
+boolean [1] is incompatible with number [2].
 
 
 Error ---------------------------------------------------------- locals.js:12:16
 
-boolean is incompatible with string.
+boolean [1] is incompatible with string [2].
 
 
 Error: locals.js:12
@@ -95,13 +95,13 @@ Error: locals.js:12
 Error ----------------------------------------------------------- locals.js:14:9
 
 Cannot call `foo` with `x` bound to `p` because:
- - number is incompatible with boolean.
- - string is incompatible with boolean.
+ - number [1] is incompatible with boolean [2].
+ - string [3] is incompatible with boolean [2].
 
 
 Error ---------------------------------------------------------- locals.js:22:10
 
-Cannot return `x` because string is incompatible with number.
+Cannot return `x` because string [1] is incompatible with number [2].
 
 
 

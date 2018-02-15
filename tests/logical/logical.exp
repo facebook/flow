@@ -1,49 +1,53 @@
 Error ---------------------------------------------------------- logical.js:8:12
 
-Cannot return `x && '123'` because boolean is incompatible with number.
+Cannot return `x && '123'` because boolean [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------------- logical.js:23:12
 
-Cannot return `false && '123'` because boolean is incompatible with number.
+Cannot return `false && '123'` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:101:12
 
 Cannot return `(x != null) && (x > 10)` because:
- - boolean is incompatible with string.
- - boolean is incompatible with string.
+ - boolean [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- logical.js:109:12
 
-Cannot return `(x != null) && x` because boolean is incompatible with number.
+Cannot return `(x != null) && x` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:117:12
 
-Cannot return `(x != undefined) && x` because boolean is incompatible with
-number.
+Cannot return `(x != undefined) && x` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:124:12
 
-Cannot return `x && '123'` because boolean is incompatible with string.
+Cannot return `x && '123'` because boolean [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- logical.js:148:12
 
-Cannot return `x || 0` because boolean is incompatible with string.
+Cannot return `x || 0` because boolean [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- logical.js:176:12
 
-Cannot return `true || '123'` because boolean is incompatible with number.
+Cannot return `true || '123'` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:281:12
 
-Cannot return `x || (1 && 'foo')` because boolean is incompatible with string.
+Cannot return `x || (1 && 'foo')` because boolean [1] is incompatible with
+string [2].
 
 
 Error: logical.js:291
@@ -92,71 +96,74 @@ Error: logical.js:315
 
 Error -------------------------------------------------------- logical.js:322:12
 
-Cannot return `false && x && y` because boolean is incompatible with array type.
+Cannot return `false && x && y` because boolean [1] is incompatible with array
+type [2].
 
 
 Error -------------------------------------------------------- logical.js:329:12
 
 Cannot return `x && false && y` because:
- - number is incompatible with array type.
- - boolean is incompatible with array type.
+ - number [1] is incompatible with array type [2].
+ - boolean [3] is incompatible with array type [2].
 
 
 Error -------------------------------------------------------- logical.js:348:18
 
-Cannot assign `y || true` to `y` because boolean is incompatible with number.
+Cannot assign `y || true` to `y` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:348:18
 
-boolean is incompatible with number.
+boolean [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- logical.js:363:12
 
-Cannot return `y` because boolean is incompatible with number.
+Cannot return `y` because boolean [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- logical.js:371:18
 
-Cannot assign `y && true` to `y` because boolean is incompatible with number.
+Cannot assign `y && true` to `y` because boolean [1] is incompatible with
+number [2].
 
 
 Error -------------------------------------------------------- logical.js:371:18
 
-boolean is incompatible with number.
+boolean [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- logical.js:380:12
 
 Cannot return array literal because:
- - in type argument `T` and then property `x`, number is incompatible with
-   string.
- - in type argument `T` and then property `x`, boolean is incompatible with
-   string.
- - in type argument `T` and then property `x`, boolean is incompatible with
-   string.
+ - in type argument `T` and then property `x`, number [1] is incompatible with
+   string [2].
+ - in type argument `T` and then property `x`, boolean [3] is incompatible with
+   string [2].
+ - in type argument `T` and then property `x`, boolean [4] is incompatible with
+   string [2].
 
 
 Error -------------------------------------------------------- logical.js:396:12
 
 Cannot return array literal because:
- - in type argument `T` and then property `x`, number is incompatible with
-   string.
- - in type argument `T` and then property `x`, boolean is incompatible with
-   string.
- - in type argument `T` and then property `x`, boolean is incompatible with
-   string.
+ - in type argument `T` and then property `x`, number [1] is incompatible with
+   string [2].
+ - in type argument `T` and then property `x`, boolean [3] is incompatible with
+   string [2].
+ - in type argument `T` and then property `x`, boolean [4] is incompatible with
+   string [2].
 
 
 Error -------------------------------------------------------- logical.js:510:11
 
-Cannot return `x.y && x.z` because string is incompatible with boolean.
+Cannot return `x.y && x.z` because string [1] is incompatible with boolean [2].
 
 
 Error -------------------------------------------------------- logical.js:513:11
 
-Cannot return `x.y || x.z` because string is incompatible with boolean.
+Cannot return `x.y || x.z` because string [1] is incompatible with boolean [2].
 
 
 

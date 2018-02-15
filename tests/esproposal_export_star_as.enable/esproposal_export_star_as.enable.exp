@@ -1,11 +1,13 @@
 Error ------------------------------------------------------------- dest.js:6:17
 
-Cannot assign `source.num` to `b` because number is incompatible with string.
+Cannot assign `source.num` to `b` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------------- dest.js:9:17
 
-Cannot assign `source.str` to `d` because string is incompatible with number.
+Cannot assign `source.str` to `d` because string [1] is incompatible with
+number [2].
 
 
 

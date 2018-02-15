@@ -1,43 +1,43 @@
 Error ---------------------------------------------------------- template.js:5:2
 
-Cannot cast template string to number because string is incompatible with
-number.
+Cannot cast template string to number because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- template.js:8:8
 
-Cannot coerce object literal to string because object literal should not be
+Cannot coerce object literal to string because object literal [1] should not be
 coerced.
 
 
 Error -------------------------------------------------------- template.js:22:12
 
-Cannot coerce `x` to string because boolean should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced.
 
 
 Error --------------------------------------------------------- template.js:23:8
 
-Cannot coerce `x` to string because boolean should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced.
 
 
 Error -------------------------------------------------------- template.js:24:21
 
-Cannot coerce `x` to string because boolean should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced.
 
 
 Error -------------------------------------------------------- template.js:27:12
 
-Cannot coerce `x` to string because mixed should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced.
 
 
 Error --------------------------------------------------------- template.js:28:8
 
-Cannot coerce `x` to string because mixed should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced.
 
 
 Error -------------------------------------------------------- template.js:29:21
 
-Cannot coerce `x` to string because mixed should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced.
 
 
 

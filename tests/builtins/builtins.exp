@@ -1,16 +1,18 @@
 Error ------------------------------------------------------------ array.js:3:17
 
-Cannot assign `b[0]` to `c` because number is incompatible with string.
+Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------ array.js:8:20
 
-Cannot assign `array[0]` to `x` because string is incompatible with number.
+Cannot assign `array[0]` to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------- array.js:15:20
 
-Cannot assign `foo1.get()` to `x` because string is incompatible with number.
+Cannot assign `foo1.get()` to `x` because string [1] is incompatible with
+number [2].
 
 
 

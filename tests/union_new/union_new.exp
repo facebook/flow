@@ -1,7 +1,7 @@
 Error ----------------------------------------------------- issue-1462-i.js:21:9
 
-Cannot call `print` with `val.foo` bound to `x` because array type is
-incompatible with number.
+Cannot call `print` with `val.foo` bound to `x` because array type [1] is
+incompatible with number [2].
 
 
 Error: issue-824.js:21
@@ -153,7 +153,7 @@ Error: test10.js:62
 Error ----------------------------------------------------------- test11.js:12:8
 
 Cannot call `length` with object literal bound to `list` because property `next`
-is missing in object literal but exists in `Cons`.
+is missing in object literal [1] but exists in `Cons` [2].
 
 
 Error: test11.js:14
@@ -236,18 +236,18 @@ Error: test16.js:14
 Error ------------------------------------------------------------ test17.js:7:2
 
 Cannot cast `[].concat(...)[1]` to string because:
- - number is incompatible with string.
- - number is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- test20.js:14:26
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ---------------------------------------------------------- test20.js:14:36
 
-Cannot get `str.length` because property `length` is missing in `Number`.
+Cannot get `str.length` because property `length` is missing in `Number` [1].
 
 
 Error: test21.js:11
@@ -297,8 +297,8 @@ Error: test22.js:20
 
 Error ---------------------------------------------------------- test26.js:20:25
 
-Cannot call `new Record().set` with `"42"` bound to `y` because string is
-incompatible with number.
+Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is
+incompatible with number [2].
 
 
 Error: test33.js:7
@@ -318,12 +318,13 @@ Error: test33.js:7
 
 Error ------------------------------------------------------------ test33.js:8:2
 
-Cannot cast `bar()` to string because number is incompatible with string.
+Cannot cast `bar()` to string because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------------- test34.js:10:6
 
-Cannot cast `x.foo` to empty because string is incompatible with empty.
+Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
 
 
 Error: test5.js:14
@@ -360,12 +361,14 @@ Error: test5.js:25
 
 Error ----------------------------------------------------------- test9.js:12:10
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 Error ----------------------------------------------------------- test9.js:12:14
 
-Cannot perform arithmetic operation because null or undefined is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a
+number.
 
 
 

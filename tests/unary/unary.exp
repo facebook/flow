@@ -1,71 +1,72 @@
 Error ------------------------------------------------------------ unary.js:8:10
 
-string is not a number.
+string [1] is not a number.
 
 
 Error ----------------------------------------------------------- unary.js:12:11
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------------ unary.js:19:2
 
-Cannot cast `-1` to undefined because number is incompatible with undefined.
+Cannot cast `-1` to undefined because number [1] is incompatible with
+undefined [2].
 
 
 Error ----------------------------------------------------------- update.js:12:5
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ----------------------------------------------------------- update.js:12:5
 
-Cannot assign number to `y` because number is incompatible with string.
+Cannot assign number to `y` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- update.js:14:5
 
-Cannot assign number to `y` because number is incompatible with string.
+Cannot assign number to `y` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- update.js:18:5
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ----------------------------------------------------------- update.js:18:5
 
-Cannot assign number to `y` because number is incompatible with string.
+Cannot assign number to `y` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- update.js:22:5
 
-Cannot assign number to `y` because number is incompatible with string.
+Cannot assign number to `y` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- update.js:22:7
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ----------------------------------------------------------- update.js:26:5
 
-Cannot assign number to `y` because number is incompatible with string.
+Cannot assign number to `y` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- update.js:26:7
 
-Cannot perform arithmetic operation because string is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
 
 Error ----------------------------------------------------------- update.js:31:5
 
-Cannot reassign constant `y`.
+Cannot reassign constant `y` [1].
 
 
 Error ----------------------------------------------------------- update.js:32:5
 
-Cannot reassign constant `y`.
+Cannot reassign constant `y` [1].
 
 
 

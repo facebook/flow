@@ -1,46 +1,48 @@
 Error ----------------------------------------------------------------- B.js:6:2
 
-Cannot cast `b.foo` to number because function is incompatible with number.
+Cannot cast `b.foo` to number because function [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------------- C.js:4:9
 
-Cannot extend `B` with `C` because in property `foo` and then the first
-argument, string is incompatible with number.
+Cannot extend `B` [1] with `C` because in property `foo` and then the first
+argument, string [2] is incompatible with number [3].
 
 
 Error ----------------------------------------------------------------- C.js:8:2
 
-Cannot cast `c.foo` to number because function is incompatible with number.
+Cannot cast `c.foo` to number because function [1] is incompatible with
+number [2].
 
 
 Error ----------------------------------------------------------------- D.js:3:9
 
-Cannot get `new E().x` because property `x` is missing in `E`.
+Cannot get `new E().x` because property `x` is missing in `E` [1].
 
 
 Error ----------------------------------------------------- class_shapes.js:18:3
 
-Cannot get `x.b` because property `b` is missing in `TestClass`.
+Cannot get `x.b` because property `b` is missing in `TestClass` [1].
 
 
 Error ----------------------------------------------------- class_shapes.js:20:3
 
-Cannot get `x.d` because property `d` is missing in `TestClass`.
+Cannot get `x.d` because property `d` is missing in `TestClass` [1].
 
 
 Error ---------------------------------------------------- class_shapes.js:22:15
 
-Cannot assign `x` to `y` because property `b` is missing in `TestClass` but
-exists in `Foo`.
+Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but
+exists in `Foo` [2].
 
 
 Error ---------------------------------------------------- class_shapes.js:35:15
 
 Cannot assign `z` to `w` because:
- - in property `a`, number is incompatible with string.
- - in property `b`, number is incompatible with string.
- - in property `c`, number is incompatible with string.
+ - in property `a`, number [1] is incompatible with string [2].
+ - in property `b`, number [3] is incompatible with string [4].
+ - in property `c`, number [5] is incompatible with string [6].
 
 
 Error ------------------------------------------------------------ expr.js:14:13
@@ -55,41 +57,42 @@ Cannot resolve name `Qux`.
 
 Error ------------------------------------------------------------ expr.js:29:21
 
-Cannot assign `new _Alias()` to `alias1` because `Alias` is incompatible with
-`Alias`.
+Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible
+with `Alias` [2].
 
 
 Error ------------------------------------------------------------ expr.js:30:21
 
-Cannot assign `_Alias.factory()` to `alias2` because `Alias` is incompatible
-with `Alias`.
+Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible
+with `Alias` [2].
 
 
 Error --------------------------------------------------------------- loc.js:5:7
 
-Cannot declare `Foo` because the name is already bound.
+Cannot declare `Foo` [1] because the name is already bound.
 
 
 Error ---------------------------------------------------------- statics.js:10:2
 
-Cannot cast `C` to object type because in property `p`, string is incompatible
-with number.
+Cannot cast `C` to object type because in property `p`, string [1] is
+incompatible with number [2].
 
 
 Error ---------------------------------------------------------- statics.js:13:2
 
-Cannot cast `o` to statics of `C` because object type is incompatible with
-statics of `C`.
+Cannot cast `o` to statics of `C` because object type [1] is incompatible with
+statics of `C` [2].
 
 
 Error ---------------------------------------------------------- statics.js:19:2
 
-Cannot cast `Dup1.x` to empty because function is incompatible with empty.
+Cannot cast `Dup1.x` to empty because function [1] is incompatible with
+empty [2].
 
 
 Error ---------------------------------------------------------- statics.js:25:2
 
-Cannot cast `Dup2.x` to empty because string is incompatible with empty.
+Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2].
 
 
 

@@ -6,7 +6,7 @@ mean to add `// @flow` to the top of `./import`? (`untyped-type-import`)
 
 Error -------------------------------------------------------------- test.js:8:3
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 

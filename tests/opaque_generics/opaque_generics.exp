@@ -1,25 +1,25 @@
 Error --------------------------------------------- importtest-polarity.js:10:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 Error --------------------------------------------- importtest-polarity.js:18:12
 
-Cannot return `x` because in type argument `T`, number is incompatible with
-string.
+Cannot return `x` because in type argument `T`, number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------- importtest-polarity.js:26:12
 
-Cannot return `x` because in type argument `T`, number is incompatible with
-string.
+Cannot return `x` because in type argument `T`, number [1] is incompatible with
+string [2].
 
 
 Error --------------------------------------------- importtest-polarity.js:30:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 Error: importtest-polarity.js:39
@@ -52,66 +52,66 @@ Error: importtest-polarity.js:39
 Error --------------------------------------------- importtest-polarity.js:39:12
 
 Cannot return `x` because:
- - in type argument `S`, number is incompatible with string.
- - in type argument `T`, string is incompatible with number.
+ - in type argument `S`, number [1] is incompatible with string [2].
+ - in type argument `T`, string [3] is incompatible with number [4].
 
 
 Error ------------------------------------------------------- importtest.js:7:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ importtest.js:15:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ importtest.js:23:12
 
-Cannot return `x` because `Container` is incompatible with `Box`.
+Cannot return `x` because `Container` [1] is incompatible with `Box` [2].
 
 
 Error ------------------------------------------------------ importtest.js:27:12
 
-Cannot return `x` because `Box` is incompatible with `Container`.
+Cannot return `x` because `Box` [1] is incompatible with `Container` [2].
 
 
 Error --------------------------------------------------- test-polarity.js:12:28
 
-Cannot use `T` in an output position because `T` is expected to occur only in
-input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur
+only in input positions.
 
 
 Error --------------------------------------------------- test-polarity.js:13:28
 
-Cannot use `T` in an input position because `T` is expected to occur only in
-output positions.
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur
+only in output positions.
 
 
 Error --------------------------------------------------- test-polarity.js:14:28
 
-Cannot use `T` in an input/output position because `T` is expected to occur only
-in input positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to
+occur only in input positions.
 
 
 Error --------------------------------------------------- test-polarity.js:15:28
 
-Cannot use `T` in an input/output position because `T` is expected to occur only
-in output positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to
+occur only in output positions.
 
 
 Error ------------------------------------------------------------- test.js:7:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------ test.js:15:12
 
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because in type argument `T`, string [1] is incompatible with
+number [2].
 
 
 

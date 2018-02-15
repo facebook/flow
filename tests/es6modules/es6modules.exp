@@ -1,13 +1,13 @@
 Error ------------------------------------------------------ es6modules.js:10:18
 
-Cannot assign `DefaultA.numberValue1` to `a2` because number is incompatible
-with string.
+Cannot assign `DefaultA.numberValue1` to `a2` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:15:18
 
-Cannot assign `DefaultB.numberValue` to `b2` because number is incompatible with
-string.
+Cannot assign `DefaultB.numberValue` to `b2` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:18:22
@@ -28,42 +28,44 @@ Cannot import `doesntExist1` because there is no `doesntExist1` export in
 
 Error ------------------------------------------------------ es6modules.js:31:18
 
-Cannot assign `numberValue1` to `c2` because number is incompatible with string.
+Cannot assign `numberValue1` to `c2` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:35:18
 
-Cannot assign `numVal1` to `d2` because number is incompatible with string.
+Cannot assign `numVal1` to `d2` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:39:18
 
-Cannot assign `CJS_Clobb_Lit.numberValue3` to `e2` because number is
-incompatible with string.
+Cannot assign `CJS_Clobb_Lit.numberValue3` to `e2` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:40:15
 
 Cannot get `CJS_Clobb_Lit.doesntExist` because property `doesntExist` is missing
-in object literal.
+in object literal [1].
 
 
 Error ------------------------------------------------------ es6modules.js:45:26
 
 Cannot get `CJS_Clobb_Lit_NS.default.default` because property `default` is
-missing in object literal.
+missing in object literal [1].
 
 
 Error ------------------------------------------------------ es6modules.js:46:18
 
-Cannot assign `CJS_Clobb_Lit_NS.numberValue4` to `f3` because number is
-incompatible with string.
+Cannot assign `CJS_Clobb_Lit_NS.numberValue4` to `f3` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:47:18
 
-Cannot assign `CJS_Clobb_Lit_NS.default.numberValue5` to `f4` because number is
-incompatible with string.
+Cannot assign `CJS_Clobb_Lit_NS.default.numberValue5` to `f4` because number [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------- es6modules.js:53:9
@@ -93,37 +95,37 @@ Cannot import `childProp` because there is no `childProp` export in
 Error ------------------------------------------------------ es6modules.js:63:23
 
 Cannot get `new CJS_Clobb_Class().doesntExist` because property `doesntExist` is
-missing in `Test`.
+missing in `Test` [1].
 
 
 Error ------------------------------------------------------ es6modules.js:65:18
 
-Cannot assign `CJS_Clobb_Class.staticNumber2()` to `h2` because number is
-incompatible with string.
+Cannot assign `CJS_Clobb_Class.staticNumber2()` to `h2` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:67:18
 
-Cannot assign `new CJS_Clobb_Class().instNumber1()` to `h4` because number is
-incompatible with string.
+Cannot assign `new CJS_Clobb_Class().instNumber1()` to `h4` because number [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------- es6modules.js:70:5
 
-Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` is
-not a function.
+Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` [1]
+is not a function.
 
 
 Error ------------------------------------------------------ es6modules.js:71:37
 
 Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3`
-is missing in module `CommonJS_Clobbering_Class`.
+is missing in module `CommonJS_Clobbering_Class` [1].
 
 
 Error ------------------------------------------------------ es6modules.js:73:18
 
 Cannot assign `new CJS_Clobb_Class_NS.default().instNumber2()` to `i3` because
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------- es6modules.js:79:9
@@ -134,36 +136,38 @@ Cannot import `doesntExist3` because there is no `doesntExist3` export in
 
 Error ------------------------------------------------------ es6modules.js:83:18
 
-Cannot assign `numberValue2` to `j2` because number is incompatible with string.
+Cannot assign `numberValue2` to `j2` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:87:18
 
-Cannot assign `numVal3` to `k2` because number is incompatible with string.
+Cannot assign `numVal3` to `k2` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:91:18
 
-Cannot assign `CJS_Named.numberValue1` to `l2` because number is incompatible
-with string.
+Cannot assign `CJS_Named.numberValue1` to `l2` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:92:11
 
 Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in
-module `CommonJS_Named`.
+module `CommonJS_Named` [1].
 
 
 Error ------------------------------------------------------ es6modules.js:96:18
 
-Cannot assign `CJS_Named_NS.default.numberValue4` to `m2` because number is
-incompatible with string.
+Cannot assign `CJS_Named_NS.default.numberValue4` to `m2` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:97:18
 
-Cannot assign `CJS_Named_NS.numberValue4` to `m3` because number is incompatible
-with string.
+Cannot assign `CJS_Named_NS.numberValue4` to `m3` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:103:9
@@ -174,26 +178,26 @@ Cannot import `doesntExist4` because there is no `doesntExist4` export in
 
 Error ----------------------------------------------------- es6modules.js:107:18
 
-Cannot assign `ES6_Def_AnonFunc1()` to `n2` because number is incompatible with
-string.
+Cannot assign `ES6_Def_AnonFunc1()` to `n2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:111:18
 
-Cannot assign `ES6_Def_NamedFunc1()` to `o2` because number is incompatible with
-string.
+Cannot assign `ES6_Def_NamedFunc1()` to `o2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:115:18
 
-Cannot assign `new ES6_Def_AnonClass1().givesANum()` to `p2` because number is
-incompatible with string.
+Cannot assign `new ES6_Def_AnonClass1().givesANum()` to `p2` because number [1]
+is incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:119:18
 
-Cannot assign `new ES6_Def_NamedClass1().givesANum()` to `q2` because number is
-incompatible with string.
+Cannot assign `new ES6_Def_NamedClass1().givesANum()` to `q2` because number [1]
+is incompatible with string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:125:8
@@ -204,204 +208,206 @@ Cannot import a default export because there is no default export in
 
 Error ----------------------------------------------------- es6modules.js:129:18
 
-Cannot assign `specifierNumber1_1` to `r2` because number is incompatible with
-string.
+Cannot assign `specifierNumber1_1` to `r2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:133:18
 
-Cannot assign `specifierNumber2Renamed` to `s2` because number is incompatible
-with string.
+Cannot assign `specifierNumber2Renamed` to `s2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:137:18
 
-Cannot assign `specifierNumber3Renamed` to `t2` because number is incompatible
-with string.
+Cannot assign `specifierNumber3Renamed` to `t2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:142:18
 
-Cannot assign `groupedSpecifierNumber1` to `u3` because number is incompatible
-with string.
+Cannot assign `groupedSpecifierNumber1` to `u3` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:143:18
 
-Cannot assign `groupedSpecifierNumber2` to `u4` because number is incompatible
-with string.
+Cannot assign `groupedSpecifierNumber2` to `u4` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:147:18
 
-Cannot assign `givesANumber()` to `v2` because number is incompatible with
-string.
+Cannot assign `givesANumber()` to `v2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:151:18
 
-Cannot assign `new NumberGenerator().givesANumber()` to `w2` because number is
-incompatible with string.
+Cannot assign `new NumberGenerator().givesANumber()` to `w2` because number [1]
+is incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:156:18
 
-Cannot assign `varDeclNumber1` to `x3` because number is incompatible with
-string.
+Cannot assign `varDeclNumber1` to `x3` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:157:18
 
-Cannot assign `varDeclNumber2` to `x4` because number is incompatible with
-string.
+Cannot assign `varDeclNumber2` to `x4` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:161:18
 
-Cannot assign `destructuredObjNumber` to `y2` because number is incompatible
-with string.
+Cannot assign `destructuredObjNumber` to `y2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:165:18
 
-Cannot assign `destructuredArrNumber` to `z2` because number is incompatible
-with string.
+Cannot assign `destructuredArrNumber` to `z2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:169:19
 
-Cannot assign `numberValue4` to `aa2` because number is incompatible with
-string.
+Cannot assign `numberValue4` to `aa2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:173:19
 
-Cannot assign `numberValue2_renamed` to `ab2` because number is incompatible
-with string.
+Cannot assign `numberValue2_renamed` to `ab2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:177:19
 
-Cannot assign `numberValue5` to `ac2` because number is incompatible with
-string.
+Cannot assign `numberValue5` to `ac2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:183:38
 
 Cannot get `require(...).doesntExist` because property `doesntExist` is missing
-in module `ES6_Default_AnonFunction2`.
+in module `ES6_Default_AnonFunction2` [1].
 
 
 Error ----------------------------------------------------- es6modules.js:187:19
 
-Cannot assign `ES6_Def_AnonFunc2()` to `ad2` because number is incompatible with
-string.
+Cannot assign `ES6_Def_AnonFunc2()` to `ad2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:191:19
 
-Cannot assign `ES6_Def_NamedFunc2()` to `ae2` because number is incompatible
-with string.
+Cannot assign `ES6_Def_NamedFunc2()` to `ae2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:195:19
 
-Cannot assign `new ES6_Def_AnonClass2().givesANum()` to `af2` because number is
-incompatible with string.
+Cannot assign `new ES6_Def_AnonClass2().givesANum()` to `af2` because number [1]
+is incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:199:19
 
-Cannot assign `new ES6_Def_NamedClass2().givesANum()` to `ag2` because number is
-incompatible with string.
+Cannot assign `new ES6_Def_NamedClass2().givesANum()` to `ag2` because
+number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:207:19
 
-Cannot assign `specifierNumber4` to `ah2` because number is incompatible with
-string.
+Cannot assign `specifierNumber4` to `ah2` because number [1] is incompatible
+with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:211:19
 
-Cannot assign `specifierNumber5Renamed` to `ai2` because number is incompatible
-with string.
+Cannot assign `specifierNumber5Renamed` to `ai2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:217:19
 
-Cannot assign `groupedSpecifierNumber3` to `aj3` because number is incompatible
-with string.
+Cannot assign `groupedSpecifierNumber3` to `aj3` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:218:19
 
-Cannot assign `groupedSpecifierNumber4` to `aj4` because number is incompatible
-with string.
+Cannot assign `groupedSpecifierNumber4` to `aj4` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:222:19
 
-Cannot assign `givesANumber2()` to `ak2` because number is incompatible with
-string.
+Cannot assign `givesANumber2()` to `ak2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:226:19
 
-Cannot assign `new NumberGenerator2().givesANumber()` to `al2` because number is
-incompatible with string.
+Cannot assign `new NumberGenerator2().givesANumber()` to `al2` because
+number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:232:19
 
-Cannot assign `varDeclNumber3` to `am3` because number is incompatible with
-string.
+Cannot assign `varDeclNumber3` to `am3` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:233:19
 
-Cannot assign `varDeclNumber4` to `am4` because number is incompatible with
-string.
+Cannot assign `varDeclNumber4` to `am4` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:237:19
 
-Cannot assign `destructuredObjNumber2` to `an2` because number is incompatible
-with string.
+Cannot assign `destructuredObjNumber2` to `an2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:241:19
 
-Cannot assign `destructuredArrNumber2` to `ao2` because number is incompatible
-with string.
+Cannot assign `destructuredArrNumber2` to `ao2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:245:19
 
-Cannot assign `numberValue6` to `ap2` because number is incompatible with
-string.
+Cannot assign `numberValue6` to `ap2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:249:19
 
-Cannot assign `numberValue2_renamed2` to `aq2` because number is incompatible
-with string.
+Cannot assign `numberValue2_renamed2` to `aq2` because number [1] is
+incompatible with string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:253:19
 
-Cannot assign `numberValue7` to `ar2` because number is incompatible with
-string.
+Cannot assign `numberValue7` to `ar2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:262:19
 
-Cannot assign `defaultNum` to `as2` because number is incompatible with string.
+Cannot assign `defaultNum` to `as2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:265:19
 
-Cannot assign `namedStr` to `as4` because string is incompatible with number.
+Cannot assign `namedStr` to `as4` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ es6modules.js:276:8
@@ -418,14 +424,14 @@ Cannot import `specifierNumber` because there is no `specifierNumber` export in
 
 Error ----------------------------------------------------- es6modules.js:288:19
 
-Cannot assign `numberValue8` to `at2` because number is incompatible with
-string.
+Cannot assign `numberValue8` to `at2` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- es6modules.js:291:19
 
-Cannot assign `numberValue9` to `at4` because number is incompatible with
-string.
+Cannot assign `numberValue9` to `at4` because number [1] is incompatible with
+string [2].
 
 
 Error ------------------------------------------------------ es6modules.js:296:9

@@ -1,46 +1,46 @@
 Error ----------------------------------------------------------- class.js:11:37
 
-Cannot get `any.yep2` because property `yep2` is missing in `Foo`.
+Cannot get `any.yep2` because property `yep2` is missing in `Foo` [1].
 
 
 Error ----------------------------------------------------------- class.js:12:37
 
-Cannot get `any.nope` because property `nope` is missing in `Foo`.
+Cannot get `any.nope` because property `nope` is missing in `Foo` [1].
 
 
 Error ----------------------------------------------------------- class.js:13:37
 
-Cannot get `any.yep1` because property `yep1` is missing in `Bar`.
+Cannot get `any.yep1` because property `yep1` is missing in `Bar` [1].
 
 
 Error ----------------------------------------------------------- class.js:15:37
 
-Cannot get `any.nope` because property `nope` is missing in `Bar`.
+Cannot get `any.nope` because property `nope` is missing in `Bar` [1].
 
 
 Error --------------------------------------------------------- function.js:7:37
 
-Cannot get `any.nope` because property `nope` is missing in undefined.
+Cannot get `any.nope` because property `nope` is missing in undefined [1].
 
 
 Error -------------------------------------------------------- intrinsic.js:6:32
 
-Cannot get `any.yep2` because property `yep2` is missing in object type.
+Cannot get `any.yep2` because property `yep2` is missing in object type [1].
 
 
 Error -------------------------------------------------------- intrinsic.js:7:32
 
-Cannot get `any.nope` because property `nope` is missing in object type.
+Cannot get `any.nope` because property `nope` is missing in object type [1].
 
 
 Error -------------------------------------------------------- intrinsic.js:8:32
 
-Cannot get `any.yep1` because property `yep1` is missing in object type.
+Cannot get `any.yep1` because property `yep1` is missing in object type [1].
 
 
 Error ------------------------------------------------------- intrinsic.js:10:32
 
-Cannot get `any.nope` because property `nope` is missing in object type.
+Cannot get `any.nope` because property `nope` is missing in object type [1].
 
 
 

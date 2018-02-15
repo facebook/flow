@@ -1,22 +1,22 @@
 Error -------------------------------------------------------------- test.js:4:8
 
-Cannot assign object literal to `o1` because in property `bar`, string is
-incompatible with number.
+Cannot assign object literal to `o1` because in property `bar`, string [1] is
+incompatible with number [2].
 
 
 Error -------------------------------------------------------------- test.js:7:1
 
-string `qux` is incompatible with string enum.
+string `qux` [1] is incompatible with string enum [2].
 
 
 Error ------------------------------------------------------------- test.js:14:1
 
-Property `qux` is missing in `R`.
+Property `qux` is missing in `R` [1].
 
 
 Error ------------------------------------------------------------- test.js:20:6
 
-Property `qux` is missing in object type.
+Property `qux` is missing in object type [1].
 
 
 

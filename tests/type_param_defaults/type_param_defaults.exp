@@ -1,112 +1,117 @@
 Error ---------------------------------------------------------- classes.js:19:2
 
-Cannot cast `b_number.p` to boolean because number is incompatible with boolean.
+Cannot cast `b_number.p` to boolean because number [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:20:2
 
-Cannot cast `b_void.p` to boolean because undefined is incompatible with
-boolean.
+Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:21:2
 
-Cannot cast `b_default.p` to boolean because string is incompatible with
-boolean.
+Cannot cast `b_default.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:23:2
 
-Cannot cast `b_star.p` to boolean because number is incompatible with boolean.
+Cannot cast `b_star.p` to boolean because number [1] is incompatible with
+boolean [2].
 
 
 Error --------------------------------------------------------- classes.js:27:17
 
-Cannot instantiate `C` because in type argument `T`, number is incompatible with
-string.
+Cannot instantiate `C` because in type argument `T`, number [1] is incompatible
+with string [2].
 
 
 Error --------------------------------------------------------- classes.js:27:27
 
-Cannot assign `new C(...)` to `c_number` because in type argument `T`, number is
-incompatible with string.
+Cannot assign `new C(...)` to `c_number` because in type argument `T`,
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- classes.js:27:33
 
-Cannot call `C` with `123` bound to `p` because number is incompatible with
-string.
+Cannot call `C` with `123` bound to `p` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- classes.js:32:2
 
-Cannot cast `c_void.p` to boolean because undefined is incompatible with
-boolean.
+Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:33:2
 
-Cannot cast `c_default.p` to boolean because string is incompatible with
-boolean.
+Cannot cast `c_default.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:34:2
 
-Cannot cast `c_star.p` to boolean because string is incompatible with boolean.
+Cannot cast `c_star.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error --------------------------------------------------------- classes.js:40:21
 
-Cannot use `D` with less than 1 type argument.
+Cannot use `D` [1] with less than 1 type argument.
 
 
 Error --------------------------------------------------------- classes.js:41:17
 
-Cannot use `D` with more than 2 type arguments.
+Cannot use `D` [1] with more than 2 type arguments.
 
 
 Error --------------------------------------------------------- classes.js:42:26
 
-Cannot assign `new D(...)` to `d_star` because in type argument `T`, number is
-incompatible with string.
+Cannot assign `new D(...)` to `d_star` because in type argument `T`, number [1]
+is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- classes.js:44:2
 
-Cannot cast `d_number.p` to boolean because number is incompatible with boolean.
+Cannot cast `d_number.p` to boolean because number [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:45:2
 
-Cannot cast `d_void.p` to boolean because undefined is incompatible with
-boolean.
+Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:46:2
 
-Cannot cast `d_default.p` to boolean because string is incompatible with
-boolean.
+Cannot cast `d_default.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error ---------------------------------------------------------- classes.js:47:2
 
-Cannot cast `d_star.p` to boolean because string is incompatible with boolean.
+Cannot cast `d_star.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error --------------------------------------------------------- classes.js:49:12
 
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------------- classes.js:50:27
 
-number is incompatible with string.
+number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- classes.js:56:2
 
-Cannot cast `g_default.p` to boolean because string is incompatible with
-boolean.
+Cannot cast `g_default.p` to boolean because string [1] is incompatible with
+boolean [2].
 
 
 Error --------------------------------------------------------- classes.js:58:13
@@ -116,20 +121,20 @@ Cannot resolve name `T`.
 
 Error --------------------------------------------------------- classes.js:62:17
 
-Cannot instantiate `I` because in type argument `T`, number is incompatible with
-string.
+Cannot instantiate `I` because in type argument `T`, number [1] is incompatible
+with string [2].
 
 
 Error --------------------------------------------------------- classes.js:62:27
 
-Cannot assign `new I(...)` to `i_number` because in type argument `T`, number is
-incompatible with string.
+Cannot assign `new I(...)` to `i_number` because in type argument `T`,
+number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- classes.js:62:33
 
-Cannot call `I` with `123` bound to `p` because number is incompatible with
-string.
+Cannot call `I` with `123` bound to `p` because number [1] is incompatible with
+string [2].
 
 
 

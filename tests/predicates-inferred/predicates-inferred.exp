@@ -1,38 +1,38 @@
 Error --------------------------------------------- sanity-multi-params.js:10:12
 
-Cannot return `x` because array type is incompatible with string.
+Cannot return `x` because array type [1] is incompatible with string [2].
 
 
 Error --------------------------------------------- sanity-multi-params.js:12:14
 
-Cannot call `x.join` because property `join` is missing in `String`.
+Cannot call `x.join` because property `join` is missing in `String` [1].
 
 
 Error --------------------------------------------------- sanity-ordering.js:7:4
 
-Cannot cast `obj.page` to object type because null or undefined is incompatible
-with object type.
+Cannot cast `obj.page` to object type because null or undefined [1] is
+incompatible with object type [2].
 
 
 Error ------------------------------------------------- sanity-ordering.js:15:17
 
-Cannot get `head[key]` because an indexer property is missing in undefined.
+Cannot get `head[key]` because an indexer property is missing in undefined [1].
 
 
 Error ------------------------------------------------- sanity-ordering.js:15:41
 
 Cannot assign object literal to `head[key]` because an indexer property is
-missing in undefined.
+missing in undefined [1].
 
 
 Error ---------------------------------------------- sanity-unbound-var.js:13:12
 
-Cannot return `x` because array type is incompatible with string.
+Cannot return `x` because array type [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------- sanity-unbound-var.js:15:14
 
-Cannot call `x.join` because property `join` is missing in `String`.
+Cannot call `x.join` because property `join` is missing in `String` [1].
 
 
 Error ----------------------------------------------------------- sanity.js:5:20

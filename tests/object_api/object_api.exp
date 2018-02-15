@@ -1,75 +1,75 @@
 Error ----------------------------------------------------------------- c.js:5:3
 
-Cannot call `c.foo` because property `foo` is missing in object literal.
+Cannot call `c.foo` because property `foo` is missing in object literal [1].
 
 
 Error ---------------------------------------------------- object_assign.js:7:44
 
 Cannot assign `Object.assign(...)` to `decl_export_` because property `bar` is
-missing in object literal but exists in object type.
+missing in object literal [1] but exists in object type [2].
 
 
 Error ---------------------------------------------------- object_create.js:12:2
 
-Cannot cast object literal to `C` because object literal is incompatible with
-`C`.
+Cannot cast object literal to `C` because object literal [1] is incompatible
+with `C` [2].
 
 
 Error ---------------------------------------------------- object_create.js:17:2
 
-Cannot cast `o` to `C` because `O` is incompatible with `C`.
+Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2].
 
 
 Error ------------------------------------------------------- object_keys.js:5:2
 
-Cannot cast `Object.keys(...)` to undefined because array type is incompatible
-with undefined.
+Cannot cast `Object.keys(...)` to undefined because array type [1] is
+incompatible with undefined [2].
 
 
 Error ------------------------------------------------------- object_keys.js:9:4
 
-Cannot cast `k` to number because string is incompatible with number.
+Cannot cast `k` to number because string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------ object_keys.js:14:4
 
-Cannot cast `k` to number because string is incompatible with number.
+Cannot cast `k` to number because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------- object_keys.js:18:14
 
 Cannot cast `Object.keys(...)` to array type because in type argument `T`,
-string is incompatible with number.
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------------ object_keys.js:25:2
 
 Cannot cast `Object.keys(...)` to array type because in type argument `T`,
-string literal `prop` is incompatible with string literal `error`.
+string literal `prop` [1] is incompatible with string literal `error` [2].
 
 
 Error ------------------------------------------------------ object_keys.js:32:2
 
 Cannot cast `Object.keys(...)` to array type because in type argument `T`,
-string literal `bar_prop` is incompatible with string literal `error`.
+string literal `bar_prop` [1] is incompatible with string literal `error` [2].
 
 
 Error ------------------------------------------------------ object_keys.js:38:6
 
 Cannot cast `Object.keys(...)` to array type because in type argument `T`,
-string literal `hi` is incompatible with string literal `bye`.
+string literal `hi` [1] is incompatible with string literal `bye` [2].
 
 
 Error ------------------------------------------------------ object_keys.js:44:6
 
 Cannot cast `Object.keys(...)` to array type because in type argument `T`,
-string is incompatible with string literal `123`.
+string [1] is incompatible with string literal `123` [2].
 
 
 Error --------------------------------------------------- object_missing.js:5:12
 
 Cannot call method `doesNotExist` because property `doesNotExist` is missing in
-statics of `Object`.
+statics of `Object` [1].
 
 
 Error ------------------------------------------------- object_prototype.js:31:3
@@ -80,38 +80,38 @@ writable.
 
 Error ------------------------------------------------ object_prototype.js:38:26
 
-Cannot assign `x.toString` to `xToString` because function type is incompatible
-with number.
+Cannot assign `x.toString` to `xToString` because function type [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:39:33
 
-Cannot assign `x.toString` to `xToString2` because in the return value, string
-is incompatible with number.
+Cannot assign `x.toString` to `xToString2` because in the return value,
+string [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:43:26
 
-Cannot assign `y.toString` to `yToString` because function type is incompatible
-with number.
+Cannot assign `y.toString` to `yToString` because function type [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------- object_prototype.js:49:7
 
 Cannot assign function to `123.toString` because property `toString` is missing
-in number.
+in number [1].
 
 
 Error ------------------------------------------------ object_prototype.js:51:16
 
-Cannot call `123.toString` with `'foo'` bound to `radix` because string is
-incompatible with number.
+Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:52:16
 
-Cannot call `123.toString` with `null` bound to `radix` because null is
-incompatible with number.
+Cannot call `123.toString` with `null` bound to `radix` because null [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------- object_prototype.js:68:3
@@ -122,20 +122,20 @@ is not writable.
 
 Error ------------------------------------------------ object_prototype.js:71:32
 
-Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type is
-incompatible with number.
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1]
+is incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:72:51
 
 Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return
-value, boolean is incompatible with number.
+value, boolean [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:76:32
 
-Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type is
-incompatible with number.
+Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1]
+is incompatible with number [2].
 
 
 Error ------------------------------------------------- object_prototype.js:93:3
@@ -147,19 +147,19 @@ Cannot assign function to `b.propertyIsEnumerable` because property
 Error ------------------------------------------------ object_prototype.js:96:38
 
 Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because
-function type is incompatible with number.
+function type [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------- object_prototype.js:98:3
 
 Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in
-the return value, boolean is incompatible with number.
+the return value, boolean [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------- object_prototype.js:102:38
 
 Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because
-function type is incompatible with number.
+function type [1] is incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:119:3
@@ -170,14 +170,14 @@ writable.
 
 Error ----------------------------------------------- object_prototype.js:122:25
 
-Cannot assign `x.valueOf` to `xValueOf` because function type is incompatible
-with number.
+Cannot assign `x.valueOf` to `xValueOf` because function type [1] is
+incompatible with number [2].
 
 
 Error ----------------------------------------------- object_prototype.js:126:25
 
-Cannot assign `y.valueOf` to `yValueOf` because function type is incompatible
-with number.
+Cannot assign `y.valueOf` to `yValueOf` because function type [1] is
+incompatible with number [2].
 
 
 Error ------------------------------------------------ object_prototype.js:147:3
@@ -188,42 +188,43 @@ is not writable.
 
 Error ----------------------------------------------- object_prototype.js:150:32
 
-Cannot assign `x.toLocaleString` to `xToLocaleString` because function type is
-incompatible with number.
+Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1]
+is incompatible with number [2].
 
 
 Error ----------------------------------------------- object_prototype.js:151:39
 
 Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return
-value, string is incompatible with number.
+value, string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------- object_prototype.js:155:32
 
-Cannot assign `y.toLocaleString` to `yToLocaleString` because function type is
-incompatible with number.
+Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1]
+is incompatible with number [2].
 
 
 Error ------------------------------------------------------------- proto.js:3:2
 
-Cannot cast `o1_proto.toString` to empty because function type is incompatible
-with empty.
+Cannot cast `o1_proto.toString` to empty because function type [1] is
+incompatible with empty [2].
 
 
 Error ------------------------------------------------------------- proto.js:7:2
 
-Cannot cast `o2.__proto__.p` to empty because number is incompatible with empty.
+Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------------------------------------ proto.js:13:2
 
-Cannot cast `C1_proto.bind` to empty because function type is incompatible with
-empty.
+Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible
+with empty [2].
 
 
 Error ----------------------------------------------------------- proto.js:17:14
 
-Cannot get `inst1_proto.m` because property `m` is missing in super of `C1`.
+Cannot get `inst1_proto.m` because property `m` is missing in super of `C1` [1].
 
 
 

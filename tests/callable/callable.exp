@@ -1,30 +1,30 @@
 Error -------------------------------------------------------- primitives.js:6:1
 
-Cannot call `dict` because a callable signature is missing in object type.
+Cannot call `dict` because a callable signature is missing in object type [1].
 
 
 Error ------------------------------------------------------- primitives.js:12:7
 
-Cannot call `icall` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `icall` with `0` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------ primitives.js:13:18
 
-Cannot call `icall.call` with `0` bound to `x` because number is incompatible
-with string.
+Cannot call `icall.call` with `0` bound to `x` because number [1] is
+incompatible with string [2].
 
 
 Error ------------------------------------------------------ primitives.js:20:10
 
-Cannot call `callable` with `0` bound to `x` because number is incompatible with
-string.
+Cannot call `callable` with `0` bound to `x` because number [1] is incompatible
+with string [2].
 
 
 Error ------------------------------------------------------ primitives.js:21:21
 
-Cannot call `callable.call` with `0` bound to `x` because number is incompatible
-with string.
+Cannot call `callable.call` with `0` bound to `x` because number [1] is
+incompatible with string [2].
 
 
 

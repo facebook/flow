@@ -10,20 +10,20 @@ Missing type annotation for `n`.
 
 Error ------------------------------------------------------------- Fun.js:20:15
 
-Cannot call `eq` with `n` bound to `x` because string is incompatible with
-number.
+Cannot call `eq` with `n` bound to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- Fun.js:21:35
 
-Cannot call `sub` with `n` bound to `x` because string is incompatible with
-number.
+Cannot call `sub` with `n` bound to `x` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------------- Fun.js:21:43
 
-Cannot call `mul` with `n` bound to `y` because string is incompatible with
-number.
+Cannot call `mul` with `n` bound to `y` because string [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------ Ycombinator.js:4:12
@@ -33,24 +33,24 @@ Missing type annotation for `f`.
 
 Error ----------------------------------------------------- Ycombinator.js:10:44
 
-Cannot return `f(...)` because string is incompatible with number.
+Cannot return `f(...)` because string [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------- Ycombinator.js:10:46
 
-Cannot call `f` with `x` bound to `x` because number is incompatible with
-string.
+Cannot call `f` with `x` bound to `x` because number [1] is incompatible with
+string [2].
 
 
 Error ----------------------------------------------------- Ycombinator.js:14:44
 
-Cannot return `f(...)` because number is incompatible with string.
+Cannot return `f(...)` because number [1] is incompatible with string [2].
 
 
 Error ----------------------------------------------------- Ycombinator.js:14:46
 
-Cannot call `f` with `x` bound to `x` because string is incompatible with
-number.
+Cannot call `f` with `x` bound to `x` because string [1] is incompatible with
+number [2].
 
 
 

@@ -1,13 +1,13 @@
 Error ----------------------------------------------------------- fetch.js:12:28
 
-Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` is
-incompatible with string.
+Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` [1]
+is incompatible with string [2].
 
 
 Error ----------------------------------------------------------- fetch.js:25:26
 
-Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` is
-incompatible with `Response`.
+Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` [1] is
+incompatible with `Response` [2].
 
 
 Error: headers.js:3
@@ -56,70 +56,73 @@ Error: headers.js:4
 
 Error ----------------------------------------------------------- headers.js:9:3
 
-Cannot call `e.append` because function requires another argument.
+Cannot call `e.append` because function [1] requires another argument.
 
 
 Error ---------------------------------------------------------- headers.js:10:3
 
-Cannot call `e.append` because function requires another argument.
+Cannot call `e.append` because function [1] requires another argument.
 
 
 Error --------------------------------------------------------- headers.js:10:10
 
 Cannot call `e.append` with object literal bound to `name` because object
-literal is incompatible with string.
+literal [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- headers.js:12:3
 
-Cannot call `e.set` because function requires another argument.
+Cannot call `e.set` because function [1] requires another argument.
 
 
 Error ---------------------------------------------------------- headers.js:13:3
 
-Cannot call `e.set` because function requires another argument.
+Cannot call `e.set` because function [1] requires another argument.
 
 
 Error ---------------------------------------------------------- headers.js:13:7
 
-Cannot call `e.set` with object literal bound to `name` because object literal
-is incompatible with string.
+Cannot call `e.set` with object literal bound to `name` because object
+literal [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- headers.js:15:20
 
-Cannot assign `e.append(...)` to `f` because undefined is incompatible with
-`Headers`.
+Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with
+`Headers` [2].
 
 
 Error --------------------------------------------------------- headers.js:18:19
 
-Cannot assign `e.get(...)` to `h` because string is incompatible with number.
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with
+number [2].
 
 
 Error ---------------------------------------------------------- headers.js:28:3
 
-Cannot call `e.getAll` because property `getAll` is missing in `Headers`.
+Cannot call `e.getAll` because property `getAll` is missing in `Headers` [1].
 
 
 Error ---------------------------------------------------------- request.js:2:24
 
-Cannot call `Request` because function requires another argument.
+Cannot call `Request` because function [1] requires another argument.
 
 
 Error ---------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because:
- - in property `cache`, string enum is incompatible with undefined.
- - in property `credentials`, string enum is incompatible with undefined.
- - in property `headers`, `Headers` is incompatible with object type.
- - in property `headers`, `Headers` is incompatible with undefined.
- - in property `integrity`, string is incompatible with undefined.
- - in property `method`, string is incompatible with undefined.
- - in property `mode`, string enum is incompatible with undefined.
- - in property `redirect`, string enum is incompatible with undefined.
- - in property `referrer`, string is incompatible with undefined.
- - in property `referrerPolicy`, string enum is incompatible with undefined.
+ - in property `cache`, string enum [1] is incompatible with undefined [2].
+ - in property `credentials`, string enum [3] is incompatible with
+   undefined [4].
+ - in property `headers`, `Headers` [5] is incompatible with object type [6].
+ - in property `headers`, `Headers` [5] is incompatible with undefined [6].
+ - in property `integrity`, string [7] is incompatible with undefined [8].
+ - in property `method`, string [9] is incompatible with undefined [10].
+ - in property `mode`, string enum [11] is incompatible with undefined [12].
+ - in property `redirect`, string enum [13] is incompatible with undefined [14].
+ - in property `referrer`, string [15] is incompatible with undefined [16].
+ - in property `referrerPolicy`, string enum [17] is incompatible with
+   undefined [18].
 
 
 Error: request.js:8
@@ -147,13 +150,13 @@ Error: request.js:8
 Error --------------------------------------------------------- request.js:24:19
 
 Cannot call `h.text().then` with function bound to `onFulfill` because in the
-first argument, `Buffer` is incompatible with string.
+first argument, `Buffer` [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- request.js:26:27
 
 Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in
-the first argument, `ArrayBuffer` is incompatible with `Buffer`.
+the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
 
 
 Error: request.js:54
@@ -191,19 +194,19 @@ Error: request.js:54
 Error --------------------------------------------------------- request.js:63:28
 
 Cannot call `Request` with object literal bound to `init` because in property
-`method`, null is incompatible with string.
+`method`, null [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- response.js:8:28
 
 Cannot call `Response` with object literal bound to `init` because in property
-`status`, string is incompatible with number.
+`status`, string [1] is incompatible with number [2].
 
 
 Error --------------------------------------------------------- response.js:9:28
 
 Cannot call `Response` with object literal bound to `init` because in property
-`status`, null is incompatible with number.
+`status`, null [1] is incompatible with number [2].
 
 
 Error: response.js:11
@@ -342,63 +345,64 @@ Error: response.js:30
 Error -------------------------------------------------------- response.js:42:19
 
 Cannot call `h.text().then` with function bound to `onFulfill` because in the
-first argument, `Buffer` is incompatible with string.
+first argument, `Buffer` [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- response.js:44:27
 
 Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in
-the first argument, `ArrayBuffer` is incompatible with `Buffer`.
+the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
 
 
 Error -------------------------------------------------- urlsearchparams.js:4:31
 
 Cannot call `URLSearchParams` with array literal bound to `query` because:
- - in type argument `T`, string is incompatible with tuple type.
- - in type argument `T`, string is incompatible with tuple type.
+ - in type argument `T`, string [1] is incompatible with tuple type [2].
+ - in type argument `T`, string [3] is incompatible with tuple type [2].
 
 
 Error --------------------------------------------------- urlsearchparams.js:9:3
 
-Cannot call `e.append` because function requires another argument.
+Cannot call `e.append` because function [1] requires another argument.
 
 
 Error -------------------------------------------------- urlsearchparams.js:10:3
 
-Cannot call `e.append` because function requires another argument.
+Cannot call `e.append` because function [1] requires another argument.
 
 
 Error ------------------------------------------------- urlsearchparams.js:10:10
 
 Cannot call `e.append` with object literal bound to `name` because object
-literal is incompatible with string.
+literal [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------- urlsearchparams.js:12:3
 
-Cannot call `e.set` because function requires another argument.
+Cannot call `e.set` because function [1] requires another argument.
 
 
 Error -------------------------------------------------- urlsearchparams.js:13:3
 
-Cannot call `e.set` because function requires another argument.
+Cannot call `e.set` because function [1] requires another argument.
 
 
 Error -------------------------------------------------- urlsearchparams.js:13:7
 
-Cannot call `e.set` with object literal bound to `name` because object literal
-is incompatible with string.
+Cannot call `e.set` with object literal bound to `name` because object
+literal [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------- urlsearchparams.js:15:28
 
-Cannot assign `e.append(...)` to `f` because undefined is incompatible with
-`URLSearchParams`.
+Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with
+`URLSearchParams` [2].
 
 
 Error ------------------------------------------------- urlsearchparams.js:18:19
 
-Cannot assign `e.get(...)` to `h` because string is incompatible with number.
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with
+number [2].
 
 
 

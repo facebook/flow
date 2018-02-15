@@ -1,14 +1,14 @@
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ basic.js:6:2
 
-Cannot cast `null` to empty because null is incompatible with empty.
+Cannot cast `null` to empty because null [1] is incompatible with empty [2].
 
 
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ group.js:6:2
 
 Cannot cast object literal to object type because:
- • in property `a`, number is incompatible with string.
- • in property `b`, number is incompatible with string.
- • in property `c`, number is incompatible with string.
+ • in property `a`, number [1] is incompatible with string [2].
+ • in property `b`, number [3] is incompatible with string [4].
+ • in property `c`, number [5] is incompatible with string [6].
 
 
 

@@ -1,23 +1,24 @@
 Error ---------------------------------------------------------- libtest.js:1:16
 
-Cannot assign `NaN` to `x` because number is incompatible with string.
+Cannot assign `NaN` to `x` because number [1] is incompatible with string [2].
 
 
 Error ---------------------------------------------------------- libtest.js:2:16
 
-Cannot assign `Number.MAX_VALUE` to `y` because number is incompatible with
-string.
+Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with
+string [2].
 
 
 Error ---------------------------------------------------------- libtest.js:3:16
 
-Cannot assign `new TypeError().name` to `z` because string is incompatible with
-number.
+Cannot assign `new TypeError().name` to `z` because string [1] is incompatible
+with number [2].
 
 
 Error ---------------------------------------------------------- libtest.js:4:16
 
-Cannot assign `parseInt(...)` to `w` because number is incompatible with string.
+Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with
+string [2].
 
 
 

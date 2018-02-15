@@ -1,298 +1,302 @@
 Error ------------------------------------------------- cross_module/app.js:5:24
 
 Cannot call `fn` with function bound to `arg` because in the first argument and
-then property `a`, number is incompatible with string.
+then property `a`, number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------- cross_module/app.js:8:27
 
 Cannot call `fn` with function bound to `arg` because in the first argument and
-then property `a`, number is incompatible with string.
+then property `a`, number [1] is incompatible with string [2].
 
 
 Error ------------------------------------------------------------- type.js:13:2
 
-Cannot cast `o1` to object type because in property `p`, undefined is
-incompatible with `T`.
+Cannot cast `o1` to object type because in property `p`, undefined [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:16:5
 
-Cannot cast object literal to `O1` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O1` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:23:2
 
-Cannot cast `o2` to object type because in property `p`, undefined is
-incompatible with `T`.
+Cannot cast `o2` to object type because in property `p`, undefined [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:26:5
 
-Cannot cast object literal to `O2` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O2` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------ type.js:30:16
 
-Inexact object type is incompatible with exact `O3`.
+Inexact object type [1] is incompatible with exact `O3` [2].
 
 
 Error ------------------------------------------------------------- type.js:36:2
 
-Cannot cast `o4` to object type because inexact object type is incompatible with
-exact object type.
+Cannot cast `o4` to object type because inexact object type [1] is incompatible
+with exact object type [2].
 
 
 Error ------------------------------------------------------------- type.js:37:2
 
 Cannot cast object literal to `O4` because property `p` is missing in object
-literal but exists in object type.
+literal [1] but exists in object type [2].
 
 
 Error ------------------------------------------------------------- type.js:39:5
 
-Cannot cast object literal to `O4` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O4` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:47:2
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type but
-exists in object type.
+Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but
+exists in object type [2].
 
 
 Error ------------------------------------------------------------- type.js:49:5
 
-Cannot cast object literal to `O5` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O5` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:50:2
 
 Cannot cast object literal to `O5` because property `q` is missing in object
-type but exists in object literal.
+type [1] but exists in object literal [2].
 
 
 Error ------------------------------------------------------------- type.js:56:2
 
 Cannot cast object literal to `O6` because property `p` is missing in object
-literal but exists in `O6`.
+literal [1] but exists in `O6` [2].
 
 
 Error ------------------------------------------------------------- type.js:57:5
 
-Cannot cast object literal to `O6` because in property `p`, `T` is incompatible
-with `U`.
+Cannot cast object literal to `O6` because in property `p`, `T` [1] is
+incompatible with `U` [2].
 
 
 Error ------------------------------------------------------------ type.js:62:16
 
-Inexact object type is incompatible with exact `O7`.
+Inexact object type [1] is incompatible with exact `O7` [2].
 
 
 Error ------------------------------------------------------------- type.js:68:2
 
-Cannot cast `o8.p` to `T` because `U` is incompatible with `T`.
+Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------- type.js:69:2
 
-Cannot cast `o8.p` to `U` because `T` is incompatible with `U`.
+Cannot cast `o8.p` to `U` because `T` [1] is incompatible with `U` [2].
 
 
 Error ------------------------------------------------------------- type.js:75:2
 
-Cannot cast `o9.p` to `T` because undefined is incompatible with `T`.
+Cannot cast `o9.p` to `T` because undefined [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------ type.js:101:2
 
-Cannot cast `o14` to object type because in property `p`, undefined is
-incompatible with `T`.
+Cannot cast `o14` to object type because in property `p`, undefined [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------------ type.js:105:5
 
-Cannot cast object literal to `O14` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O14` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error ------------------------------------------------------- type_contra.js:6:2
 
 Cannot cast `o1` to object type because in property `p`, property `p` of unknown
-type is incompatible with `T`.
+type [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------- type_contra.js:7:2
 
 Cannot cast `o1.p` to `T` because:
- - property `p` of unknown type is incompatible with `T`.
- - undefined is incompatible with `T`.
+ - property `p` of unknown type [1] is incompatible with `T` [2].
+ - undefined [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------ type_contra.js:12:2
 
 Cannot cast `o2` to object type because in the indexer property, computed
-property of unknown type is incompatible with `T`.
+property of unknown type [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------ type_contra.js:13:2
 
-Cannot cast `o2.p` to `T` because computed property of unknown type is
-incompatible with `T`.
+Cannot cast `o2.p` to `T` because computed property of unknown type [1] is
+incompatible with `T` [2].
 
 
 Error -------------------------------------------------------- type_empty.js:5:2
 
-Cannot cast `42` to `O` because number is incompatible with empty.
+Cannot cast `42` to `O` because number [1] is incompatible with empty [2].
 
 
 Error -------------------------------------------------------- type_empty.js:9:4
 
-Cannot cast `x` to number because object type is incompatible with number.
+Cannot cast `x` to number because object type [1] is incompatible with
+number [2].
 
 
 Error ------------------------------------------------------- type_empty.js:14:6
 
 Cannot call `fn` with object literal bound to the first parameter because object
-literal is incompatible with `T`.
+literal [1] is incompatible with `T` [2].
 
 
 Error ------------------------------------------------------ type_generic.js:3:2
 
 Cannot cast `spread(...)` to object type because:
- - in property `p`, number is incompatible with empty.
- - in property `q`, number is incompatible with empty.
+ - in property `p`, number [1] is incompatible with empty [2].
+ - in property `q`, number [3] is incompatible with empty [4].
 
 
 Error ------------------------------------------------ type_intersection.js:15:6
 
-Cannot cast object literal to `O2` because in property `p`, `A` is incompatible
-with `B`.
+Cannot cast object literal to `O2` because in property `p`, `A` [1] is
+incompatible with `B` [2].
 
 
 Error -------------------------------------------------------- type_mixed.js:5:2
 
-Cannot cast `o1.someProp` to empty because mixed is incompatible with empty.
+Cannot cast `o1.someProp` to empty because mixed [1] is incompatible with
+empty [2].
 
 
 Error -------------------------------------------------------- type_mixed.js:9:2
 
-Cannot cast `o2.someProp` to empty because mixed is incompatible with empty.
+Cannot cast `o2.someProp` to empty because mixed [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------------------------------- type_mixed.js:13:2
 
-Cannot cast `o3.a` to empty because number is incompatible with empty.
+Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------- type_mixed.js:14:2
 
 Cannot cast `o3.b` to empty because:
- - mixed is incompatible with empty.
- - number is incompatible with empty.
- - undefined is incompatible with empty.
+ - mixed [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+ - undefined [4] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------- type_mixed.js:15:2
 
-Cannot cast `o3.c` to empty because mixed is incompatible with empty.
+Cannot cast `o3.c` to empty because mixed [1] is incompatible with empty [2].
 
 
 Error ------------------------------------------------------- type_mixed.js:18:4
 
-Cannot cast `obj.someProp` to empty because `O` is incompatible with empty.
+Cannot cast `obj.someProp` to empty because `O` [1] is incompatible with
+empty [2].
 
 
 Error ------------------------------------------------------ type_string.js:1:15
 
-string literal `foo` is not an object.
+string literal `foo` [1] is not an object.
 
 
 Error -------------------------------------------------------- type_void.js:12:2
 
-Cannot cast `o1` to object type because inexact `O1` is incompatible with exact
-object type.
+Cannot cast `o1` to object type because inexact `O1` [1] is incompatible with
+exact object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:13:2
 
-Cannot cast `o1` to object type because property `p` is missing in `O1` but
-exists in object type.
+Cannot cast `o1` to object type because property `p` is missing in `O1` [1] but
+exists in object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:21:2
 
-Cannot cast `o2` to object type because property `p` is missing in `O2` but
-exists in object type.
+Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but
+exists in object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:22:2
 
-Cannot cast object literal to `O2` because inexact object literal is
-incompatible with exact `O2`.
+Cannot cast object literal to `O2` because inexact object literal [1] is
+incompatible with exact `O2` [2].
 
 
 Error -------------------------------------------------------- type_void.js:23:2
 
-Cannot cast object literal to `O2` because property `p` is missing in `O2` but
-exists in object literal.
+Cannot cast object literal to `O2` because property `p` is missing in `O2` [1]
+but exists in object literal [2].
 
 
 Error -------------------------------------------------------- type_void.js:28:2
 
-Cannot cast `o3` to object type because inexact `O3` is incompatible with exact
-object type.
+Cannot cast `o3` to object type because inexact `O3` [1] is incompatible with
+exact object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:29:2
 
-Cannot cast `o3` to object type because property `p` is missing in `O3` but
-exists in object type.
+Cannot cast `o3` to object type because property `p` is missing in `O3` [1] but
+exists in object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:37:2
 
-Cannot cast `o4` to object type because property `p` is missing in `O4` but
-exists in object type.
+Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but
+exists in object type [2].
 
 
 Error -------------------------------------------------------- type_void.js:38:2
 
-Cannot cast object literal to `O4` because inexact object literal is
-incompatible with exact `O4`.
+Cannot cast object literal to `O4` because inexact object literal [1] is
+incompatible with exact `O4` [2].
 
 
 Error -------------------------------------------------------- type_void.js:39:2
 
-Cannot cast object literal to `O4` because property `p` is missing in `O4` but
-exists in object literal.
+Cannot cast object literal to `O4` because property `p` is missing in `O4` [1]
+but exists in object literal [2].
 
 
 Error -------------------------------------------------------- type_void.js:44:2
 
-Cannot cast `o5` to object type because in property `p`, undefined is
-incompatible with `T`.
+Cannot cast `o5` to object type because in property `p`, undefined [1] is
+incompatible with `T` [2].
 
 
 Error -------------------------------------------------------- type_void.js:47:5
 
-Cannot cast object literal to `O5` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O5` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 Error -------------------------------------------------------- type_void.js:53:2
 
-Cannot cast `o6` to object type because in property `p`, undefined is
-incompatible with `T`.
+Cannot cast `o6` to object type because in property `p`, undefined [1] is
+incompatible with `T` [2].
 
 
 Error -------------------------------------------------------- type_void.js:56:5
 
-Cannot cast object literal to `O6` because in property `p`, `U` is incompatible
-with `T`.
+Cannot cast object literal to `O6` because in property `p`, `U` [1] is
+incompatible with `T` [2].
 
 
 

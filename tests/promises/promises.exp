@@ -1,136 +1,137 @@
 Error -------------------------------------------------------------- all.js:13:4
 
-Cannot cast `a` to number because string is incompatible with number.
+Cannot cast `a` to number because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------------- all.js:14:4
 
-Cannot cast `b` to boolean because number is incompatible with boolean.
+Cannot cast `b` to boolean because number [1] is incompatible with boolean [2].
 
 
 Error -------------------------------------------------------------- all.js:15:4
 
-Cannot cast `c` to string because boolean is incompatible with string.
+Cannot cast `c` to string because boolean [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------------- all.js:19:6
 
 Cannot cast `x` to undefined because:
- - boolean is incompatible with undefined.
- - number is incompatible with undefined.
- - string is incompatible with undefined.
+ - boolean [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
+ - string [4] is incompatible with undefined [2].
 
 
 Error -------------------------------------------------------------- all.js:24:9
 
-Cannot call `Promise.all` because property `@@iterator` is missing in undefined
-but exists in `$Iterable`.
+Cannot call `Promise.all` because property `@@iterator` is missing in
+undefined [1] but exists in `$Iterable` [2].
 
 
 Error ------------------------------------------------------------- all.js:27:13
 
 Cannot call `Promise.all` with `0` bound to `promises` because property
-`@@iterator` is missing in number but exists in `$Iterable`.
+`@@iterator` is missing in number [1] but exists in `$Iterable` [2].
 
 
 Error --------------------------------------------------------- promise.js:16:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- promise.js:25:21
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- promise.js:35:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- promise.js:47:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error --------------------------------------------------------- promise.js:63:19
 
-Cannot assign `numOrStr` to `c` because number is incompatible with string.
+Cannot assign `numOrStr` to `c` because number [1] is incompatible with
+string [2].
 
 
 Error -------------------------------------------------------- promise.js:117:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- promise.js:123:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- promise.js:129:19
 
-Cannot assign `num` to `b` because number is incompatible with string.
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
 
 
 Error -------------------------------------------------------- promise.js:161:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:169:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:177:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:201:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:209:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:217:21
 
-Cannot assign `str` to `b` because string is incompatible with number.
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
 
 
 Error -------------------------------------------------------- promise.js:225:21
 
 Cannot assign `num` to `b` because:
- - number is incompatible with string.
- - undefined is incompatible with string.
+ - number [1] is incompatible with string [2].
+ - undefined [3] is incompatible with string [2].
 
 
 Error -------------------------------------------------- resolve_global.js:35:18
 
 Cannot call `Promise.resolve` because property `resolve` is missing in statics
-of `Promise`.
+of `Promise` [1].
 
 
 Error -------------------------------------------------- resolve_global.js:39:23
 
-Cannot instantiate `Promise` because `Promise` is not a polymorphic type.
+Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
 
 
 Error ------------------------------------------------------ resolve_void.js:3:2
 
 Cannot cast `Promise.resolve()` to `Promise` because in type argument `R`,
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------- resolve_void.js:5:18
 
 Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R`,
-undefined is incompatible with number.
+undefined [1] is incompatible with number [2].
 
 
 
