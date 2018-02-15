@@ -7,9 +7,6 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve module `Foo`.
 
-Error: test.js:5
-  5: require('Foo');
-             ^^^^^ Cannot resolve module `Foo`.
 
 
 Found 1 error

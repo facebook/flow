@@ -2,9 +2,6 @@ Error --------------------------------------------------------------------------
 
 Cannot assign function to `a.foo` because property `foo` is not writable.
 
-Error: test.js:9
-  9: a.foo = function(): C { return new C(); }
-       ^^^ Cannot assign function to `a.foo` because property `foo` is not writable.
 
 
 Found 1 error

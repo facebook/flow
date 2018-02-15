@@ -1246,19 +1246,15 @@ module Cli_output = struct
       message
 
   let get_pretty_printed_friendly_error
-    ~stdin_file
     ~strip_root
     ~flags
     ~severity
-    kind trace error
+    error
   =
     let open Friendly in
     let header = print_header_friendly ~strip_root ~flags ~severity error.loc in
     let message = print_message_friendly ~flags error in
-    (header :: default_style "\n\n" :: message) @ [default_style "\n\n"] @
-    (get_pretty_printed_classic_error
-      ~stdin_file ~strip_root ~severity
-      kind trace (to_classic error))
+    (header :: default_style "\n\n" :: message) @ [default_style "\n\n"]
 
   let get_pretty_printed_error
     ~stdin_file
@@ -1276,11 +1272,18 @@ module Cli_output = struct
         kind trace error
     | Friendly error ->
       get_pretty_printed_friendly_error
-        ~stdin_file
         ~strip_root
         ~flags
         ~severity
-        kind trace error
+        error @
+     List.concat (List.map (
+       print_message_nice ~strip_root ~severity stdin_file (
+         match file_of_source error.Friendly.loc.Loc.source with
+         | Some filename -> filename
+         | None -> "[No file]"
+       )
+     ) (append_trace_reasons [] trace)) @
+     (match trace with [] -> [] | _ -> [default_style "\n"])
     in
     let to_print = if flags.one_line then List.map remove_newlines to_print
       else to_print in

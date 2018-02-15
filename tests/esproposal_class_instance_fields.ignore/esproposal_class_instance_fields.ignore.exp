@@ -2,9 +2,6 @@ Error --------------------------------------------------------------------------
 
 Computed property keys not supported.
 
-Error: test.js:7
-  7:   [computed]: string;
-       ^^^^^^^^^^^^^^^^^^^ Computed property keys not supported.
 
 
 Found 1 error
