@@ -3,12 +3,105 @@ Error ------------------------------------------------------------- basic.js:6:2
 Cannot cast `null` to empty because null [1] is incompatible with empty [2].
 
 
+Error -------------------------------------------------------- code_frame.js:2:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+
+Error -------------------------------------------------------- code_frame.js:4:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+
+Error -------------------------------------------------------- code_frame.js:7:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+
+Error ------------------------------------------------------- code_frame.js:12:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+
+Error -------------------------------------------------- code_frame_omit.js:10:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:16:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:17:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:26:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:32:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:33:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:43:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:49:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
+Error -------------------------------------------------- code_frame_omit.js:50:4
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
 Error ------------------------------------------------------------- group.js:6:2
 
 Cannot cast object literal to object type because:
  - in property `a`, number [1] is incompatible with string [2].
  - in property `b`, number [3] is incompatible with string [4].
  - in property `c`, number [5] is incompatible with string [6].
+
+
+Error ------------------------------------------------- haste_dupes/dupe2.js:1:1
+
+Duplicate module provider for `dupe`. Change either this module provider or the
+current module provider [1].
 
 
 Error ------------------------------------------------------------ layout.js:8:4
@@ -119,6 +212,13 @@ Cannot cast array literal to tuple type because:
  - in index 2, object literal [5] is incompatible with empty [6].
 
 
+Error ---------------------------------------------- reference_order/test.js:9:2
+
+Cannot cast array literal to tuple type because:
+ - in index 0, number [1] is incompatible with empty [2].
+ - in index 1, number [3] is incompatible with empty [4].
+
+
 Error ------------------------------------------------------------ wrap.js:21:64
 
 Cannot cast object literal to object type because in property `this.is.going`,
@@ -139,4 +239,4 @@ Cannot cast object literal to object type because:
 
 
 
-Found 55 errors
+Found 80 errors

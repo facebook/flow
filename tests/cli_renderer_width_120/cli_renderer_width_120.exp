@@ -3,5 +3,11 @@ Error --------------------------------------------------------------------------
 Cannot cast `null` to empty because null [1] is incompatible with empty [2].
 
 
+Error ----------------------------------------------------------------------------------------------- text_break.js:6:34
 
-Found 1 error
+Cannot cast object literal to object type because in property `a.b.c.d.e.f.g.h`, number [1] is incompatible with
+empty [2].
+
+
+
+Found 2 errors

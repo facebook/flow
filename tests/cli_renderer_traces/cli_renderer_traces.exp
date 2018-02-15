@@ -1,8 +1,59 @@
-Error -------------------------------------------------------------- test.js:7:6
+Error -------------------------------------------------------- code_frame.js:2:6
 
 Cannot cast object literal to object type because in property `p`, number [1] is
 incompatible with empty [2].
 
+Trace:
+* path 1:
+  2: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+  2: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error -------------------------------------------------------- code_frame.js:4:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+Trace:
+* path 1:
+  4: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+  4: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error -------------------------------------------------------- code_frame.js:7:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+Trace:
+* path 1:
+  7:   p: 42,
+          ^^ NumT [number]
+  9:   p: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ------------------------------------------------------- code_frame.js:12:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
+
+Trace:
+* path 1:
+ 12: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+ 12: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error -------------------------------------------------------------- test.js:7:6
+
+Cannot cast object literal to object type because in property `p`, number [1] is
+incompatible with empty [2].
 
 Trace:
 * path 1:
@@ -11,11 +62,11 @@ Trace:
   9:   p: empty,
           ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
 
+
 Error ------------------------------------------------------------- test.js:13:6
 
 Cannot cast object literal to object type because in property `a`, number [1] is
 incompatible with empty [2].
-
 
 Trace:
 * path 1:
@@ -24,11 +75,11 @@ Trace:
  17:   a: empty,
           ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
 
+
 Error ------------------------------------------------------------- test.js:14:6
 
 Cannot cast object literal to object type because in property `b`, number [1] is
 incompatible with empty [2].
-
 
 Trace:
 * path 1:
@@ -37,11 +88,11 @@ Trace:
  18:   b: empty,
           ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
 
+
 Error ------------------------------------------------------------- test.js:15:6
 
 Cannot cast object literal to object type because in property `c`, number [1] is
 incompatible with empty [2].
-
 
 Trace:
 * path 1:
@@ -51,4 +102,5 @@ Trace:
           ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
 
 
-Found 4 errors
+
+Found 8 errors
