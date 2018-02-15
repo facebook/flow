@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- index.js:3:2
 
-Cannot cast `require(...)` to boolean because `Decl` is incompatible with boolean.
+Cannot cast `require(...)` to boolean because `Decl` [1] is incompatible with boolean [2].
 
 
 Error ----------------------------------------------------------------------------------------------------- index.js:6:9

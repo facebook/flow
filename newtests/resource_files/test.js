@@ -36,9 +36,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`css\` to string because object type [1] is incompatible with string [2].
             References:
               3: const css = require('./foo.css');
-                                     ^^^^^^^^^^^ [1]: object type
+                                     ^^^^^^^^^^^ [1]
               5: (css: string)
-                       ^^^^^^ [2]: string
+                       ^^^^^^ [2]
         `,
       ),
   ]),
@@ -81,9 +81,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2].
             References:
               3: const png = require('./bar.png');
-                                     ^^^^^^^^^^^ [1]: string
+                                     ^^^^^^^^^^^ [1]
               5: (png: number)
-                       ^^^^^^ [2]: number
+                       ^^^^^^ [2]
         `,
       ),
   ]),
@@ -99,9 +99,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2].
             References:
               2: declare module.exports: boolean;
-                                         ^^^^^^^ [1]: boolean. See: cssMock.js:2
+                                         ^^^^^^^ [1]. See: cssMock.js:2
               5: (css: string)
-                       ^^^^^^ [2]: string
+                       ^^^^^^ [2]
         `,
       ),
   ]).flowConfig('_flowconfig_with_module_name_mapper'),

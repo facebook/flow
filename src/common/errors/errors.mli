@@ -29,22 +29,22 @@ type info_tree =
   | InfoNode of info list * info_tree list
 
 module Friendly : sig
-  type message = message_feature list
+  type 'a message = 'a message_feature list
 
-  and message_feature =
+  and 'a message_feature =
     | Inline of message_inline list
-    | Reference of message_inline list * Loc.t
+    | Reference of message_inline list * 'a
 
   and message_inline =
     | Text of string
     | Code of string
 
-  val message_of_string: string -> message
-  val text: string -> message_feature
-  val code: string -> message_feature
-  val ref: ?loc:bool -> Reason.reason -> message_feature
-  val conjunction_concat: ?conjunction:string -> message list -> message
-  val capitalize: message -> message
+  val message_of_string: string -> 'a message
+  val text: string -> 'a message_feature
+  val code: string -> 'a message_feature
+  val ref: ?loc:bool -> Reason.reason -> Loc.t message_feature
+  val conjunction_concat: ?conjunction:string -> 'a message list -> 'a message
+  val capitalize: 'a message -> 'a message
 end
 
 (* error structure *)
@@ -62,14 +62,14 @@ val mk_friendly_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
   Loc.t ->
-  Friendly.message ->
+  Loc.t Friendly.message ->
   error
 
 val mk_friendly_error_with_root:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  (Loc.t * Friendly.message) ->
-  (Loc.t * Friendly.message) ->
+  (Loc.t * Loc.t Friendly.message) ->
+  (Loc.t * Loc.t Friendly.message) ->
   error
 
 val is_duplicate_provider_error: error -> bool

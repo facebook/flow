@@ -17,7 +17,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                             ^ Cannot get \`obj1.a.b\` because property \`b\` is missing in null or undefined [1].
                                   References:
                                     6: declare var obj1: {a: ?{b: {c: number}}};
-                                                             ^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                             ^^^^^^^^^^^^^^^^^ [1]
                               `,
                             ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?number);\n').noNewErrors(),
@@ -29,9 +29,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               17: (idx(obj1, obj => obj.a.b.c): number);
-                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                               17: (idx(obj1, obj => obj.a.b.c): number);
-                                                                                                ^^^^^^ [2]: number
+                                                                                                ^^^^^^ [2]
                                                          `,
                                                        ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?string);\n').newErrors(
@@ -41,9 +41,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to nullable string because number [1] is incompatible with string [2].
                                                               References:
                                                                 6: declare var obj1: {a: ?{b: {c: number}}};
-                                                                                                  ^^^^^^ [1]: number
+                                                                                                  ^^^^^^ [1]
                                                                20: (idx(obj1, obj => obj.a.b.c): ?string);
-                                                                                                  ^^^^^^ [2]: string
+                                                                                                  ^^^^^^ [2]
                                                           `,
                                                         ),
     addCode('(idx(obj1, obj => obj["a"].b.c): number);\n').newErrors(
@@ -53,9 +53,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                                 References:
                                                                  23: (idx(obj1, obj => obj["a"].b.c): number);
-                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                                  23: (idx(obj1, obj => obj["a"].b.c): number);
-                                                                                                      ^^^^^^ [2]: number
+                                                                                                      ^^^^^^ [2]
                                                             `,
                                                           ),
     addCode('idx(obj1, obj => obj.notAProp);\n').newErrors(
@@ -65,7 +65,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                               ^^^^^^^^ Cannot get \`obj.notAProp\` because property \`notAProp\` is missing in object type [1].
                                                       References:
                                                         6: declare var obj1: {a: ?{b: {c: number}}};
-                                                                             ^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
+                                                                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                   `,
                                                 ),
     addCode('idx(obj1, obj => obj.a = null);\n').newErrors(
@@ -84,9 +84,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               37: (idx(obj2, obj => obj.a.b.c): number);
-                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                               37: (idx(obj2, obj => obj.a.b.c): number);
-                                                                                                ^^^^^^ [2]: number
+                                                                                                ^^^^^^ [2]
                                                          `,
                                                        ),
     addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
@@ -98,9 +98,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               45: (idx(obj3, obj => obj.a.b.c): number);
-                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                               45: (idx(obj3, obj => obj.a.b.c): number);
-                                                                                                ^^^^^^ [2]: number
+                                                                                                ^^^^^^ [2]
                                                          `,
                                                        ),
     // Nested maybes/optionals should get unwrapped
@@ -122,18 +122,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                                6: class Foo1 { a: ?Foo1; b: ?number; }
-                                                                                            ^^^^^^^ [1]: null or undefined
+                                                                                            ^^^^^^^ [1]
                                                               18: (idx(new Foo1(), o => o.a.b): number);
-                                                                                                ^^^^^^ [2]: number
+                                                                                                ^^^^^^ [2]
 
                                                            test.js:18
                                                             18: (idx(new Foo1(), o => o.a.b): number);
                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                              References:
                                                               18: (idx(new Foo1(), o => o.a.b): number);
-                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
                                                               18: (idx(new Foo1(), o => o.a.b): number);
-                                                                                                ^^^^^^ [2]: number
+                                                                                                ^^^^^^ [2]
                                                          `,
                                                        ),
     addCode('idx(new Foo1(), o => o.a = null);\n').newErrors(
@@ -167,9 +167,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                      ^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
                                                  References:
                                                    9: (idx(42, n => n): number);
-                                                       ^^^^^^^^^^^^^^^ [1]: null or undefined
+                                                       ^^^^^^^^^^^^^^^ [1]
                                                    9: (idx(42, n => n): number);
-                                                                        ^^^^^^ [2]: number
+                                                                        ^^^^^^ [2]
                                              `,
                                            ),
     addCode('idx(42, n => n.nope);\n').newErrors(
@@ -179,7 +179,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                               ^^^^ Cannot get \`n.nope\` because property \`nope\` is missing in \`Number\` [1].
                                             References:
                                              12: idx(42, n => n.nope);
-                                                     ^^ [1]: \`Number\`
+                                                     ^^ [1]
                                         `,
                                       ),
   ]),

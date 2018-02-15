@@ -6,7 +6,7 @@ Importing a type from an untyped module makes it `any` and is not safe! Did you 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot reassign constant `x`.
+Cannot reassign constant `x` [1].
 
 
 

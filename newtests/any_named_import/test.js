@@ -42,9 +42,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2].
             References:
               3: import * as Any from "any";
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module \`any\`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
               5: (Any: number);
-                       ^^^^^^ [2]: number
+                       ^^^^^^ [2]
         `,
       )
       .because('Any should be { [key: string]: any }'),
@@ -68,9 +68,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
             References:
               6:   declare module.exports: Object;
-                                           ^^^^^^ [1]: object type. See lib: [LIB] flow-typed/lib.js:6
+                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
               5: (obj: string);
-                       ^^^^^^ [2]: string
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should have the type Object'),
@@ -86,9 +86,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
             References:
               6:   declare module.exports: Object;
-                                           ^^^^^^ [1]: object type. See lib: [LIB] flow-typed/lib.js:6
+                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
               5: (obj: string);
-                       ^^^^^^ [2]: string
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should have the type Object'),
@@ -106,9 +106,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2].
             References:
               3: import * as obj from "object";
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module \`object\`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
               5: (obj: number);
-                       ^^^^^^ [2]: number
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should be { [key: string]: any }'),

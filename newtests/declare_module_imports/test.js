@@ -18,9 +18,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                      ^^^^^ Cannot cast \`"str"\` to \`BT\` because string [1] is incompatible with number [2].
                                  References:
                                    7: ("str": BT);
-                                       ^^^^^ [1]: string
+                                       ^^^^^ [1]
                                    7: ("str": BT);
-                                              ^^ [2]: number
+                                              ^^ [2]
                              `,
                            ),
   ]),
@@ -36,9 +36,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                         ^^ Cannot cast \`42\` to \`BDefault\` because number [1] is incompatible with \`Def\` [2].
                                     References:
                                       9: (42: BDefault);
-                                          ^^ [1]: number
+                                          ^^ [1]
                                       9: (42: BDefault);
-                                              ^^^^^^^^ [2]: \`Def\`
+                                              ^^^^^^^^ [2]
                                 `,
                               ),
   ]),
@@ -63,9 +63,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                     ^^^^ Cannot cast \`cVal\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
                                 References:
                                   8:       const cVal = {};
-                                                        ^^ [1]: object literal
+                                                        ^^ [1]
                                  18: (cVal: DT);
-                                            ^^ [2]: \`DT\`
+                                            ^^ [2]
                             `,
                           ),
     addCode('(cVal.D: CT);').newErrors(
@@ -75,9 +75,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                       ^^^^^^ Cannot cast \`cVal.D\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
                                   References:
                                     9:       const dVal = {};
-                                                          ^^ [1]: object literal
+                                                          ^^ [1]
                                    20: (cVal.D: CT);
-                                                ^^ [2]: \`CT\`
+                                                ^^ [2]
                               `,
                             ),
 
@@ -90,9 +90,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                     ^^^^ Cannot cast \`dVal\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
                                 References:
                                   9:       const dVal = {};
-                                                        ^^ [1]: object literal
+                                                        ^^ [1]
                                  26: (dVal: CT);
-                                            ^^ [2]: \`CT\`
+                                            ^^ [2]
                             `,
                           ),
     addCode('(dVal.C: DT);').newErrors(
@@ -102,9 +102,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                       ^^^^^^ Cannot cast \`dVal.C\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
                                   References:
                                     8:       const cVal = {};
-                                                          ^^ [1]: object literal
+                                                          ^^ [1]
                                    28: (dVal.C: DT);
-                                                ^^ [2]: \`DT\`
+                                                ^^ [2]
                               `,
                             ),
   ]),

@@ -44,17 +44,11 @@ type classic_error = {
   extra: info_tree list
 }
 
+module LocMap = Utils_js.LocMap
+
 (* Types and utilities for friendly errors. *)
 module Friendly = struct
   open Reason
-
-  module RefMap = MyMap.Make(struct
-    type t = Loc.t * string
-    let compare (a_loc, a_str) (b_loc, b_str) =
-      match Loc.compare a_loc b_loc with
-      | 0 -> String.compare a_str b_str
-      | n -> n
-  end)
 
   (* The error message format is designed to render well in all the environments
    * which a Flow error message appears. This includes:
@@ -78,26 +72,28 @@ module Friendly = struct
    * message. If we have a root then some environments (such as the CLI) will
    * merge errors with the same root cause into a single block.
    *)
-  type t = {
-    root: error_root option;
+  type 'a t' = {
+    root: 'a error_root option;
     loc: Loc.t;
-    message: message;
+    message: 'a message;
   }
 
-  and error_root = {
+  and 'a error_root = {
     root_loc: Loc.t;
-    root_message: message;
+    root_message: 'a message;
   }
 
-  and message = message_feature list
+  and 'a message = 'a message_feature list
 
-  and message_feature =
+  and 'a message_feature =
     | Inline of message_inline list
-    | Reference of message_inline list * Loc.t
+    | Reference of message_inline list * 'a
 
   and message_inline =
     | Text of string
     | Code of string
+
+  type t = Loc.t t'
 
   (* This function was introduced into the OCaml standard library in 4.04.0. Not
    * all of our tooling supports 4.04.0 yet, so we have a small
@@ -188,6 +184,38 @@ module Friendly = struct
   | (Inline ((Text s)::xs))::message -> (Inline ((Text (String.capitalize_ascii s))::xs))::message
   | message -> message
 
+  (* The intermediate fold extract_references uses. Returns both a loc_to_id map
+   * and an id_to_loc map. These maps are the inverses of one another. Also
+   * returns a transformed message. *)
+  let extract_references_intermediate next_id loc_to_id id_to_loc message =
+    let (next_id, loc_to_id, id_to_loc, message) =
+      List.fold_left (fun (next_id, loc_to_id, id_to_loc, message) message_feature ->
+        match message_feature with
+        | Inline inlines ->
+          (next_id, loc_to_id, id_to_loc, Inline inlines :: message)
+        | Reference (inlines, loc) ->
+          (match LocMap.get loc loc_to_id with
+          | Some id ->
+            (next_id, loc_to_id, id_to_loc, Reference (inlines, id) :: message)
+          | None ->
+            let id = next_id in
+            let loc_to_id = LocMap.add loc id loc_to_id in
+            let id_to_loc = IMap.add id loc id_to_loc in
+            (next_id + 1, loc_to_id, id_to_loc, Reference (inlines, id) :: message)
+          )
+      ) (next_id, loc_to_id, id_to_loc, []) message
+    in
+    (next_id, loc_to_id, id_to_loc, List.rev message)
+
+  (* Extracts common location references from a message. In order, each location
+   * will be replaced with an integer reference starting at 1. If some reference
+   * has the same location as another then they will share an id. *)
+  let extract_references : Loc.t message -> (Loc.t IMap.t * int message) =
+    fun message ->
+      let (_, _, id_to_loc, message) =
+        extract_references_intermediate 1 LocMap.empty IMap.empty message in
+      (id_to_loc, message)
+
   (* Converts our friendly error to a classic error message. *)
   let to_classic { root; loc; message } =
     (* Add our root to the message... *)
@@ -195,40 +223,24 @@ module Friendly = struct
     | Some { root_message; _ } -> root_message @ [Inline [Text " "]] @ message
     | None -> message
     in
-    (* Turn the message into a string and create a map for all of our
-     * references... *)
-    let (message, references) =
-      List.fold_left (fun (message, references) -> function
-      (* Add inlines... *)
-      | Inline m -> (message ^ string_of_message_inlines m, references)
-      (* Add a reference and update our references map... *)
-      | Reference (inlines, loc) ->
-        (* Finish the reference string we add to our message. *)
-        let reference = string_of_message_inlines inlines in
-        (* If we already have this reference then re-use its n. Otherwise,
-         * create a new reference. *)
-        let (references, n) = match RefMap.get (loc, reference) references with
-        | Some n -> (references, n)
-        | None ->
-          let n = (RefMap.cardinal references) + 1 in
-          let references = RefMap.add (loc, reference) n references in
-          (references, n)
-        in
-        let reference = reference ^ " [" ^ string_of_int n ^ "]" in
-        (* Add the reference to our message. We're done! *)
-        (message ^ reference, references)
-      ) ("", RefMap.empty) message
-    in
+    (* Extract the references from the message. *)
+    let (references, message) = extract_references message in
+    (* Turn the message into a string. *)
+    let message = List.fold_left (fun message -> function
+    | Inline inlines ->
+      message ^ string_of_message_inlines inlines
+    | Reference (inlines, id) ->
+      message ^ string_of_message_inlines inlines ^ " [" ^ string_of_int id ^ "]"
+    ) "" message in
     {
       messages = [BlameM (loc, message)];
       extra = (
-        if not (RefMap.is_empty references) then
+        if not (IMap.is_empty references) then
           (InfoLeaf [(Loc.none, ["References:"])])::
           (references
-          |> RefMap.bindings
-          |> List.sort (fun (_, a) (_, b) -> a - b)
-          |> List.map (fun ((loc, reference), n) ->
-            InfoLeaf [(loc, ["[" ^ string_of_int n ^ "]: " ^ reference])]))
+          |> IMap.bindings
+          |> List.map (fun (id, loc) ->
+            InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])]))
         else
           []
       );
@@ -654,8 +666,8 @@ type error_group =
   (* Friendly errors that share a root are grouped together. *)
   | FriendlyGroup of {
       kind: error_kind;
-      root: Friendly.error_root;
-      messages: (Loc.t * Friendly.message) Nel.t;
+      root: Loc.t Friendly.error_root;
+      messages: (Loc.t * Loc.t Friendly.message) Nel.t;
       omitted: int;
     }
 
@@ -1098,6 +1110,197 @@ module Cli_output = struct
         ^ filename
     )
 
+  module FileKeyMap = MyMap.Make(File_key)
+
+  type tag_kind =
+    | Open
+    | Close
+
+  type tags = (Loc.position * int * tag_kind) list FileKeyMap.t
+
+  (* See the definition of update_colors for why we need this cyclic type. *)
+  type opened = Opened of opened IMap.t
+
+  (* ==========================
+   * Reference Layout Algorithm
+   * ==========================
+   *
+   * In our error messages, we print a code frame and the code frame may have
+   * any number of overlapping references. These overlapping references are
+   * colored in such a way where the smallest location always has the
+   * same color. For instance, consider the following source text diagram:
+   *
+   *     Source Text  >  abcdefghijklmnopqrstuvwxyz0123456789
+   *     Coloration   >    XXOOOOXXX  XXXXOOOOOOO     OOOOO
+   *     Reference 1  >    |-------|
+   *     Reference 2  >      |--|
+   *     Reference 3  >               |------|
+   *     Reference 4  >                   |-----|
+   *     Reference 5  >                               |---|
+   *
+   * Reference 1 completely contains reference 2. References 3 and 4 overlap.
+   * Reference 5 is completely on its own.
+   *
+   * The "Coloration" row depicts how we would like to "paint" the source text
+   * in our design for error messages. In the "Coloration" row: spaces represent
+   * unpainted space, O's represent some first color, and X's represent some
+   * second color.
+   *
+   * Notice how reference 2 and reference 5 share the same color. "O". This is
+   * because, in our design, the references with the smallest contained area
+   * always share the same color. The references which contain them have the
+   * second color, "X".
+   *
+   * Notice how in references 3 and 4, one does not contain another. Instead the
+   * two references overlap. This is not common in Flow's error messages.
+   * However, we still need reasonable support for this case in our algorithm.
+   * For implementation convenience, we choose to give the reference which comes
+   * second the "O" color and the reference which comes first the "X" color.
+   *
+   * This example only demonstrates two colors. "O" and "X". However, in
+   * principle there could be any number of overlapping references.
+   *
+   * NOTE: Our current algorithm is not that efficient. There is a lot of room
+   * for optimization. For instance, a binary tree may be used instead of a list
+   * for the variable "tags". Since the number of references in a single file is
+   * almost always under 100, the implementation currently prefers legibility
+   * and correctness to efficiency.
+   *
+   * ## Inputs and Outputs
+   *
+   * We take in a map of reference ids to reference locations.
+   *
+   * We return both:
+   * - A map of reference ids to reference colors.
+   * - A map of filenames to lists of open/close tags to be used in rendering
+   *   source text. *)
+  let layout_references : Loc.t IMap.t -> (int IMap.t * tags) =
+    let open Loc in
+    let rec add_tags colors opened id start end' tags tags_acc =
+      match tags with
+      (* For an empty array, add both the open and close tags. Also add a color
+       * of 0 for this id. *)
+      | [] ->
+        let colors = IMap.add id 0 colors in
+        (colors, List.rev ((end', id, Close) :: (start, id, Open) :: tags_acc))
+      (* Search for the correct place where start should appear in our list.
+       *
+       * Note that we may introduce an Open tag _before_ a Close tag at the same
+       * position! This is intentional as it introduces overlapping. If we have
+       * two tags that open/close at the same position we want them to be
+       * different colors. Intersecting accomplishes this. *)
+      | ((pos, tag_id, tag_kind) as tag) :: tags when pos_cmp pos start < 0 ->
+        (* Keep track of the ids which are opening and closing so that we can
+         * increment their colors if start is inside them.
+         *
+         * Also keep track of the ids which were opened at the time this tag was
+         * opened. This allows us to move backwards through the containment tree
+         * and update tag colors appropriately.
+         *
+         * See the definition of update_colors for more information. *)
+        let opened = Opened (
+          let Opened opened' = opened in
+          match tag_kind with
+          | Open -> IMap.add tag_id opened opened'
+          | Close -> IMap.remove tag_id opened'
+        ) in
+        add_tags colors opened id start end' tags (tag :: tags_acc)
+      (* We've found the correct place for start! If there are any tags which
+       * are currently open then we need to increment their colors. *)
+      | tags ->
+        (* Add our closing tag. We will get from this operation the color which
+         * we should add for our current reference. *)
+        let (color, tags) = add_close_tag colors id end' tags 0 [] in
+        (* Increment the colors of all open references by the color of this tag.
+         * It is a logic error if some open_id does not exist in colors. *)
+        let colors = update_colors opened colors color in
+        (* Add the color for this reference. *)
+        let colors = IMap.add id color colors in
+        (* Finish by adding an open tag. A corresponding closing tag will have
+         * been added by add_close_tag. *)
+        (colors, List.rev_append ((start, id, Open) :: tags_acc) tags)
+
+    and add_close_tag colors id end' tags color_acc tags_acc =
+      match tags with
+      | [] ->
+        (color_acc, List.rev ((end', id, Close) :: tags_acc))
+      (* Search for the last place to add our end position.
+       *
+       * Note that we may introduce a Close tag _after_ an Open tag at the same
+       * position! This is intentional as it introduces overlapping. If we have
+       * two tags that open/close at the same position we want them to be
+       * different colors. Intersecting accomplishes this. *)
+      | ((pos, tag_id, tag_kind) as tag) :: tags when pos_cmp pos end' <= 0 ->
+        (* If we run into an open tag then our color must be at least 1 greater
+         * then the color of the opened tag. *)
+        let color_acc = match tag_kind with
+        | Open -> max color_acc ((Option.value (IMap.get tag_id colors) ~default:0) + 1)
+        | Close -> color_acc
+        in
+        add_close_tag colors id end' tags color_acc (tag :: tags_acc)
+      (* When we find the location for our close tag, add it. *)
+      | tags ->
+        (color_acc, List.rev_append ((end', id, Close) :: tags_acc) tags)
+
+    (* According to our design, the color of a location is one plus the largest
+     * color opened inside of the location. See add_close_tag for the
+     * implementation of this logic when we add a location that opens *before*
+     * a location that already exists in tags.
+     *
+     * The logic for updating colors when a location opens *after* a location
+     * that already exists in tags is more difficult. Not only must we try to
+     * update the locations which are currently opened, but we must also
+     * propagate updates to previously opened tags. Consider the uncommon case
+     * our logic takes pain to support:
+     *
+     *     Reference 1  >  |-------|
+     *     Reference 2  >       |--------|
+     *     Reference 3  >             |--------|
+     *
+     * Let's say references 1 and 2 already exist. We are adding reference 3. At
+     * this point, reference 1 will have a color of 1 and reference 2 will have
+     * a color of 0.
+     *
+     * We add reference 3 which has a color of 0. Reference 3 opens inside of
+     * reference 2 so we update reference 2's color to 0 + 1. Now reference 2
+     * and reference 1 have a color of 1. This is incorrect. Reference 1 should
+     * have a color of 2 at this point.
+     *
+     * Our `opened` type keeps track of the open references when another
+     * reference opens. So we have access to reference 1 through reference 2.
+     * Update reference 1's color to 1 + 1.
+     *
+     * We can short-circuit the recursive traversal of reference trees when we
+     * can't update the color of most recently opened tags. *)
+    and update_colors (Opened opened) colors color =
+      IMap.fold (fun open_id opened colors ->
+        let open_color = Option.value (IMap.get open_id colors) ~default:0 in
+        if open_color >= color + 1 then
+          colors
+        else
+          let colors = IMap.add open_id (color + 1) colors in
+          update_colors opened colors (color + 1)
+      ) opened colors
+    in
+    fun references ->
+      List.fold_left (fun (colors, file_tags) (id, loc) ->
+        match loc.source with
+        | None -> (colors, file_tags)
+        | Some source ->
+          let tags = Option.value (FileKeyMap.get source file_tags) ~default:[] in
+          let (colors, tags) = add_tags colors (Opened IMap.empty) id loc.start loc._end tags [] in
+          let file_tags = FileKeyMap.add source tags file_tags in
+          (colors, file_tags)
+      ) (IMap.empty, FileKeyMap.empty) (IMap.bindings references)
+
+  (* To be used with layout_references. *)
+  let get_tty_color id colors =
+    match (Option.value (IMap.get id colors) ~default:0) mod 3 with
+    | 0 -> Tty.Cyan
+    | 1 -> Tty.Yellow
+    | 2 -> Tty.Green
+    | _ -> failwith "unreachable"
+
   let bullet_char ~flags =
     (* Use [U+2022][1] for the bullet character if unicode is enabled.
      *
@@ -1332,17 +1535,24 @@ module Cli_output = struct
     | Code s -> (false, Tty.Bold Tty.Default, s)
     in
     (* Put it all together! *)
-    fun ~flags ?(bullet=false) message ->
+    fun ~flags ~colors ?(bullet=false) message ->
       let message = List.rev (List.fold_left (fun acc feature ->
         match feature with
         | Inline inlines ->
           List.rev_append
             (List.map (print_message_inline ~flags ~reference:false) inlines)
             acc
-        | Reference (inlines, _) ->
-          List.rev_append
-            (List.map (print_message_inline ~flags ~reference:true) inlines)
-            acc
+        | Reference (inlines, id) ->
+          let message =
+            List.map (print_message_inline ~flags ~reference:true) inlines @
+            [
+              (false, Tty.Normal Tty.Default, " ");
+              (false, Tty.Dim Tty.Default, "[");
+              (false, Tty.Normal (get_tty_color id colors), string_of_int id);
+              (false, Tty.Dim Tty.Default, "]");
+            ]
+          in
+          List.rev_append message acc
       ) [] message) in
       (* Use [U+2022][1] for the bullet character if unicode is enabled.
        *
@@ -1382,35 +1592,59 @@ module Cli_output = struct
     in
     (* Either print our one message, our one message with the root prepended, or
      * a list of error messages that share the same root. *)
-    let message = match root, others with
+    let (_references, _colors, _tags, message) = match root, others with
     | None, _ ->
-      print_message_friendly ~flags first_message
+      let (references, first_message) = extract_references first_message in
+      let (colors, tags) = layout_references references in
+      (references, colors, tags, print_message_friendly ~flags ~colors first_message)
     | Some { root_message; _ }, [] when omitted = 0 ->
-      print_message_friendly ~flags (root_message @ (text " " :: first_message))
+      let message = root_message @ (text " " :: first_message) in
+      let (references, message) = extract_references message in
+      let (colors, tags) = layout_references references in
+      (references, colors, tags, print_message_friendly ~flags ~colors message)
     | Some { root_message; _ }, others ->
+      let messages = (first_loc, first_message) :: others in
+      (* Use extract_references_intermediate to extract the references from each
+       * individual message. *)
+      let (references, root_message, messages_reversed) =
+        let (next_id, loc_to_id, id_to_loc, root_message) =
+          extract_references_intermediate 1 LocMap.empty IMap.empty root_message in
+        let (_, _, id_to_loc, messages_reversed) =
+          List.fold_left (fun (next_id, loc_to_id, id_to_loc, messages) (loc, message) ->
+            let (next_id, loc_to_id, id_to_loc, message) =
+              extract_references_intermediate next_id loc_to_id id_to_loc message in
+            (next_id, loc_to_id, id_to_loc, (loc, message) :: messages)
+          ) (next_id, loc_to_id, id_to_loc, []) messages
+        in
+        (id_to_loc, root_message, messages_reversed)
+      in
+      let (colors, tags) = layout_references references in
       let message =
         List.fold_left
           (fun acc_message (_, message) ->
             acc_message @
             [default_style "\n"] @
-            print_message_friendly ~flags ~bullet:true message
+            print_message_friendly ~flags ~colors ~bullet:true message
           )
-          ((print_message_friendly ~flags root_message) @ [default_style ":"])
-          ((first_loc, first_message) :: others)
+          ((print_message_friendly ~flags ~colors root_message) @ [default_style ":"])
+          (List.rev messages_reversed)
       in
-      if omitted = 0 then
-        message
-      else
-        message @
-        [default_style (
-          "\n " ^
-          bullet_char ~flags ^
-          " ... " ^
-          string_of_int omitted ^
-          " more error" ^
-          (if omitted = 1 then "" else "s") ^
-          "."
-        )]
+      let message =
+        if omitted = 0 then
+          message
+        else
+          message @
+          [default_style (
+            "\n " ^
+            bullet_char ~flags ^
+            " ... " ^
+            string_of_int omitted ^
+            " more error" ^
+            (if omitted = 1 then "" else "s") ^
+            "."
+          )]
+      in
+      (references, colors, tags, message)
     in
     (* Put it all together! *)
     (header :: default_style "\n\n" :: message) @ [default_style "\n\n\n"]

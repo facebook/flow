@@ -66,9 +66,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                            ^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
           References:
             7:       <Bar x={23} />;
-                             ^^ [1]: number
+                             ^^ [1]
             5:       type Props = {|x: string|};
-                                       ^^^^^^ [2]: string
+                                       ^^^^^^ [2]
       `,
     ),
   ]),
@@ -116,9 +116,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                             ^ Property \`@@iterator\` is missing in number [1] but exists in \`$Iterable\` [2].
           References:
             7:       const x = 42;
-                               ^^ [1]: number
+                               ^^ [1]
            31: interface $Iterable<+Yield,+Return,-Next> {
-                         ^^^^^^^^^ [2]: \`$Iterable\`. See lib: [LIB] prelude.js:31
+                         ^^^^^^^^^ [2]. See lib: [LIB] prelude.js:31
       `,
     )
   ]),
@@ -137,9 +137,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^ Cannot create \`Foo\` element because in property \`children\` and then type argument \`T\`, string [1] is incompatible with number [2].
           References:
             7:       const arr = ["foo"];
-                                  ^^^^^ [1]: string
+                                  ^^^^^ [1]
             5:       type Props = {|children: Array<number>|};
-                                                    ^^^^^^ [2]: number
+                                                    ^^^^^^ [2]
       `,
     ),
   ]),
@@ -186,9 +186,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
           References:
             8:       <Bar {...params} />;
-                     ^^^^^^^^^^^^^^^^^^^ [1]: props
+                     ^^^^^^^^^^^^^^^^^^^ [1]
             6:       function Bar(props: Props) {}
-                                         ^^^^^ [2]: \`Props\`
+                                         ^^^^^ [2]
       `,
     ),
   ]),
@@ -217,18 +217,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
           References:
             7:       const params = {x: 23};
-                                        ^^ [1]: number
+                                        ^^ [1]
             5:       type Props = {|x: string|};
-                                       ^^^^^^ [2]: string
+                                       ^^^^^^ [2]
 
         test.js:8
           8:       <Bar {...params} />;
                     ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
           References:
             8:       <Bar {...params} />;
-                     ^^^^^^^^^^^^^^^^^^^ [1]: props
+                     ^^^^^^^^^^^^^^^^^^^ [1]
             6:       function Bar(props: Props) {}
-                                         ^^^^^ [2]: \`Props\`
+                                         ^^^^^ [2]
       `,
     ),
   ]),
@@ -288,9 +288,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^ Cannot create \`Bar\` element because property \`children\` is missing in \`Props\` [1] but exists in props [2].
           References:
             6:       function Bar(props: Props) {}
-                                         ^^^^^ [1]: \`Props\`
+                                         ^^^^^ [1]
             7:       <Bar>Test</Bar>
-                     ^^^^^^^^^^^^^^^ [2]: props
+                     ^^^^^^^^^^^^^^^ [2]
       `,
     ),
   ]),
@@ -310,9 +310,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                         ^^^^^^^ Cannot create \`Foo\` element because in property \`children\` and then type argument \`T\`, number [1] is incompatible with string [2].
           References:
             8:       function Bar(props: BarProps): number {return 0;}
-                                                    ^^^^^^ [1]: number
+                                                    ^^^^^^ [1]
             5:       type FooProps = {|children: Array<string>|};
-                                                       ^^^^^^ [2]: string
+                                                       ^^^^^^ [2]
       `,
     ),
   ]),
@@ -353,9 +353,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                          ^^ Cannot create \`Bar\` element because in property \`children\` and then index 0, number [1] is incompatible with string literal \`A\` [2].
           References:
             7:       <Bar>{42}</Bar>
-                           ^^ [1]: number
+                           ^^ [1]
             5:       type Props = {|children: ['A']|};
-                                               ^^^ [2]: string literal \`A\`
+                                               ^^^ [2]
       `,
     ),
   ]),

@@ -22,9 +22,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                     ^^ Cannot cast \`42\` to \`aType\` because number [1] is incompatible with string [2].
                                 References:
                                   8: (42: aType)
-                                      ^^ [1]: number
+                                      ^^ [1]
                                   8: (42: aType)
-                                          ^^^^^ [2]: string
+                                          ^^^^^ [2]
                             `,
                           ),
 
@@ -93,9 +93,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                          ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
                                      References:
                                        8: ("asdf": aType);
-                                           ^^^^^^ [1]: string
+                                           ^^^^^^ [1]
                                        8: ("asdf": aType);
-                                                   ^^^^^ [2]: number
+                                                   ^^^^^ [2]
                                  `,
                                ),
   ]),
@@ -116,9 +116,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                          ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
                                      References:
                                        8: ("asdf": aType);
-                                           ^^^^^^ [1]: string
+                                           ^^^^^^ [1]
                                        8: ("asdf": aType);
-                                                   ^^^^^ [2]: number
+                                                   ^^^^^ [2]
                                  `,
                                ),
   ]),

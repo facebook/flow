@@ -51,14 +51,14 @@ export default suite(({addFile, addFiles, addCode}) => [
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
             References:
               3: const arr = [1,2,3];
-                              ^ [1]: number
+                              ^ [1]
 
           test.js:7
             7: React.createElement(...arr, {})
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
             References:
               3: const arr = [1,2,3];
-                                ^ [1]: number
+                                ^ [1]
         `,
       ),
     addCode('React.createElement(({}: any), ...arr)')
@@ -69,7 +69,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
             References:
               3: const arr = [1,2,3];
-                              ^ [1]: number
+                              ^ [1]
         `,
       ),
     addCode('React.createElement(...arr, ...arr)')
@@ -80,14 +80,14 @@ export default suite(({addFile, addFiles, addCode}) => [
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
             References:
               3: const arr = [1,2,3];
-                              ^ [1]: number
+                              ^ [1]
 
           test.js:11
            11: React.createElement(...arr, ...arr)
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
             References:
               3: const arr = [1,2,3];
-                                ^ [1]: number
+                                ^ [1]
         `,
       ),
   ]),
@@ -170,7 +170,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                ^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
             References:
              17: Object.assign({}, ...[1])
-                                       ^ [1]: number
+                                       ^ [1]
         `,
       )
       .because('But this is an error since the array contains non-objects'),

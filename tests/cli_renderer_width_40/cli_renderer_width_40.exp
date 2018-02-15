@@ -1,33 +1,33 @@
 Error --------------------- basic.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error - name/that/gets/very/close.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error ----------------------------------
 name/that/gets/very/close2.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error - name_that_gets_very_close.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error ----------------------------------
 name_that_gets_very_close2.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error ------ non_breakable_breaks.js:7:2
@@ -35,8 +35,8 @@ Error ------ non_breakable_breaks.js:7:2
 Cannot cast
 `reallyReallyReallyReallyReallyReallyRea
 llyReallyLongVariableName` to empty
-because number is incompatible with
-empty.
+because number [1] is incompatible with
+empty [2].
 
 
 Error ----- non_breakable_breaks.js:10:2
@@ -45,53 +45,53 @@ Cannot cast
 `reallyReallyReallyReallyReallyReallyRea
 llyReallyReallyReallyReallyReallyReallyR
 eallyReallyReallyLongVariableName` to
-empty because number is incompatible
-with empty.
+empty because number [1] is incompatible
+with empty [2].
 
 
 Error ----- non_breakable_breaks.js:13:2
 
 Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijkl`
-to empty because number is incompatible
-with empty.
+to empty because number [1] is
+incompatible with empty [2].
 
 
 Error ----- non_breakable_breaks.js:16:2
 
 Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijklm
-` to empty because number is
-incompatible with empty.
+` to empty because number [1] is
+incompatible with empty [2].
 
 
 Error ----- non_breakable_breaks.js:19:2
 
 Cannot cast `mnopqrstuvwxyzabcdefghijkl`
-to empty because number is incompatible
-with empty.
+to empty because number [1] is
+incompatible with empty [2].
 
 
 Error ----- non_breakable_breaks.js:22:2
 
 Cannot cast
 `mnopqrstuvwxyzabcdefghijklm` to empty
-because number is incompatible with
-empty.
+because number [1] is incompatible with
+empty [2].
 
 
 Error ----------------------------------
 really/long/filename/that/is/much/more/then/40/characters.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error ----------------------------------
 really_long_filename_that_is_much_more_then_40_characters.js:6:2
 
-Cannot cast `null` to empty because null
-is incompatible with empty.
+Cannot cast `null` to empty because
+null [1] is incompatible with empty [2].
 
 
 Error -------------------- wrap.js:21:64
@@ -102,8 +102,8 @@ type because in property
 `to.be.a.really`, index 0, property
 `long.error.message.that.hopefully`,
 index 0, and then property
-`breaks.on.multiple.lines`; number is
-incompatible with string.
+`breaks.on.multiple.lines`; number [1]
+is incompatible with string [2].
 
 
 Error ---------------- wrap_group.js:6:2
@@ -115,15 +115,17 @@ type because:
    property
    `long.error.message.that.hopefully`,
    index 0, and then property
-   `breaks.on.multiple.lines.a`; number
-   is incompatible with string.
+   `breaks.on.multiple.lines.a`;
+   number [1] is incompatible with
+   string [2].
  - in property `this.is.going`, index 0,
    property `to.be.a.really`, index 0,
    property
    `long.error.message.that.hopefully`,
    index 0, and then property
-   `breaks.on.multiple.lines.b`; number
-   is incompatible with string.
+   `breaks.on.multiple.lines.b`;
+   number [3] is incompatible with
+   string [4].
 
 
 

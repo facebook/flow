@@ -16,7 +16,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                                                    ^^^^^ Cannot reassign import \`named\` [1].
                                                                 References:
                                                                   3: import {named} from "./dep.js"; named = 43;
-                                                                             ^^^^^ [1]: \`named\`
+                                                                             ^^^^^ [1]
                                                             `,
                                                           ),
   ]),
@@ -30,7 +30,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                                              ^^^ Cannot reassign import \`def\` [1].
                                                               References:
                                                                 3: import def from "./dep.js"; def = "nope";
-                                                                          ^^^ [1]: \`def\`
+                                                                          ^^^ [1]
                                                           `,
                                                         )
   ]),
@@ -44,7 +44,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                                                 ^^ Cannot reassign import \`ns\` [1].
                                                              References:
                                                                3: import * as ns from "./dep.js"; ns = {};
-                                                                              ^^ [1]: \`ns\`
+                                                                              ^^ [1]
                                                          `,
                                                        )
   ]),

@@ -23,7 +23,7 @@
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -43,7 +43,7 @@
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[2]: null or undefined",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -102,7 +102,7 @@
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[1]: number",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -122,7 +122,7 @@
           "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"[2]: null or undefined",
+              "descr":"[2]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",

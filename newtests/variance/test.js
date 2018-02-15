@@ -24,9 +24,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roA\` to \`RWA\` because property \`p\` is read-only in \`ROA\` [1] but writable in \`RWA\` [2].
             References:
              17:     declare var roA: ROA;
-                                      ^^^ [1]: \`ROA\`
+                                      ^^^ [1]
              50: (roA: RWA);
-                       ^^^ [2]: \`RWA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droA: dRWA);')
@@ -37,9 +37,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droA\` to \`dRWA\` because an indexer property is read-only in \`dROA\` [1] but writable in \`dRWA\` [2].
             References:
              34:     declare var droA: dROA;
-                                       ^^^^ [1]: \`dROA\`
+                                       ^^^^ [1]
              52: (droA: dRWA);
-                        ^^^^ [2]: \`dRWA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -52,9 +52,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woA\` to \`RWA\` because property \`p\` is write-only in \`WOA\` [1] but readable in \`RWA\` [2].
             References:
              18:     declare var woA: WOA;
-                                      ^^^ [1]: \`WOA\`
+                                      ^^^ [1]
              54: (woA: RWA);
-                       ^^^ [2]: \`RWA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoA: dRWA);')
@@ -65,9 +65,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoA\` to \`dRWA\` because an indexer property is write-only in \`dWOA\` [1] but readable in \`dRWA\` [2].
             References:
              35:     declare var dwoA: dWOA;
-                                       ^^^^ [1]: \`dWOA\`
+                                       ^^^^ [1]
              56: (dwoA: dRWA);
-                        ^^^^ [2]: \`dRWA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -85,9 +85,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`rwB\` to \`RWA\` because in property \`p\`, \`B\` [1] is incompatible with \`A\` [2].
             References:
              12:     type RWB = {p: B}
-                                    ^ [1]: \`B\`
+                                    ^ [1]
               9:     type RWA = {p: A}
-                                    ^ [2]: \`A\`
+                                    ^ [2]
         `,
       ),
     addCode('(drwB: dRWA);')
@@ -98,9 +98,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`drwB\` to \`dRWA\` because in the indexer property, \`B\` [1] is incompatible with \`A\` [2].
             References:
              29:     type dRWB = {[string]: B};
-                                            ^ [1]: \`B\`
+                                            ^ [1]
              26:     type dRWA = {[string]: A};
-                                            ^ [2]: \`A\`
+                                            ^ [2]
         `,
       ),
 
@@ -113,9 +113,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roB\` to \`RWA\` because property \`p\` is read-only in \`ROB\` [1] but writable in \`RWA\` [2].
             References:
              21:     declare var roB: ROB;
-                                      ^^^ [1]: \`ROB\`
+                                      ^^^ [1]
              66: (roB: RWA);
-                       ^^^ [2]: \`RWA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droB: dRWA);')
@@ -126,9 +126,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droB\` to \`dRWA\` because an indexer property is read-only in \`dROB\` [1] but writable in \`dRWA\` [2].
             References:
              38:     declare var droB: dROB;
-                                       ^^^^ [1]: \`dROB\`
+                                       ^^^^ [1]
              68: (droB: dRWA);
-                        ^^^^ [2]: \`dRWA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -141,18 +141,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woB\` to \`RWA\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
               9:     type RWA = {p: A}
-                                    ^ [1]: \`A\`
+                                    ^ [1]
              14:     type WOB = {-p: B}
-                                     ^ [2]: \`B\`
+                                     ^ [2]
 
           test.js:70
            70: (woB: RWA);
                 ^^^ Cannot cast \`woB\` to \`RWA\` because property \`p\` is write-only in \`WOB\` [1] but readable in \`RWA\` [2].
             References:
              22:     declare var woB: WOB;
-                                      ^^^ [1]: \`WOB\`
+                                      ^^^ [1]
              70: (woB: RWA);
-                       ^^^ [2]: \`RWA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoB: dRWA);')
@@ -163,18 +163,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because an indexer property is write-only in \`dWOB\` [1] but readable in \`dRWA\` [2].
             References:
              39:     declare var dwoB: dWOB;
-                                       ^^^^ [1]: \`dWOB\`
+                                       ^^^^ [1]
              72: (dwoB: dRWA);
-                        ^^^^ [2]: \`dRWA\`
+                        ^^^^ [2]
 
           test.js:72
            72: (dwoB: dRWA);
                 ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              26:     type dRWA = {[string]: A};
-                                            ^ [1]: \`A\`
+                                            ^ [1]
              31:     type dWOB = {-[string]: B};
-                                             ^ [2]: \`B\`
+                                             ^ [2]
         `,
       ),
   ]),
@@ -201,9 +201,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woA\` to \`ROA\` because property \`p\` is write-only in \`WOA\` [1] but read-only in \`ROA\` [2].
             References:
              18:     declare var woA: WOA;
-                                      ^^^ [1]: \`WOA\`
+                                      ^^^ [1]
              54: (woA: ROA);
-                       ^^^ [2]: \`ROA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoA: dROA);')
@@ -214,9 +214,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoA\` to \`dROA\` because an indexer property is write-only in \`dWOA\` [1] but read-only in \`dROA\` [2].
             References:
              35:     declare var dwoA: dWOA;
-                                       ^^^^ [1]: \`dWOA\`
+                                       ^^^^ [1]
              56: (dwoA: dROA);
-                        ^^^^ [2]: \`dROA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -241,9 +241,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woB\` to \`ROA\` because property \`p\` is write-only in \`WOB\` [1] but read-only in \`ROA\` [2].
             References:
              22:     declare var woB: WOB;
-                                      ^^^ [1]: \`WOB\`
+                                      ^^^ [1]
              70: (woB: ROA);
-                       ^^^ [2]: \`ROA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoB: dROA);')
@@ -254,9 +254,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoB\` to \`dROA\` because an indexer property is write-only in \`dWOB\` [1] but read-only in \`dROA\` [2].
             References:
              39:     declare var dwoB: dWOB;
-                                       ^^^^ [1]: \`dWOB\`
+                                       ^^^^ [1]
              72: (dwoB: dROA);
-                        ^^^^ [2]: \`dROA\`
+                        ^^^^ [2]
         `,
       ),
   ]),
@@ -279,9 +279,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roA\` to \`WOA\` because property \`p\` is read-only in \`ROA\` [1] but write-only in \`WOA\` [2].
             References:
              17:     declare var roA: ROA;
-                                      ^^^ [1]: \`ROA\`
+                                      ^^^ [1]
              50: (roA: WOA);
-                       ^^^ [2]: \`WOA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droA: dWOA);')
@@ -292,9 +292,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droA\` to \`dWOA\` because an indexer property is read-only in \`dROA\` [1] but write-only in \`dWOA\` [2].
             References:
              34:     declare var droA: dROA;
-                                       ^^^^ [1]: \`dROA\`
+                                       ^^^^ [1]
              52: (droA: dWOA);
-                        ^^^^ [2]: \`dWOA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -315,9 +315,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`rwB\` to \`WOA\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              11:     type WOA = {-p: A}
-                                     ^ [1]: \`A\`
+                                     ^ [1]
              12:     type RWB = {p: B}
-                                    ^ [2]: \`B\`
+                                    ^ [2]
         `,
       ),
     addCode('(drwB: dWOA);')
@@ -328,9 +328,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`drwB\` to \`dWOA\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              28:     type dWOA = {-[string]: A};
-                                             ^ [1]: \`A\`
+                                             ^ [1]
              29:     type dRWB = {[string]: B};
-                                            ^ [2]: \`B\`
+                                            ^ [2]
         `,
       ),
 
@@ -343,9 +343,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roB\` to \`WOA\` because property \`p\` is read-only in \`ROB\` [1] but write-only in \`WOA\` [2].
             References:
              21:     declare var roB: ROB;
-                                      ^^^ [1]: \`ROB\`
+                                      ^^^ [1]
              66: (roB: WOA);
-                       ^^^ [2]: \`WOA\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droB: dWOA);')
@@ -356,9 +356,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droB\` to \`dWOA\` because an indexer property is read-only in \`dROB\` [1] but write-only in \`dWOA\` [2].
             References:
              38:     declare var droB: dROB;
-                                       ^^^^ [1]: \`dROB\`
+                                       ^^^^ [1]
              68: (droB: dWOA);
-                        ^^^^ [2]: \`dWOA\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -371,9 +371,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woB\` to \`WOA\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              11:     type WOA = {-p: A}
-                                     ^ [1]: \`A\`
+                                     ^ [1]
              14:     type WOB = {-p: B}
-                                     ^ [2]: \`B\`
+                                     ^ [2]
         `,
       ),
     addCode('(dwoB: dWOA);')
@@ -384,9 +384,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoB\` to \`dWOA\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              28:     type dWOA = {-[string]: A};
-                                             ^ [1]: \`A\`
+                                             ^ [1]
              31:     type dWOB = {-[string]: B};
-                                             ^ [2]: \`B\`
+                                             ^ [2]
         `,
       ),
   ]),
@@ -401,9 +401,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^^^ Cannot cast object literal to \`RWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              42: ({p: new A}: RWB);
-                      ^^^^^ [1]: \`A\`
+                      ^^^^^ [1]
              12:     type RWB = {p: B}
-                                    ^ [2]: \`B\`
+                                    ^ [2]
         `,
       ),
     addCode('({p: new A}: dRWB);')
@@ -414,9 +414,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^^^ Cannot cast object literal to \`dRWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              44: ({p: new A}: dRWB);
-                      ^^^^^ [1]: \`A\`
+                      ^^^^^ [1]
              29:     type dRWB = {[string]: B};
-                                            ^ [2]: \`B\`
+                                            ^ [2]
         `,
       ),
 
@@ -429,9 +429,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`rwA\` to \`RWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
               9:     type RWA = {p: A}
-                                    ^ [1]: \`A\`
+                                    ^ [1]
              12:     type RWB = {p: B}
-                                    ^ [2]: \`B\`
+                                    ^ [2]
         `,
       ),
     addCode('(drwA: dRWB);')
@@ -442,9 +442,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`drwA\` to \`dRWB\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              26:     type dRWA = {[string]: A};
-                                            ^ [1]: \`A\`
+                                            ^ [1]
              29:     type dRWB = {[string]: B};
-                                            ^ [2]: \`B\`
+                                            ^ [2]
         `,
       ),
 
@@ -457,18 +457,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roA\` to \`RWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              10:     type ROA = {+p: A}
-                                     ^ [1]: \`A\`
+                                     ^ [1]
              12:     type RWB = {p: B}
-                                    ^ [2]: \`B\`
+                                    ^ [2]
 
           test.js:50
            50: (roA: RWB);
                 ^^^ Cannot cast \`roA\` to \`RWB\` because property \`p\` is read-only in \`ROA\` [1] but writable in \`RWB\` [2].
             References:
              17:     declare var roA: ROA;
-                                      ^^^ [1]: \`ROA\`
+                                      ^^^ [1]
              50: (roA: RWB);
-                       ^^^ [2]: \`RWB\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droA: dRWB);')
@@ -479,18 +479,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droA\` to \`dRWB\` because an indexer property is read-only in \`dROA\` [1] but writable in \`dRWB\` [2].
             References:
              34:     declare var droA: dROA;
-                                       ^^^^ [1]: \`dROA\`
+                                       ^^^^ [1]
              52: (droA: dRWB);
-                        ^^^^ [2]: \`dRWB\`
+                        ^^^^ [2]
 
           test.js:52
            52: (droA: dRWB);
                 ^^^^ Cannot cast \`droA\` to \`dRWB\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              27:     type dROA = {+[string]: A};
-                                             ^ [1]: \`A\`
+                                             ^ [1]
              29:     type dRWB = {[string]: B};
-                                            ^ [2]: \`B\`
+                                            ^ [2]
         `,
       ),
 
@@ -503,9 +503,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woA\` to \`RWB\` because property \`p\` is write-only in \`WOA\` [1] but readable in \`RWB\` [2].
             References:
              18:     declare var woA: WOA;
-                                      ^^^ [1]: \`WOA\`
+                                      ^^^ [1]
              54: (woA: RWB);
-                       ^^^ [2]: \`RWB\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoA: dRWB);')
@@ -516,9 +516,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoA\` to \`dRWB\` because an indexer property is write-only in \`dWOA\` [1] but readable in \`dRWB\` [2].
             References:
              35:     declare var dwoA: dWOA;
-                                       ^^^^ [1]: \`dWOA\`
+                                       ^^^^ [1]
              56: (dwoA: dRWB);
-                        ^^^^ [2]: \`dRWB\`
+                        ^^^^ [2]
         `,
       ),
   ]),
@@ -533,9 +533,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^^^ Cannot cast object literal to \`ROB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              42: ({p: new A}: ROB);
-                      ^^^^^ [1]: \`A\`
+                      ^^^^^ [1]
              13:     type ROB = {+p: B}
-                                     ^ [2]: \`B\`
+                                     ^ [2]
         `,
       ),
     addCode('({p: new A}: dROB);')
@@ -546,9 +546,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                     ^^^^^ Cannot cast object literal to \`dROB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              44: ({p: new A}: dROB);
-                      ^^^^^ [1]: \`A\`
+                      ^^^^^ [1]
              30:     type dROB = {+[string]: B};
-                                             ^ [2]: \`B\`
+                                             ^ [2]
         `,
       ),
 
@@ -561,9 +561,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`rwA\` to \`ROB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
               9:     type RWA = {p: A}
-                                    ^ [1]: \`A\`
+                                    ^ [1]
              13:     type ROB = {+p: B}
-                                     ^ [2]: \`B\`
+                                     ^ [2]
         `,
       ),
     addCode('(drwA: dROB);')
@@ -574,9 +574,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`drwA\` to \`dROB\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              26:     type dRWA = {[string]: A};
-                                            ^ [1]: \`A\`
+                                            ^ [1]
              30:     type dROB = {+[string]: B};
-                                             ^ [2]: \`B\`
+                                             ^ [2]
         `,
       ),
 
@@ -589,9 +589,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roA\` to \`ROB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
             References:
              10:     type ROA = {+p: A}
-                                     ^ [1]: \`A\`
+                                     ^ [1]
              13:     type ROB = {+p: B}
-                                     ^ [2]: \`B\`
+                                     ^ [2]
         `,
       ),
     addCode('(droA: dROB);')
@@ -602,9 +602,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droA\` to \`dROB\` because in the indexer property, \`A\` [1] is incompatible with \`B\` [2].
             References:
              27:     type dROA = {+[string]: A};
-                                             ^ [1]: \`A\`
+                                             ^ [1]
              30:     type dROB = {+[string]: B};
-                                             ^ [2]: \`B\`
+                                             ^ [2]
         `,
       ),
 
@@ -617,9 +617,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`woA\` to \`ROB\` because property \`p\` is write-only in \`WOA\` [1] but read-only in \`ROB\` [2].
             References:
              18:     declare var woA: WOA;
-                                      ^^^ [1]: \`WOA\`
+                                      ^^^ [1]
              54: (woA: ROB);
-                       ^^^ [2]: \`ROB\`
+                       ^^^ [2]
         `,
       ),
     addCode('(dwoA: dROB);')
@@ -630,9 +630,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`dwoA\` to \`dROB\` because an indexer property is write-only in \`dWOA\` [1] but read-only in \`dROB\` [2].
             References:
              35:     declare var dwoA: dWOA;
-                                       ^^^^ [1]: \`dWOA\`
+                                       ^^^^ [1]
              56: (dwoA: dROB);
-                        ^^^^ [2]: \`dROB\`
+                        ^^^^ [2]
         `,
       ),
   ]),
@@ -655,9 +655,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`roA\` to \`WOB\` because property \`p\` is read-only in \`ROA\` [1] but write-only in \`WOB\` [2].
             References:
              17:     declare var roA: ROA;
-                                      ^^^ [1]: \`ROA\`
+                                      ^^^ [1]
              50: (roA: WOB);
-                       ^^^ [2]: \`WOB\`
+                       ^^^ [2]
         `,
       ),
     addCode('(droA: dWOB);')
@@ -668,9 +668,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^^ Cannot cast \`droA\` to \`dWOB\` because an indexer property is read-only in \`dROA\` [1] but write-only in \`dWOB\` [2].
             References:
              34:     declare var droA: dROA;
-                                       ^^^^ [1]: \`dROA\`
+                                       ^^^^ [1]
              52: (droA: dWOB);
-                        ^^^^ [2]: \`dWOB\`
+                        ^^^^ [2]
         `,
       ),
 
@@ -694,9 +694,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is read-only in object type [1] but writable in object type [2].
             References:
              44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
-                                ^^^^^^ [1]: object type
+                                ^^^^^^ [1]
              44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
-                                                ^^^^^ [2]: object type
+                                                ^^^^^ [2]
         `,
       ),
 
@@ -708,9 +708,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is write-only in object type [1] but readable in object type [2].
             References:
              46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
-                                ^^^^^^ [1]: object type
+                                ^^^^^^ [1]
              46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
-                                                ^^^^^ [2]: object type
+                                                ^^^^^ [2]
         `,
       ),
 
@@ -722,9 +722,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is writable in object type [1] but read-only in object type [2].
             References:
              48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
-                                ^^^^^ [1]: object type
+                                ^^^^^ [1]
              48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
-                                               ^^^^^^ [2]: object type
+                                               ^^^^^^ [2]
         `,
       ),
 
@@ -739,9 +739,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is write-only in object type [1] but read-only in object type [2].
             References:
              52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
-                                ^^^^^^ [1]: object type
+                                ^^^^^^ [1]
              52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
-                                                ^^^^^^ [2]: object type
+                                                ^^^^^^ [2]
         `,
       ),
 
@@ -753,9 +753,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is readable in object type [1] but write-only in object type [2].
             References:
              54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
-                                ^^^^^ [1]: object type
+                                ^^^^^ [1]
              54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
-                                               ^^^^^^ [2]: object type
+                                               ^^^^^^ [2]
         `,
       ),
 
@@ -767,9 +767,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is read-only in object type [1] but write-only in object type [2].
             References:
              56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
-                                ^^^^^^ [1]: object type
+                                ^^^^^^ [1]
              56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
-                                                ^^^^^^ [2]: object type
+                                                ^^^^^^ [2]
         `,
       ),
 
@@ -819,9 +819,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                ^^^ Cannot cast \`rwA\` to \`RWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
            References:
              9:     type RWA = {p: A}
-                                   ^ [1]: \`A\`
+                                   ^ [1]
             12:     type RWB = {p: B}
-                                   ^ [2]: \`B\`
+                                   ^ [2]
        `,
      ),
 
@@ -834,9 +834,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                ^^^ Cannot cast \`roA\` to \`RWB\` because in property \`p\`, \`A\` [1] is incompatible with \`B\` [2].
            References:
             10:     type ROA = {+p: A}
-                                    ^ [1]: \`A\`
+                                    ^ [1]
             12:     type RWB = {p: B}
-                                   ^ [2]: \`B\`
+                                   ^ [2]
        `,
      ),
 

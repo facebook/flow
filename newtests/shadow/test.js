@@ -23,9 +23,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                ^^^ Cannot cast \`o.p\` to string because number [1] is incompatible with string [2].
            References:
             10: proto.p = 0;
-                          ^ [1]: number
+                          ^ [1]
              8: (o.p: string);
-                      ^^^^^^ [2]: string
+                      ^^^^^^ [2]
        `,
      ),
   ]),
@@ -47,18 +47,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                       ^^^ Cannot cast \`a.p\` to string because boolean [1] is incompatible with string [2].
             References:
              11: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
               7:       (a.p: string);
-                             ^^^^^^ [2]: string
+                             ^^^^^^ [2]
 
           test.js:8
             8:       (b.p: number);
                       ^^^ Cannot cast \`b.p\` to number because boolean [1] is incompatible with number [2].
             References:
              11: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
               8:       (b.p: number);
-                             ^^^^^^ [2]: number
+                             ^^^^^^ [2]
         `,
       ),
   ]),
@@ -82,9 +82,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`a.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
               7:       a.p = 0;
-                             ^ [1]: number
+                             ^ [1]
              12: (a.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       ),
 
@@ -97,9 +97,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`b.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
               8:       b.p = "";
-                             ^^ [1]: string
+                             ^^ [1]
              14: (b.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       ),
 
@@ -112,36 +112,36 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
              16: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
              12: (a.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
 
           test.js:12
            12: (a.p: void);
                 ^^^ Cannot cast \`a.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
               8:       b.p = "";
-                             ^^ [1]: string
+                             ^^ [1]
              12: (a.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
 
           test.js:14
            14: (b.p: void);
                 ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
              16: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
              14: (b.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
 
           test.js:14
            14: (b.p: void);
                 ^^^ Cannot cast \`b.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
               7:       a.p = 0;
-                             ^ [1]: number
+                             ^ [1]
              14: (b.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       ),
   ]),
@@ -160,9 +160,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                     ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because in property \`p\`, number [1] is incompatible with string [2].
             References:
               5:       proto.p = 0;
-                                 ^ [1]: number
+                                 ^ [1]
               8: var o: {p: string} = Object.create(proto);
-                            ^^^^^^ [2]: string
+                            ^^^^^^ [2]
         `,
       ),
   ]),
@@ -183,9 +183,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                                     ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because property \`p\` is missing in \`Object.create\` [1] but exists in object type [2].
             References:
               7: var o: {p: string} = Object.create(proto);
-                                      ^^^^^^^^^^^^^^^^^^^^ [1]: \`Object.create\`
+                                      ^^^^^^^^^^^^^^^^^^^^ [1]
               7: var o: {p: string} = Object.create(proto);
-                        ^^^^^^^^^^^ [2]: object type
+                        ^^^^^^^^^^^ [2]
         `,
       ),
 
@@ -197,9 +197,9 @@ export default suite(({addFile, addFiles, addCode}) => [
                          ^ Cannot assign \`0\` to \`proto.p\` because number [1] is incompatible with string [2].
             References:
               9: proto.p = 0;
-                           ^ [1]: number
+                           ^ [1]
               7: var o: {p: string} = Object.create(proto);
-                            ^^^^^^ [2]: string
+                            ^^^^^^ [2]
         `,
       ),
   ]),
@@ -228,18 +228,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                         ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
              13: o.p = true;
-                       ^^^^ [1]: boolean
+                       ^^^^ [1]
               7:         (o.p: number);
-                               ^^^^^^ [2]: number
+                               ^^^^^^ [2]
 
           test.js:9
             9:         (o.p: string);
                         ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
              13: o.p = true;
-                       ^^^^ [1]: boolean
+                       ^^^^ [1]
               9:         (o.p: string);
-                               ^^^^^^ [2]: string
+                               ^^^^^^ [2]
         `,
       ),
   ]),
@@ -267,18 +267,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                         ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
              13:         o.p = 0;
-                               ^ [1]: number
+                               ^ [1]
               7:         (o.p: void);
-                               ^^^^ [2]: undefined
+                               ^^^^ [2]
 
           test.js:7
             7:         (o.p: void);
                         ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
              15:         o.p = "";
-                               ^^ [1]: string
+                               ^^ [1]
               7:         (o.p: void);
-                               ^^^^ [2]: undefined
+                               ^^^^ [2]
         `,
       ),
   ]),
@@ -305,18 +305,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                         ^^^ Cannot cast \`a.p\` to number because boolean [1] is incompatible with number [2].
             References:
              15: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
               9:         (a.p: number);
-                               ^^^^^^ [2]: number
+                               ^^^^^^ [2]
 
           test.js:11
            11:         (b.p: string);
                         ^^^ Cannot cast \`b.p\` to string because boolean [1] is incompatible with string [2].
             References:
              15: proto.p = true;
-                           ^^^^ [1]: boolean
+                           ^^^^ [1]
              11:         (b.p: string);
-                               ^^^^^^ [2]: string
+                               ^^^^^^ [2]
         `,
       ),
   ]),
@@ -341,18 +341,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
             References:
               7:         o.p = 0;
-                               ^ [1]: number
+                               ^ [1]
              13: (o.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
 
           test.js:13
            13: (o.p: void);
                 ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
               9:         o.p = "";
-                               ^^ [1]: string
+                               ^^ [1]
              13: (o.p: void);
-                       ^^^^ [2]: undefined
+                       ^^^^ [2]
         `,
       ),
   ]),
@@ -380,18 +380,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                         ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
             References:
               7:         o.p = true;
-                               ^^^^ [1]: boolean
+                               ^^^^ [1]
              13:         (o.p: number); // error: void ~> number
-                               ^^^^^^ [2]: number
+                               ^^^^^^ [2]
 
           test.js:15
            15:         (o.p: string); // error: void ~> string
                         ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
             References:
               7:         o.p = true;
-                               ^^^^ [1]: boolean
+                               ^^^^ [1]
              15:         (o.p: string); // error: void ~> string
-                               ^^^^^^ [2]: string
+                               ^^^^^^ [2]
         `,
       ),
   ]),

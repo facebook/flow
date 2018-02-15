@@ -1,7 +1,7 @@
 first status, after recheck
 Error ------------------------------------------------------------------------------------------------------ test.js:5:5
 
-Cannot call `bar` with `5` bound to `str` because number is incompatible with string.
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
 
 
 
@@ -9,7 +9,7 @@ Found 1 error
 second status, after touch
 Error ------------------------------------------------------------------------------------------------------ test.js:5:5
 
-Cannot call `bar` with `5` bound to `str` because number is incompatible with string.
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
 
 
 
@@ -17,7 +17,7 @@ Found 1 error
 third status, after modification
 Error ------------------------------------------------------------------------------------------------------ test.js:5:5
 
-Cannot call `bar` with `5` bound to `str` because number is incompatible with string.
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
 
 
 

@@ -42,7 +42,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                   ^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
             References:
               5: var myStr = "hello";
-                             ^^^^^^^ [1]: string
+                             ^^^^^^^ [1]
         `,
       )
   ]),

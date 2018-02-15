@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error: commonjs-pascal.js:6
@@ -45,12 +45,12 @@ Error: commonjs-pascal.js:6
 
 Error ------------------------------------------------------------------------------------------ commonjs-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react`.
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error: commonjs.js:6
@@ -95,12 +95,12 @@ Error: commonjs.js:6
 
 Error ------------------------------------------------------------------------------------------------- commonjs.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react`.
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
 
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error: es-default-pascal.js:6
@@ -145,32 +145,32 @@ Error: es-default-pascal.js:6
 
 Error ---------------------------------------------------------------------------------------- es-default-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react`.
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:5:25
 
-Cannot get `React.Node` because property `Node` is missing in object type.
+Cannot get `React.Node` because property `Node` is missing in object type [1].
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:6:12
 
-Cannot get `React.Node` because property `Node` is missing in object type.
+Cannot get `React.Node` because property `Node` is missing in object type [1].
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in object type.
+Cannot get `React.Missing` because property `Missing` is missing in object type [1].
 
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error: es-namespace-pascal.js:6
@@ -215,12 +215,12 @@ Error: es-namespace-pascal.js:6
 
 Error -------------------------------------------------------------------------------------- es-namespace-pascal.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `React`.
+Cannot get `React.Missing` because property `Missing` is missing in module `React` [1].
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` is incompatible with number.
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
 
 
 Error: es-namespace.js:6
@@ -265,7 +265,7 @@ Error: es-namespace.js:6
 
 Error --------------------------------------------------------------------------------------------- es-namespace.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react`.
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
 
 
 
