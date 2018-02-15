@@ -2,6 +2,15 @@ Error --------------------------------------------------------------------------
 
 Cannot reassign constant `x` [1].
 
+   test.js:17:3
+   17|   x = "hey"; // error, const param cannot be reassigned
+         ^
+
+References:
+   test.js:16:26
+   16| function cannot_reassign(x: string) {
+                                ^^^^^^^^^ [1]
+
 
 
 Found 1 error

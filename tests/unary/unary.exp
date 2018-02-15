@@ -2,70 +2,199 @@ Error --------------------------------------------------------------------------
 
 string [1] is not a number.
 
+   unary.js:8:10
+   8|   return -y; // error, we don't allow coercion here
+               ^^
+
+References:
+   unary.js:7:16
+   7| function x1(y: string): number {
+                     ^^^^^^ [1]
+
 
 Error --------------------------------------------------------------------------------------------------- unary.js:12:11
 
 string [1] is incompatible with number [2].
+
+   unary.js:12:11
+   12|   return ~y;  // error, we don't allow coercion here
+                 ^
+
+References:
+   unary.js:11:16
+   11| function x3(y: string) {
+                      ^^^^^^ [1]
+   unary.js:12:10
+   12|   return ~y;  // error, we don't allow coercion here
+                ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:19:2
 
 Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2].
 
+   unary.js:19:2
+   19| (-1: void); // error, number ~> void
+        ^^ [1]
+
+References:
+   unary.js:19:6
+   19| (-1: void); // error, number ~> void
+            ^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   update.js:12:5
+   12|     y++; // error, we don't allow coercion here
+           ^
+
+References:
+   update.js:11:15
+   11|   function(y: string) {
+                     ^^^^^^ [1]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
 Cannot assign number to `y` because number [1] is incompatible with string [2].
+
+   update.js:12:5
+   12|     y++; // error, we don't allow coercion here
+           ^^^ [1]
+
+References:
+   update.js:11:15
+   11|   function(y: string) {
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- update.js:14:5
 
 Cannot assign number to `y` because number [1] is incompatible with string [2].
 
+   update.js:14:5
+   14|     y++; // error, but you still can't write a number to a string
+           ^^^ [1]
+
+References:
+   update.js:11:15
+   11|   function(y: string) {
+                     ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   update.js:18:5
+   18|     y--; // error, we don't allow coercion here
+           ^
+
+References:
+   update.js:17:15
+   17|   function(y: string) {
+                     ^^^^^^ [1]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
 Cannot assign number to `y` because number [1] is incompatible with string [2].
+
+   update.js:18:5
+   18|     y--; // error, we don't allow coercion here
+           ^^^ [1]
+
+References:
+   update.js:17:15
+   17|   function(y: string) {
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:5
 
 Cannot assign number to `y` because number [1] is incompatible with string [2].
 
+   update.js:22:5
+   22|     ++y; // error, we don't allow coercion here
+           ^^^ [1]
+
+References:
+   update.js:21:15
+   21|   function(y: string) {
+                     ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:7
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   update.js:22:7
+   22|     ++y; // error, we don't allow coercion here
+             ^
+
+References:
+   update.js:21:15
+   21|   function(y: string) {
+                     ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:5
 
 Cannot assign number to `y` because number [1] is incompatible with string [2].
 
+   update.js:26:5
+   26|     --y; // error, we don't allow coercion here
+           ^^^ [1]
+
+References:
+   update.js:25:15
+   25|   function(y: string) {
+                     ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:7
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   update.js:26:7
+   26|     --y; // error, we don't allow coercion here
+             ^
+
+References:
+   update.js:25:15
+   25|   function(y: string) {
+                     ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- update.js:31:5
 
 Cannot reassign constant `y` [1].
 
+   update.js:31:5
+   31|     y++; // error, can't update const
+           ^
+
+References:
+   update.js:30:11
+   30|     const y = 123;
+                 ^ [1]
+
 
 Error --------------------------------------------------------------------------------------------------- update.js:32:5
 
 Cannot reassign constant `y` [1].
+
+   update.js:32:5
+   32|     y--; // error, can't update const
+           ^
+
+References:
+   update.js:30:11
+   30|     const y = 123;
+                 ^ [1]
 
 
 

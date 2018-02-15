@@ -2,10 +2,34 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o[A.FOO]` to empty because null [1] is incompatible with empty [2].
 
+   b.js:11:2
+   11| (o[A.FOO]: empty); // error: null ~> empty
+        ^^^^^^^^
+
+References:
+   b.js:10:15
+   10| var o = {[k]: null};
+                     ^^^^ [1]
+   b.js:11:12
+   11| (o[A.FOO]: empty); // error: null ~> empty
+                  ^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------------------- c.js:11:2
 
 Cannot cast `o[k]` to empty because null [1] is incompatible with empty [2].
+
+   c.js:11:2
+   11| (o[k]: empty); // error: null ~> empty
+        ^^^^
+
+References:
+   c.js:9:19
+    9| var o = {[A.FOO]: null};
+                         ^^^^ [1]
+   c.js:11:8
+   11| (o[k]: empty); // error: null ~> empty
+              ^^^^^ [2]
 
 
 

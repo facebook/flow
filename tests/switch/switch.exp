@@ -2,60 +2,195 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   switch.js:28:13
+   28|         x = x*x;
+                   ^
+
+References:
+   switch.js:23:19
+   23|     var x = b? 0: "";
+                         ^^ [1]
+
 
 Error -------------------------------------------------------------------------------------------------- switch.js:28:15
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   switch.js:28:15
+   28|         x = x*x;
+                     ^
+
+References:
+   switch.js:23:19
+   23|     var x = b? 0: "";
+                         ^^ [1]
 
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:16:6
 
 Cannot cast `a` to string because number [1] is incompatible with string [2].
 
+   switch_default_fallthrough.js:16:6
+   16|     (a : string); // error, string | number ~/> string
+            ^
+
+References:
+   switch_default_fallthrough.js:10:13
+   10|         a = 0;
+                   ^ [1]
+   switch_default_fallthrough.js:16:10
+   16|     (a : string); // error, string | number ~/> string
+                ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:17:6
 
 Cannot cast `a` to number because string [1] is incompatible with number [2].
+
+   switch_default_fallthrough.js:17:6
+   17|     (a : number); // error, string | number ~/> number
+            ^
+
+References:
+   switch_default_fallthrough.js:5:13
+    5|     var a = "";
+                   ^^ [1]
+   switch_default_fallthrough.js:17:10
+   17|     (a : number); // error, string | number ~/> number
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:21:12
 
 Cannot return `b` because number [1] is incompatible with string [2].
 
+   switch_default_fallthrough.js:21:12
+   21|     return b; // error, number ~/> string
+                  ^
+
+References:
+   switch_default_fallthrough.js:12:13
+   12|         b = 0;
+                   ^ [1]
+   switch_default_fallthrough.js:4:26
+    4| function foo(x : mixed): string {
+                                ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:39:6
 
 Cannot cast `a` to string because number [1] is incompatible with string [2].
+
+   switch_default_fallthrough.js:39:6
+   39|     (a : string); // error, string | number ~/> string
+            ^
+
+References:
+   switch_default_fallthrough.js:30:13
+   30|         a = 0;
+                   ^ [1]
+   switch_default_fallthrough.js:39:10
+   39|     (a : string); // error, string | number ~/> string
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:40:6
 
 Cannot cast `a` to number because string [1] is incompatible with number [2].
 
+   switch_default_fallthrough.js:40:6
+   40|     (a : number); // error, string | number ~/> number
+            ^
+
+References:
+   switch_default_fallthrough.js:25:13
+   25|     var a = "";
+                   ^^ [1]
+   switch_default_fallthrough.js:40:10
+   40|     (a : number); // error, string | number ~/> number
+                ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:43:6
 
 Cannot cast `b` to string because number [1] is incompatible with string [2].
+
+   switch_default_fallthrough.js:43:6
+   43|     (b : string); // error, string | number ~/> string
+            ^
+
+References:
+   switch_default_fallthrough.js:35:13
+   35|         b = 0;
+                   ^ [1]
+   switch_default_fallthrough.js:43:10
+   43|     (b : string); // error, string | number ~/> string
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:44:6
 
 Cannot cast `b` to number because string [1] is incompatible with number [2].
 
+   switch_default_fallthrough.js:44:6
+   44|     (b : number); // error, string | number ~/> number
+            ^
+
+References:
+   switch_default_fallthrough.js:26:13
+   26|     var b = "";
+                   ^^ [1]
+   switch_default_fallthrough.js:44:10
+   44|     (b : number); // error, string | number ~/> number
+                ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:46:12
 
 Cannot return `a + b` because string [1] is incompatible with number [2].
+
+   switch_default_fallthrough.js:46:12
+   46|     return a+b; // error, string ~/> number
+                  ^^^ [1]
+
+References:
+   switch_default_fallthrough.js:24:25
+   24| function baz(x: mixed): number {
+                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ trailing_cases.js:23:18
 
 Cannot assign `x` to `y` because string [1] is incompatible with number [2].
 
+   trailing_cases.js:23:18
+   23|   var y:number = x; // error, number | string ~/> number
+                        ^
+
+References:
+   trailing_cases.js:19:9
+   19|     x = "2";
+               ^^^ [1]
+   trailing_cases.js:23:9
+   23|   var y:number = x; // error, number | string ~/> number
+               ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------ trailing_cases.js:39:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+
+   trailing_cases.js:39:18
+   39|   var y:number = x; // error, number | uninitialized ~/> number
+                        ^
+
+References:
+   trailing_cases.js:27:7
+   27|   var x;
+             ^ [1]
+   trailing_cases.js:39:9
+   39|   var y:number = x; // error, number | uninitialized ~/> number
+               ^^^^^^ [2]
 
 
 

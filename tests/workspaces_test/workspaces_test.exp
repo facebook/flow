@@ -2,10 +2,28 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `123` to `bWorkspaceType` because number [1] is incompatible with string [2].
 
+   bar/index.js:8:46
+   8| export const bWorkspaceType: WorkspaceType = 123; // Error: number ~> string
+                                                   ^^^ [1]
+
+References:
+   bar/index.js:8:30
+   8| export const bWorkspaceType: WorkspaceType = 123; // Error: number ~> string
+                                   ^^^^^^^^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------- foo/index.js:10:46
 
 Cannot assign `'123'` to `bWorkspaceType` because string [1] is incompatible with number [2].
+
+   foo/index.js:10:46
+   10| export const bWorkspaceType: WorkspaceType = '123'; // Error: string ~> number
+                                                    ^^^^^ [1]
+
+References:
+   foo/index.js:10:30
+   10| export const bWorkspaceType: WorkspaceType = '123'; // Error: string ~> number
+                                    ^^^^^^^^^^^^^ [2]
 
 
 

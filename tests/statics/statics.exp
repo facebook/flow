@@ -1,31 +1,94 @@
-Error --------------------------------------------------------------------------------------------- class_statics.js:6:3
+Error --------------------------------------------------------------------------------------------- class_statics.js:6:1
 
 Cannot assign function to `C.g` because property `g` is missing in statics of `C` [1].
+
+   class_statics.js:6:1
+   6| C.g = function(x:string) { C.f(x); };
+      ^^^
+
+References:
+   class_statics.js:1:7
+   1| class C {
+            ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- class_statics.js:6:32
 
 Cannot call `C.f` with `x` bound to `x` because string [1] is incompatible with number [2].
 
+   class_statics.js:6:32
+   6| C.g = function(x:string) { C.f(x); };
+                                     ^
+
+References:
+   class_statics.js:6:18
+   6| C.g = function(x:string) { C.f(x); };
+                       ^^^^^^ [1]
+   class_statics.js:2:14
+   2|   static f(x:number) { }
+                   ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------- class_statics.js:7:5
 
 Cannot call `C.g` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   class_statics.js:7:5
+   7| C.g(0);
+          ^ [1]
+
+References:
+   class_statics.js:6:18
+   6| C.g = function(x:string) { C.f(x); };
+                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_statics.js:9:16
 
 Cannot assign `C.x` to `x` because string [1] is incompatible with number [2].
 
+   class_statics.js:9:16
+   9| var x:number = C.x;
+                     ^^^
+
+References:
+   class_statics.js:3:12
+   3|   static x:string;
+                 ^^^^^^ [1]
+   class_statics.js:9:7
+   9| var x:number = C.x;
+            ^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------- class_statics.js:10:7
 
 Cannot assign `0` to `C.x` because number [1] is incompatible with string [2].
 
+   class_statics.js:10:7
+   10| C.x = 0;
+             ^ [1]
+
+References:
+   class_statics.js:3:12
+    3|   static x:string;
+                  ^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------- funstatics.js:5:16
 
 Cannot assign `new C().f()` to `x` because number [1] is incompatible with string [2].
+
+   funstatics.js:5:16
+   5| var x:string = new C().f();
+                     ^^^^^^^^^^^
+
+References:
+   funstatics.js:2:41
+   2| C.prototype.f = function() { return C.g(0); }
+                                              ^ [1]
+   funstatics.js:5:7
+   5| var x:string = new C().f();
+            ^^^^^^ [2]
 
 
 

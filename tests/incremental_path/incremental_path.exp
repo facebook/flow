@@ -4,6 +4,18 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `require(...)` to boolean because number [1] is incompatible with boolean [2].
 
+   dir/a.js:2:2
+   2| (require('b'): boolean);
+       ^^^^^^^^^^^^
+
+References:
+   dir/node_modules/b.js:2:18
+   2| module.exports = 0;
+                       ^ [1]
+   dir/a.js:2:16
+   2| (require('b'): boolean);
+                     ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -13,6 +25,18 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `require(...)` to boolean because string [1] is incompatible with boolean [2].
 
+   dir/a.js:2:2
+   2| (require('b'): boolean);
+       ^^^^^^^^^^^^
+
+References:
+   node_modules/b.js:2:18
+   2| module.exports = "";
+                       ^^ [1]
+   dir/a.js:2:16
+   2| (require('b'): boolean);
+                     ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -21,6 +45,18 @@ Should resolve to dir/node_modules/b.js which is number
 Error ----------------------------------------------------------------------------------------------------- dir/a.js:2:2
 
 Cannot cast `require(...)` to boolean because number [1] is incompatible with boolean [2].
+
+   dir/a.js:2:2
+   2| (require('b'): boolean);
+       ^^^^^^^^^^^^
+
+References:
+   dir/node_modules/b.js:2:18
+   2| module.exports = 0;
+                       ^ [1]
+   dir/a.js:2:16
+   2| (require('b'): boolean);
+                     ^^^^^^^ [2]
 
 
 

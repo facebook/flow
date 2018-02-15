@@ -2,10 +2,16 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve module `Exists3`.
 
+   12| var m2 = require('2DoesntExist'); // Error
+                        ^^^^^^^^^^^^^^
+
 
 Error ------------------------------------------------------------------------------------------------------- A.js:13:33
 
 Cannot resolve module `Exists4`.
+
+   13| import {numVal as numVal2} from '3DoesntExist'; // Error
+                                       ^^^^^^^^^^^^^^
 
 
 

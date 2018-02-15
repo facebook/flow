@@ -7,6 +7,18 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:5:5
+   5| if (x) { /* sketchy */ }
+          ^
+
+References:
+   test.js:3:9
+   3| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:3:8
+   3| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -18,6 +30,9 @@ After fixing the lint error, leaving the suppression:
 Warning --------------------------------------------------------------------------------------------------- test.js:4:22
 
 Unused suppression comment.
+
+   4| //flowlint-next-line sketchy-null:off
+                           ^^^^^^^^^^^^^^^^
 
 
 

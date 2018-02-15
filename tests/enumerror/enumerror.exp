@@ -2,10 +2,33 @@ Error --------------------------------------------------------------------------
 
 Property `PAUSE` is missing in object type [1].
 
+   enumerror.js:10:18
+   10| isActive({state: 'PAUSE'});
+                        ^^^^^^^
+
+References:
+   enumerror.js:3:37
+                                           v
+    3| function isActive(ad: {state: $Keys<{
+    4|     PAUSED: string;
+    5|     ACTIVE: string;
+    6|     DELETED: string;
+    7| }>}): boolean {
+       ^ [1]
+
 
 Error ----------------------------------------------------------------------------------------------- enumerror.js:20:19
 
 Property `PAUSE` is missing in `typeof MyStates` [1].
+
+   enumerror.js:20:19
+   20| isActive2({state: 'PAUSE'});
+                         ^^^^^^^
+
+References:
+   enumerror.js:17:38
+   17| function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
+                                            ^^^^^^^^^^^^^^^ [1]
 
 
 

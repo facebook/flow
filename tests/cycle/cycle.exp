@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `B`.
 
+   5| module.exports = B;
+                       ^
+
 
 
 Found 1 error

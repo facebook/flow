@@ -2,25 +2,80 @@ Error --------------------------------------------------------------------------
 
 Property `LOCATION` is missing in object literal [1].
 
+   enum_client.js:6:5
+   6| foo("LOCATION"); // error
+          ^^^^^^^^^^
+
+References:
+   enum.js:1:15
+                    v
+   1| var APIKeys = {
+   2|     AGE: 'age',
+   3|     NAME: 'name',
+   4| };
+      ^ [1]
+
 
 Error ---------------------------------------------------------------------------------------------- enum_client.js:10:5
 
 Property `name` is missing in object type [1].
+
+   enum_client.js:10:5
+   10| bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
+           ^^^^^^^^^^^^
+
+References:
+   enum_client.js:8:23
+    8| function bar(x: $Keys<{age: number}>) { }
+                             ^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:17:19
 
 Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2].
 
+   enum_client.js:17:19
+   17| var name:number = object[APIKeys.NAME]; // error: object.name is a string
+                         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   enum_client.js:14:24
+   14| object[APIKeys.NAME] = "FOO"; // i.e., object.name = "FOO"
+                              ^^^^^ [1]
+   enum_client.js:17:10
+   17| var name:number = object[APIKeys.NAME]; // error: object.name is a string
+                ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:21:18
 
 Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2].
 
+   enum_client.js:21:18
+   21| var red:string = tuple[indices.red]; // error: tuple[0] is a number
+                        ^^^^^^^^^^^^^^^^^^
+
+References:
+   enum_client.js:20:14
+   20| var tuple = [42, "hello", false];
+                    ^^ [1]
+   enum_client.js:21:9
+   21| var red:string = tuple[indices.red]; // error: tuple[0] is a number
+               ^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- number.js:6:10
 
 string [1] is not a number.
+
+   number.js:6:10
+   6|   return -x;
+               ^^
+
+References:
+   number.js:5:19
+   5| function test2(x: string): number {
+                        ^^^^^^ [1]
 
 
 

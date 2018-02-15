@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Octal literals are not allowed in strict mode.
 
+   3| (01: number);
+       ^^
+
 
 
 Found 1 error

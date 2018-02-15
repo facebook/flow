@@ -3,6 +3,9 @@ Error --------------------------------------------------------------------------
 
 Unexpected end of input
 
+   4|
+      
+
 
 
 Found 1 error
@@ -10,6 +13,9 @@ syntax_error.js (no filename)
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
 Unexpected end of input
+
+   4|
+      
 
 
 
@@ -22,6 +28,15 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^
+
+References:
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
@@ -32,6 +47,15 @@ not_flow.js with --all
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^
+
+References:
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^ [1]
 
 
 
@@ -48,6 +72,15 @@ not_flow.js with --respect-pragma and --all
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^
+
+References:
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^ [1]
 
 
 

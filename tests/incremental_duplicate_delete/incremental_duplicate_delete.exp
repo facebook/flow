@@ -7,6 +7,15 @@ Error --------------------------------------------------------------------------
 
 Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
 
+   B.js:1:1
+   1| /**
+      
+
+References:
+   A.js:1:1
+   1| /**
+       [1]
+
 
 
 Found 1 error

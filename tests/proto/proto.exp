@@ -2,30 +2,96 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
 
+   annot.js:3:2
+   3| (o.p: empty); // error: number ~> empty
+       ^^^
+
+References:
+   annot.js:1:14
+   1| type O = {p: number, __proto__: {q: string}};
+                   ^^^^^^ [1]
+   annot.js:3:7
+   3| (o.p: empty); // error: number ~> empty
+            ^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- annot.js:4:2
 
 Cannot cast `o.q` to empty because string [1] is incompatible with empty [2].
 
+   annot.js:4:2
+   4| (o.q: empty); // error: string ~> empty
+       ^^^
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:8:12
+References:
+   annot.js:1:37
+   1| type O = {p: number, __proto__: {q: string}};
+                                          ^^^^^^ [1]
+   annot.js:4:7
+   4| (o.q: empty); // error: string ~> empty
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- annot.js:8:2
 
 Cannot cast object literal to `O` because in property `q`, number [1] is incompatible with string [2].
 
+   annot.js:8:2
+   8| ({p: 0, q: 0}: O); // error: number ~> string
+       ^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- annot.js:9:24
+References:
+   annot.js:8:12
+   8| ({p: 0, q: 0}: O); // error: number ~> string
+                 ^ [1]
+   annot.js:1:37
+   1| type O = {p: number, __proto__: {q: string}};
+                                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- annot.js:9:2
 
 Cannot cast object literal to `O` because in property `q`, number [1] is incompatible with string [2].
+
+   annot.js:9:2
+   9| ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   annot.js:9:24
+   9| ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                             ^ [1]
+   annot.js:1:37
+   1| type O = {p: number, __proto__: {q: string}};
+                                          ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:10:2
 
 Cannot cast object literal to `O` because property `q` is missing in object literal [1] but exists in object type [2].
 
+   annot.js:10:2
+   10| ({p: 0}: O); // error, property `q` not found
+        ^^^^^^ [1]
 
-Error --------------------------------------------------------------------------------------------------- annot.js:15:13
+References:
+   annot.js:10:10
+   10| ({p: 0}: O); // error, property `q` not found
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:15:2
 
 Cannot get `o_optional.q` because property `q` is missing in `O_optional` [1].
+
+   annot.js:15:2
+   15| (o_optional.q: empty); // error: property `q` not found
+        ^^^^^^^^^^^^
+
+References:
+   annot.js:14:25
+   14| declare var o_optional: O_optional;
+                               ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:16:2
@@ -34,115 +100,346 @@ Cannot cast `o_optional.__proto__` to empty because:
  - object type [1] is incompatible with empty [2].
  - undefined [1] is incompatible with empty [2].
 
+   annot.js:16:2
+   16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------------------------------------------------- annot.js:21:13
+References:
+   annot.js:13:33
+   13| type O_optional = { __proto__?: { q: 0 } };
+                                       ^^^^^^^^ [1]
+   annot.js:16:24
+   16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+                              ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:21:2
 
 Cannot get `o_variance.q` because property `q` is missing in `O_variance` [1].
+
+   annot.js:21:2
+   21| (o_variance.q: empty); // error: property `q` not found
+        ^^^^^^^^^^^^
+
+References:
+   annot.js:20:25
+   20| declare var o_variance: O_variance;
+                               ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:22:2
 
 Cannot cast `o_variance.__proto__` to empty because object type [1] is incompatible with empty [2].
 
+   annot.js:22:2
+   22| (o_variance.__proto__: empty); // error: object type ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------------------------------------------------- annot.js:27:13
+References:
+   annot.js:19:33
+   19| type O_variance = { +__proto__: { q: 0 } };
+                                       ^^^^^^^^ [1]
+   annot.js:22:24
+   22| (o_variance.__proto__: empty); // error: object type ~> empty
+                              ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:27:2
 
 Cannot get `o_callable.q` because property `q` is missing in `O_callable` [1].
+
+   annot.js:27:2
+   27| (o_callable.q: empty); // error: property `q` not found
+        ^^^^^^^^^^^^
+
+References:
+   annot.js:26:25
+   26| declare var o_callable: O_callable;
+                               ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:28:2
 
 Cannot cast `o_callable.__proto__` to empty because object type [1] is incompatible with empty [2].
 
+   annot.js:28:2
+   28| (o_callable.__proto__: empty); // error: object type ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   annot.js:25:42
+   25| type O_callable = { (): void, __proto__: {} };
+                                                ^^ [1]
+   annot.js:28:24
+   28| (o_callable.__proto__: empty); // error: object type ~> empty
+                              ^^^^^ [2]
+
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:33:2
 
 Cannot cast `o_method.__proto__` to empty because function type [1] is incompatible with empty [2].
+
+   annot.js:33:2
+   33| (o_method.__proto__: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   annot.js:31:19
+   31| type O_method = { __proto__(): void };
+                         ^^^^^^^^^^^^^^^^^ [1]
+   annot.js:33:22
+   33| (o_method.__proto__: empty); // error: function ~> empty
+                            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:37:2
 
 Cannot cast `o_loop.p` to empty because number literal `0` [1] is incompatible with empty [2].
 
+   annot.js:37:2
+   37| (o_loop.p: empty); // error: number ~> empty
+        ^^^^^^^^
+
+References:
+   annot.js:35:20
+   35| type O_loop = { p: 0, __proto__: O_loop };
+                          ^ [1]
+   annot.js:37:12
+   37| (o_loop.p: empty); // error: number ~> empty
+                  ^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- annot.js:40:31
 
 Cannot use number [1] as a prototype. Expected an object or null.
+
+   annot.js:40:31
+   40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
+                                     ^^^^^^
+
+References:
+   annot.js:40:31
+   40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
+                                     ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- literal.js:2:2
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
 
+   literal.js:2:2
+   2| (o.p: empty); // error: number ~> empty
+       ^^^
+
+References:
+   literal.js:1:14
+   1| var o = { p: 0, __proto__: { q: 1 } };
+                   ^ [1]
+   literal.js:2:7
+   2| (o.p: empty); // error: number ~> empty
+            ^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- literal.js:3:2
 
 Cannot cast `o.q` to empty because number [1] is incompatible with empty [2].
 
+   literal.js:3:2
+   3| (o.q: empty); // error: number ~> empty
+       ^^^
 
-Error --------------------------------------------------------------------------------------------------- literal.js:6:8
+References:
+   literal.js:1:33
+   1| var o = { p: 0, __proto__: { q: 1 } };
+                                      ^ [1]
+   literal.js:3:7
+   3| (o.q: empty); // error: number ~> empty
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- literal.js:6:2
 
 Cannot get `o_get.q` because property `q` is missing in object literal [1].
 
+   literal.js:6:2
+   6| (o_get.q: empty); // error: property `q` not found
+       ^^^^^^^
 
-Error -------------------------------------------------------------------------------------------------- literal.js:10:8
+References:
+   literal.js:5:13
+   5| var o_get = { get __proto__() { return { q: 1 } } };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- literal.js:10:2
 
 Cannot get `o_set.__proto__` because property `__proto__` is not readable.
+
+   10| (o_set.__proto__: empty); // error: read from contravariant prop
+        ^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- literal.js:13:2
 
 Cannot cast `o_method.__proto__` to empty because function [1] is incompatible with empty [2].
 
+   literal.js:13:2
+   13| (o_method.__proto__: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------- literal.js:17:14
+References:
+   literal.js:12:27
+   12| var o_method = { __proto__() {} };
+                                 ^^ [1]
+   literal.js:13:22
+   13| (o_method.__proto__: empty); // error: function ~> empty
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- literal.js:17:2
 
 Cannot get `o_shorthand.q` because property `q` is missing in object literal [1].
+
+   literal.js:17:2
+   17| (o_shorthand.q: empty); // error: property `q` not found
+        ^^^^^^^^^^^^^
+
+References:
+   literal.js:16:19
+   16| var o_shorthand = { __proto__ };
+                         ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- literal.js:20:18
 
 Mutating this prototype is unsupported.
 
+   20| var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
+                        ^^^^^^^^^^^^^^^^^^^^
+
 
 Error -------------------------------------------------------------------------------------------------- literal.js:21:2
 
 Cannot cast `o_computed.__proto__` to empty because object literal [1] is incompatible with empty [2].
+
+   literal.js:21:2
+   21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   literal.js:20:18
+   20| var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
+                        ^^^^^^^^^^^^^^^^^^^^ [1]
+   literal.js:21:24
+   21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
+                              ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- literal.js:23:33
 
 Cannot use uninitialized variable [1] as a prototype. Expected an object or null.
 
+   literal.js:23:33
+   23| var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                                       ^^^^^^
+
+References:
+   literal.js:23:5
+   23| var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+           ^^^^^^ [1]
+
 
 Error -------------------------------------------------------------------------------------------------- literal.js:24:2
 
 Cannot cast `o_loop.p` to empty because number [1] is incompatible with empty [2].
 
+   literal.js:24:2
+   24| (o_loop.p: empty); // error: number ~> empty
+        ^^^^^^^^
 
-Error -------------------------------------------------------------------------------------------------- literal.js:25:9
+References:
+   literal.js:23:19
+   23| var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                         ^ [1]
+   literal.js:24:12
+   24| (o_loop.p: empty); // error: number ~> empty
+                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- literal.js:25:2
 
 Cannot get `o_loop.q` because property `q` is missing in object literal [1].
+
+   literal.js:25:2
+   25| (o_loop.q: empty); // error: property `q` not found
+        ^^^^^^^^
+
+References:
+   literal.js:23:14
+   23| var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- literal.js:27:30
 
 Cannot use number [1] as a prototype. Expected an object or null.
 
+   literal.js:27:30
+   27| var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
+                                    ^
 
-Error ------------------------------------------------------------------------------------------------------ null.js:5:8
+References:
+   literal.js:27:30
+   27| var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
+                                    ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ null.js:5:1
 
 Cannot call `o_null.toString` because property `toString` is missing in object literal [1].
+
+   null.js:5:1
+   5| o_null.toString(); // property `toString` not found
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   null.js:4:14
+   4| var o_null = { p: 0, __proto__: null }
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- null.js:13:2
 
 Cannot cast `o_shadow.p` to string because number [1] is incompatible with string [2].
 
+   null.js:13:2
+   13| (o_shadow.p: string);
+        ^^^^^^^^^^
+
+References:
+   null.js:14:14
+   14| o_shadow.p = 0; // error: number ~> string
+                    ^ [1]
+   null.js:13:14
+   13| (o_shadow.p: string);
+                    ^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- null.js:18:4
 
 Cannot cast `o_nonstrict.p` to empty because property `p` of unknown type [1] is incompatible with empty [2].
+
+   null.js:18:4
+   18|   (o_nonstrict.p: empty); // error: mixed ~> empty
+          ^^^^^^^^^^^^^
+
+References:
+   null.js:17:5
+   17| if (o_nonstrict.p) {
+           ^^^^^^^^^^^^^ [1]
+   null.js:18:19
+   18|   (o_nonstrict.p: empty); // error: mixed ~> empty
+                         ^^^^^ [2]
 
 
 

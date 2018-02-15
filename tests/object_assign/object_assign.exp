@@ -2,66 +2,215 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2].
 
+   A.js:13:19
+   13| var bad: number = Bad.foo();
+                         ^^^^^^^^^
+
+References:
+   A.js:9:20
+    9|   foo: function(): string { return 'hi'; }
+                          ^^^^^^ [1]
+   A.js:13:10
+   13| var bad: number = Bad.foo();
+                ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------- A.js:21:20
 
 Cannot assign `Good.foo()` to `good` because string [1] is incompatible with number [2].
+
+   A.js:21:20
+   21| var good: number = Good.foo();
+                          ^^^^^^^^^^
+
+References:
+   A.js:18:20
+   18|   foo: function(): string { return 'hi'; }
+                          ^^^^^^ [1]
+   A.js:21:11
+   21| var good: number = Good.foo();
+                 ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- B.js:7:20
 
 Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with number [2].
 
+   B.js:7:20
+    7| var good: number = A.Good.foo(); // string ~> number
+                          ^^^^^^^^^^^^
+
+References:
+   A.js:18:20
+   18|   foo: function(): string { return 'hi'; }
+                          ^^^^^^ [1]
+   B.js:7:11
+    7| var good: number = A.Good.foo(); // string ~> number
+                 ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------- B.js:10:20
 
 Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2].
+
+   B.js:10:20
+   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                          ^^^
+
+References:
+   A.js:9:20
+    9|   foo: function(): string { return 'hi'; }
+                          ^^^^^^ [1]
+   B.js:10:11
+   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- B.js:10:20
 
 Cannot call `f` because property `foo` is missing in global object [1] but exists in object literal [2].
 
+   B.js:10:20
+   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                          ^^^ [1]
+
+References:
+   A.js:8:25
+    8| var Bad = Object.assign({}, EventEmitter.prototype, {
+                               ^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------- B.js:12:19
 
 Cannot assign `A.Bad.foo()` to `bad` because string [1] is incompatible with number [2].
+
+   B.js:12:19
+   12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+                         ^^^^^^^^^^^
+
+References:
+   A.js:9:20
+    9|   foo: function(): string { return 'hi'; }
+                          ^^^^^^ [1]
+   B.js:12:10
+   12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
 Property `a` is missing in string [1].
 
+   non_objects.js:3:1
+   3| Object.assign("123", {a: "foo"});
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   non_objects.js:3:15
+   3| Object.assign("123", {a: "foo"});
+                    ^^^^^ [1]
+
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:4:1
 
 Property `a` is missing in number [1].
+
+   non_objects.js:4:1
+   4| Object.assign(123, {a: "foo"});
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   non_objects.js:4:15
+   4| Object.assign(123, {a: "foo"});
+                    ^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:5:1
 
 number [1] is not an object.
 
+   non_objects.js:5:1
+   5| Object.assign({a: "foo"}, 123);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   non_objects.js:5:27
+   5| Object.assign({a: "foo"}, 123);
+                                ^^^ [1]
+
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:2
 
 Cannot cast `Object.assign(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+
+   spread.js:7:2
+   7| (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:3:37
+   3| declare var arrOfObjs: Array<{ foo: string }>;
+                                          ^^^^^^ [1]
+   spread.js:7:42
+   7| (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
+                                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:8:2
 
 Cannot cast `Object.assign(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
 
+   spread.js:8:2
+   8| (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:4:47
+   4| declare var roArrOfObjs: $ReadOnlyArray<{foo: string}>;
+                                                    ^^^^^^ [1]
+   spread.js:8:44
+   8| (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
+                                                 ^^^^^^ [2]
+
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:9:2
 
 Cannot cast `Object.assign(...)` to object type because in property `bar`, number [1] is incompatible with boolean [2].
 
+   spread.js:9:2
+   9| (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------------------------------------------------------- spread.js:13:19
+References:
+   spread.js:5:40
+   5| declare var tup: [{foo: string}, {bar: number}];
+                                             ^^^^^^ [1]
+   spread.js:9:49
+   9| (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
+                                                      ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:11:2
 
 Cannot cast `Object.assign(...)` to object type because in property `b`, string [1] is incompatible with boolean literal
 `true` [2].
+
+   spread.js:11:2
+        v-------------
+   11| (Object.assign(
+   12|   {},
+   13|   ...[{a: 1}, {b: 'foo'}],
+   14|   ...[{c: true}],
+   15| ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
+       ^
+
+References:
+   spread.js:13:19
+   13|   ...[{a: 1}, {b: 'foo'}],
+                         ^^^^^ [1]
+   spread.js:15:19
+   15| ): {a: number, b: true, c: boolean}); // Error: 'foo' => true
+                         ^^^^ [2]
 
 
 

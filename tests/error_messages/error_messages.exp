@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `define`.
 
+   1| if (typeof define === 'function' && define.amd) { }
+                 ^^^^^^
+
 
 
 Found 1 error

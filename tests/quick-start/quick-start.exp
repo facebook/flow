@@ -11,6 +11,15 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `0` to string because number [1] is incompatible with string [2].
 
+   a.js:4:2
+   4| (0: string);
+       ^ [1]
+
+References:
+   a.js:4:5
+   4| (0: string);
+          ^^^^^^ [2]
+
 
 
 Found 1 error
@@ -22,6 +31,15 @@ Revert file, expect error again.
 Error --------------------------------------------------------------------------------------------------------- a.js:4:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2].
+
+   a.js:4:2
+   4| (0: string);
+       ^ [1]
+
+References:
+   a.js:4:5
+   4| (0: string);
+          ^^^^^^ [2]
 
 
 

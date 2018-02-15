@@ -7,6 +7,18 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -18,11 +30,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -35,6 +71,18 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -46,11 +94,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -63,6 +135,18 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -74,11 +158,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -96,11 +204,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -113,11 +245,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -130,11 +286,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -147,11 +327,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -164,11 +368,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 
@@ -181,11 +409,35 @@ Error --------------------------------------------------------------------------
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
 
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 (`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
 
 
 

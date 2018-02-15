@@ -1,21 +1,57 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:5:28
+Error ----------------------------------------------------------------------------------------------------- test.js:5:11
 
 Cannot get `this.constructor.x` because property `x` is missing in statics of `C` [1].
 
+   test.js:5:11
+   5|   qux() { this.constructor.x; }
+                ^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:3
+References:
+   test.js:1:7
+   1| class C {
+            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot get `C.x` because property `x` is missing in statics of `C` [1].
 
+   test.js:7:1
+   7| C.x;
+      ^^^
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:6
+References:
+   test.js:1:7
+   1| class C {
+            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot call `foo.bar` because undefined [1] is not a function.
 
+   test.js:13:2
+   13| (foo.bar(): string); // error, could be undefined
+        ^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:6
+References:
+   exports_optional_prop.js:4:9
+    4|   bar?: () => string
+               ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:4
 
 Cannot call `x.bar` because undefined [1] is not a function.
+
+   test.js:16:4
+   16|   (x.bar(): string); // error. caused by `f(foo)`; annotate x to track it down.
+          ^^^^^^^
+
+References:
+   exports_optional_prop.js:4:9
+    4|   bar?: () => string
+               ^^^^^^^^^^^^ [1]
 
 
 

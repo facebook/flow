@@ -3,21 +3,60 @@ Error --------------------------------------------------------------------------
 Cannot call `veryOptimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
 literal `true` [2].
 
+   boolean.js:8:34
+   8| var y : boolean = veryOptimistic(false); // error
+                                       ^^^^^ [1]
+
+References:
+   boolean.js:3:40
+   3| function veryOptimistic(isThisAwesome: true): boolean {
+                                             ^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------- boolean.js:15:35
 
 Cannot call `veryPessimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
 literal `true` [2].
 
+   boolean.js:15:35
+   15| var y : boolean = veryPessimistic(false); // error
+                                         ^^^^^ [1]
+
+References:
+   boolean.js:10:41
+   10| function veryPessimistic(isThisAwesome: true): boolean {
+                                               ^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------- boolean.js:21:12
 
 Cannot return `x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
 
+   boolean.js:21:12
+   21|     return x;
+                  ^
+
+References:
+   boolean.js:19:17
+   19| function bar(x: MyOwnBooleanLOL): false {
+                       ^^^^^^^^^^^^^^^ [1]
+   boolean.js:19:35
+   19| function bar(x: MyOwnBooleanLOL): false {
+                                         ^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------- boolean.js:23:12
 
 Cannot return `!x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+
+   boolean.js:23:12
+   23|     return !x;
+                  ^^ [1]
+
+References:
+   boolean.js:19:35
+   19| function bar(x: MyOwnBooleanLOL): false {
+                                         ^^^^^ [2]
 
 
 Error: boolean.js:29
@@ -46,10 +85,28 @@ Error --------------------------------------------------------------------------
 
 Cannot call `highlander` with `2` bound to `howMany` because number [1] is incompatible with number literal `1` [2].
 
+   number.js:8:12
+   8| highlander(2); // error
+                 ^ [1]
+
+References:
+   number.js:3:30
+   3| function highlander(howMany: 1): number {
+                                   ^ [2]
+
 
 Error --------------------------------------------------------------------------------------------------- number.js:19:5
 
 Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with number enum [2].
+
+   number.js:19:5
+   19| bar(3); // error
+           ^ [1]
+
+References:
+   number.js:13:19
+   13| function bar(num: Foo): number {
+                         ^^^ [2]
 
 
 

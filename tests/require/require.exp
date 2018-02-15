@@ -2,35 +2,83 @@ Error --------------------------------------------------------------------------
 
 Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
 
+   require.js:9:14
+   9| takesAString(A.numberValue);
+                   ^^^^^^^^^^^^^
+
+References:
+   ProvidesModuleA.js:6:23
+   6| exports.numberValue = 42;
+                            ^^ [1]
+   require.js:4:28
+   4| function takesAString(str: string): void {}
+                                 ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------- require.js:14:14
 
 Cannot call `takesAString` with `B.numberValue` bound to `str` because number [1] is incompatible with string [2].
+
+   require.js:14:14
+   14| takesAString(B.numberValue);
+                    ^^^^^^^^^^^^^
+
+References:
+   B.js:3:23
+    3| exports.numberValue = 42;
+                             ^^ [1]
+   require.js:4:28
+    4| function takesAString(str: string): void {}
+                                  ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- require.js:17:9
 
 Cannot resolve module `C`.
 
+   17| require("C");
+               ^^^
+
 
 Error -------------------------------------------------------------------------------------------------- require.js:20:9
 
 Cannot resolve module `./D`.
 
+   20| require("./D");
+               ^^^^^
 
-Error -------------------------------------------------------------------------------------------------- require.js:25:3
+
+Error -------------------------------------------------------------------------------------------------- require.js:25:1
 
 Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1].
+
+   require.js:25:1
+   25| E.stringValue; // Error: The E exports obj has no 'stringValue' property
+       ^^^^^^^^^^^^^
+
+References:
+   E.js:6:18
+                        v
+    6| module.exports = {
+    7|   numberValue: 42
+    8| };
+       ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- require.js:30:1
 
 The parameter passed to `require` must be a string literal.
 
+   30| require(a); // Error: Param must be string literal
+       ^^^^^^^^^^
+
 
 Error -------------------------------------------------------------------------------------------------- require.js:32:1
 
 The parameter passed to `require` must be a string literal.
+
+   32| require(`${'./E'}`); // error: but only if they have no expressions
+       ^^^^^^^^^^^^^^^^^^^
 
 
 

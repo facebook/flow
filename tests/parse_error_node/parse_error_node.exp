@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Unexpected token #
 
+   3| function foo() { ### // invalid token
+                       ^
+
 
 
 Found 1 error

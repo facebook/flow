@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Computed property keys not supported.
 
+   7|   [computed]: string;
+        ^^^^^^^^^^^^^^^^^^^
+
 
 
 Found 1 error

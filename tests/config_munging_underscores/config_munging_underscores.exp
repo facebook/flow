@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Cannot import `_p` because there is no `_p` export in `./commonjs_export`.
 
+   3| import {_p} from "./commonjs_export";
+              ^^
+
 
 
 Found 1 error

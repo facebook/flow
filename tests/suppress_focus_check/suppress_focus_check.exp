@@ -5,10 +5,16 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -19,10 +25,16 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -32,6 +44,9 @@ Focused check on focused.js only reports focused's unused suppression
 Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -45,10 +60,16 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

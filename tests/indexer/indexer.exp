@@ -2,10 +2,31 @@ Error --------------------------------------------------------------------------
 
 Cannot return object literal because in the indexer property's key, string `foo` [1] is incompatible with number [2].
 
+   A.js:13:10
+   13|   return { foo: "bar" }
+                ^^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------------- A.js:18:17
+References:
+   A.js:12:25
+   12| function foo2(): {[key: number]: string} {
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:18:10
 
 Cannot return object literal because in property `foo`, string [1] is incompatible with number [2].
+
+   A.js:18:10
+   18|   return { foo: "bar" }
+                ^^^^^^^^^^^^^^
+
+References:
+   A.js:18:17
+   18|   return { foo: "bar" }
+                       ^^^^^ [1]
+   A.js:17:34
+   17| function foo3(): {[key: string]: number} {
+                                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
@@ -14,10 +35,37 @@ Cannot return object literal because:
  - in the indexer property's key, string `foo` [1] is incompatible with number [2].
  - in property `foo`, string [3] is incompatible with number [4].
 
+   A.js:23:10
+   23|   return { foo: "bar" }
+                ^^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------------- A.js:38:17
+References:
+   A.js:22:25
+   22| function foo4(): {[key: number]: number} {
+                               ^^^^^^ [2]
+   A.js:23:17
+   23|   return { foo: "bar" }
+                       ^^^^^ [3]
+   A.js:22:34
+   22| function foo4(): {[key: number]: number} {
+                                        ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:38:10
 
 Cannot return object literal because in property `foo`, string [1] is incompatible with number [2].
+
+   A.js:38:10
+   38|   return { foo: "bar" }
+                ^^^^^^^^^^^^^^
+
+References:
+   A.js:38:17
+   38|   return { foo: "bar" }
+                       ^^^^^ [1]
+   A.js:37:47
+   37| function foo7(): {[key: string]: number; foo: number} {
+                                                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ call.js:4:2
@@ -26,10 +74,25 @@ Cannot cast `y` to object type because:
  - object type [1] is incompatible with function prototype [2].
  - a callable signature is missing in object type [1] but exists in object type [2].
 
+   call.js:4:2
+   4| (y: {(number): string});
+       ^
+
+References:
+   call.js:3:16
+   3| declare var y: {[string]: boolean};
+                     ^^^^^^^^^^^^^^^^^^^ [1]
+   call.js:4:5
+   4| (y: {(number): string});
+          ^^^^^^^^^^^^^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------------- multiple.js:7:7
 
 Multiple indexers are not supported.
+
+   7|       [k2: number]: number, // error: not supported (yet)
+            ^^^^^^^^^^^^^^^^^^^^
 
 
 

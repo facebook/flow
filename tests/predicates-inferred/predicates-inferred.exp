@@ -2,45 +2,127 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x` because array type [1] is incompatible with string [2].
 
+   sanity-multi-params.js:10:12
+   10|     return x;
+                  ^
 
-Error ------------------------------------------------------------------------------------- sanity-multi-params.js:12:14
+References:
+   sanity-multi-params.js:8:26
+    8| function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]
+   sanity-multi-params.js:8:42
+    8| function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- sanity-multi-params.js:12:12
 
 Cannot call `x.join` because property `join` is missing in `String` [1].
+
+   sanity-multi-params.js:12:12
+   12|     return x.join();
+                  ^^^^^^^^
+
+References:
+   sanity-multi-params.js:8:17
+    8| function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- sanity-ordering.js:7:4
 
 Cannot cast `obj.page` to object type because null or undefined [1] is incompatible with object type [2].
 
+   sanity-ordering.js:7:4
+   7|   (obj.page: Object);
+         ^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:17
+References:
+   sanity-ordering.js:4:26
+   4| declare var obj: { page: ?Object; };
+                               ^^^^^^^ [1]
+   sanity-ordering.js:7:14
+   7|   (obj.page: Object);
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:12
 
 Cannot get `head[key]` because an indexer property is missing in undefined [1].
 
+   sanity-ordering.js:15:12
+   15|     head = head[key] || create && (head[key] = {});
+                  ^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:41
+References:
+   sanity-ordering.js:6:5
+    6| if (dotAccess(obj)) {
+           ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:36
 
 Cannot assign object literal to `head[key]` because an indexer property is missing in undefined [1].
+
+   sanity-ordering.js:15:36
+   15|     head = head[key] || create && (head[key] = {});
+                                          ^^^^^^^^^
+
+References:
+   sanity-ordering.js:6:5
+    6| if (dotAccess(obj)) {
+           ^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:12
 
 Cannot return `x` because array type [1] is incompatible with string [2].
 
+   sanity-unbound-var.js:13:12
+   13|     return x;
+                  ^
 
-Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:15:14
+References:
+   sanity-unbound-var.js:11:26
+   11| function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]
+   sanity-unbound-var.js:11:42
+   11| function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:15:12
 
 Cannot call `x.join` because property `join` is missing in `String` [1].
+
+   sanity-unbound-var.js:15:12
+   15|     return x.join();
+                  ^^^^^^^^
+
+References:
+   sanity-unbound-var.js:11:17
+   11| function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- sanity.js:5:20
 
 Cannot declare predicate when a function body is present.
 
+   5| function check(y): %checks(typeof y === "string") {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Error -------------------------------------------------------------------------------------------------- sanity.js:16:41
 
 Invalid body for predicate function. Expected a simple return statement as body.
+
+                                               v
+   16| function indirect_is_number(y): %checks {
+   17|   var y = 1;
+   18|   return typeof y === "number";
+   19| }
+       ^
 
 
 

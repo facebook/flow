@@ -24,30 +24,93 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
 
+   overload.js:7:18
+     7| var x1: number = "".match(0)[0];
+                         ^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------- overload.js:7:30
+References:
+   <BUILTINS>/core.js:301:44
+   301|     match(regexp: string | RegExp): ?Array<string>;
+                                                   ^^^^^^ [1]
+   overload.js:7:9
+     7| var x1: number = "".match(0)[0];
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
 Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
+
+   overload.js:7:18
+     7| var x1: number = "".match(0)[0];
+                         ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:301:37
+   301|     match(regexp: string | RegExp): ?Array<string>;
+                                            ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
 Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
 
+   overload.js:7:27
+     7| var x1: number = "".match(0)[0];
+                                  ^ [1]
+
+References:
+   <BUILTINS>/core.js:301:19
+   301|     match(regexp: string | RegExp): ?Array<string>;
+                          ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
 Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
 
+   overload.js:8:18
+     8| var x2: number = "".match(/pattern/)[0];
+                         ^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------- overload.js:8:38
+References:
+   <BUILTINS>/core.js:301:44
+   301|     match(regexp: string | RegExp): ?Array<string>;
+                                                   ^^^^^^ [1]
+   overload.js:8:9
+     8| var x2: number = "".match(/pattern/)[0];
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
 Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
+
+   overload.js:8:18
+     8| var x2: number = "".match(/pattern/)[0];
+                         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:301:37
+   301|     match(regexp: string | RegExp): ?Array<string>;
+                                            ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
 
 Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
+
+   overload.js:10:18
+    10| var x4: number = "".split(/pattern/)[0];
+                         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:309:63
+   309|     split(separator?: string | RegExp, limit?: number): Array<string>;
+                                                                      ^^^^^^ [1]
+   overload.js:10:9
+    10| var x4: number = "".split(/pattern/)[0];
+                ^^^^^^ [2]
 
 
 Error: overload.js:24
@@ -143,6 +206,18 @@ Error: overload.js:32
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
 
 Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2].
+
+   test2.js:7:2
+   7| (foo.bar('hmmm'): number); // error
+       ^^^^^^^^^^^^^^^
+
+References:
+   test2.js:3:19
+   3|   bar(x: string): string;
+                        ^^^^^^ [1]
+   test2.js:7:19
+   7| (foo.bar('hmmm'): number); // error
+                        ^^^^^^ [2]
 
 
 

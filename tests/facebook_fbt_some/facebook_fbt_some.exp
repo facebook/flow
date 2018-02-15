@@ -2,6 +2,18 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `<fbt />` to string because number [1] is incompatible with string [2].
 
+   main.js:4:2
+   4| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+       ^^^^^^^
+
+References:
+   flow-typed/fbt.js:1:12
+   1| type Fbt = number
+                 ^^^^^^ [1]
+   main.js:4:11
+   4| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+                ^^^^^^ [2]
+
 
 
 Found 1 error

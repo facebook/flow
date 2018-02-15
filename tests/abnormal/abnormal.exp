@@ -2,15 +2,24 @@ Error --------------------------------------------------------------------------
 
 Illegal break statement
 
+   3| break; // error, illegal
+      ^^^^^^
+
 
 Error ----------------------------------------------------------------------------------------- toplevel_continue.js:3:1
 
 Illegal continue statement
 
+   3| continue; // error, illegal
+      ^^^^^^^^^
+
 
 Error ------------------------------------------------------------------------------------------- toplevel_return.js:3:1
 
 Illegal return statement
+
+   3| return; // error, illegal
+      ^^^^^^
 
 
 

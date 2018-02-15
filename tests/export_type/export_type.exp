@@ -2,45 +2,132 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
 
+   importer.js:11:23
+   11| var b: inlinedType1 = 'asdf'; // Error: string ~> number
+                             ^^^^^^ [1]
+
+References:
+   importer.js:11:8
+   11| var b: inlinedType1 = 'asdf'; // Error: string ~> number
+              ^^^^^^^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------ importer.js:14:26
 
 Cannot assign `'asdf'` to `d` because string [1] is incompatible with number [2].
+
+   importer.js:14:26
+   14| var d: standaloneType1 = 'asdf'; // Error: string ~> number
+                                ^^^^^^ [1]
+
+References:
+   importer.js:14:8
+   14| var d: standaloneType1 = 'asdf'; // Error: string ~> number
+              ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ importer.js:17:18
 
 Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2].
 
+   importer.js:17:18
+   17| var f: talias1 = 'asdf'; // Error: string ~> number
+                        ^^^^^^ [1]
+
+References:
+   importer.js:17:8
+   17| var f: talias1 = 'asdf'; // Error: string ~> number
+              ^^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------ importer.js:20:18
 
 Cannot assign `'asdf'` to `h` because string [1] is incompatible with number [2].
+
+   importer.js:20:18
+   20| var h: talias3 = 'asdf'; // Error: string ~> number
+                        ^^^^^^ [1]
+
+References:
+   importer.js:20:8
+   20| var h: talias3 = 'asdf'; // Error: string ~> number
+              ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ importer.js:24:18
 
 Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2].
 
+   importer.js:24:18
+   24| var j: talias4 = 'asdf'; // Error: string ~> number
+                        ^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------ importer.js:29:22
+References:
+   importer.js:24:8
+   24| var j: talias4 = 'asdf'; // Error: string ~> number
+              ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.js:29:15
 
 Cannot assign object literal to `l` because in property `prop`, string [1] is incompatible with number [2].
 
+   importer.js:29:15
+   29| var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                     ^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------ importer.js:32:23
+References:
+   importer.js:29:22
+   29| var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                            ^^^^^^ [1]
+   types_only.js:15:31
+   15| export interface IFoo { prop: number };
+                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.js:32:16
 
 Cannot assign object literal to `n` because in property `prop`, number [1] is incompatible with string [2].
+
+   importer.js:32:16
+   32| var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                      ^^^^^^^^^^
+
+References:
+   importer.js:32:23
+   32| var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                             ^^ [1]
+   types_only2.js:5:32
+    5| export interface IFoo2 { prop: string };
+                                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- types_only.js:5:23
 
 Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
 
+   types_only.js:5:23
+   5| var b: inlinedType1 = 'asdf'; // Error: string ~> number
+                            ^^^^^^ [1]
+
+References:
+   types_only.js:5:8
+   5| var b: inlinedType1 = 'asdf'; // Error: string ~> number
+             ^^^^^^^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------- types_only.js:11:9
 
 Cannot reference type `standaloneType2` [1] from a value position.
+
+   types_only.js:11:9
+   11| export {standaloneType2}; // Error: Missing `type` keyword
+               ^^^^^^^^^^^^^^^
+
+References:
+   types_only.js:10:6
+   10| type standaloneType2 = number;
+            ^^^^^^^^^^^^^^^ [1]
 
 
 

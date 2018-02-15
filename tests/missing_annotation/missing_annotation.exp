@@ -2,15 +2,24 @@ Error --------------------------------------------------------------------------
 
 Missing type annotation for `arg`.
 
+   4|   a: function(arg) {  // missing arg annotation
+                    ^^^
+
 
 Error ---------------------------------------------------------------------------------------------------- infer.js:8:15
 
 Missing type annotation for `arg`.
 
+   8|   b: function(arg) {  // missing arg annotation
+                    ^^^
+
 
 Error --------------------------------------------------------------------------------------------------- infer.js:32:21
 
 Missing type annotation for `x`.
+
+   32|     return function(x) {  // missing param annotation
+                           ^
 
 
 

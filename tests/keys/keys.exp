@@ -2,45 +2,135 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2].
 
+   keys.js:10:4
+   10|   (123: $Keys<Object>); // Error: number -> keys of Object
+          ^^^ [1]
+
+References:
+   keys.js:10:9
+   10|   (123: $Keys<Object>); // Error: number -> keys of Object
+               ^^^^^^^^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:21:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+
+   keys.js:21:4
+   21|   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+          ^^^ [1]
+
+References:
+   keys.js:21:9
+   21|   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+               ^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:26:4
 
 some string with unknown value [1] is incompatible with string literal `hi` [2].
 
+   keys.js:26:4
+   26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
+          ^^^
+
+References:
+   keys.js:26:4
+   26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
+          ^^^ [1]
+   keys.js:24:26
+   24| type StrLitDict = {[key: 'hi']: mixed};
+                                ^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:28:6
 
 some string with unknown value [1] is incompatible with string literal `hi` [2].
+
+   keys.js:28:6
+   28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
+            ^^^
+
+References:
+   keys.js:28:6
+   28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
+            ^^^ [1]
+   keys.js:24:26
+   24| type StrLitDict = {[key: 'hi']: mixed};
+                                ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:31:4
 
 property `bye` [1] is incompatible with string literal `hi` [2].
 
+   keys.js:31:4
+   31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
+          ^^^^^
+
+References:
+   keys.js:31:4
+   31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
+          ^^^^^ [1]
+   keys.js:24:26
+   24| type StrLitDict = {[key: 'hi']: mixed};
+                                ^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:33:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+
+   keys.js:33:4
+   33|   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+          ^^^ [1]
+
+References:
+   keys.js:33:9
+   33|   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+               ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:38:4
 
 An indexer property is missing in `ObjLit` [1].
 
+   keys.js:38:4
+   38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
+          ^^^
+
+References:
+   keys.js:38:15
+   38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
+                     ^^^^^^ [1]
+
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:40:6
 
 An indexer property is missing in `ObjLit` [1].
 
+   keys.js:40:6
+   40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
+            ^^^
+
+References:
+   keys.js:40:17
+   40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
+                       ^^^^^^ [1]
+
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:44:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+
+   keys.js:44:4
+   44|   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+          ^^^ [1]
+
+References:
+   keys.js:44:9
+   44|   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+               ^^^^^^^^^^^^^ [2]
 
 
 

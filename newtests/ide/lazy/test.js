@@ -446,6 +446,15 @@ export default suite(({
 
           Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
 
+             test.js:3:17
+             3| var x: string = 123
+                                ^^^ [1]
+
+          References:
+             test.js:3:8
+             3| var x: string = 123
+                       ^^^^^^ [2]
+
 
 
           Found 1 error
@@ -1002,11 +1011,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -1937,6 +1964,15 @@ export default suite(({
 
           Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
 
+             focusedWithCyclicDependency.js:3:17
+             3| var x: string = 123;
+                                ^^^ [1]
+
+          References:
+             focusedWithCyclicDependency.js:3:8
+             3| var x: string = 123;
+                       ^^^^^^ [2]
+
 
 
           Found 1 error
@@ -1982,6 +2018,15 @@ export default suite(({
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
 
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 1 error
@@ -1996,6 +2041,15 @@ export default suite(({
 
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
 
 
 
@@ -2055,11 +2109,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2076,11 +2148,23 @@ export default suite(({
 
           Cannot resolve module \`./dependency\`.
 
+             1| import dependency from './dependency';
+                                       ^^^^^^^^^^^^^^
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2098,11 +2182,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2185,17 +2287,44 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
 
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
           Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
 
           Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
           with string [2].
+
+             otherDependent.js:3:35
+             3| var otherDependentError: string = 123;
+                                                  ^^^ [1]
+
+          References:
+             otherDependent.js:3:26
+             3| var otherDependentError: string = 123;
+                                         ^^^^^^ [2]
 
 
 
@@ -2252,11 +2381,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2274,11 +2421,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2335,11 +2500,29 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
 
 
 
@@ -2357,17 +2540,44 @@ export default suite(({
           Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
           string [2].
 
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
           Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
           string [2].
 
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
           Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
 
           Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
           with string [2].
+
+             otherDependent.js:3:35
+             3| var otherDependentError: string = 123;
+                                                  ^^^ [1]
+
+          References:
+             otherDependent.js:3:26
+             3| var otherDependentError: string = 123;
+                                         ^^^^^^ [2]
 
 
 

@@ -1,25 +1,73 @@
-Error ----------------------------------------------------------------------------------------------------- api.js:11:39
+Error ------------------------------------------------------------------------------------------------------ api.js:11:4
 
 Cannot call `na` with `Children.map(...)` bound to `x` because in type argument `T`, string [1] is incompatible with
 number [2].
 
+   api.js:11:4
+   11| na(Children.map(a, (x: string) => (x: string))); // Error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- api.js:11:24
+References:
+   api.js:11:39
+   11| na(Children.map(a, (x: string) => (x: string))); // Error
+                                             ^^^^^^ [1]
+   api.js:30:22
+   30| function na(x: Array<number>) {}
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:11:20
 
 Cannot call `Children.map` with function bound to `fn` because in the first argument, string [1] is incompatible with
 number [2].
 
+   api.js:11:20
+   11| na(Children.map(a, (x: string) => (x: string))); // Error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- api.js:12:39
+References:
+   api.js:11:24
+   11| na(Children.map(a, (x: string) => (x: string))); // Error
+                              ^^^^^^ [1]
+   api.js:5:25
+    5| const a: ChildrenArray<?number> = [
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ api.js:12:4
 
 Cannot call `sa` with `Children.map(...)` bound to `x` because in type argument `T`, number [1] is incompatible with
 string [2].
+
+   api.js:12:4
+   12| sa(Children.map(a, (x: number) => (x: number))); // Error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   api.js:12:39
+   12| sa(Children.map(a, (x: number) => (x: number))); // Error
+                                             ^^^^^^ [1]
+   api.js:31:22
+   31| function sa(x: Array<string>) {}
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:18
 
 Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T`, null or undefined [1] is
 incompatible with number [2].
+
+   api.js:14:18
+   14| Children.forEach(a, (x: number) => {}); // Error
+                        ^
+
+References:
+   api.js:5:24
+    5| const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [1]
+   api.js:14:25
+   14| Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:16:18
@@ -28,21 +76,72 @@ Cannot call `Children.forEach` with `a` bound to `children` because:
  - in type argument `T`, null or undefined [1] is incompatible with string [2].
  - in type argument `T`, number [3] is incompatible with string [2].
 
+   api.js:16:18
+   16| Children.forEach(a, (x: string) => {}); // Error
+                        ^
+
+References:
+   api.js:5:24
+    5| const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [1]
+   api.js:16:25
+   16| Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [2]
+   api.js:5:25
+    5| const a: ChildrenArray<?number> = [
+                               ^^^^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------------ api.js:19:3
 
 Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is incompatible with string [2].
+
+   api.js:19:3
+    19| s(Children.count(a)); // Error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:236:42
+   236|     count(children: ChildrenArray<any>): number;
+                                                 ^^^^^^ [1]
+   api.js:29:15
+    29| function s(x: string) {}
+                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ api.js:22:3
 
 Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
 
+   api.js:22:3
+   22| s(Children.only(a)); // Error
+         ^^^^^^^^^^^^^^^^
+
+References:
+   api.js:5:25
+    5| const a: ChildrenArray<?number> = [
+                               ^^^^^^ [1]
+   api.js:29:15
+   29| function s(x: string) {}
+                     ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------ api.js:25:4
 
 Cannot call `sa` with `Children.toArray(...)` bound to `x` because in type argument `T`, number [1] is incompatible with
 string [2].
+
+   api.js:25:4
+   25| sa(Children.toArray(a)); // Error
+          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   api.js:5:25
+    5| const a: ChildrenArray<?number> = [
+                               ^^^^^^ [1]
+   api.js:31:22
+   31| function sa(x: Array<string>) {}
+                            ^^^^^^ [2]
 
 
 Error: builtin_intrinsic.js:24
@@ -93,19 +192,46 @@ Error: builtin_intrinsic.js:24
            25:   {{a: 1, b: 2, c: 3}}
                   ^^^^^^^^^^^^^^^^^^ object literal
 
-Error ------------------------------------------------------------------------------------------------ component.js:15:2
+Error ------------------------------------------------------------------------------------------------ component.js:15:1
 
 Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
 
+   component.js:15:1
+   15| <MyComponent />; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------ component.js:16:2
+References:
+   component.js:6:43
+    6| class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ component.js:16:1
 
 Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
 
+   component.js:16:1
+   16| <MyComponent></MyComponent>; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------ component.js:18:2
+References:
+   component.js:6:43
+    6| class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ component.js:18:1
 
 Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
+
+   component.js:18:1
+   18| <MyComponent>{}</MyComponent>; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   component.js:6:43
+    6| class MyComponent extends React.Component<{children: Node}, void> {
+                                                 ^^^^^^^^^^^^^^^^ [2]
 
 
 Error: component.js:40
@@ -156,91 +282,288 @@ Error: component.js:40
            41:   {{a: 1, b: 2, c: 3}}
                   ^^^^^^^^^^^^^^^^^^ object literal
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:23:2
+Error ------------------------------------------------------------------------------------------------------ fun.js:23:1
 
 Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
 
+   fun.js:23:1
+   23| <Fun />; // Error: `children` is required.
+       ^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:27:6
+References:
+   fun.js:16:35
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:27:1
 
 Cannot create `Fun` element because in property `children`, children array [1] is incompatible with `Fn` [2].
 
+   fun.js:27:1
+   27| <Fun>{() => 42}{() => 42}</Fun>; // Error: Two functions are not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:29:6
+References:
+   fun.js:27:6
+   27| <Fun>{() => 42}{() => 42}</Fun>; // Error: Two functions are not allowed.
+            ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:29:1
 
 Cannot create `Fun` element because in property `children`, children array [1] is incompatible with `Fn` [2].
 
+   fun.js:29:1
+   29| <Fun>{() => 42}  </Fun>; // Error: Spaces make it an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:30:6
+References:
+   fun.js:29:6
+   29| <Fun>{() => 42}  </Fun>; // Error: Spaces make it an array.
+            ^^^^^^^^^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:30:1
 
 Cannot create `Fun` element because in property `children`, children array [1] is incompatible with `Fn` [2].
 
+   fun.js:30:1
+   30| <Fun>  {() => 42}</Fun>; // Error: Spaces make it an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:42:12
+References:
+   fun.js:30:6
+   30| <Fun>  {() => 42}</Fun>; // Error: Spaces make it an array.
+            ^^^^^^^^^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:37:1
 
 Cannot create `Fun` element because in property `children` and then the return value, string [1] is incompatible with
 number [2].
+
+   fun.js:37:1
+       v----
+   37| <Fun>
+   38|   {data => {
+   39|     (data.foo: number); // OK: `foo` is a number.
+   40|     (data.bar: string); // Error: `bar` is a number.
+   41|     (data.nope: boolean); // Error: `nope` does not exist.
+   42|     return '42'; // Error: Must return a number.
+   43|   }}
+   44| </Fun>;
+       -----^
+
+References:
+   fun.js:42:12
+   42|     return '42'; // Error: Must return a number.
+                  ^^^^ [1]
+   fun.js:14:21
+   14| type Fn = (Data) => number;
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:40:6
 
 Cannot cast `data.bar` to string because number [1] is incompatible with string [2].
 
+   fun.js:40:6
+   40|     (data.bar: string); // Error: `bar` is a number.
+            ^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:41:11
+References:
+   fun.js:11:8
+   11|   bar: number,
+              ^^^^^^ [1]
+   fun.js:40:16
+   40|     (data.bar: string); // Error: `bar` is a number.
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:41:6
 
 Cannot get `data.nope` because property `nope` is missing in `Data` [1].
 
+   fun.js:41:6
+   41|     (data.nope: boolean); // Error: `nope` does not exist.
+            ^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:46:2
+References:
+   fun.js:14:12
+   14| type Fn = (Data) => number;
+                  ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:46:1
 
 Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
 
+   fun.js:46:1
+   46| <Fun>{}</Fun>; // Error: `void` is not allowed.
+       ^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:47:2
+References:
+   fun.js:16:35
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:47:1
 
 Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
 
+   fun.js:47:1
+   47| <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:48:7
+References:
+   fun.js:16:35
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:48:1
 
 Cannot create `Fun` element because in property `children`, undefined [1] is incompatible with `Fn` [2].
 
+   fun.js:48:1
+   48| <Fun>{undefined}</Fun>; // Error: `undefined` is not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:49:7
+References:
+   <BUILTINS>/core.js:13:24
+   13| declare var undefined: void;
+                              ^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:49:1
 
 Cannot create `Fun` element because in property `children`, null [1] is incompatible with `Fn` [2].
 
+   fun.js:49:1
+   49| <Fun>{null}</Fun>; // Error: `null` is not allowed.
+       ^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:50:7
+References:
+   fun.js:49:7
+   49| <Fun>{null}</Fun>; // Error: `null` is not allowed.
+             ^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:50:1
 
 Cannot create `Fun` element because in property `children`, boolean [1] is incompatible with `Fn` [2].
 
+   fun.js:50:1
+   50| <Fun>{true}</Fun>; // Error: `boolean`s are not allowed.
+       ^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:51:7
+References:
+   fun.js:50:7
+   50| <Fun>{true}</Fun>; // Error: `boolean`s are not allowed.
+             ^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:51:1
 
 Cannot create `Fun` element because in property `children`, boolean [1] is incompatible with `Fn` [2].
 
+   fun.js:51:1
+   51| <Fun>{false}</Fun>; // Error: `boolean`s are not allowed.
+       ^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:52:7
+References:
+   fun.js:51:7
+   51| <Fun>{false}</Fun>; // Error: `boolean`s are not allowed.
+             ^^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:52:1
 
 Cannot create `Fun` element because in property `children`, number [1] is incompatible with `Fn` [2].
 
+   fun.js:52:1
+   52| <Fun>{0}</Fun>; // Error: `number`s are not allowed.
+       ^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:53:7
+References:
+   fun.js:52:7
+   52| <Fun>{0}</Fun>; // Error: `number`s are not allowed.
+             ^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:53:1
 
 Cannot create `Fun` element because in property `children`, number [1] is incompatible with `Fn` [2].
 
+   fun.js:53:1
+   53| <Fun>{42}</Fun>; // Error: `number`s are not allowed.
+       ^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:54:6
+References:
+   fun.js:53:7
+   53| <Fun>{42}</Fun>; // Error: `number`s are not allowed.
+             ^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:54:1
 
 Cannot create `Fun` element because in property `children`, a callable signature is missing in `React.Element` [1] but
 exists in `Fn` [2].
 
+   fun.js:54:1
+   54| <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:56:2
+References:
+   fun.js:54:6
+   54| <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
+            ^^^^^^^^^^^^ [1]
+   fun.js:16:46
+   16| class Fun extends React.Component<{children: Fn}, void> {}
+                                                    ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:56:1
 
 Cannot create `Obj` element because property `children` is missing in props [1] but exists in object type [2].
+
+   fun.js:56:1
+   56| <Obj />; // Error: `children` is required.
+       ^^^^^^^ [1]
+
+References:
+   fun.js:18:35
+   18| class Obj extends React.Component<{children: Data}, void> {}
+                                         ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:60:1
@@ -249,25 +572,91 @@ Cannot create `Obj` element because:
  - in property `children.foo`, string [1] is incompatible with number [2].
  - in property `children.bar`, string [3] is incompatible with number [4].
 
+   fun.js:60:1
+   60| <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:61:6
+References:
+   fun.js:60:13
+   60| <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
+                   ^^^ [1]
+   fun.js:10:8
+   10|   foo: number,
+              ^^^^^^ [2]
+   fun.js:60:23
+   60| <Obj>{{foo: '1', bar: '2'}}</Obj>; // Error: Incorrect types.
+                             ^^^ [3]
+   fun.js:11:8
+   11|   bar: number,
+              ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:61:1
 
 Cannot create `Obj` element because in property `children`, children array [1] is incompatible with `Data` [2].
 
+   fun.js:61:1
+   61| <Obj>{{foo: 1, bar: 2}}{{foo: 1, bar: 2}}</Obj>; // Error: Two objects are not
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:63:6
+References:
+   fun.js:61:6
+   61| <Obj>{{foo: 1, bar: 2}}{{foo: 1, bar: 2}}</Obj>; // Error: Two objects are not
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:18:46
+   18| class Obj extends React.Component<{children: Data}, void> {}
+                                                    ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:63:1
 
 Cannot create `Obj` element because in property `children`, children array [1] is incompatible with `Data` [2].
 
+   fun.js:63:1
+   63| <Obj>{{foo: 1, bar: 2}}  </Obj>; // Error: Spaces make it an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:64:6
+References:
+   fun.js:63:6
+   63| <Obj>{{foo: 1, bar: 2}}  </Obj>; // Error: Spaces make it an array.
+            ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:18:46
+   18| class Obj extends React.Component<{children: Data}, void> {}
+                                                    ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:64:1
 
 Cannot create `Obj` element because in property `children`, children array [1] is incompatible with `Data` [2].
 
+   fun.js:64:1
+   64| <Obj>  {{foo: 1, bar: 2}}</Obj>; // Error: Spaces make it an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:71:16
+References:
+   fun.js:64:6
+   64| <Obj>  {{foo: 1, bar: 2}}</Obj>; // Error: Spaces make it an array.
+            ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:18:46
+   18| class Obj extends React.Component<{children: Data}, void> {}
+                                                    ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:71:1
 
 Cannot create `FunArrayOnly` element because in property `children`, function [1] is incompatible with array type [2].
+
+   fun.js:71:1
+   71| <FunArrayOnly>{() => 42}</FunArrayOnly>; // Error: A single expression is not
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:71:16
+   71| <FunArrayOnly>{() => 42}</FunArrayOnly>; // Error: A single expression is not
+                      ^^^^^^^^ [1]
+   fun.js:20:55
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                             ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:77:1
@@ -276,16 +665,58 @@ Cannot create `FunArrayOnly` element because:
  - in property `children` and then type argument `T`, array literal [1] is incompatible with `Fn` [2].
  - in property `children` and then type argument `T`, array literal [3] is incompatible with `Fn` [2].
 
+   fun.js:77:1
+   77| <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:80:16
+References:
+   fun.js:77:16
+   77| <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+                      ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:20:61
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                                   ^^ [2]
+   fun.js:77:38
+   77| <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+                                            ^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:80:1
 
 Cannot create `FunArrayOnly` element because in property `children` and then type argument `T`, array literal [1] is
 incompatible with `Fn` [2].
 
+   fun.js:80:1
+   80| <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------------------------------------------------ fun.js:84:4
+References:
+   fun.js:80:16
+   80| <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
+                      ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:20:61
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:83:1
 
 Cannot create `FunArrayOnly` element because in property `children`, function [1] is incompatible with array type [2].
+
+   fun.js:83:1
+       v-------------
+   83| <FunArrayOnly>
+   84|   {() => 42}
+   85| </FunArrayOnly>;
+       --------------^
+
+References:
+   fun.js:84:4
+   84|   {() => 42}
+          ^^^^^^^^ [1]
+   fun.js:20:55
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                             ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:108:1
@@ -294,21 +725,66 @@ Cannot create `FunArray` element because:
  - in property `children` and then type argument `T`, array literal [1] is incompatible with `Fn` [2].
  - in property `children` and then type argument `T`, array literal [3] is incompatible with `Fn` [2].
 
+   fun.js:108:1
+   108| <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- fun.js:111:12
+References:
+   fun.js:108:12
+   108| <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
+                   ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:21:62
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                     ^^ [2]
+   fun.js:108:34
+   108| <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
+                                         ^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:111:1
 
 Cannot create `FunArray` element because in property `children` and then type argument `T`, array literal [1] is
 incompatible with `Fn` [2].
 
+   fun.js:111:1
+   111| <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:134:2
+References:
+   fun.js:111:12
+   111| <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
+                   ^^^^^^^^^^^^^^^^^^^^ [1]
+   fun.js:21:62
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                     ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:134:1
 
 Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
 
+   fun.js:134:1
+   134| <FunArray>{}</FunArray>; // Error: `void` is not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- fun.js:135:2
+References:
+   fun.js:21:40
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:135:1
 
 Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
+
+   fun.js:135:1
+   135| <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   fun.js:21:40
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error: fun.js:136
@@ -473,20 +949,44 @@ Error: fun.js:141
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type
 
-Error ---------------------------------------------------------------------------------------------------- fun.js:142:11
+Error ----------------------------------------------------------------------------------------------------- fun.js:142:1
 
 Cannot create `FunArray` element because in property `children`, a callable signature is missing in `React.Element` [1]
 but exists in `Fn` [2].
+
+   fun.js:142:1
+   142| <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:142:11
+   142| <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
+                  ^^^^^^^^^^^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:6
 
 A spread argument is unsupported here.
 
+   7| <Foo>{...["a", "b"]}</Foo>
+           ^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- tabs.js:26:2
+
+Error ----------------------------------------------------------------------------------------------------- tabs.js:26:1
 
 Cannot create `TabBar` element because property `children` is missing in props [1] but exists in object type [2].
+
+   tabs.js:26:1
+   26| <TabBar />; // Error: `children` is required.
+       ^^^^^^^^^^ [1]
+
+References:
+   tabs.js:24:38
+   24| class TabBar extends React.Component<{children: TabBarNode}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error: tabs.js:30
@@ -609,9 +1109,21 @@ Error: tabs.js:32
            16:   | boolean
                    ^^^^^^^ boolean
 
-Error ---------------------------------------------------------------------------------------------------- tabs.js:67:10
+Error ----------------------------------------------------------------------------------------------------- tabs.js:67:1
 
 Cannot create `TabBar` element because in property `children.type`, `NotTab` [1] is incompatible with `Tab` [2].
+
+   tabs.js:67:1
+   67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:1
@@ -620,134 +1132,434 @@ Cannot create `TabBar` element because:
  - in property `children`, type argument `T`, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
  - in property `children`, type argument `T`, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
 
+   tabs.js:68:1
+   68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- tabs.js:73:4
+References:
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- tabs.js:71:1
 
 Cannot create `TabBar` element because in property `children`, type argument `T`, and then property `type`; `NotTab` [1]
 is incompatible with `Tab` [2].
 
+   tabs.js:71:1
+       v-------
+   71| <TabBar>
+   72|   <Tab/>
+   73|   <NotTab/>
+   74|   <Tab/>
+   75|   <Tab/>
+   76| </TabBar>;
+       --------^
 
-Error ------------------------------------------------------------------------------------------------------ text.js:9:2
+References:
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ text.js:9:1
 
 Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
 
+   text.js:9:1
+   9| <Text />; // Error: `children` is required.
+      ^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- text.js:11:2
+References:
+   text.js:5:36
+   5| class Text extends React.Component<{children: string}, void> {}
+                                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:11:1
 
 Cannot create `TextLiteral` element because property `children` is missing in props [1] but exists in object type [2].
 
+   text.js:11:1
+   11| <TextLiteral />; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- text.js:15:2
+References:
+   text.js:7:43
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:15:1
 
 Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
 
+   text.js:15:1
+   15| <Text></Text>; // Error: `children` does not exist.
+       ^^^^^^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- text.js:18:2
+References:
+   text.js:5:36
+    5| class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:18:1
 
 Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
 
+   text.js:18:1
+   18| <Text>{}</Text>; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- text.js:19:2
+References:
+   text.js:5:36
+    5| class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:19:1
 
 Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
 
+   text.js:19:1
+   19| <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- text.js:20:8
+References:
+   text.js:5:36
+    5| class Text extends React.Component<{children: string}, void> {}
+                                          ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:20:1
 
 Cannot create `Text` element because in property `children`, undefined [1] is incompatible with string [2].
 
+   text.js:20:1
+   20| <Text>{undefined}</Text>; // Error: `undefined` is not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:21:8
+References:
+   <BUILTINS>/core.js:13:24
+   13| declare var undefined: void;
+                              ^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:21:1
 
 Cannot create `Text` element because in property `children`, null [1] is incompatible with string [2].
 
+   text.js:21:1
+   21| <Text>{null}</Text>; // Error: `null` is not allowed.
+       ^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:22:8
+References:
+   text.js:21:8
+   21| <Text>{null}</Text>; // Error: `null` is not allowed.
+              ^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:22:1
 
 Cannot create `Text` element because in property `children`, boolean [1] is incompatible with string [2].
 
+   text.js:22:1
+   22| <Text>{true}</Text>; // Error: `boolean`s are not allowed.
+       ^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:23:8
+References:
+   text.js:22:8
+   22| <Text>{true}</Text>; // Error: `boolean`s are not allowed.
+              ^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:23:1
 
 Cannot create `Text` element because in property `children`, boolean [1] is incompatible with string [2].
 
+   text.js:23:1
+   23| <Text>{false}</Text>; // Error: `boolean`s are not allowed.
+       ^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:24:8
+References:
+   text.js:23:8
+   23| <Text>{false}</Text>; // Error: `boolean`s are not allowed.
+              ^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:24:1
 
 Cannot create `Text` element because in property `children`, number [1] is incompatible with string [2].
 
+   text.js:24:1
+   24| <Text>{0}</Text>; // Error: `number`s are not allowed.
+       ^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:25:8
+References:
+   text.js:24:8
+   24| <Text>{0}</Text>; // Error: `number`s are not allowed.
+              ^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:25:1
 
 Cannot create `Text` element because in property `children`, number [1] is incompatible with string [2].
 
+   text.js:25:1
+   25| <Text>{42}</Text>; // Error: `number`s are not allowed.
+       ^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:26:7
+References:
+   text.js:25:8
+   25| <Text>{42}</Text>; // Error: `number`s are not allowed.
+              ^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:26:1
 
 Cannot create `Text` element because in property `children`, `React.Element` [1] is incompatible with string [2].
 
+   text.js:26:1
+   26| <Text><intrinsic/></Text>; // Error: elements are not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- text.js:35:7
-
-Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
-
-
-Error ----------------------------------------------------------------------------------------------------- text.js:36:7
-
-Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
-
-
-Error ----------------------------------------------------------------------------------------------------- text.js:37:7
-
-Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
+References:
+   text.js:26:7
+   26| <Text><intrinsic/></Text>; // Error: elements are not allowed.
+             ^^^^^^^^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- text.js:38:7
+Error ----------------------------------------------------------------------------------------------------- text.js:35:1
 
 Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
 
+   text.js:35:1
+   35| <Text>{'Hello, '}{'world!'}</Text>; // Error: We did not allow an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:48:14
+References:
+   text.js:35:7
+   35| <Text>{'Hello, '}{'world!'}</Text>; // Error: We did not allow an array.
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:36:1
+
+Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
+
+   text.js:36:1
+   36| <Text>Hello, {'world!'}</Text>; // Error: We did not allow an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   text.js:36:7
+   36| <Text>Hello, {'world!'}</Text>; // Error: We did not allow an array.
+             ^^^^^^^^^^^^^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:37:1
+
+Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
+
+   text.js:37:1
+   37| <Text>{'Hello, world!'}  </Text>; // Error: Spaces cause there to be an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   text.js:37:7
+   37| <Text>{'Hello, world!'}  </Text>; // Error: Spaces cause there to be an array.
+             ^^^^^^^^^^^^^^^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:38:1
+
+Cannot create `Text` element because in property `children`, children array [1] is incompatible with string [2].
+
+   text.js:38:1
+   38| <Text>  {'Hello, world!'}</Text>; // Error: Spaces cause there to be an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   text.js:38:7
+   38| <Text>  {'Hello, world!'}</Text>; // Error: Spaces cause there to be an array.
+             ^^^^^^^^^^^^^^^^^^^ [1]
+   text.js:5:47
+    5| class Text extends React.Component<{children: string}, void> {}
+                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:48:1
 
 Cannot create `TextLiteral` element because in property `children`, JSX text [1] is incompatible with string enum [2].
 
+   text.js:48:1
+   48| <TextLiteral>buz</TextLiteral>; // Error: `buz` is not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:49:15
+References:
+   text.js:48:14
+   48| <TextLiteral>buz</TextLiteral>; // Error: `buz` is not allowed.
+                    ^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:49:1
 
 Cannot create `TextLiteral` element because in property `children`, string [1] is incompatible with string enum [2].
 
+   text.js:49:1
+   49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:50:14
+References:
+   text.js:49:15
+   49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
+                     ^^^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:50:1
 
 Cannot create `TextLiteral` element because in property `children`, JSX text [1] is incompatible with string enum [2].
 
+   text.js:50:1
+   50| <TextLiteral>foo  </TextLiteral>; // Error: Spaces are not trimmed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:51:14
+References:
+   text.js:50:14
+   50| <TextLiteral>foo  </TextLiteral>; // Error: Spaces are not trimmed.
+                    ^^^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:51:1
 
 Cannot create `TextLiteral` element because in property `children`, JSX text [1] is incompatible with string enum [2].
 
+   text.js:51:1
+   51| <TextLiteral>  foo</TextLiteral>; // Error: Spaces are not trimmed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:52:14
+References:
+   text.js:51:14
+   51| <TextLiteral>  foo</TextLiteral>; // Error: Spaces are not trimmed.
+                    ^^^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:52:1
 
 Cannot create `TextLiteral` element because in property `children`, children array [1] is incompatible with string
 enum [2].
 
+   text.js:52:1
+   52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- text.js:53:14
+References:
+   text.js:52:14
+   52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
+                    ^^^^^^^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- text.js:53:1
 
 Cannot create `TextLiteral` element because in property `children`, children array [1] is incompatible with string
 enum [2].
 
+   text.js:53:1
+   53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- tuple.js:9:2
+References:
+   text.js:53:14
+   53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.
+                    ^^^^^^^^^ [1]
+   text.js:7:54
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                            ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- tuple.js:9:1
 
 Cannot create `Tuple` element because property `children` is missing in props [1] but exists in object type [2].
 
+   tuple.js:9:1
+   9| <Tuple />; // Error: `children` is required.
+      ^^^^^^^^^ [1]
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:12:8
+References:
+   tuple.js:6:27
+   6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- tuple.js:12:1
 
 Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 4 but tuple type [2]
 has an arity of 3.
+
+   tuple.js:12:1
+   12| <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tuple.js:12:8
+   12| <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple.js:6:38
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:13:1
@@ -758,11 +1570,53 @@ Cannot create `Tuple` element because:
  - in property `children` and then index 1, boolean [5] is incompatible with string [6].
  - in property `children` and then index 2, JSX text [7] is incompatible with number [8].
 
+   tuple.js:13:1
+   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:14:8
+References:
+   tuple.js:13:8
+   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+              ^^ [1]
+   tuple.js:6:39
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                             ^^^^^^^ [2]
+   tuple.js:13:8
+   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+              ^^^^^^^^^^^^^^^ [3]
+   tuple.js:6:38
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   tuple.js:13:11
+   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                 ^^^^ [5]
+   tuple.js:6:48
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                      ^^^^^^ [6]
+   tuple.js:13:16
+   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                      ^^^ [7]
+   tuple.js:6:56
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                              ^^^^^^ [8]
+
+
+Error ---------------------------------------------------------------------------------------------------- tuple.js:14:1
 
 Cannot create `Tuple` element because in property `children`, children array [1] has an arity of 4 but tuple type [2]
 has an arity of 3.
+
+   tuple.js:14:1
+   14| <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tuple.js:14:8
+   14| <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
+              ^^^^^^^^^^^^^^^ [1]
+   tuple.js:6:38
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:16:1
@@ -772,22 +1626,85 @@ Cannot create `Tuple` element because:
  - in property `children` and then index 0, array literal [3] is incompatible with boolean [4].
  - in property `children` and then index 1, array literal [5] is incompatible with string [6].
 
+   tuple.js:16:1
+   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:18:9
+References:
+   tuple.js:16:8
+   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple.js:6:38
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tuple.js:16:9
+   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+               ^^^^^^^^^^^^^^^^^ [3]
+   tuple.js:6:39
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                             ^^^^^^^ [4]
+   tuple.js:16:28
+   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+                                  ^^^^^^^^^^^^^^^^^ [5]
+   tuple.js:6:48
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                      ^^^^^^ [6]
+
+
+Error ---------------------------------------------------------------------------------------------------- tuple.js:18:1
 
 Cannot create `Tuple` element because in property `children`, array literal [1] has an arity of 4 but tuple type [2] has
 an arity of 3.
 
+   tuple.js:18:1
+   18| <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------------------------------------------------- tuple.js:34:12
+References:
+   tuple.js:18:9
+   18| <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
+               ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple.js:6:38
+    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- tuple.js:34:1
 
 Cannot create `TupleOne` element because in property `children`, boolean [1] is incompatible with tuple type [2].
 
+   tuple.js:34:1
+   34| <TupleOne>{true}</TupleOne>; // Error: A single expression is not an array.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------------------------------------------------- view.js:31:2
+References:
+   tuple.js:34:12
+   34| <TupleOne>{true}</TupleOne>; // Error: A single expression is not an array.
+                  ^^^^ [1]
+   tuple.js:7:51
+    7| class TupleOne extends React.Component<{children: [boolean]}, void> {}
+                                                         ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- view.js:31:1
 
 Cannot create `View` element because in property `children`, property `a` is missing in `React.Element` [1] but exists
 in object literal [2].
+
+   view.js:31:1
+       v-----
+   31| <View>
+   32|   {{a: 1, b: 2, c: 3}}
+   33| </View>;
+       ------^
+
+References:
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [1]
+   view.js:32:4
+   32|   {{a: 1, b: 2, c: 3}}
+          ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error: view.js:35

@@ -2,35 +2,119 @@ Error --------------------------------------------------------------------------
 
 Cannot return `y` because in type argument `A`, number [1] is incompatible with string [2].
 
+   issue-598.js:7:48
+   7| function bar(y: F<number>): F<string> { return y; }
+                                                     ^
+
+References:
+   issue-598.js:7:19
+   7| function bar(y: F<number>): F<string> { return y; }
+                        ^^^^^^ [1]
+   issue-598.js:7:31
+   7| function bar(y: F<number>): F<string> { return y; }
+                                    ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
 Cannot cast `p.x` to string because number [1] is incompatible with string [2].
+
+   test.js:6:2
+   6| (p.x: string); // error
+       ^^^
+
+References:
+   test.js:5:10
+   5| var p: P<number> = new P;
+               ^^^^^^ [1]
+   test.js:6:7
+   6| (p.x: string); // error
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2
 
 Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
 
+   test.js:9:2
+   9| (pstar: number); // error, but limit potentially unbounded number of errors!
+       ^^^^^
+
+References:
+   test.js:8:12
+   8| var pstar: Pstar<number> = 0; // OK
+                 ^^^^^^^^^^^^^ [1]
+   test.js:9:9
+   9| (pstar: number); // error, but limit potentially unbounded number of errors!
+              ^^^^^^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot cast `pstar.x` to string because number [1] is incompatible with string [2].
+
+   test.js:13:2
+   13| (pstar.x: string); // error
+        ^^^^^^^
+
+References:
+   test.js:5:10
+    5| var p: P<number> = new P;
+                ^^^^^^ [1]
+   test.js:13:11
+   13| (pstar.x: string); // error
+                 ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
 Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
 
+   test.js:16:2
+   16| (pstar.x: string); // error
+        ^^^^^^^
 
-Error --------------------------------------------------------------------------------------------------- test2.js:30:12
+References:
+   test.js:15:19
+   15| pstar = (new P: P<P<number>>); // OK
+                         ^^^^^^^^^ [1]
+   test.js:16:11
+   16| (pstar.x: string); // error
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:30:3
 
 Cannot cast `new C()` to `D` because in type argument `X`, number [1] is incompatible with string [2].
+
+   test2.js:30:3
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+         ^^^^^^^^^^^^^^^^
+
+References:
+   test2.js:30:12
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+                  ^^^^^^ [1]
+   test2.js:30:24
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+                              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
 Cannot return `x` because in the return value, a callable signature is missing in `Q` [1] but exists in `P` [2].
+
+   test3.js:13:10
+   13|   return x; // terminate despite expanding types, error
+                ^
+
+References:
+   test3.js:10:19
+   10| type P<X> = () => Q<P<X>>;
+                         ^^^^^^^ [1]
+   test3.js:12:35
+   12| function bar(x: P<number>): () => P<number> {
+                                         ^^^^^^^^^ [2]
 
 
 

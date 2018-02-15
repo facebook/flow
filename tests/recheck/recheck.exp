@@ -4,10 +4,28 @@ Error --------------------------------------------------------------------------
 
 Cannot return `5` because number [1] is incompatible with string [2].
 
+   a1.js:3:42
+   3| function foo(x: number): string { return 5; }
+                                               ^ [1]
+
+References:
+   a1.js:3:26
+   3| function foo(x: number): string { return 5; }
+                               ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
 Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): string { return 5; }
+                      ^^^^^^ [2]
 
 
 
@@ -16,10 +34,28 @@ Error --------------------------------------------------------------------------
 
 Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
 
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
 
 Cannot cast `five + five` to string because number [1] is incompatible with string [2].
+
+   a3.js:5:2
+   5| (five + five: string);
+       ^^^^^^^^^^^ [1]
+
+References:
+   a3.js:5:15
+   5| (five + five: string);
+                    ^^^^^^ [2]
 
 
 
@@ -28,15 +64,42 @@ Error --------------------------------------------------------------------------
 
 Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
 
+   a1.js:5:5
+   5| foo("");
+          ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
 Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
 
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
 
 Cannot cast `five + five` to string because number [1] is incompatible with string [2].
+
+   a3.js:5:2
+   5| (five + five: string);
+       ^^^^^^^^^^^ [1]
+
+References:
+   a3.js:5:15
+   5| (five + five: string);
+                    ^^^^^^ [2]
 
 
 
@@ -46,6 +109,15 @@ Test b:
 Error -------------------------------------------------------------------------------------------------------- b3.js:5:2
 
 Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
+
+   b3.js:5:2
+   5| (new D: C);
+       ^^^^^ [1]
+
+References:
+   b3.js:5:9
+   5| (new D: C);
+              ^ [2]
 
 
 
@@ -58,11 +130,29 @@ Error --------------------------------------------------------------------------
 Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists
 in object type [2].
 
+   c2.js:6:7
+   6|   foo({ y: 0 });
+            ^^^^^^^^ [1]
+
+References:
+   c1.js:3:28
+   3| export function foo(props: { x: number }) { }
+                                 ^^^^^^^^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
 in object type [2].
+
+   c3.js:5:5
+   5| bar({ x: 0 });
+          ^^^^^^^^ [1]
+
+References:
+   c2.js:5:28
+   5| export function bar(props: { y: number }) {
+                                 ^^^^^^^^^^^^^ [2]
 
 
 
@@ -72,6 +162,15 @@ Error --------------------------------------------------------------------------
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
 in object type [2].
 
+   c3.js:5:5
+   5| bar({ x: 0 });
+          ^^^^^^^^ [1]
+
+References:
+   c2.js:5:28
+   5| export function bar(props: { y: number }) {
+                                 ^^^^^^^^^^^^^ [2]
+
 
 
 Found 1 error
@@ -80,6 +179,18 @@ Test d:
 Error ------------------------------------------------------------------------------------------------------- d2.js:4:19
 
 Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
+
+   d2.js:4:19
+   4| export var y: A = x;
+                        ^
+
+References:
+   d1.js:5:16
+   5| export var x = new B;
+                     ^^^^^ [1]
+   d2.js:4:15
+   4| export var y: A = x;
+                    ^ [2]
 
 
 
@@ -128,6 +239,18 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
 
+   f2.js:4:2
+   4| (c: { x: number });
+       ^
+
+References:
+   f1.js:4:15
+   4| type S = { x: string };
+                    ^^^^^^ [1]
+   f2.js:4:10
+   4| (c: { x: number });
+               ^^^^^^ [2]
+
 
 
 Found 1 error
@@ -136,6 +259,18 @@ No errors!
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
 Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
+
+   f2.js:4:2
+   4| (c: { x: number });
+       ^
+
+References:
+   f1.js:4:15
+   4| type S = { x: string };
+                    ^^^^^^ [1]
+   f2.js:4:10
+   4| (c: { x: number });
+               ^^^^^^ [2]
 
 
 
@@ -149,23 +284,32 @@ Error --------------------------------------------------------------------------
 
 Cannot import `Foo` because there is no `Foo` export in `./h1`.
 
+   3| import type { Foo } from './h1';
+                    ^^^
+
 
 
 Found 1 error
 
 Test i:
-Error -------------------------------------------------------------------------------------------------------- i2.js:5:5
+Error -------------------------------------------------------------------------------------------------------- i2.js:5:1
 
 Cannot assign `0` to `foo.p` because property `p` is not writable.
+
+   5| foo.p = 0;
+      ^^^^^
 
 
 
 Found 1 error
 
 Test j:
-Error -------------------------------------------------------------------------------------------------------- j2.js:5:5
+Error -------------------------------------------------------------------------------------------------------- j2.js:5:1
 
 Cannot assign `0` to `foo.p` because property `p` is not writable.
+
+   5| foo.p = 0;
+      ^^^^^
 
 
 
@@ -179,22 +323,52 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `T` because in type argument `X`, string [1] is incompatible with number [2].
 
+   m3.js:6:2
+   6| (x: T<number>);
+       ^
+
+References:
+   m1.js:5:17
+   5| export var x: T<string> = null;
+                      ^^^^^^ [1]
+   m3.js:6:7
+   6| (x: T<number>);
+            ^^^^^^ [2]
+
 
 
 Found 1 error
 
 Test k:
-Error --------------------------------------------------------------------------------------------------------- k.js:4:4
+Error --------------------------------------------------------------------------------------------------------- k.js:4:2
 
 Cannot get `x.p` because property `p` is missing in `LibK` [1].
+
+   k.js:4:2
+   4| (x.p: string);
+       ^^^
+
+References:
+   k.js:3:16
+   3| declare var x: LibK;
+                     ^^^^ [1]
 
 
 
 Found 1 error
 No errors!
-Error --------------------------------------------------------------------------------------------------------- k.js:4:4
+Error --------------------------------------------------------------------------------------------------------- k.js:4:2
 
 Cannot get `x.p` because property `p` is missing in `LibK` [1].
+
+   k.js:4:2
+   4| (x.p: string);
+       ^^^
+
+References:
+   k.js:3:16
+   3| declare var x: LibK;
+                     ^^^^ [1]
 
 
 

@@ -2,6 +2,15 @@ Error --------------------------------------------------------------------------
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 
+   dupe2.js:1:1
+   1| /**
+      
+
+References:
+   dupe1.js:1:1
+   1| /**
+       [1]
+
 
 
 Found 1 error

@@ -2,6 +2,15 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `"string"` to `x` because string [1] is incompatible with number [2].
 
+   dir/foo.js:3:17
+   3| var x: number = "string"; // Error string ~> number
+                      ^^^^^^^^ [1]
+
+References:
+   dir/foo.js:3:8
+   3| var x: number = "string"; // Error string ~> number
+             ^^^^^^ [2]
+
 
 
 Found 1 error

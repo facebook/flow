@@ -2,20 +2,32 @@ Error --------------------------------------------------------------------------
 
 Unexpected token ILLEGAL
 
+   4|
+      
+
 
 Error ---------------------------------------------------------------------------------------- incorrect_token_lt.js:3:4
 
 Unexpected token <
+
+   3| <><</>; // Error: `<` is not a valid token here.
+         ^
 
 
 Error ------------------------------------------------------------------------------ nonmatching_closing_element.js:3:17
 
 Expected corresponding JSX closing tag for JSX fragment
 
+   3| <></elementName>; // Error: `elementName` is not a valid token here.
+                      ^
+
 
 Error ------------------------------------------------------------------------------ nonmatching_opening_element.js:3:17
 
 Expected corresponding JSX closing tag for elementName
+
+   3| <elementName></>; // Error: `elementName` is not a valid token here.
+                      ^
 
 
 

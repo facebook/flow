@@ -6,6 +6,15 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `123` to string because number [1] is incompatible with string [2].
 
+   test.js:3:2
+   3| (123: string); // error
+       ^^^ [1]
+
+References:
+   test.js:3:7
+   3| (123: string); // error
+            ^^^^^^ [2]
+
 
 
 Found 1 error
@@ -17,6 +26,9 @@ After fixing the error, leaving the suppression:
 Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
 
 Unused suppression comment.
+
+   3| // $FlowIssue
+      ^^^^^^^^^^^^^
 
 
 

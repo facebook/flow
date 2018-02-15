@@ -2,6 +2,15 @@ Error --------------------------------------------------------------------------
 
 Cannot call `bar` with `123` bound to `x` because number [1] is incompatible with string [2].
 
+   libtest.js:2:5
+   2| bar(123);
+          ^^^ [1]
+
+References:
+   libB.js:1:25
+   1| declare function bar(x: string): void;
+                              ^^^^^^ [2]
+
 
 
 Found 1 error

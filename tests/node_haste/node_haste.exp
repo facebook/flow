@@ -2,6 +2,9 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve module `annotation`.
 
+   7| var unreachable = require('annotation');
+                                ^^^^^^^^^^^^
+
 
 
 Found 1 error

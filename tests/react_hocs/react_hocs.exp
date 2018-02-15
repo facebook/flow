@@ -2,35 +2,115 @@ Error --------------------------------------------------------------------------
 
 In property `bar`, number [1] is incompatible with string [2].
 
+   Bad.js:11:21
+    11| const Bad = (props: Props) => null;
+                            ^^^^^
+
+References:
+   Bad.js:8:8
+     8|   bar: number,
+               ^^^^^^ [1]
+   <BUILTINS>/core.js:144:31
+   144|     toString(radix?: number): string;
+                                      ^^^^^^ [2]
+
 
 Error ---------------------------------------------------------------------------------------------------- Good.js:15:15
 
 Property `foo` is missing in props [1].
+
+   Good.js:15:15
+   15|   mapProps(({ foo, buz, qux }) => ({
+                     ^^^
+
+References:
+   Good_use.js:9:1
+    9| <Good buz={2} qux={3} />; // Error: Missing foo
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- Good.js:15:20
 
 Property `buz` is missing in props [1].
 
+   Good.js:15:20
+   15|   mapProps(({ foo, buz, qux }) => ({
+                          ^^^
+
+References:
+   Good_use.js:8:1
+    8| <Good foo={1} qux={3} />; // Error: Missing buz
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
 
 Error ---------------------------------------------------------------------------------------------------- Good.js:15:25
 
 Property `qux` is missing in props [1].
+
+   Good.js:15:25
+   15|   mapProps(({ foo, buz, qux }) => ({
+                               ^^^
+
+References:
+   Good_use.js:7:1
+    7| <Good foo={1} buz={2} />; // Error: Missing qux
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- Good.js:17:10
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   Good.js:17:10
+   17|     buz: buz * 2,
+                ^^^
+
+References:
+   Good_use.js:10:19
+   10| <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
+                         ^^^^^^ [1]
+
 
 Error ----------------------------------------------------------------------------------------------------- Good.js:18:5
 
 string [1] is incompatible with number [2].
 
+   Good.js:18:5
+   18|     qux,
+           ^^^
+
+References:
+   Good_use.js:11:27
+   11| <Good foo={1} buz={2} qux="nope" />; // Error: string ~> number
+                                 ^^^^^^ [1]
+   Good.js:9:8
+    9|   qux: number,
+              ^^^^^^ [2]
+
 
 Error ---------------------------------------------------------------------------------------------------- hocs.js:15:25
 
 Property `foo` is missing in object type [1] but exists in `Props` [2].
+
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^
+
+References:
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^ [1]
+   Bad.js:11:21
+   11| const Bad = (props: Props) => null;
+                           ^^^^^ [2]
 
 
 
