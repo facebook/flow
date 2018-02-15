@@ -238,9 +238,9 @@ Error: fun.js:30
    16: class Fun extends React.Component<{children: Fn}, void> {}
                                                     ^^ [2]: `Fn`
 
-Error: fun.js:38
- 38:   {data => {
-               ^ Cannot create `Fun` element because in property `children` and then the return value, string [1] is incompatible with number [2].
+Error: fun.js:42
+ 42:     return '42'; // Error: Must return a number.
+                ^^^^ Cannot create `Fun` element because in property `children` and then the return value, string [1] is incompatible with number [2].
   References:
    42:     return '42'; // Error: Must return a number.
                   ^^^^ [1]: string

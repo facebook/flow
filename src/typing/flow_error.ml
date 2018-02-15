@@ -1014,7 +1014,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
           [text "the rest argument"])
 
       | Frame (FunReturn {lower; _}, use_op) ->
-        `Frame (lower, use_op,
+        `Frame (repos_reason loc lower, use_op,
           [text "the return value"])
 
       | Frame (IndexerKeyCompatibility {lower; _}, use_op) ->

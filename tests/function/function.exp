@@ -425,9 +425,9 @@ Error: rest.js:53
    53: (empty_rest(): empty); // Error Array ~> empty
                       ^^^^^ [2]: empty
 
-Error: rest.js:58
- 58:   return function(...args) {
-                               ^ Cannot return function because in the return value, rest array [1] is incompatible with number [2].
+Error: rest.js:59
+ 59:     return args; // Error: Array ~> number
+                ^^^^ Cannot return function because in the return value, rest array [1] is incompatible with number [2].
   References:
    57: ): (...args: Args) => number {
           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: rest array
