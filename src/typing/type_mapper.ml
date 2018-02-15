@@ -1221,11 +1221,11 @@ class ['a] t = object(self)
 
   method spec cx map_cx t =
     match t with
-    | UnionCases (use_op, t', tlist) ->
+    | UnionCases (use_op, t', rep, tlist) ->
         let t'' = self#type_ cx map_cx t' in
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         if t'' == t' && tlist' == tlist then t
-        else UnionCases (use_op, t'', tlist')
+        else UnionCases (use_op, t'', rep, tlist')
     | IntersectionCases (tlist, use_t) ->
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         let use_t' = self#use_type cx map_cx use_t in

@@ -1031,7 +1031,7 @@ module rec TypeTerm : sig
   | PropExistsTest of bool * string * t * t
 
   and spec =
-  | UnionCases of use_op * t * t list
+  | UnionCases of use_op * t * UnionRep.t * t list
   | IntersectionCases of t list * use_t
 
   (* A dependent predicate type consisting of:
@@ -1387,6 +1387,8 @@ and UnionRep : sig
 
   (** build a rep from list of members *)
   val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
+  val optimize: TypeTerm.t list -> t -> unit
+  val is_optimized: t -> bool
 
   (** replace reason with enum desc, if any *)
   val enum_reason: reason -> t -> reason
@@ -1453,7 +1455,7 @@ end = struct
    *)
   type t =
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
-    (base_t * EnumSet.t) option
+    (base_t * EnumSet.t) option ref
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
@@ -1462,19 +1464,33 @@ end = struct
       Some (base, EnumSet.add tcanon tset)
     | _ -> None
 
+  let optimize ts (_, _, _, enum_ref) =
+    (* TODO: Since ts might be derived through flattening, it might have 0 or 1 elements, in which
+       case the union should be considered degenerate and optimized further. *)
+    match ts with
+      | t::ts ->
+        let enum = match Option.both (base_of_t t) (canon t) with
+          | None -> None
+          | Some (tbase, tcanon) ->
+            let enum = EnumSet.singleton tcanon in
+            ListUtils.fold_left_opt acc_enum (tbase, enum) ts
+        in
+        enum_ref := enum
+      | [] -> ()
+
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
   let make t0 t1 ts =
-    let enum = match Option.both (base_of_t t0) (canon t0) with
-    | None -> None
-    | Some (tbase, tcanon) ->
-      let enum = EnumSet.singleton tcanon in
-      ListUtils.fold_left_opt acc_enum (tbase, enum) (t1::ts)
-    in
-    t0, t1, ts, enum
+    let enum_ref = ref None in
+    let rep = t0, t1, ts, enum_ref in
+    optimize (t0::t1::ts) rep;
+    rep
+
+  let is_optimized (_, _, _, enum_ref) =
+    !enum_ref <> None
 
   let enum_reason r (_, _, _, enum) =
-    match enum with
+    match !enum with
     | None -> r
     | Some (b, _) ->
       replace_reason_const (desc_of_base b) r
@@ -1498,11 +1514,11 @@ end = struct
     if changed then make t0_ t1_ ts_ else rep
 
   let quick_mem t (t0, t1, ts, enum) =
-    match Option.both (canon t) enum with
+    match Option.both (canon t) !enum with
     | None ->
       if List.mem t (t0::t1::ts)
       then Some true
-      else Option.map ~f:(Fn.const false) enum
+      else Option.map ~f:(Fn.const false) !enum
     | Some (tcanon, (base, tset)) ->
       if (base_of_canon tcanon) = base
       then Some (EnumSet.mem tcanon tset)

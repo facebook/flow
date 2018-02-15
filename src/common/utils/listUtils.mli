@@ -43,3 +43,5 @@ module Monad2 (M : M_.S2) : sig
                    -> 'a -> 'b list
                    -> ('a * 'c list, 'd) M.t
 end
+
+val to_string: string -> ('a -> string) -> ('a list -> string)

@@ -1812,7 +1812,7 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let try_flow = function
-    | UnionCases (use_op, t, ts) ->
+    | UnionCases (use_op, t, _rep, ts) ->
         spf "(%s, %s, [%s])"
           (string_of_use_op use_op)
           (kid t)
