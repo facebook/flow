@@ -917,12 +917,6 @@ Introduction of a shadow property via a write: {
     {
       "source":"objects.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":3,"offset":183},
-      "end":{"line":19,"column":5,"offset":186}
-    },
-    {
-      "source":"objects.js",
-      "type":"SourceFile",
       "start":{"line":20,"column":3,"offset":194},
       "end":{"line":20,"column":5,"offset":197}
     }
@@ -932,12 +926,6 @@ Use of a shadow property: {
   "kind":"symbol-found",
   "name":"bar",
   "locs":[
-    {
-      "source":"objects.js",
-      "type":"SourceFile",
-      "start":{"line":19,"column":3,"offset":183},
-      "end":{"line":19,"column":5,"offset":186}
-    },
     {
       "source":"objects.js",
       "type":"SourceFile",
@@ -965,12 +953,6 @@ Introduction of a shadow property via a read: {
     {
       "source":"objects.js",
       "type":"SourceFile",
-      "start":{"line":23,"column":3,"offset":216},
-      "end":{"line":23,"column":5,"offset":219}
-    },
-    {
-      "source":"objects.js",
-      "type":"SourceFile",
       "start":{"line":24,"column":3,"offset":223},
       "end":{"line":24,"column":5,"offset":226}
     }
@@ -980,12 +962,6 @@ Write of a shadow property introduced via a read: {
   "kind":"symbol-found",
   "name":"bar",
   "locs":[
-    {
-      "source":"objects.js",
-      "type":"SourceFile",
-      "start":{"line":23,"column":3,"offset":216},
-      "end":{"line":23,"column":5,"offset":219}
-    },
     {
       "source":"objects.js",
       "type":"SourceFile",

@@ -385,9 +385,12 @@ end = struct
       | FailureAnyType ->
           Ok AnyType
 
-  let filter_refs cx potential_refs file_key def_locs name =
+  let filter_refs cx potential_refs file_key local_defs def_locs name =
     potential_refs |>
       LocMap.bindings |>
+      (* The location where a shadow prop is introduced is considered both a definition and a use.
+       * Make sure we include it only once despite that. *)
+      List.filter (fun (loc, _) -> not (List.mem loc local_defs)) |>
       List.map begin fun (ref_loc, ty) ->
         extract_def_loc cx ty name >>| function
           | Found locs ->
@@ -430,7 +433,7 @@ end = struct
         Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
       in
       unset_hooks ();
-      filter_refs cx !potential_refs file_key def_locs name
+      filter_refs cx !potential_refs file_key local_defs def_locs name
       >>| (@) local_defs
     end
 
