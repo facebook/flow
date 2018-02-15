@@ -1,9 +1,13 @@
+Error ---------------------------------------------------------- hoisted.js:10:3
+
 Error: hoisted.js:10
  10:   f(); // error, possibly undefined
        ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
   References:
     8:     var f = function () {};
                ^ [1]: possibly uninitialized variable
+
+Error ---------------------------------------------------------- hoisted.js:17:3
 
 Error: hoisted.js:17
  17:   f(); // error, possibly undefined
@@ -12,12 +16,16 @@ Error: hoisted.js:17
    15:     var f = function () {};
                ^ [1]: possibly uninitialized variable
 
+Error ---------------------------------------------------------- hoisted.js:31:3
+
 Error: hoisted.js:31
  31:   f(); // error, possibly undefined
        ^ Cannot call `f` because uninitialized variable [1] is not a function.
   References:
    29:     var f = function () {};
                ^ [1]: uninitialized variable
+
+Error ---------------------------------------------------------- hoisted.js:38:3
 
 Error: hoisted.js:38
  38:   f(); // error, possibly undefined
@@ -26,12 +34,16 @@ Error: hoisted.js:38
    36:     var f = function () {};
                ^ [1]: possibly uninitialized variable
 
+Error ---------------------------------------------------------- hoisted.js:45:3
+
 Error: hoisted.js:45
  45:   f(); // error, possibly undefined
        ^ Cannot call `f` because possibly uninitialized variable [1] is not a function.
   References:
    43:     var f = function () {};
                ^ [1]: possibly uninitialized variable
+
+Error -------------------------------------------------------- hoisted2.js:17:18
 
 Error: hoisted2.js:17
  17:   var y:number = x; // error
@@ -42,6 +54,8 @@ Error: hoisted2.js:17
    17:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- hoisted2.js:33:20
+
 Error: hoisted2.js:33
  33:     var y:number = x; // error
                         ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -50,6 +64,8 @@ Error: hoisted2.js:33
                ^ [1]: uninitialized variable
    33:     var y:number = x; // error
                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- hoisted2.js:39:18
 
 Error: hoisted2.js:39
  39:   var y:number = x; // error
@@ -60,6 +76,8 @@ Error: hoisted2.js:39
    39:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- hoisted2.js:50:18
+
 Error: hoisted2.js:50
  50:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -68,6 +86,8 @@ Error: hoisted2.js:50
                ^ [1]: possibly uninitialized variable
    50:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- hoisted2.js:69:18
 
 Error: hoisted2.js:69
  69:   var y:number = x; // error, possibly uninitialized
@@ -78,6 +98,8 @@ Error: hoisted2.js:69
    69:   var y:number = x; // error, possibly uninitialized
                ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- hoisted2.js:94:18
+
 Error: hoisted2.js:94
  94:   var y:number = x; // error, possibly uninitialized
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -86,6 +108,8 @@ Error: hoisted2.js:94
              ^ [1]: possibly uninitialized variable
    94:   var y:number = x; // error, possibly uninitialized
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:124:18
 
 Error: hoisted2.js:124
 124:   var y:number = x; // error
@@ -96,6 +120,8 @@ Error: hoisted2.js:124
   124:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:137:18
+
 Error: hoisted2.js:137
 137:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -104,6 +130,8 @@ Error: hoisted2.js:137
                  ^ [1]: possibly uninitialized variable
   137:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:146:22
 
 Error: hoisted2.js:146
 146:       var y:number = x; // error
@@ -114,6 +142,8 @@ Error: hoisted2.js:146
   146:       var y:number = x; // error
                    ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:160:18
+
 Error: hoisted2.js:160
 160:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -122,6 +152,8 @@ Error: hoisted2.js:160
                ^ [1]: uninitialized variable
   160:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:171:18
 
 Error: hoisted2.js:171
 171:   var y:number = x; // error
@@ -132,6 +164,8 @@ Error: hoisted2.js:171
   171:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:184:18
+
 Error: hoisted2.js:184
 184:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -140,6 +174,8 @@ Error: hoisted2.js:184
                ^ [1]: uninitialized variable
   184:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:208:18
 
 Error: hoisted2.js:208
 208:   var y:number = x; // error
@@ -150,6 +186,8 @@ Error: hoisted2.js:208
   208:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:219:18
+
 Error: hoisted2.js:219
 219:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -158,6 +196,8 @@ Error: hoisted2.js:219
                ^ [1]: uninitialized variable
   219:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:232:18
 
 Error: hoisted2.js:232
 232:   var y:number = x; // error
@@ -168,6 +208,8 @@ Error: hoisted2.js:232
   232:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:243:18
+
 Error: hoisted2.js:243
 243:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -176,6 +218,8 @@ Error: hoisted2.js:243
                ^ [1]: possibly uninitialized variable
   243:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- hoisted2.js:256:18
 
 Error: hoisted2.js:256
 256:   var y:number = x; // error
@@ -186,6 +230,8 @@ Error: hoisted2.js:256
   256:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- hoisted2.js:267:18
+
 Error: hoisted2.js:267
 267:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -194,6 +240,8 @@ Error: hoisted2.js:267
                   ^ [1]: possibly uninitialized variable
   267:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- let.js:17:18
 
 Error: let.js:17
  17:   let z:number = x;   // error
@@ -204,12 +252,16 @@ Error: let.js:17
    17:   let z:number = x;   // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- let.js:24:11
+
 Error: let.js:24
  24:   let x = x;  // 'x' not initialized!
                ^ Cannot use variable `x` [1] because the declaration either comes later or was skipped.
   References:
    24:   let x = x;  // 'x' not initialized!
              ^ [1]: `x`
+
+Error ------------------------------------------------------------- let.js:33:18
 
 Error: let.js:33
  33:   var y:number = x; // error, possibly uninitialized
@@ -220,6 +272,8 @@ Error: let.js:33
    33:   var y:number = x; // error, possibly uninitialized
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- let.js:58:18
+
 Error: let.js:58
  58:   var y:number = x; // error, possibly uninitialized
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -229,12 +283,16 @@ Error: let.js:58
    58:   var y:number = x; // error, possibly uninitialized
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- let.js:83:22
+
 Error: let.js:83
  83:       let y:number = x; // error, skipped declaration
                           ^ Cannot use variable `x` [1] because the declaration either comes later or was skipped.
   References:
    81:       let x:number;
                  ^ [1]: `x`
+
+Error ------------------------------------------------------------- let.js:93:18
 
 Error: let.js:93
  93:   var y:number = x; // error
@@ -245,6 +303,8 @@ Error: let.js:93
    93:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ let.js:111:18
+
 Error: let.js:111
 111:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -253,6 +313,8 @@ Error: let.js:111
              ^ [1]: possibly uninitialized variable
   111:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ let.js:120:18
 
 Error: let.js:120
 120:   var y:number = x; // error

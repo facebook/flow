@@ -67,3 +67,6 @@ val supports_color : unit -> bool
 
 (* Whether the terminal supports emoji *)
 val supports_emoji : unit -> bool
+
+(* Gets the column width of the current terminal. *)
+val get_term_cols : unit -> int option

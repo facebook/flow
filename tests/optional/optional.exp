@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------- generic.js:1:22
+
 Error: generic.js:1
   1: function x<T>(x: T = 0) {}
                           ^ number [1] is incompatible with `T` [2].
@@ -6,6 +8,8 @@ Error: generic.js:1
                             ^ [1]: number
     1: function x<T>(x: T = 0) {}
                         ^ [2]: `T`
+
+Error ---------------------------------------------------------- generic.js:4:15
 
 Error: generic.js:4
   4:   x<T>(x: T = 0) {}
@@ -16,6 +20,8 @@ Error: generic.js:4
     4:   x<T>(x: T = 0) {}
                  ^ [2]: `T`
 
+Error ------------------------------------------------------------- loop.js:5:33
+
 Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }
                                      ^ Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2].
@@ -25,6 +31,8 @@ Error: loop.js:5
     5: function f<T:*>(x:T,y?:T) { x = y }
                          ^ [2]: `T`
 
+Error --------------------------------------------------------- nullable.js:17:5
+
 Error: nullable.js:17
  17:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -32,12 +40,16 @@ Error: nullable.js:17
    15: function optionalNullable3(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: null or undefined
 
+Error --------------------------------------------------------- nullable.js:17:5
+
 Error: nullable.js:17
  17:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
   References:
    15: function optionalNullable3(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: undefined
+
+Error --------------------------------------------------------- nullable.js:23:5
 
 Error: nullable.js:23
  23:     x.y++; // should error
@@ -46,6 +58,8 @@ Error: nullable.js:23
    21: function optionalNullable4(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: null or undefined
 
+Error --------------------------------------------------------- nullable.js:23:5
+
 Error: nullable.js:23
  23:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
@@ -53,12 +67,16 @@ Error: nullable.js:23
    21: function optionalNullable4(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: undefined
 
+Error --------------------------------------------------------- nullable.js:29:5
+
 Error: nullable.js:29
  29:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
   References:
    27: function optionalNullable5(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: null or undefined
+
+Error --------------------------------------------------------- nullable.js:29:5
 
 Error: nullable.js:29
  29:     x.y++; // should error
@@ -67,6 +85,8 @@ Error: nullable.js:29
    27: function optionalNullable5(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: undefined
 
+Error --------------------------------------------------------- nullable.js:35:5
+
 Error: nullable.js:35
  35:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -74,12 +94,16 @@ Error: nullable.js:35
    33: function optionalNullable6(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: null or undefined
 
+Error --------------------------------------------------------- nullable.js:35:5
+
 Error: nullable.js:35
  35:     x.y++; // should error
          ^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
   References:
    33: function optionalNullable6(x: {y?: ?number}) {
                                           ^^^^^^^ [1]: undefined
+
+Error --------------------------------------------------------- optional.js:1:23
 
 Error: optional.js:1
   1: function bar(x?,y?) { x * 0; }
@@ -88,13 +112,19 @@ Error: optional.js:1
     1: function bar(x?,y?) { x * 0; }
                     ^^ [1]: undefined
 
+Error --------------------------------------------------------- optional.js:7:14
+
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                   ^ Missing type annotation for `x`.
 
+Error --------------------------------------------------------- optional.js:7:27
+
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                ^ Missing type annotation for rest parameter `y`.
+
+Error --------------------------------------------------------- optional.js:7:43
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -105,6 +135,8 @@ Error: optional.js:7
     4: var foo:(x?:number)=>void = bar;
                    ^^^^^^ [2]: number
 
+Error --------------------------------------------------------- optional.js:7:54
+
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                                           ^^^^ Cannot return `y[0]` because number [1] is incompatible with string [2].
@@ -113,6 +145,8 @@ Error: optional.js:7
              ^ [1]: number
     7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                     ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- optional.js:7:54
 
 Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -123,6 +157,8 @@ Error: optional.js:7
     7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                     ^^^^^^ [2]: string
 
+Error -------------------------------------------------- optional_param2.js:7:31
+
 Error: optional_param2.js:7
   7: var j:I<number> = i.map(id => id);
                                    ^^ Cannot assign `i.map(...)` to `j` because in type argument `V`, undefined [1] is incompatible with number [2].
@@ -131,6 +167,8 @@ Error: optional_param2.js:7
                                 ^ [1]: undefined
     7: var j:I<number> = i.map(id => id);
                ^^^^^^ [2]: number
+
+Error -------------------------------------------------- optional_param4.js:12:5
 
 Error: optional_param4.js:12
  12: foo(true); // ERROR boolean ~> number
@@ -141,6 +179,8 @@ Error: optional_param4.js:12
     3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
                         ^^^^^^ [2]: number
 
+Error ------------------------------------------------- optional_param4.js:13:10
+
 Error: optional_param4.js:13
  13: foo(123, true); // ERROR boolean ~> string
               ^^^^ Cannot call `foo` because in the rest argument and then type argument `T`, boolean [1] is incompatible with string [2].
@@ -150,12 +190,16 @@ Error: optional_param4.js:13
     3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
                                             ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- undefined.js:8:14
+
 Error: undefined.js:8
   8:     return x.duck;
                   ^^^^ Cannot get `x.duck` because property `duck` is missing in undefined [1].
   References:
    13: declare var undefined: void;
                               ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
+
+Error ------------------------------------------------------- undefined2.js:8:14
 
 Error: undefined2.js:8
   8:     return x.duck;

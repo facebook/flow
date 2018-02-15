@@ -1,3 +1,5 @@
+Error --------------------------------------------------------------- A.js:13:19
+
 Error: A.js:13
  13: var bad: number = Bad.foo();
                        ^^^^^^^^^ Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: A.js:13
                           ^^^^^^ [1]: string
    13: var bad: number = Bad.foo();
                 ^^^^^^ [2]: number
+
+Error --------------------------------------------------------------- A.js:21:20
 
 Error: A.js:21
  21: var good: number = Good.foo();
@@ -16,6 +20,8 @@ Error: A.js:21
    21: var good: number = Good.foo();
                  ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- B.js:7:20
+
 Error: B.js:7
   7: var good: number = A.Good.foo(); // string ~> number
                         ^^^^^^^^^^^^ Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: B.js:7
                           ^^^^^^ [1]: string. See: A.js:18
     7: var good: number = A.Good.foo(); // string ~> number
                  ^^^^^^ [2]: number
+
+Error --------------------------------------------------------------- B.js:10:20
 
 Error: B.js:10
  10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
@@ -34,6 +42,8 @@ Error: B.js:10
    10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                  ^^^^^^ [2]: number
 
+Error --------------------------------------------------------------- B.js:10:20
+
 Error: B.js:10
  10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                         ^ Cannot call `f` because property `foo` is missing in global object [1] but exists in object literal [2].
@@ -42,6 +52,8 @@ Error: B.js:10
                           ^^^ [1]: global object
     8: var Bad = Object.assign({}, EventEmitter.prototype, {
                                ^^ [2]: object literal. See: A.js:8
+
+Error --------------------------------------------------------------- B.js:12:19
 
 Error: B.js:12
  12: var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
@@ -52,12 +64,16 @@ Error: B.js:12
    12: var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                 ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- non_objects.js:3:1
+
 Error: non_objects.js:3
   3: Object.assign("123", {a: "foo"});
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `a` is missing in string [1].
   References:
     3: Object.assign("123", {a: "foo"});
                      ^^^^^ [1]: string
+
+Error ------------------------------------------------------- non_objects.js:4:1
 
 Error: non_objects.js:4
   4: Object.assign(123, {a: "foo"});
@@ -66,12 +82,16 @@ Error: non_objects.js:4
     4: Object.assign(123, {a: "foo"});
                      ^^^ [1]: number
 
+Error ------------------------------------------------------- non_objects.js:5:1
+
 Error: non_objects.js:5
   5: Object.assign({a: "foo"}, 123);
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
   References:
     5: Object.assign({a: "foo"}, 123);
                                  ^^^ [1]: number
+
+Error ------------------------------------------------------------ spread.js:7:2
 
 Error: spread.js:7
   7: (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
@@ -82,6 +102,8 @@ Error: spread.js:7
     7: (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
                                                 ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ spread.js:8:2
+
 Error: spread.js:8
   8: (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `Object.assign(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
@@ -91,6 +113,8 @@ Error: spread.js:8
     8: (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
                                                   ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ spread.js:9:2
+
 Error: spread.js:9
   9: (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
       ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `Object.assign(...)` to object type because in property `bar`, number [1] is incompatible with boolean [2].
@@ -99,6 +123,8 @@ Error: spread.js:9
                                               ^^^^^^ [1]: number
     9: (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
                                                        ^^^^^^^ [2]: boolean
+
+Error ---------------------------------------------------------- spread.js:13:19
 
 Error: spread.js:13
  13:   ...[{a: 1}, {b: 'foo'}],

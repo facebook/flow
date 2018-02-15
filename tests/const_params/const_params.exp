@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:17:3
+
 Error: test.js:17
  17:   x = "hey"; // error, const param cannot be reassigned
        ^ Cannot reassign constant `x` [1].

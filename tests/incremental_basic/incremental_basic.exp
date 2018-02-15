@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -7,6 +9,8 @@ Error: a.js:2
     2: var a: string = 0;
               ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------------- b.js:3:17
+
 Error: b.js:3
   3: var b: number = a;
                      ^ Cannot assign `a` to `b` because string [1] is incompatible with number [2].
@@ -15,6 +19,8 @@ Error: b.js:3
               ^^^^^^ [1]: string. See: a.js:2
     3: var b: number = a;
               ^^^^^^ [2]: number
+
+Error ---------------------------------------------------------------- c.js:3:17
 
 Error: c.js:3
   3: var c: string = b;
@@ -27,6 +33,8 @@ Error: c.js:3
 
 
 Found 3 errors
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -38,6 +46,8 @@ Error: a.js:2
 
 
 Found 1 error
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -49,6 +59,8 @@ Error: c.js:3
 
 
 Found 1 error
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].

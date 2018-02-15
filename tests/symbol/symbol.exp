@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------- symbol.js:4:25
+
 Error: symbol.js:4
   4: var WAT = Symbol('foo', 'bar'); // Error - unused argument
                              ^^^^^ Cannot call `Symbol` because no more than 1 argument is expected by function type [1].

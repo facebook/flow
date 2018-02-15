@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- FormData.js:5:14
+
 Error: FormData.js:5
   5: new FormData(''); // incorrect
                   ^^ Cannot call `FormData` with empty string bound to `form` because string [1] is incompatible with `HTMLFormElement` [2].
@@ -6,6 +8,8 @@ Error: FormData.js:5
                     ^^ [1]: string
   322:     constructor(form?: HTMLFormElement): void;
                               ^^^^^^^^^^^^^^^ [2]: `HTMLFormElement`. See lib: <BUILTINS>/bom.js:322
+
+Error --------------------------------------------------------- FormData.js:6:14
 
 Error: FormData.js:6
   6: new FormData(document.createElement('input')); // incorrect
@@ -16,6 +20,8 @@ Error: FormData.js:6
   322:     constructor(form?: HTMLFormElement): void;
                               ^^^^^^^^^^^^^^^ [2]: `HTMLFormElement`. See lib: <BUILTINS>/bom.js:322
 
+Error -------------------------------------------------------- FormData.js:14:19
+
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
                        ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `d` because `File` [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: FormData.js:14
                                ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:325
    14: const d: string = a.get('foo'); // incorrect
                 ^^^^^^ [2]: string
+
+Error -------------------------------------------------------- FormData.js:14:19
 
 Error: FormData.js:14
  14: const d: string = a.get('foo'); // incorrect
@@ -34,6 +42,8 @@ Error: FormData.js:14
    14: const d: string = a.get('foo'); // incorrect
                 ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- FormData.js:15:17
+
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
                      ^^^^^^^^^^^^ Cannot assign `a.get(...)` to `e` because null or undefined [1] is incompatible with `Blob` [2].
@@ -42,6 +52,8 @@ Error: FormData.js:15
                               ^^^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/bom.js:325
    15: const e: Blob = a.get('foo'); // incorrect
                 ^^^^ [2]: `Blob`
+
+Error -------------------------------------------------------- FormData.js:15:17
 
 Error: FormData.js:15
  15: const e: Blob = a.get('foo'); // incorrect
@@ -52,6 +64,8 @@ Error: FormData.js:15
    15: const e: Blob = a.get('foo'); // incorrect
                 ^^^^ [2]: `Blob`
 
+Error --------------------------------------------------------- FormData.js:17:7
+
 Error: FormData.js:17
  17: a.get(2); // incorrect
            ^ Cannot call `a.get` with `2` bound to `name` because number [1] is incompatible with string [2].
@@ -60,6 +74,8 @@ Error: FormData.js:17
              ^ [1]: number
   325:     get(name: string): ?FormDataEntryValue;
                      ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:325
+
+Error -------------------------------------------------------- FormData.js:21:43
 
 Error: FormData.js:21
  21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
@@ -70,6 +86,8 @@ Error: FormData.js:21
    21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                                        ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:22:41
+
 Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                              ^^^^^^^^^^^^^^^ Cannot assign `a.getAll(...)` to `a3` because in type argument `T`, `File` [1] is incompatible with `Blob` [2].
@@ -78,6 +96,8 @@ Error: FormData.js:22
                                           ^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:319
    22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                 ^^^^ [2]: `Blob`
+
+Error -------------------------------------------------------- FormData.js:23:10
 
 Error: FormData.js:23
  23: a.getAll(23); // incorrect
@@ -184,6 +204,8 @@ Error: FormData.js:32
   330:     set(name: string, value: File, filename?: string): void;
                                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:330
 
+Error -------------------------------------------------------- FormData.js:35:24
+
 Error: FormData.js:35
  35: a.set('bar', new Blob, 2) // incorrect
                             ^ Cannot call `a.set` with `2` bound to `filename` because number [1] is incompatible with string [2].
@@ -289,6 +311,8 @@ Error: FormData.js:45
   334:     append(name: string, value: File, filename?: string): void;
                                                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:334
 
+Error -------------------------------------------------------- FormData.js:48:27
+
 Error: FormData.js:48
  48: a.append('bar', new Blob, 2) // incorrect
                                ^ Cannot call `a.append` with `2` bound to `filename` because number [1] is incompatible with string [2].
@@ -297,6 +321,8 @@ Error: FormData.js:48
                                  ^ [1]: number
   333:     append(name: string, value: Blob, filename?: string): void;
                                                         ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:333
+
+Error -------------------------------------------------------- FormData.js:52:10
 
 Error: FormData.js:52
  52: a.delete(3); // incorrect
@@ -307,6 +333,8 @@ Error: FormData.js:52
   336:     delete(name: string): void;
                         ^^^^^^ [2]: string. See lib: <BUILTINS>/bom.js:336
 
+Error -------------------------------------------------------- FormData.js:56:23
+
 Error: FormData.js:56
  56: for (let x: number of a.keys()) {} // incorrect
                            ^^^^^^^^ Cannot assign `x` to `x` because string [1] is incompatible with number [2].
@@ -315,6 +343,8 @@ Error: FormData.js:56
                             ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:338
    56: for (let x: number of a.keys()) {} // incorrect
                    ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:64:52
 
 Error: FormData.js:64
  64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
@@ -325,6 +355,8 @@ Error: FormData.js:64
    64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                                                  ^^^^ [2]: `Blob`
 
+Error -------------------------------------------------------- FormData.js:65:11
+
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                ^ Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
@@ -333,6 +365,8 @@ Error: FormData.js:65
                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
    65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                          ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:65:14
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -343,6 +377,8 @@ Error: FormData.js:65
    65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- FormData.js:65:38
+
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                           ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 0, string [1] is incompatible with number [2].
@@ -351,6 +387,8 @@ Error: FormData.js:65
                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
    65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                          ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:65:38
 
 Error: FormData.js:65
  65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -361,6 +399,8 @@ Error: FormData.js:65
    65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- FormData.js:66:14
+
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                   ^ Cannot assign element 1 to `y` because `File` [1] is incompatible with number [2].
@@ -369,6 +409,8 @@ Error: FormData.js:66
                                         ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
    66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:66:14
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -379,6 +421,8 @@ Error: FormData.js:66
    66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:66:38
+
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                           ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with number [2].
@@ -387,6 +431,8 @@ Error: FormData.js:66
                                         ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
    66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:66:38
 
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -397,6 +443,8 @@ Error: FormData.js:66
    66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:66:38
+
 Error: FormData.js:66
  66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                           ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
@@ -405,6 +453,8 @@ Error: FormData.js:66
                                         ^^^^^^^^^^^^^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
    66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:67:11
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -415,6 +465,8 @@ Error: FormData.js:67
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                          ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:67:14
+
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                   ^ Cannot assign element 1 to `y` because `File` [1] is incompatible with number [2].
@@ -423,6 +475,8 @@ Error: FormData.js:67
                                         ^^^^^^^^^^^^^^^^^^ [1]: `File`. See lib: <BUILTINS>/bom.js:340
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:67:14
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -433,6 +487,8 @@ Error: FormData.js:67
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:67:38
+
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                           ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 0, string [1] is incompatible with number [2].
@@ -441,6 +497,8 @@ Error: FormData.js:67
                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:340
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                          ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:67:38
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -451,6 +509,8 @@ Error: FormData.js:67
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- FormData.js:67:38
+
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                           ^^^^^^^^^^^ Cannot assign for-of element to variable because in index 1, string [1] is incompatible with number [2].
@@ -459,6 +519,8 @@ Error: FormData.js:67
                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/bom.js:319
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- FormData.js:67:38
 
 Error: FormData.js:67
  67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -469,12 +531,16 @@ Error: FormData.js:67
    67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                  ^^^^^^ [2]: number
 
+Error ------------------------------------------------- MutationObserver.js:10:5
+
 Error: MutationObserver.js:10
  10: new MutationObserver(); // incorrect
          ^^^^^^^^^^^^^^^^ Cannot call `MutationObserver` because function [1] requires another argument.
   References:
   368:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function. See lib: <BUILTINS>/bom.js:368
+
+Error ------------------------------------------------ MutationObserver.js:11:22
 
 Error: MutationObserver.js:11
  11: new MutationObserver(42); // incorrect
@@ -484,6 +550,8 @@ Error: MutationObserver.js:11
                             ^^ [1]: number
   368:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: function type. See lib: <BUILTINS>/bom.js:368
+
+Error ------------------------------------------------ MutationObserver.js:12:26
 
 Error: MutationObserver.js:12
  12: new MutationObserver((n: number) => {}); // incorrect
@@ -500,6 +568,8 @@ Error: MutationObserver.js:18
 369:     observe(target: Node, options: MutationObserverInit): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:369
 
+Error ------------------------------------------------- MutationObserver.js:18:3
+
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect
        ^^^^^^^ Cannot call `o.observe` because function [1] requires another argument.
@@ -513,12 +583,16 @@ Error: MutationObserver.js:19
 369:     observe(target: Node, options: MutationObserverInit): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:369
 
+Error ------------------------------------------------- MutationObserver.js:19:3
+
 Error: MutationObserver.js:19
  19: o.observe('invalid'); // incorrect
        ^^^^^^^ Cannot call `o.observe` because function [1] requires another argument.
   References:
   369:     observe(target: Node, options: MutationObserverInit): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function. See lib: <BUILTINS>/bom.js:369
+
+Error ------------------------------------------------ MutationObserver.js:19:11
 
 Error: MutationObserver.js:19
  19: o.observe('invalid'); // incorrect
@@ -534,6 +608,8 @@ Error: MutationObserver.js:20
      ^^^^^^^^^^^^^^ call of method `observe`. Too few arguments passed to
 369:     observe(target: Node, options: MutationObserverInit): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:369
+
+Error ------------------------------------------------- MutationObserver.js:20:3
 
 Error: MutationObserver.js:20
  20: o.observe(div); // incorrect
@@ -631,6 +707,8 @@ Error: MutationObserver.js:22
                  ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:358
        22: o.observe(div, { subtree: true }); // incorrect
                           ^^^^^^^^^^^^^^^^^ object literal
+
+Error ------------------------------------------------ MutationObserver.js:23:53
 
 Error: MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect

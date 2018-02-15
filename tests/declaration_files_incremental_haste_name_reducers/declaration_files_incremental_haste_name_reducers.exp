@@ -1,4 +1,6 @@
 ======Start off with the .js files but without the .flow file======
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
@@ -7,6 +9,8 @@ Error: index.js:4
                               ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -19,6 +23,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -27,6 +33,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -39,6 +47,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
@@ -47,6 +57,8 @@ Error: index.js:4
                               ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -62,6 +74,8 @@ Found 2 errors
 
 
 ======Start off with the .js files and the .flow file======
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -70,6 +84,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -82,6 +98,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `AImplementation` [1] is incompatible with boolean [2].
@@ -90,6 +108,8 @@ Error: index.js:4
                               ^^^^^^^^^^^^^^^ [1]: `AImplementation`. See: A.js:4
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -102,6 +122,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -110,6 +132,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -125,6 +149,8 @@ Found 2 errors
 
 
 ======Start off without the .js files and with the .flow file======
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -133,6 +159,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -145,6 +173,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -153,6 +183,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean
@@ -165,6 +197,8 @@ Error: index.js:7
 
 
 Found 2 errors
+Error ------------------------------------------------------------- index.js:4:2
+
 Error: index.js:4
   4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
       ^^^^^^^ Cannot cast `A.foo()` to boolean because `ADefinition` [1] is incompatible with boolean [2].
@@ -173,6 +207,8 @@ Error: index.js:4
                                       ^^^^^^^^^^^ [1]: `ADefinition`. See: A.js.flow:2
     4: (A.foo(): boolean); // Error: Either AImplementation ~> boolean or ADefinition ~> boolean
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- index.js:7:2
 
 Error: index.js:7
   7: (test.foo(): boolean); // Error: Either TestImplementation ~> boolean or TestDefinition ~> boolean

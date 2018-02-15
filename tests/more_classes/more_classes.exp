@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- Bar.js:15:19
+
 Error: Bar.js:15
  15:     new Qux().w = "?";
                        ^^^ Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: Bar.js:15
                          ^^^ [1]: string
     5:   w:number;
            ^^^^^^ [2]: number. See: Qux.js:5
+
+Error ------------------------------------------------------------- Foo.js:21:12
 
 Error: Foo.js:21
  21:   fooqux(x:string) {
@@ -18,6 +22,8 @@ Error: Foo.js:21
     9:   fooqux(x:number) { }
                   ^^^^^^ [3]: number. See: Qux.js:9
 
+Error ------------------------------------------------------------- Foo.js:10:10
+
 Error: Foo.js:10
  10:     this.x = x;
               ^ Cannot assign `x` to `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
@@ -25,9 +31,13 @@ Error: Foo.js:10
     7: class Foo extends Qux {
              ^^^ [1]: uninitialized this (expected super constructor call)
 
+Error ------------------------------------------------------------- Foo.js:13:16
+
 Error: Foo.js:13
  13:   foo(y:string,z):number {
                     ^ Missing type annotation for `z`.
+
+Error ------------------------------------------------------------- Foo.js:16:21
 
 Error: Foo.js:16
  16:     var v = new Bar(y);
@@ -38,6 +48,8 @@ Error: Foo.js:16
     9:   constructor(y:number) {
                        ^^^^^^ [2]: number. See: Bar.js:9
 
+Error ------------------------------------------------------------- Foo.js:18:12
+
 Error: Foo.js:18
  18:     return v.bar(z,u);
                 ^^^^^^^^^^ Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
@@ -46,6 +58,8 @@ Error: Foo.js:18
                                 ^^^^^^ [1]: string. See: Bar.js:14
    13:   foo(y:string,z):number {
                          ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- Foo.js:18:20
 
 Error: Foo.js:18
  18:     return v.bar(z,u);

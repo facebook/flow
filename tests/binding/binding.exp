@@ -1,9 +1,13 @@
+Error ------------------------------------------------------------- const.js:4:1
+
 Error: const.js:4
   4: x++;
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------- const.js:5:1
 
 Error: const.js:5
   5: x--;
@@ -12,12 +16,16 @@ Error: const.js:5
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------- const.js:6:1
+
 Error: const.js:6
   6: x += 0;
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------- const.js:7:1
 
 Error: const.js:7
   7: x -= 0;
@@ -26,12 +34,16 @@ Error: const.js:7
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------- const.js:8:1
+
 Error: const.js:8
   8: x /= 0;
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------- const.js:9:1
 
 Error: const.js:9
   9: x %= 0;
@@ -40,12 +52,16 @@ Error: const.js:9
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------ const.js:10:1
+
 Error: const.js:10
  10: x <<= 0
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------ const.js:11:1
 
 Error: const.js:11
  11: x >>= 0;
@@ -54,12 +70,16 @@ Error: const.js:11
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------ const.js:12:1
+
 Error: const.js:12
  12: x >>>= 0;
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------ const.js:13:1
 
 Error: const.js:13
  13: x |= 0;
@@ -68,6 +88,8 @@ Error: const.js:13
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------ const.js:14:1
+
 Error: const.js:14
  14: x ^= 0;
      ^ Cannot reassign constant `x` [1].
@@ -75,12 +97,16 @@ Error: const.js:14
     1: const x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------ const.js:15:1
+
 Error: const.js:15
  15: x &= 0;
      ^ Cannot reassign constant `x` [1].
   References:
     1: const x = 0;
              ^ [1]: `x`
+
+Error ------------------------------------------------------------ const.js:21:2
 
 Error: const.js:21
  21: (foo: number); // error: string ~> number
@@ -91,6 +117,8 @@ Error: const.js:21
    21: (foo: number); // error: string ~> number
              ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ const.js:22:2
+
 Error: const.js:22
  22: (bar: number); // error: string ~> number
       ^^^ Cannot cast `bar` to number because string [1] is incompatible with number [2].
@@ -99,6 +127,8 @@ Error: const.js:22
                         ^^^^^ [1]: string
    22: (bar: number); // error: string ~> number
              ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ const.js:26:4
 
 Error: const.js:26
  26:   (baz: number); // error: string ~> number
@@ -109,12 +139,16 @@ Error: const.js:26
    26:   (baz: number); // error: string ~> number
                ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- rebinding.js:16:8
+
 Error: rebinding.js:16
  16:   type A = number;  // error: name already bound
             ^ Cannot declare `A` [1] because the name is already bound.
   References:
    15:   type A = number;
               ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:21:9
 
 Error: rebinding.js:21
  21:   class A {}        // error: name already bound
@@ -123,12 +157,16 @@ Error: rebinding.js:21
    20:   type A = number;
               ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:26:7
+
 Error: rebinding.js:26
  26:   let A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
    25:   type A = number;
               ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:31:9
 
 Error: rebinding.js:31
  31:   const A = 0;     // error: name already bound
@@ -137,12 +175,16 @@ Error: rebinding.js:31
    30:   type A = number;
               ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:36:7
+
 Error: rebinding.js:36
  36:   var A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
    35:   type A = number;
               ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:41:3
 
 Error: rebinding.js:41
  41:   A = 42;           // error: type alias ref'd from value pos
@@ -151,12 +193,16 @@ Error: rebinding.js:41
    40:   type A = number;
               ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:48:8
+
 Error: rebinding.js:48
  48:   type A = number;  // error: name already bound
             ^ Cannot declare `A` [1] because the name is already bound.
   References:
    47:   class A {}
                ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:53:9
 
 Error: rebinding.js:53
  53:   class A {}        // error: name already bound
@@ -165,12 +211,16 @@ Error: rebinding.js:53
    52:   class A {}
                ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:58:7
+
 Error: rebinding.js:58
  58:   let A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
    57:   class A {}
                ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:63:9
 
 Error: rebinding.js:63
  63:   const A = 0;     // error: name already bound
@@ -179,12 +229,16 @@ Error: rebinding.js:63
    62:   class A {}
                ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:68:7
+
 Error: rebinding.js:68
  68:   var A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
    67:   class A {}
                ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:75:8
 
 Error: rebinding.js:75
  75:   type A = number;  // error: name already bound
@@ -193,12 +247,16 @@ Error: rebinding.js:75
    74:   let A = 0;
              ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:80:9
+
 Error: rebinding.js:80
  80:   class A {}        // error: name already bound
              ^ Cannot declare `A` [1] because the name is already bound.
   References:
    79:   let A = 0;
              ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:85:7
 
 Error: rebinding.js:85
  85:   let A = 0;        // error: name already bound
@@ -207,12 +265,16 @@ Error: rebinding.js:85
    84:   let A = 0;
              ^ [1]: `A`
 
+Error -------------------------------------------------------- rebinding.js:90:9
+
 Error: rebinding.js:90
  90:   const A = 0;     // error: name already bound
              ^ Cannot declare `A` [1] because the name is already bound.
   References:
    89:   let A = 0;
              ^ [1]: `A`
+
+Error -------------------------------------------------------- rebinding.js:95:7
 
 Error: rebinding.js:95
  95:   var A = 0;        // error: name already bound
@@ -221,12 +283,16 @@ Error: rebinding.js:95
    94:   let A = 0;
              ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:102:8
+
 Error: rebinding.js:102
 102:   type A = number;  // error: name already bound
             ^ Cannot declare `A` [1] because the name is already bound.
   References:
   101:   const A = 0;
                ^ [1]: `A`
+
+Error ------------------------------------------------------- rebinding.js:107:9
 
 Error: rebinding.js:107
 107:   class A {}        // error: name already bound
@@ -235,12 +301,16 @@ Error: rebinding.js:107
   106:   const A = 0;
                ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:112:7
+
 Error: rebinding.js:112
 112:   let A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
   111:   const A = 0;
                ^ [1]: `A`
+
+Error ------------------------------------------------------- rebinding.js:117:9
 
 Error: rebinding.js:117
 117:   const A = 0;     // error: name already bound
@@ -249,12 +319,16 @@ Error: rebinding.js:117
   116:   const A = 0;
                ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:122:7
+
 Error: rebinding.js:122
 122:   var A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
   121:   const A = 0;
                ^ [1]: `A`
+
+Error ------------------------------------------------------- rebinding.js:127:3
 
 Error: rebinding.js:127
 127:   A = 42;           // error: cannot be reassigned
@@ -263,12 +337,16 @@ Error: rebinding.js:127
   126:   const A = 0;
                ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:134:8
+
 Error: rebinding.js:134
 134:   type A = number;  // error: name already bound
             ^ Cannot declare `A` [1] because the name is already bound.
   References:
   133:   var A = 0;
              ^ [1]: `A`
+
+Error ------------------------------------------------------- rebinding.js:139:9
 
 Error: rebinding.js:139
 139:   class A {}        // error: name already bound
@@ -277,12 +355,16 @@ Error: rebinding.js:139
   138:   var A = 0;
              ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:144:7
+
 Error: rebinding.js:144
 144:   let A = 0;        // error: name already bound
            ^ Cannot declare `A` [1] because the name is already bound.
   References:
   143:   var A = 0;
              ^ [1]: `A`
+
+Error ------------------------------------------------------- rebinding.js:149:9
 
 Error: rebinding.js:149
 149:   const A = 0;      // error: name already bound
@@ -291,12 +373,16 @@ Error: rebinding.js:149
   148:   var A = 0;
              ^ [1]: `A`
 
+Error ------------------------------------------------------- rebinding.js:167:5
+
 Error: rebinding.js:167
 167:     function a() {}; // error: name already bound
          ^^^^^^^^^^^^^^^ Cannot declare `a` [1] because the name is already bound.
   References:
   166:     function a() {};
            ^^^^^^^^^^^^^^^ [1]: `a`
+
+Error ------------------------------------------------------ rebinding.js:177:11
 
 Error: rebinding.js:177
 177:       var x = 0; // error: name already bound
@@ -305,12 +391,16 @@ Error: rebinding.js:177
   175:     let x = 0;
                ^ [1]: `x`
 
+Error ------------------------------------------------------ rebinding.js:186:12
+
 Error: rebinding.js:186
 186:       type x = string; // error: name already bound
                 ^ Cannot declare `x` [1] because the name is already bound.
   References:
   184:     let x = 0;
                ^ [1]: `x`
+
+Error ------------------------------------------------------ rebinding.js:193:34
 
 Error: rebinding.js:193
 193: function fn_params_name_clash(x, x /* error: x already bound */) {}
@@ -319,12 +409,16 @@ Error: rebinding.js:193
   193: function fn_params_name_clash(x, x /* error: x already bound */) {}
                                      ^ [1]: `x`
 
+Error ------------------------------------------------------- rebinding.js:195:7
+
 Error: rebinding.js:195
 195:   let x = 0; // error: x already bound
            ^ Cannot declare `x` [1] because the name is already bound.
   References:
   194: function fn_params_clash_fn_binding(x,y) {
                                            ^ [1]: `x`
+
+Error ------------------------------------------------------------ scope.js:6:13
 
 Error: scope.js:6
   6:     var b = ""; // error: string ~> number
@@ -335,6 +429,8 @@ Error: scope.js:6
     3:   var b: number = 0;
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- scope.js:16:15
+
 Error: scope.js:16
  16:       var b = ""; // error: string ~> number
                    ^^ Cannot assign empty string to `b` because string [1] is incompatible with number [2].
@@ -344,12 +440,16 @@ Error: scope.js:16
    12:   var b: number = 0;
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- scope.js:19:11
+
 Error: scope.js:19
  19:       let a = ""; // error: a already bound in switch
                ^ Cannot declare `a` [1] because the name is already bound.
   References:
    15:       let a = ""; // ok: local to switch
                  ^ [1]: `a`
+
+Error ------------------------------------------------------------ scope.js:30:6
 
 Error: scope.js:30
  30:      a = "";     // error: assign before declaration
@@ -358,12 +458,16 @@ Error: scope.js:30
    36:       let a = "";
                  ^ [1]: `a`
 
+Error ----------------------------------------------------------- scope.js:33:14
+
 Error: scope.js:33
  33:      var b = a;  // error: use before declaration
                   ^ Cannot use variable `a` [1] because the declaration either comes later or was skipped.
   References:
    36:       let a = "";
                  ^ [1]: `a`
+
+Error ------------------------------------------------------------ scope.js:39:7
 
 Error: scope.js:39
  39:       a = "";     // error: skipped initializer
@@ -372,6 +476,8 @@ Error: scope.js:39
    36:       let a = "";
                  ^ [1]: `a`
 
+Error ----------------------------------------------------------- scope.js:42:22
+
 Error: scope.js:42
  42:       var c:string = a;  // error: skipped initializer
                           ^ Cannot use variable `a` [1] because the declaration either comes later or was skipped.
@@ -379,9 +485,13 @@ Error: scope.js:42
    36:       let a = "";
                  ^ [1]: `a`
 
+Error ------------------------------------------------------------ scope.js:45:3
+
 Error: scope.js:45
  45:   a = ""; // error: a no longer in scope
        ^ Cannot resolve name `a`.
+
+Error ----------------------------------------------------------- scope.js:66:16
 
 Error: scope.js:66
  66:   for (var a = "" /* error: string ~> number */;;) {}
@@ -392,6 +502,8 @@ Error: scope.js:66
    65:   var a: number = 0;
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- scope.js:66:16
+
 Error: scope.js:66
  66:   for (var a = "" /* error: string ~> number */;;) {}
                     ^^ string [1] is incompatible with number [2].
@@ -400,6 +512,8 @@ Error: scope.js:66
                       ^^ [1]: string
    65:   var a: number = 0;
                 ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- scope.js:76:12
 
 Error: scope.js:76
  76:   for (var a /* error: string ~> number */ in o) {}
@@ -410,6 +524,8 @@ Error: scope.js:76
    75:   var a: number = 0;
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- scope.js:76:12
+
 Error: scope.js:76
  76:   for (var a /* error: string ~> number */ in o) {}
                 ^ string [1] is incompatible with number [2].
@@ -418,6 +534,8 @@ Error: scope.js:76
                   ^ [1]: string
    75:   var a: number = 0;
                 ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- scope.js:86:47
 
 Error: scope.js:86
  86:   for (var a /* error: string ~> number */ of xs) {}
@@ -428,6 +546,8 @@ Error: scope.js:86
    85:   var a: number = 0;
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- scope.js:86:47
+
 Error: scope.js:86
  86:   for (var a /* error: string ~> number */ of xs) {}
                                                    ^^ string [1] is incompatible with number [2].
@@ -436,6 +556,8 @@ Error: scope.js:86
                                      ^^^^^^ [1]: string
    85:   var a: number = 0;
                 ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ scope.js:93:6
 
 Error: scope.js:93
  93:   ): number {
@@ -446,6 +568,8 @@ Error: scope.js:93
    92:     x: () => string = f // error: number ~> string
                     ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------- scope.js:103:12
+
 Error: scope.js:103
 103:     return x(); // error: string ~> number
                 ^^^ Cannot return `x()` because string [1] is incompatible with number [2].
@@ -455,9 +579,13 @@ Error: scope.js:103
   101:   function f0(x = () => a): number {
                                    ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------- scope.js:105:19
+
 Error: scope.js:105
 105:   function f1(x = b /* error: cannot resolve b */): number {
                        ^ Cannot resolve name `b`.
+
+Error ------------------------------------------------------------- tdz.js:25:11
 
 Error: tdz.js:25
  25:   var v = x * c;  // errors, let + const referenced before decl
@@ -466,12 +594,16 @@ Error: tdz.js:25
    26:   let x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------- tdz.js:25:15
+
 Error: tdz.js:25
  25:   var v = x * c;  // errors, let + const referenced before decl
                    ^ Cannot use variable `c` [1] because the declaration either comes later or was skipped.
   References:
    27:   const c = 0;
                ^ [1]: `c`
+
+Error -------------------------------------------------------------- tdz.js:31:3
 
 Error: tdz.js:31
  31:   x = 10;         // error, attempt to write to let before decl
@@ -480,12 +612,16 @@ Error: tdz.js:31
    32:   let x = 0;
              ^ [1]: `x`
 
+Error -------------------------------------------------------------- tdz.js:34:5
+
 Error: tdz.js:34
  34:     y = 10;       // error, attempt to write to let before decl
          ^ Cannot use variable `y` [1] because the declaration either comes later or was skipped.
   References:
    35:     let y = 0;
                ^ [1]: `y`
+
+Error ------------------------------------------------------------- tdz.js:41:13
 
 Error: tdz.js:41
  41:     var v = x * c; // errors, let + const referenced before decl
@@ -494,6 +630,8 @@ Error: tdz.js:41
    43:   let x = 0;
              ^ [1]: `x`
 
+Error ------------------------------------------------------------- tdz.js:41:17
+
 Error: tdz.js:41
  41:     var v = x * c; // errors, let + const referenced before decl
                      ^ Cannot use variable `c` [1] because the declaration either comes later or was skipped.
@@ -501,12 +639,16 @@ Error: tdz.js:41
    44:   const c = 0;
                ^ [1]: `c`
 
+Error ------------------------------------------------------------- tdz.js:80:13
+
 Error: tdz.js:80
  80: var y = new C(); // error: let ref before decl from value position
                  ^ Cannot use variable `C` [1] because the declaration either comes later or was skipped.
   References:
    82: class C {}
              ^ [1]: `C`
+
+Error -------------------------------------------------------------- tdz.js:96:3
 
 Error: tdz.js:96
  96: f(a); // error: undefined ~/> number

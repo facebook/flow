@@ -1,3 +1,5 @@
+Error ---------------------------------------------------- intersection.js:10:32
+
 Error: intersection.js:10
  10: function foo(x: X): A { return x; } // error
                                     ^ Cannot return `x` because `B` [1] is incompatible with `A` [2].
@@ -6,6 +8,8 @@ Error: intersection.js:10
                        ^ [1]: `B`
    10: function foo(x: X): A { return x; } // error
                            ^ [2]: `A`
+
+Error ---------------------------------------------------- intersection.js:11:32
 
 Error: intersection.js:11
  11: function bar(x: X): B { return x; } // error
@@ -16,13 +20,19 @@ Error: intersection.js:11
    11: function bar(x: X): B { return x; } // error
                            ^ [2]: `B`
 
+Error ------------------------------------------------------------- test.js:7:10
+
 Error: test.js:7
   7: type A = $Call; // Error: one or more arguments are required.
               ^^^^^ Cannot use type without at least 1 type argument.
 
+Error ------------------------------------------------------------- test.js:8:10
+
 Error: test.js:8
   8: type B = $Call<>; // Error: one or more arguments are required.
               ^^^^^^^ Cannot use type without at least 1 type argument.
+
+Error ------------------------------------------------------------- test.js:13:9
 
 Error: test.js:13
  13: ((null: mixed): C); // Error: mixed ~> number
@@ -33,6 +43,8 @@ Error: test.js:13
    13: ((null: mixed): C); // Error: mixed ~> number
                        ^ [2]: number
 
+Error ------------------------------------------------------------- test.js:15:2
+
 Error: test.js:15
  15: (c: empty); // Error: number ~> empty
       ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
@@ -41,6 +53,8 @@ Error: test.js:15
                       ^ [1]: number
    15: (c: empty); // Error: number ~> empty
            ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------- test.js:19:2
 
 Error: test.js:19
  19: (42: D); // Error: number ~> undefined
@@ -51,6 +65,8 @@ Error: test.js:19
    19: (42: D); // Error: number ~> undefined
             ^ [2]: undefined
 
+Error ------------------------------------------------------------- test.js:24:9
+
 Error: test.js:24
  24: ((null: mixed): E); // Error: mixed ~> number
              ^^^^^ Cannot cast `null` to `E` because mixed [1] is incompatible with number [2].
@@ -59,6 +75,8 @@ Error: test.js:24
                ^^^^^ [1]: mixed
    24: ((null: mixed): E); // Error: mixed ~> number
                        ^ [2]: number
+
+Error ------------------------------------------------------------- test.js:26:2
 
 Error: test.js:26
  26: (e: empty); // Error: number ~> empty
@@ -69,6 +87,8 @@ Error: test.js:26
    26: (e: empty); // Error: number ~> empty
            ^^^^^ [2]: empty
 
+Error ------------------------------------------------------------- test.js:31:9
+
 Error: test.js:31
  31: ((null: mixed): F); // Error: mixed ~> number
              ^^^^^ Cannot cast `null` to `F` because mixed [1] is incompatible with number [2].
@@ -77,6 +97,8 @@ Error: test.js:31
                ^^^^^ [1]: mixed
    31: ((null: mixed): F); // Error: mixed ~> number
                        ^ [2]: number
+
+Error ------------------------------------------------------------- test.js:33:2
 
 Error: test.js:33
  33: (f: empty); // Error: number ~> empty
@@ -109,6 +131,8 @@ Error: test.js:38
    35: type G = $Call<Fn2, number, string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
+Error ------------------------------------------------------------- test.js:39:2
+
 Error: test.js:39
  39: (g: number); // Error: number | string ~> number
       ^ Cannot cast `g` to number because string [1] is incompatible with number [2].
@@ -118,6 +142,8 @@ Error: test.js:39
    39: (g: number); // Error: number | string ~> number
            ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- test.js:41:2
+
 Error: test.js:41
  41: (g: empty); // Error: number | string ~> empty
       ^ Cannot cast `g` to empty because number [1] is incompatible with empty [2].
@@ -126,6 +152,8 @@ Error: test.js:41
                       ^ [1]: number
    41: (g: empty); // Error: number | string ~> empty
            ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------- test.js:41:2
 
 Error: test.js:41
  41: (g: empty); // Error: number | string ~> empty
@@ -158,6 +186,8 @@ Error: union.js:6
     3: type A = $Call<(() => number) | (() => string)>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
+Error ------------------------------------------------------------- union.js:7:2
+
 Error: union.js:7
   7: (a: number); // Error: number | string ~> number
       ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
@@ -167,6 +197,8 @@ Error: union.js:7
     7: (a: number); // Error: number | string ~> number
            ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- union.js:9:2
+
 Error: union.js:9
   9: (a: empty); // Error: number | string ~> empty
       ^ Cannot cast `a` to empty because number [1] is incompatible with empty [2].
@@ -175,6 +207,8 @@ Error: union.js:9
                       ^ [1]: number
     9: (a: empty); // Error: number | string ~> empty
            ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------- union.js:9:2
 
 Error: union.js:9
   9: (a: empty); // Error: number | string ~> empty
@@ -207,6 +241,8 @@ Error: union.js:14
    11: type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
+Error ------------------------------------------------------------ union.js:15:2
+
 Error: union.js:15
  15: (b: number); // Error: number | string ~> number
       ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
@@ -216,6 +252,8 @@ Error: union.js:15
    15: (b: number); // Error: number | string ~> number
            ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ union.js:17:2
+
 Error: union.js:17
  17: (b: empty); // Error: number | string ~> empty
       ^ Cannot cast `b` to empty because number [1] is incompatible with empty [2].
@@ -224,6 +262,8 @@ Error: union.js:17
                       ^ [1]: number
    17: (b: empty); // Error: number | string ~> empty
            ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------ union.js:17:2
 
 Error: union.js:17
  17: (b: empty); // Error: number | string ~> empty
@@ -256,6 +296,8 @@ Error: union.js:22
    19: type C = $Call<<T>(T) => T, number | string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
+Error ------------------------------------------------------------ union.js:23:2
+
 Error: union.js:23
  23: (c: number); // Error: number | string ~> number
       ^ Cannot cast `c` to number because string [1] is incompatible with number [2].
@@ -265,6 +307,8 @@ Error: union.js:23
    23: (c: number); // Error: number | string ~> number
            ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ union.js:25:2
+
 Error: union.js:25
  25: (c: empty); // Error: number | string ~> empty
       ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
@@ -273,6 +317,8 @@ Error: union.js:25
                       ^ [1]: number
    25: (c: empty); // Error: number | string ~> empty
            ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------ union.js:25:2
 
 Error: union.js:25
  25: (c: empty); // Error: number | string ~> empty

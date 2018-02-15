@@ -1,3 +1,5 @@
+Error ------------------------------------------------- license_with_flow.js:4:2
+
 Error: license_with_flow.js:4
   4: ("": void); // error
       ^^ Cannot cast empty string to undefined because string [1] is incompatible with undefined [2].
@@ -7,21 +9,31 @@ Error: license_with_flow.js:4
     4: ("": void); // error
             ^^^^ [2]: undefined
 
+Error -------------------------------------------------- multiple_flows_1.js:2:4
+
 Error: multiple_flows_1.js:2
   2: /* @flow */
         ^^^^^ Unexpected `@flow` declaration. Only one per file is allowed.
+
+Error -------------------------------------------------- multiple_flows_2.js:3:4
 
 Error: multiple_flows_2.js:3
   3:  * @noflow
         ^^^^^^^ Unexpected `@flow` declaration. Only one per file is allowed.
 
+Error ----------------------------------------- multiple_providesModule_1.js:3:4
+
 Error: multiple_providesModule_1.js:3
   3:  * @providesModule Bar
         ^^^^^^^^^^^^^^^ Unexpected `@providesModule` declaration. Only one per file is allowed.
 
+Error ----------------------------------------- multiple_providesModule_2.js:6:4
+
 Error: multiple_providesModule_2.js:6
   6:  * @providesModule Bar
         ^^^^^^^^^^^^^^^ Unexpected `@providesModule` declaration. Only one per file is allowed.
+
+Error ---------------------------------------------- use_strict_with_flow.js:4:2
 
 Error: use_strict_with_flow.js:4
   4: ("": void); // error
@@ -31,6 +43,8 @@ Error: use_strict_with_flow.js:4
         ^^ [1]: string
     4: ("": void); // error
             ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- with_flow.js:3:2
 
 Error: with_flow.js:3
   3: ("": void); // error

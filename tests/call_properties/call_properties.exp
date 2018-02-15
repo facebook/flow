@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- A.js:8:10
+
 Error: A.js:8
   8:   return f();
               ^^^ Cannot return `f()` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: A.js:8
                            ^^^^^^ [1]: string
     7: function b(f: { (): string }): number {
                                       ^^^^^^ [2]: number
+
+Error --------------------------------------------------------------- A.js:13:12
 
 Error: A.js:13
  13:   return f("hello");
@@ -16,12 +20,16 @@ Error: A.js:13
    12: function c(f: { (x: number): number }): number {
                            ^^^^^^ [2]: number
 
+Error --------------------------------------------------------------- A.js:18:10
+
 Error: A.js:18
  18:   return f();
               ^ Cannot call `f` because function [1] requires another argument.
   References:
    17: function d(f: { (x: number): number }): number {
                        ^^^^^^^^^^^^^^^^^^^ [1]: function
+
+Error --------------------------------------------------------------- A.js:23:10
 
 Error: A.js:23
  23:   return f();
@@ -30,12 +38,16 @@ Error: A.js:23
    22: function e(f: {}): number {
                      ^^ [1]: object type
 
+Error --------------------------------------------------------------- A.js:29:10
+
 Error: A.js:29
  29:   return x();
               ^ Cannot call `x` because a callable signature is missing in object literal [1].
   References:
    28:   var x = {};
                  ^^ [1]: object literal
+
+Error ---------------------------------------------------------------- B.js:5:56
 
 Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
@@ -46,6 +58,8 @@ Error: B.js:5
     5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
                              ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- B.js:8:47
+
 Error: B.js:8
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                                    ^^^^^^ Cannot assign function to `c` because in the first argument, number [1] is incompatible with string [2].
@@ -54,6 +68,8 @@ Error: B.js:8
                                                      ^^^^^^ [1]: number
     8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                     ^^^^^^ [2]: string
+
+Error --------------------------------------------------------------- B.js:11:25
 
 Error: B.js:11
  11: var d: { (): string } = function (x: number): string { return "hi"; };
@@ -64,6 +80,8 @@ Error: B.js:11
    11: var d: { (): string } = function (x: number): string { return "hi"; };
                 ^^^^^^^^^^ [2]: function type
 
+Error ---------------------------------------------------------------- C.js:8:10
+
 Error: C.js:8
   8:   return x;
               ^ Cannot return `x` because in the return value, string [1] is incompatible with number [2].
@@ -72,6 +90,8 @@ Error: C.js:8
                                     ^^^^^^ [1]: string
     7: function b(x: { (z: number): string }): (z: number) => number {
                                                               ^^^^^^ [2]: number
+
+Error --------------------------------------------------------------- C.js:13:10
 
 Error: C.js:13
  13:   return x;
@@ -82,6 +102,8 @@ Error: C.js:13
    12: function c(x: { (z: number): string }): (z: string) => string {
                                                    ^^^^^^ [2]: string
 
+Error --------------------------------------------------------------- C.js:18:10
+
 Error: C.js:18
  18:   return x;
               ^ Cannot return `x` because function type [1] requires another argument from function type [2].
@@ -90,6 +112,8 @@ Error: C.js:18
                        ^^^^^^^^^^^^^^^^^^^ [1]: function type
    17: function d(x: { (z: number): string }): () => string {
                                                ^^^^^^^^^^^^ [2]: function type
+
+Error --------------------------------------------------------------- C.js:23:10
 
 Error: C.js:23
  23:   return x;
@@ -100,6 +124,8 @@ Error: C.js:23
    22: function e(x: {}): () => string {
                           ^^^^^^^^^^^^ [2]: function type
 
+Error --------------------------------------------------------------- C.js:33:10
+
 Error: C.js:33
  33:   return x; // error
               ^ Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
@@ -108,6 +134,8 @@ Error: C.js:33
                      ^^ [1]: object type
    32: function g(x: {}): Function {
                           ^^^^^^^^ [2]: function type
+
+Error ---------------------------------------------------------------- D.js:12:3
 
 Error: D.js:12
  12:   function (x: number): string { return "hi"; };
@@ -118,6 +146,8 @@ Error: D.js:12
    11: var c: { (): string; (x: number): string } =
                 ^^^^^^^^^^ [2]: function type
 
+Error --------------------------------------------------------------- D.js:21:10
+
 Error: D.js:21
  21:   return x;
               ^ Cannot return `x` because in the return value, string [1] is incompatible with number [2].
@@ -126,6 +156,8 @@ Error: D.js:21
                            ^^^^^^ [1]: string
    20: function e(x: { (): string; (x: number): string }): () => number {
                                                                  ^^^^^^ [2]: number
+
+Error ---------------------------------------------------------------- E.js:2:32
 
 Error: E.js:2
   2: var a : { someProp: number } = function () {};
@@ -136,6 +168,8 @@ Error: E.js:2
     2: var a : { someProp: number } = function () {};
                ^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
+Error ---------------------------------------------------------------- F.js:6:41
+
 Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"
                                              ^^^^ Cannot assign function to `b` because in the return value, string [1] is incompatible with number [2].
@@ -145,12 +179,16 @@ Error: F.js:6
     6: var b: { (x: number): number } = (x) => "hi"
                              ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- F.js:9:43
+
 Error: F.js:9
   9: var c: { (x: string): string } = (x) => x.toFixed()
                                                ^^^^^^^ Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1].
   References:
     9: var c: { (x: string): string } = (x) => x.toFixed()
                     ^^^^^^ [1]: `String`
+
+Error ----------------------------------------------------------- use_ops.js:4:2
 
 Error: use_ops.js:4
   4: (a: B); // error HERE and preserve use ops

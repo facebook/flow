@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- importtest.js:7:2
+
 Error: importtest.js:7
   7: (3 : ID); // Error: number ~> ID
       ^ Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2].
@@ -6,6 +8,8 @@ Error: importtest.js:7
         ^ [1]: number
     7: (3 : ID); // Error: number ~> ID
             ^^ [2]: `ID`
+
+Error ------------------------------------------------------ importtest.js:10:12
 
 Error: importtest.js:10
  10:     return x;
@@ -16,6 +20,8 @@ Error: importtest.js:10
     9: function bad1(x: number) : ID { // Error: number ~> ID
                                   ^^ [2]: `ID`
 
+Error ------------------------------------------------------ importtest.js:14:22
+
 Error: importtest.js:14
  14:     return Test.hide(x); // Error: ID ~> number
                           ^ Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: importtest.js:14
                         ^^ [1]: `ID`
    12: export function hide(x: number) : ID {
                                ^^^^^^ [2]: number. See: test.js:12
+
+Error ------------------------------------------------------ importtest.js:18:12
 
 Error: importtest.js:18
  18:     return x; // Error: ID ~> ID2
@@ -34,6 +42,8 @@ Error: importtest.js:18
    17: function bad3(x: ID) : ID2 {
                               ^^^ [2]: number
 
+Error ------------------------------------------------------ importtest.js:22:12
+
 Error: importtest.js:22
  22:     return x;
                 ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
@@ -42,6 +52,8 @@ Error: importtest.js:22
                         ^^^ [1]: number
    21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
                                ^^ [2]: `ID`
+
+Error ------------------------------------------------------------- test.js:17:2
 
 Error: test.js:17
  17: ("hello": MyNum) // Error: string ~> number

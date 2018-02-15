@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- A.js:5:19
+
 Error: A.js:5
   5: var a_2: string = m1.numVal; // Error: number ~> string
                        ^^^^^^^^^ Cannot assign `m1.numVal` to `a_2` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: A.js:5
                  ^^ [1]: number. See: Exists.js:4
     5: var a_2: string = m1.numVal; // Error: number ~> string
                 ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- A.js:8:19
 
 Error: A.js:8
   8: var a_4: string = numVal; // Error: number ~> string
@@ -16,6 +20,8 @@ Error: A.js:8
     8: var a_4: string = numVal; // Error: number ~> string
                 ^^^^^^ [2]: string
 
+Error --------------------------------------------------------------- A.js:14:19
+
 Error: A.js:14
  14: var b_2: string = m2.numVal; // Error: number ~> string
                        ^^^^^^^^^ Cannot assign `m2.numVal` to `b_2` because number [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: A.js:14
                  ^^ [1]: number. See: Exists.js:4
    14: var b_2: string = m2.numVal; // Error: number ~> string
                 ^^^^^^ [2]: string
+
+Error --------------------------------------------------------------- A.js:17:19
 
 Error: A.js:17
  17: var b_4: string = numVal2; // Error: number ~> string
@@ -34,6 +42,8 @@ Error: A.js:17
    17: var b_4: string = numVal2; // Error: number ~> string
                 ^^^^^^ [2]: string
 
+Error --------------------------------------------------------------- A.js:22:19
+
 Error: A.js:22
  22: var c_2: string = m3.numVal; // Error: number ~> string
                        ^^^^^^^^^ Cannot assign `m3.numVal` to `c_2` because number [1] is incompatible with string [2].
@@ -42,6 +52,8 @@ Error: A.js:22
                  ^^ [1]: number. See: node_modules/Exists/index.js:4
    22: var c_2: string = m3.numVal; // Error: number ~> string
                 ^^^^^^ [2]: string
+
+Error --------------------------------------------------------------- A.js:25:19
 
 Error: A.js:25
  25: var c_4: string = numVal3; // Error: number ~> string

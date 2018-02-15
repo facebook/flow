@@ -1,9 +1,13 @@
+Error ------------------------------------------------------------- test.js:21:8
+
 Error: test.js:21
  21: var c: MyClass = new MyClass(0); // error, missing argument list (1)
             ^^^^^^^ Cannot use `MyClass` [1] without 1 type argument.
   References:
    14: class MyClass<T> {
                      ^ [1]: `MyClass`
+
+Error ------------------------------------------------------------- test.js:34:9
 
 Error: test.js:34
  34: var c2: MyClass2 = new MyClass2(0, ""); // error, missing argument list (1-2)
@@ -12,12 +16,16 @@ Error: test.js:34
    25: class MyClass2<T, U = string> {
                       ^^^^ [1]: `MyClass2`
 
+Error ------------------------------------------------------------- test.js:42:8
+
 Error: test.js:42
  42: var o: MyObject = { x: 0 }; // error, missing argument list
             ^^^^^^^^ Cannot use `MyObject` [1] without 1 type argument.
   References:
    38: type MyObject<T> = {
                      ^ [1]: `MyObject`
+
+Error ------------------------------------------------------------ test.js:46:36
 
 Error: test.js:46
  46: type MySubobject = { y: number } & MyObject; // error, missing argument list
@@ -26,12 +34,16 @@ Error: test.js:46
    38: type MyObject<T> = {
                      ^ [1]: `MyObject`
 
+Error ------------------------------------------------------------ test.js:50:11
+
 Error: test.js:50
  50: interface MyInterface<T> {
                ^^^^^^^^^^^ Cannot use `MyInterface` [1] without 1 type argument.
   References:
    50: interface MyInterface<T> {
                              ^ [1]: `MyInterface`
+
+Error ------------------------------------------------------------ test.js:60:26
 
 Error: test.js:60
  60: class MySubclass extends MyClass { // error, missing argument list
@@ -40,6 +52,8 @@ Error: test.js:60
    14: class MyClass<T> {
                      ^ [1]: `MyClass`
 
+Error ------------------------------------------------------------ test.js:69:27
+
 Error: test.js:69
  69: class MySubclass2 extends MyClass3 { } // error, missing argument list
                                ^^^^^^^^ Cannot use `MyClass3` [1] with less than 1 type argument.
@@ -47,12 +61,16 @@ Error: test.js:69
    67: class MyClass3<X, Y = void> { }
                       ^^^^ [1]: `MyClass3`
 
+Error ------------------------------------------------------------ test.js:79:11
+
 Error: test.js:79
  79: var poly: MyClass<> = new MyClass; // error, too few arguments
                ^^^^^^^^^ Cannot use `MyClass` [1] with less than 1 type argument.
   References:
    14: class MyClass<T> {
                      ^ [1]: `MyClass`
+
+Error ------------------------------------------------------------ test.js:83:11
 
 Error: test.js:83
  83: var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic

@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- fun.js:5:19
+
 Error: fun.js:5
   5: var f0: F = () => 0; // error: number ~> void
                        ^ Cannot assign function to `f0` because in the return value, number [1] is incompatible with undefined [2].
@@ -7,9 +9,13 @@ Error: fun.js:5
     2:   (): void;
              ^^^^ [2]: undefined
 
+Error ----------------------------------------------------------- indexer.js:9:3
+
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
        ^^^^^^^^^^^^^^^^^^^^ Multiple indexers are not supported.
+
+Error -------------------------------------------------------- interface.js:3:17
 
 Error: interface.js:3
   3: var x: string = new C().x;
@@ -20,6 +26,8 @@ Error: interface.js:3
     3: var x: string = new C().x;
               ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- interface.js:7:13
+
 Error: interface.js:7
   7: var i = new I(); // error
                  ^ Cannot reference type `I` [1] from a value position.
@@ -27,12 +35,16 @@ Error: interface.js:7
     5: interface I { x: number; }
                  ^ [1]: `I`
 
+Error -------------------------------------------------------- interface.js:10:6
+
 Error: interface.js:10
  10:   (o.name: string); // error, name is static
           ^^^^ Cannot get `o.name` because property `name` is missing in `I` [1].
   References:
     9: function testInterfaceName(o: I) {
                                      ^ [1]: `I`
+
+Error ------------------------------------------------------------- test.js:6:17
 
 Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
@@ -43,6 +55,8 @@ Error: test.js:6
     2: interface I_ { x: number }
                          ^^^^^^ [2]: number
 
+Error -------------------------------------------------------------- test.js:7:2
+
 Error: test.js:7
   7: (k.x: string); // error: x is number
       ^^^ Cannot cast `k.x` to string because number [1] is incompatible with string [2].
@@ -51,6 +65,8 @@ Error: test.js:7
                          ^^^^^^ [1]: number
     7: (k.x: string); // error: x is number
              ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test.js:17:25
 
 Error: test.js:17
  17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
@@ -61,6 +77,8 @@ Error: test.js:17
    17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                 ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ test.js:17:39
+
 Error: test.js:17
  17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                                            ^^ Cannot assign object literal to `e` because in property `z`, string [1] is incompatible with number [2].
@@ -69,6 +87,8 @@ Error: test.js:17
                                              ^^ [1]: string
    17: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                 ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:18:2
 
 Error: test.js:18
  18: (e.x: string); // error: x is number
@@ -79,6 +99,8 @@ Error: test.js:18
    18: (e.x: string); // error: x is number
              ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------- test.js:20:2
+
 Error: test.js:20
  20: (e.z: string); // error: z is number
       ^^^ Cannot cast `e.z` to string because number [1] is incompatible with string [2].
@@ -88,12 +110,16 @@ Error: test.js:20
    20: (e.z: string); // error: z is number
              ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ test2.js:5:34
+
 Error: test2.js:5
   5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
                                       ^ Cannot get `l.z` because property `z` is missing in `L` [1].
   References:
     5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
                        ^ [1]: `L`
+
+Error ------------------------------------------------------------ test3.js:3:31
 
 Error: test3.js:3
   3: interface K extends I, J { x: string } // error: x is number in I
@@ -106,6 +132,8 @@ Error: test3.js:3
     1: interface I { x: number, y : string }
                         ^^^^^^ [3]: number
 
+Error ------------------------------------------------------------- test3.js:5:4
+
 Error: test3.js:5
   5:   (k.x: number); // error: x is string in K
         ^^^ Cannot cast `k.x` to number because string [1] is incompatible with number [2].
@@ -114,6 +142,8 @@ Error: test3.js:5
                                      ^^^^^^ [1]: string
     5:   (k.x: number); // error: x is string in K
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test3.js:6:4
 
 Error: test3.js:6
   6:   (k.y: number); // error: y is string in I
@@ -124,6 +154,8 @@ Error: test3.js:6
     6:   (k.y: number); // error: y is string in I
                ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- test4.js:2:2
+
 Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2].
@@ -132,6 +164,8 @@ Error: test4.js:2
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
     2: (function foo(x: number) { }: I); // error, property `foo` not found function
                                      ^ [2]: `I`
+
+Error ------------------------------------------------------------ test4.js:9:17
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string

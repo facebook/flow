@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- Closure.js:20:14
+
 Error: Closure.js:20
  20: takes_string(global_x); // error
                   ^^^^^^^^ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: Closure.js:20
                                         ^^ [1]: number
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- Closure.js:20:14
 
 Error: Closure.js:20
  20: takes_string(global_x); // error
@@ -16,6 +20,8 @@ Error: Closure.js:20
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
 
+Error --------------------------------------------------------- Closure.js:38:16
+
 Error: Closure.js:38
  38:   takes_string(local_x); // error
                     ^^^^^^^ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: Closure.js:38
                                         ^^ [1]: number
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- Closure.js:38:16
 
 Error: Closure.js:38
  38:   takes_string(local_x); // error
@@ -34,6 +42,8 @@ Error: Closure.js:38
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
 
+Error --------------------------------------------------------- Closure.js:57:14
+
 Error: Closure.js:57
  57: takes_string(global_y); // error
                   ^^^^^^^^ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
@@ -42,6 +52,8 @@ Error: Closure.js:57
                                     ^^ [1]: number
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- Closure.js:57:14
 
 Error: Closure.js:57
  57: takes_string(global_y); // error
@@ -52,6 +64,8 @@ Error: Closure.js:57
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
 
+Error --------------------------------------------------------- Closure.js:77:16
+
 Error: Closure.js:77
  77:   takes_string(local_y); // error
                     ^^^^^^^ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
@@ -60,6 +74,8 @@ Error: Closure.js:77
                                      ^^ [1]: number
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- Closure.js:77:16
 
 Error: Closure.js:77
  77:   takes_string(local_y); // error
@@ -70,6 +86,8 @@ Error: Closure.js:77
     6: function takes_string(_:string) { }
                                ^^^^^^ [2]: string
 
+Error ------------------------------------------------------ cond_havoc.js:12:10
+
 Error: cond_havoc.js:12
  12:   return x; // error, string ~/~> number (return type anno) TODO
               ^ Cannot return `x` because string [1] is incompatible with number [2].
@@ -79,6 +97,8 @@ Error: cond_havoc.js:12
     6: function example(b: bool): number {
                                   ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- const.js:20:38
+
 Error: const.js:20
  20:     call_me = () => { var y:number = var_x; };  // error
                                           ^^^^^ Cannot assign `var_x` to `y` because null [1] is incompatible with number [2].
@@ -87,6 +107,8 @@ Error: const.js:20
                  ^^^^ [1]: null
    20:     call_me = () => { var y:number = var_x; };  // error
                                    ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- const.js:20:38
 
 Error: const.js:20
  20:     call_me = () => { var y:number = var_x; };  // error

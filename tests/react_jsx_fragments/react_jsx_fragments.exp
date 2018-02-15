@@ -1,14 +1,22 @@
+Error ----------------------------------------------------- embedded_ltgt.js:4:1
+
 Error: embedded_ltgt.js:4
   4: 
      ^ Unexpected token ILLEGAL
+
+Error ------------------------------------------------ incorrect_token_lt.js:3:4
 
 Error: incorrect_token_lt.js:3
   3: <><</>; // Error: `<` is not a valid token here.
         ^ Unexpected token <
 
+Error -------------------------------------- nonmatching_closing_element.js:3:17
+
 Error: nonmatching_closing_element.js:3
   3: <></elementName>; // Error: `elementName` is not a valid token here.
                      ^ Expected corresponding JSX closing tag for JSX fragment
+
+Error -------------------------------------- nonmatching_opening_element.js:3:17
 
 Error: nonmatching_opening_element.js:3
   3: <elementName></>; // Error: `elementName` is not a valid token here.

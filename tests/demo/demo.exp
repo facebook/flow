@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- 1/f.js:3:27
+
 Error: 1/f.js:3
   3: function f(x) { return 42/x; }
                                ^ Cannot perform arithmetic operation because null [1] is not a number.
@@ -5,13 +7,19 @@ Error: 1/f.js:3
     5: var x = null;
                ^^^^ [1]: null
 
+Error -------------------------------------------------------------- 2/A.js:5:15
+
 Error: 2/A.js:5
   5:   constructor(x) { this.x = x; }
                    ^ Missing type annotation for `x`.
 
+Error -------------------------------------------------------------- 2/A.js:9:10
+
 Error: 2/A.js:9
   9:   onLoad(callback) {
               ^^^^^^^^ Missing type annotation for `callback`.
+
+Error ------------------------------------------------------------- 2/A.js:10:21
 
 Error: 2/A.js:10
  10:     return callback(this.getX());

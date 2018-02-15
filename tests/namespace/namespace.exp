@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------- client.js:3:19
+
 Error: client.js:3
   3: var bar: string = ns.foo
                        ^^^^^^ Cannot assign `ns.foo` to `bar` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: client.js:3
                                     ^^^^^^ [1]: number. See: namespace.js:17
     3: var bar: string = ns.foo
                 ^^^^^^ [2]: string
+
+Error -------------------------------------------------------- namespace.js:3:23
 
 Error: namespace.js:3
   3: var f: T = function(x:string): void { }
@@ -16,6 +20,8 @@ Error: namespace.js:3
     2: type T = (x:number) => void;
                    ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- namespace.js:11:16
+
 Error: namespace.js:11
  11: var y:number = bar(0, x => "");
                     ^^^^^^^^^^^^^^^ Cannot assign `bar(...)` to `y` because string [1] is incompatible with number [2].
@@ -25,6 +31,8 @@ Error: namespace.js:11
    11: var y:number = bar(0, x => "");
              ^^^^^^ [2]: number
 
+Error ------------------------------------------------------- namespace.js:15:16
+
 Error: namespace.js:15
  15: var s2:Seq = [[""]];
                     ^^ Cannot assign array literal to `s2` because in type argument `T` and then type argument `T`, string [1] is incompatible with number [2].
@@ -33,6 +41,8 @@ Error: namespace.js:15
                       ^^ [1]: string
    13: type Seq = number | Array<Seq>;
                   ^^^^^^ [2]: number
+
+Error ------------------------------------------------------- namespace.js:17:26
 
 Error: namespace.js:17
  17: module.exports = { foo: ("": number) };

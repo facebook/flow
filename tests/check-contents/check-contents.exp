@@ -1,4 +1,6 @@
 syntax_error.js
+Error ------------------------------------------------------ syntax_error.js:4:1
+
 Error: syntax_error.js:4
   4: 
      ^ Unexpected end of input
@@ -6,6 +8,8 @@ Error: syntax_error.js:4
 
 Found 1 error
 syntax_error.js (no filename)
+Error -------------------------------------------------------------------- -:4:1
+
 Error: -:4
   4: 
      ^ Unexpected end of input
@@ -15,6 +19,8 @@ Found 1 error
 
 
 not_flow.js
+
+Error ---------------------------------------------------------- not_flow.js:1:5
 
 Error: not_flow.js:1
   1: 1 * 'foo';
@@ -28,6 +34,8 @@ Found 1 error
 
 
 not_flow.js with --all
+
+Error ---------------------------------------------------------- not_flow.js:1:5
 
 Error: not_flow.js:1
   1: 1 * 'foo';
@@ -46,6 +54,8 @@ File is not @flow!
 
 
 not_flow.js with --respect-pragma and --all
+
+Error ---------------------------------------------------------- not_flow.js:1:5
 
 Error: not_flow.js:1
   1: 1 * 'foo';

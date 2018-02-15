@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ class.js:4:12
+
 Error: class.js:4
   4:     this.b(a); // error: A ~> incompatible instance of T
                 ^ Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
@@ -7,6 +9,8 @@ Error: class.js:4
     1: class C<T> {
                ^ [2]: `T`
 
+Error ---------------------------------------------------- default_params.js:6:7
+
 Error: default_params.js:6
   6:     h(c); // err, T ~> U
            ^ Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
@@ -15,6 +19,8 @@ Error: default_params.js:6
                               ^ [1]: `T`
     3:     function h(d:U = b) {}
                         ^ [2]: `U`
+
+Error --------------------------------------------------- default_params.js:10:7
 
 Error: default_params.js:10
  10:   g(0,0); // error: number ~> T
@@ -47,6 +53,8 @@ Error: method_shadow.js:42
    40: declare var g: G<number|string>;
                                ^^^^^^ string
 
+Error ---------------------------------------------------- method_shadow.js:43:6
+
 Error: method_shadow.js:43
  43: (g.m(""): G<number>); // err, string ~> number
           ^^ Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is incompatible with number [2].
@@ -55,6 +63,8 @@ Error: method_shadow.js:43
             ^^ [1]: string
    43: (g.m(""): G<number>); // err, string ~> number
                    ^^^^^^ [2]: number
+
+Error --------------------------------------------------- method_shadow.js:51:18
 
 Error: method_shadow.js:51
  51:         this.x = x; // err, m's T != H's T

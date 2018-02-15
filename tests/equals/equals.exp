@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ equals.js:7:2
+
 Error: equals.js:7
   7: (1 == ""); // error
       ^ Cannot compare number [1] to string [2].
@@ -6,6 +8,8 @@ Error: equals.js:7
         ^ [1]: number
     7: (1 == ""); // error
              ^^ [2]: string
+
+Error ------------------------------------------------------------ equals.js:8:2
 
 Error: equals.js:8
   8: ("" == 1); // error

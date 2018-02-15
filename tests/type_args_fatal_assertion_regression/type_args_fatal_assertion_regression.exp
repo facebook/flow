@@ -1,9 +1,13 @@
+Error ------------------------------------------------------------- test.js:10:5
+
 Error: test.js:10
  10: (x: V);
          ^ Cannot use `V` [1] with more than 1 type argument.
   References:
     7: class T<U> {}
                ^ [1]: `V`
+
+Error ------------------------------------------------------------- test.js:12:2
 
 Error: test.js:12
  12: (42: empty); // Error: number ~> empty

@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:8:59
+
 Error: test.js:8
   8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
                                                                ^ Cannot return `x` because number [1] is incompatible with `Queue` [2].
@@ -6,6 +8,8 @@ Error: test.js:8
                                          ^^^^^^ [1]: number
     8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
                                                   ^^^^^ [2]: `Queue`
+
+Error ------------------------------------------------------------- test.js:9:58
 
 Error: test.js:9
   9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
@@ -16,6 +20,8 @@ Error: test.js:9
     9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
                                                  ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ test.js:13:19
+
 Error: test.js:13
  13: counter_to_number(y); // Error: number ~> Counter
                        ^ Cannot call `counter_to_number` with `y` bound to `c` because number [1] is incompatible with `Counter` [2].
@@ -25,6 +31,8 @@ Error: test.js:13
     8: declare function counter_to_number(c: Counter): number;
                                              ^^^^^^^ [2]: `Counter`. See lib: flow-typed/decls.js:8
 
+Error ------------------------------------------------------------ test.js:22:12
+
 Error: test.js:22
  22:     return x; // Error: string ~> number, number ~> string
                 ^ Cannot return `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -33,6 +41,8 @@ Error: test.js:22
                                                    ^^^^^^ [1]: number
    21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
                                                                        ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test.js:27:12
 
 Error: test.js:27
  27:     return x; // Error string ~> number

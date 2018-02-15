@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ Arith.js:13:7
+
 Error: Arith.js:13
  13:   num(x+y); // error
            ^^^ Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: Arith.js:13
              ^^^ [1]: string
     4: function num(x:number) { }
                       ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ Arith.js:15:7
 
 Error: Arith.js:15
  15:   str(x+x); // error
@@ -16,6 +20,8 @@ Error: Arith.js:15
     6: function str(x:string) { }
                       ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:16:7
+
 Error: Arith.js:16
  16:   str(z+y); // error
            ^ Cannot add `z` and `y` because object literal [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: Arith.js:16
                  ^^ [1]: object literal
    10:   var y = "...";
                  ^^^^^ [2]: string
+
+Error ----------------------------------------------------------- Arith.js:56:13
 
 Error: Arith.js:56
  56: str("foo" + true); // error
@@ -34,6 +42,8 @@ Error: Arith.js:56
    56: str("foo" + true); // error
            ^^^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:57:5
+
 Error: Arith.js:57
  57: str(true + "foo"); // error
          ^^^^ Cannot add `true` and `"foo"` because boolean [1] is incompatible with string [2].
@@ -42,6 +52,8 @@ Error: Arith.js:57
            ^^^^ [1]: boolean
    57: str(true + "foo"); // error
                   ^^^^^ [2]: string
+
+Error ----------------------------------------------------------- Arith.js:58:13
 
 Error: Arith.js:58
  58: str("foo" + null); // error
@@ -52,6 +64,8 @@ Error: Arith.js:58
    58: str("foo" + null); // error
            ^^^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:59:5
+
 Error: Arith.js:59
  59: str(null + "foo"); // error
          ^^^^ Cannot add `null` and `"foo"` because null [1] is incompatible with string [2].
@@ -60,6 +74,8 @@ Error: Arith.js:59
            ^^^^ [1]: null
    59: str(null + "foo"); // error
                   ^^^^^ [2]: string
+
+Error ----------------------------------------------------------- Arith.js:60:13
 
 Error: Arith.js:60
  60: str("foo" + undefined); // error
@@ -70,6 +86,8 @@ Error: Arith.js:60
    60: str("foo" + undefined); // error
            ^^^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:61:5
+
 Error: Arith.js:61
  61: str(undefined + "foo"); // error
          ^^^^^^^^^ Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with string [2].
@@ -79,12 +97,16 @@ Error: Arith.js:61
    61: str(undefined + "foo"); // error
                        ^^^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:65:6
+
 Error: Arith.js:65
  65:     (x + y); // error
           ^ Cannot add `x` and `y` because mixed [1] could either behave like a string or like a number.
   References:
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
+
+Error ------------------------------------------------------------ Arith.js:66:6
 
 Error: Arith.js:66
  66:     (x + 0); // error
@@ -93,12 +115,16 @@ Error: Arith.js:66
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
 
+Error ----------------------------------------------------------- Arith.js:67:10
+
 Error: Arith.js:67
  67:     (0 + x); // error
               ^ Cannot add `0` and `x` because mixed [1] could either behave like a string or like a number.
   References:
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
+
+Error ------------------------------------------------------------ Arith.js:68:6
 
 Error: Arith.js:68
  68:     (x + ""); // error
@@ -107,12 +133,16 @@ Error: Arith.js:68
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
 
+Error ----------------------------------------------------------- Arith.js:69:11
+
 Error: Arith.js:69
  69:     ("" + x); // error
                ^ Cannot add empty string and `x` because mixed [1] could either behave like a string or like a number.
   References:
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
+
+Error ------------------------------------------------------------ Arith.js:70:6
 
 Error: Arith.js:70
  70:     (x + {}); // error
@@ -121,12 +151,16 @@ Error: Arith.js:70
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
 
+Error ----------------------------------------------------------- Arith.js:71:11
+
 Error: Arith.js:71
  71:     ({} + x); // error
                ^ Cannot add object literal and `x` because mixed [1] could either behave like a string or like a number.
   References:
    64:   function(x: mixed, y: mixed) {
                      ^^^^^ [1]: mixed
+
+Error ----------------------------------------------------------- Arith.js:78:11
 
 Error: Arith.js:78
  78:     ((1 + {}): number); // error: object !~> number
@@ -137,6 +171,8 @@ Error: Arith.js:78
    78:     ((1 + {}): number); // error: object !~> number
              ^ [2]: number
 
+Error ------------------------------------------------------------ Arith.js:79:7
+
 Error: Arith.js:79
  79:     (({} + 1): number); // error: object !~> number
            ^^ Cannot add object literal and `1` because object literal [1] is incompatible with number [2].
@@ -145,6 +181,8 @@ Error: Arith.js:79
              ^^ [1]: object literal
    79:     (({} + 1): number); // error: object !~> number
                   ^ [2]: number
+
+Error ----------------------------------------------------------- Arith.js:80:13
 
 Error: Arith.js:80
  80:     (("1" + {}): string); // error: object !~> string
@@ -155,6 +193,8 @@ Error: Arith.js:80
    80:     (("1" + {}): string); // error: object !~> string
              ^^^ [2]: string
 
+Error ------------------------------------------------------------ Arith.js:81:7
+
 Error: Arith.js:81
  81:     (({} + "1"): string); // error: object !~> string
            ^^ Cannot add object literal and `"1"` because object literal [1] is incompatible with string [2].
@@ -163,6 +203,8 @@ Error: Arith.js:81
              ^^ [1]: object literal
    81:     (({} + "1"): string); // error: object !~> string
                   ^^^ [2]: string
+
+Error ------------------------------------------------------------ Arith.js:88:6
 
 Error: Arith.js:88
  88:     (x + z: empty); // error, string ~> empty
@@ -173,6 +215,8 @@ Error: Arith.js:88
    88:     (x + z: empty); // error, string ~> empty
                    ^^^^^ [2]: empty
 
+Error ------------------------------------------------------------ Arith.js:89:6
+
 Error: Arith.js:89
  89:     (z + x: empty); // error, string ~> empty
           ^^^^^ Cannot cast `z + x` to empty because string [1] is incompatible with empty [2].
@@ -182,12 +226,16 @@ Error: Arith.js:89
    89:     (z + x: empty); // error, string ~> empty
                    ^^^^^ [2]: empty
 
+Error ---------------------------------------------------------- exponent.js:7:1
+
 Error: exponent.js:7
   7: y **= 2; // error
      ^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
     6: let y: string = "123";
               ^^^^^^ [1]: string
+
+Error ---------------------------------------------------------- exponent.js:7:1
 
 Error: exponent.js:7
   7: y **= 2; // error
@@ -198,12 +246,16 @@ Error: exponent.js:7
     6: let y: string = "123";
               ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------- generic.js:3:33
+
 Error: generic.js:3
   3: function f<A>(a: A): A { return a + a; } // error
                                      ^ Cannot add `a` and `a` because `A` [1] could either behave like a string or like a number.
   References:
     3: function f<A>(a: A): A { return a + a; } // error
                         ^ [1]: `A`
+
+Error ---------------------------------------------------------- generic.js:4:40
 
 Error: generic.js:4
   4: function f<A,B>(a: A, b: B): A {return a + b; } // error
@@ -212,12 +264,16 @@ Error: generic.js:4
     4: function f<A,B>(a: A, b: B): A {return a + b; } // error
                           ^ [1]: `A`
 
+Error ---------------------------------------------------------- generic.js:5:40
+
 Error: generic.js:5
   5: function f<A,B>(a: A, b: B): A {return b + a; } // error
                                             ^ Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
   References:
     5: function f<A,B>(a: A, b: B): A {return b + a; } // error
                                 ^ [1]: `B`
+
+Error ---------------------------------------------------------- generic.js:6:40
 
 Error: generic.js:6
   6: function f<A,B>(a: A, b: B): B {return a + b; } // error
@@ -226,12 +282,16 @@ Error: generic.js:6
     6: function f<A,B>(a: A, b: B): B {return a + b; } // error
                           ^ [1]: `A`
 
+Error ---------------------------------------------------------- generic.js:7:40
+
 Error: generic.js:7
   7: function f<A,B>(a: A, b: B): B {return b + a; } // error
                                             ^ Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
   References:
     7: function f<A,B>(a: A, b: B): B {return b + a; } // error
                                 ^ [1]: `B`
+
+Error -------------------------------------------------------------- mult.js:5:5
 
 Error: mult.js:5
   5: num(null * 1);
@@ -240,6 +300,8 @@ Error: mult.js:5
     5: num(null * 1);
            ^^^^ [1]: null
 
+Error -------------------------------------------------------------- mult.js:6:9
+
 Error: mult.js:6
   6: num(1 * null);
              ^^^^ Cannot perform arithmetic operation because null [1] is not a number.
@@ -247,12 +309,16 @@ Error: mult.js:6
     6: num(1 * null);
                ^^^^ [1]: null
 
+Error ------------------------------------------------------------- mult.js:12:1
+
 Error: mult.js:12
  12: y *= 2; // error
      ^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
    11: let y: string = "123";
               ^^^^^^ [1]: string
+
+Error ------------------------------------------------------------- mult.js:12:1
 
 Error: mult.js:12
  12: y *= 2; // error
@@ -263,6 +329,8 @@ Error: mult.js:12
    11: let y: string = "123";
               ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- relational.js:4:2
+
 Error: relational.js:4
   4: (1 < "foo"); // error
       ^ Cannot compare number [1] to string [2].
@@ -271,6 +339,8 @@ Error: relational.js:4
         ^ [1]: number
     4: (1 < "foo"); // error
             ^^^^^ [2]: string
+
+Error -------------------------------------------------------- relational.js:5:2
 
 Error: relational.js:5
   5: ("foo" < 1); // error
@@ -281,6 +351,8 @@ Error: relational.js:5
     5: ("foo" < 1); // error
                 ^ [2]: number
 
+Error -------------------------------------------------------- relational.js:7:2
+
 Error: relational.js:7
   7: (1 < {foo: 1}); // error
       ^ Cannot compare number [1] to object literal [2].
@@ -289,6 +361,8 @@ Error: relational.js:7
         ^ [1]: number
     7: (1 < {foo: 1}); // error
             ^^^^^^^^ [2]: object literal
+
+Error -------------------------------------------------------- relational.js:8:2
 
 Error: relational.js:8
   8: ({foo: 1} < 1); // error
@@ -299,6 +373,8 @@ Error: relational.js:8
     8: ({foo: 1} < 1); // error
                    ^ [2]: number
 
+Error -------------------------------------------------------- relational.js:9:2
+
 Error: relational.js:9
   9: ({foo: 1} < {foo: 1}); // error
       ^^^^^^^^ Cannot compare object literal [1] to object literal [2].
@@ -307,6 +383,8 @@ Error: relational.js:9
         ^^^^^^^^ [1]: object literal
     9: ({foo: 1} < {foo: 1}); // error
                    ^^^^^^^^ [2]: object literal
+
+Error ------------------------------------------------------- relational.js:10:2
 
 Error: relational.js:10
  10: ("foo" < {foo: 1}); // error
@@ -317,6 +395,8 @@ Error: relational.js:10
    10: ("foo" < {foo: 1}); // error
                 ^^^^^^^^ [2]: object literal
 
+Error ------------------------------------------------------- relational.js:11:2
+
 Error: relational.js:11
  11: ({foo: 1} < "foo"); // error
       ^^^^^^^^ Cannot compare object literal [1] to string [2].
@@ -325,6 +405,8 @@ Error: relational.js:11
         ^^^^^^^^ [1]: object literal
    11: ({foo: 1} < "foo"); // error
                    ^^^^^ [2]: string
+
+Error ------------------------------------------------------- relational.js:14:2
 
 Error: relational.js:14
  14: (1 < x); // 2 errors: null !~> number; undefined !~> number
@@ -335,6 +417,8 @@ Error: relational.js:14
    13: var x = (null : ?number);
                        ^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------- relational.js:15:2
+
 Error: relational.js:15
  15: (x < 1); // 2 errors: null !~> number; undefined !~> number
       ^ Cannot compare null or undefined [1] to number [2].
@@ -343,6 +427,8 @@ Error: relational.js:15
                        ^^^^^^^ [1]: null or undefined
    15: (x < 1); // 2 errors: null !~> number; undefined !~> number
             ^ [2]: number
+
+Error ------------------------------------------------------- relational.js:17:2
 
 Error: relational.js:17
  17: (null < null); // error
@@ -353,6 +439,8 @@ Error: relational.js:17
    17: (null < null); // error
                ^^^^ [2]: null
 
+Error ------------------------------------------------------- relational.js:18:2
+
 Error: relational.js:18
  18: (undefined < null); // error
       ^^^^^^^^^ Cannot compare undefined [1] to null [2].
@@ -362,6 +450,8 @@ Error: relational.js:18
    18: (undefined < null); // error
                     ^^^^ [2]: null
 
+Error ------------------------------------------------------- relational.js:19:2
+
 Error: relational.js:19
  19: (null < undefined); // error
       ^^^^ Cannot compare null [1] to undefined [2].
@@ -370,6 +460,8 @@ Error: relational.js:19
         ^^^^ [1]: null
    13: declare var undefined: void;
                               ^^^^ [2]: undefined. See lib: <BUILTINS>/core.js:13
+
+Error ------------------------------------------------------- relational.js:20:2
 
 Error: relational.js:20
  20: (undefined < undefined); // error

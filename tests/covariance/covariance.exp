@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- test.js:2:8
+
 Error: test.js:2
   2: var b: CovArrayVerbose<number,*> = [];
             ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `CovArrayVerbose` because in type argument `Y`, string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: test.js:2
               ^^ [1]: string
     2: var b: CovArrayVerbose<number,*> = [];
                               ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:3:35
 
 Error: test.js:3
   3: var y: CovArrayVerbose<mixed,*> = b;
@@ -16,6 +20,8 @@ Error: test.js:3
     3: var y: CovArrayVerbose<mixed,*> = b;
                               ^^^^^ [2]: mixed
 
+Error ------------------------------------------------------------- test.js:8:46
+
 Error: test.js:8
   8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                                                   ^^^^^^ Cannot return `this.x` because in type argument `X`, `E` [1] is incompatible with mixed [2].
@@ -25,6 +31,8 @@ Error: test.js:8
     8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
                                   ^^^^^ [2]: mixed
 
+Error ------------------------------------------------------------- test.js:13:2
+
 Error: test.js:13
  13: (nv.x[0]: string); // error
       ^^^^^^^ Cannot cast `nv.x[0]` to string because number [1] is incompatible with string [2].
@@ -33,6 +41,8 @@ Error: test.js:13
                ^ [1]: number
    13: (nv.x[0]: string); // error
                  ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- test.js:14:2
 
 Error: test.js:14
  14: (nv.foo()[0]: string); // error

@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ array.js:3:17
+
 Error: array.js:3
   3: var c: string = b[0]; // error: number !~> string
                      ^^^^ Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2].
@@ -7,6 +9,8 @@ Error: array.js:3
     3: var c: string = b[0]; // error: number !~> string
               ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ array.js:8:20
+
 Error: array.js:8
   8:     var x:number = array[0]; // error: string !~> number
                         ^^^^^^^^ Cannot assign `array[0]` to `x` because string [1] is incompatible with number [2].
@@ -15,6 +19,8 @@ Error: array.js:8
                                                    ^^^^^ [1]: string
     8:     var x:number = array[0]; // error: string !~> number
                  ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- array.js:15:20
 
 Error: array.js:15
  15:     var x:number = foo1.get(); // error: string !~> number

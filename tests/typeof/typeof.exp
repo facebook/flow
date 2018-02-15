@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- maybe.js:9:2
+
 Error: maybe.js:9
   9: ('foo': typeof x); // error: string ~> number
       ^^^^^ Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: maybe.js:9
         ^^^^^ [1]: string
     8: var x = f(42);
                  ^^ [2]: number
+
+Error ---------------------------------------------------------- optional.js:9:2
 
 Error: optional.js:9
   9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
@@ -16,6 +20,8 @@ Error: optional.js:9
     8: var x = f(42).p;
                  ^^ [2]: number
 
+Error ---------------------------------------------------------- typeof.js:43:19
+
 Error: typeof.js:43
  43: var b: MyClass1 = MyClass1;
                        ^^^^^^^^ Cannot assign `MyClass1` to `b` because statics of `MyClass1` [1] is incompatible with `MyClass1` [2].
@@ -24,6 +30,8 @@ Error: typeof.js:43
              ^^^^^^^^ [1]: statics of `MyClass1`
    43: var b: MyClass1 = MyClass1;
               ^^^^^^^^ [2]: `MyClass1`
+
+Error ---------------------------------------------------------- typeof.js:53:26
 
 Error: typeof.js:53
  53: var c: typeof MyClass2 = new MyClass2();
@@ -34,6 +42,8 @@ Error: typeof.js:53
    53: var c: typeof MyClass2 = new MyClass2();
               ^^^^^^^^^^^^^^^ [2]: `typeof MyClass2`
 
+Error ---------------------------------------------------------- typeof.js:61:26
+
 Error: typeof.js:61
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number
                               ^^^^^^ Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2].
@@ -43,12 +53,16 @@ Error: typeof.js:61
    59: var numValue:number = 42;
                     ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------- typeof.js:73:15
+
 Error: typeof.js:73
  73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
                    ^^^^^^^^^^^ Cannot reference type `numberAlias` [1] from a value position.
   References:
    67: type numberAlias = number;
             ^^^^^^^^^^^ [1]: `numberAlias`
+
+Error ---------------------------------------------------------- typeof.js:82:18
 
 Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno

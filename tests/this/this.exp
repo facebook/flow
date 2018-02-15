@@ -1,9 +1,13 @@
+Error ------------------------------------------------------------ This.js:29:15
+
 Error: This.js:29
  29:   return this.x
                    ^ Cannot get `this.x` because property `x` is missing in global object [1].
   References:
    29:   return this.x
                 ^^^^ [1]: global object
+
+Error ------------------------------------------------------------ This.js:29:10
 
 Error: This.js:29
  29:   return this.x
@@ -14,6 +18,8 @@ Error: This.js:29
    28: function f1() : number {
                        ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ This.js:33:21
+
 Error: This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                          ^^^^^^^^^^^^^^^^^ Cannot assign `f1.bind(...)()` to `f1_2` because number [1] is incompatible with string [2].
@@ -23,6 +29,8 @@ Error: This.js:33
    33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ This.js:41:15
+
 Error: This.js:41
  41:   return this.x
                    ^ Cannot get `this.x` because property `x` is missing in global object [1].
@@ -30,12 +38,16 @@ Error: This.js:41
    41:   return this.x
                 ^^^^ [1]: global object
 
+Error ------------------------------------------------------------ This.js:48:34
+
 Error: This.js:48
  48:     var a2 = () => { return this.x };
                                       ^ Cannot get `this.x` because property `x` is missing in global object [1].
   References:
    48:     var a2 = () => { return this.x };
                                    ^^^^ [1]: global object
+
+Error ------------------------------------------------------------ This.js:49:12
 
 Error: This.js:49
  49:     return a2()
@@ -46,6 +58,8 @@ Error: This.js:49
    47: function f2() : number {
                        ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ This.js:53:21
+
 Error: This.js:53
  53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                          ^^^^^^^^^^^^^^^^^ Cannot assign `f2.bind(...)()` to `f2_2` because number [1] is incompatible with string [2].
@@ -54,6 +68,8 @@ Error: This.js:53
                        ^^^^^^ [1]: number
    53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- This.js:58:2
 
 Error: This.js:58
  58: (this: void);
@@ -64,6 +80,8 @@ Error: This.js:58
    58: (this: void);
               ^^^^ [2]: undefined
 
+Error ----------------------------------------------------------- arrows.js:16:2
+
 Error: arrows.js:16
  16: (j: D); // error, since return type of bar is C, not the type of `this`
       ^ Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2].
@@ -72,6 +90,8 @@ Error: arrows.js:16
              ^ [1]: `C`
    16: (j: D); // error, since return type of bar is C, not the type of `this`
            ^ [2]: `D`
+
+Error ---------------------------------------------------------- arrows.js:24:17
 
 Error: arrows.js:24
  24:       super.foo(""); // find super method, error due to incorrect arg

@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- foo.js:8:17
+
 Error: foo.js:8
   8: var _ = require('underscore');
                      ^^^^^^^^^^^^ Cannot resolve module `underscore`.

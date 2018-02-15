@@ -1,6 +1,10 @@
+Error --------------------------------------------- foo/bar/nested_test.js:10:27
+
 Error: foo/bar/nested_test.js:10
  10: var unreachable = require('annotation');
                                ^^^^^^^^^^^^ Cannot resolve module `annotation`.
+
+Error ---------------------------------------------- foo/bar/nested_test.js:12:2
 
 Error: foo/bar/nested_test.js:12
  12: (docblock.fun(): string);
@@ -11,6 +15,8 @@ Error: foo/bar/nested_test.js:12
    12: (docblock.fun(): string);
                         ^^^^^^ [2]: string
 
+Error ---------------------------------------------- foo/bar/nested_test.js:13:2
+
 Error: foo/bar/nested_test.js:13
  13: (min.fun(): string);
       ^^^^^^^^^ Cannot cast `min.fun()` to string because number [1] is incompatible with string [2].
@@ -19,6 +25,8 @@ Error: foo/bar/nested_test.js:13
                                       ^^^^^^ [1]: number. See: external/_d3/min.js.flow:1
    13: (min.fun(): string);
                    ^^^^^^ [2]: string
+
+Error ---------------------------------------------- foo/bar/nested_test.js:14:2
 
 Error: foo/bar/nested_test.js:14
  14: (corge.fun(): string);
@@ -29,6 +37,8 @@ Error: foo/bar/nested_test.js:14
    14: (corge.fun(): string);
                      ^^^^^^ [2]: string
 
+Error ---------------------------------------------- foo/bar/nested_test.js:15:2
+
 Error: foo/bar/nested_test.js:15
  15: (SomeOtherModule.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^ Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible with string [2].
@@ -37,6 +47,8 @@ Error: foo/bar/nested_test.js:15
                                       ^^^^^^ [1]: number. See: node_modules/qux/corge2/lib/foo.js.flow:2
    15: (SomeOtherModule.fun(): string);
                                ^^^^^^ [2]: string
+
+Error -------------------------------------------------------------- test.js:4:2
 
 Error: test.js:4
   4: (Implicit.fun(): string);
@@ -47,6 +59,8 @@ Error: test.js:4
     4: (Implicit.fun(): string);
                         ^^^^^^ [2]: string
 
+Error -------------------------------------------------------------- test.js:7:2
+
 Error: test.js:7
   7: (ExplicitSameName.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to string because number [1] is incompatible with string [2].
@@ -55,6 +69,8 @@ Error: test.js:7
                                      ^^^^^^ [1]: number. See: ExplicitProvidesModuleSameName.js.flow:6
     7: (ExplicitSameName.fun(): string);
                                 ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- test.js:10:2
 
 Error: test.js:10
  10: (ExplicitDifferentName.fun(): string);

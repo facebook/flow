@@ -1,4 +1,6 @@
-[31;1mError:[0m[0m [0m[0;4mtest.js:13[0m[0m
+[31mError ------------------------------------------------------------- test.js:13:5[0m[0m
+
+[0m[31;1mError:[0m[0m [0m[0;4mtest.js:13[0m[0m
 [0m[0;1m 13: [0m[0mif ([0m[31mx[0m[0m) {} //appears as an error[0m[0;1m
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)[0m[0m[0m[0m
 [0m[0;1m  References:[0m[0m
@@ -7,6 +9,8 @@
 [0m[0;1m    5: [0m[0mvar x: [0m[31m?number[0m[0m = 0;[0m[0;1m
               ^^^^^^^ [2]: null or undefined[0m[0m[0m[0m
 [0m[0m
+[0m[33mWarning ----------------------------------------------------------- test.js:10:5[0m[0m
+
 [0m[33;1mWarning:[0m[0m [0m[0;4mtest.js:10[0m[0m
 [0m[0;1m 10: [0m[0mif ([0m[33mx[0m[0m) {} //appears as a warning[0m[0;1m
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)[0m[0m[0m[0m

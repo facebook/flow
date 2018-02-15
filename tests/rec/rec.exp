@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- issue-598.js:7:48
+
 Error: issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
                                                     ^ Cannot return `y` because in type argument `A`, number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: issue-598.js:7
                          ^^^^^^ [1]: number
     7: function bar(y: F<number>): F<string> { return y; }
                                      ^^^^^^ [2]: string
+
+Error -------------------------------------------------------------- test.js:6:2
 
 Error: test.js:6
   6: (p.x: string); // error
@@ -16,6 +20,8 @@ Error: test.js:6
     6: (p.x: string); // error
              ^^^^^^ [2]: string
 
+Error -------------------------------------------------------------- test.js:9:2
+
 Error: test.js:9
   9: (pstar: number); // error, but limit potentially unbounded number of errors!
       ^^^^^ Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: test.js:9
                   ^^^^^^^^^^^^^ [1]: `P`
     9: (pstar: number); // error, but limit potentially unbounded number of errors!
                ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:13:2
 
 Error: test.js:13
  13: (pstar.x: string); // error
@@ -34,6 +42,8 @@ Error: test.js:13
    13: (pstar.x: string); // error
                  ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------- test.js:16:2
+
 Error: test.js:16
  16: (pstar.x: string); // error
       ^^^^^^^ Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
@@ -43,6 +53,8 @@ Error: test.js:16
    16: (pstar.x: string); // error
                  ^^^^^^ [2]: string
 
+Error ----------------------------------------------------------- test2.js:30:12
+
 Error: test2.js:30
  30: ((new C: C<number>): D<string>) // error: number ~/~ string
                 ^^^^^^ Cannot cast `new C()` to `D` because in type argument `X`, number [1] is incompatible with string [2].
@@ -51,6 +63,8 @@ Error: test2.js:30
                   ^^^^^^ [1]: number
    30: ((new C: C<number>): D<string>) // error: number ~/~ string
                               ^^^^^^ [2]: string
+
+Error ----------------------------------------------------------- test3.js:13:10
 
 Error: test3.js:13
  13:   return x; // terminate despite expanding types, error

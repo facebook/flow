@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------- dir/foo.js:3:17
+
 Error: dir/foo.js:3
   3: var x: number = "string"; // Error string ~> number
                      ^^^^^^^^ Cannot assign `"string"` to `x` because string [1] is incompatible with number [2].

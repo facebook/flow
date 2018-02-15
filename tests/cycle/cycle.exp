@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- B.js:5:18
+
 Error: B.js:5
   5: module.exports = B;
                       ^ Cannot resolve name `B`.

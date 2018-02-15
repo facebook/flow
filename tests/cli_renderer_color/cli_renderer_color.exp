@@ -1,0 +1,24 @@
+[31mError ------------------------------------------------------------- basic.js:6:2[0m[0m
+
+[0m[31;1mError:[0m[0m [0m[0;4mbasic.js:6[0m[0m
+[0m[0;1m  6: [0m[0m([0m[31mnull[0m[0m: empty); // Error: null ~> empty[0m[0;1m
+      ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].[0m[0m[0m[0m
+[0m[0;1m  References:[0m[0m
+[0m[0;1m    6: [0m[0m([0m[31mnull[0m[0m: empty); // Error: null ~> empty[0m[0;1m
+        ^^^^ [1]: null[0m[0m[0m[0m
+[0m[0;1m    6: [0m[0m(null: [0m[31mempty[0m[0m); // Error: null ~> empty[0m[0;1m
+              ^^^^^ [2]: empty[0m[0m[0m[0m
+[0m[0m
+[0m[33mWarning -------------------------------------------------------- warning.js:11:5[0m[0m
+
+[0m[33;1mWarning:[0m[0m [0m[0;4mwarning.js:11[0m[0m
+[0m[0;1m 11: [0m[0mif ([0m[33mx[0m[0m) {[0m[0;1m
+         ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)[0m[0m[0m[0m
+[0m[0;1m  References:[0m[0m
+[0m[0;1m    8: [0m[0mconst x: ?[0m[33mnumber[0m[0m = 42;[0m[0;1m
+                 ^^^^^^ [1]: number[0m[0m[0m[0m
+[0m[0;1m    8: [0m[0mconst x: [0m[33m?number[0m[0m = 42;[0m[0;1m
+                ^^^^^^^ [2]: null or undefined[0m[0m[0m[0m
+[0m[0m
+[0m
+Found 1 error and 1 warning

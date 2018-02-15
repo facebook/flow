@@ -1,3 +1,5 @@
+Error ------------------------------------------------------- enum_client.js:6:5
+
 Error: enum_client.js:6
   6: foo("LOCATION"); // error
          ^^^^^^^^^^ Property `LOCATION` is missing in object literal [1].
@@ -9,12 +11,16 @@ Error: enum_client.js:6
     4: };
        ^ [1]: object literal. See: enum.js:1
 
+Error ------------------------------------------------------ enum_client.js:10:5
+
 Error: enum_client.js:10
  10: bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
          ^^^^^^^^^^^^ Property `name` is missing in object type [1].
   References:
     8: function bar(x: $Keys<{age: number}>) { }
                              ^^^^^^^^^^^^^ [1]: object type
+
+Error ----------------------------------------------------- enum_client.js:17:19
 
 Error: enum_client.js:17
  17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
@@ -25,6 +31,8 @@ Error: enum_client.js:17
    17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------- enum_client.js:21:18
+
 Error: enum_client.js:21
  21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
                       ^^^^^^^^^^^^^^^^^^ Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2].
@@ -33,6 +41,8 @@ Error: enum_client.js:21
                     ^^ [1]: number
    21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
                ^^^^^^ [2]: string
+
+Error ----------------------------------------------------------- number.js:6:10
 
 Error: number.js:6
   6:   return -x;

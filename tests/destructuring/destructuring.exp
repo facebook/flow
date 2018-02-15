@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- array_rest.js:7:2
+
 Error: array_rest.js:7
   7: (a: void); // error: number ~> void
       ^ Cannot cast `a` to undefined because number [1] is incompatible with undefined [2].
@@ -6,6 +8,8 @@ Error: array_rest.js:7
                  ^ [1]: number
     7: (a: void); // error: number ~> void
            ^^^^ [2]: undefined
+
+Error -------------------------------------------------------- array_rest.js:8:2
 
 Error: array_rest.js:8
   8: (b: void); // error: string ~> void
@@ -16,6 +20,8 @@ Error: array_rest.js:8
     8: (b: void); // error: string ~> void
            ^^^^ [2]: undefined
 
+Error -------------------------------------------------------- array_rest.js:9:2
+
 Error: array_rest.js:9
   9: (c: void); // error: boolean ~> void
       ^ Cannot cast `c` to undefined because boolean [1] is incompatible with undefined [2].
@@ -24,6 +30,8 @@ Error: array_rest.js:9
                         ^^^^ [1]: boolean
     9: (c: void); // error: boolean ~> void
            ^^^^ [2]: undefined
+
+Error ------------------------------------------------------- array_rest.js:10:2
 
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
@@ -34,6 +42,8 @@ Error: array_rest.js:10
    10: (d: void); // error: number|string|boolean ~> void
            ^^^^ [2]: undefined
 
+Error ------------------------------------------------------- array_rest.js:10:2
+
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
       ^ Cannot cast `d` to undefined because number [1] is incompatible with undefined [2].
@@ -42,6 +52,8 @@ Error: array_rest.js:10
                  ^ [1]: number
    10: (d: void); // error: number|string|boolean ~> void
            ^^^^ [2]: undefined
+
+Error ------------------------------------------------------- array_rest.js:10:2
 
 Error: array_rest.js:10
  10: (d: void); // error: number|string|boolean ~> void
@@ -52,12 +64,16 @@ Error: array_rest.js:10
    10: (d: void); // error: number|string|boolean ~> void
            ^^^^ [2]: undefined
 
+Error ------------------------------------------------------- array_rest.js:12:6
+
 Error: array_rest.js:12
  12: let [...e] = 0;
           ^^^^ number [1] is not an array.
   References:
    12: let [...e] = 0;
                     ^ [1]: number
+
+Error ---------------------------------------------------------- computed.js:2:2
 
 Error: computed.js:2
   2: (val1: void); // error: string ~> void
@@ -68,6 +84,8 @@ Error: computed.js:2
     2: (val1: void); // error: string ~> void
               ^^^^ [2]: undefined
 
+Error ---------------------------------------------------------- computed.js:9:2
+
 Error: computed.js:9
   9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
       ^^^^^^^^^^ Cannot cast `spread.key` to undefined because string [1] is incompatible with undefined [2].
@@ -76,6 +94,8 @@ Error: computed.js:9
                                                  ^^^^^ [1]: string
     9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
                     ^^^^ [2]: undefined
+
+Error ---------------------------------------------------------- defaults.js:9:4
 
 Error: defaults.js:9
   9:   (q:void);
@@ -86,6 +106,8 @@ Error: defaults.js:9
     9:   (q:void);
             ^^^^ [2]: undefined
 
+Error ---------------------------------------------------------- defaults.js:9:4
+
 Error: defaults.js:9
   9:   (q:void);
         ^ Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
@@ -94,6 +116,8 @@ Error: defaults.js:9
                           ^^^^ [1]: null
     9:   (q:void);
             ^^^^ [2]: undefined
+
+Error ---------------------------------------------------------- defaults.js:9:4
 
 Error: defaults.js:9
   9:   (q:void);
@@ -104,6 +128,8 @@ Error: defaults.js:9
     9:   (q:void);
             ^^^^ [2]: undefined
 
+Error ---------------------------------------------------------- defaults.js:9:4
+
 Error: defaults.js:9
   9:   (q:void);
         ^ Cannot cast `q` to undefined because number [1] is incompatible with undefined [2].
@@ -112,6 +138,8 @@ Error: defaults.js:9
                                    ^ [1]: number
     9:   (q:void);
             ^^^^ [2]: undefined
+
+Error ---------------------------------------------------------- defaults.js:9:4
 
 Error: defaults.js:9
   9:   (q:void);
@@ -122,6 +150,8 @@ Error: defaults.js:9
     9:   (q:void);
             ^^^^ [2]: undefined
 
+Error --------------------------------------------------------- defaults.js:23:4
+
 Error: defaults.js:23
  23:   (q:void);
         ^ Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2].
@@ -130,6 +160,8 @@ Error: defaults.js:23
                          ^^^^ [1]: boolean
    23:   (q:void);
             ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- defaults.js:23:4
 
 Error: defaults.js:23
  23:   (q:void);
@@ -140,6 +172,8 @@ Error: defaults.js:23
    23:   (q:void);
             ^^^^ [2]: undefined
 
+Error --------------------------------------------------------- defaults.js:23:4
+
 Error: defaults.js:23
  23:   (q:void);
         ^ Cannot cast `q` to undefined because null [1] is incompatible with undefined [2].
@@ -148,6 +182,8 @@ Error: defaults.js:23
                                   ^^^^ [1]: null
    23:   (q:void);
             ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- defaults.js:23:4
 
 Error: defaults.js:23
  23:   (q:void);
@@ -158,6 +194,8 @@ Error: defaults.js:23
    23:   (q:void);
             ^^^^ [2]: undefined
 
+Error --------------------------------------------------------- defaults.js:23:4
+
 Error: defaults.js:23
  23:   (q:void);
         ^ Cannot cast `q` to undefined because string [1] is incompatible with undefined [2].
@@ -166,6 +204,8 @@ Error: defaults.js:23
                                      ^^ [1]: string
    23:   (q:void);
             ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- defaults.js:35:4
 
 Error: defaults.js:35
  35:   (o.r:void);
@@ -176,6 +216,8 @@ Error: defaults.js:35
    35:   (o.r:void);
               ^^^^ [2]: undefined
 
+Error --------------------------------------------------------- defaults.js:35:4
+
 Error: defaults.js:35
  35:   (o.r:void);
         ^^^ Cannot cast `o.r` to undefined because number [1] is incompatible with undefined [2].
@@ -184,6 +226,8 @@ Error: defaults.js:35
                                             ^ [1]: number
    35:   (o.r:void);
               ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- defaults.js:35:4
 
 Error: defaults.js:35
  35:   (o.r:void);
@@ -194,6 +238,8 @@ Error: defaults.js:35
    35:   (o.r:void);
               ^^^^ [2]: undefined
 
+Error --------------------------------------------------------- defaults.js:43:3
+
 Error: defaults.js:43
  43:   p = true // error: boolean ~> string
        ^ number [1] is incompatible with string [2].
@@ -202,6 +248,8 @@ Error: defaults.js:43
             ^ [1]: number
    45:   p: string
             ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- defaults.js:43:7
 
 Error: defaults.js:43
  43:   p = true // error: boolean ~> string
@@ -212,6 +260,8 @@ Error: defaults.js:43
    45:   p: string
             ^^^^^^ [2]: string
 
+Error --------------------------------------------------------- defaults.js:49:4
+
 Error: defaults.js:49
  49:   (p:void); // error: string ~> void
         ^ Cannot cast `p` to undefined because string [1] is incompatible with undefined [2].
@@ -220,6 +270,8 @@ Error: defaults.js:49
             ^^^^^^ [1]: string
    49:   (p:void); // error: string ~> void
             ^^^^ [2]: undefined
+
+Error --------------------------------------------------------- defaults.js:53:3
 
 Error: defaults.js:53
  53:   p = true // error: boolean ~> string
@@ -230,6 +282,8 @@ Error: defaults.js:53
    55:   p: string
             ^^^^^^ [2]: string
 
+Error --------------------------------------------------------- defaults.js:57:6
+
 Error: defaults.js:57
  57:   p: 0 // error: number ~> string
           ^ Cannot assign object literal to variable because in property `p`, number [1] is incompatible with string [2].
@@ -238,6 +292,8 @@ Error: defaults.js:57
             ^ [1]: number
    55:   p: string
             ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- defaults.js:59:2
 
 Error: defaults.js:59
  59: (p:void); // error: string ~> void
@@ -248,12 +304,16 @@ Error: defaults.js:59
    59: (p:void); // error: string ~> void
           ^^^^ [2]: undefined
 
+Error -------------------------------------------------------- defaults.js:61:24
+
 Error: defaults.js:61
  61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
                             ^ Property `x` is missing in null [1].
   References:
    61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
                                      ^^^^ [1]: null
+
+Error -------------------------------------------------------- defaults.js:62:24
 
 Error: defaults.js:62
  62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
@@ -262,6 +322,8 @@ Error: defaults.js:62
    62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
                                     ^ [1]: number
 
+Error -------------------------------------------------------- defaults.js:63:24
+
 Error: defaults.js:63
  63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
                             ^ An indexer property is missing in null [1].
@@ -269,12 +331,16 @@ Error: defaults.js:63
    63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
                                  ^^^^ [1]: null
 
+Error -------------------------------------------------------- defaults.js:64:24
+
 Error: defaults.js:64
  64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
                             ^^^^ null [1] is not an array.
   References:
    64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
                                     ^^^^ [1]: null
+
+Error -------------------------------------------------------- defaults.js:75:24
 
 Error: defaults.js:75
  75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
@@ -284,6 +350,8 @@ Error: defaults.js:75
                                                 ^ [1]: number
    75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
                                      ^^^^^^ [2]: string
+
+Error -------------------------------------------------------- defaults.js:76:26
 
 Error: defaults.js:76
  76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
@@ -316,6 +384,8 @@ Error: defaults.js:77
    77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
                                 ^ string
 
+Error -------------------------------------------------------- defaults.js:80:27
+
 Error: defaults.js:80
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                ^ boolean [1] is incompatible with number [2].
@@ -324,6 +394,8 @@ Error: defaults.js:80
                                                              ^^^^ [1]: boolean
    80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                        ^^^^^^ [2]: number
+
+Error -------------------------------------------------------- defaults.js:80:27
 
 Error: defaults.js:80
  80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
@@ -334,6 +406,8 @@ Error: defaults.js:80
    80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                        ^^^^^^ [2]: number
 
+Error ----------------------------------------------------- destructuring.js:4:3
+
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
        ^^ Cannot assign `[...][0].a1` to `a` because number [1] is incompatible with string [2].
@@ -342,6 +416,8 @@ Error: destructuring.js:4
                             ^ [1]: number
     1: declare var a:string;
                      ^^^^^^ [2]: string
+
+Error ----------------------------------------------------- destructuring.js:4:9
 
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
@@ -352,6 +428,8 @@ Error: destructuring.js:4
     2: declare var b:string;
                      ^^^^^^ [2]: string
 
+Error ---------------------------------------------------- destructuring.js:4:12
+
 Error: destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
                 ^ Cannot assign `[...][1]` to `c` because number [1] is incompatible with string [2].
@@ -361,13 +439,19 @@ Error: destructuring.js:4
     3: declare var c:string;
                      ^^^^^^ [2]: string
 
+Error ---------------------------------------------------- destructuring.js:10:6
+
 Error: destructuring.js:10
  10: ({n: obj.x} = {n:3});
           ^^^^^ Unsupported expression pattern in destructuring.
 
+Error ---------------------------------------------------- destructuring.js:11:2
+
 Error: destructuring.js:11
  11: [obj.x] = ['foo'];
       ^^^^^ Unsupported expression pattern in destructuring.
+
+Error ---------------------------------------------------- destructuring.js:14:9
 
 Error: destructuring.js:14
  14:     a = p;
@@ -378,9 +462,13 @@ Error: destructuring.js:14
     1: declare var a:string;
                      ^^^^^^ [2]: string
 
+Error ---------------------------------------------------- destructuring.js:15:9
+
 Error: destructuring.js:15
  15:     b = z;
              ^ Cannot resolve name `z`.
+
+Error ---------------------------------------------------- destructuring.js:16:9
 
 Error: destructuring.js:16
  16:     c = r;
@@ -391,6 +479,8 @@ Error: destructuring.js:16
     3: declare var c:string;
                      ^^^^^^ [2]: string
 
+Error ---------------------------------------------------- destructuring.js:20:2
+
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
       ^ Cannot assign `[...][0]` to `a` because number [1] is incompatible with string [2].
@@ -399,6 +489,8 @@ Error: destructuring.js:20
                       ^ [1]: number
     1: declare var a:string;
                      ^^^^^^ [2]: string
+
+Error ---------------------------------------------------- destructuring.js:20:5
 
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
@@ -409,6 +501,8 @@ Error: destructuring.js:20
     2: declare var b:string;
                      ^^^^^^ [2]: string
 
+Error --------------------------------------------------- destructuring.js:20:15
+
 Error: destructuring.js:20
  20: [a,,b,...c] = [0,1,true,3];
                    ^^^^^^^^^^^^ Cannot assign array literal to `c` because `c` [1] is incompatible with string [2].
@@ -417,6 +511,8 @@ Error: destructuring.js:20
              ^^^^ [1]: `c`
     3: declare var c:string;
                      ^^^^^^ [2]: string
+
+Error --------------------------------------------------- destructuring.js:23:37
 
 Error: destructuring.js:23
  23:     var o:{x: string; y: number;} = z;
@@ -427,6 +523,8 @@ Error: destructuring.js:23
    23:     var o:{x: string; y: number;} = z;
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
+Error --------------------------------------------------- destructuring.js:28:48
+
 Error: destructuring.js:28
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
                                                     ^^^^^^^^^^^^^^^^ Cannot assign object literal to `extend` because property `z` is missing in object literal [1] but exists in object type [2].
@@ -435,6 +533,8 @@ Error: destructuring.js:28
                                                       ^^^^^^^^^^^^^^^^ [1]: object literal
    28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
+
+Error ---------------------------------------------------- destructuring.js:31:8
 
 Error: destructuring.js:31
  31: qux({a:""});
@@ -445,6 +545,8 @@ Error: destructuring.js:31
    30: function qux(_: {a:number}) { }
                           ^^^^^^ [2]: number
 
+Error --------------------------------------------------- destructuring.js:33:10
+
 Error: destructuring.js:33
  33: corge({b:0});
               ^ Cannot call `corge` with object literal bound to the first parameter because in property `b`, number [1] is incompatible with string [2].
@@ -453,6 +555,8 @@ Error: destructuring.js:33
                 ^ [1]: number
    32: function corge({b}: {b:string}) { }
                               ^^^^^^ [2]: string
+
+Error --------------------------------------------------- destructuring.js:35:27
 
 Error: destructuring.js:35
  35: var {n}:{n: number} = {n: ""}
@@ -463,12 +567,16 @@ Error: destructuring.js:35
    35: var {n}:{n: number} = {n: ""}
                    ^^^^^^ [2]: number
 
+Error ---------------------------------------------------- destructuring.js:38:8
+
 Error: destructuring.js:38
  38:   var {foo} = {bar: 123}; // error on foo
             ^^^ Property `foo` is missing in object literal [1].
   References:
    38:   var {foo} = {bar: 123}; // error on foo
                      ^^^^^^^^^^ [1]: object literal
+
+Error --------------------------------------------------- destructuring.js:39:13
 
 Error: destructuring.js:39
  39:   var {bar, baz} = {bar: 123} // error on baz
@@ -477,6 +585,8 @@ Error: destructuring.js:39
    39:   var {bar, baz} = {bar: 123} // error on baz
                           ^^^^^^^^^^ [1]: object literal
 
+Error ---------------------------------------------------- destructuring.js:45:6
+
 Error: destructuring.js:45
  45:   (x.baz: string); // error, baz doesn't exist
           ^^^ Cannot get `x.baz` because property `baz` is missing in object literal [1].
@@ -484,12 +594,16 @@ Error: destructuring.js:45
    43:   var x = {foo: 'abc', bar: 123};
                  ^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
 
+Error ---------------------------------------------------- destructuring.js:46:9
+
 Error: destructuring.js:46
  46:   (rest.baz: string); // error, rest is sealed
              ^^^ Cannot get `rest.baz` because property `baz` is missing in `rest` [1].
   References:
    44:   var {foo, ...rest} = x;
                    ^^^^^^^ [1]: `rest`
+
+Error --------------------------------------------------- destructuring.js:64:23
 
 Error: destructuring.js:64
  64: var bp1_err: string = baseprop1; // Error: number ~> string
@@ -500,6 +614,8 @@ Error: destructuring.js:64
    64: var bp1_err: string = baseprop1; // Error: number ~> string
                     ^^^^^^ [2]: string
 
+Error --------------------------------------------------- destructuring.js:66:23
+
 Error: destructuring.js:66
  66: var bp2_err: string = others.baseprop2; // Error: number ~> string
                            ^^^^^^^^^^^^^^^^ Cannot assign `others.baseprop2` to `bp2_err` because number [1] is incompatible with string [2].
@@ -508,6 +624,8 @@ Error: destructuring.js:66
                     ^^^^^^ [1]: number
    66: var bp2_err: string = others.baseprop2; // Error: number ~> string
                     ^^^^^^ [2]: string
+
+Error --------------------------------------------------- destructuring.js:69:23
 
 Error: destructuring.js:69
  69: var cp1_err: string = childprop1; // Error: number ~> string
@@ -518,6 +636,8 @@ Error: destructuring.js:69
    69: var cp1_err: string = childprop1; // Error: number ~> string
                     ^^^^^^ [2]: string
 
+Error --------------------------------------------------- destructuring.js:71:23
+
 Error: destructuring.js:71
  71: var cp2_err: string = others.childprop2; // Error: number ~> string
                            ^^^^^^^^^^^^^^^^^ Cannot assign `others.childprop2` to `cp2_err` because number [1] is incompatible with string [2].
@@ -527,13 +647,19 @@ Error: destructuring.js:71
    71: var cp2_err: string = others.childprop2; // Error: number ~> string
                     ^^^^^^ [2]: string
 
+Error ------------------------------------------------ destructuring_init.js:1:5
+
 Error: destructuring_init.js:1
   1: var {foo};
          ^^^^^ Destructuring assignment must be initialized
 
+Error ---------------------------------------------- destructuring_param.js:5:17
+
 Error: destructuring_param.js:5
   5: function g(a, { a }) {
                      ^ Strict mode function may not have duplicate parameter names
+
+Error ------------------------------------------------------------- eager.js:2:3
 
 Error: eager.js:2
   2: ({x} = null); // error, property `x` can not be accessed on `null`
@@ -542,12 +668,16 @@ Error: eager.js:2
     2: ({x} = null); // error, property `x` can not be accessed on `null`
               ^^^^ [1]: null
 
+Error ------------------------------------------------------- object_rest.js:5:9
+
 Error: object_rest.js:5
   5: o1_rest.x = 0; // error: rest result is sealed
              ^ Cannot assign `0` to `o1_rest.x` because property `x` is missing in `o1_rest` [1].
   References:
     3: var {p, ...o1_rest} = o1;
                ^^^^^^^^^^ [1]: `o1_rest`
+
+Error ------------------------------------------------------ object_rest.js:11:9
 
 Error: object_rest.js:11
  11: o2_rest.x = 0; // error: rest result is sealed
@@ -556,12 +686,16 @@ Error: object_rest.js:11
     9: var {p, ...o2_rest} = o2;
                ^^^^^^^^^^ [1]: `o2_rest`
 
+Error ------------------------------------------------------ object_rest.js:16:9
+
 Error: object_rest.js:16
  16: o3_rest.x = 0; // error: rest result is sealed
              ^ Cannot assign `0` to `o3_rest.x` because property `x` is missing in `o3_rest` [1].
   References:
    14: var {p, ...o3_rest} = o3;
                ^^^^^^^^^^ [1]: `o3_rest`
+
+Error -------------------------------------------------------- string_lit.js:2:2
 
 Error: string_lit.js:2
   2: (val: void); // error: string ~> void
@@ -571,6 +705,8 @@ Error: string_lit.js:2
                                    ^^^^^ [1]: string
     2: (val: void); // error: string ~> void
              ^^^^ [2]: undefined
+
+Error ------------------------------------------------------- unannotated.js:8:5
 
 Error: unannotated.js:8
   8:   x.bar

@@ -1,9 +1,13 @@
+Error -------------------------------------------------------- issue-198.js:9:20
+
 Error: issue-198.js:9
   9:         return str.toFixed();
                         ^^^^^^^ Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
   References:
   141:     toFixed(fractionDigits?: number): string;
                                              ^^^^^^ [1]: `String`. See lib: <BUILTINS>/core.js:141
+
+Error -------------------------------------------------------- issue-324.js:8:10
 
 Error: issue-324.js:8
   8: foostr = barstr;
@@ -14,6 +18,8 @@ Error: issue-324.js:8
     5: var foostr: Foo | string = new Foo();
                    ^^^ [2]: `Foo`
 
+Error ------------------------------------------------------------- union.js:2:5
+
 Error: union.js:2
   2: bar(0);
          ^ Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2].
@@ -22,6 +28,8 @@ Error: union.js:2
            ^ [1]: number
     1: function bar(x: Document | string): void { }
                                   ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ union.js:8:13
 
 Error: union.js:8
   8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
@@ -32,6 +40,8 @@ Error: union.js:8
     8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
                ^ [2]: `C`
 
+Error ------------------------------------------------------------ union.js:9:19
+
 Error: union.js:9
   9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
                        ^ `D` [1] is incompatible with `C` [2].
@@ -40,6 +50,8 @@ Error: union.js:9
              ^ [1]: `D`
     4: class C { }
              ^ [2]: `C`
+
+Error ------------------------------------------------------------- yuge.js:23:6
 
 Error: yuge.js:23
  23:     ("": ErrorCode);  // also, error pos omits this line completely

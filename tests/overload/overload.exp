@@ -20,6 +20,8 @@ Error: annot.js:6
     2: declare function f(x: number): void;
                              ^^^^^^ number
 
+Error --------------------------------------------------------- overload.js:7:18
+
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
@@ -29,12 +31,16 @@ Error: overload.js:7
     7: var x1: number = "".match(0)[0];
                ^^^^^^ [2]: number
 
+Error --------------------------------------------------------- overload.js:7:30
+
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                                   ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
   References:
   301:     match(regexp: string | RegExp): ?Array<string>;
                                            ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
+
+Error --------------------------------------------------------- overload.js:7:27
 
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
@@ -45,6 +51,8 @@ Error: overload.js:7
   301:     match(regexp: string | RegExp): ?Array<string>;
                          ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:301
 
+Error --------------------------------------------------------- overload.js:8:18
+
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
@@ -54,12 +62,16 @@ Error: overload.js:8
     8: var x2: number = "".match(/pattern/)[0];
                ^^^^^^ [2]: number
 
+Error --------------------------------------------------------- overload.js:8:38
+
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
                                           ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
   References:
   301:     match(regexp: string | RegExp): ?Array<string>;
                                            ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
+
+Error -------------------------------------------------------- overload.js:10:18
 
 Error: overload.js:10
  10: var x4: number = "".split(/pattern/)[0];
@@ -159,6 +171,8 @@ Error: overload.js:32
                                ^^^^^^^ boolean. This type is incompatible with
        17:     bar(x: { a: string }): string;
                            ^^^^^^ string
+
+Error ------------------------------------------------------------- test2.js:7:2
 
 Error: test2.js:7
   7: (foo.bar('hmmm'): number); // error

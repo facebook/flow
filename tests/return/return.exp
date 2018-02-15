@@ -1,9 +1,13 @@
+Error -------------------------------------------------- function_return.js:7:16
+
 Error: function_return.js:7
   7: function f(x): number {
                     ^^^^^^ Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned undefined.
   References:
     7: function f(x): number {
                       ^^^^^^ [1]: number
+
+Error -------------------------------------------------- function_return.js:23:3
 
 Error: function_return.js:23
  23:   return;
@@ -14,6 +18,8 @@ Error: function_return.js:23
    19: function h(x): number {
                       ^^^^^^ [2]: number
 
+Error --------------------------------------------------------- implicit.js:6:22
+
 Error: implicit.js:6
   6: async function g1(): number {}
                           ^^^^^^ Cannot expect number as the return type of async function because number [1] is incompatible with implicitly-returned `Promise`.
@@ -21,12 +27,16 @@ Error: implicit.js:6
     6: async function g1(): number {}
                             ^^^^^^ [1]: number
 
+Error --------------------------------------------------------- implicit.js:7:30
+
 Error: implicit.js:7
   7: async function g2(): Promise<number> {}
                                   ^^^^^^ Cannot expect `Promise` as the return type of async function because in type argument `R`, number [1] is incompatible with implicitly-returned undefined.
   References:
     7: async function g2(): Promise<number> {}
                                     ^^^^^^ [1]: number
+
+Error ------------------------------------------------------------- void.js:12:2
 
 Error: void.js:12
  12: (f(true): void); // error: string ~> void

@@ -1,7 +1,11 @@
+Error -------------------------------------------------- flow-typed/libs.js:21:3
+
 Library lint error (deprecated-declare-exports):
 flow-typed/libs.js:21
  21:   declare var exports: number;
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deprecated syntax. Use `declare module.exports` instead. (`deprecated-declare-exports`)
+
+Error -------------------------------------------------------------- main.js:5:2
 
 Error: main.js:5
   5: (declare_module_exports: string); // Error: number ~> string
@@ -12,9 +16,13 @@ Error: main.js:5
     5: (declare_module_exports: string); // Error: number ~> string
                                 ^^^^^^ [2]: string
 
+Error -------------------------------------------------------------- main.js:8:9
+
 Error: main.js:8
   8: import {str} from "declare_m_e_with_other_value_declares";
              ^^^ Cannot import `str` because there is no `str` export in `declare_m_e_with_other_value_declares`. Did you mean `import str from "..."`?
+
+Error ------------------------------------------------------------- main.js:12:2
 
 Error: main.js:12
  12: (42: str2); // Error: number ~> string
@@ -25,6 +33,8 @@ Error: main.js:12
    12: (42: str2); // Error: number ~> string
             ^^^^ [2]: string
 
+Error ------------------------------------------------------------- main.js:21:2
+
 Error: main.js:21
  21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `DEPRECATED__declare_var_exports` to string because number [1] is incompatible with string [2].
@@ -33,6 +43,8 @@ Error: main.js:21
                               ^^^^^^ [1]: number. See lib: flow-typed/libs.js:21
    21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
                                          ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- main.js:25:2
 
 Error: main.js:25
  25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string

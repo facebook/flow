@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:18:2
+
 Error: test.js:18
  18: ((new C).foo(): boolean); // last wins
       ^^^^^^^^^^^^^ Cannot cast `new C().foo()` to boolean because string [1] is incompatible with boolean [2].
@@ -6,6 +8,8 @@ Error: test.js:18
                 ^^^^^^ [1]: string
    18: ((new C).foo(): boolean); // last wins
                        ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- test.js:19:2
 
 Error: test.js:19
  19: ((new C).x: boolean); // last wins
@@ -16,6 +20,8 @@ Error: test.js:19
    19: ((new C).x: boolean); // last wins
                    ^^^^^^^ [2]: boolean
 
+Error ------------------------------------------------------------- test.js:20:2
+
 Error: test.js:20
  20: ((new C).bar: boolean); // last wins
       ^^^^^^^^^^^ Cannot cast `new C().bar` to boolean because string [1] is incompatible with boolean [2].
@@ -24,6 +30,8 @@ Error: test.js:20
               ^^^^^^ [1]: string
    20: ((new C).bar: boolean); // last wins
                      ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- test.js:21:2
 
 Error: test.js:21
  21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
@@ -34,6 +42,8 @@ Error: test.js:21
    21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
                      ^^^^^^^ [2]: boolean
 
+Error ------------------------------------------------------------- test.js:38:2
+
 Error: test.js:38
  38: (o.foo(): boolean); // last wins
       ^^^^^^^ Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2].
@@ -42,6 +52,8 @@ Error: test.js:38
                 ^^^^^^ [1]: string
    38: (o.foo(): boolean); // last wins
                  ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- test.js:39:2
 
 Error: test.js:39
  39: (o.x: boolean); // last wins
@@ -52,6 +64,8 @@ Error: test.js:39
    39: (o.x: boolean); // last wins
              ^^^^^^^ [2]: boolean
 
+Error ------------------------------------------------------------- test.js:40:2
+
 Error: test.js:40
  40: (o.bar: boolean); // last wins
       ^^^^^ Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2].
@@ -60,6 +74,8 @@ Error: test.js:40
               ^^^^^^^ [1]: string
    40: (o.bar: boolean); // last wins
                ^^^^^^^ [2]: boolean
+
+Error ------------------------------------------------------------- test.js:41:2
 
 Error: test.js:41
  41: (o.qux(): boolean); // last wins

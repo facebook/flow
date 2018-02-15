@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- D.js:3:17
+
 Error: D.js:3
   3: var x: number = C.foo;
                      ^^^^^ Cannot assign `C.foo` to `x` because string [1] is incompatible with number [2].
@@ -7,6 +9,8 @@ Error: D.js:3
     3: var x: number = C.foo;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- D.js:4:17
+
 Error: D.js:4
   4: var y: string = C.A;
                      ^^^ Cannot assign `C.A` to `y` because number [1] is incompatible with string [2].
@@ -15,6 +19,8 @@ Error: D.js:4
                         ^ [1]: number. See: A.js:2
     4: var y: string = C.A;
               ^^^^^^ [2]: string
+
+Error ----------------------------------------------------------------- D.js:5:7
 
 Error: D.js:5
   5: C.A = false;

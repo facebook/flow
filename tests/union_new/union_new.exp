@@ -1,3 +1,5 @@
+Error ----------------------------------------------------- issue-1462-i.js:21:9
+
 Error: issue-1462-i.js:21
  21:   print(val.foo);  // <--- foo could be an array
              ^^^^^^^ Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
@@ -153,6 +155,8 @@ Error: test10.js:62
    62: check_arr([id("")]);
                  ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
+Error ----------------------------------------------------------- test11.js:12:8
+
 Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
             ^^^^^^^^^^^^^^^^ Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but exists in `Cons` [2].
@@ -239,6 +243,8 @@ Error: test16.js:14
    14: bar(() => qux());
                  ^^^^^ return
 
+Error ------------------------------------------------------------ test17.js:7:2
+
 Error: test17.js:7
   7: ([].concat([0,1])[1]: string)
       ^^^^^^^^^^^^^^^^^^^ Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
@@ -247,6 +253,8 @@ Error: test17.js:7
                    ^ [1]: number
     7: ([].concat([0,1])[1]: string)
                              ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test17.js:7:2
 
 Error: test17.js:7
   7: ([].concat([0,1])[1]: string)
@@ -257,12 +265,16 @@ Error: test17.js:7
     7: ([].concat([0,1])[1]: string)
                              ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------- test20.js:14:26
+
 Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
                               ^^^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
    14: [""].reduce((acc,str) => acc * str.length);
         ^^ [1]: string
+
+Error ---------------------------------------------------------- test20.js:14:36
 
 Error: test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
@@ -316,6 +328,8 @@ Error: test22.js:20
    14: } & Empty;
            ^^^^^ Empty
 
+Error ---------------------------------------------------------- test26.js:20:25
+
 Error: test26.js:20
  20: new Record().set('foo', "42");
                              ^^^^ Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is incompatible with number [2].
@@ -340,6 +354,8 @@ Error: test33.js:7
     6: function bar() { return 0 }
                      ^ return
 
+Error ------------------------------------------------------------ test33.js:8:2
+
 Error: test33.js:8
   8: (bar(): string); // error: number ~> string
       ^^^^^ Cannot cast `bar()` to string because number [1] is incompatible with string [2].
@@ -348,6 +364,8 @@ Error: test33.js:8
                                ^ [1]: number
     8: (bar(): string); // error: number ~> string
                ^^^^^^ [2]: string
+
+Error ----------------------------------------------------------- test34.js:10:6
 
 Error: test34.js:10
  10:     (x.foo: empty); // error: string ~> empty
@@ -390,12 +408,16 @@ Error: test5.js:25
    24: var a2 = [];
                 ^^ unknown element type of empty array
 
+Error ----------------------------------------------------------- test9.js:12:10
+
 Error: test9.js:12
  12:   return x * x;
               ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
   References:
    15: function foo(f: ((_: ?number) => ?number) | (() => void)) { }
                             ^^^^^^^ [1]: null or undefined
+
+Error ----------------------------------------------------------- test9.js:12:14
 
 Error: test9.js:12
  12:   return x * x;

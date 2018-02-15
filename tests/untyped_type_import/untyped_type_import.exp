@@ -1,30 +1,46 @@
+Error ---------------------------------------------------------- imports.js:5:14
+
 Error: imports.js:5
   5: import type {FooType} from './untyped_exports.js'; //Error
                   ^^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
+
+Error ---------------------------------------------------------- imports.js:6:16
 
 Error: imports.js:6
   6: import typeof {FooObj} from './untyped_exports.js'; //Error
                     ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
+Error --------------------------------------------------------- imports.js:10:15
+
 Error: imports.js:10
  10: import typeof BarObj from './untyped_exports.js'; //Error
                    ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
+
+Error --------------------------------------------------------- imports.js:14:14
 
 Error: imports.js:14
  14: import type {BazType} from './untyped_exports.js'; //Error
                   ^^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
 
+Error --------------------------------------------------------- imports.js:15:16
+
 Error: imports.js:15
  15: import typeof {BazObj} from './untyped_exports.js'; //Error
                     ^^^^^^ Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-type-import`)
+
+Error --------------------------------------------------------- imports.js:24:29
 
 Error: imports.js:24
  24: import type {BeepType} from './nonexistent.js';
                                  ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
+Error --------------------------------------------------------- imports.js:25:30
+
 Error: imports.js:25
  25: import typeof {BeepObj} from './nonexistent.js';
                                   ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
+
+Error --------------------------------------------------------- imports.js:27:28
 
 Error: imports.js:27
  27: import typeof BoopObj from './nonexistent.js';

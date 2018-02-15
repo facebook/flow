@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------------- D.js:6:20
+
 Error: D.js:6
   6: var bar1: string = require('A');
                         ^^^^^^^^^^^^ Cannot assign `require(...)` to `bar1` because module `A` [1] is incompatible with string [2].
@@ -10,6 +12,8 @@ Error: D.js:6
     6: var bar1: string = require('A');
                  ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------------- D.js:7:20
+
 Error: D.js:7
   7: var bar2: string = require('B');
                         ^^^^^^^^^^^^ Cannot assign `require(...)` to `bar2` because module `A` [1] is incompatible with string [2].
@@ -21,6 +25,8 @@ Error: D.js:7
        ^ [1]: module `A`. See lib: A.js:1
     7: var bar2: string = require('B');
                  ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- D.js:8:20
 
 Error: D.js:8
   8: var bar3: string = require('C');

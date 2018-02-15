@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- builtin.js:11:31
+
 Error: builtin.js:11
  11: var lengthTest3: IHasLength = 123; // number doesn't have length
                                    ^^^ Cannot assign `123` to `lengthTest3` because property `length` is missing in number [1] but exists in `IHasLength` [2].
@@ -6,6 +8,8 @@ Error: builtin.js:11
                                      ^^^ [1]: number
    11: var lengthTest3: IHasLength = 123; // number doesn't have length
                         ^^^^^^^^^^ [2]: `IHasLength`
+
+Error --------------------------------------------------------- builtin.js:12:31
 
 Error: builtin.js:12
  12: var lengthTest4: IHasLength = true; // bool doesn't have length
@@ -16,6 +20,8 @@ Error: builtin.js:12
    12: var lengthTest4: IHasLength = true; // bool doesn't have length
                         ^^^^^^^^^^ [2]: `IHasLength`
 
+Error ----------------------------------------------------------- class.js:22:34
+
 Error: class.js:22
  22: var testInstance2: IHasXNumber = new ClassWithXString(); // Error wrong type
                                       ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `new ClassWithXString()` to `testInstance2` because in property `x`, string [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: class.js:22
             ^^^^^^ [1]: string
    14:   x: number;
             ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- class.js:23:34
 
 Error: class.js:23
  23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
@@ -34,6 +42,8 @@ Error: class.js:23
    23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
                           ^^^^^^^^^^^ [2]: `IHasYString`
 
+Error ------------------------------------------------------------- obj.js:10:35
+
 Error: obj.js:10
  10: var propTest2: IHasXString = { x: 123 }; // Error string != number
                                        ^^^ Cannot assign object literal to `propTest2` because in property `x`, number [1] is incompatible with string [2].
@@ -42,6 +52,8 @@ Error: obj.js:10
                                          ^^^ [1]: number
     6:   x: string;
             ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- obj.js:11:30
 
 Error: obj.js:11
  11: var propTest3: IHasXString = {}; // Property not found
@@ -52,6 +64,8 @@ Error: obj.js:11
    11: var propTest3: IHasXString = {}; // Property not found
                       ^^^^^^^^^^^ [2]: `IHasXString`
 
+Error -------------------------------------------------------------- obj.js:19:4
+
 Error: obj.js:19
  19:   (y: IHasXString); // error: string != number
         ^ Cannot cast `y` to `IHasXString` because in property `x`, number [1] is incompatible with string [2].
@@ -61,6 +75,8 @@ Error: obj.js:19
     6:   x: string;
             ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- optional.js:10:26
+
 Error: optional.js:10
  10: var test2: HasOptional = {}; // Error: missing property a
                               ^^ Cannot assign object literal to `test2` because property `a` is missing in object literal [1] but exists in `HasOptional` [2].
@@ -69,6 +85,8 @@ Error: optional.js:10
                                 ^^ [1]: object literal
    10: var test2: HasOptional = {}; // Error: missing property a
                   ^^^^^^^^^^^ [2]: `HasOptional`
+
+Error -------------------------------------------------------- optional.js:12:43
 
 Error: optional.js:12
  12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number

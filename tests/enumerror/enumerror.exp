@@ -1,3 +1,5 @@
+Error ------------------------------------------------------- enumerror.js:10:18
+
 Error: enumerror.js:10
  10: isActive({state: 'PAUSE'});
                       ^^^^^^^ Property `PAUSE` is missing in object type [1].
@@ -9,6 +11,8 @@ Error: enumerror.js:10
     6:     DELETED: string;
     7: }>}): boolean {
        ^ [1]: object type
+
+Error ------------------------------------------------------- enumerror.js:20:19
 
 Error: enumerror.js:20
  20: isActive2({state: 'PAUSE'});

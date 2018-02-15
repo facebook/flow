@@ -1,10 +1,16 @@
+Error ------------------------------------------------------------ annot.js:1:17
+
 Error: annot.js:1
   1: var A = require('./unknown_class');
                      ^^^^^^^^^^^^^^^^^ Cannot resolve module `./unknown_class`.
 
+Error ------------------------------------------------------------- annot.js:5:7
+
 Error: annot.js:5
   5:   bar(x) { }
            ^ Missing type annotation for `x`.
+
+Error ------------------------------------------------------------- fun.js:11:16
 
 Error: fun.js:11
  11: var x:string = f(0);
@@ -14,6 +20,8 @@ Error: fun.js:11
                     ^^^^^^ [1]: number
    11: var x:string = f(0);
              ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- obj.js:10:16
 
 Error: obj.js:10
  10: var x:string = o.x;

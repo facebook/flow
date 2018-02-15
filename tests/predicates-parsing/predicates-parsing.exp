@@ -1,22 +1,34 @@
+Error ----------------------------------------------------------- fail-0.js:5:40
+
 Error: fail-0.js:5
   5: declare function f2(x: mixed): boolean %checks;
                                             ^^^^^^^ Predicate function declarations need to declare a predicate expression.
+
+Error ----------------------------------------------------------- fail-1.js:5:24
 
 Error: fail-1.js:5
   5: function f6(x: mixed): %checks (x !== null) {  }
                             ^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
+Error ----------------------------------------------------------- fail-1.js:5:45
+
 Error: fail-1.js:5
   5: function f6(x: mixed): %checks (x !== null) {  }
                                                  ^^^^ Invalid body for predicate function. Expected a simple return statement as body.
+
+Error ----------------------------------------------------------- fail-1.js:5:45
 
 Error: fail-1.js:5
   5: function f6(x: mixed): %checks (x !== null) {  }
                                                  ^^^^ Predicate functions need to return non-void.
 
+Error ----------------------------------------------------------- fail-2.js:3:22
+
 Error: fail-2.js:3
   3: var a2 = (x: mixed): %checks (x !== null) => {        // Error: body form
                           ^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+Error ----------------------------------------------------------- fail-2.js:3:46
 
 Error: fail-2.js:3
                                                   v---------------------------
@@ -25,21 +37,31 @@ Error: fail-2.js:3
   5: }
      ^ Invalid body for predicate function. Expected a simple return statement as body.
 
+Error ----------------------------------------------------------- fail-3.js:5:24
+
 Error: fail-3.js:5
   5: function f5(x: mixed): %checks (x !== null) { return x !== null }
                             ^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+Error ----------------------------------------------------------- fail-3.js:7:22
 
 Error: fail-3.js:7
   7: var a2 = (x: mixed): %checks (x !== null) => x !== null;
                           ^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
+Error ---------------------------------------------------- unsupported-0.js:5:31
+
 Error: unsupported-0.js:5
   5: var a3: (x: mixed) => boolean %checks (x !== null);
                                    ^ Unexpected token %
 
+Error ---------------------------------------------------- unsupported-1.js:5:31
+
 Error: unsupported-1.js:5
   5: var a4: (x: mixed) => boolean %checks = (x: mixed) => x !== null;
                                    ^ Unexpected token %
+
+Error ---------------------------------------------------- unsupported-2.js:5:31
 
 Error: unsupported-2.js:5
   5: var a5: (x: mixed) => boolean %checks(x !== null) =

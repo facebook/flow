@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------------- B.js:6:6
+
 Error: B.js:6
   6:   c: C;
           ^ Cannot extend `A` [1] with `B` because in property `c`, `C` [2] is incompatible with string [3].
@@ -8,6 +10,8 @@ Error: B.js:6
             ^ [2]: `C`
     5:   c: string;
             ^^^^^^ [3]: string. See: A.js:5
+
+Error ----------------------------------------------------------------- C.js:6:6
 
 Error: C.js:6
   6:   b: B;
@@ -22,6 +26,8 @@ Error: C.js:6
 
 
 Found 2 errors
+Error ----------------------------------------------------------------- C.js:6:6
+
 Error: C.js:6
   6:   b: B;
           ^ Cannot extend `A` [1] with `C` because in property `b`, string [2] is incompatible with number [3].
@@ -35,6 +41,8 @@ Error: C.js:6
 
 
 Found 1 error
+Error ----------------------------------------------------------------- C.js:6:6
+
 Error: C.js:6
   6:   b: B;
           ^ Cannot extend `A` [1] with `C` because in property `b`, string [2] is incompatible with number [3].
@@ -48,6 +56,8 @@ Error: C.js:6
 
 
 Found 1 error
+Error ----------------------------------------------------------------- C.js:6:6
+
 Error: C.js:6
   6:   b: B;
           ^ Cannot extend `A` [1] with `C` because in property `b`, string [2] is incompatible with number [3].

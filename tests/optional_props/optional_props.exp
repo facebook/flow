@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:2:27
+
 Error: test.js:2
   2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
                                ^ Cannot assign `x` to `y` because property `foo` is missing in object type [1] but exists in object type [2].
@@ -6,6 +8,8 @@ Error: test.js:2
               ^^^ [1]: object type
     2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
               ^^^^^^^^^^^^^^^^ [2]: object type
+
+Error -------------------------------------------------------------- test.js:8:9
 
 Error: test.js:8
   8: o.foo = 0; // future widening is constrained
@@ -16,6 +20,8 @@ Error: test.js:8
     2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
                       ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ test.js:12:11
+
 Error: test.js:12
  12: bar({foo: ""});
                ^^ Cannot call `bar` with object literal bound to `config` because in property `foo`, string [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: test.js:12
                  ^^ [1]: string
    10: function bar(config: { foo?: number }) {}
                                     ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test2.js:3:9
 
 Error: test2.js:3
   3: a.foo = null; // But this is an error
@@ -34,6 +42,8 @@ Error: test2.js:3
     1: var a: { foo?: string } = {};
                       ^^^^^^ [2]: string
 
+Error ----------------------------------------------------------- test2.js:10:34
+
 Error: test2.js:10
  10: var d: { foo?: string } = { foo: null }; // But this is an error
                                       ^^^^ Cannot assign object literal to `d` because in property `foo`, null [1] is incompatible with string [2].
@@ -43,12 +53,16 @@ Error: test2.js:10
    10: var d: { foo?: string } = { foo: null }; // But this is an error
                       ^^^^^^ [2]: string
 
+Error ----------------------------------------------------------- test3.js:54:16
+
 Error: test3.js:54
  54:         this.x.b = 'hello';
                     ^ Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object literal [1].
   References:
    53:         this.x = { a: 123 };
                         ^^^^^^^^^^ [1]: object literal
+
+Error ------------------------------------------------ test3_exact_annot.js:5:38
 
 Error: test3_exact_annot.js:5
   5: const b: { a: number, b?: number } = a; // error: property `b` not found
@@ -59,12 +73,16 @@ Error: test3_exact_annot.js:5
     5: const b: { a: number, b?: number } = a; // error: property `b` not found
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
+Error ------------------------------------------------- test3_exact_annot.js:7:4
+
 Error: test3_exact_annot.js:7
   7: (a.b: number); // error: property `b` not found
         ^ Cannot get `a.b` because property `b` is missing in object type [1].
   References:
     4: const a: {| a: number |} = { a: 1 };
                 ^^^^^^^^^^^^^^^ [1]: object type
+
+Error ---------------------------------------------------- test3_failure.js:7:14
 
 Error: test3_failure.js:7
   7:     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)

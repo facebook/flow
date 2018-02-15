@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:2:19
+
 Error: test.js:2
   2: var foo: number = new Foo(); // error (returns object literal above)
                        ^^^^^^^^^ Cannot assign `new Foo()` to `foo` because object literal [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: test.js:2
                                ^^ [1]: object literal
     2: var foo: number = new Foo(); // error (returns object literal above)
                 ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:5:19
 
 Error: test.js:5
   5: var bar: number = new Bar(); // error (returns new object)
@@ -16,6 +20,8 @@ Error: test.js:5
     5: var bar: number = new Bar(); // error (returns new object)
                 ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- test.js:8:19
+
 Error: test.js:8
   8: var qux: number = new Qux(); // error (returns new object)
                        ^^^^^^^^^ Cannot assign `new Qux()` to `qux` because new object [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: test.js:8
                          ^^^^^^^^^ [1]: new object
     8: var qux: number = new Qux(); // error (returns new object)
                 ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:23:2
 
 Error: test.js:23
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
@@ -34,6 +42,8 @@ Error: test.js:23
    23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
                          ^^^^^^^^^^^ [2]: object type
 
+Error ------------------------------------------------------------- test2.js:7:7
+
 Error: test2.js:7
   7: d.x = ""; // error, string ~/~ number (but property x is found)
            ^^ Cannot assign empty string to `d.x` because string [1] is incompatible with number [2].
@@ -42,6 +52,8 @@ Error: test2.js:7
              ^^ [1]: string
     2:   constructor(): { x: number }; // OK
                              ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test2.js:9:2
 
 Error: test2.js:9
   9: (new D: D); // error, new D is an object, D not in proto chain

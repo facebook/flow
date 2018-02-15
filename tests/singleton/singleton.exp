@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------- boolean.js:8:34
+
 Error: boolean.js:8
   8: var y : boolean = veryOptimistic(false); // error
                                       ^^^^^ Cannot call `veryOptimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean literal `true` [2].
@@ -6,6 +8,8 @@ Error: boolean.js:8
                                         ^^^^^ [1]: boolean
     3: function veryOptimistic(isThisAwesome: true): boolean {
                                               ^^^^ [2]: boolean literal `true`
+
+Error --------------------------------------------------------- boolean.js:15:35
 
 Error: boolean.js:15
  15: var y : boolean = veryPessimistic(false); // error
@@ -16,6 +20,8 @@ Error: boolean.js:15
    10: function veryPessimistic(isThisAwesome: true): boolean {
                                                ^^^^ [2]: boolean literal `true`
 
+Error --------------------------------------------------------- boolean.js:21:12
+
 Error: boolean.js:21
  21:     return x;
                 ^ Cannot return `x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
@@ -24,6 +30,8 @@ Error: boolean.js:21
                        ^^^^^^^^^^^^^^^ [1]: boolean literal `true`
    19: function bar(x: MyOwnBooleanLOL): false {
                                          ^^^^^ [2]: boolean literal `false`
+
+Error --------------------------------------------------------- boolean.js:23:12
 
 Error: boolean.js:23
  23:     return !x;
@@ -56,6 +64,8 @@ Error: boolean.js:29
    17: type MyOwnBooleanLOL = true | false
                                      ^^^^^ boolean literal `false`
 
+Error ----------------------------------------------------------- number.js:8:12
+
 Error: number.js:8
   8: highlander(2); // error
                 ^ Cannot call `highlander` with `2` bound to `howMany` because number [1] is incompatible with number literal `1` [2].
@@ -64,6 +74,8 @@ Error: number.js:8
                   ^ [1]: number
     3: function highlander(howMany: 1): number {
                                     ^ [2]: number literal `1`
+
+Error ----------------------------------------------------------- number.js:19:5
 
 Error: number.js:19
  19: bar(3); // error

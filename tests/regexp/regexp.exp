@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------- regexp.js:2:20
+
 Error: regexp.js:2
   2: var match:number = patt.test("Hello world!");
                         ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible with number [2].

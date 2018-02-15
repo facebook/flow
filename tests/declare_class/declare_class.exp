@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- lib/test.js:8:10
+
 Library type error:
 lib/test.js:8
   8:   foo(): string;
@@ -10,6 +12,8 @@ lib/test.js:8
     2:   foo(): number;
                 ^^^^^^ [3]: number
 
+Error ----------------------------------------------------- declare_class.js:8:7
+
 Error: declare_class.js:8
   8: C.x = "";
            ^^ Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
@@ -18,6 +22,8 @@ Error: declare_class.js:8
              ^^ [1]: string
     2:     static x: number;
                      ^^^^^^ [2]: number
+
+Error ----------------------------------------------------- declare_class.js:9:7
 
 Error: declare_class.js:9
   9: C.foo("");
@@ -28,6 +34,8 @@ Error: declare_class.js:9
     3:     static foo(x: number): void;
                          ^^^^^^ [2]: number
 
+Error ---------------------------------------------------- declare_class.js:12:2
+
 Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
       ^^^^^^ Cannot cast `C.name` to number because string [1] is incompatible with number [2].
@@ -36,6 +44,8 @@ Error: declare_class.js:12
                      ^ [1]: string
    12: (C.name: number); // error, it's a string
                 ^^^^^^ [2]: number
+
+Error ---------------------------------------------------- declare_class.js:15:7
 
 Error: declare_class.js:15
  15: new D(123); // error, number ~> string

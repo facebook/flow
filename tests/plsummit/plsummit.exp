@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- generics.js:4:32
+
 Error: generics.js:4
   4: function foo<X>(x: X): X { r = x; return x; }
                                     ^ Cannot assign `x` to `r` because `X` [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: generics.js:4
                           ^ [1]: `X`
     3: var r: number = 0;
               ^^^^^^ [2]: number
+
+Error ----------------------------------------------------- import_class.js:3:15
 
 Error: import_class.js:3
   3: var c = new C("");
@@ -16,6 +20,8 @@ Error: import_class.js:3
     3:     constructor(x: number) { this.x = x; }
                           ^^^^^^ [2]: number. See: export_class.js:3
 
+Error ---------------------------------------------------------- objects.js:5:17
+
 Error: objects.js:5
   5: var x: string = c.foo();
                      ^^^^^^^ Cannot assign `c.foo()` to `x` because number [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: objects.js:5
                                ^ [1]: number
     5: var x: string = c.foo();
               ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- objects.js:13:17
 
 Error: objects.js:13
  13: var y: number = o2.bar();

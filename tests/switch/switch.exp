@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------- switch.js:28:13
+
 Error: switch.js:28
  28:         x = x*x;
                  ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -5,12 +7,16 @@ Error: switch.js:28
    23:     var x = b? 0: "";
                          ^^ [1]: string
 
+Error ---------------------------------------------------------- switch.js:28:15
+
 Error: switch.js:28
  28:         x = x*x;
                    ^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
    23:     var x = b? 0: "";
                          ^^ [1]: string
+
+Error --------------------------------------- switch_default_fallthrough.js:16:6
 
 Error: switch_default_fallthrough.js:16
  16:     (a : string); // error, string | number ~/> string
@@ -21,6 +27,8 @@ Error: switch_default_fallthrough.js:16
    16:     (a : string); // error, string | number ~/> string
                 ^^^^^^ [2]: string
 
+Error --------------------------------------- switch_default_fallthrough.js:17:6
+
 Error: switch_default_fallthrough.js:17
  17:     (a : number); // error, string | number ~/> number
           ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
@@ -29,6 +37,8 @@ Error: switch_default_fallthrough.js:17
                    ^^ [1]: string
    17:     (a : number); // error, string | number ~/> number
                 ^^^^^^ [2]: number
+
+Error -------------------------------------- switch_default_fallthrough.js:21:12
 
 Error: switch_default_fallthrough.js:21
  21:     return b; // error, number ~/> string
@@ -39,6 +49,8 @@ Error: switch_default_fallthrough.js:21
     4: function foo(x : mixed): string {
                                 ^^^^^^ [2]: string
 
+Error --------------------------------------- switch_default_fallthrough.js:39:6
+
 Error: switch_default_fallthrough.js:39
  39:     (a : string); // error, string | number ~/> string
           ^ Cannot cast `a` to string because number [1] is incompatible with string [2].
@@ -47,6 +59,8 @@ Error: switch_default_fallthrough.js:39
                    ^ [1]: number
    39:     (a : string); // error, string | number ~/> string
                 ^^^^^^ [2]: string
+
+Error --------------------------------------- switch_default_fallthrough.js:40:6
 
 Error: switch_default_fallthrough.js:40
  40:     (a : number); // error, string | number ~/> number
@@ -57,6 +71,8 @@ Error: switch_default_fallthrough.js:40
    40:     (a : number); // error, string | number ~/> number
                 ^^^^^^ [2]: number
 
+Error --------------------------------------- switch_default_fallthrough.js:43:6
+
 Error: switch_default_fallthrough.js:43
  43:     (b : string); // error, string | number ~/> string
           ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
@@ -65,6 +81,8 @@ Error: switch_default_fallthrough.js:43
                    ^ [1]: number
    43:     (b : string); // error, string | number ~/> string
                 ^^^^^^ [2]: string
+
+Error --------------------------------------- switch_default_fallthrough.js:44:6
 
 Error: switch_default_fallthrough.js:44
  44:     (b : number); // error, string | number ~/> number
@@ -75,6 +93,8 @@ Error: switch_default_fallthrough.js:44
    44:     (b : number); // error, string | number ~/> number
                 ^^^^^^ [2]: number
 
+Error -------------------------------------- switch_default_fallthrough.js:46:12
+
 Error: switch_default_fallthrough.js:46
  46:     return a+b; // error, string ~/> number
                 ^^^ Cannot return `a + b` because string [1] is incompatible with number [2].
@@ -84,6 +104,8 @@ Error: switch_default_fallthrough.js:46
    24: function baz(x: mixed): number {
                                ^^^^^^ [2]: number
 
+Error -------------------------------------------------- trailing_cases.js:23:18
+
 Error: trailing_cases.js:23
  23:   var y:number = x; // error, number | string ~/> number
                       ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
@@ -92,6 +114,8 @@ Error: trailing_cases.js:23
                ^^^ [1]: string
    23:   var y:number = x; // error, number | string ~/> number
                ^^^^^^ [2]: number
+
+Error -------------------------------------------------- trailing_cases.js:39:18
 
 Error: trailing_cases.js:39
  39:   var y:number = x; // error, number | uninitialized ~/> number

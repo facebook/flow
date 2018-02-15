@@ -442,6 +442,8 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------------- test.js:3:17
+
           Error: test.js:3
             3: var x: string = 123
                                ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
@@ -1001,6 +1003,8 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -1009,6 +1013,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -1943,6 +1949,8 @@ export default suite(({
       flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error -------------------------------------- focusedWithCyclicDependency.js:3:17
+
           Error: focusedWithCyclicDependency.js:3
             3: var x: string = 123;
                                ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
@@ -1991,6 +1999,8 @@ export default suite(({
     flowCmd(['check-contents', 'focused.js'], 'focused.js')
       .stdout(
         `
+          Error ---------------------------------------------------------- focused.js:3:28
+
           Error: focused.js:3
             3: var focusedError: string = 123;
                                           ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
@@ -2009,6 +2019,8 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2070,6 +2082,8 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2078,6 +2092,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2098,9 +2114,13 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ---------------------------------------------------------- focused.js:1:24
+
           Error: focused.js:1
             1: import dependency from './dependency';
                                       ^^^^^^^^^^^^^^ Cannot resolve module \`./dependency\`.
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2121,6 +2141,8 @@ export default suite(({
     .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2129,6 +2151,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2214,6 +2238,8 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2223,6 +2249,8 @@ export default suite(({
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
 
+          Error ---------------------------------------------------------- focused.js:3:28
+
           Error: focused.js:3
             3: var focusedError: string = 123;
                                           ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
@@ -2231,6 +2259,8 @@ export default suite(({
                                             ^^^ [1]: number
               3: var focusedError: string = 123;
                                    ^^^^^^ [2]: string
+
+          Error --------------------------------------------------- otherDependent.js:3:35
 
           Error: otherDependent.js:3
             3: var otherDependentError: string = 123;
@@ -2290,6 +2320,8 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2298,6 +2330,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2318,6 +2352,8 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2326,6 +2362,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2385,6 +2423,8 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2393,6 +2433,8 @@ export default suite(({
                                                ^^^ [1]: number
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
+
+          Error ---------------------------------------------------------- focused.js:3:28
 
           Error: focused.js:3
             3: var focusedError: string = 123;
@@ -2413,6 +2455,8 @@ export default suite(({
       .stdout(
         `
 
+          Error ------------------------------------------------------- dependency.js:3:31
+
           Error: dependency.js:3
             3: var dependencyError: string = 123;
                                              ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
@@ -2422,6 +2466,8 @@ export default suite(({
               3: var dependencyError: string = 123;
                                       ^^^^^^ [2]: string
 
+          Error ---------------------------------------------------------- focused.js:3:28
+
           Error: focused.js:3
             3: var focusedError: string = 123;
                                           ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
@@ -2430,6 +2476,8 @@ export default suite(({
                                             ^^^ [1]: number
               3: var focusedError: string = 123;
                                    ^^^^^^ [2]: string
+
+          Error --------------------------------------------------- otherDependent.js:3:35
 
           Error: otherDependent.js:3
             3: var otherDependentError: string = 123;

@@ -1,9 +1,13 @@
+Error -------------------------------------------------------------- in.js:27:15
+
 Error: in.js:27
  27:     ('foo' in 123); // error
                    ^^^ Cannot use `in` because on the right-hand side, number [1] must be an object or array.
   References:
    27:     ('foo' in 123); // error
                      ^^^ [1]: number
+
+Error -------------------------------------------------------------- in.js:28:15
 
 Error: in.js:28
  28:     ('foo' in 'bar'); // error
@@ -12,12 +16,16 @@ Error: in.js:28
    28:     ('foo' in 'bar'); // error
                      ^^^^^ [1]: string
 
+Error -------------------------------------------------------------- in.js:29:15
+
 Error: in.js:29
  29:     ('foo' in void 0); // error
                    ^^^^^^ Cannot use `in` because on the right-hand side, undefined [1] must be an object or array.
   References:
    29:     ('foo' in void 0); // error
                      ^^^^^^ [1]: undefined
+
+Error -------------------------------------------------------------- in.js:30:15
 
 Error: in.js:30
  30:     ('foo' in null); // error
@@ -26,12 +34,16 @@ Error: in.js:30
    30:     ('foo' in null); // error
                      ^^^^ [1]: null
 
+Error --------------------------------------------------------------- in.js:35:6
+
 Error: in.js:35
  35:     (null in {}); // error
           ^^^^ Cannot use `in` because on the left-hand side, null [1] must be a string or number.
   References:
    35:     (null in {}); // error
             ^^^^ [1]: null
+
+Error --------------------------------------------------------------- in.js:36:6
 
 Error: in.js:36
  36:     (void 0 in {}); // error
@@ -40,12 +52,16 @@ Error: in.js:36
    36:     (void 0 in {}); // error
             ^^^^^^ [1]: undefined
 
+Error --------------------------------------------------------------- in.js:37:6
+
 Error: in.js:37
  37:     ({} in {}); // error
           ^^ Cannot use `in` because on the left-hand side, object literal [1] must be a string or number.
   References:
    37:     ({} in {}); // error
             ^^ [1]: object literal
+
+Error --------------------------------------------------------------- in.js:38:6
 
 Error: in.js:38
  38:     ([] in {}); // error
@@ -54,12 +70,16 @@ Error: in.js:38
    38:     ([] in {}); // error
             ^^ [1]: empty array literal
 
+Error --------------------------------------------------------------- in.js:39:6
+
 Error: in.js:39
  39:     (false in []); // error
           ^^^^^ Cannot use `in` because on the left-hand side, boolean [1] must be a string or number.
   References:
    39:     (false in []); // error
             ^^^^^ [1]: boolean
+
+Error -------------------------------------------------------------- in.js:44:18
 
 Error: in.js:44
  44:     if ('foo' in 123) {} // error
@@ -68,12 +88,16 @@ Error: in.js:44
    44:     if ('foo' in 123) {} // error
                         ^^^ [1]: number
 
+Error --------------------------------------------------------------- in.js:45:9
+
 Error: in.js:45
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
              ^^^^^^ Cannot use `in` because on the left-hand side, boolean literal `false` [1] must be a string or number.
   References:
    45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
                ^^^^^^ [1]: boolean literal `false`
+
+Error -------------------------------------------------------------- in.js:52:15
 
 Error: in.js:52
  52:     ('foo' in y); // error

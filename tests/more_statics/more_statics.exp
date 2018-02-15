@@ -1,3 +1,5 @@
+Error ----------------------------------------------------- class_static.js:9:17
+
 Error: class_static.js:9
   9: var x: number = C.bar();
                      ^^^^^^^ Cannot assign `C.bar()` to `x` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: class_static.js:9
                          ^^^^^^ [1]: string
     9: var x: number = C.bar();
               ^^^^^^ [2]: number
+
+Error ---------------------------------------------------- class_static.js:10:17
 
 Error: class_static.js:10
  10: var y: number = C.foo();

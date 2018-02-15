@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:3:21
+
 Error: test.js:3
   3:     var y: string = x; // error
                          ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: test.js:3
                                   ^ [1]: number
     3:     var y: string = x; // error
                   ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- test.js:9:16
 
 Error: test.js:9
   9:         return x; // error, since T: number and U: number does not imply U: T
@@ -16,6 +20,8 @@ Error: test.js:9
     8:     bar<U: number>(x: U): T {
                                  ^ [2]: `T`
 
+Error ------------------------------------------------------------ test.js:13:25
+
 Error: test.js:13
  13:         var y: string = x; // error
                              ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: test.js:13
                         ^ [1]: number
    13:         var y: string = x; // error
                       ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test.js:22:10
 
 Error: test.js:22
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
@@ -34,6 +42,8 @@ Error: test.js:22
     7: class C<T: number> {
                   ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ test.js:22:20
+
 Error: test.js:22
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
                         ^^^^^ Cannot assign `new C()` to `c` because in type argument `T`, string [1] is incompatible with number [2].
@@ -43,6 +53,8 @@ Error: test.js:22
     7: class C<T: number> {
                   ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ test.js:23:17
+
 Error: test.js:23
  23: var q: number = c.qux(0);
                      ^^^^^^^^ Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with number [2].
@@ -51,6 +63,8 @@ Error: test.js:23
                 ^^^^^^ [1]: string
    23: var q: number = c.qux(0);
               ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ test.js:23:23
 
 Error: test.js:23
  23: var q: number = c.qux(0);

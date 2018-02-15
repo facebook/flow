@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:20:6
+
 Error: test.js:20
  20: x2 = x2 || true;
           ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -6,6 +8,8 @@ Error: test.js:20
                 ^^^^^^^ [1]: boolean
    19: var x2: ?boolean = null;
                ^^^^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:23:6
 
 Error: test.js:23
  23: y2 = y2 || 1;
@@ -16,6 +20,8 @@ Error: test.js:23
    22: var y2: ?number = null;
                ^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:26:6
+
 Error: test.js:26
  26: z2 = z2 || 'foo';
           ^^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -25,6 +31,8 @@ Error: test.js:26
    25: var z2: ?string = null;
                ^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:32:6
+
 Error: test.js:32
  32: a1 = a1 || false;
           ^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -33,6 +41,8 @@ Error: test.js:32
                          ^^^^^^ [1]: number
    31: var a1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:32:6
 
 Error: test.js:32
  32: a1 = a1 || false;
@@ -43,6 +53,8 @@ Error: test.js:32
    31: var a1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:35:6
+
 Error: test.js:35
  35: b1 = b1 || 0;
           ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -51,6 +63,8 @@ Error: test.js:35
                ^^^^^^^ [1]: boolean
    34: var b1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:35:6
 
 Error: test.js:35
  35: b1 = b1 || 0;
@@ -61,6 +75,8 @@ Error: test.js:35
    34: var b1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:38:6
+
 Error: test.js:38
  38: c1 = c1 || '';
           ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -70,6 +86,8 @@ Error: test.js:38
    37: var c1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:38:6
+
 Error: test.js:38
  38: c1 = c1 || '';
           ^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -78,6 +96,8 @@ Error: test.js:38
                          ^^^^^^ [1]: number
    37: var c1: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:58:5
 
 Error: test.js:58
  58: if (x4 || true) {}
@@ -88,6 +108,8 @@ Error: test.js:58
    57: var x4: ?boolean = null;
                ^^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:61:5
+
 Error: test.js:61
  61: if (y4 || false) {}
          ^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -96,6 +118,8 @@ Error: test.js:61
                 ^^^^^^ [1]: number
    60: var y4: ?number = null;
                ^^^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:64:5
 
 Error: test.js:64
  64: if (z4 || 'foo') {}
@@ -106,6 +130,8 @@ Error: test.js:64
    63: var z4: ?string = null;
                ^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:70:5
+
 Error: test.js:70
  70: if (a2 || false) {}
          ^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -114,6 +140,8 @@ Error: test.js:70
                          ^^^^^^ [1]: number
    69: var a2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:70:5
 
 Error: test.js:70
  70: if (a2 || false) {}
@@ -124,6 +152,8 @@ Error: test.js:70
    69: var a2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:73:5
+
 Error: test.js:73
  73: if (b2 || 0) {}
          ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -132,6 +162,8 @@ Error: test.js:73
                ^^^^^^^ [1]: boolean
    72: var b2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:73:5
 
 Error: test.js:73
  73: if (b2 || 0) {}
@@ -142,6 +174,8 @@ Error: test.js:73
    72: var b2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:76:5
+
 Error: test.js:76
  76: if (c2 || '') {}
          ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -151,6 +185,8 @@ Error: test.js:76
    75: var c2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:76:5
+
 Error: test.js:76
  76: if (c2 || '') {}
          ^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -159,6 +195,8 @@ Error: test.js:76
                          ^^^^^^ [1]: number
    75: var c2: boolean | number | string | null = null;
                                            ^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:82:7
 
 Error: test.js:82
  82: d1 = (d1 || e1) || false; //Both checks are sketchy. (This is how it gets parsed without the parentheses)
@@ -169,6 +207,8 @@ Error: test.js:82
    80: var d1: ?boolean = null;
                ^^^^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------ test.js:82:13
+
 Error: test.js:82
  82: d1 = (d1 || e1) || false; //Both checks are sketchy. (This is how it gets parsed without the parentheses)
                  ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -177,6 +217,8 @@ Error: test.js:82
                 ^^^^^^^ [1]: boolean
    81: var e1: ?boolean = true;
                ^^^^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:86:6
 
 Error: test.js:86
  86: d2 = d2 || (e2 || false); //Only d2 is sketchy; e2 matches the default pattern.

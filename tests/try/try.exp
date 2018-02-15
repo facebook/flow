@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ init.js:34:20
+
 Error: init.js:34
  34:     var y:number = x; // error
                         ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: init.js:34
                ^ [1]: possibly uninitialized variable
    34:     var y:number = x; // error
                  ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ init.js:44:20
 
 Error: init.js:44
  44:     var y:number = x; // error
@@ -16,6 +20,8 @@ Error: init.js:44
    44:     var y:number = x; // error
                  ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ init.js:54:20
+
 Error: init.js:54
  54:     var y:number = x; // error
                         ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: init.js:54
                ^ [1]: possibly uninitialized variable
    54:     var y:number = x; // error
                  ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ init.js:66:20
 
 Error: init.js:66
  66:     var y:number = x; // error
@@ -34,6 +42,8 @@ Error: init.js:66
    66:     var y:number = x; // error
                  ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- init.js:118:18
+
 Error: init.js:118
 118:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -42,6 +52,8 @@ Error: init.js:118
                ^ [1]: uninitialized variable
   118:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- init.js:131:18
 
 Error: init.js:131
 131:   var y:number = x; // error
@@ -52,6 +64,8 @@ Error: init.js:131
   131:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- init.js:140:18
+
 Error: init.js:140
 140:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -60,6 +74,8 @@ Error: init.js:140
                ^ [1]: possibly uninitialized variable
   140:   var y:number = x; // error
                ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- init.js:153:18
 
 Error: init.js:153
 153:   var y:number = x; // error
@@ -70,13 +86,19 @@ Error: init.js:153
   153:   var y:number = x; // error
                ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- return.js:28:3
+
 Error: return.js:28
  28:   return "bar"; // unreachable
        ^^^^^^^^^^^^^ Unreachable code.
 
+Error ----------------------------------------------------------- return.js:64:3
+
 Error: return.js:64
  64:   bar(); // unreachable
        ^^^^^^ Unreachable code.
+
+Error ------------------------------------------------------------- test.js:18:5
 
 Error: test.js:18
  18:     x(); // string ~/> function call (no num or bool error)
@@ -85,12 +107,16 @@ Error: test.js:18
    10:         x = "";
                    ^^ [1]: string
 
+Error ------------------------------------------------------------- test.js:19:5
+
 Error: test.js:19
  19:     y(); // object ~/> function call (no uninitialized error)
          ^ Cannot call `y` because a callable signature is missing in object literal [1].
   References:
    15:         y = {};
                    ^^ [1]: object literal
+
+Error ------------------------------------------------------------- test.js:41:5
 
 Error: test.js:41
  41:     x(); // unreachable

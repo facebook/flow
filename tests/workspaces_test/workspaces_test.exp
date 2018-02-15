@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- bar/index.js:8:46
+
 Error: bar/index.js:8
   8: export const bWorkspaceType: WorkspaceType = 123; // Error: number ~> string
                                                   ^^^ Cannot assign `123` to `bWorkspaceType` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: bar/index.js:8
                                                     ^^^ [1]: number
     8: export const bWorkspaceType: WorkspaceType = 123; // Error: number ~> string
                                     ^^^^^^^^^^^^^ [2]: string
+
+Error ------------------------------------------------------- foo/index.js:10:46
 
 Error: foo/index.js:10
  10: export const bWorkspaceType: WorkspaceType = '123'; // Error: string ~> number

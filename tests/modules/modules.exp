@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- cli2.js:5:3
+
 Error: cli2.js:5
   5: f("...");
        ^^^^^ Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: cli2.js:5
          ^^^^^ [1]: string
     7: function f(x:number):number { g(x); return x; }
                     ^^^^^^ [2]: number. See: lib.js:7
+
+Error -------------------------------------------------------------- lib.js:7:33
 
 Error: lib.js:7
   7: function f(x:number):number { g(x); return x; }

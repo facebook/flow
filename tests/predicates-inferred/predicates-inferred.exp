@@ -1,3 +1,5 @@
+Error --------------------------------------------- sanity-multi-params.js:10:12
+
 Error: sanity-multi-params.js:10
  10:     return x;
                 ^ Cannot return `x` because array type [1] is incompatible with string [2].
@@ -7,12 +9,16 @@ Error: sanity-multi-params.js:10
     8: function foo(x: string | Array<string>): string {
                                                 ^^^^^^ [2]: string
 
+Error --------------------------------------------- sanity-multi-params.js:12:14
+
 Error: sanity-multi-params.js:12
  12:     return x.join();
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
   References:
     8: function foo(x: string | Array<string>): string {
                        ^^^^^^ [1]: `String`
+
+Error --------------------------------------------------- sanity-ordering.js:7:4
 
 Error: sanity-ordering.js:7
   7:   (obj.page: Object);
@@ -23,6 +29,8 @@ Error: sanity-ordering.js:7
     7:   (obj.page: Object);
                     ^^^^^^ [2]: object type
 
+Error ------------------------------------------------- sanity-ordering.js:15:17
+
 Error: sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
                      ^^^ Cannot get `head[key]` because an indexer property is missing in undefined [1].
@@ -30,12 +38,16 @@ Error: sanity-ordering.js:15
     6: if (dotAccess(obj)) {
            ^^^^^^^^^^^^^^ [1]: undefined
 
+Error ------------------------------------------------- sanity-ordering.js:15:41
+
 Error: sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
                                              ^^^ Cannot assign object literal to `head[key]` because an indexer property is missing in undefined [1].
   References:
     6: if (dotAccess(obj)) {
            ^^^^^^^^^^^^^^ [1]: undefined
+
+Error ---------------------------------------------- sanity-unbound-var.js:13:12
 
 Error: sanity-unbound-var.js:13
  13:     return x;
@@ -46,6 +58,8 @@ Error: sanity-unbound-var.js:13
    11: function foo(x: string | Array<string>): string {
                                                 ^^^^^^ [2]: string
 
+Error ---------------------------------------------- sanity-unbound-var.js:15:14
+
 Error: sanity-unbound-var.js:15
  15:     return x.join();
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
@@ -53,9 +67,13 @@ Error: sanity-unbound-var.js:15
    11: function foo(x: string | Array<string>): string {
                        ^^^^^^ [1]: `String`
 
+Error ----------------------------------------------------------- sanity.js:5:20
+
 Error: sanity.js:5
   5: function check(y): %checks(typeof y === "string") {
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+Error ---------------------------------------------------------- sanity.js:16:41
 
 Error: sanity.js:16
                                              v

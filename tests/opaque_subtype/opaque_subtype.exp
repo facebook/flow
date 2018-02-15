@@ -1,9 +1,13 @@
+Error --------------------------------------------------------- decltest.js:2:33
+
 Error: decltest.js:2
   2: declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
                                      ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
   References:
     2: declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
                                 ^ [1]: `T`
+
+Error ------------------------------------------------------- importtest.js:7:12
 
 Error: importtest.js:7
   7:     return y;
@@ -14,6 +18,8 @@ Error: importtest.js:7
     6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
                                        ^^^^^^^^^^^ [2]: `SuperOpaque`
 
+Error ------------------------------------------------------ importtest.js:15:12
+
 Error: importtest.js:15
  15:     return x;
                 ^ Cannot return `x` because number [1] is incompatible with `Counter` [2].
@@ -22,6 +28,8 @@ Error: importtest.js:15
                           ^^^^^^ [1]: number
    14: function test3 (x: number): Counter {// Error: number ~> Counter
                                    ^^^^^^^ [2]: `Counter`
+
+Error ------------------------------------------------------ importtest.js:27:12
 
 Error: importtest.js:27
  27:     return x;
@@ -32,6 +40,8 @@ Error: importtest.js:27
    26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
                                             ^^^^^^^^^^^^^^^ [2]: `PolyBar`
 
+Error ------------------------------------------------------ importtest.js:31:12
+
 Error: importtest.js:31
  31:     return x;
                 ^ Cannot return `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -40,6 +50,8 @@ Error: importtest.js:31
                                   ^^^^^^ [1]: number
    30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
                                                     ^^^^^^ [2]: string
+
+Error ------------------------------------------------------ importtest.js:39:12
 
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
@@ -50,6 +62,8 @@ Error: importtest.js:39
    38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
                          ^^^^^^^^^ [2]: `SuperType`
 
+Error ------------------------------------------------------ importtest.js:39:12
+
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
                 ^^^ Cannot return `x++` because number [1] is incompatible with `SuperType` [2].
@@ -58,6 +72,8 @@ Error: importtest.js:39
                   ^^^ [1]: number
    38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
                                      ^^^^^^^^^ [2]: `SuperType`
+
+Error ------------------------------------------------------ importtest.js:52:12
 
 Error: importtest.js:52
  52:     return x + y;
@@ -68,6 +84,8 @@ Error: importtest.js:52
    51: function test12(x: ID, y: ID): number { // Error: string ~> number
                                       ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- test.js:7:48
+
 Error: test.js:7
   7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                                     ^^^^^^^ number [1] is incompatible with `SuperType` [2].
@@ -76,6 +94,8 @@ Error: test.js:7
                                                       ^^^^^^^ [1]: number
     7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                           ^^^^^^^^^ [2]: `SuperType`
+
+Error ------------------------------------------------------------ test.js:12:36
 
 Error: test.js:12
  12: export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
@@ -86,6 +106,8 @@ Error: test.js:12
    12: export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
                                     ^^^ [2]: `Bar`
 
+Error ------------------------------------------------------------ test.js:17:45
+
 Error: test.js:17
  17: export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                                  ^^^^^^^^^^ `PolyFoo` [1] is incompatible with `PolyBar` [2].
@@ -95,12 +117,16 @@ Error: test.js:17
    17: export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                       ^^^^^^^^^^ [2]: `PolyBar`
 
+Error ------------------------------------------------------------ test.js:19:27
+
 Error: test.js:19
  19: class PolyBar2<T> extends PolyFoo {}
                                ^^^^^^^ Cannot use `PolyFoo` [1] with less than 1 type argument.
   References:
    14: export class PolyFoo<T> {}
                             ^ [1]: `PolyFoo`
+
+Error ------------------------------------------------------------ test.js:21:47
 
 Error: test.js:21
  21: export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
@@ -111,6 +137,8 @@ Error: test.js:21
    21: export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
                                        ^^^^^^^^^^^ [2]: `PolyBar2`
 
+Error ------------------------------------------------------------ test.js:27:65
+
 Error: test.js:27
  27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                                                      ^^^^^^ string [1] is incompatible with number [2].
@@ -119,6 +147,8 @@ Error: test.js:27
                                                                        ^^^^^^ [1]: string
    27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                             ^^^^^^ [2]: number
+
+Error ------------------------------------------------------ typeapp-test.js:5:8
 
 Error: typeapp-test.js:5
   5:   foo2.p = null; // Error, covariant property p

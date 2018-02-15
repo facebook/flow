@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------- import.js:3:17
+
 Error: import.js:3
   3: var x: string = e.x;
                      ^^^ Cannot assign `e.x` to `x` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: import.js:3
                    ^ [1]: number. See: export.js:2
     3: var x: string = e.x;
               ^^^^^^ [2]: string
+
+Error ----------------------------------------------------------- import.js:4:17
 
 Error: import.js:4
   4: var y: number = e.y;

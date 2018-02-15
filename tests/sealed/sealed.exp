@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ proto.js:3:16
+
 Error: proto.js:3
   3: var x:number = o.x;
                     ^^^ Cannot assign `o.x` to `x` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: proto.js:3
              ^^^^^ [1]: string
     3: var x:number = o.x;
              ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ proto.js:7:16
 
 Error: proto.js:7
   7: var y:number = o.m();
@@ -16,6 +20,8 @@ Error: proto.js:7
     7: var y:number = o.m();
              ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ proto.js:7:16
+
 Error: proto.js:7
   7: var y:number = o.m();
                     ^^^^^ Cannot assign `o.m()` to `y` because string [1] is incompatible with number [2].
@@ -25,6 +31,8 @@ Error: proto.js:7
     7: var y:number = o.m();
              ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ sealed.js:3:3
+
 Error: sealed.js:3
   3: o.z = 0;
        ^ Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
@@ -32,12 +40,16 @@ Error: sealed.js:3
    12: var export_o: { x:any; } = o; // awkward type cast
                      ^^^^^^^^^^ [1]: object type. See: proto.js:12
 
+Error ------------------------------------------------------------ sealed.js:8:3
+
 Error: sealed.js:8
   8: a.x = 123;
        ^ Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
   References:
     7: var a = new Bar(234);
                ^^^^^^^^^^^^ [1]: new object
+
+Error ------------------------------------------------------------ sealed.js:9:3
 
 Error: sealed.js:9
   9: a.y = 'abc'; // error, needs to be declared in Bar's constructor

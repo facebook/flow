@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- Bad.js:11:21
+
 Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                          ^^^^^ In property `bar`, number [1] is incompatible with string [2].
@@ -7,12 +9,16 @@ Error: Bad.js:11
   144:     toString(radix?: number): string;
                                      ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:144
 
+Error ------------------------------------------------------------ Good.js:15:15
+
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                    ^^^ Property `foo` is missing in props [1].
   References:
     9: <Good buz={2} qux={3} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:9
+
+Error ------------------------------------------------------------ Good.js:15:20
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
@@ -21,6 +27,8 @@ Error: Good.js:15
     8: <Good foo={1} qux={3} />; // Error: Missing buz
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:8
 
+Error ------------------------------------------------------------ Good.js:15:25
+
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                              ^^^ Property `qux` is missing in props [1].
@@ -28,12 +36,16 @@ Error: Good.js:15
     7: <Good foo={1} buz={2} />; // Error: Missing qux
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:7
 
+Error ------------------------------------------------------------ Good.js:17:10
+
 Error: Good.js:17
  17:     buz: buz * 2,
               ^^^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
    10: <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
                          ^^^^^^ [1]: string. See: Good_use.js:10
+
+Error ------------------------------------------------------------- Good.js:18:5
 
 Error: Good.js:18
  18:     qux,
@@ -43,6 +55,8 @@ Error: Good.js:18
                                  ^^^^^^ [1]: string. See: Good_use.js:11
     9:   qux: number,
               ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------ hocs.js:15:25
 
 Error: hocs.js:15
                              v-

@@ -1,3 +1,5 @@
+Error ---------------------------------------------------------- require.js:9:14
+
 Error: require.js:9
   9: takesAString(A.numberValue);
                   ^^^^^^^^^^^^^ Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: require.js:9
                              ^^ [1]: number. See: ProvidesModuleA.js:6
     4: function takesAString(str: string): void {}
                                   ^^^^^^ [2]: string
+
+Error --------------------------------------------------------- require.js:14:14
 
 Error: require.js:14
  14: takesAString(B.numberValue);
@@ -16,13 +20,19 @@ Error: require.js:14
     4: function takesAString(str: string): void {}
                                   ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------- require.js:17:9
+
 Error: require.js:17
  17: require("C");
              ^^^ Cannot resolve module `C`.
 
+Error ---------------------------------------------------------- require.js:20:9
+
 Error: require.js:20
  20: require("./D");
              ^^^^^ Cannot resolve module `./D`.
+
+Error ---------------------------------------------------------- require.js:25:3
 
 Error: require.js:25
  25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
@@ -34,9 +44,13 @@ Error: require.js:25
     8: };
        ^ [1]: object literal. See: E.js:6
 
+Error ---------------------------------------------------------- require.js:30:1
+
 Error: require.js:30
  30: require(a); // Error: Param must be string literal
      ^^^^^^^^^^ The parameter passed to `require` must be a string literal.
+
+Error ---------------------------------------------------------- require.js:32:1
 
 Error: require.js:32
  32: require(`${'./E'}`); // error: but only if they have no expressions

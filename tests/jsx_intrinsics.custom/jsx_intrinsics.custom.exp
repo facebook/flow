@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- main.js:6:10
+
 Error: main.js:6
   6: <div id={42} />; // Error: (`id` prop) number ~> string
               ^^ Cannot create `div` element because in property `id`, number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: main.js:6
                 ^^ [1]: number
     4:   div: $JSXIntrinsic<{id: string}>,
                                  ^^^^^^ [2]: string. See lib: lib/jsx.js:4
+
+Error -------------------------------------------------------------- main.js:9:2
 
 Error: main.js:9
   9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
@@ -16,6 +20,8 @@ Error: main.js:9
     9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
                                    ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- strings.js:9:2
+
 Error: strings.js:9
   9: <Div />; // This is fine
       ^^^ Cannot create `Div` element because property `id` is missing in props [1] but exists in object type [2].
@@ -24,6 +30,8 @@ Error: strings.js:9
        ^^^^^^^ [1]: props
     4:   div: $JSXIntrinsic<{id: string}>,
                             ^^^^^^^^^^^^ [2]: object type. See lib: lib/jsx.js:4
+
+Error ---------------------------------------------------------- strings.js:10:2
 
 Error: strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics
@@ -36,6 +44,8 @@ Error: strings.js:10
     6: };
        ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
+Error ---------------------------------------------------------- strings.js:11:2
+
 Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
       ^^^ An indexer property is missing in `$JSXIntrinsics` [1].
@@ -47,6 +57,8 @@ Error: strings.js:11
     6: };
        ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
+Error --------------------------------------------------------- strings.js:13:28
+
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
                                 ^^ Cannot call `React.createElement` because property `id` is missing in props [1] but exists in object type [2].
@@ -55,6 +67,8 @@ Error: strings.js:13
                                   ^^ [1]: props
     4:   div: $JSXIntrinsic<{id: string}>,
                             ^^^^^^^^^^^^ [2]: object type. See lib: lib/jsx.js:4
+
+Error --------------------------------------------------------- strings.js:14:21
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
@@ -67,6 +81,8 @@ Error: strings.js:14
     6: };
        ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
 
+Error --------------------------------------------------------- strings.js:15:21
+
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
                          ^^^ An indexer property is missing in `$JSXIntrinsics` [1].
@@ -77,6 +93,8 @@ Error: strings.js:15
     5:   span: $JSXIntrinsic<{id: string, class: string}>,
     6: };
        ^ [1]: `$JSXIntrinsics`. See lib: lib/jsx.js:3
+
+Error --------------------------------------------------------- strings.js:18:10
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually

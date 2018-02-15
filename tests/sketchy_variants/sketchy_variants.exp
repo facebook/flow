@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- test.js:5:5
+
 Error: test.js:5
   5: if (x){}
          ^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
@@ -6,6 +8,8 @@ Error: test.js:5
               ^^^^ [1]: boolean
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error -------------------------------------------------------------- test.js:5:5
 
 Error: test.js:5
   5: if (x){}
@@ -16,6 +20,8 @@ Error: test.js:5
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error -------------------------------------------------------------- test.js:5:5
+
 Error: test.js:5
   5: if (x){}
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -25,6 +31,8 @@ Error: test.js:5
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error -------------------------------------------------------------- test.js:5:5
+
 Error: test.js:5
   5: if (x){}
          ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -33,6 +41,8 @@ Error: test.js:5
                                 ^^^^^^ [1]: string
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error -------------------------------------------------------------- test.js:9:5
 
 Error: test.js:9
   9: if (x){}
@@ -43,6 +53,8 @@ Error: test.js:9
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error -------------------------------------------------------------- test.js:9:5
+
 Error: test.js:9
   9: if (x){}
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -52,6 +64,8 @@ Error: test.js:9
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error -------------------------------------------------------------- test.js:9:5
+
 Error: test.js:9
   9: if (x){}
          ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -60,6 +74,8 @@ Error: test.js:9
                                 ^^^^^^ [1]: string
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:13:5
 
 Error: test.js:13
  13: if (x){}
@@ -70,6 +86,8 @@ Error: test.js:13
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:13:5
+
 Error: test.js:13
  13: if (x){}
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -79,6 +97,8 @@ Error: test.js:13
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:13:5
+
 Error: test.js:13
  13: if (x){}
          ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -87,6 +107,8 @@ Error: test.js:13
                                 ^^^^^^ [1]: string
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:17:5
 
 Error: test.js:17
  17: if (x){}
@@ -96,6 +118,8 @@ Error: test.js:17
               ^^^^ [1]: boolean
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:17:5
 
 Error: test.js:17
  17: if (x){}
@@ -106,6 +130,8 @@ Error: test.js:17
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:17:5
+
 Error: test.js:17
  17: if (x){}
          ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -114,6 +140,8 @@ Error: test.js:17
                                 ^^^^^^ [1]: string
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:21:5
 
 Error: test.js:21
  21: if (x){}
@@ -124,6 +152,8 @@ Error: test.js:21
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:21:5
+
 Error: test.js:21
  21: if (x){}
          ^ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-mixed`)
@@ -133,6 +163,8 @@ Error: test.js:21
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:21:5
+
 Error: test.js:21
  21: if (x){}
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -141,6 +173,8 @@ Error: test.js:21
                          ^^^^^^ [1]: number
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:27:5
 
 Error: test.js:27
  27: if (x){}
@@ -151,6 +185,8 @@ Error: test.js:27
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:31:5
+
 Error: test.js:31
  31: if (x){}
          ^ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-mixed`)
@@ -160,6 +196,8 @@ Error: test.js:31
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
 
+Error ------------------------------------------------------------- test.js:35:5
+
 Error: test.js:35
  35: if (x){}
          ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -168,6 +206,8 @@ Error: test.js:35
                          ^^^^^^ [1]: number
     2: var x: bool|mixed|number|string = null
                    ^^^^^ [2]: null or undefined
+
+Error ------------------------------------------------------------- test.js:39:5
 
 Error: test.js:39
  39: if (x){}

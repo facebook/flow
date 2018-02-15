@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- basic.js:6:2
+
 Error: basic.js:6
   6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2].
@@ -7,6 +9,8 @@ Error: basic.js:6
     6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
                                         ^^^^^ [2]: empty
 
+Error ------------------------------------------------------------- basic.js:8:2
+
 Error: basic.js:8
   8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2].
@@ -15,6 +19,8 @@ Error: basic.js:8
                                      ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
     8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
                                                ^^^^^ [2]: empty
+
+Error ------------------------------------------------------------ basic.js:10:2
 
 Error: basic.js:10
       v-------
@@ -29,12 +35,16 @@ Error: basic.js:10
    13: )(42): empty); // Error: number ~> empty
               ^^^^^ [2]: empty
 
+Error ------------------------------------------------------------ basic.js:11:8
+
 Error: basic.js:11
  11:   n => n * 5, // Error: string cannot be multiplied.
             ^ Cannot perform arithmetic operation because string [1] is not a number.
   References:
   144:     toString(radix?: number): string;
                                      ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:144
+
+Error ------------------------------------------------------------ basic.js:15:2
 
 Error: basic.js:15
       v--------------
@@ -49,6 +59,8 @@ Error: basic.js:15
    18: )(42): empty); // Error: string ~> empty
               ^^^^^ [2]: empty
 
+Error ------------------------------------------------------- recompose.js:23:19
+
 Error: recompose.js:23
  23:     c: Math.round(props.p), // Error: string ~> number
                        ^^^^^^^ Cannot call `Math.round` with `props.p` bound to `x` because string [1] is incompatible with number [2].
@@ -57,6 +69,8 @@ Error: recompose.js:23
               ^^^^^^^^^^^^^^^^ [1]: string
   184:     round(x: number): number;
                     ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:184
+
+Error ------------------------------------------------------------ spread.js:8:2
 
 Error: spread.js:8
       v-------
@@ -70,6 +84,8 @@ Error: spread.js:8
    10: )(42): empty); // Error: number ~> empty
               ^^^^^ [2]: empty
 
+Error ------------------------------------------------------------ spread.js:8:2
+
 Error: spread.js:8
       v-------
   8: (compose(
@@ -81,6 +97,8 @@ Error: spread.js:8
          ^^ [1]: number
    10: )(42): empty); // Error: number ~> empty
               ^^^^^ [2]: empty
+
+Error ----------------------------------------------------------- spread.js:12:2
 
 Error: spread.js:12
       v-------
@@ -94,6 +112,8 @@ Error: spread.js:12
    14: )('foo'): empty); // Error: string ~> empty and number ~> empty
                  ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:12:2
+
 Error: spread.js:12
       v-------
  12: (compose(
@@ -106,6 +126,8 @@ Error: spread.js:12
    14: )('foo'): empty); // Error: string ~> empty and number ~> empty
                  ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:13:6
+
 Error: spread.js:13
  13:   ...fns1, // Error: string ~> number
           ^^^^ Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible with number [2].
@@ -114,6 +136,8 @@ Error: spread.js:13
          ^^^^^ [1]: string
     4: declare var fns1: Array<(number) => number>;
                                 ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- spread.js:16:2
 
 Error: spread.js:16
       v-------
@@ -127,6 +151,8 @@ Error: spread.js:16
    18: )(42): empty); // Error: number ~> empty and string ~> empty
               ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:16:2
+
 Error: spread.js:16
       v-------
  16: (compose(
@@ -139,6 +165,8 @@ Error: spread.js:16
    18: )(42): empty); // Error: number ~> empty and string ~> empty
               ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:17:6
+
 Error: spread.js:17
  17:   ...fns2, // Error: string ~> number
           ^^^^ Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible with number [2].
@@ -148,12 +176,16 @@ Error: spread.js:17
     5: declare var fns2: Array<(number) => string>;
                                 ^^^^^^ [2]: number
 
+Error ----------------------------------------------------------- spread.js:21:2
+
 Error: spread.js:21
  21: (compose(
       ^^^^^^^ Cannot call `compose` because property `p` is missing in `Number` [1].
   References:
    20: const x1 = { p: { p: { p: { p: 42 } } } };
                                       ^^ [1]: `Number`
+
+Error ----------------------------------------------------------- spread.js:21:2
 
 Error: spread.js:21
       v-------
@@ -167,6 +199,8 @@ Error: spread.js:21
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:21:2
+
 Error: spread.js:21
       v-------
  21: (compose(
@@ -178,6 +212,8 @@ Error: spread.js:21
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
+
+Error ----------------------------------------------------------- spread.js:21:2
 
 Error: spread.js:21
       v-------
@@ -191,6 +227,8 @@ Error: spread.js:21
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:21:2
+
 Error: spread.js:21
       v-------
  21: (compose(
@@ -202,6 +240,8 @@ Error: spread.js:21
                             ^^^^^^^^^^^^^^^^ [1]: object literal
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
+
+Error ----------------------------------------------------------- spread.js:21:2
 
 Error: spread.js:21
       v-------
@@ -215,6 +255,8 @@ Error: spread.js:21
    23: )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]: empty
 
+Error ----------------------------------------------------------- spread.js:27:2
+
 Error: spread.js:27
       v--------
  27: ((compose(
@@ -226,6 +268,8 @@ Error: spread.js:27
                       ^^ [1]: `X2`
    29: ))(x2): empty); // Error: object ~> empty
                ^^^^^ [2]: empty
+
+Error ----------------------------------------------------------- spread.js:27:2
 
 Error: spread.js:27
       v--------

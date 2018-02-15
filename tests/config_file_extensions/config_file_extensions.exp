@@ -1,3 +1,5 @@
+Error --------------------------------------------------------- test.js.es6:6:10
+
 Error: test.js.es6:6
   6:   return x * 10;
               ^ Cannot perform arithmetic operation because string [1] is not a number.

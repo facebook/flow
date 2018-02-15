@@ -1,3 +1,5 @@
+Error ----------------------------------------------------------- test2.js:10:10
+
 Error: test2.js:10
  10: check(B, new A);
               ^^^^^ Cannot call `check` with `new A()` bound to `inst` because `A` [1] is incompatible with `B` [2].
@@ -6,6 +8,8 @@ Error: test2.js:10
                 ^^^^^ [1]: `A`
     7: class B extends A { }
              ^ [2]: `B`
+
+Error ----------------------------------------------------------- test2.js:12:10
 
 Error: test2.js:12
  12: check(C, new A);
@@ -16,6 +20,8 @@ Error: test2.js:12
     8: class C { }
              ^ [2]: `C`
 
+Error ----------------------------------------------------------- test2.js:13:10
+
 Error: test2.js:13
  13: check(C, new B);
               ^^^^^ Cannot call `check` with `new B()` bound to `inst` because `B` [1] is incompatible with `C` [2].
@@ -24,6 +30,8 @@ Error: test2.js:13
                 ^^^^^ [1]: `B`
     8: class C { }
              ^ [2]: `C`
+
+Error ----------------------------------------------------------- test2.js:14:10
 
 Error: test2.js:14
  14: check(B, new C);

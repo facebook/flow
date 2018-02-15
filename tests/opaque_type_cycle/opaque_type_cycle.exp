@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------ test2.js:4:12
+
 Error: test2.js:4
   4:     return x; // Error: number ~> ID
                 ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
@@ -6,6 +8,8 @@ Error: test2.js:4
                                ^^^^^^ [1]: number
     3: export function hide(x: number) : ID {
                                          ^^ [2]: `ID`
+
+Error ------------------------------------------------------------ test2.js:8:12
 
 Error: test2.js:8
   8:     return show(x); // Error: number ~> ID
@@ -16,6 +20,8 @@ Error: test2.js:8
     7: function bad(x: ID) : ID {
                              ^^ [2]: `ID`
 
+Error ----------------------------------------------------------- test2.js:12:12
+
 Error: test2.js:12
  12:     return opaquify(x); // Error: ID ~> number
                 ^^^^^^^^^^^ Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2].
@@ -25,6 +31,8 @@ Error: test2.js:12
    11: function bad2(x: number): number {
                                  ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ test3.js:5:46
+
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
                                                   ^ Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2].
@@ -33,6 +41,8 @@ Error: test3.js:5
                                ^^^^^^ [1]: number
     4: export var y: num = 3;
                      ^^^ [2]: `num`. See: cycle.js:4
+
+Error ------------------------------------------------------------ test3.js:5:68
 
 Error: test3.js:5
   5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}

@@ -1,5 +1,7 @@
 
 Initial status:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -8,6 +10,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -18,6 +22,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -26,6 +32,8 @@ Error: c.js:3
               ^^^^^^ [1]: number. See: b.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -38,6 +46,8 @@ Error: dupe2.js:1
 Found 4 errors
 
 Delete c.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -47,6 +57,8 @@ Error: a.js:2
     2: var a: string = 0;
               ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------------- b.js:3:17
+
 Error: b.js:3
   3: var b: number = a;
                      ^ Cannot assign `a` to `b` because string [1] is incompatible with number [2].
@@ -55,6 +67,8 @@ Error: b.js:3
               ^^^^^^ [1]: string. See: a.js:2
     3: var b: number = a;
               ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -67,6 +81,8 @@ Error: dupe2.js:1
 Found 3 errors
 
 Delete b.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -75,6 +91,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -87,6 +105,8 @@ Error: dupe2.js:1
 Found 2 errors
 
 Restore b.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -96,6 +116,8 @@ Error: a.js:2
     2: var a: string = 0;
               ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------------- b.js:3:17
+
 Error: b.js:3
   3: var b: number = a;
                      ^ Cannot assign `a` to `b` because string [1] is incompatible with number [2].
@@ -104,6 +126,8 @@ Error: b.js:3
               ^^^^^^ [1]: string. See: a.js:2
     3: var b: number = a;
               ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -116,6 +140,8 @@ Error: dupe2.js:1
 Found 3 errors
 
 Restore c.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -124,6 +150,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -134,6 +162,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -142,6 +172,8 @@ Error: c.js:3
               ^^^^^^ [1]: number. See: b.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -154,6 +186,8 @@ Error: dupe2.js:1
 Found 4 errors
 
 Delete d.json:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -162,6 +196,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -172,6 +208,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -180,6 +218,8 @@ Error: c.js:3
               ^^^^^^ [1]: number. See: b.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -192,6 +232,8 @@ Error: dupe2.js:1
 Found 4 errors
 
 Delete unchecked.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -200,6 +242,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -210,6 +254,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -219,12 +265,16 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------- dupe2.js:1:1
+
 Error: dupe2.js:1
   1: /**
      ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
   References:
     1: /**
        ^ [1]: current module provider. See: dupe1.js:1
+
+Error ----------------------------------------------- requires_unchecked.js:5:25
 
 Error: requires_unchecked.js:5
   5: var unchecked = require('Unchecked');
@@ -234,6 +284,8 @@ Error: requires_unchecked.js:5
 Found 5 errors
 
 Restore unchecked.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -242,6 +294,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -252,6 +306,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -260,6 +316,8 @@ Error: c.js:3
               ^^^^^^ [1]: number. See: b.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**
@@ -272,6 +330,8 @@ Error: dupe2.js:1
 Found 4 errors
 
 Delete dupe2.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -281,6 +341,8 @@ Error: a.js:2
     2: var a: string = 0;
               ^^^^^^ [2]: string
 
+Error ---------------------------------------------------------------- b.js:3:17
+
 Error: b.js:3
   3: var b: number = a;
                      ^ Cannot assign `a` to `b` because string [1] is incompatible with number [2].
@@ -289,6 +351,8 @@ Error: b.js:3
               ^^^^^^ [1]: string. See: a.js:2
     3: var b: number = a;
               ^^^^^^ [2]: number
+
+Error ---------------------------------------------------------------- c.js:3:17
 
 Error: c.js:3
   3: var c: string = b;
@@ -303,6 +367,8 @@ Error: c.js:3
 Found 3 errors
 
 Restore dupe2.js:
+Error ---------------------------------------------------------------- a.js:2:17
+
 Error: a.js:2
   2: var a: string = 0;
                      ^ Cannot assign `0` to `a` because number [1] is incompatible with string [2].
@@ -311,6 +377,8 @@ Error: a.js:2
                        ^ [1]: number
     2: var a: string = 0;
               ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------------- b.js:3:17
 
 Error: b.js:3
   3: var b: number = a;
@@ -321,6 +389,8 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
+Error ---------------------------------------------------------------- c.js:3:17
+
 Error: c.js:3
   3: var c: string = b;
                      ^ Cannot assign `b` to `c` because number [1] is incompatible with string [2].
@@ -329,6 +399,8 @@ Error: c.js:3
               ^^^^^^ [1]: number. See: b.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------- dupe2.js:1:1
 
 Error: dupe2.js:1
   1: /**

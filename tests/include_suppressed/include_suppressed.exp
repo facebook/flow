@@ -1,4 +1,6 @@
 Without --include-suppressed
+Error -------------------------------------------------------------- test.js:3:2
+
 Error: test.js:3
   3: (123: string); // Normal error
       ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
@@ -7,6 +9,8 @@ Error: test.js:3
         ^^^ [1]: number
     3: (123: string); // Normal error
              ^^^^^^ [2]: string
+
+Warning ------------------------------------------------------------ test.js:8:1
 
 Warning: test.js:8
   8: // $FlowFixMe - unused suppression comment
@@ -17,6 +21,8 @@ Found 1 error and 1 warning
 
 
 With --include-suppressed
+Error -------------------------------------------------------------- test.js:3:2
+
 Error: test.js:3
   3: (123: string); // Normal error
       ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
@@ -26,6 +32,8 @@ Error: test.js:3
     3: (123: string); // Normal error
              ^^^^^^ [2]: string
 
+Error -------------------------------------------------------------- test.js:6:2
+
 Error: test.js:6
   6: (123: string); // Suppressed error
       ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
@@ -34,6 +42,8 @@ Error: test.js:6
         ^^^ [1]: number
     6: (123: string); // Suppressed error
              ^^^^^^ [2]: string
+
+Warning ------------------------------------------------------------ test.js:8:1
 
 Warning: test.js:8
   8: // $FlowFixMe - unused suppression comment

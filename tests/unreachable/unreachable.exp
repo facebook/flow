@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- typecheck.js:4:10
+
 Error: typecheck.js:4
   4:   return bar();
               ^^^^^ Cannot return `bar()` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: typecheck.js:4
                   ^ [1]: number
     3: function test1(): string {
                          ^^^^^^ [2]: string
+
+Error ------------------------------------------------------- typecheck.js:21:21
 
 Error: typecheck.js:21
  21:     var y: string = n;    // error, n is number (EmptyT would work)
@@ -16,12 +20,16 @@ Error: typecheck.js:21
    21:     var y: string = n;    // error, n is number (EmptyT would work)
                   ^^^^^^ [2]: string
 
+Error ------------------------------------------------------ unreachable.js:5:19
+
 Error: unreachable.js:5
   5:   return bar(x) + baz(y);
                        ^^^ Cannot call `baz` because uninitialized variable [1] is not a function.
   References:
    13:   var baz = function (why) {
              ^^^ [1]: uninitialized variable
+
+Error ----------------------------------------------------- unreachable.js:13:13
 
 Error: unreachable.js:13
                  v---------------
@@ -30,9 +38,13 @@ Error: unreachable.js:13
  15:   };
        ^ Unreachable code.
 
+Error ----------------------------------------------------- unreachable.js:22:11
+
 Error: unreachable.js:22
  22:       u = 5,
                ^ Unreachable code.
+
+Error ----------------------------------------------------- unreachable.js:24:11
 
 Error: unreachable.js:24
  24:       w = 7;

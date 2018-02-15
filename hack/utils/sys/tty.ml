@@ -153,3 +153,21 @@ let eprintf fmt =
   if Unix.(isatty stderr)
   then Printf.eprintf fmt
   else Printf.ifprintf stderr fmt
+
+(* Gets the number of columns in the current terminal window through
+ * [`tput cols`][1]. If the command fails in any way then `None` will
+ * be returned.
+ *
+ * This value may change over the course of program execution if a user resizes
+ * their terminal.
+ *
+ * [1]: http://invisible-island.net/ncurses/man/tput.1.html
+ *)
+let get_term_cols () =
+  if not Sys.unix then
+    None
+  else
+    try
+      Some (int_of_string (Sys_utils.exec_read "tput cols"))
+    with
+      _ -> None

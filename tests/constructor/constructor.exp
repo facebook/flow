@@ -1,9 +1,13 @@
+Error ------------------------------------------------------ constructor.js:6:19
+
 Error: constructor.js:6
   6:     constructor():number { }
                        ^^^^^^ Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned undefined.
   References:
     6:     constructor():number { }
                          ^^^^^^ [1]: number
+
+Error ----------------------------------------------------- constructor.js:15:10
 
 Error: constructor.js:15
  15: (new Foo(123): Bar<string>); // error, number !~> string
@@ -13,6 +17,8 @@ Error: constructor.js:15
                 ^^^ [1]: number
    15: (new Foo(123): Bar<string>); // error, number !~> string
                           ^^^^^^ [2]: string
+
+Error ----------------------------------------------------- constructor.js:22:10
 
 Error: constructor.js:22
  22: (new Baz(123): Baz<string>); // error, number !~> string

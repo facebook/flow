@@ -30,6 +30,8 @@ Error: intersection.js:9
         9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                            ^^^^^^ object type
 
+Error ----------------------------------------------------- intersection.js:12:8
+
 Error: intersection.js:12
  12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
             ^^^^^^ Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
@@ -38,6 +40,8 @@ Error: intersection.js:12
               ^^^^^^ [1]: object type
    12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
                              ^^^^^^^^^^^^^^^ [2]: object type
+
+Error ----------------------------------------------------- intersection.js:14:8
 
 Error: intersection.js:14
  14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
@@ -48,12 +52,16 @@ Error: intersection.js:14
    14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
                              ^^^^^^^^^^^^^^^^^^ [2]: object type
 
+Error ------------------------------------------------------------ lower.js:21:4
+
 Error: lower.js:21
  21: (y.age: number); // Error -- could be void
         ^^^ Cannot get `y.age` because property `age` is missing in `Person` [1].
   References:
    18: declare var y: PersonWithoutAgeActual;
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Person`
+
+Error ------------------------------------------------------------ lower.js:22:2
 
 Error: lower.js:22
  22: (y.name: number); // Error -- should be string
@@ -64,12 +72,16 @@ Error: lower.js:22
    22: (y.name: number); // Error -- should be string
                 ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------ lower.js:23:3
+
 Error: lower.js:23
  23: y.bla; // Error -- key not found.
        ^^^ Cannot get `y.bla` because property `bla` is missing in `Person` [1].
   References:
    18: declare var y: PersonWithoutAgeActual;
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Person`
+
+Error --------------------------------------------------------- undefined.js:8:8
 
 Error: undefined.js:8
   8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
@@ -79,6 +91,8 @@ Error: undefined.js:8
               ^^^^^^ [1]: object type
     8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
                              ^^^^^^^^^^^^ [2]: object type
+
+Error ------------------------------------------------------- undefined.js:10:12
 
 Error: undefined.js:10
  10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error

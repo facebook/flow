@@ -1,3 +1,5 @@
+Error ------------------------------------------------------------- test.js:2:10
+
 Error: test.js:2
   2:   foo(x: Out): Out { return x; }
               ^^^ Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
@@ -5,12 +7,16 @@ Error: test.js:2
     1: class Variance<+Out,-In> {
                        ^^^ [1]: `Out`
 
+Error ------------------------------------------------------------- test.js:3:15
+
 Error: test.js:3
   3:   bar(y: In): In { return y; }
                    ^^ Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
   References:
     1: class Variance<+Out,-In> {
                             ^^ [1]: `In`
+
+Error ------------------------------------------------------------- test.js:13:4
 
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
@@ -21,6 +27,8 @@ Error: test.js:13
    13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
                          ^ [2]: `A`
 
+Error ------------------------------------------------------------- test.js:13:4
+
 Error: test.js:13
  13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
         ^^ Cannot cast `v1` to `Variance` because in type argument `Out`, `A` [1] is incompatible with `B` [2].
@@ -30,12 +38,16 @@ Error: test.js:13
    13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
                        ^ [2]: `B`
 
+Error ------------------------------------------------------------- test.js:18:9
+
 Error: test.js:18
  18:   inv1: Out; // error
              ^^^ Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
   References:
    17: class PropVariance<+Out,-In> {
                            ^^^ [1]: `Out`
+
+Error ------------------------------------------------------------- test.js:19:9
 
 Error: test.js:19
  19:   inv2: In; // error
@@ -44,12 +56,16 @@ Error: test.js:19
    17: class PropVariance<+Out,-In> {
                                 ^^ [1]: `In`
 
+Error ------------------------------------------------------------- test.js:20:9
+
 Error: test.js:20
  20:   -co1: Out; // error
              ^^^ Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
   References:
    17: class PropVariance<+Out,-In> {
                            ^^^ [1]: `Out`
+
+Error ------------------------------------------------------------ test.js:23:10
 
 Error: test.js:23
  23:   +con2: In; // error
@@ -58,12 +74,16 @@ Error: test.js:23
    17: class PropVariance<+Out,-In> {
                                 ^^ [1]: `In`
 
+Error ------------------------------------------------------------ test.js:25:27
+
 Error: test.js:25
  25:   inv_dict1: {[k:string]: Out}; // error
                                ^^^ Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
   References:
    17: class PropVariance<+Out,-In> {
                            ^^^ [1]: `Out`
+
+Error ------------------------------------------------------------ test.js:26:27
 
 Error: test.js:26
  26:   inv_dict2: {[k:string]: In}; // error
@@ -72,12 +92,16 @@ Error: test.js:26
    17: class PropVariance<+Out,-In> {
                                 ^^ [1]: `In`
 
+Error ------------------------------------------------------------ test.js:28:28
+
 Error: test.js:28
  28:   +co_dict2: {+[k:string]: In}; // error
                                 ^^ Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
   References:
    17: class PropVariance<+Out,-In> {
                                 ^^ [1]: `In`
+
+Error ------------------------------------------------------------ test.js:29:29
 
 Error: test.js:29
  29:   +con_dict1: {-[k:string]: Out}; // error

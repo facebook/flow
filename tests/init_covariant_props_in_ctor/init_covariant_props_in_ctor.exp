@@ -1,6 +1,10 @@
+Error ---------------------------------------------------------------- a.js:13:3
+
 Error: a.js:13
  13: a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
        ^^^^ Cannot assign `2` to `a.prop` because property `prop` is not writable.
+
+Error --------------------------------------------------------------- a.js:20:17
 
 Error: a.js:20
  20:     this.prop = prop;         // ERROR: we should not be assigning a string here
@@ -11,17 +15,25 @@ Error: a.js:20
    16:   +prop: number;
                 ^^^^^^ [2]: number
 
+Error --------------------------------------------------------------- a.js:21:10
+
 Error: a.js:21
  21:     this.m = () => {};        // ERORR: cannot assign method
               ^ Cannot assign function to `this.m` because property `m` is not writable.
+
+Error --------------------------------------------------------------- a.js:47:12
 
 Error: a.js:47
  47:       this.prop = prop;       // ERROR: the initilized object can only be
                 ^^^^ Cannot assign `prop` to `this.prop` because property `prop` is not writable.
 
+Error --------------------------------------------------------------- a.js:61:10
+
 Error: a.js:61
  61:     this.prop = 1;            // ERROR
               ^^^^ Cannot assign `1` to `this.prop` because property `prop` is not writable.
+
+Error --------------------------------------------------------------- a.js:70:17
 
 Error: a.js:70
  70:     this.prop = "";           // ERROR
@@ -31,6 +43,8 @@ Error: a.js:70
                        ^^ [1]: string
     5:   +prop: number;
                 ^^^^^^ [2]: number
+
+Error ---------------------------------------------------------------- a.js:74:7
 
 Error: a.js:74
  74: class G extends F {

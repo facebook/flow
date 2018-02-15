@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- generics.js:19:16
+
 Error: generics.js:19
  19: var s:string = d.x;
                     ^^^ Cannot assign `d.x` to `s` because number [1] is incompatible with string [2].
@@ -6,6 +8,8 @@ Error: generics.js:19
                         ^ [1]: number
    19: var s:string = d.x;
              ^^^^^^ [2]: string
+
+Error -------------------------------------------------------- generics.js:20:16
 
 Error: generics.js:20
  20: var n:number = o.u;
@@ -16,6 +20,8 @@ Error: generics.js:20
    20: var n:number = o.u;
              ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- generics.js:28:16
+
 Error: generics.js:28
  28: var x:string = e.set(0);
                     ^^^^^^^^ Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string [2].
@@ -24,6 +30,8 @@ Error: generics.js:28
                             ^ [1]: number
    28: var x:string = e.set(0);
              ^^^^^^ [2]: string
+
+Error -------------------------------------------------------- generics.js:28:16
 
 Error: generics.js:28
  28: var x:string = e.set(0);
@@ -34,6 +42,8 @@ Error: generics.js:28
    28: var x:string = e.set(0);
              ^^^^^^ [2]: string
 
+Error -------------------------------------------------------- generics.js:39:41
+
 Error: generics.js:39
  39: var h2:F<Array<Array<Array<number>>>> = h1;
                                              ^^ Cannot assign `h1` to `h2` because in type argument `X` and then type argument `T`, string [1] is incompatible with number [2].
@@ -43,13 +53,19 @@ Error: generics.js:39
    39: var h2:F<Array<Array<Array<number>>>> = h1;
                                   ^^^^^^ [2]: number
 
+Error -------------------------------------------------------- generics.js:41:11
+
 Error: generics.js:41
  41: var obj : Object<string, string> = {} // error, arity 0
                ^^^^^^^^^^^^^^^^^^^^^^ Cannot apply type because it is not a polymorphic type.
 
+Error -------------------------------------------------------- generics.js:42:10
+
 Error: generics.js:42
  42: var fn : Function<string> = function() { return 'foo'; } // error, arity 0
               ^^^^^^^^^^^^^^^^ Cannot apply type because it is not a polymorphic type.
+
+Error -------------------------------------------------------- generics.js:43:10
 
 Error: generics.js:43
  43: var fn : function<string> = function() { return 'foo'; } // error, arity 0

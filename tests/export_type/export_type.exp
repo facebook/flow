@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- importer.js:11:23
+
 Error: importer.js:11
  11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: importer.js:11
                              ^^^^^^ [1]: string
    11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
               ^^^^^^^^^^^^ [2]: number
+
+Error -------------------------------------------------------- importer.js:14:26
 
 Error: importer.js:14
  14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
@@ -16,6 +20,8 @@ Error: importer.js:14
    14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
               ^^^^^^^^^^^^^^^ [2]: number
 
+Error -------------------------------------------------------- importer.js:17:18
+
 Error: importer.js:17
  17: var f: talias1 = 'asdf'; // Error: string ~> number
                       ^^^^^^ Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2].
@@ -24,6 +30,8 @@ Error: importer.js:17
                         ^^^^^^ [1]: string
    17: var f: talias1 = 'asdf'; // Error: string ~> number
               ^^^^^^^ [2]: number
+
+Error -------------------------------------------------------- importer.js:20:18
 
 Error: importer.js:20
  20: var h: talias3 = 'asdf'; // Error: string ~> number
@@ -34,6 +42,8 @@ Error: importer.js:20
    20: var h: talias3 = 'asdf'; // Error: string ~> number
               ^^^^^^^ [2]: number
 
+Error -------------------------------------------------------- importer.js:24:18
+
 Error: importer.js:24
  24: var j: talias4 = 'asdf'; // Error: string ~> number
                       ^^^^^^ Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2].
@@ -42,6 +52,8 @@ Error: importer.js:24
                         ^^^^^^ [1]: string
    24: var j: talias4 = 'asdf'; // Error: string ~> number
               ^^^^^^^ [2]: number
+
+Error -------------------------------------------------------- importer.js:29:22
 
 Error: importer.js:29
  29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
@@ -52,6 +64,8 @@ Error: importer.js:29
    15: export interface IFoo { prop: number };
                                      ^^^^^^ [2]: number. See: types_only.js:15
 
+Error -------------------------------------------------------- importer.js:32:23
+
 Error: importer.js:32
  32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
                            ^^ Cannot assign object literal to `n` because in property `prop`, number [1] is incompatible with string [2].
@@ -61,6 +75,8 @@ Error: importer.js:32
     5: export interface IFoo2 { prop: string };
                                       ^^^^^^ [2]: string. See: types_only2.js:5
 
+Error ------------------------------------------------------- types_only.js:5:23
+
 Error: types_only.js:5
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
@@ -69,6 +85,8 @@ Error: types_only.js:5
                              ^^^^^^ [1]: string
     5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
               ^^^^^^^^^^^^ [2]: number
+
+Error ------------------------------------------------------- types_only.js:11:9
 
 Error: types_only.js:11
  11: export {standaloneType2}; // Error: Missing `type` keyword

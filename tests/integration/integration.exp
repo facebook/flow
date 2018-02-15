@@ -1,3 +1,5 @@
+Error --------------------------------------------------------------- foo.js:2:9
+
 Error: foo.js:2
   2: require('./bar');
              ^^^^^^^ Cannot resolve module `./bar`.

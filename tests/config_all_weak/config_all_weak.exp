@@ -1,3 +1,5 @@
+Error -------------------------------------------------------- no_at_flow.js:3:3
+
 Error: no_at_flow.js:3
   3: x.length;
        ^^^^^^ Cannot get `x.length` because property `length` is missing in uninitialized variable [1].

@@ -1,9 +1,13 @@
+Error ------------------------------------------------------------ annot.js:3:17
+
 Error: annot.js:3
   3: class B extends A { } // OK, same as above
                      ^ Cannot use `A` [1] with less than 1 type argument.
   References:
     1: class A<X> { }
                ^ [1]: `A`
+
+Error ----------------------------------------------------------- annot.js:10:36
 
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
@@ -14,6 +18,8 @@ Error: annot.js:10
    10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                                             ^^^^^^^^^^^ [2]: object type
 
+Error ------------------------------------------------------------- error.js:8:8
+
 Error: error.js:8
   8: newFn1('string'); // The error should point here.
             ^^^^^^^^ Cannot call `newFn1` with `'string'` bound to the first parameter because string [1] is incompatible with number [2].
@@ -22,6 +28,8 @@ Error: error.js:8
               ^^^^^^^^ [1]: string
     7: const newFn1 = fn1((x: number) => {});
                               ^^^^^^ [2]: number
+
+Error ----------------------------------------------------------- error.js:12:12
 
 Error: error.js:12
  12: newFn2((x: string) => {}); // The error should point here.
@@ -32,6 +40,8 @@ Error: error.js:12
    11: const newFn2 = fn2(42);
                           ^^ [2]: number
 
+Error ------------------------------------------------------------ error.js:15:5
+
 Error: error.js:15
  15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
          ^^ Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2].
@@ -40,6 +50,8 @@ Error: error.js:15
            ^^ [1]: number
    15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
                    ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ error.js:20:2
 
 Error: error.js:20
  20: (newVal4: string); // The error should point here.
@@ -50,6 +62,8 @@ Error: error.js:20
    20: (newVal4: string); // The error should point here.
                  ^^^^^^ [2]: string
 
+Error ----------------------------------- implicit_bounded_instantiation.js:15:8
+
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
             ^^^^ Cannot instantiate `C` because in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
@@ -58,6 +72,8 @@ Error: implicit_bounded_instantiation.js:15
               ^^^^^^^^^^ [1]: `Base`
     7: class C<T: Middle> {
                   ^^^^^^ [2]: `Middle`
+
+Error ----------------------------------- implicit_bounded_instantiation.js:15:8
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
@@ -68,6 +84,8 @@ Error: implicit_bounded_instantiation.js:15
     7: class C<T: Middle> {
                   ^^^^^^ [2]: `Middle`
 
+Error ----------------------------------- implicit_bounded_instantiation.js:19:8
+
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
             ^^ Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2].
@@ -76,6 +94,8 @@ Error: implicit_bounded_instantiation.js:19
               ^^ [1]: number
     7: class C<T: Middle> {
                   ^^^^^^ [2]: `Middle`
+
+Error ----------------------------------- implicit_bounded_instantiation.js:20:8
 
 Error: implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle
@@ -86,6 +106,8 @@ Error: implicit_bounded_instantiation.js:20
     7: class C<T: Middle> {
                   ^^^^^^ [2]: `Middle`
 
+Error ----------------------------------------------------------- phantom.js:7:2
+
 Error: phantom.js:7
   7: (a: B); // Error
       ^ Cannot cast `a` to `B` because in type argument `Phantom`, number [1] is incompatible with string [2].
@@ -94,6 +116,8 @@ Error: phantom.js:7
                   ^^^^^^ [1]: number
     4: type B = T<string>;
                   ^^^^^^ [2]: string
+
+Error ---------------------------------------------------------- phantom.js:15:2
 
 Error: phantom.js:15
  15: (c: D); // Error
@@ -104,6 +128,8 @@ Error: phantom.js:15
    12: type D = T<string>;
                   ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ poly.js:17:16
+
 Error: poly.js:17
  17: var x:string = foo.x;
                     ^^^^^ Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
@@ -112,6 +138,8 @@ Error: poly.js:17
                          ^ [1]: number
    17: var x:string = foo.x;
              ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ poly.js:17:16
 
 Error: poly.js:17
  17: var x:string = foo.x;
@@ -122,6 +150,8 @@ Error: poly.js:17
    17: var x:string = foo.x;
              ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ poly.js:18:31
+
 Error: poly.js:18
  18: var z:Foo<number> = Q.bar(foo,"");
                                    ^^ Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string [1] is incompatible with number [2].
@@ -130,6 +160,8 @@ Error: poly.js:18
                                      ^^ [1]: string
    18: var z:Foo<number> = Q.bar(foo,"");
                  ^^^^^^ [2]: number
+
+Error ------------------------------------------------------------- test.js:8:10
 
 Error: test.js:8
   8:   foo(x: number): number { return x; } // error (specialization, see below)
@@ -141,6 +173,8 @@ Error: test.js:8
                 ^^^^^^ [2]: number
     2:   foo<X>(x: X): X { return x; }
                    ^ [3]: `X`
+
+Error ------------------------------------------------------------- test.js:8:19
 
 Error: test.js:8
   8:   foo(x: number): number { return x; } // error (specialization, see below)

@@ -1,9 +1,13 @@
+Error -------------------------------------------------------------- test.js:4:5
+
 Error: test.js:4
   4: foo(1, 2); // error
          ^ Cannot call `foo` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error -------------------------------------------------------------- test.js:6:3
 
 Error: test.js:6
   6:   1, // error
@@ -12,12 +16,16 @@ Error: test.js:6
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error -------------------------------------------------------------- test.js:9:1
+
 Error: test.js:9
   9: foo(...args); // error
      ^^^ Cannot call `foo` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------ test.js:11:16
 
 Error: test.js:11
  11: foo.call(null, 1, 2); // error
@@ -26,12 +34,16 @@ Error: test.js:11
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error ------------------------------------------------------------- test.js:12:5
+
 Error: test.js:12
  12: foo.call(null, ...args); // error
          ^^^^ Cannot call `foo.call` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------ test.js:13:16
 
 Error: test.js:13
  13: foo.call(null, 1, 2, ...args); // error
@@ -40,12 +52,16 @@ Error: test.js:13
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error ------------------------------------------------------------ test.js:15:18
+
 Error: test.js:15
  15: foo.apply(null, [1, 2]); // error
                       ^ Cannot call `foo.apply` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------- test.js:16:5
 
 Error: test.js:16
  16: foo.apply(null, args); // error
@@ -54,12 +70,16 @@ Error: test.js:16
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error ------------------------------------------------------------ test.js:18:16
+
 Error: test.js:18
  18: foo.bind(null, 1, 2); // error
                     ^ Cannot call `foo.bind` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------- test.js:19:5
 
 Error: test.js:19
  19: foo.bind(null, ...args); // error
@@ -68,12 +88,16 @@ Error: test.js:19
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error ------------------------------------------------------------ test.js:20:16
+
 Error: test.js:20
  20: foo.bind(null, 1, 2, ...args); // error
                     ^ Cannot call `foo.bind` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------- test.js:22:9
 
 Error: test.js:22
  22: new foo(1, 2); // error
@@ -82,12 +106,16 @@ Error: test.js:22
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
 
+Error ------------------------------------------------------------- test.js:23:5
+
 Error: test.js:23
  23: new foo(...args); // error
          ^^^ Cannot call `foo` because no arguments are expected by function [1].
   References:
     1: function foo() {}
        ^^^^^^^^^^^^^^ [1]: function
+
+Error ------------------------------------------------------------- test.js:24:9
 
 Error: test.js:24
  24: new foo(1, 2, ...args); // error

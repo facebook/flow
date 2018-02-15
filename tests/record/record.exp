@@ -1,3 +1,5 @@
+Error -------------------------------------------------------------- test.js:4:8
+
 Error: test.js:4
   4:   bar: "", // error: string ~/~ number
             ^^ Cannot assign object literal to `o1` because in property `bar`, string [1] is incompatible with number [2].
@@ -6,6 +8,8 @@ Error: test.js:4
               ^^ [1]: string
     2: var o1: {[key: Key1]: number} = {
                              ^^^^^^ [2]: number
+
+Error -------------------------------------------------------------- test.js:7:1
 
 Error: test.js:7
   7: o1.qux; // error: qux not found
@@ -16,12 +20,16 @@ Error: test.js:7
     2: var o1: {[key: Key1]: number} = {
                       ^^^^ [2]: string enum
 
+Error ------------------------------------------------------------- test.js:14:1
+
 Error: test.js:14
  14: o2.qux; // error: qux not found
      ^^^^^^ Property `qux` is missing in `R` [1].
   References:
    12: var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
                       ^^^^ [1]: `R`
+
+Error ------------------------------------------------------------- test.js:20:6
 
 Error: test.js:20
  20:   x: { foo: number, qux: boolean }; // error: qux not found

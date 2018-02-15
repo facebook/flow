@@ -1,9 +1,13 @@
+Error -------------------------------------------------------------- test.js:7:3
+
 Error: test.js:7
   7: A.qux = function(x: string) { } // error?
        ^^^ Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1].
   References:
     1: class A {
              ^ [1]: statics of `A`
+
+Error ------------------------------------------------------------ test.js:10:13
 
 Error: test.js:10
  10:   static x: string; // error?
@@ -16,6 +20,8 @@ Error: test.js:10
     2:   static x: number;
                    ^^^^^^ [3]: number
 
+Error ------------------------------------------------------------ test.js:11:17
+
 Error: test.js:11
  11:   static foo(x: string) { } // error?
                      ^^^^^^ Cannot extend `A` [1] with `B` because in property `foo` and then the first argument, string [2] is incompatible with number [3].
@@ -27,6 +33,8 @@ Error: test.js:11
     4:   static foo(x: number) { }
                        ^^^^^^ [3]: number
 
+Error ------------------------------------------------------------ test.js:13:11
+
 Error: test.js:13
  13:     B.x = 0; // error
                ^ Cannot assign `0` to `B.x` because number [1] is incompatible with string [2].
@@ -35,6 +43,8 @@ Error: test.js:13
                  ^ [1]: number
    10:   static x: string; // error?
                    ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test.js:15:11
 
 Error: test.js:15
  15:     B.foo(0); // error
@@ -45,6 +55,8 @@ Error: test.js:15
    11:   static foo(x: string) { } // error?
                        ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------ test.js:17:11
+
 Error: test.js:17
  17:     B.y = 0; // error
                ^ Cannot assign `0` to `B.y` because number [1] is incompatible with string [2].
@@ -53,6 +65,8 @@ Error: test.js:17
                  ^ [1]: number
     3:   static y: string;
                    ^^^^^^ [2]: string
+
+Error ------------------------------------------------------------ test.js:18:11
 
 Error: test.js:18
  18:     B.bar(0); // error
@@ -63,12 +77,16 @@ Error: test.js:18
     5:   static bar(y: string) { }
                        ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------- test.js:19:7
+
 Error: test.js:19
  19:     B.qux(0); // error
            ^^^ Cannot call `B.qux` because property `qux` is missing in statics of `B` [1].
   References:
     9: class B extends A {
              ^ [1]: statics of `B`
+
+Error ------------------------------------------------------------ test.js:26:12
 
 Error: test.js:26
  26:     return new this(); // error B ~> number
@@ -79,12 +97,16 @@ Error: test.js:26
    25:   static badCreate(): number {
                              ^^^^^^ [2]: number
 
+Error ------------------------------------------------------------- test.js:40:7
+
 Error: test.js:40
  40:     D.foo(0); // error?
            ^^^ Cannot call `D.foo` because property `foo` is missing in statics of `D` [1].
   References:
    38: class D extends C<string> {
              ^ [1]: statics of `D`
+
+Error ------------------------------------------------------------ test.js:42:11
 
 Error: test.js:42
  42:     D.bar(0);
@@ -95,6 +117,8 @@ Error: test.js:42
    38: class D extends C<string> {
                          ^^^^^^ [2]: string
 
+Error ------------------------------------------------------------- test.js:47:2
+
 Error: test.js:47
  47: (new A: typeof A);
       ^^^^^ Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with `typeof A` [2].
@@ -104,12 +128,16 @@ Error: test.js:47
    47: (new A: typeof A);
                ^^^^^^^^ [2]: `typeof A`
 
+Error ------------------------------------------------------------ test.js:53:10
+
 Error: test.js:53
  53:     this.bar(); // error
               ^^^ Cannot call `this.bar` because property `bar` is missing in statics of `E` [1].
   References:
    50: class E {
              ^ [1]: statics of `E`
+
+Error ------------------------------------------------------------ test.js:54:12
 
 Error: test.js:54
  54:     return this.x; // error
