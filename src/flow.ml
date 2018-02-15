@@ -20,7 +20,6 @@ end = struct
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
-    ConfigCommands.Init.command;
     CoverageCommand.command;
     CycleCommand.command;
     DumpTypesCommand.command;
@@ -31,6 +30,7 @@ end = struct
     GetDefCommand.command;
     GetImportsCommand.command;
     IdeCommand.command;
+    InitCommand.command;
     LsCommand.command;
     PortCommand.command;
     ServerCommand.command;
