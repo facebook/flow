@@ -707,12 +707,13 @@ let reasons_overlap r1 r2 =
 (* reason transformers: *)
 
 (* returns reason with new description and position of original *)
-let replace_reason f r =
+let replace_reason ?(keep_def_loc=false) f r =
+  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
   mk_reason_with_test_id
     (TestID.current ())
     (f (desc_of_reason ~unwrap:false r))
     (loc_of_reason r)
-    None
+    def_loc_opt
     (annot_loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =

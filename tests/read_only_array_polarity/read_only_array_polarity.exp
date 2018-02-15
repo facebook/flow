@@ -1,10 +1,16 @@
 Error: test.js:16
  16:     bad (x: number) : $ReadOnlyArray<T> {// Error: T in covariant position
-                                          ^ T. covariant position (expected `T` to occur only contravariantly)
+                                          ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+  References:
+   15: class Baz<-T> {
+                  ^ [1]: `T`
 
 Error: test.js:22
  22:     bad (x: $ReadOnlyArray<T> => number) : number {// Error: T used covariantly
-                                ^ T. covariant position (expected `T` to occur only contravariantly)
+                                ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+  References:
+   21: class ContraBaz<-T> {
+                        ^ [1]: `T`
 
 
 Found 2 errors

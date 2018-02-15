@@ -1,6 +1,9 @@
 Error: decltest.js:2
   2: declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
-                                     ^ T. invariant position (expected `T` to occur only covariantly)
+                                     ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+  References:
+    2: declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
+                                ^ [1]: `T`
 
 Error: importtest.js:7
   7:     return y;

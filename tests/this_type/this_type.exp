@@ -12,83 +12,143 @@ Error: class_expr.js:6
 
 Error: contra.js:4
   4:   next: this; // error (see below for exploit): `this` should only appear in
-             ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+             ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+    3: class C {
+             ^ [1]: `this`
 
 Error: contra.js:15
  15:   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
-              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+              ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   14: class A {
+             ^ [1]: `this`
 
 Error: contra.js:19
  19:   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
-              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+              ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   18: class B extends A {
+             ^ [1]: `this`
 
 Error: contra.js:25
  25:   out_object(): { _: this } { return { _: this }; }
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                          ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:26
  26:   in_object(_: { _: this }) { }
-                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                         ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:27
  27:   inout_object: { _: this };
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                          ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:29
  29:   out_array(): Array<this> { return [this]; }
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                          ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:30
  30:   in_array(_: Array<this>) { }
-                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                         ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:31
  31:   inout_array: Array<this>;
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                          ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   24: class Invariant {
+             ^^^^^^^^^ [1]: `this`
 
 Error: contra.js:38
  38:   out_set(): Set<this> { return new Set().add(this); }
-                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                      ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:39
  39:   in_set(_: Set<this>) { }
-                     ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                     ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:40
  40:   inout_set: Set<this>;
-                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                      ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:44
  44:   in_promise(_: Promise<this>) { }
-                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                             ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:45
  45:   inout_promise: Promise<this>;
-                              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                              ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:48
  48:   *out_generator(): Generator<this,this,this> {
-                                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                                             ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:52
  52:   in_generator(_: Generator<this,this,this>) { }
-                                 ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                                 ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:52
  52:   in_generator(_: Generator<this,this,this>) { }
-                                      ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                                      ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:53
  53:   inout_generator: Generator<this,this,this>;
-                                  ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                                  ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:53
  53:   inout_generator: Generator<this,this,this>;
-                                       ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                                       ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: contra.js:53
  53:   inout_generator: Generator<this,this,this>;
-                                            ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+                                            ^^^^ Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+  References:
+   36: class Misc {
+             ^^^^ [1]: `this`
 
 Error: generics.js:6
   6: class ImplicitNumber extends Implicit { arg: number; }
@@ -206,7 +266,10 @@ Error: test.js:29
 
 Error: test.js:41
  41:   corge(that: this) { }
-                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                   ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   34: class Base2 {
+             ^^^^^ [1]: `this`
 
 Error: test.js:51
  51:   bar(): Override2 { return new Override2; } // error (cf. OK above)
@@ -243,11 +306,17 @@ Error: test.js:56
 
 Error: test.js:54
  54:   corge(that: this) { } // error
-                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                   ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   47: class Override2 extends Base2 {
+             ^^^^^^^^^ [1]: `this`
 
 Error: test.js:56
  56:   grault(that: this) { } // error, too
-                    ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+                    ^^^^ Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+  References:
+   47: class Override2 extends Base2 {
+             ^^^^^^^^^ [1]: `this`
 
 
 Found 40 errors

@@ -222,8 +222,8 @@ val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
-val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
-val replace_reason_const: ?keep_def_loc: bool -> reason_desc -> reason -> reason
+val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
+val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 
 val repos_reason: Loc.t -> ?annot_loc:Loc.t -> reason -> reason
 val annot_reason: reason -> reason
