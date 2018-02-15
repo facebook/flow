@@ -36,43 +36,6 @@ let matching_sentinel_prop reason key sentinel_value =
 
 (**************************************************************)
 
-(* Find the constraints of a type variable in the graph.
-
-   Recall that type variables are either roots or goto nodes. (See
-   Constraint for details.) If the type variable is a root, the
-   constraints are stored with the type variable. Otherwise, the type variable
-   is a goto node, and it points to another type variable: a linked list of such
-   type variables must be traversed until a root is reached. *)
-let rec find_graph cx id =
-  let _, constraints = find_constraints cx id in
-  constraints
-
-and find_constraints cx id =
-  let root_id, root = find_root cx id in
-  root_id, root.constraints
-
-(* Find the root of a type variable, potentially traversing a chain of type
-   variables, while short-circuiting all the type variables in the chain to the
-   root during traversal to speed up future traversals. *)
-and find_root cx id =
-  match IMap.get id (Context.graph cx) with
-  | Some (Goto next_id) ->
-      let root_id, root = find_root cx next_id in
-      if root_id != next_id then Context.set_tvar cx id (Goto root_id) else ();
-      root_id, root
-
-  | Some (Root root) ->
-      id, root
-
-  | None ->
-      let msg = spf "find_root: tvar %d not found in file %s" id
-        (Debug_js.string_of_file cx)
-      in
-      assert_false msg
-
-(* Replace the node associated with a type variable in the graph. *)
-and replace_node cx id node = Context.set_tvar cx id node
-
 (* Check that id1 is not linked to id2. *)
 let not_linked (id1, _bounds1) (_id2, bounds2) =
   (* It suffices to check that id1 is not already in the lower bounds of
@@ -195,7 +158,7 @@ let types_of constraints =
   | Resolved t -> [t]
 
 (* Def types that describe the solution of a type variable. *)
-let possible_types cx id = types_of (find_graph cx id)
+let possible_types cx id = types_of (Context.find_graph cx id)
   |> List.filter is_proper_def
 
 let possible_types_of_type cx = function
@@ -207,7 +170,7 @@ let uses_of constraints =
   | Unresolved { upper; _ } -> UseTypeMap.keys upper
   | Resolved t -> [UseT (unknown_use, t)]
 
-let possible_uses cx id = uses_of (find_graph cx id)
+let possible_uses cx id = uses_of (Context.find_graph cx id)
 
 let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
@@ -507,7 +470,7 @@ let rec assume_ground cx ?(depth=1) ids t =
 and assume_ground_id cx ~depth ids id =
   if not (ISet.mem id !ids) then (
     ids := !ids |> ISet.add id;
-    let constraints = find_graph cx id in
+    let constraints = Context.find_graph cx id in
     match constraints with
     | Unresolved { upper; uppertvars; _ } ->
       upper |> UseTypeMap.iter (fun t _ ->
@@ -919,7 +882,7 @@ module ResolvableTypeJob = struct
          with the corresponding literal types to decide membership in those
          disjoint unions. *)
       then IMap.add id (Binding tvar) acc
-      else begin match find_graph cx id with
+      else begin match Context.find_graph cx id with
       | Resolved t ->
         let acc = IMap.add id OpenResolved acc in
         collect_of_type ?log_unresolved cx reason acc t
@@ -1371,8 +1334,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (******************)
 
     | (OpenT(_, tvar1), UseT (use_op, OpenT(_, tvar2))) ->
-      let id1, constraints1 = find_constraints cx tvar1 in
-      let id2, constraints2 = find_constraints cx tvar2 in
+      let id1, constraints1 = Context.find_constraints cx tvar1 in
+      let id2, constraints2 = Context.find_constraints cx tvar2 in
 
       (match constraints1, constraints2 with
       | Unresolved bounds1, Unresolved bounds2 ->
@@ -1403,7 +1366,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ -> t2
       in
 
-      let id1, constraints1 = find_constraints cx tvar in
+      let id1, constraints1 = Context.find_constraints cx tvar in
       (match constraints1 with
       | Unresolved bounds1 ->
           edges_and_flows_to_t cx trace (id1, bounds1) t2
@@ -1417,7 +1380,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (******************)
 
     | (t1, UseT (use_op, OpenT(_, tvar))) ->
-      let id2, constraints2 = find_constraints cx tvar in
+      let id2, constraints2 = Context.find_constraints cx tvar in
       (match constraints2 with
       | Unresolved bounds2 ->
           edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
@@ -1530,7 +1493,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | InternalT (ChoiceKitT (_, Trigger)),
       ChoiceKitUseT (r, EvalDestructor (reason_tvar, id, use_desc, d, tout)) ->
-      (match find_graph cx id with
+      (match Context.find_graph cx id with
       | Resolved t ->
         (* EvalDestructor are currently only created for AnnotT. A big part of
          * AnnotT's job is repositioning the source type. Do that
@@ -7032,7 +6995,7 @@ and mk_type_destructor cx ~trace use_op reason t d id =
    * once to an annotation instead of a tvar that gets a bound on both sides. *)
   let t = match t with
     | OpenT (_, id) ->
-      let _, constraints = find_constraints cx id in
+      let _, constraints = Context.find_constraints cx id in
       (match constraints with
         | Resolved t -> t
         | _ -> t)
@@ -8176,7 +8139,7 @@ and guess_and_record_sentinel_prop cx ts =
 
   let props_of_object = function
     | AnnotT ((_, id), _) ->
-      let constraints = find_graph cx id in
+      let constraints = Context.find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
         Context.find_props cx props_tmap
@@ -8191,7 +8154,7 @@ and guess_and_record_sentinel_prop cx ts =
 
   let is_singleton_type = function
     | AnnotT ((_, id), _) ->
-      let constraints = find_graph cx id in
+      let constraints = Context.find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_,
           (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | NullT | VoidT)
@@ -8221,7 +8184,7 @@ and guess_and_record_sentinel_prop cx ts =
     let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
     List.iter (function
       | AnnotT ((_, id), _) ->
-        let constraints = find_graph cx id in
+        let constraints = Context.find_graph cx id in
         begin match constraints with
         | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
           Cache.SentinelProp.add props_tmap keys
@@ -8246,7 +8209,7 @@ and union_flatten' cx seen t = match t with
     if ISet.mem id !seen then []
     else begin
       seen := ISet.add id !seen;
-      match find_graph cx id with
+      match Context.find_graph cx id with
         | Resolved (DefT (_, UnionT rep)) -> union_flatten cx seen @@ UnionRep.members rep
         | _ -> [t]
     end
@@ -9183,7 +9146,7 @@ and add_lower l (trace, use_op) bounds =
    separately, too, as part of the bounds of skip_tvar. **)
 and iter_with_filter cx bindings skip_id each =
   bindings |> IMap.iter (fun id trace ->
-    match find_constraints cx id with
+    match Context.find_constraints cx id with
     | root_id, Unresolved bounds when root_id <> skip_id ->
         each (root_id, bounds) trace
     | _ ->
@@ -9340,46 +9303,46 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
       add_upper_edges cx trace (id2, bounds2) (id1, bounds1);
       add_lower_edges cx trace ~opt:true (id2, bounds2) (id1, bounds1);
     );
-    replace_node cx id1 (Goto id2);
+    Context.replace_node cx id1 (Goto id2);
 
   | Unresolved bounds1, Resolved t2 ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
-    replace_node cx id1 (Goto id2);
+    Context.replace_node cx id1 (Goto id2);
 
   | Resolved t1, Unresolved bounds2 ->
     let t1_use = UseT (unify_flip use_op, t1) in
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
-    replace_node cx id2 (Goto id1);
+    Context.replace_node cx id2 (Goto id1);
 
   | Resolved t1, Resolved t2 ->
     (* replace node first, in case rec_unify recurses back to these tvars *)
-    replace_node cx id1 (Goto id2);
+    Context.replace_node cx id1 (Goto id2);
     rec_unify cx trace ~use_op t1 t2;
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
 and merge_ids cx trace ~use_op id1 id2 =
-  let (id1, root1), (id2, root2) = find_root cx id1, find_root cx id2 in
+  let (id1, root1), (id2, root2) = Context.find_root cx id1, Context.find_root cx id2 in
   if id1 = id2 then ()
   else if root1.rank < root2.rank
   then goto cx trace ~use_op (id1, root1) (id2, root2)
   else if root2.rank < root1.rank
   then goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
   else (
-    replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
+    Context.replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
     goto cx trace ~use_op (id1, root1) (id2, root2);
   )
 
 (* Resolve a type variable to a type. This involves finding its root, and
    resolving to that type. *)
 and resolve_id cx trace ~use_op id t =
-  let id, root = find_root cx id in
+  let id, root = Context.find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
-    replace_node cx id (Root { root with constraints = Resolved t });
+    Context.replace_node cx id (Root { root with constraints = Resolved t });
     edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~use_op ~opt:true t (id, bounds);
 
@@ -10332,7 +10295,7 @@ and reposition cx ?trace loc ?desc ?annot_loc t =
   | OpenT (r, id) as t ->
     let reason = mod_reason r in
     let use_desc = Option.is_some desc in
-    let constraints = find_graph cx id in
+    let constraints = Context.find_graph cx id in
     begin match constraints with
     | Resolved t ->
       (* A tvar may be resolved to a type that has special repositioning logic,
@@ -12061,7 +12024,7 @@ and assert_ground_id cx ?(depth=1) skip ids id =
   if not (ISet.mem id !ids)
   then (
     ids := !ids |> ISet.add id;
-    match find_graph cx id with
+    match Context.find_graph cx id with
     | Unresolved { lower; _ } ->
         TypeMap.keys lower |> List.iter (assert_ground cx ~depth skip ids);
 

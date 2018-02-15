@@ -7,12 +7,6 @@
 
 open Reason
 
-val find_constraints:
-  Context.t ->
-  Constraint.ident ->
-  Constraint.ident * Constraint.constraints
-val find_graph: Context.t -> Constraint.ident -> Constraint.constraints
-
 (* propagates sources to sinks following a subtype relation *)
 val flow: Context.t -> (Type.t * Type.use_t) -> unit
 val flow_t: Context.t -> (Type.t * Type.t) -> unit

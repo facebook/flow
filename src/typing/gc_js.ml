@@ -99,7 +99,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx pole marked r root_id
       else
@@ -134,7 +134,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar_bounds cx pole marked root_id
       else
@@ -160,7 +160,7 @@ end
 
 (* Keep a reachable type variable around. *)
 let live cx marked p id =
-  let constraints = Flow_js.find_graph cx id in
+  let constraints = Context.find_graph cx id in
   match constraints with
   | Resolved _ -> ()
   | Unresolved bounds ->

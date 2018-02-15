@@ -171,7 +171,7 @@ end = struct
   (* let get_free_tvars = get >>| fun st -> State.(st.free_tvars) *)
 
   let find_cons i =
-    get_cx >>| fun cx -> Flow_js.find_constraints cx i
+    get_cx >>| fun cx -> Context.find_constraints cx i
 
   let fresh_num =
     let open State in
