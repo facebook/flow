@@ -13,6 +13,7 @@ val btwn_exclusive : t -> t -> t
 val char_before : t -> t
 val first_char: t -> t
 val contains : t -> t -> bool
+val lines_intersect : t -> t -> bool
 val pos_cmp : position -> position -> int
 val span_compare : t -> t -> int
 val compare : t -> t -> int

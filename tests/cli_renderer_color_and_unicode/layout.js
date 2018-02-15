@@ -22,12 +22,3 @@
   ([o.b, o, o.a]: [empty, empty, empty]);
   ([o.b, o.a, o]: [empty, empty, empty]);
 }
-
-{
-  const o = {p: (() => o: () => empty)};
-}
-
-{
-  let a;
-  ((a = [() => a]): [empty & (() => empty)]);
-}

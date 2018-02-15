@@ -340,7 +340,7 @@ let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
 let line_number_style text = (Tty.Bold Tty.Default, text)
 let comment_style text = (Tty.Bold Tty.Default, text)
 let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
-let _dim_style text = (Tty.Dim Tty.Default, text)
+let dim_style text = (Tty.Dim Tty.Default, text)
 
 
 let lib_prefix = "[LIB] "
@@ -380,14 +380,15 @@ let highlight_error_in_line ~severity_style line c0 c1 =
     source_fragment_style suffix;
   ]
 
-(* 0-indexed *)
+(* 0-indexed
+ *
+ * If start + len adds to more lines then exist in the file, then the full len
+ * will not be returned. *)
 let get_lines ~start ~len content =
   let rec loop ~start ~len ~acc ~pos content =
-    if len = 0
+    if len = 0 || pos > String.length content
     then List.rev acc
     else begin
-      if pos > String.length content then
-        raise (Invalid_argument "not enough lines");
       let next_newline =
         try String.index_from content pos '\n'
         with Not_found -> String.length content
@@ -1102,13 +1103,16 @@ module Cli_output = struct
         String.make horizontal_line_length '-'
     in
     (* Construct the header by appending the constituent pieces. *)
-    severity_style (
-      severity_name
-        ^ " "
-        ^ horizontal_line
-        ^ (if filename_on_newline then "\n" else " ")
-        ^ filename
-    )
+    [
+      severity_style (
+        severity_name
+          ^ " "
+          ^ horizontal_line
+          ^ (if filename_on_newline then "\n" else " ")
+          ^ filename
+      );
+      default_style "\n";
+    ]
 
   module FileKeyMap = MyMap.Make(File_key)
 
@@ -1120,6 +1124,12 @@ module Cli_output = struct
 
   (* See the definition of update_colors for why we need this cyclic type. *)
   type opened = Opened of opened IMap.t
+
+  type 'a color =
+    (* Rank based color. *)
+    | Color of int
+    (* Custom color passed into the layout_references algorithm. *)
+    | CustomColor of 'a
 
   (* ==========================
    * Reference Layout Algorithm
@@ -1174,14 +1184,16 @@ module Cli_output = struct
    * - A map of reference ids to reference colors.
    * - A map of filenames to lists of open/close tags to be used in rendering
    *   source text. *)
-  let layout_references : Loc.t IMap.t -> (int IMap.t * tags) =
+  let layout_references ~(custom_colors:'a IMap.t) : Loc.t IMap.t -> ('a color IMap.t * tags) =
     let open Loc in
     let rec add_tags colors opened id start end' tags tags_acc =
       match tags with
       (* For an empty array, add both the open and close tags. Also add a color
        * of 0 for this id. *)
       | [] ->
-        let colors = IMap.add id 0 colors in
+        let color = Option.value_map (IMap.get id custom_colors)
+          ~f:(fun custom -> CustomColor custom) ~default:(Color 0) in
+        let colors = IMap.add id color colors in
         (colors, List.rev ((end', id, Close) :: (start, id, Open) :: tags_acc))
       (* Search for the correct place where start should appear in our list.
        *
@@ -1211,11 +1223,19 @@ module Cli_output = struct
         (* Add our closing tag. We will get from this operation the color which
          * we should add for our current reference. *)
         let (color, tags) = add_close_tag colors id end' tags 0 [] in
-        (* Increment the colors of all open references by the color of this tag.
-         * It is a logic error if some open_id does not exist in colors. *)
-        let colors = update_colors opened colors color in
-        (* Add the color for this reference. *)
-        let colors = IMap.add id color colors in
+        (* Add a color for this id to the colors map. If our id exists in
+         * custom_colors then we add a custom color. Otherwise we add a color
+         * based on the current rank and update similar rank-based colors. *)
+        let colors = match IMap.get id custom_colors with
+        | Some custom ->
+          IMap.add id (CustomColor custom) colors
+        | None ->
+          (* Increment the colors of all open references by the color of this tag.
+           * It is a logic error if some open_id does not exist in colors. *)
+          let colors = update_colors opened colors color in
+          (* Add the color for this reference. *)
+          IMap.add id (Color color) colors
+        in
         (* Finish by adding an open tag. A corresponding closing tag will have
          * been added by add_close_tag. *)
         (colors, List.rev_append ((start, id, Open) :: tags_acc) tags)
@@ -1234,8 +1254,13 @@ module Cli_output = struct
         (* If we run into an open tag then our color must be at least 1 greater
          * then the color of the opened tag. *)
         let color_acc = match tag_kind with
-        | Open -> max color_acc ((Option.value (IMap.get tag_id colors) ~default:0) + 1)
         | Close -> color_acc
+        | Open ->
+          (match IMap.get tag_id colors with
+          | None -> max color_acc (0 + 1)
+          | Some (Color tag_color) -> max color_acc (tag_color + 1)
+          | Some (CustomColor _) -> color_acc
+          )
         in
         add_close_tag colors id end' tags color_acc (tag :: tags_acc)
       (* When we find the location for our close tag, add it. *)
@@ -1274,12 +1299,15 @@ module Cli_output = struct
      * can't update the color of most recently opened tags. *)
     and update_colors (Opened opened) colors color =
       IMap.fold (fun open_id opened colors ->
-        let open_color = Option.value (IMap.get open_id colors) ~default:0 in
-        if open_color >= color + 1 then
-          colors
-        else
-          let colors = IMap.add open_id (color + 1) colors in
-          update_colors opened colors (color + 1)
+        let open_color = Option.value (IMap.get open_id colors) ~default:(Color 0) in
+        match open_color with
+        | CustomColor _ -> colors
+        | Color open_color ->
+          if open_color >= color + 1 then
+            colors
+          else
+            let colors = IMap.add open_id (Color (color + 1)) colors in
+            update_colors opened colors (color + 1)
       ) opened colors
     in
     fun references ->
@@ -1293,13 +1321,43 @@ module Cli_output = struct
           (colors, file_tags)
       ) (IMap.empty, FileKeyMap.empty) (IMap.bindings references)
 
-  (* To be used with layout_references. *)
-  let get_tty_color id colors =
-    match (Option.value (IMap.get id colors) ~default:0) mod 3 with
+  (* To be used with the result of layout_references.
+   *
+   * There are some special values influenced by logic
+   * in layout_friendly_error_group.
+   *
+   * - We manually set the color of primary references to CustomColor `Primary
+   *   which should always be red.
+   * - We manually set the color of root locations to CustomColor `Root which
+   *   should always be the default terminal color.
+   *)
+  let get_tty_color_internal = function
+  | CustomColor `Primary -> Tty.Red
+  | CustomColor `Root -> Tty.Default
+  | Color rank ->
+    (match rank mod 3 with
     | 0 -> Tty.Cyan
     | 1 -> Tty.Yellow
     | 2 -> Tty.Green
     | _ -> failwith "unreachable"
+    )
+
+  let get_tty_color id colors =
+    get_tty_color_internal (Option.value (IMap.get id colors) ~default:(Color 0))
+
+  (* Gets the Tty color from a stack of ids. This function will ignore
+   * CustomColor `Root if there are other colors on the stack. *)
+  let rec get_tty_color_from_stack ids colors =
+    match ids with
+    | [] -> None
+    | id :: ids ->
+      (match Option.value (IMap.get id colors) ~default:(Color 0) with
+      | CustomColor `Root ->
+        Option.value_map (get_tty_color_from_stack ids colors)
+          ~f:(fun x -> Some x) ~default:(Some Tty.Default)
+      | color ->
+        Some (get_tty_color_internal color)
+      )
 
   let bullet_char ~flags =
     (* Use [U+2022][1] for the bullet character if unicode is enabled.
@@ -1572,82 +1630,527 @@ module Cli_output = struct
       in
       message
 
+  (* Shows 3 lines of context in both directions from the root location. *)
+  let root_context_lines = 3
+
+  (* Omit code that takes up more then 15 lines in either direction. For 30
+   * lines in total.
+   *
+   * 30 lines is a lot of code. The reasoning behind this is we want to show as
+   * much context as possible. *)
+  let omit_after_lines = 15
+
+  (* Merge locs within only 3 lines of one another. *)
+  let merge_nearby_lines = 3
+
+  (* =========================
+   * Error Message Code Frames
+   * =========================
+   *
+   * We render the root location for our friendly error message. Decorated with
+   * the reference locations from the message. *)
+  let print_code_frames_friendly
+    ~stdin_file
+    ~strip_root
+    ~flags
+    ~references
+    ~colors
+    ~tags
+    root_loc
+  =
+    let open Loc in
+    (* Get a list of all the locations we will want to display. We want to
+     * display references and the root location with some extra lines
+     * for context. *)
+    let locs =
+      (* Expand the root location with 3 lines of context in either direction.
+       * However, don't expand before the first line or after the last line. If
+       * we expand past the last line then read_lines_in_file will skip
+       * those lines. *)
+      let expanded_root_loc =
+        let start_line = max 1 (root_loc.start.line - root_context_lines) in
+        let end_line = root_loc._end.line + root_context_lines in
+        { root_loc with
+          start = { root_loc.start with line = start_line };
+          _end = { root_loc._end with line = end_line };
+        }
+      in
+      expanded_root_loc :: List.map snd (IMap.bindings references)
+    in
+    (* Group our locs by their file key.
+     *
+     * Also split large locs into two smaller locs.
+     *
+     * Also compute the largest line number. We need this to compute the
+     * gutter width. *)
+    let (max_line, locs) = List.fold_left (fun (max_line, acc) loc ->
+      match loc.source with
+      | None -> failwith "expected loc to have a source"
+      | Some source ->
+        (* If our loc is larger then some threshold determined by
+         * omit_after_lines then split it into two locs. *)
+        let new_locs =
+          if ((loc._end.line - loc.start.line) + 1) <= (omit_after_lines * 2) then
+            [loc]
+          else
+            let loc1 = { loc with
+              _end = { loc.start with
+                line = loc.start.line + (omit_after_lines - 1);
+              };
+            } in
+            let loc2 = { loc with
+              start = { loc._end with
+                line = loc._end.line - (omit_after_lines - 1);
+              };
+            } in
+            [loc1; loc2]
+        in
+        (* Add the new locs to our FileKeyMap. *)
+        let locs = Option.value (FileKeyMap.get source acc) ~default:[] in
+        (max max_line loc._end.line, FileKeyMap.add source (new_locs @ locs) acc)
+    ) (0, FileKeyMap.empty) locs in
+    (* Perform some organization operations on our locs. *)
+    let locs = FileKeyMap.map (fun locs ->
+      (* Sort all of the locations we want to display. Locations in the root
+       * file should appear first. Sort in the reverse direction. Our next merge
+       * step will flip the list back around. *)
+      let locs = List.sort Loc.compare locs in
+      (* Merge the locations we want to display. We start with the location with
+       * the lowest line number. Our fold depends on this to merge correctly. *)
+      let locs = List.fold_left (fun acc loc ->
+        match acc with
+        (* Init. *)
+        | [] -> [loc]
+        (* If the previous loc + 3 lines below intersects with the next loc then
+         * we want to merge those locs into one code frame. *)
+        | last_loc :: acc when (
+            Loc.lines_intersect loc
+              { last_loc with
+                _end = { last_loc._end with
+                  line = last_loc._end.line + (merge_nearby_lines + 1);
+                };
+              }
+          ) ->
+          let loc = {
+            source = last_loc.source;
+            start = if pos_cmp loc.start last_loc.start < 0 then loc.start else last_loc.start;
+            _end = if pos_cmp loc._end last_loc._end > 0 then loc._end else last_loc._end;
+          } in
+          loc :: acc
+        (* Otherwise, add the loc by itself. *)
+        | acc -> loc :: acc
+      ) [] locs in
+      (* Return the reversed locs. *)
+      List.rev locs
+    ) locs in
+    (* Organize all our references onto the line which we will find them on. We
+     * do a second pass to sort these references and determine the
+     * gutter width. *)
+    let file_line_references = IMap.fold (fun id loc file_line_references ->
+      if id < 0 then
+        file_line_references
+      else
+        match loc.source with
+        | None -> failwith "expected loc to have a source"
+        | Some source ->
+          let line_references =
+            Option.value (FileKeyMap.get source file_line_references) ~default:IMap.empty in
+          let references =
+            Option.value (IMap.get loc.start.line line_references) ~default:[] in
+          let references = (id, loc.start) :: references in
+          let line_references = IMap.add loc.start.line references line_references in
+          FileKeyMap.add source line_references file_line_references
+    ) references FileKeyMap.empty in
+    (* Create the styled text which we will put in the gutter for all of our
+     * file line references.
+     *
+     * We use a ref for gutter_width since we want to map file_line_references
+     * in place instead of using a fold which would re-create the map. *)
+    let gutter_width = ref 5 in
+    let file_line_references = FileKeyMap.map (IMap.map (fun references ->
+      (* Reverse sort the references by their start position. We reverse sort
+       * since we fold_left next. *)
+      let references = List.sort (fun (_, a) (_, b) -> pos_cmp b a) references in
+      (* Fold the list. Creating the width and the string we will
+       * ultimately render. *)
+      let (width, references) = List.fold_left (fun (width, acc) (id, _) ->
+        let string_id = string_of_int id in
+        let width = width + 2 + String.length string_id in
+        let acc =
+          (dim_style "[")
+            :: (Tty.Normal (get_tty_color id colors), string_id)
+            :: (dim_style "]")
+            :: acc
+        in
+        (width, acc)
+      ) (1, [default_style " "]) references in
+      let (width, references) = (width + 1, default_style " " :: references) in
+      (* Set gutter_width to the larger of the current gutter_width or the width
+       * for this line. *)
+      gutter_width := max !gutter_width width;
+      (* Return the final list of references for the line along with the width. *)
+      (width, references)
+    )) file_line_references in
+    let gutter_width = !gutter_width in
+    (* Get the line number gutter length by looking at the string length for the
+     * maximum line number.
+     *
+     * Sometimes, the maximum line number will not be read. So this might not be
+     * the true maximum line number. However, for the purposes of
+     * max_line_number_length this imprecision is not important.
+     *
+     * The penalty for this imprecision is our code frame gutter might be a
+     * little wider then it needs to be in unlikely edge cases. *)
+    let max_line_number_length = String.length (string_of_int max_line) in
+    (* When Unicode characters are enabled, the gutter divider is a box
+     * drawing [U+2502][1] character. Otherwise we use an ascii pipe symbol.
+     *
+     * [1]: http://graphemica.com/%E2%94%82 *)
+    let vertical_line = if flags.unicode then "\xE2\x94\x82" else "|" in
+    (* Print the code frame for each loc. Highlighting appropriate references. *)
+    let code_frames = FileKeyMap.mapi (fun file_key locs ->
+      (* Used by read_lines_in_file. *)
+      let filename = file_of_source (Some file_key) in
+      (* Get some data structures associated with this file. *)
+      let tags = Option.value (FileKeyMap.get file_key tags) ~default:[] in
+      let line_references =
+        Option.value (FileKeyMap.get file_key file_line_references) ~default:IMap.empty in
+      (* Fold all the locs for this file into code frames. *)
+      let (_, _, code_frames) = List.fold_left (fun (tags, opened, code_frames) loc ->
+        (* Read the lines from this location. *)
+        let lines = read_lines_in_file loc filename stdin_file in
+        match lines with
+        | None -> (tags, opened, code_frames)
+        | Some lines ->
+          (* Create the code frame styles. *)
+          let (_, tags, opened, code_frame) = List.fold_left (fun (n, tags, opened, acc) line ->
+            (* Loop which will paint the different parts of a line of code in
+             * our code frame. Eats tags on the current line. *)
+            let rec loop acc col tags opened line =
+              (* Get the current style for the line. *)
+              let style = Option.value_map (get_tty_color_from_stack opened colors)
+                ~f:(fun color -> Tty.Normal color) ~default:(Tty.Dim Tty.Default) in
+              match tags with
+              (* If we have no more tags then use our current style with
+               * the line. *)
+              | [] ->
+                (tags, opened, (style, line) :: acc)
+              (* If we have a tag on this line then eat it and add the new
+               * opened tag to `opened`. Note that our condition depends on tag
+               * being well formed by layout_references! *)
+              | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
+                let opened = match tag_kind with
+                | Open -> tag_id :: opened
+                | Close -> List.filter (fun id -> tag_id <> id) opened
+                in
+                let split = pos.column - col in
+                let left = String.sub line 0 split in
+                let right = String.sub line split (String.length line - split) in
+                let acc = (style, left) :: acc in
+                loop acc pos.column tags opened right
+              (* If we do not have a tag on this line then use our current style
+               * with this line of code. *)
+              | tags ->
+                (tags, opened, (style, line) :: acc)
+            in
+            (* Start that loop! *)
+            let (tags, opened, code_line) = loop [] 0 tags opened line in
+            let code_line = List.rev code_line in
+            (* Create the gutter text. *)
+            let gutter =
+              match IMap.get n line_references with
+              | None ->
+                [default_style (String.make gutter_width ' ')]
+              | Some (width, references) when width < gutter_width ->
+                default_style (String.make (gutter_width - width) ' ') :: references
+              | Some (_, references) ->
+                references
+            in
+            (* Create the next line. *)
+            let next_line =
+              (* Get the line number string with appropriate padding. *)
+              let line_number =
+                let n = string_of_int n in
+                let padding = String.make (max_line_number_length - (String.length n)) ' ' in
+                let n = (Tty.Dim Tty.Default, n) in
+                [default_style padding; n; dim_style vertical_line]
+              in
+              gutter @
+              line_number @
+              (* If the line is empty then strip the whitespace which would be
+               * trailing whitespace anyways. *)
+              (if line = "" then [] else [default_style " "]) @
+              code_line @
+              [default_style "\n"]
+            in
+            (* Increment our line count and add the next line to
+             * our accumulator. *)
+            (n + 1, tags, opened, next_line :: acc)
+          ) (loc.start.line, tags, opened, []) (Nel.to_list lines) in
+          (tags, opened, List.concat (List.rev code_frame) :: code_frames)
+      ) (tags, [], []) locs in
+      match code_frames with
+      | [] -> []
+      | code_frame :: code_frames ->
+        (* Add all of our code frames together with a colon for omitted chunks
+         * of code in the file. *)
+        List.concat (List.fold_left (fun acc code_frame ->
+          code_frame :: [
+            default_style (String.make (gutter_width + max_line_number_length) ' ');
+            dim_style ":";
+            default_style "\n";
+          ] :: acc
+        ) [code_frame] code_frames)
+    ) locs in
+    (* Get the root code frame from our map of code frames. We will start with
+     * this code frame. *)
+    let root_file_key = match root_loc.source with
+    | None -> failwith "expected loc to have a source"
+    | Some file_key -> file_key
+    in
+    let root_code_frame = FileKeyMap.get root_file_key code_frames in
+    let code_frames = FileKeyMap.remove root_file_key code_frames in
+    (* If we only have a root code frame then only render that. *)
+    if FileKeyMap.is_empty code_frames then
+      Option.value root_code_frame ~default:[]
+    else
+      let code_frames = FileKeyMap.bindings code_frames in
+      let code_frames = match root_code_frame with
+      | None -> code_frames
+      | Some root_code_frame -> (root_file_key, root_code_frame) :: code_frames
+      in
+      (* Add a title to non-root code frames and concatenate them all together! *)
+      List.concat (List.rev (List.fold_left (fun acc (file_key, code_frame) ->
+        let open File_key in
+        let file_name = match file_key with
+        | LibFile filename
+          -> relative_lib_path ~strip_root filename
+        | SourceFile filename
+        | JsonFile filename
+        | ResourceFile filename
+          -> relative_path ~strip_root filename
+        | Builtins
+          -> "(builtins)"
+        in
+        let header = [
+          default_style (String.make gutter_width ' ');
+          default_style (file_name ^ "\n");
+        ] in
+        let header = if acc = [] then header else default_style "\n" :: header in
+        (header @ code_frame) :: acc
+      ) [] code_frames))
+
+  (* Goes through the process of laying out a friendly error message group by
+   * combining our lower level functions like extract_references_intermediate
+   * and layout_references.
+   *
+   * After we extract all of the reference locations from our message and give
+   * them an id we then add a couple of "shadow references" with negative ids to
+   * the references map. These shadow references include:
+   *
+   * - The root location of an error message.
+   * - The primary locations of all error messages in the group.
+   *
+   * These shadow references are not shown in the gutter since they are not
+   * referred to in the message text. Which is why they have a negative id.
+   *
+   * We add these "shadow references" into our reference system so that they may
+   * be laid out along with all the other references by layout_references.
+   *
+   * We generally also provide a custom color to layout_references for these
+   * "shadow references" so we don't use their default layout color. *)
+  let layout_friendly_error_group
+    root
+    messages
+  =
+    let open Friendly in
+    let module LocSet = Utils_js.LocSet in
+    (* Setup our initial loc_to_id and id_to_loc maps. *)
+    let (next_id, loc_to_id, id_to_loc) = (1, LocMap.empty, IMap.empty) in
+    (* If we have a root then extract the references from that root message. *)
+    let (next_id, loc_to_id, id_to_loc, root_message) = match root with
+    | None -> (next_id, loc_to_id, id_to_loc, None)
+    | Some { root_message; _ } ->
+      let (next_id, loc_to_id, id_to_loc, root_message) =
+        extract_references_intermediate next_id loc_to_id id_to_loc root_message in
+      (next_id, loc_to_id, id_to_loc, Some root_message)
+    in
+    (* Extract the references and primary locations from all of our messages.
+     * Messages is a non-empty list so we want to preserve that
+     * for messages_reversed. *)
+    let (next_id, loc_to_id, id_to_loc, messages_reversed, primary_locs) =
+      let ((first_loc, first_message), messages) = messages in
+      let (next_id, loc_to_id, id_to_loc, first_message) =
+        extract_references_intermediate next_id loc_to_id id_to_loc first_message in
+      let primary_locs = LocSet.add first_loc LocSet.empty in
+      List.fold_left (fun (next_id, loc_to_id, id_to_loc, messages, primary_locs) (loc, message) ->
+        let (next_id, loc_to_id, id_to_loc, message) =
+          extract_references_intermediate next_id loc_to_id id_to_loc message in
+        let primary_locs = LocSet.add loc primary_locs in
+        (next_id, loc_to_id, id_to_loc, Nel.cons message messages, primary_locs)
+      ) (next_id, loc_to_id, id_to_loc, Nel.one first_message, primary_locs) messages
+    in
+    (* Find all the references for primary locations. If there is not yet a
+     * reference for a primary location then we create one. *)
+    let (next_id, loc_to_id, id_to_loc, primary_loc_ids) =
+      LocSet.fold (fun loc (next_id, loc_to_id, id_to_loc, primary_loc_ids) ->
+        match LocMap.get loc loc_to_id with
+        (* If there is a reference for this primary location then don't alter
+         * our loc_to_id or id_to_loc maps. *)
+        | Some id -> (next_id, loc_to_id, id_to_loc, ISet.add id primary_loc_ids)
+        (* If there is no reference for this primary location then create a
+         * negative id. Negative ids will not be rendered in the code
+         * frame gutter. *)
+        | None ->
+          let id = -1 * next_id in
+          let next_id = next_id + 1 in
+          let loc_to_id = LocMap.add loc id loc_to_id in
+          let id_to_loc = IMap.add id loc id_to_loc in
+          let primary_loc_ids = ISet.add id primary_loc_ids in
+          (next_id, loc_to_id, id_to_loc, primary_loc_ids)
+      ) primary_locs (next_id, loc_to_id, id_to_loc, ISet.empty)
+    in
+    (* Go through a very similar process as primary locations to add a reference
+     * for the root location and record its id. If a reference already exists
+     * then we will not higlight our root location any differently! *)
+    let (next_id, loc_to_id, id_to_loc, root_id) = match root with
+    | None -> (next_id, loc_to_id, id_to_loc, None)
+    | Some { root_loc; _ } ->
+      (match LocMap.get root_loc loc_to_id with
+      | Some _ -> (next_id, loc_to_id, id_to_loc, None)
+      | None ->
+        let id = -1 * next_id in
+        let next_id = next_id + 1 in
+        let loc_to_id = LocMap.add root_loc id loc_to_id in
+        let id_to_loc = IMap.add id root_loc id_to_loc in
+        (next_id, loc_to_id, id_to_loc, Some id)
+      )
+    in
+    (* Create a custom color map for our primary location and root locations. *)
+    let custom_colors = IMap.empty in
+    (* Set the custom color for all primary loc ids to `Primary. *)
+    let custom_colors = ISet.fold (fun id custom_colors ->
+      IMap.add id `Primary custom_colors
+    ) primary_loc_ids custom_colors in
+    (* Manually set the custom color for the root loc to `Root. *)
+    let custom_colors = match root_id with
+    | None -> custom_colors
+    | Some id -> IMap.add id `Root custom_colors
+    in
+    (* Layout all of our references. Including the negative ones. *)
+    let (colors, tags) = layout_references ~custom_colors id_to_loc in
+    (* Return everything we need for printing error messages. *)
+    let _ = (next_id, loc_to_id) in
+    (id_to_loc, colors, tags, root_message, messages_reversed)
+
   let get_pretty_printed_friendly_error_group
+    ~stdin_file
     ~strip_root
     ~flags
     ~severity
+    trace
     root
-    ((first_loc, first_message), others)
+    messages
     omitted
   =
     let open Friendly in
     (* The header location is either the root location when we have more then
      * one message, or the primary location of the one message we have. *)
     let header =
-      let loc = match root, others with
-      | None, _ | _, [] -> first_loc
+      let loc = match root, messages with
+      | None, ((loc, _), _) | _, ((loc, _), []) -> loc
       | Some { root_loc; _ }, _ -> root_loc
       in
       print_header_friendly ~strip_root ~flags ~severity loc
     in
-    (* Either print our one message, our one message with the root prepended, or
-     * a list of error messages that share the same root. *)
-    let (_references, _colors, _tags, message) = match root, others with
-    | None, _ ->
-      let (references, first_message) = extract_references first_message in
-      let (colors, tags) = layout_references references in
-      (references, colors, tags, print_message_friendly ~flags ~colors first_message)
-    | Some { root_message; _ }, [] when omitted = 0 ->
-      let message = root_message @ (text " " :: first_message) in
-      let (references, message) = extract_references message in
-      let (colors, tags) = layout_references references in
-      (references, colors, tags, print_message_friendly ~flags ~colors message)
-    | Some { root_message; _ }, others ->
-      let messages = (first_loc, first_message) :: others in
-      (* Use extract_references_intermediate to extract the references from each
-       * individual message. *)
-      let (references, root_message, messages_reversed) =
-        let (next_id, loc_to_id, id_to_loc, root_message) =
-          extract_references_intermediate 1 LocMap.empty IMap.empty root_message in
-        let (_, _, id_to_loc, messages_reversed) =
-          List.fold_left (fun (next_id, loc_to_id, id_to_loc, messages) (loc, message) ->
-            let (next_id, loc_to_id, id_to_loc, message) =
-              extract_references_intermediate next_id loc_to_id id_to_loc message in
-            (next_id, loc_to_id, id_to_loc, (loc, message) :: messages)
-          ) (next_id, loc_to_id, id_to_loc, []) messages
-        in
-        (id_to_loc, root_message, messages_reversed)
-      in
-      let (colors, tags) = layout_references references in
-      let message =
-        List.fold_left
-          (fun acc_message (_, message) ->
-            acc_message @
-            [default_style "\n"] @
-            print_message_friendly ~flags ~colors ~bullet:true message
-          )
-          ((print_message_friendly ~flags ~colors root_message) @ [default_style ":"])
-          (List.rev messages_reversed)
-      in
+    (* Layout our entire friendly error group. This returns a bunch of data we
+     * will need to print our friendly error group. *)
+    let (references, colors, tags, root_message, messages_reversed) =
+      layout_friendly_error_group root messages in
+    (* Print the text of our error message depending on the root message and
+     * reversed messages. *)
+    let message = match root_message, messages_reversed with
+    (* When we do not have a root, we assume that there is only one error
+     * message. Based on our error message grouping logic this is a
+     * safe assumption. *)
+    | None, (message, _) ->
+      print_message_friendly ~flags ~colors message @ [default_style "\n"]
+    (* If we have a root message and only one message then add them together
+     * separated by a space. *)
+    | Some root_message, (message, []) when omitted = 0 ->
+      print_message_friendly ~flags ~colors (root_message @ (text " " :: message)) @
+      [default_style "\n"]
+    (* If we have a root message and more then one extra error messages then
+     * we want to use our bullet list style. *)
+    | Some root_message, (message, messages) ->
+      let root_message =
+        print_message_friendly ~flags ~colors root_message @ [default_style ":\n"] in
+      let messages = List.rev (List.map (fun message ->
+        print_message_friendly ~flags ~colors ~bullet:true message @
+        [default_style "\n"]
+      ) (message :: messages)) in
+      let message = List.concat (root_message :: messages) in
       let message =
         if omitted = 0 then
           message
         else
           message @
           [default_style (
-            "\n " ^
+            " " ^
             bullet_char ~flags ^
             " ... " ^
             string_of_int omitted ^
             " more error" ^
             (if omitted = 1 then "" else "s") ^
-            "."
+            ".\n"
           )]
       in
-      (references, colors, tags, message)
+      message
+    in
+    (* Print the code frame for our error message. *)
+    let code_frame =
+      let root_loc =
+        Option.value_map root
+          ~default:(let ((loc, _), _) = messages in loc)
+          ~f:(fun { root_loc; _ } -> root_loc)
+      in
+      if Tty.should_color flags.color then
+        print_code_frames_friendly
+          ~stdin_file
+          ~strip_root
+          ~flags
+          ~references
+          ~colors
+          ~tags
+          root_loc
+      else
+        []
     in
     (* Put it all together! *)
-    (header :: default_style "\n\n" :: message) @ [default_style "\n\n\n"]
+    List.concat [
+      (* Header: *)
+      header;
+      [default_style "\n"];
+
+      (* Error Message: *)
+      message;
+
+      (* Code frame: *)
+      (match code_frame with [] -> [] | code_frame -> default_style "\n" :: code_frame);
+
+      (* Trace: *)
+      (match trace with [] -> [] | _ -> [default_style "\n"]);
+      List.concat (List.map (
+        print_message_nice ~strip_root ~severity stdin_file (
+          match file_of_source (let ((loc, _), _) = messages in loc.Loc.source) with
+          | Some filename -> filename
+          | None -> "[No file]"
+        )
+      ) (append_trace_reasons [] trace));
+
+      (* Next error: *)
+      [default_style "\n\n"];
+    ]
 
   let print_styles ~out_channel ~flags styles =
     let styles =
@@ -1701,27 +2204,22 @@ module Cli_output = struct
               kind trace error
           | FriendlySingleton (_, trace, error) ->
             let open Friendly in
-            (get_pretty_printed_friendly_error_group
+            get_pretty_printed_friendly_error_group
+              ~stdin_file
               ~strip_root
               ~flags
               ~severity
+              trace
               error.root
               (Nel.one (error.loc, error.message))
               0
-            ) @
-            List.concat (List.map (
-              print_message_nice ~strip_root ~severity stdin_file (
-                match file_of_source error.loc.Loc.source with
-                | Some filename -> filename
-                | None -> "[No file]"
-              )
-            ) (append_trace_reasons [] trace)) @
-            (match trace with [] -> [] | _ -> [default_style "\n"])
           | FriendlyGroup { kind=_; root; messages; omitted } ->
             get_pretty_printed_friendly_error_group
+              ~stdin_file
               ~strip_root
               ~flags
               ~severity
+              []
               (Some root)
               (Nel.rev messages)
               omitted
