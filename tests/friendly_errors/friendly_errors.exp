@@ -1,5 +1,8 @@
 Error ------------------------------------- class-extends-and-implements.js:15:6
 
+Cannot extend `A` with `C` because in property `p`, string is incompatible with
+number.
+
 Error: class-extends-and-implements.js:15
  15:   p: string;
           ^^^^^^ Cannot extend `A` [1] with `C` because in property `p`, string [2] is incompatible with number [3].
@@ -12,6 +15,9 @@ Error: class-extends-and-implements.js:15
             ^^^^^^ [3]: number
 
 Error ------------------------------------- class-extends-and-implements.js:19:6
+
+Cannot extend `B` with `D` because in property `p`, string is incompatible with
+number.
 
 Error: class-extends-and-implements.js:19
  19:   p: string;
@@ -26,6 +32,9 @@ Error: class-extends-and-implements.js:19
 
 Error ------------------------------------- class-extends-and-implements.js:31:6
 
+Cannot implement `E` with `G` because in property `p`, string is incompatible
+with number.
+
 Error: class-extends-and-implements.js:31
  31:   p: string;
           ^^^^^^ Cannot implement `E` [1] with `G` because in property `p`, string [2] is incompatible with number [3].
@@ -38,6 +47,9 @@ Error: class-extends-and-implements.js:31
             ^^^^^^ [3]: number
 
 Error ------------------------------------- class-extends-and-implements.js:35:6
+
+Cannot implement `F` with `H` because in property `p`, string is incompatible
+with number.
 
 Error: class-extends-and-implements.js:35
  35:   p: string;
@@ -52,6 +64,9 @@ Error: class-extends-and-implements.js:35
 
 Error ------------------------------------- class-extends-and-implements.js:47:6
 
+Cannot extend `I` with `K` because in property `p`, string is incompatible with
+number.
+
 Error: class-extends-and-implements.js:47
  47:   p: string;
           ^^^^^^ Cannot extend `I` [1] with `K` because in property `p`, string [2] is incompatible with number [3].
@@ -64,6 +79,9 @@ Error: class-extends-and-implements.js:47
             ^^^^^^ [3]: number
 
 Error ------------------------------------- class-extends-and-implements.js:51:6
+
+Cannot extend `J` with `L` because in property `p`, string is incompatible with
+number.
 
 Error: class-extends-and-implements.js:51
  51:   p: string;
@@ -78,6 +96,9 @@ Error: class-extends-and-implements.js:51
 
 Error ------------------------------------- class-extends-and-implements.js:71:7
 
+Cannot extend `M1` with `O` because in property `p1`, string is incompatible
+with number.
+
 Error: class-extends-and-implements.js:71
  71:   p1: string;
            ^^^^^^ Cannot extend `M1` [1] with `O` because in property `p1`, string [2] is incompatible with number [3].
@@ -90,6 +111,9 @@ Error: class-extends-and-implements.js:71
              ^^^^^^ [3]: number
 
 Error ------------------------------------- class-extends-and-implements.js:72:7
+
+Cannot extend `M2` with `O` because in property `p2`, string is incompatible
+with number.
 
 Error: class-extends-and-implements.js:72
  72:   p2: string;
@@ -104,6 +128,9 @@ Error: class-extends-and-implements.js:72
 
 Error ------------------------------------- class-extends-and-implements.js:76:7
 
+Cannot extend `N1` with `P` because in property `p1`, string is incompatible
+with number.
+
 Error: class-extends-and-implements.js:76
  76:   p1: string;
            ^^^^^^ Cannot extend `N1` [1] with `P` because in property `p1`, string [2] is incompatible with number [3].
@@ -116,6 +143,9 @@ Error: class-extends-and-implements.js:76
              ^^^^^^ [3]: number
 
 Error ------------------------------------- class-extends-and-implements.js:77:7
+
+Cannot extend `N2` with `P` because in property `p2`, string is incompatible
+with number.
 
 Error: class-extends-and-implements.js:77
  77:   p2: string;
@@ -130,6 +160,9 @@ Error: class-extends-and-implements.js:77
 
 Error ------------------------------------- class-extends-and-implements.js:97:7
 
+Cannot implement `Q1` with `S` because in property `p1`, number is incompatible
+with string.
+
 Error: class-extends-and-implements.js:97
  97:   p1: number;
            ^^^^^^ Cannot implement `Q1` [1] with `S` because in property `p1`, number [2] is incompatible with string [3].
@@ -142,6 +175,9 @@ Error: class-extends-and-implements.js:97
              ^^^^^^ [3]: string
 
 Error ------------------------------------- class-extends-and-implements.js:98:7
+
+Cannot implement `Q2` with `S` because in property `p2`, number is incompatible
+with string.
 
 Error: class-extends-and-implements.js:98
  98:   p2: number;
@@ -156,6 +192,9 @@ Error: class-extends-and-implements.js:98
 
 Error ------------------------------------ class-extends-and-implements.js:102:7
 
+Cannot implement `R1` with `T` because in property `p1`, number is incompatible
+with string.
+
 Error: class-extends-and-implements.js:102
 102:   p1: number;
            ^^^^^^ Cannot implement `R1` [1] with `T` because in property `p1`, number [2] is incompatible with string [3].
@@ -168,6 +207,9 @@ Error: class-extends-and-implements.js:102
              ^^^^^^ [3]: string
 
 Error ------------------------------------ class-extends-and-implements.js:103:7
+
+Cannot implement `R2` with `T` because in property `p2`, number is incompatible
+with string.
 
 Error: class-extends-and-implements.js:103
 103:   p2: number;
@@ -182,6 +224,8 @@ Error: class-extends-and-implements.js:103
 
 Error --------------------------------------- class-refinement-env-merge.js:12:6
 
+Cannot cast `this.p` to number because string is incompatible with number.
+
 Error: class-refinement-env-merge.js:12
  12:     (this.p: number);
           ^^^^^^ Cannot cast `this.p` to number because string [1] is incompatible with number [2].
@@ -192,6 +236,8 @@ Error: class-refinement-env-merge.js:12
                     ^^^^^^ [2]: number
 
 Error --------------------------------------- class-refinement-env-merge.js:12:6
+
+Cannot cast `this.p` to number because string is incompatible with number.
 
 Error: class-refinement-env-merge.js:12
  12:     (this.p: number);
@@ -204,6 +250,8 @@ Error: class-refinement-env-merge.js:12
 
 Error -------------------------------------------- desc-class-properties.js:16:6
 
+Cannot cast `this.a` to number because string is incompatible with number.
+
 Error: desc-class-properties.js:16
  16:     (this.a: number); // Error: string ~> number
           ^^^^^^ Cannot cast `this.a` to number because string [1] is incompatible with number [2].
@@ -214,6 +262,8 @@ Error: desc-class-properties.js:16
                     ^^^^^^ [2]: number
 
 Error -------------------------------------------- desc-class-properties.js:17:6
+
+Cannot cast `super.a` to number because string is incompatible with number.
 
 Error: desc-class-properties.js:17
  17:     (super.a: number); // Error: string ~> number
@@ -226,6 +276,8 @@ Error: desc-class-properties.js:17
 
 Error -------------------------------------------- desc-class-properties.js:18:6
 
+Cannot cast `this.b` to number because string is incompatible with number.
+
 Error: desc-class-properties.js:18
  18:     (this.b: number); // Error: string ~> number
           ^^^^^^ Cannot cast `this.b` to number because string [1] is incompatible with number [2].
@@ -236,6 +288,8 @@ Error: desc-class-properties.js:18
                     ^^^^^^ [2]: number
 
 Error -------------------------------------------- desc-class-properties.js:19:6
+
+Cannot cast `this.#c` to number because string is incompatible with number.
 
 Error: desc-class-properties.js:19
  19:     (this.#c: number); // Error: string ~> number
@@ -248,6 +302,9 @@ Error: desc-class-properties.js:19
 
 Error ----------------------------------------- indexer-key-compatibility.js:7:2
 
+Cannot cast `o` to object type because in the indexer property's key, number is
+incompatible with string.
+
 Error: indexer-key-compatibility.js:7
   7: (o: {[k: string]: any});
       ^ Cannot cast `o` to object type because in the indexer property's key, number [1] is incompatible with string [2].
@@ -258,6 +315,9 @@ Error: indexer-key-compatibility.js:7
                 ^^^^^^ [2]: string
 
 Error ------------------------------------ loc-primary-for-covariant-ops.js:8:16
+
+Cannot cast `any` to function type because in the first argument and then
+property `p`, number is incompatible with string.
 
 Error: loc-primary-for-covariant-ops.js:8
   8: ((any: (x: {p: number}) => void): (x: {p: string}) => void);
@@ -270,6 +330,9 @@ Error: loc-primary-for-covariant-ops.js:8
 
 Error ----------------------------------- loc-primary-for-covariant-ops.js:11:14
 
+Cannot cast `any` to `X` because in type argument `T` and then property `p`,
+number is incompatible with string.
+
 Error: loc-primary-for-covariant-ops.js:11
  11: ((any: X<{p: number}>): X<{p: string}>);
                   ^^^^^^ Cannot cast `any` to `X` because in type argument `T` and then property `p`, number [1] is incompatible with string [2].
@@ -280,6 +343,9 @@ Error: loc-primary-for-covariant-ops.js:11
                                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- loc-primary.js:8:2
+
+Cannot cast `a1` to `A` because in property `p`, number is incompatible with
+string.
 
 Error: loc-primary.js:8
   8: (a1: A); // Error: string ~> number. We should point to a1.
@@ -292,6 +358,9 @@ Error: loc-primary.js:8
 
 Error ------------------------------------------------------ loc-primary.js:10:6
 
+Cannot cast object literal to `A` because in property `p`, number is
+incompatible with string.
+
 Error: loc-primary.js:10
  10: ({p: a2}: A); // Error: string ~> number. We should point to a2.
           ^^ Cannot cast object literal to `A` because in property `p`, number [1] is incompatible with string [2].
@@ -302,6 +371,9 @@ Error: loc-primary.js:10
                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ loc-primary.js:11:6
+
+Cannot cast object literal to `A` because in property `p`, number is
+incompatible with string.
 
 Error: loc-primary.js:11
  11: ({p: 42}: A); // Error: string ~> number. We should point to 42.
@@ -314,6 +386,9 @@ Error: loc-primary.js:11
 
 Error ------------------------------------------------------ loc-primary.js:15:2
 
+Cannot cast `b1` to `B` because in property `a.b`, number is incompatible with
+string.
+
 Error: loc-primary.js:15
  15: (b1: B); // Error: string ~> number. We should point to b1.
       ^^ Cannot cast `b1` to `B` because in property `a.b`, number [1] is incompatible with string [2].
@@ -324,6 +399,9 @@ Error: loc-primary.js:15
                         ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ loc-primary.js:17:6
+
+Cannot cast object literal to `B` because in property `a.b`, number is
+incompatible with string.
 
 Error: loc-primary.js:17
  17: ({a: b2}: B); // Error: string ~> number. We should point to b2.
@@ -336,6 +414,9 @@ Error: loc-primary.js:17
 
 Error ----------------------------------------------------- loc-primary.js:19:10
 
+Cannot cast object literal to `B` because in property `a.b`, number is
+incompatible with string.
+
 Error: loc-primary.js:19
  19: ({a: {b: b3}}: B); // Error: string ~> number. We should point to b3.
               ^^ Cannot cast object literal to `B` because in property `a.b`, number [1] is incompatible with string [2].
@@ -346,6 +427,9 @@ Error: loc-primary.js:19
                         ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- loc-primary.js:20:10
+
+Cannot cast object literal to `B` because in property `a.b`, number is
+incompatible with string.
 
 Error: loc-primary.js:20
  20: ({a: {b: 42}}: B); // Error: string ~> number. We should point to 42.
@@ -358,6 +442,9 @@ Error: loc-primary.js:20
 
 Error ------------------------------------------------------ loc-primary.js:24:2
 
+Cannot cast `c1` to `C` because in property `a.b.c`, number is incompatible with
+string.
+
 Error: loc-primary.js:24
  24: (c1: C); // Error: string ~> number. We should point to c1.
       ^^ Cannot cast `c1` to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
@@ -368,6 +455,9 @@ Error: loc-primary.js:24
                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ loc-primary.js:26:6
+
+Cannot cast object literal to `C` because in property `a.b.c`, number is
+incompatible with string.
 
 Error: loc-primary.js:26
  26: ({a: c2}: C); // Error: string ~> number. We should point to c2.
@@ -380,6 +470,9 @@ Error: loc-primary.js:26
 
 Error ----------------------------------------------------- loc-primary.js:28:10
 
+Cannot cast object literal to `C` because in property `a.b.c`, number is
+incompatible with string.
+
 Error: loc-primary.js:28
  28: ({a: {b: c3}}: C); // Error: string ~> number. We should point to c3.
               ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
@@ -390,6 +483,9 @@ Error: loc-primary.js:28
                             ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- loc-primary.js:30:14
+
+Cannot cast object literal to `C` because in property `a.b.c`, number is
+incompatible with string.
 
 Error: loc-primary.js:30
  30: ({a: {b: {c: c4}}}: C); // Error: string ~> number. We should point to c4.
@@ -402,6 +498,9 @@ Error: loc-primary.js:30
 
 Error ----------------------------------------------------- loc-primary.js:31:14
 
+Cannot cast object literal to `C` because in property `a.b.c`, number is
+incompatible with string.
+
 Error: loc-primary.js:31
  31: ({a: {b: {c: 42}}}: C); // Error: string ~> number. We should point to 42.
                   ^^ Cannot cast object literal to `C` because in property `a.b.c`, number [1] is incompatible with string [2].
@@ -412,6 +511,9 @@ Error: loc-primary.js:31
                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ loc-primary.js:35:2
+
+Cannot cast `d1` to `D` because in property `a.b.c.d`, number is incompatible
+with string.
 
 Error: loc-primary.js:35
  35: (d1: D); // Error: string ~> number. We should point to d1.
@@ -424,6 +526,9 @@ Error: loc-primary.js:35
 
 Error ------------------------------------------------------ loc-primary.js:37:6
 
+Cannot cast object literal to `D` because in property `a.b.c.d`, number is
+incompatible with string.
+
 Error: loc-primary.js:37
  37: ({a: d2}: D); // Error: string ~> number. We should point to d2.
           ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
@@ -434,6 +539,9 @@ Error: loc-primary.js:37
                                 ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- loc-primary.js:39:10
+
+Cannot cast object literal to `D` because in property `a.b.c.d`, number is
+incompatible with string.
 
 Error: loc-primary.js:39
  39: ({a: {b: d3}}: D); // Error: string ~> number. We should point to d3.
@@ -446,6 +554,9 @@ Error: loc-primary.js:39
 
 Error ----------------------------------------------------- loc-primary.js:41:14
 
+Cannot cast object literal to `D` because in property `a.b.c.d`, number is
+incompatible with string.
+
 Error: loc-primary.js:41
  41: ({a: {b: {c: d4}}}: D); // Error: string ~> number. We should point to d4.
                   ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
@@ -456,6 +567,9 @@ Error: loc-primary.js:41
                                 ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- loc-primary.js:43:18
+
+Cannot cast object literal to `D` because in property `a.b.c.d`, number is
+incompatible with string.
 
 Error: loc-primary.js:43
  43: ({a: {b: {c: {d: d5}}}}: D); // Error: string ~> number. We should point to d5.
@@ -468,6 +582,9 @@ Error: loc-primary.js:43
 
 Error ----------------------------------------------------- loc-primary.js:44:18
 
+Cannot cast object literal to `D` because in property `a.b.c.d`, number is
+incompatible with string.
+
 Error: loc-primary.js:44
  44: ({a: {b: {c: {d: 42}}}}: D); // Error: string ~> number. We should point to 42.
                       ^^ Cannot cast object literal to `D` because in property `a.b.c.d`, number [1] is incompatible with string [2].
@@ -478,6 +595,8 @@ Error: loc-primary.js:44
                                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- loc-reference.js:15:2
+
+Cannot cast `x1` to empty because `X` is incompatible with empty.
 
 Error: loc-reference.js:15
  15: (x1: empty); // X ~> empty. Ref should point to first `new X()`.
@@ -490,6 +609,8 @@ Error: loc-reference.js:15
 
 Error ---------------------------------------------------- loc-reference.js:16:2
 
+Cannot cast `x2` to empty because `X` is incompatible with empty.
+
 Error: loc-reference.js:16
  16: (x2: empty); // X ~> empty. Ref should point to first `X` annotation.
       ^^ Cannot cast `x2` to empty because `X` [1] is incompatible with empty [2].
@@ -500,6 +621,8 @@ Error: loc-reference.js:16
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:17:2
+
+Cannot cast `x3` to empty because `X` is incompatible with empty.
 
 Error: loc-reference.js:17
  17: (x3: empty); // X ~> empty. Ref should point to first `new X()`.
@@ -512,6 +635,8 @@ Error: loc-reference.js:17
 
 Error ---------------------------------------------------- loc-reference.js:18:2
 
+Cannot cast `x4` to empty because `X` is incompatible with empty.
+
 Error: loc-reference.js:18
  18: (x4: empty); // X ~> empty. Ref should point to first `X` annotation.
       ^^ Cannot cast `x4` to empty because `X` [1] is incompatible with empty [2].
@@ -522,6 +647,8 @@ Error: loc-reference.js:18
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:19:2
+
+Cannot cast `x5` to empty because `X` is incompatible with empty.
 
 Error: loc-reference.js:19
  19: (x5: empty); // X ~> empty. Ref should point to second `X` annotation.
@@ -534,6 +661,8 @@ Error: loc-reference.js:19
 
 Error ---------------------------------------------------- loc-reference.js:20:2
 
+Cannot cast `x6` to empty because `X` is incompatible with empty.
+
 Error: loc-reference.js:20
  20: (x6: empty); // X ~> empty. Ref should point to second `X` annotation.
       ^^ Cannot cast `x6` to empty because `X` [1] is incompatible with empty [2].
@@ -544,6 +673,8 @@ Error: loc-reference.js:20
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:29:2
+
+Cannot cast `y1` to empty because number is incompatible with empty.
 
 Error: loc-reference.js:29
  29: (y1: empty); // number ~> empty. Ref should point to 42.
@@ -556,6 +687,8 @@ Error: loc-reference.js:29
 
 Error ---------------------------------------------------- loc-reference.js:30:2
 
+Cannot cast `y2` to empty because number is incompatible with empty.
+
 Error: loc-reference.js:30
  30: (y2: empty); // number ~> empty. Ref should point to first `number` annotation.
       ^^ Cannot cast `y2` to empty because number [1] is incompatible with empty [2].
@@ -566,6 +699,8 @@ Error: loc-reference.js:30
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:31:2
+
+Cannot cast `y3` to empty because number is incompatible with empty.
 
 Error: loc-reference.js:31
  31: (y3: empty); // number ~> empty. Ref should point to 42.
@@ -578,6 +713,8 @@ Error: loc-reference.js:31
 
 Error ---------------------------------------------------- loc-reference.js:32:2
 
+Cannot cast `y4` to empty because number is incompatible with empty.
+
 Error: loc-reference.js:32
  32: (y4: empty); // number ~> empty. Ref should point to first `number` annotation.
       ^^ Cannot cast `y4` to empty because number [1] is incompatible with empty [2].
@@ -588,6 +725,8 @@ Error: loc-reference.js:32
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:33:2
+
+Cannot cast `y5` to empty because number is incompatible with empty.
 
 Error: loc-reference.js:33
  33: (y5: empty); // number ~> empty. Ref should point to second `number` annotation.
@@ -600,6 +739,8 @@ Error: loc-reference.js:33
 
 Error ---------------------------------------------------- loc-reference.js:34:2
 
+Cannot cast `y6` to empty because number is incompatible with empty.
+
 Error: loc-reference.js:34
  34: (y6: empty); // number ~> empty. Ref should point to 42.
       ^^ Cannot cast `y6` to empty because number [1] is incompatible with empty [2].
@@ -610,6 +751,8 @@ Error: loc-reference.js:34
             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- loc-reference.js:37:4
+
+Cannot cast `x` to number because string is incompatible with number.
 
 Error: loc-reference.js:37
  37:   (x: number); // string ~> number. Ref should point to `x: string`.
@@ -622,6 +765,8 @@ Error: loc-reference.js:37
 
 Error ---------------------------------------------------- loc-reference.js:41:4
 
+Cannot cast `x` to number because `T` is incompatible with number.
+
 Error: loc-reference.js:41
  41:   (x: number); // T ~> number. Ref should point to `x: T`.
         ^ Cannot cast `x` to number because `T` [1] is incompatible with number [2].
@@ -633,6 +778,8 @@ Error: loc-reference.js:41
 
 Error ----------------------------------------------- misc-incompatibles.js:8:24
 
+number is not a class.
+
 Error: misc-incompatibles.js:8
   8: declare class X mixins Y {}
                             ^ number [1] is not a class.
@@ -641,6 +788,8 @@ Error: misc-incompatibles.js:8
                  ^^ [1]: number
 
 Error ---------------------------------------------- misc-incompatibles.js:11:11
+
+Cannot extend `A` with `B` because number is not inheritable.
 
 Error: misc-incompatibles.js:11
  11: interface B extends A {}
@@ -653,6 +802,8 @@ Error: misc-incompatibles.js:11
 
 Error ---------------------------------------------- misc-incompatibles.js:11:21
 
+number is not supported by unclassified use GetStaticsT.
+
 Error: misc-incompatibles.js:11
  11: interface B extends A {}
                          ^ number [1] is not supported by unclassified use GetStaticsT.
@@ -661,6 +812,8 @@ Error: misc-incompatibles.js:11
                            ^ [1]: number
 
 Error ----------------------------------------------- misc-incompatibles.js:14:3
+
+Cannot access computed property using boolean.
 
 Error: misc-incompatibles.js:14
  14: o[true];
@@ -671,6 +824,8 @@ Error: misc-incompatibles.js:14
 
 Error ----------------------------------------------- misc-incompatibles.js:15:3
 
+Cannot assign computed property using boolean.
+
 Error: misc-incompatibles.js:15
  15: o[true] = 42;
        ^^^^ Cannot assign computed property using boolean [1].
@@ -680,11 +835,16 @@ Error: misc-incompatibles.js:15
 
 Error ----------------------------------------------- misc-incompatibles.js:17:1
 
+Invalid left-hand side in assignment expression.
+
 Error: misc-incompatibles.js:17
  17: [nope] += 1;
      ^^^^^^ Invalid left-hand side in assignment expression.
 
 Error ------------------------------------------------------------- order.js:9:6
+
+Cannot cast object literal to object type because in property `a`, number is
+incompatible with boolean.
 
 Error: order.js:9
   9:   a: 42,
@@ -697,6 +857,9 @@ Error: order.js:9
 
 Error ------------------------------------------------------------ order.js:11:6
 
+Cannot cast object literal to object type because in property `c`, boolean is
+incompatible with number.
+
 Error: order.js:11
  11:   c: true,
           ^^^^ Cannot cast object literal to object type because in property `c`, boolean [1] is incompatible with number [2].
@@ -707,6 +870,8 @@ Error: order.js:11
             ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ order.js:10:7
+
+Cannot cast `'foo'` to empty because string is incompatible with empty.
 
 Error: order.js:10
  10:   b: ('foo': empty),
@@ -719,6 +884,9 @@ Error: order.js:10
 
 Error ---------------------------------------------------- prop-variance.js:12:8
 
+Cannot cast `any` to object type because property `p` is read-only in object
+type but writable in object type.
+
 Error: prop-variance.js:12
  12: ((any: {+p: T}): {p: T}); // Error: read-only ~> writable
             ^^^^^^^ Cannot cast `any` to object type because property `p` is read-only in object type [1] but writable in object type [2].
@@ -729,6 +897,9 @@ Error: prop-variance.js:12
                         ^^^^^^ [2]: object type
 
 Error ---------------------------------------------------- prop-variance.js:14:8
+
+Cannot cast `any` to object type because property `p` is read-only in object
+type but write-only in object type.
 
 Error: prop-variance.js:14
  14: ((any: {+p: T}): {-p: T}); // Error: read-only ~> write-only
@@ -741,6 +912,9 @@ Error: prop-variance.js:14
 
 Error ---------------------------------------------------- prop-variance.js:15:8
 
+Cannot cast `any` to object type because property `p` is write-only in object
+type but readable in object type.
+
 Error: prop-variance.js:15
  15: ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
             ^^^^^^^ Cannot cast `any` to object type because property `p` is write-only in object type [1] but readable in object type [2].
@@ -752,6 +926,9 @@ Error: prop-variance.js:15
 
 Error ---------------------------------------------------- prop-variance.js:16:8
 
+Cannot cast `any` to object type because property `p` is write-only in object
+type but read-only in object type.
+
 Error: prop-variance.js:16
  16: ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
             ^^^^^^^ Cannot cast `any` to object type because property `p` is write-only in object type [1] but read-only in object type [2].
@@ -762,6 +939,8 @@ Error: prop-variance.js:16
                         ^^^^^^^ [2]: object type
 
 Error ------------------------------------------------ typeof-unexpected.js:6:15
+
+`typeof` can only be used to get the type of variables.
 
 Error: typeof-unexpected.js:6
   6: (null: typeof 42);

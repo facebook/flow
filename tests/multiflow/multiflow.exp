@@ -1,5 +1,8 @@
 Error ----------------------------------------------------------- apply.js:12:22
 
+Cannot call `apply` with array literal bound to `args` because in the second
+argument, number is incompatible with number literal `123`.
+
 Error: apply.js:12
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
                           ^^^ Cannot call `apply` with array literal bound to `args` because in the second argument, number [1] is incompatible with number literal `123` [2].
@@ -10,6 +13,9 @@ Error: apply.js:12
                                    ^^^ [2]: number literal `123`
 
 Error ----------------------------------------------------------- apply.js:13:15
+
+Cannot call `apply` with array literal bound to `args` because function requires
+another argument from function type.
 
 Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
@@ -22,6 +28,9 @@ Error: apply.js:13
 
 Error ----------------------------------------------------------- apply.js:19:17
 
+Cannot call `apply` with array literal bound to `args` because in the rest
+argument and then index 1, number is incompatible with number literal `123`.
+
 Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
                      ^^^^^^^^^^^ Cannot call `apply` with array literal bound to `args` because in the rest argument and then index 1, number [1] is incompatible with number literal `123` [2].
@@ -32,6 +41,9 @@ Error: apply.js:19
                                          ^^^ [2]: number literal `123`
 
 Error ----------------------------------------------------------- apply.js:20:17
+
+Cannot call `apply` with array literal bound to `args` because in the rest
+argument, rest array has an arity of 1 but tuple type has an arity of 2.
 
 Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
@@ -44,6 +56,9 @@ Error: apply.js:20
 
 Error ----------------------------------------------------------- apply.js:21:17
 
+Cannot call `apply` with array literal bound to `args` because in the rest
+argument, rest array has an arity of 3 but tuple type has an arity of 2.
+
 Error: apply.js:21
  21: apply(withRest, ['hi', 123, false]); // Error - too many args
                      ^^^^^^^^^^^^^^^^^^ Cannot call `apply` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 3 but tuple type [2] has an arity of 2.
@@ -54,6 +69,9 @@ Error: apply.js:21
                                   ^^^^^^^^^^^ [2]: tuple type
 
 Error ----------------------------------------------------------- apply.js:31:26
+
+Cannot call `applyType` with array literal bound to `args` because in the second
+argument, number is incompatible with number literal `123`.
 
 Error: apply.js:31
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
@@ -66,6 +84,9 @@ Error: apply.js:31
 
 Error ----------------------------------------------------------- apply.js:32:19
 
+Cannot call `applyType` with array literal bound to `args` because function
+requires another argument from function type.
+
 Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
                        ^^^^^^ Cannot call `applyType` with array literal bound to `args` because function [1] requires another argument from function type [2].
@@ -76,6 +97,9 @@ Error: apply.js:32
              ^^^^^^^^^^^^^^^^ [2]: function type
 
 Error ----------------------------------------------------------- apply.js:38:21
+
+Cannot call `applyType` with array literal bound to `args` because in the rest
+argument and then index 1, number is incompatible with number literal `123`.
 
 Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
@@ -88,6 +112,9 @@ Error: apply.js:38
 
 Error ----------------------------------------------------------- apply.js:39:21
 
+Cannot call `applyType` with array literal bound to `args` because in the rest
+argument, rest array has an arity of 1 but tuple type has an arity of 2.
+
 Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args
                          ^^^^^^ Cannot call `applyType` with array literal bound to `args` because in the rest argument, rest array [1] has an arity of 1 but tuple type [2] has an arity of 2.
@@ -98,6 +125,9 @@ Error: apply.js:39
                                   ^^^^^^^^^^^ [2]: tuple type
 
 Error ----------------------------------------------------------- apply.js:40:21
+
+Cannot call `applyType` with array literal bound to `args` because in the rest
+argument, rest array has an arity of 3 but tuple type has an arity of 2.
 
 Error: apply.js:40
  40: applyType(withRest, ['hi', 123, false]); // Error - too many args
@@ -110,6 +140,9 @@ Error: apply.js:40
 
 Error -------------------------------------------------------------- jsx.js:30:2
 
+Cannot cast `<AcceptsWhatever />` to number because string is incompatible with
+number.
+
 Error: jsx.js:30
  30: (<AcceptsWhatever />: number); // Error string ~> number
       ^^^^^^^^^^^^^^^^^^^ Cannot cast `<AcceptsWhatever />` to number because string [1] is incompatible with number [2].
@@ -120,6 +153,9 @@ Error: jsx.js:30
                              ^^^^^^ [2]: number
 
 Error -------------------------------------------------------------- jsx.js:31:2
+
+Cannot cast `<AcceptsWhatever />` to number because string is incompatible with
+number.
 
 Error: jsx.js:31
  31: (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
@@ -132,6 +168,9 @@ Error: jsx.js:31
 
 Error -------------------------------------------------------------- jsx.js:34:3
 
+Cannot create `ExpectsProps` element because in the first argument, property
+`name` is missing in object type but exists in object type.
+
 Error: jsx.js:34
  34: (<ExpectsProps />); // Error - missing prop
        ^^^^^^^^^^^^ Cannot create `ExpectsProps` element because in the first argument, property `name` is missing in object type [1] but exists in object type [2].
@@ -142,6 +181,9 @@ Error: jsx.js:34
                                             ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------------------- jsx.js:35:2
+
+Cannot cast `<ExpectsProps />` to number because string is incompatible with
+number.
 
 Error: jsx.js:35
  35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
@@ -154,6 +196,9 @@ Error: jsx.js:35
 
 Error -------------------------------------------------------------- jsx.js:38:3
 
+Cannot create `ExpectsChildrenTuple` element because in the rest argument, rest
+array has an arity of 0 but tuple type has an arity of 1.
+
 Error: jsx.js:38
  38: (<ExpectsChildrenTuple />); // Error - missing child
        ^^^^^^^^^^^^^^^^^^^^ Cannot create `ExpectsChildrenTuple` element because in the rest argument, rest array [1] has an arity of 0 but tuple type [2] has an arity of 1.
@@ -164,6 +209,9 @@ Error: jsx.js:38
                                                                    ^^^^^^^^ [2]: tuple type
 
 Error ------------------------------------------------------------- jsx.js:40:25
+
+Cannot create `ExpectsChildrenTuple` element because in the rest argument and
+then index 0, number is incompatible with string.
 
 Error: jsx.js:40
  40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
@@ -176,6 +224,9 @@ Error: jsx.js:40
 
 Error -------------------------------------------------------------- jsx.js:41:3
 
+Cannot create `ExpectsChildrenTuple` element because in the rest argument, rest
+array has an arity of 2 but tuple type has an arity of 1.
+
 Error: jsx.js:41
  41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
        ^^^^^^^^^^^^^^^^^^^^ Cannot create `ExpectsChildrenTuple` element because in the rest argument, rest array [1] has an arity of 2 but tuple type [2] has an arity of 1.
@@ -186,6 +237,9 @@ Error: jsx.js:41
                                                                    ^^^^^^^^ [2]: tuple type
 
 Error ------------------------------------------------------------- jsx.js:46:25
+
+Cannot create `ExpectsChildrenArray` element because in the rest argument and
+then type argument `T`, number is incompatible with string.
 
 Error: jsx.js:46
  46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
@@ -198,6 +252,8 @@ Error: jsx.js:46
 
 Error ----------------------------------------------------------- spread.js:7:37
 
+Cannot call `fun` because no more than 2 arguments are expected by function.
+
 Error: spread.js:7
   7: fun(...['hi'], ...[], ...[123], ...[true]); // Error - true is unused
                                          ^^^^ Cannot call `fun` because no more than 2 arguments are expected by function [1].
@@ -207,6 +263,8 @@ Error: spread.js:7
 
 Error ----------------------------------------------------------- spread.js:8:31
 
+Cannot call `fun` because no more than 2 arguments are expected by function.
+
 Error: spread.js:8
   8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
                                    ^^^ Cannot call `fun` because no more than 2 arguments are expected by function [1].
@@ -215,6 +273,9 @@ Error: spread.js:8
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
 
 Error ----------------------------------------------------------- spread.js:8:20
+
+Cannot call `fun` with boolean bound to `y` because boolean is incompatible with
+number literal `123`.
 
 Error: spread.js:8
   8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
@@ -227,6 +288,9 @@ Error: spread.js:8
 
 Error ---------------------------------------------------------- spread.js:19:33
 
+Cannot call `funWithRestArray` with boolean bound to `y` because boolean is
+incompatible with number literal `123`.
+
 Error: spread.js:19
  19: funWithRestArray(...['hi'], ...[true], ...[123]); // Error: true ~> 123
                                      ^^^^ Cannot call `funWithRestArray` with boolean bound to `y` because boolean [1] is incompatible with number literal `123` [2].
@@ -238,6 +302,9 @@ Error: spread.js:19
 
 Error ---------------------------------------------------------- spread.js:28:37
 
+Cannot call `funWithRestArray` because in the rest argument and then type
+argument `T`, string is incompatible with number.
+
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
                                          ^^^^^ Cannot call `funWithRestArray` because in the rest argument and then type argument `T`, string [1] is incompatible with number [2].
@@ -248,6 +315,9 @@ Error: spread.js:28
                                                                  ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- spread.js:28:37
+
+Cannot call `funWithRestArray` because in the rest argument, string is
+incompatible with number literal `123`.
 
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);

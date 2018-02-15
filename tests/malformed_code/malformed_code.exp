@@ -5,6 +5,8 @@ Found 0 errors
 Check with --all sees a parse error
 Error -------------------------------------------------------------- text.js:0:1
 
+Malformed unicode
+
 Error: text.js:0
 Malformed unicode
 

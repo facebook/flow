@@ -1,16 +1,23 @@
 Error -------------------------------------------------------------- Fun.js:8:14
 
+Missing type annotation for `fold`.
+
 Error: Fun.js:8
   8: function fix(fold) {
                   ^^^^ Missing type annotation for `fold`.
 
 Error ------------------------------------------------------------- Fun.js:19:21
 
+Missing type annotation for `n`.
+
 Error: Fun.js:19
  19:     return function(n) {
                          ^ Missing type annotation for `n`.
 
 Error ------------------------------------------------------------- Fun.js:20:15
+
+Cannot call `eq` with `n` bound to `x` because string is incompatible with
+number.
 
 Error: Fun.js:20
  20:       if (eq (n, 1)) { return 1; }
@@ -23,6 +30,9 @@ Error: Fun.js:20
 
 Error ------------------------------------------------------------- Fun.js:21:35
 
+Cannot call `sub` with `n` bound to `x` because string is incompatible with
+number.
+
 Error: Fun.js:21
  21:       return mul (factorial (sub (n, 1)), n);
                                        ^ Cannot call `sub` with `n` bound to `x` because string [1] is incompatible with number [2].
@@ -33,6 +43,9 @@ Error: Fun.js:21
                       ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- Fun.js:21:43
+
+Cannot call `mul` with `n` bound to `y` because string is incompatible with
+number.
 
 Error: Fun.js:21
  21:       return mul (factorial (sub (n, 1)), n);
@@ -45,11 +58,15 @@ Error: Fun.js:21
 
 Error ------------------------------------------------------ Ycombinator.js:4:12
 
+Missing type annotation for `f`.
+
 Error: Ycombinator.js:4
   4: function Y(f) {
                 ^ Missing type annotation for `f`.
 
 Error ----------------------------------------------------- Ycombinator.js:10:44
+
+Cannot return `f(...)` because string is incompatible with number.
 
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
@@ -62,6 +79,9 @@ Error: Ycombinator.js:10
 
 Error ----------------------------------------------------- Ycombinator.js:10:46
 
+Cannot call `f` with `x` bound to `x` because number is incompatible with
+string.
+
 Error: Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
                                                   ^ Cannot call `f` with `x` bound to `x` because number [1] is incompatible with string [2].
@@ -73,6 +93,8 @@ Error: Ycombinator.js:10
 
 Error ----------------------------------------------------- Ycombinator.js:14:44
 
+Cannot return `f(...)` because number is incompatible with string.
+
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }
                                                 ^^^^ Cannot return `f(...)` because number [1] is incompatible with string [2].
@@ -83,6 +105,9 @@ Error: Ycombinator.js:14
                                   ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- Ycombinator.js:14:46
+
+Cannot call `f` with `x` bound to `x` because string is incompatible with
+number.
 
 Error: Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }

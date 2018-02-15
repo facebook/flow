@@ -1,5 +1,8 @@
 Error ----------------------------------------------------------- cycle_C.js:4:7
 
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
+
 Error: cycle_C.js:4
   4:   if (x); /* sketchy because of uses */
            ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -10,6 +13,9 @@ Error: cycle_C.js:4
                        ^^^^ [2]: null or undefined
 
 Error ---------------------------------------------------- fully_across_B.js:4:6
+
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
 
 Error: fully_across_B.js:4
   4:   if(x){ /* sketchy because of uses */ }
@@ -22,6 +28,9 @@ Error: fully_across_B.js:4
 
 Error -------------------------------------------------- partial_across_B.js:4:6
 
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
+
 Error: partial_across_B.js:4
   4:   if(x){ /* sketchy because of uses */ }
           ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -32,6 +41,9 @@ Error: partial_across_B.js:4
                         ^^^^ [2]: null or undefined. See: partial_across_A.js:1
 
 Error -------------------------------------------------- simple_sketchies.js:5:7
+
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
 
 Error: simple_sketchies.js:5
   5:   if (x) {/* sketchy */}
@@ -44,6 +56,9 @@ Error: simple_sketchies.js:5
 
 Error ------------------------------------------------- simple_sketchies.js:10:7
 
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
+
 Error: simple_sketchies.js:10
  10:   if (x) { /* sketchy */ }
            ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -54,6 +69,9 @@ Error: simple_sketchies.js:10
                             ^^^^ [2]: null or undefined
 
 Error ------------------------------------------------- simple_sketchies.js:31:7
+
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
 
 Error: simple_sketchies.js:31
  31:   if (x) { /* sketchy because of calls */ }
@@ -66,6 +84,9 @@ Error: simple_sketchies.js:31
 
 Error ------------------------------------------------- simple_sketchies.js:37:7
 
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
+
 Error: simple_sketchies.js:37
  37:   if (x) { /* sketchy because of calls */ }
            ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -76,6 +97,9 @@ Error: simple_sketchies.js:37
          ^^^^ [2]: null or undefined
 
 Error ------------------------------------------------- simple_sketchies.js:47:7
+
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
 
 Error: simple_sketchies.js:47
  47:   if (o.p) {/* sketchy */}
@@ -88,6 +112,9 @@ Error: simple_sketchies.js:47
 
 Error ------------------------------------------------- simple_sketchies.js:52:7
 
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
+
 Error: simple_sketchies.js:52
  52:   if (o.p) {/* sketchy */}
            ^^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -98,6 +125,9 @@ Error: simple_sketchies.js:52
                           ^^^^^^^ [2]: null or undefined
 
 Error ------------------------------------------------- simple_sketchies.js:57:7
+
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
 
 Error: simple_sketchies.js:57
  57:   if (o.p) { /* sketchy */ }
@@ -110,6 +140,9 @@ Error: simple_sketchies.js:57
 
 Error ------------------------------------------------- simple_sketchies.js:68:7
 
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
+
 Error: simple_sketchies.js:68
  68:   if (assignee = x) { /* sketchy */ }
            ^^^^^^^^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
@@ -120,6 +153,9 @@ Error: simple_sketchies.js:68
                      ^^^^^^^ [2]: null or undefined
 
 Error ------------------------------------------------ simple_sketchies.js:73:16
+
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
 
 Error: simple_sketchies.js:73
  73: var valToUse = value || defaultVal; /* sketchy */
@@ -132,6 +168,9 @@ Error: simple_sketchies.js:73
 
 Error ------------------------------------------------ simple_sketchies.js:78:20
 
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
+
 Error: simple_sketchies.js:78
  78: var sketchyFalse = value && false; /* sketchy */
                         ^^^^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
@@ -142,6 +181,9 @@ Error: simple_sketchies.js:78
                   ^^^^^^^ [2]: null or undefined
 
 Error ------------------------------------------------ simple_sketchies.js:79:19
+
+Sketchy null check on number which is potentially 0. Perhaps you meant to check
+for null or undefined? (`sketchy-null-number`)
 
 Error: simple_sketchies.js:79
  79: var sketchyTrue = value || true; /* sketchy */

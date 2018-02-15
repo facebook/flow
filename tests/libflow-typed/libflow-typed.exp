@@ -1,5 +1,8 @@
 Error ---------------------------------------------------------- libtest.js:2:25
 
+Cannot assign `"Stegosaurus"` to `dino` because string is incompatible with
+string enum.
+
 Error: libtest.js:2
   2: const dino : Dinosaur = "Stegosaurus"
                              ^^^^^^^^^^^^^ Cannot assign `"Stegosaurus"` to `dino` because string [1] is incompatible with string enum [2].

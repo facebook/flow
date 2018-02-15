@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- test.js:10:5
 
+Cannot use `V` with more than 1 type argument.
+
 Error: test.js:10
  10: (x: V);
          ^ Cannot use `V` [1] with more than 1 type argument.
@@ -8,6 +10,8 @@ Error: test.js:10
                ^ [1]: `V`
 
 Error ------------------------------------------------------------- test.js:12:2
+
+Cannot cast `42` to empty because number is incompatible with empty.
 
 Error: test.js:12
  12: (42: empty); // Error: number ~> empty

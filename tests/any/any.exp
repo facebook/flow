@@ -1,5 +1,7 @@
 Error -------------------------------------------------------------- any.js:8:16
 
+Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
+
 Error: any.js:8
   8: var y:string = bar(0);
                     ^^^^^^ Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2].
@@ -11,11 +13,15 @@ Error: any.js:8
 
 Error ------------------------------------------------------- flowfixme.js:14:27
 
+Cannot resolve name `nnumber`.
+
 Error: flowfixme.js:14
  14: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
                                ^^^^^^^ Cannot resolve name `nnumber`.
 
 Error ------------------------------------------------------- flowfixme.js:17:16
+
+Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
 
 Error: flowfixme.js:17
  17: var y:string = bar(0);
@@ -28,11 +34,15 @@ Error: flowfixme.js:17
 
 Error ------------------------------------------------------- flowissue.js:14:27
 
+Cannot resolve name `nnumber`.
+
 Error: flowissue.js:14
  14: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
                                ^^^^^^^ Cannot resolve name `nnumber`.
 
 Error ------------------------------------------------------- flowissue.js:17:16
+
+Cannot assign `bar(...)` to `y` because mixed is incompatible with string.
 
 Error: flowissue.js:17
  17: var y:string = bar(0);
@@ -45,6 +55,8 @@ Error: flowissue.js:17
 
 Error ------------------------------------------------------- propagate.js:10:10
 
+Cannot return `c.bar(...)` because number is incompatible with string.
+
 Error: propagate.js:10
  10:   return c.bar(0, y); // should be able to select first case and error
               ^^^^^^^^^^^ Cannot return `c.bar(...)` because number [1] is incompatible with string [2].
@@ -56,6 +68,8 @@ Error: propagate.js:10
 
 Error -------------------------------------------------------- propagate.js:16:6
 
+Cannot cast `x` to boolean because mixed is incompatible with boolean.
+
 Error: propagate.js:16
  16:     (x: boolean);
           ^ Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
@@ -66,6 +80,8 @@ Error: propagate.js:16
                ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------- propagate.js:23:6
+
+Cannot cast `x` to boolean because mixed is incompatible with boolean.
 
 Error: propagate.js:23
  23:     (x: boolean);

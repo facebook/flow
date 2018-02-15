@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ test10.js:3:2
 
+Cannot cast `o.p` to empty because number is incompatible with empty.
+
 Error: test10.js:3
   3: (o.p: empty); // error: number ~> empty
       ^^^ Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
@@ -10,6 +12,8 @@ Error: test10.js:3
              ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------ test3.js:8:17
+
+Cannot assign `o.y` to `y` because string is incompatible with number.
 
 Error: test3.js:8
   8: var y: number = o.y;
@@ -22,6 +26,8 @@ Error: test3.js:8
 
 Error ------------------------------------------------------------ test3.js:9:17
 
+Cannot assign `o.z` to `z` because string is incompatible with number.
+
 Error: test3.js:9
   9: var z: number = o.z;
                      ^^^ Cannot assign `o.z` to `z` because string [1] is incompatible with number [2].
@@ -32,6 +38,8 @@ Error: test3.js:9
               ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- test3.js:17:18
+
+Cannot assign `s.y` to `t` because number is incompatible with boolean.
 
 Error: test3.js:17
  17: var t: boolean = s.y; // error, string or number
@@ -44,6 +52,8 @@ Error: test3.js:17
 
 Error ----------------------------------------------------------- test3.js:17:18
 
+Cannot assign `s.y` to `t` because string is incompatible with boolean.
+
 Error: test3.js:17
  17: var t: boolean = s.y; // error, string or number
                       ^^^ Cannot assign `s.y` to `t` because string [1] is incompatible with boolean [2].
@@ -54,6 +64,9 @@ Error: test3.js:17
               ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------ test6.js:10:2
+
+Cannot cast `p` to object type because property `abc` is missing in object
+literal but exists in object type.
 
 Error: test6.js:10
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
@@ -69,6 +82,9 @@ Error: test6.js:10
 
 Error ------------------------------------------------------------- test7.js:6:6
 
+Cannot cast object literal to undefined because object literal is incompatible
+with undefined.
+
 Error: test7.js:6
   6:     ({...x}: void); // error, Object
           ^^^^^^ Cannot cast object literal to undefined because object literal [1] is incompatible with undefined [2].
@@ -79,6 +95,9 @@ Error: test7.js:6
                     ^^^^ [2]: undefined
 
 Error ------------------------------------------------------------- test8.js:7:2
+
+Cannot cast object literal to object type because in property `q`, string is
+incompatible with number.
 
 Error: test8.js:7
   7: ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
@@ -91,6 +110,9 @@ Error: test8.js:7
 
 Error ------------------------------------------------------------- test8.js:8:2
 
+Cannot cast object literal to object type because in property `p`, number is
+incompatible with string.
+
 Error: test8.js:8
   8: ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
       ^^^^^^^^ Cannot cast object literal to object type because in property `p`, number [1] is incompatible with string [2].
@@ -101,6 +123,9 @@ Error: test8.js:8
                        ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test9.js:5:2
+
+Cannot cast object literal to object type because a callable signature is
+missing in object literal but exists in object type.
 
 Error: test9.js:5
   5: ({ ...o_call }: { "$call": any }); // error: callable should not be copied
@@ -113,6 +138,9 @@ Error: test9.js:5
 
 Error ------------------------------------------------------------ test9.js:11:2
 
+Cannot cast object literal to object type because an indexer property is missing
+in object literal but exists in object type.
+
 Error: test9.js:11
  11: ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
       ^^^^^^^^^^^^^^ Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in object type [2].
@@ -123,6 +151,9 @@ Error: test9.js:11
                         ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------ test9.js:12:2
+
+Cannot cast object literal to object type because an indexer property is missing
+in object literal but exists in object type.
 
 Error: test9.js:12
  12: ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied

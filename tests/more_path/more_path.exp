@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ Sigma.js:13:7
 
+Cannot call `x.c` because property `c` is missing in `B`.
+
 Error: Sigma.js:13
  13:     x.c(); // error
            ^ Cannot call `x.c` because property `c` is missing in `B` [1].
@@ -8,6 +10,8 @@ Error: Sigma.js:13
                       ^ [1]: `B`
 
 Error ------------------------------------------------------------ Sigma.js:15:5
+
+Cannot assign number to `x` because number is incompatible with `B`.
 
 Error: Sigma.js:15
  15:     x++; // TODO no error? since unreachable (x: B implies x: A)
@@ -20,6 +24,8 @@ Error: Sigma.js:15
 
 Error ------------------------------------------------------------ Sigma.js:15:5
 
+number is incompatible with `B`.
+
 Error: Sigma.js:15
  15:     x++; // TODO no error? since unreachable (x: B implies x: A)
          ^^^ number [1] is incompatible with `B` [2].
@@ -31,6 +37,8 @@ Error: Sigma.js:15
 
 Error ------------------------------------------------------------ Sigma.js:24:7
 
+Cannot call `x.d` because property `d` is missing in `C`.
+
 Error: Sigma.js:24
  24:     x.d(); // error
            ^ Cannot call `x.d` because property `d` is missing in `C` [1].
@@ -40,6 +48,8 @@ Error: Sigma.js:24
 
 Error ------------------------------------------------------------ Sigma.js:27:7
 
+Cannot call `x.c` because property `c` is missing in `A`.
+
 Error: Sigma.js:27
  27:     x.c(); // error
            ^ Cannot call `x.c` because property `c` is missing in `A` [1].
@@ -48,6 +58,8 @@ Error: Sigma.js:27
                       ^ [1]: `A`
 
 Error ----------------------------------------------------------- Sigma.js:35:20
+
+`A` is incompatible with `D`.
 
 Error: Sigma.js:35
  35:   if (x instanceof A) {
@@ -59,6 +71,9 @@ Error: Sigma.js:35
                       ^ [2]: `D`
 
 Error ------------------------------------------------------------ test.js:11:16
+
+Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in
+`ChildClass`.
 
 Error: test.js:11
  11:     return obj.childProp_TYPO; // error (obj: ChildClass)

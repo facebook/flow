@@ -1,5 +1,8 @@
 Error -------------------------------------------------------------- test.js:5:7
 
+Cannot implement `IFoo` with `C1` because property `foo` is missing in `C1` but
+exists in `IFoo`.
+
 Error: test.js:5
   5: class C1 implements IFoo {} // error: property `foo` not found
            ^^ Cannot implement `IFoo` [1] with `C1` because property `foo` is missing in `C1` [2] but exists in `IFoo` [1].
@@ -10,6 +13,9 @@ Error: test.js:5
              ^^ [2]: `C1`
 
 Error ------------------------------------------------------------- test.js:6:33
+
+Cannot implement `IFoo` with `C2` because in property `foo`, number is
+incompatible with string.
 
 Error: test.js:6
   6: class C2 implements IFoo { foo: number } // error: number <~> string
@@ -24,6 +30,9 @@ Error: test.js:6
 
 Error ------------------------------------------------------------- test.js:13:7
 
+Cannot implement `IBar` with `C4` because property `bar` is missing in `C4` but
+exists in `IBar`.
+
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
            ^^ Cannot implement `IBar` [1] with `C4` because property `bar` is missing in `C4` [2] but exists in `IBar` [1].
@@ -34,6 +43,9 @@ Error: test.js:13
              ^^ [2]: `C4`
 
 Error ------------------------------------------------------------- test.js:13:7
+
+Cannot implement `IFoo` with `C4` because property `foo` is missing in `C4` but
+exists in `IFoo`.
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
@@ -46,6 +58,9 @@ Error: test.js:13
 
 Error ------------------------------------------------------------- test.js:18:7
 
+Cannot implement `IFooBar` with `C5` because property `bar` is missing in `C5`
+but exists in `IFooBar`.
+
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
            ^^ Cannot implement `IFooBar` [1] with `C5` because property `bar` is missing in `C5` [2] but exists in `IFooBar` [1].
@@ -56,6 +71,9 @@ Error: test.js:18
              ^^ [2]: `C5`
 
 Error ------------------------------------------------------------- test.js:18:7
+
+Cannot implement `IFooBar` with `C5` because property `foo` is missing in `C5`
+but exists in `IFoo`.
 
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
@@ -70,6 +88,9 @@ Error: test.js:18
 
 Error ------------------------------------------------------------- test.js:21:2
 
+Cannot cast `new C5()` to `IBar` because property `bar` is missing in `C5` but
+exists in `IBar`.
+
 Error: test.js:21
  21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
       ^^^^^^ Cannot cast `new C5()` to `IBar` because property `bar` is missing in `C5` [1] but exists in `IBar` [2].
@@ -80,6 +101,8 @@ Error: test.js:21
                 ^^^^ [2]: `IBar`
 
 Error ------------------------------------------------------------ test.js:26:21
+
+Cannot implement `C1` because it is not an interface.
 
 Error: test.js:26
  26: class C7 implements C1 {} // error: C1 is a class, expected an interface

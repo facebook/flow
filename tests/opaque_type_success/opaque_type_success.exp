@@ -1,5 +1,8 @@
 Error ------------------------------------------------------------- test.js:36:1
 
+Unable to determine module type (CommonJS vs ES) if both an export statement and
+`module.exports` are used in the same module!
+
 Error: test.js:36
  36: exports.hide = hide;
      ^^^^^^^ Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same module!

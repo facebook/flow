@@ -1,5 +1,7 @@
 Error ------------------------------------------------- es_declare_module.js:6:2
 
+Cannot cast `num1` to string because number is incompatible with string.
+
 Error: es_declare_module.js:6
   6: (num1: string); // Error: number ~> string
       ^^^^ Cannot cast `num1` to string because number [1] is incompatible with string [2].
@@ -11,6 +13,8 @@ Error: es_declare_module.js:6
 
 Error ------------------------------------------------- es_declare_module.js:8:2
 
+Cannot cast `str1` to number because string is incompatible with number.
+
 Error: es_declare_module.js:8
   8: (str1: number); // Error: string ~> number
       ^^^^ Cannot cast `str1` to number because string [1] is incompatible with number [2].
@@ -21,6 +25,9 @@ Error: es_declare_module.js:8
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------ es_declare_module.js:10:2
+
+Cannot cast `CJS_Named` to number because module `CJS_Named` is incompatible
+with number.
 
 Error: es_declare_module.js:10
  10: (CJS_Named: number); // Error: Module ~> number
@@ -37,11 +44,15 @@ Error: es_declare_module.js:10
 
 Error ------------------------------------------------ es_declare_module.js:12:9
 
+Cannot import `num2` because there is no `num2` export in `CJS_Clobbered`.
+
 Error: es_declare_module.js:12
  12: import {num2} from "CJS_Clobbered"; // Error: No such export!
              ^^^^ Cannot import `num2` because there is no `num2` export in `CJS_Clobbered`.
 
 Error ------------------------------------------------ es_declare_module.js:15:2
+
+Cannot cast `numExport` to string because number is incompatible with string.
 
 Error: es_declare_module.js:15
  15: (numExport: string); // Error: number ~> string
@@ -54,6 +65,8 @@ Error: es_declare_module.js:15
 
 Error ------------------------------------------------ es_declare_module.js:18:2
 
+Cannot cast `'asdf'` to `numType` because string is incompatible with number.
+
 Error: es_declare_module.js:18
  18: ('asdf': numType); // Error: string ~> number
       ^^^^^^ Cannot cast `'asdf'` to `numType` because string [1] is incompatible with number [2].
@@ -65,11 +78,15 @@ Error: es_declare_module.js:18
 
 Error ------------------------------------------------ es_declare_module.js:20:9
 
+Cannot import `strHidden` because there is no `strHidden` export in `ES`.
+
 Error: es_declare_module.js:20
  20: import {strHidden} from "ES"; // Error: No such export!
              ^^^^^^^^^ Cannot import `strHidden` because there is no `strHidden` export in `ES`.
 
 Error ------------------------------------------------ es_declare_module.js:23:2
+
+Cannot cast `str3` to number because string is incompatible with number.
 
 Error: es_declare_module.js:23
  23: (str3: number); // Error: string ~> number
@@ -82,6 +99,8 @@ Error: es_declare_module.js:23
 
 Error ------------------------------------------------ es_declare_module.js:27:2
 
+Cannot cast `num3` to string because number is incompatible with string.
+
 Error: es_declare_module.js:27
  27: (num3: string); // Error: number ~> string
       ^^^^ Cannot cast `num3` to string because number [1] is incompatible with string [2].
@@ -92,6 +111,8 @@ Error: es_declare_module.js:27
               ^^^^^^ [2]: string
 
 Error ------------------------------------------------ es_declare_module.js:32:2
+
+Cannot cast `42` to `C` because number is incompatible with `C`.
 
 Error: es_declare_module.js:32
  32: (42: C); // Error: number ~> C
@@ -104,6 +125,8 @@ Error: es_declare_module.js:32
 
 Error ------------------------------------------------ es_declare_module.js:34:2
 
+Cannot cast `42` to `CType` because number is incompatible with `C`.
+
 Error: es_declare_module.js:34
  34: (42: CType); // Error: number ~> CType
       ^^ Cannot cast `42` to `CType` because number [1] is incompatible with `C` [2].
@@ -115,11 +138,15 @@ Error: es_declare_module.js:34
 
 Error ------------------------------------------------ es_declare_module.js:36:9
 
+Cannot import the type `T` as a value. Use `import type` instead.
+
 Error: es_declare_module.js:36
  36: import {T} from "ES"; // Error: T is a type import, not a value
              ^ Cannot import the type `T` as a value. Use `import type` instead.
 
 Error ------------------------------------------------ es_declare_module.js:39:2
+
+Cannot cast `'asdf'` to `T2` because string is incompatible with number.
 
 Error: es_declare_module.js:39
  39: ('asdf': T2); // Error: string ~> number
@@ -131,6 +158,8 @@ Error: es_declare_module.js:39
                 ^^ [2]: number
 
 Error ------------------------------------------------ es_declare_module.js:41:9
+
+Cannot import `exports` because there is no `exports` export in `ES`.
 
 Error: es_declare_module.js:41
  41: import {exports as nope} from "ES"; // Error: Not an export

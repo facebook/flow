@@ -1,5 +1,8 @@
 Error --------------------------------------------------------- lib/test.js:8:10
 
+Cannot extend mixins `_module.C` with `D` because in property `foo` and then the
+return value, string is incompatible with number.
+
 Library type error:
 lib/test.js:8
   8:   foo(): string;
@@ -14,6 +17,8 @@ lib/test.js:8
 
 Error ----------------------------------------------------- declare_class.js:8:7
 
+Cannot assign empty string to `C.x` because string is incompatible with number.
+
 Error: declare_class.js:8
   8: C.x = "";
            ^^ Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
@@ -24,6 +29,9 @@ Error: declare_class.js:8
                      ^^^^^^ [2]: number
 
 Error ----------------------------------------------------- declare_class.js:9:7
+
+Cannot call `C.foo` with empty string bound to `x` because string is
+incompatible with number.
 
 Error: declare_class.js:9
   9: C.foo("");
@@ -36,6 +44,8 @@ Error: declare_class.js:9
 
 Error ---------------------------------------------------- declare_class.js:12:2
 
+Cannot cast `C.name` to number because string is incompatible with number.
+
 Error: declare_class.js:12
  12: (C.name: number); // error, it's a string
       ^^^^^^ Cannot cast `C.name` to number because string [1] is incompatible with number [2].
@@ -46,6 +56,9 @@ Error: declare_class.js:12
                 ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- declare_class.js:15:7
+
+Cannot call `D` with `123` bound to `x` because number is incompatible with
+string.
 
 Error: declare_class.js:15
  15: new D(123); // error, number ~> string

@@ -1,5 +1,7 @@
 Error ---------------------------------------------------- client_object.js:3:16
 
+Cannot assign `o.w.z.y` to `a` because string is incompatible with number.
+
 Error: client_object.js:3
   3: var a:number = o.w.z.y;
                     ^^^^^^^ Cannot assign `o.w.z.y` to `a` because string [1] is incompatible with number [2].

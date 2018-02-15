@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ unary.js:8:10
 
+string is not a number.
+
 Error: unary.js:8
   8:   return -y; // error, we don't allow coercion here
               ^^ string [1] is not a number.
@@ -8,6 +10,8 @@ Error: unary.js:8
                       ^^^^^^ [1]: string
 
 Error ----------------------------------------------------------- unary.js:12:11
+
+string is incompatible with number.
 
 Error: unary.js:12
  12:   return ~y;  // error, we don't allow coercion here
@@ -20,6 +24,8 @@ Error: unary.js:12
 
 Error ------------------------------------------------------------ unary.js:19:2
 
+Cannot cast `-1` to undefined because number is incompatible with undefined.
+
 Error: unary.js:19
  19: (-1: void); // error, number ~> void
       ^^ Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2].
@@ -31,6 +37,8 @@ Error: unary.js:19
 
 Error ----------------------------------------------------------- update.js:12:5
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
          ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -39,6 +47,8 @@ Error: update.js:12
                      ^^^^^^ [1]: string
 
 Error ----------------------------------------------------------- update.js:12:5
+
+Cannot assign number to `y` because number is incompatible with string.
 
 Error: update.js:12
  12:     y++; // error, we don't allow coercion here
@@ -51,6 +61,8 @@ Error: update.js:12
 
 Error ----------------------------------------------------------- update.js:14:5
 
+Cannot assign number to `y` because number is incompatible with string.
+
 Error: update.js:14
  14:     y++; // error, but you still can't write a number to a string
          ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
@@ -62,6 +74,8 @@ Error: update.js:14
 
 Error ----------------------------------------------------------- update.js:18:5
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
          ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -70,6 +84,8 @@ Error: update.js:18
                      ^^^^^^ [1]: string
 
 Error ----------------------------------------------------------- update.js:18:5
+
+Cannot assign number to `y` because number is incompatible with string.
 
 Error: update.js:18
  18:     y--; // error, we don't allow coercion here
@@ -82,6 +98,8 @@ Error: update.js:18
 
 Error ----------------------------------------------------------- update.js:22:5
 
+Cannot assign number to `y` because number is incompatible with string.
+
 Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
          ^^^ Cannot assign number to `y` because number [1] is incompatible with string [2].
@@ -93,6 +111,8 @@ Error: update.js:22
 
 Error ----------------------------------------------------------- update.js:22:7
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: update.js:22
  22:     ++y; // error, we don't allow coercion here
            ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -101,6 +121,8 @@ Error: update.js:22
                      ^^^^^^ [1]: string
 
 Error ----------------------------------------------------------- update.js:26:5
+
+Cannot assign number to `y` because number is incompatible with string.
 
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here
@@ -113,6 +135,8 @@ Error: update.js:26
 
 Error ----------------------------------------------------------- update.js:26:7
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: update.js:26
  26:     --y; // error, we don't allow coercion here
            ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -122,6 +146,8 @@ Error: update.js:26
 
 Error ----------------------------------------------------------- update.js:31:5
 
+Cannot reassign constant `y`.
+
 Error: update.js:31
  31:     y++; // error, can't update const
          ^ Cannot reassign constant `y` [1].
@@ -130,6 +156,8 @@ Error: update.js:31
                  ^ [1]: `y`
 
 Error ----------------------------------------------------------- update.js:32:5
+
+Cannot reassign constant `y`.
 
 Error: update.js:32
  32:     y--; // error, can't update const

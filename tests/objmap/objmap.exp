@@ -1,5 +1,8 @@
 Error --------------------------------------------------------- identity.js:20:6
 
+Cannot cast object literal to `Foo` because in property `a`, string is
+incompatible with number.
+
 Error: identity.js:20
  20:   a: 'asd', // Error: string ~> number
           ^^^^^ Cannot cast object literal to `Foo` because in property `a`, string [1] is incompatible with number [2].
@@ -10,6 +13,9 @@ Error: identity.js:20
               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:21:6
+
+Cannot cast object literal to `Foo` because in property `b`, string is
+incompatible with number.
 
 Error: identity.js:21
  21:   b: 'asd', // Error: string ~> number
@@ -22,6 +28,9 @@ Error: identity.js:21
 
 Error --------------------------------------------------------- identity.js:25:6
 
+Cannot cast `any` to `Foo` because in property `a`, string is incompatible with
+number.
+
 Error: identity.js:25
  25:   a: string, // Error: string ~> number
           ^^^^^^ Cannot cast `any` to `Foo` because in property `a`, string [1] is incompatible with number [2].
@@ -32,6 +41,9 @@ Error: identity.js:25
               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:26:6
+
+Cannot cast `any` to `Foo` because in property `b`, string is incompatible with
+number.
 
 Error: identity.js:26
  26:   b: string, // Error: string ~> number
@@ -44,6 +56,9 @@ Error: identity.js:26
 
 Error --------------------------------------------------------- identity.js:29:2
 
+Cannot cast object literal to `Foo` because property `a` is missing in object
+literal but exists in object type.
+
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
       ^^ Cannot cast object literal to `Foo` because property `a` is missing in object literal [1] but exists in object type [2].
@@ -54,6 +69,9 @@ Error: identity.js:29
             ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:29:2
+
+Cannot cast object literal to `Foo` because property `b` is missing in object
+literal but exists in object type.
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
@@ -66,6 +84,9 @@ Error: identity.js:29
 
 Error --------------------------------------------------------- identity.js:31:8
 
+Cannot cast `any` to `Foo` because property `a` is missing in object type but
+exists in object type.
+
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
             ^^ Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
@@ -76,6 +97,9 @@ Error: identity.js:31
                    ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:31:8
+
+Cannot cast `any` to `Foo` because property `b` is missing in object type but
+exists in object type.
 
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -88,6 +112,9 @@ Error: identity.js:31
 
 Error --------------------------------------------------------- identity.js:38:2
 
+Cannot cast `foo` to object type because in property `a`, number is incompatible
+with string.
+
 Error: identity.js:38
  38: (foo: {
       ^^^ Cannot cast `foo` to object type because in property `a`, number [1] is incompatible with string [2].
@@ -99,6 +126,9 @@ Error: identity.js:38
 
 Error --------------------------------------------------------- identity.js:38:2
 
+Cannot cast `foo` to object type because in property `b`, number is incompatible
+with string.
+
 Error: identity.js:38
  38: (foo: {
       ^^^ Cannot cast `foo` to object type because in property `b`, number [1] is incompatible with string [2].
@@ -109,6 +139,8 @@ Error: identity.js:38
             ^^^^^^ [2]: string
 
 Error --------------------------------------------------------- identity.js:43:2
+
+Cannot cast `foo.a` to empty because number is incompatible with empty.
 
 Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
@@ -250,6 +282,9 @@ Error: identity.js:70
 
 Error -------------------------------------------------------- issue-2674.js:7:2
 
+Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` is
+incompatible with string literal `BAR`.
+
 Error: issue-2674.js:7
   7: (a.FOO: 'BAR'); // error
       ^^^^^ Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
@@ -260,6 +295,9 @@ Error: issue-2674.js:7
                ^^^^^ [2]: string literal `BAR`
 
 Error -------------------------------------------------------- issue-2674.js:8:9
+
+Cannot assign `'BAR'` to `a.FOO` because string is incompatible with string
+literal `FOO`.
 
 Error: issue-2674.js:8
   8: a.FOO = 'BAR'; // error
@@ -272,6 +310,9 @@ Error: issue-2674.js:8
 
 Error ------------------------------------------------------- issue-2674.js:14:2
 
+Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` is
+incompatible with string literal `BAR`.
+
 Error: issue-2674.js:14
  14: (b.FOO : 'BAR'); // error
       ^^^^^ Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
@@ -282,6 +323,9 @@ Error: issue-2674.js:14
                 ^^^^^ [2]: string literal `BAR`
 
 Error ------------------------------------------------------- issue-2674.js:15:9
+
+Cannot assign `'BAR'` to `b.FOO` because string is incompatible with string
+literal `FOO`.
 
 Error: issue-2674.js:15
  15: b.FOO = 'BAR'; // error
@@ -294,6 +338,9 @@ Error: issue-2674.js:15
 
 Error ------------------------------------------------------- issue-2674.js:21:2
 
+Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` is
+incompatible with string literal `BAR`.
+
 Error: issue-2674.js:21
  21: (c[0]: 'BAR'); // error
       ^^^^ Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
@@ -304,6 +351,9 @@ Error: issue-2674.js:21
               ^^^^^ [2]: string literal `BAR`
 
 Error ------------------------------------------------------- issue-2674.js:22:8
+
+Cannot assign `'BAR'` to `c[0]` because string is incompatible with string
+literal `FOO`.
 
 Error: issue-2674.js:22
  22: c[0] = 'BAR'; // error
@@ -316,6 +366,9 @@ Error: issue-2674.js:22
 
 Error ----------------------------------------------------------- objmap.js:10:2
 
+Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` is
+incompatible with string literal `BAR`.
+
 Error: objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
       ^^^^^ Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
@@ -326,6 +379,8 @@ Error: objmap.js:10
                 ^^^^^ [2]: string literal `BAR`
 
 Error ----------------------------------------------------------- objmap.js:16:4
+
+Cannot cast `o.foo` to string because number is incompatible with string.
 
 Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string
@@ -338,6 +393,9 @@ Error: objmap.js:16
 
 Error --------------------------------------------------------- optional.js:13:2
 
+Cannot cast `o3.b` to array type because undefined is incompatible with array
+type.
+
 Error: optional.js:13
  13: (o3.b: Array<number | void>); // Error: void ~> array
       ^^^^ Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
@@ -348,6 +406,9 @@ Error: optional.js:13
               ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 Error --------------------------------------------------------- optional.js:17:2
+
+Cannot cast `o6.b` to array type because undefined is incompatible with array
+type.
 
 Error: optional.js:17
  17: (o6.b: Array<number | void>); // Error: void ~> array

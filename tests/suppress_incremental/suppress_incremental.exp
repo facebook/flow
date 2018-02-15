@@ -4,6 +4,8 @@ No errors!
 After introducing an error:
 Error -------------------------------------------------------------- test.js:3:2
 
+Cannot cast `123` to string because number is incompatible with string.
+
 Error: test.js:3
   3: (123: string); // error
       ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
@@ -21,6 +23,8 @@ No errors!
 
 After fixing the error, leaving the suppression:
 Warning ------------------------------------------------------------ test.js:3:1
+
+Unused suppression comment.
 
 Warning: test.js:3
   3: // $FlowIssue

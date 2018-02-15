@@ -1,10 +1,15 @@
 Error ---------------------------------------------------- copyProperties.js:6:6
 
+Cannot resolve name `copyProperties`.
+
 Error: copyProperties.js:6
   6:     (copyProperties()); // error, unknown global
           ^^^^^^^^^^^^^^ Cannot resolve name `copyProperties`.
 
 Error -------------------------------------------------- copyProperties.js:31:28
+
+Cannot cast `copyProperties(...)` to object type because in property `foo`,
+string is incompatible with number.
 
 Error: copyProperties.js:31
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
@@ -17,17 +22,23 @@ Error: copyProperties.js:31
 
 Error --------------------------------------------------------- invariant.js:6:5
 
+Cannot resolve name `invariant`.
+
 Error: invariant.js:6
   6:     invariant(x, 'truthy only'); // error, forgot to require invariant
          ^^^^^^^^^ Cannot resolve name `invariant`.
 
 Error --------------------------------------------------------- mergeInto.js:6:6
 
+Cannot resolve name `mergeInto`.
+
 Error: mergeInto.js:6
   6:     (mergeInto()); // error, unknown global
           ^^^^^^^^^ Cannot resolve name `mergeInto`.
 
 Error ------------------------------------------------------------- test.js:6:21
+
+Cannot assign `this.x` to `x` because number is incompatible with string.
 
 Error: test.js:6
   6:     var x: string = this.x;
@@ -39,6 +50,8 @@ Error: test.js:6
                   ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:7:10
+
+Cannot assign empty string to `this.y` because property `y` is missing in `Foo`.
 
 Error: test.js:7
   7:     this.y = "";

@@ -1,5 +1,8 @@
 Error ---------------------------------------------------------- spread.js:14:42
 
+Cannot call `funWithRestArray` because in the rest argument and then type
+argument `T`, string is incompatible with number.
+
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
                                               ^^^^^ Cannot call `funWithRestArray` because in the rest argument and then type argument `T`, string [1] is incompatible with number [2].
@@ -10,6 +13,9 @@ Error: spread.js:14
                                                                  ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- spread.js:14:42
+
+Cannot call `funWithRestArray` because in the rest argument, string is
+incompatible with number literal `123`.
 
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);

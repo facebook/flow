@@ -1,5 +1,7 @@
 Error -------------------------------------------------------- importtest.js:7:2
 
+Cannot cast `3` to `ID` because number is incompatible with `ID`.
+
 Error: importtest.js:7
   7: (3 : ID); // Error: number ~> ID
       ^ Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2].
@@ -10,6 +12,8 @@ Error: importtest.js:7
             ^^ [2]: `ID`
 
 Error ------------------------------------------------------ importtest.js:10:12
+
+Cannot return `x` because number is incompatible with `ID`.
 
 Error: importtest.js:10
  10:     return x;
@@ -22,6 +26,9 @@ Error: importtest.js:10
 
 Error ------------------------------------------------------ importtest.js:14:22
 
+Cannot call `Test.hide` with `x` bound to `x` because `ID` is incompatible with
+number.
+
 Error: importtest.js:14
  14:     return Test.hide(x); // Error: ID ~> number
                           ^ Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2].
@@ -32,6 +39,8 @@ Error: importtest.js:14
                                ^^^^^^ [2]: number. See: test.js:12
 
 Error ------------------------------------------------------ importtest.js:18:12
+
+Cannot return `x` because `ID` is incompatible with number.
 
 Error: importtest.js:18
  18:     return x; // Error: ID ~> ID2
@@ -44,6 +53,8 @@ Error: importtest.js:18
 
 Error ------------------------------------------------------ importtest.js:22:12
 
+Cannot return `x` because number is incompatible with `ID`.
+
 Error: importtest.js:22
  22:     return x;
                 ^ Cannot return `x` because number [1] is incompatible with `ID` [2].
@@ -54,6 +65,8 @@ Error: importtest.js:22
                                ^^ [2]: `ID`
 
 Error ------------------------------------------------------------- test.js:17:2
+
+Cannot cast `"hello"` to `MyNum` because string is incompatible with number.
 
 Error: test.js:17
  17: ("hello": MyNum) // Error: string ~> number

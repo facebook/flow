@@ -1,5 +1,8 @@
 Error ------------------------------------------------------------ init.js:34:20
 
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
+
 Error: init.js:34
  34:     var y:number = x; // error
                         ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -10,6 +13,9 @@ Error: init.js:34
                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ init.js:44:20
+
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
 
 Error: init.js:44
  44:     var y:number = x; // error
@@ -22,6 +28,9 @@ Error: init.js:44
 
 Error ------------------------------------------------------------ init.js:54:20
 
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
+
 Error: init.js:54
  54:     var y:number = x; // error
                         ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -32,6 +41,9 @@ Error: init.js:54
                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ init.js:66:20
+
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
 
 Error: init.js:66
  66:     var y:number = x; // error
@@ -44,6 +56,9 @@ Error: init.js:66
 
 Error ----------------------------------------------------------- init.js:118:18
 
+Cannot assign `x` to `y` because uninitialized variable is incompatible with
+number.
+
 Error: init.js:118
 118:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
@@ -54,6 +69,9 @@ Error: init.js:118
                ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- init.js:131:18
+
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
 
 Error: init.js:131
 131:   var y:number = x; // error
@@ -66,6 +84,9 @@ Error: init.js:131
 
 Error ----------------------------------------------------------- init.js:140:18
 
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
+
 Error: init.js:140
 140:   var y:number = x; // error
                       ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -76,6 +97,9 @@ Error: init.js:140
                ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- init.js:153:18
+
+Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
+with number.
 
 Error: init.js:153
 153:   var y:number = x; // error
@@ -88,17 +112,23 @@ Error: init.js:153
 
 Error ----------------------------------------------------------- return.js:28:3
 
+Unreachable code.
+
 Error: return.js:28
  28:   return "bar"; // unreachable
        ^^^^^^^^^^^^^ Unreachable code.
 
 Error ----------------------------------------------------------- return.js:64:3
 
+Unreachable code.
+
 Error: return.js:64
  64:   bar(); // unreachable
        ^^^^^^ Unreachable code.
 
 Error ------------------------------------------------------------- test.js:18:5
+
+Cannot call `x` because string is not a function.
 
 Error: test.js:18
  18:     x(); // string ~/> function call (no num or bool error)
@@ -109,6 +139,8 @@ Error: test.js:18
 
 Error ------------------------------------------------------------- test.js:19:5
 
+Cannot call `y` because a callable signature is missing in object literal.
+
 Error: test.js:19
  19:     y(); // object ~/> function call (no uninitialized error)
          ^ Cannot call `y` because a callable signature is missing in object literal [1].
@@ -117,6 +149,8 @@ Error: test.js:19
                    ^^ [1]: object literal
 
 Error ------------------------------------------------------------- test.js:41:5
+
+Unreachable code.
 
 Error: test.js:41
  41:     x(); // unreachable

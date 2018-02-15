@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ annot.js:3:17
 
+Cannot use `A` with less than 1 type argument.
+
 Error: annot.js:3
   3: class B extends A { } // OK, same as above
                      ^ Cannot use `A` [1] with less than 1 type argument.
@@ -8,6 +10,9 @@ Error: annot.js:3
                ^ [1]: `A`
 
 Error ----------------------------------------------------------- annot.js:10:36
+
+Cannot return `new A() || new A()` because in type argument `X`, property `x` is
+missing in object type but exists in object type.
 
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
@@ -20,6 +25,9 @@ Error: annot.js:10
 
 Error ------------------------------------------------------------- error.js:8:8
 
+Cannot call `newFn1` with `'string'` bound to the first parameter because string
+is incompatible with number.
+
 Error: error.js:8
   8: newFn1('string'); // The error should point here.
             ^^^^^^^^ Cannot call `newFn1` with `'string'` bound to the first parameter because string [1] is incompatible with number [2].
@@ -30,6 +38,9 @@ Error: error.js:8
                               ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- error.js:12:12
+
+Cannot call `newFn2` with function bound to the first parameter because in the
+first argument, string is incompatible with number.
 
 Error: error.js:12
  12: newFn2((x: string) => {}); // The error should point here.
@@ -42,6 +53,9 @@ Error: error.js:12
 
 Error ------------------------------------------------------------ error.js:15:5
 
+Cannot call `fn3` with `42` bound to `x` because number is incompatible with
+string.
+
 Error: error.js:15
  15: fn3(42, (x: string) => {}); // The error should point to 42 and not string.
          ^^ Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2].
@@ -52,6 +66,8 @@ Error: error.js:15
                    ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ error.js:20:2
+
+Cannot cast `newVal4` to string because number is incompatible with string.
 
 Error: error.js:20
  20: (newVal4: string); // The error should point here.
@@ -64,6 +80,9 @@ Error: error.js:20
 
 Error ----------------------------------- implicit_bounded_instantiation.js:15:8
 
+Cannot instantiate `C` because in type argument `T`, `Base` is incompatible with
+`Middle`.
+
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
             ^^^^ Cannot instantiate `C` because in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
@@ -74,6 +93,9 @@ Error: implicit_bounded_instantiation.js:15
                   ^^^^^^ [2]: `Middle`
 
 Error ----------------------------------- implicit_bounded_instantiation.js:15:8
+
+Cannot instantiate `C` because in type argument `T`, number is incompatible with
+`Middle`.
 
 Error: implicit_bounded_instantiation.js:15
  15: var a: C<*> = new C();
@@ -86,6 +108,9 @@ Error: implicit_bounded_instantiation.js:15
 
 Error ----------------------------------- implicit_bounded_instantiation.js:19:8
 
+Cannot call `a.meth` with `42` bound to `a` because number is incompatible with
+`Middle`.
+
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
             ^^ Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2].
@@ -96,6 +121,9 @@ Error: implicit_bounded_instantiation.js:19
                   ^^^^^^ [2]: `Middle`
 
 Error ----------------------------------- implicit_bounded_instantiation.js:20:8
+
+Cannot call `a.meth` with `new Base()` bound to `a` because `Base` is
+incompatible with `Middle`.
 
 Error: implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle
@@ -108,6 +136,9 @@ Error: implicit_bounded_instantiation.js:20
 
 Error ----------------------------------------------------------- phantom.js:7:2
 
+Cannot cast `a` to `B` because in type argument `Phantom`, number is
+incompatible with string.
+
 Error: phantom.js:7
   7: (a: B); // Error
       ^ Cannot cast `a` to `B` because in type argument `Phantom`, number [1] is incompatible with string [2].
@@ -118,6 +149,9 @@ Error: phantom.js:7
                   ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- phantom.js:15:2
+
+Cannot cast `c` to `D` because in type argument `Phantom`, number is
+incompatible with string.
 
 Error: phantom.js:15
  15: (c: D); // Error
@@ -130,6 +164,8 @@ Error: phantom.js:15
 
 Error ------------------------------------------------------------ poly.js:17:16
 
+Cannot assign `foo.x` to `x` because number is incompatible with string.
+
 Error: poly.js:17
  17: var x:string = foo.x;
                     ^^^^^ Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
@@ -140,6 +176,8 @@ Error: poly.js:17
              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ poly.js:17:16
+
+Cannot assign `foo.x` to `x` because number is incompatible with string.
 
 Error: poly.js:17
  17: var x:string = foo.x;
@@ -152,6 +190,9 @@ Error: poly.js:17
 
 Error ------------------------------------------------------------ poly.js:18:31
 
+Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string is
+incompatible with number.
+
 Error: poly.js:18
  18: var z:Foo<number> = Q.bar(foo,"");
                                    ^^ Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string [1] is incompatible with number [2].
@@ -162,6 +203,9 @@ Error: poly.js:18
                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test.js:8:10
+
+Cannot extend `C` with `D` because in property `foo` and then the first
+argument, number is incompatible with `X`.
 
 Error: test.js:8
   8:   foo(x: number): number { return x; } // error (specialization, see below)
@@ -175,6 +219,9 @@ Error: test.js:8
                    ^ [3]: `X`
 
 Error ------------------------------------------------------------- test.js:8:19
+
+Cannot extend `C` with `D` because in property `foo` and then the return value,
+number is incompatible with `X`.
 
 Error: test.js:8
   8:   foo(x: number): number { return x; } // error (specialization, see below)

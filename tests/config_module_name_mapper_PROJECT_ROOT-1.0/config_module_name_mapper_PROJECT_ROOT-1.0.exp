@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- main.js:6:17
 
+Cannot assign `test` to `b` because number is incompatible with string.
+
 Error: main.js:6
   6: var b: string = test; // Error: number ~> string
                      ^^^^ Cannot assign `test` to `b` because number [1] is incompatible with string [2].

@@ -32,6 +32,9 @@ Error: intersection.js:9
 
 Error ----------------------------------------------------- intersection.js:12:8
 
+Cannot cast `any` to `$Diff` because property `a` is missing in object type but
+exists in object type.
+
 Error: intersection.js:12
  12: ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
             ^^^^^^ Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
@@ -42,6 +45,9 @@ Error: intersection.js:12
                              ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------- intersection.js:14:8
+
+Cannot cast `any` to `$Diff` because property `a` is missing in object type but
+exists in object type.
 
 Error: intersection.js:14
  14: ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
@@ -54,6 +60,8 @@ Error: intersection.js:14
 
 Error ------------------------------------------------------------ lower.js:21:4
 
+Cannot get `y.age` because property `age` is missing in `Person`.
+
 Error: lower.js:21
  21: (y.age: number); // Error -- could be void
         ^^^ Cannot get `y.age` because property `age` is missing in `Person` [1].
@@ -62,6 +70,8 @@ Error: lower.js:21
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Person`
 
 Error ------------------------------------------------------------ lower.js:22:2
+
+Cannot cast `y.name` to number because string is incompatible with number.
 
 Error: lower.js:22
  22: (y.name: number); // Error -- should be string
@@ -74,6 +84,8 @@ Error: lower.js:22
 
 Error ------------------------------------------------------------ lower.js:23:3
 
+Cannot get `y.bla` because property `bla` is missing in `Person`.
+
 Error: lower.js:23
  23: y.bla; // Error -- key not found.
        ^^^ Cannot get `y.bla` because property `bla` is missing in `Person` [1].
@@ -82,6 +94,9 @@ Error: lower.js:23
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]: `Person`
 
 Error --------------------------------------------------------- undefined.js:8:8
+
+Cannot cast `any` to `$Diff` because property `a` is missing in object type but
+exists in object type.
 
 Error: undefined.js:8
   8: ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
@@ -93,6 +108,9 @@ Error: undefined.js:8
                              ^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------- undefined.js:10:12
+
+Cannot cast `any` to `$Diff` because in property `a`, undefined is incompatible
+with `A`.
 
 Error: undefined.js:10
  10: ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error

@@ -1,5 +1,8 @@
 Error ----------------------------------------------------- constructor.js:15:10
 
+Cannot get `this.y` because property `y` is missing in uninitialized this
+(expected super constructor call).
+
 Error: constructor.js:15
  15:     this.y; // error (no super call)
               ^ Cannot get `this.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
@@ -8,6 +11,9 @@ Error: constructor.js:15
              ^ [1]: uninitialized this (expected super constructor call)
 
 Error ----------------------------------------------------- constructor.js:16:10
+
+Cannot get `this.x` because property `x` is missing in uninitialized this
+(expected super constructor call).
 
 Error: constructor.js:16
  16:     this.x; // error (no super call)
@@ -18,6 +24,9 @@ Error: constructor.js:16
 
 Error ------------------------------------------------------ constructor.js:30:5
 
+Cannot get `f.y` because property `y` is missing in uninitialized this (expected
+super constructor call).
+
 Error: constructor.js:30
  30:   f.y; // error
          ^ Cannot get `f.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
@@ -26,6 +35,9 @@ Error: constructor.js:30
              ^ [1]: uninitialized this (expected super constructor call)
 
 Error ------------------------------------------------------ constructor.js:31:5
+
+Cannot get `f.x` because property `x` is missing in uninitialized this (expected
+super constructor call).
 
 Error: constructor.js:31
  31:   f.x; // error
@@ -36,6 +48,9 @@ Error: constructor.js:31
 
 Error ----------------------------------------------------- constructor.js:45:11
 
+Cannot get `super.x` because property `x` is missing in uninitialized this
+(expected super constructor call).
+
 Error: constructor.js:45
  45:     super.x; // error (no super call)
                ^ Cannot get `super.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
@@ -44,6 +59,9 @@ Error: constructor.js:45
              ^ [1]: uninitialized this (expected super constructor call)
 
 Error ----------------------------------------------------- constructor.js:63:17
+
+Cannot call `leaked_this.foo` because property `foo` is missing in uninitialized
+this (expected super constructor call).
 
 Error: constructor.js:63
  63:     leaked_this.foo()
@@ -54,6 +72,9 @@ Error: constructor.js:63
 
 Error ----------------------------------------------------- constructor.js:83:22
 
+Cannot call `this.foo` because property `foo` is missing in uninitialized this
+(expected super constructor call).
+
 Error: constructor.js:83
  83:     super(() => this.foo()); // error (no super call yet)
                           ^^^ Cannot call `this.foo` because property `foo` is missing in uninitialized this (expected super constructor call) [1].
@@ -62,6 +83,9 @@ Error: constructor.js:83
              ^ [1]: uninitialized this (expected super constructor call)
 
 Error ----------------------------------------------------------- super.js:10:11
+
+Cannot call `super` with `x` bound to `x` because string is incompatible with
+number.
 
 Error: super.js:10
  10:     super(x);
@@ -74,6 +98,9 @@ Error: super.js:10
 
 Error ------------------------------------------------------------ super.js:14:6
 
+Cannot cast `super.staticMethod(...)` to number because string is incompatible
+with number.
+
 Error: super.js:14
  14:     (super.staticMethod('foo'): number); // error, string !~> number
           ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2].
@@ -85,6 +112,9 @@ Error: super.js:14
 
 Error ----------------------------------------------------------- super.js:15:12
 
+Cannot call `super.doesntExist` because property `doesntExist` is missing in
+statics of `A`.
+
 Error: super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
                 ^^^^^^^^^^^ Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1].
@@ -93,6 +123,9 @@ Error: super.js:15
              ^ [1]: statics of `A`
 
 Error ----------------------------------------------------------- super.js:19:13
+
+Cannot call `super.f` with `0` bound to `x` because number is incompatible with
+string.
 
 Error: super.js:19
  19:     super.f(0);
@@ -104,6 +137,8 @@ Error: super.js:19
              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- super.js:20:18
+
+Cannot get `super.g` because property `g` is missing in `A`.
 
 Error: super.js:20
  20:     return super.g;

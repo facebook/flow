@@ -1,5 +1,7 @@
 Error -------------------------------------------------------------- lex.js:11:4
 
+Cannot cast `b` to string because number is incompatible with string.
+
 Error: lex.js:11
  11:   (b : string); // error: number ~> string
         ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
@@ -10,6 +12,8 @@ Error: lex.js:11
               ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- lex.js:26:4
+
+Cannot cast `b` to string because number is incompatible with string.
 
 Error: lex.js:26
  26:   (b : string); // error: number ~> string
@@ -22,6 +26,8 @@ Error: lex.js:26
 
 Error -------------------------------------------------------------- lex.js:37:4
 
+Cannot cast `b` to string because number is incompatible with string.
+
 Error: lex.js:37
  37:   (b : string); // error: number ~> string
         ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
@@ -32,6 +38,8 @@ Error: lex.js:37
               ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- lex.js:48:4
+
+Cannot cast `b` to number because string is incompatible with number.
 
 Error: lex.js:48
  48:   (b : number); // error: string ~> number
@@ -44,6 +52,8 @@ Error: lex.js:48
 
 Error -------------------------------------------------------------- lex.js:59:4
 
+Cannot cast `b` to string because number is incompatible with string.
+
 Error: lex.js:59
  59:   (b : string); // error: number ~> string
         ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
@@ -54,6 +64,8 @@ Error: lex.js:59
               ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- locals.js:1:16
+
+Cannot assign `0` to `x` because number is incompatible with string.
 
 Error: locals.js:1
   1: var x:string = 0;
@@ -66,6 +78,8 @@ Error: locals.js:1
 
 Error ------------------------------------------------------------ locals.js:2:7
 
+number is incompatible with string.
+
 Error: locals.js:2
   2: var x:number = 1;
            ^^^^^^ number [1] is incompatible with string [2].
@@ -76,6 +90,8 @@ Error: locals.js:2
              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- locals.js:2:16
+
+Cannot assign `1` to `x` because number is incompatible with string.
 
 Error: locals.js:2
   2: var x:number = 1;
@@ -110,6 +126,8 @@ Error: locals.js:12
 
 Error ---------------------------------------------------------- locals.js:12:16
 
+boolean is incompatible with number.
+
 Error: locals.js:12
  12:         var x: bool = true;
                     ^^^^ boolean [1] is incompatible with number [2].
@@ -120,6 +138,8 @@ Error: locals.js:12
                       ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- locals.js:12:16
+
+boolean is incompatible with string.
 
 Error: locals.js:12
  12:         var x: bool = true;
@@ -154,6 +174,9 @@ Error: locals.js:12
 
 Error ----------------------------------------------------------- locals.js:14:9
 
+Cannot call `foo` with `x` bound to `p` because number is incompatible with
+boolean.
+
 Error: locals.js:14
  14:     foo(x);
              ^ Cannot call `foo` with `x` bound to `p` because number [1] is incompatible with boolean [2].
@@ -165,6 +188,9 @@ Error: locals.js:14
 
 Error ----------------------------------------------------------- locals.js:14:9
 
+Cannot call `foo` with `x` bound to `p` because string is incompatible with
+boolean.
+
 Error: locals.js:14
  14:     foo(x);
              ^ Cannot call `foo` with `x` bound to `p` because string [1] is incompatible with boolean [2].
@@ -175,6 +201,8 @@ Error: locals.js:14
                        ^^^^ [2]: boolean
 
 Error ---------------------------------------------------------- locals.js:22:10
+
+Cannot return `x` because string is incompatible with number.
 
 Error: locals.js:22
  22:   return x;

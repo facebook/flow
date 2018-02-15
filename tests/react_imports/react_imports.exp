@@ -1,5 +1,8 @@
 Error --------------------------------------------------- commonjs-pascal.js:4:2
 
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
+
 Error: commonjs-pascal.js:4
   4: (React.Component: number); // Error
       ^^^^^^^^^^^^^^^ Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
@@ -51,6 +54,9 @@ Error: commonjs-pascal.js:6
 
 Error -------------------------------------------------- commonjs-pascal.js:7:14
 
+Cannot get `React.Missing` because property `Missing` is missing in module
+`react`.
+
 Error: commonjs-pascal.js:7
   7: (null: React.Missing); // Error
                   ^^^^^^^ Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
@@ -59,6 +65,9 @@ Error: commonjs-pascal.js:7
                                  ^^^^^^^^^^^^^^^^^ [1]: module `react`. See lib: <BUILTINS>/react.js:261
 
 Error ---------------------------------------------------------- commonjs.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
 
 Error: commonjs.js:4
   4: (React.Component: number); // Error
@@ -111,6 +120,9 @@ Error: commonjs.js:6
 
 Error --------------------------------------------------------- commonjs.js:7:14
 
+Cannot get `React.Missing` because property `Missing` is missing in module
+`react`.
+
 Error: commonjs.js:7
   7: (null: React.Missing); // Error
                   ^^^^^^^ Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
@@ -119,6 +131,9 @@ Error: commonjs.js:7
                      ^^^^^^^^^^^^^^^^ [1]: module `react`
 
 Error ------------------------------------------------- es-default-pascal.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
 
 Error: es-default-pascal.js:4
   4: (React.Component: number); // Error
@@ -171,6 +186,9 @@ Error: es-default-pascal.js:6
 
 Error ------------------------------------------------ es-default-pascal.js:7:14
 
+Cannot get `React.Missing` because property `Missing` is missing in module
+`react`.
+
 Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
                   ^^^^^^^ Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
@@ -179,6 +197,9 @@ Error: es-default-pascal.js:7
                                  ^^^^^^^^^^^^^^^^^ [1]: module `react`. See lib: <BUILTINS>/react.js:261
 
 Error -------------------------------------------------------- es-default.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
@@ -190,6 +211,8 @@ Error: es-default.js:4
                          ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- es-default.js:5:25
+
+Cannot get `React.Node` because property `Node` is missing in object type.
 
 Error: es-default.js:5
   5: ('Hello, world!': React.Node); // Error: Not in default export.
@@ -205,6 +228,8 @@ Error: es-default.js:5
 
 Error ------------------------------------------------------- es-default.js:6:12
 
+Cannot get `React.Node` because property `Node` is missing in object type.
+
 Error: es-default.js:6
   6: ({}: React.Node); // Error: Not in default export.
                 ^^^^ Cannot get `React.Node` because property `Node` is missing in object type [1].
@@ -219,6 +244,8 @@ Error: es-default.js:6
 
 Error ------------------------------------------------------- es-default.js:7:14
 
+Cannot get `React.Missing` because property `Missing` is missing in object type.
+
 Error: es-default.js:7
   7: (null: React.Missing); // Error: Not in default export.
                   ^^^^^^^ Cannot get `React.Missing` because property `Missing` is missing in object type [1].
@@ -232,6 +259,9 @@ Error: es-default.js:7
          -^ [1]: object type. See lib: <BUILTINS>/react.js:241
 
 Error ----------------------------------------------- es-namespace-pascal.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
@@ -284,6 +314,9 @@ Error: es-namespace-pascal.js:6
 
 Error ---------------------------------------------- es-namespace-pascal.js:7:14
 
+Cannot get `React.Missing` because property `Missing` is missing in module
+`React`.
+
 Error: es-namespace-pascal.js:7
   7: (null: React.Missing); // Error
                   ^^^^^^^ Cannot get `React.Missing` because property `Missing` is missing in module `React` [1].
@@ -292,6 +325,9 @@ Error: es-namespace-pascal.js:7
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: module `React`
 
 Error ------------------------------------------------------ es-namespace.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` is
+incompatible with number.
 
 Error: es-namespace.js:4
   4: (React.Component: number); // Error
@@ -343,6 +379,9 @@ Error: es-namespace.js:6
             ^^ object literal
 
 Error ----------------------------------------------------- es-namespace.js:7:14
+
+Cannot get `React.Missing` because property `Missing` is missing in module
+`react`.
 
 Error: es-namespace.js:7
   7: (null: React.Missing); // Error

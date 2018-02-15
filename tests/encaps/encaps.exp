@@ -1,5 +1,7 @@
 Error ----------------------------------------------------------- encaps.js:3:16
 
+Cannot get `a.x` because property `x` is missing in `A`.
+
 Error: encaps.js:3
   3: var s1 = `l${a.x}r`; // error: no prop x in A
                     ^ Cannot get `a.x` because property `x` is missing in `A` [1].
@@ -8,6 +10,8 @@ Error: encaps.js:3
                ^^^^^^^ [1]: `A`
 
 Error ----------------------------------------------------------- encaps.js:6:20
+
+Cannot assign `strings[0]` to `x` because string is incompatible with number.
 
 Error: encaps.js:6
   6:     var x:number = strings[0]; // error: string ~> number
@@ -19,6 +23,8 @@ Error: encaps.js:6
                  ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- encaps.js:16:2
+
+Cannot cast `s3.foo` to number because string is incompatible with number.
 
 Error: encaps.js:16
  16: (s3.foo: number); // error: string ~> number

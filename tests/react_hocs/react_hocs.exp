@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- Bad.js:11:21
 
+In property `bar`, number is incompatible with string.
+
 Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                          ^^^^^ In property `bar`, number [1] is incompatible with string [2].
@@ -11,6 +13,8 @@ Error: Bad.js:11
 
 Error ------------------------------------------------------------ Good.js:15:15
 
+Property `foo` is missing in props.
+
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                    ^^^ Property `foo` is missing in props [1].
@@ -19,6 +23,8 @@ Error: Good.js:15
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: props. See: Good_use.js:9
 
 Error ------------------------------------------------------------ Good.js:15:20
+
+Property `buz` is missing in props.
 
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
@@ -29,6 +35,8 @@ Error: Good.js:15
 
 Error ------------------------------------------------------------ Good.js:15:25
 
+Property `qux` is missing in props.
+
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                              ^^^ Property `qux` is missing in props [1].
@@ -38,6 +46,8 @@ Error: Good.js:15
 
 Error ------------------------------------------------------------ Good.js:17:10
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: Good.js:17
  17:     buz: buz * 2,
               ^^^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -46,6 +56,8 @@ Error: Good.js:17
                          ^^^^^^ [1]: string. See: Good_use.js:10
 
 Error ------------------------------------------------------------- Good.js:18:5
+
+string is incompatible with number.
 
 Error: Good.js:18
  18:     qux,
@@ -57,6 +69,8 @@ Error: Good.js:18
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ hocs.js:15:25
+
+Property `foo` is missing in object type but exists in `Props`.
 
 Error: hocs.js:15
                              v-

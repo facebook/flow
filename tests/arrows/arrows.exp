@@ -1,5 +1,7 @@
 Error -------------------------------------------------- advanced_arrows.js:7:34
 
+Cannot return `x` because number is incompatible with string.
+
 Error: advanced_arrows.js:7
   7: var bad = (x: number): string => x; // Error!
                                       ^ Cannot return `x` because number [1] is incompatible with string [2].
@@ -11,6 +13,8 @@ Error: advanced_arrows.js:7
 
 Error -------------------------------------------------- advanced_arrows.js:11:2
 
+Cannot cast `ident(...)` to number because string is incompatible with number.
+
 Error: advanced_arrows.js:11
  11: (ident("hi"): number); // Error
       ^^^^^^^^^^^ Cannot cast `ident(...)` to number because string [1] is incompatible with number [2].
@@ -21,6 +25,9 @@ Error: advanced_arrows.js:11
                      ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- arrows.js:7:36
+
+Cannot call `images.sort` with function bound to `compareFn` because in the
+return value, string is incompatible with number.
 
 Error: arrows.js:7
   7:     images = images.sort((a, b) => (a.width - b.width) + "");

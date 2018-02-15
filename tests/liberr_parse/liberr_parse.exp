@@ -1,5 +1,7 @@
 Error -------------------------------------------------- libs/parse_error.js:8:3
 
+Unexpected identifier
+
 Library parse error:
 libs/parse_error.js:8
   8:   methodB: () => any

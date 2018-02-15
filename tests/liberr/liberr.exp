@@ -1,11 +1,15 @@
 Error -------------------------------------------------- libs/type_error.js:2:34
 
+Cannot use type without exactly 1 type argument.
+
 Library type error:
 libs/type_error.js:2
   2: declare function foo(x: number): Array;
                                       ^^^^^ Cannot use type without exactly 1 type argument.
 
 Error ---------------------------------------------------------------- a.js:5:17
+
+Cannot assign `0` to `x` because number is incompatible with string.
 
 Error: a.js:5
   5: var x: string = 0;

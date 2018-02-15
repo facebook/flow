@@ -2,6 +2,8 @@
 Initial status:
 Error ------------------------------------------------------------- test.js:4:20
 
+Cannot resolve module `./data`.
+
 Error: test.js:4
   4: var data = require('./data');
                         ^^^^^^^^ Cannot resolve module `./data`.
@@ -14,6 +16,8 @@ No errors!
 
 Modify data.json:
 Error ------------------------------------------------------------- test.js:5:17
+
+Cannot assign `data.x` to `x` because string is incompatible with number.
 
 Error: test.js:5
   5: var x: number = data.x;
@@ -29,6 +33,8 @@ Found 1 error
 
 Delete data.json:
 Error ------------------------------------------------------------- test.js:4:20
+
+Cannot resolve module `./data`.
 
 Error: test.js:4
   4: var data = require('./data');

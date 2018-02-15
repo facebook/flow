@@ -1,5 +1,7 @@
 Error ---------------------------------------------------------- Profile.js:19:6
 
+Cannot cast `this.props.foo` to empty because number is incompatible with empty.
+
 Error: Profile.js:19
  19:     (this.props.foo: empty); // Error: number ~> empty
           ^^^^^^^^^^^^^^ Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2].
@@ -10,6 +12,9 @@ Error: Profile.js:19
                             ^^^^^ [2]: empty
 
 Error ---------------------------------------------------------- Profile.js:20:6
+
+Cannot cast `this.props.user.id` to empty because string is incompatible with
+empty.
 
 Error: Profile.js:20
  20:     (this.props.user.id: empty); // Error: string ~> empty
@@ -22,6 +27,9 @@ Error: Profile.js:20
 
 Error ---------------------------------------------------------- Profile.js:21:6
 
+Cannot cast `this.props.user.name` to empty because string is incompatible with
+empty.
+
 Error: Profile.js:21
  21:     (this.props.user.name: empty); // Error: string ~> empty
           ^^^^^^^^^^^^^^^^^^^^ Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2].
@@ -32,6 +40,9 @@ Error: Profile.js:21
                                   ^^^^^ [2]: empty
 
 Error ---------------------------------------------------------- Profile.js:22:6
+
+Cannot cast `this.props.user.pic.id` to empty because string is incompatible
+with empty.
 
 Error: Profile.js:22
  22:     (this.props.user.pic.id: empty); // Error: string ~> empty
@@ -44,6 +55,9 @@ Error: Profile.js:22
 
 Error --------------------------------------------------------- Profile.js:23:24
 
+Cannot create `ProfilePic` element because in property `image`, object literal
+is incompatible with `ProfilePic_imageRef`.
+
 Error: Profile.js:23
  23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create `ProfilePic` element because in property `image`, object literal [1] is incompatible with `ProfilePic_imageRef` [2].
@@ -54,6 +68,9 @@ Error: Profile.js:23
          ^^^^^^^^^^^^^^^^^^^ [2]: `ProfilePic_imageRef`. See: ProfilePic.graphql.js:11
 
 Error ------------------------------------------------------- ProfilePic.js:17:6
+
+Cannot cast `this.props.image.url` to empty because string is incompatible with
+empty.
 
 Error: ProfilePic.js:17
  17:     (this.props.image.url: empty); // Error: string ~> empty
@@ -66,6 +83,9 @@ Error: ProfilePic.js:17
 
 Error ------------------------------------------------------------- main.js:15:2
 
+Cannot create `Profile` element because property `foo` is missing in props but
+exists in object type.
+
 Error: main.js:15
  15: <Profile user={userRef} />; // Error: Missing foo
       ^^^^^^^ Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
@@ -76,6 +96,9 @@ Error: main.js:15
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error ------------------------------------------------------------- main.js:16:2
+
+Cannot create `Profile` element because property `user` is missing in props but
+exists in object type.
 
 Error: main.js:16
  16: <Profile foo={42} />; // Error: Missing user
@@ -88,6 +111,9 @@ Error: main.js:16
 
 Error ------------------------------------------------------------ main.js:17:29
 
+Cannot create `Profile` element because in property `foo`, string is
+incompatible with number.
+
 Error: main.js:17
  17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
                                  ^^^^^ Cannot create `Profile` element because in property `foo`, string [1] is incompatible with number [2].
@@ -98,6 +124,9 @@ Error: main.js:17
               ^^^^^^ [2]: number. See: Profile.js:14
 
 Error ------------------------------------------------------------- main.js:18:2
+
+Cannot create `Profile` element because property `foo` is missing in props but
+exists in object type.
 
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
@@ -110,6 +139,9 @@ Error: main.js:18
 
 Error ------------------------------------------------------------- main.js:18:2
 
+Cannot create `Profile` element because property `user` is missing in props but
+exists in object type.
+
 Error: main.js:18
  18: <Profile />; // Error: Missing user and foo
       ^^^^^^^ Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
@@ -120,6 +152,9 @@ Error: main.js:18
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type. See: Relay.js:46
 
 Error ------------------------------------------------------------ main.js:19:16
+
+Cannot create `Profile` element because in property `user`, object type is
+incompatible with `Profile_userRef`.
 
 Error: main.js:19
  19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
@@ -132,6 +167,9 @@ Error: main.js:19
 
 Error ------------------------------------------------------------ main.js:20:16
 
+Cannot create `Profile` element because in property `user`, object type is
+incompatible with `Profile_userRef`.
+
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
                     ^^^^ Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
@@ -142,6 +180,9 @@ Error: main.js:20
          ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
 Error ------------------------------------------------------------ main.js:20:26
+
+Cannot create `Profile` element because in property `foo`, string is
+incompatible with number.
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
@@ -154,6 +195,9 @@ Error: main.js:20
 
 Error ------------------------------------------------------------ main.js:21:23
 
+Cannot create `Profile` element because in property `user`, mixed is
+incompatible with `Profile_userRef`.
+
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
                            ^^^^^ Cannot create `Profile` element because in property `user`, mixed [1] is incompatible with `Profile_userRef` [2].
@@ -164,6 +208,9 @@ Error: main.js:21
          ^^^^^^^^^^^^^^^ [2]: `Profile_userRef`. See: Profile.graphql.js:12
 
 Error ------------------------------------------------------------ main.js:21:43
+
+Cannot create `Profile` element because in property `foo`, mixed is incompatible
+with number.
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
@@ -176,6 +223,9 @@ Error: main.js:21
 
 Error ------------------------------------------------------------ more.js:92:45
 
+Cannot create `SingularTest` element because in property `user`, null is
+incompatible with object type.
+
 Error: more.js:92
  92: <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
                                                  ^^^^ Cannot create `SingularTest` element because in property `user`, null [1] is incompatible with object type [2].
@@ -186,6 +236,9 @@ Error: more.js:92
                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------- more.js:95:2
+
+Cannot create `SingularTest` element because property `user` is missing in props
+but exists in object type.
 
 Error: more.js:95
  95: <SingularTest onClick={cb} string="x" nullableUser={null} />;
@@ -198,6 +251,9 @@ Error: more.js:95
 
 Error ------------------------------------------------------------ more.js:98:45
 
+Cannot create `SingularTest` element because in property `user.__fragments` and
+then type argument `T`, `FragmentTypeof` is incompatible with object type.
+
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
                                                  ^^^^^^^^^^ Cannot create `SingularTest` element because in property `user.__fragments` and then type argument `T`, `FragmentTypeof` [1] is incompatible with object type [2].
@@ -208,6 +264,9 @@ Error: more.js:98
                                          ^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------ more.js:98:45
+
+Cannot create `SingularTest` element because in property `user.__fragments` and
+then type argument `T`, object type is incompatible with `FragmentTypeof`.
 
 Error: more.js:98
  98: <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
@@ -220,6 +279,9 @@ Error: more.js:98
 
 Error ----------------------------------------------------------- more.js:126:17
 
+Cannot create `SingularTest` element because in property `optionalUser`, null is
+incompatible with object type.
+
 Error: more.js:126
 126:   optionalUser={null}
                      ^^^^ Cannot create `SingularTest` element because in property `optionalUser`, null [1] is incompatible with object type [2].
@@ -230,6 +292,9 @@ Error: more.js:126
                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------------- more.js:144:20
+
+Cannot create `PluralTest` element because in property `users`, null is
+incompatible with read-only array type.
 
 Error: more.js:144
 144: <PluralTest users={null} nullableUsers={null} />;
@@ -242,6 +307,9 @@ Error: more.js:144
 
 Error ------------------------------------------------------------ more.js:147:2
 
+Cannot create `PluralTest` element because property `users` is missing in props
+but exists in object type.
+
 Error: more.js:147
 147: <PluralTest nullableUsers={null} />;
       ^^^^^^^^^^ Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in object type [2].
@@ -252,6 +320,10 @@ Error: more.js:147
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------------- more.js:150:21
+
+Cannot create `PluralTest` element because in property `users`, type argument
+`T`, property `__fragments`, and then type argument `T`; `FragmentTypeof` is
+incompatible with object type.
 
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
@@ -264,6 +336,10 @@ Error: more.js:150
 
 Error ----------------------------------------------------------- more.js:150:21
 
+Cannot create `PluralTest` element because in property `users`, type argument
+`T`, property `__fragments`, and then type argument `T`; object type is
+incompatible with `FragmentTypeof`.
+
 Error: more.js:150
 150: <PluralTest users={[nonUserRef]} nullableUsers={null} />;
                          ^^^^^^^^^^ Cannot create `PluralTest` element because in property `users`, type argument `T`, property `__fragments`, and then type argument `T`; object type [1] is incompatible with `FragmentTypeof` [2].
@@ -274,6 +350,9 @@ Error: more.js:150
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: `FragmentTypeof`
 
 Error ----------------------------------------------------------- more.js:174:66
+
+Cannot create `PluralTest` element because in property `optionalUsers`, null is
+incompatible with read-only array type.
 
 Error: more.js:174
 174: <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
@@ -286,6 +365,9 @@ Error: more.js:174
 
 Error ----------------------------------------------------------- more.js:177:24
 
+Cannot create `SingularTest` element because in property `onClick`, string is
+incompatible with function type.
+
 Error: more.js:177
 177: <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
                             ^^^^ Cannot create `SingularTest` element because in property `onClick`, string [1] is incompatible with function type [2].
@@ -296,6 +378,9 @@ Error: more.js:177
                   ^^^^^^^^^^ [2]: function type
 
 Error ----------------------------------------------------------- more.js:180:36
+
+Cannot create `SingularTest` element because in property `string`, number is
+incompatible with string.
 
 Error: more.js:180
 180: <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;

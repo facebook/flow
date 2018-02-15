@@ -1,5 +1,8 @@
 Error ----------------------------------------------------- class_statics.js:6:3
 
+Cannot assign function to `C.g` because property `g` is missing in statics of
+`C`.
+
 Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
        ^ Cannot assign function to `C.g` because property `g` is missing in statics of `C` [1].
@@ -8,6 +11,9 @@ Error: class_statics.js:6
              ^ [1]: statics of `C`
 
 Error ---------------------------------------------------- class_statics.js:6:32
+
+Cannot call `C.f` with `x` bound to `x` because string is incompatible with
+number.
 
 Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
@@ -20,6 +26,9 @@ Error: class_statics.js:6
 
 Error ----------------------------------------------------- class_statics.js:7:5
 
+Cannot call `C.g` with `0` bound to `x` because number is incompatible with
+string.
+
 Error: class_statics.js:7
   7: C.g(0);
          ^ Cannot call `C.g` with `0` bound to `x` because number [1] is incompatible with string [2].
@@ -30,6 +39,8 @@ Error: class_statics.js:7
                         ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- class_statics.js:9:16
+
+Cannot assign `C.x` to `x` because string is incompatible with number.
 
 Error: class_statics.js:9
   9: var x:number = C.x;
@@ -42,6 +53,8 @@ Error: class_statics.js:9
 
 Error ---------------------------------------------------- class_statics.js:10:7
 
+Cannot assign `0` to `C.x` because number is incompatible with string.
+
 Error: class_statics.js:10
  10: C.x = 0;
            ^ Cannot assign `0` to `C.x` because number [1] is incompatible with string [2].
@@ -52,6 +65,8 @@ Error: class_statics.js:10
                   ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- funstatics.js:5:16
+
+Cannot assign `new C().f()` to `x` because number is incompatible with string.
 
 Error: funstatics.js:5
   5: var x:string = new C().f();

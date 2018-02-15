@@ -1,6 +1,9 @@
 No errors!
 Error ----------------------------------------------------------------- b.js:8:7
 
+Sketchy null check on string which is potentially an empty string. Perhaps you
+meant to check for null or undefined? (`sketchy-null-string`)
+
 Error: b.js:8
   8:   if (x) {}
            ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)

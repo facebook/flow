@@ -64,6 +64,7 @@ val eprintf : ('a, out_channel, unit) format -> 'a
 
 (* Whether the terminal supports color *)
 val supports_color : unit -> bool
+val should_color : color_mode -> bool
 
 (* Whether the terminal supports emoji *)
 val supports_emoji : unit -> bool

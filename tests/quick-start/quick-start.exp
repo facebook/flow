@@ -9,6 +9,8 @@ No errors!
 Touch @flow file, expect error.
 Error ----------------------------------------------------------------- a.js:4:2
 
+Cannot cast `0` to string because number is incompatible with string.
+
 Error: a.js:4
   4: (0: string);
       ^ Cannot cast `0` to string because number [1] is incompatible with string [2].
@@ -26,6 +28,8 @@ No errors!
 
 Revert file, expect error again.
 Error ----------------------------------------------------------------- a.js:4:2
+
+Cannot cast `0` to string because number is incompatible with string.
 
 Error: a.js:4
   4: (0: string);

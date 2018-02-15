@@ -22,6 +22,9 @@ Error: intersection-function.js:19
 
 Error -------------------------------------------- intersection-function.js:23:3
 
+Cannot call `b` with `42` bound to `x` because number is incompatible with
+string.
+
 Error: intersection-function.js:23
  23: b(42);
        ^^ Cannot call `b` with `42` bound to `x` because number [1] is incompatible with string [2].
@@ -32,6 +35,9 @@ Error: intersection-function.js:23
                              ^^^^^^ [2]: string
 
 Error -------------------------------------------- intersection-function.js:24:7
+
+Cannot call `b` with object literal bound to `x` because in property `p`, number
+is incompatible with string.
 
 Error: intersection-function.js:24
  24: b({p: 42});
@@ -108,6 +114,9 @@ Error: intersection-function.js:31
 
 Error -------------------------------------------- intersection-function.js:36:3
 
+Cannot call `d` with `42` bound to `x` because number is incompatible with
+string.
+
 Error: intersection-function.js:36
  36: d(42);
        ^^ Cannot call `d` with `42` bound to `x` because number [1] is incompatible with string [2].
@@ -119,6 +128,9 @@ Error: intersection-function.js:36
 
 Error -------------------------------------------- intersection-function.js:37:7
 
+Cannot call `d` with object literal bound to `x` because in property `a`, number
+is incompatible with string.
+
 Error: intersection-function.js:37
  37: d({a: 42});
            ^^ Cannot call `d` with object literal bound to `x` because in property `a`, number [1] is incompatible with string [2].
@@ -129,6 +141,9 @@ Error: intersection-function.js:37
                                  ^^^^^^ [2]: string
 
 Error ------------------------------------------- intersection-function.js:38:11
+
+Cannot call `d` with object literal bound to `x` because in property `a.b`,
+number is incompatible with string.
 
 Error: intersection-function.js:38
  38: d({a: {b: 42}});
@@ -162,6 +177,9 @@ Error: intersection-function.js:42
                              ^^^^^^^^^^^ object type
 
 Error -------------------------------------------- intersection-function.js:44:3
+
+Cannot call `e` with `new Y()` bound to `x` because in property `p`, number is
+incompatible with string.
 
 Error: intersection-function.js:44
  44: e(new Y());
@@ -200,6 +218,9 @@ Error: intersection-function.js:45
              ^^^^^^^ Z
 
 Error -------------------------------------------- intersection-function.js:46:7
+
+Cannot call `e` with object literal bound to `x` because in property `p`,
+boolean is incompatible with string.
 
 Error: intersection-function.js:46
  46: e({p: true});
@@ -242,6 +263,9 @@ Error: intersection-function.js:51
 
 Error -------------------------------------------- intersection-function.js:52:7
 
+Cannot call `f` with object literal bound to `x` because in property `p`, number
+is incompatible with string.
+
 Error: intersection-function.js:52
  52: f({p: 42});
            ^^ Cannot call `f` with object literal bound to `x` because in property `p`, number [1] is incompatible with string [2].
@@ -252,6 +276,9 @@ Error: intersection-function.js:52
                                  ^^^^^^ [2]: string
 
 Error -------------------------------------------- intersection-function.js:53:3
+
+Cannot call `f` with object literal bound to `x` because property `p` is missing
+in object literal but exists in object type.
 
 Error: intersection-function.js:53
  53: f({});
@@ -264,6 +291,9 @@ Error: intersection-function.js:53
 
 Error -------------------------------------------- intersection-function.js:54:3
 
+Cannot call `f` with `new Y()` bound to `x` because in property `p`, number is
+incompatible with string.
+
 Error: intersection-function.js:54
  54: f(new Y());
        ^^^^^^^ Cannot call `f` with `new Y()` bound to `x` because in property `p`, number [1] is incompatible with string [2].
@@ -274,6 +304,9 @@ Error: intersection-function.js:54
                                  ^^^^^^ [2]: string
 
 Error -------------------------------------------- intersection-function.js:55:3
+
+Cannot call `f` with `new Z()` bound to `x` because property `p` is missing in
+`Z` but exists in object type.
 
 Error: intersection-function.js:55
  55: f(new Z());
@@ -286,6 +319,9 @@ Error: intersection-function.js:55
 
 Error ------------------------------------------- intersection-function.js:56:10
 
+Cannot call `f` with array literal bound to `x` because in type argument `T`,
+number is incompatible with string.
+
 Error: intersection-function.js:56
  56: f(([1]: [number]));
               ^^^^^^ Cannot call `f` with array literal bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -296,6 +332,9 @@ Error: intersection-function.js:56
                                             ^^^^^^ [2]: string
 
 Error ------------------------------------------- intersection-function.js:57:13
+
+Cannot call `f` with array literal bound to `x` because in index 0, number is
+incompatible with string.
 
 Error: intersection-function.js:57
  57: f(([1, 2]: [number, number]));
@@ -308,6 +347,9 @@ Error: intersection-function.js:57
 
 Error ------------------------------------------- intersection-function.js:58:16
 
+Cannot call `f` with array literal bound to `x` because in type argument `T`,
+number is incompatible with string.
+
 Error: intersection-function.js:58
  58: f(([1, 2, 3]: [number, number, number]));
                     ^^^^^^ Cannot call `f` with array literal bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -318,6 +360,9 @@ Error: intersection-function.js:58
                                             ^^^^^^ [2]: string
 
 Error ------------------------------------------- intersection-function.js:59:23
+
+Cannot call `f` with `null` bound to `x` because in type argument `T`, number is
+incompatible with string.
 
 Error: intersection-function.js:59
  59: f(((null: any): Array<number> & {p: number}));
@@ -330,6 +375,9 @@ Error: intersection-function.js:59
 
 Error -------------------------------------------- intersection-function.js:63:3
 
+Cannot call `g` with `42` bound to `x` because number is incompatible with
+string.
+
 Error: intersection-function.js:63
  63: g(42);
        ^^ Cannot call `g` with `42` bound to `x` because number [1] is incompatible with string [2].
@@ -340,6 +388,9 @@ Error: intersection-function.js:63
                              ^^^^^^ [2]: string
 
 Error -------------------------------------------- intersection-function.js:64:3
+
+Cannot call `g` with object literal bound to `x` because object literal is
+incompatible with `Z`.
 
 Error: intersection-function.js:64
  64: g({});
@@ -352,6 +403,9 @@ Error: intersection-function.js:64
 
 Error -------------------------------------------- intersection-function.js:68:6
 
+Cannot call `h` with `2` bound to `b` because number is incompatible with object
+type.
+
 Error: intersection-function.js:68
  68: h(1, 2, 3);
           ^ Cannot call `h` with `2` bound to `b` because number [1] is incompatible with object type [2].
@@ -362,6 +416,9 @@ Error: intersection-function.js:68
                                         ^^ [2]: object type
 
 Error ------------------------------------------- intersection-function.js:72:12
+
+Cannot call `i` with `42` bound to `b` because number is incompatible with
+string.
 
 Error: intersection-function.js:72
  72: i(new Y(), 42);
@@ -374,6 +431,9 @@ Error: intersection-function.js:72
 
 Error -------------------------------------------- intersection-function.js:76:6
 
+Cannot call `j` with `2` bound to `b` because number is incompatible with
+string.
+
 Error: intersection-function.js:76
  76: j(1, 2);
           ^ Cannot call `j` with `2` bound to `b` because number [1] is incompatible with string [2].
@@ -384,6 +444,9 @@ Error: intersection-function.js:76
                                         ^^^^^^ [2]: string
 
 Error ------------------------------------------- intersection-function.js:80:10
+
+Cannot call `k` with object literal bound to `b` because in property `p`, number
+is incompatible with string.
 
 Error: intersection-function.js:80
  80: k(1, {p: 2});
@@ -396,6 +459,9 @@ Error: intersection-function.js:80
 
 Error ------------------------------------------- intersection-function.js:84:15
 
+Cannot call `m` with `new W()` bound to `x` because in type argument `T`, number
+is incompatible with string.
+
 Error: intersection-function.js:84
  84: m((new W(): W<number>));
                    ^^^^^^ Cannot call `m` with `new W()` bound to `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -406,6 +472,9 @@ Error: intersection-function.js:84
                                ^^^^^^ [2]: string
 
 Error -------------------------------------------------------- sentinel.js:11:17
+
+Cannot cast object literal to `X` because in property `p`, string is
+incompatible with number.
 
 Error: sentinel.js:11
  11: ({type: 'A', p: 'foo'}: X);
@@ -485,6 +554,8 @@ Error: union.js:18
 
 Error ------------------------------------------------------------ union.js:21:2
 
+Cannot cast `42` to `B` because number is incompatible with string.
+
 Error: union.js:21
  21: (42: B);
       ^^ Cannot cast `42` to `B` because number [1] is incompatible with string [2].
@@ -495,6 +566,9 @@ Error: union.js:21
                 ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ union.js:22:6
+
+Cannot cast object literal to `B` because in property `p`, number is
+incompatible with string.
 
 Error: union.js:22
  22: ({p: 42}: B);
@@ -571,6 +645,8 @@ Error: union.js:26
 
 Error ------------------------------------------------------------ union.js:29:2
 
+Cannot cast `42` to `D` because number is incompatible with string.
+
 Error: union.js:29
  29: (42: D);
       ^^ Cannot cast `42` to `D` because number [1] is incompatible with string [2].
@@ -582,6 +658,9 @@ Error: union.js:29
 
 Error ------------------------------------------------------------ union.js:30:6
 
+Cannot cast object literal to `D` because in property `a`, number is
+incompatible with string.
+
 Error: union.js:30
  30: ({a: 42}: D);
           ^^ Cannot cast object literal to `D` because in property `a`, number [1] is incompatible with string [2].
@@ -592,6 +671,9 @@ Error: union.js:30
                              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- union.js:31:10
+
+Cannot cast object literal to `D` because in property `a.b`, number is
+incompatible with string.
 
 Error: union.js:31
  31: ({a: {b: 42}}: D);
@@ -625,6 +707,9 @@ Error: union.js:34
                     ^^^^^^^^^^^ object type
 
 Error ------------------------------------------------------------ union.js:36:2
+
+Cannot cast `new Y()` to `E` because in property `p`, number is incompatible
+with string.
 
 Error: union.js:36
  36: (new Y(): E);
@@ -663,6 +748,9 @@ Error: union.js:37
             ^^^^^^^ Z
 
 Error ------------------------------------------------------------ union.js:38:6
+
+Cannot cast object literal to `E` because in property `p`, boolean is
+incompatible with string.
 
 Error: union.js:38
  38: ({p: true}: E);
@@ -705,6 +793,9 @@ Error: union.js:41
 
 Error ------------------------------------------------------------ union.js:42:6
 
+Cannot cast object literal to `F` because in property `p`, number is
+incompatible with string.
+
 Error: union.js:42
  42: ({p: 42}: F);
           ^^ Cannot cast object literal to `F` because in property `p`, number [1] is incompatible with string [2].
@@ -715,6 +806,9 @@ Error: union.js:42
                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ union.js:43:2
+
+Cannot cast object literal to `F` because property `p` is missing in object
+literal but exists in object type.
 
 Error: union.js:43
  43: ({}: F);
@@ -727,6 +821,9 @@ Error: union.js:43
 
 Error ------------------------------------------------------------ union.js:44:2
 
+Cannot cast `new Y()` to `F` because in property `p`, number is incompatible
+with string.
+
 Error: union.js:44
  44: (new Y(): F);
       ^^^^^^^ Cannot cast `new Y()` to `F` because in property `p`, number [1] is incompatible with string [2].
@@ -737,6 +834,9 @@ Error: union.js:44
                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ union.js:45:2
+
+Cannot cast `new Z()` to `F` because property `p` is missing in `Z` but exists
+in object type.
 
 Error: union.js:45
  45: (new Z(): F);
@@ -749,6 +849,9 @@ Error: union.js:45
 
 Error ------------------------------------------------------------ union.js:46:9
 
+Cannot cast array literal to `F` because in type argument `T`, number is
+incompatible with string.
+
 Error: union.js:46
  46: (([1]: [number]): F);
              ^^^^^^ Cannot cast array literal to `F` because in type argument `T`, number [1] is incompatible with string [2].
@@ -759,6 +862,9 @@ Error: union.js:46
                                              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- union.js:47:12
+
+Cannot cast array literal to `F` because in index 0, number is incompatible with
+string.
 
 Error: union.js:47
  47: (([1, 2]: [number, number]): F);
@@ -771,6 +877,9 @@ Error: union.js:47
 
 Error ----------------------------------------------------------- union.js:48:15
 
+Cannot cast array literal to `F` because in type argument `T`, number is
+incompatible with string.
+
 Error: union.js:48
  48: (([1, 2, 3]: [number, number, number]): F);
                    ^^^^^^ Cannot cast array literal to `F` because in type argument `T`, number [1] is incompatible with string [2].
@@ -781,6 +890,9 @@ Error: union.js:48
                                              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- union.js:49:22
+
+Cannot cast `null` to `F` because in type argument `T`, number is incompatible
+with string.
 
 Error: union.js:49
  49: (((null: any): Array<number> & {p: number}): F);
@@ -793,6 +905,8 @@ Error: union.js:49
 
 Error ------------------------------------------------------------ union.js:52:2
 
+Cannot cast `42` to `G` because number is incompatible with string.
+
 Error: union.js:52
  52: (42: G);
       ^^ Cannot cast `42` to `G` because number [1] is incompatible with string [2].
@@ -804,6 +918,9 @@ Error: union.js:52
 
 Error ------------------------------------------------------------ union.js:53:2
 
+Cannot cast object literal to `G` because object literal is incompatible with
+`Z`.
+
 Error: union.js:53
  53: ({}: G);
       ^^ Cannot cast object literal to `G` because object literal [1] is incompatible with `Z` [2].
@@ -814,6 +931,9 @@ Error: union.js:53
                          ^ [2]: `Z`
 
 Error ----------------------------------------------------------- union.js:56:14
+
+Cannot cast `new W()` to `M` because in type argument `T`, number is
+incompatible with string.
 
 Error: union.js:56
  56: ((new W(): W<number>): M);

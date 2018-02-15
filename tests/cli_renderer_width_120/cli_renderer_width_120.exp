@@ -1,5 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
 
+Cannot cast `null` to empty because null is incompatible with empty.
+
 Error: basic.js:6
   6: (null: empty); // Error: null ~> empty
       ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].

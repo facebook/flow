@@ -1,5 +1,8 @@
 Error -------------------------------------------------------------- fun.js:3:19
 
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
+
 Error: fun.js:3
   3: type ArgPos<+T> = T => void; // Error: +T in negative position
                        ^ Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -8,6 +11,9 @@ Error: fun.js:3
                     ^ [1]: `T`
 
 Error -------------------------------------------------------------- fun.js:4:24
+
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
 
 Error: fun.js:4
   4: type FlipArgNeg<-T> = (T => void) => void; // Error: -T in positive position
@@ -18,6 +24,9 @@ Error: fun.js:4
 
 Error -------------------------------------------------------------- fun.js:7:25
 
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
+
 Error: fun.js:7
   7: type RetNeg<-T> = () => T; // Error: -T in positive position
                              ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
@@ -26,6 +35,9 @@ Error: fun.js:7
                     ^ [1]: `T`
 
 Error ------------------------------------------------------------- fun.js:10:30
+
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
 
 Error: fun.js:10
  10: type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
@@ -36,6 +48,9 @@ Error: fun.js:10
 
 Error -------------------------------------------------------------- obj.js:2:25
 
+Cannot use `T` in an input/output position because `T` is expected to occur only
+in input positions.
+
 Error: obj.js:2
   2: type FieldNeg<-T> = {x: T}; // Error: -T in neutral position
                              ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
@@ -44,6 +59,9 @@ Error: obj.js:2
                       ^ [1]: `T`
 
 Error -------------------------------------------------------------- obj.js:3:25
+
+Cannot use `T` in an input/output position because `T` is expected to occur only
+in output positions.
 
 Error: obj.js:3
   3: type FieldPos<+T> = {x: T}; // Error: +T in neutral position
@@ -54,6 +72,9 @@ Error: obj.js:3
 
 Error -------------------------------------------------------------- obj.js:5:29
 
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
+
 Error: obj.js:5
   5: type PosFieldNeg<-T> = {+p: T}; // Error: -T in positive position
                                  ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
@@ -62,6 +83,9 @@ Error: obj.js:5
                          ^ [1]: `T`
 
 Error -------------------------------------------------------------- obj.js:8:34
+
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
 
 Error: obj.js:8
   8: type FlipPosFieldPos<+T> = ({+x: T}) => void; // Error: +T in negative position
@@ -72,6 +96,9 @@ Error: obj.js:8
 
 Error ------------------------------------------------------------- obj.js:11:29
 
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
+
 Error: obj.js:11
  11: type NegFieldPos<+T> = {-p: T}; // Error: +T in negative position
                                  ^ Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -80,6 +107,9 @@ Error: obj.js:11
                          ^ [1]: `T`
 
 Error ------------------------------------------------------------- obj.js:12:34
+
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
 
 Error: obj.js:12
  12: type FlipNegFieldNeg<-T> = ({-x: T}) => void; // Error: -T in positive position
@@ -90,6 +120,9 @@ Error: obj.js:12
 
 Error ------------------------------------------------------------- obj.js:15:29
 
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
+
 Error: obj.js:15
  15: type GetNeg<-T> = {get p(): T}; // Error: -T in positive position
                                  ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
@@ -98,6 +131,9 @@ Error: obj.js:15
                     ^ [1]: `T`
 
 Error ------------------------------------------------------------- obj.js:19:28
+
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
 
 Error: obj.js:19
  19: type SetPos<+T> = {set p(x:T): void}; // Error: +T in negative position

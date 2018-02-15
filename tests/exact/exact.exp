@@ -1,5 +1,8 @@
 Error --------------------------------------------------- error_continues.js:3:8
 
+Cannot cast `any` to object type because inexact object type is incompatible
+with exact object type.
+
 Error: error_continues.js:3
   3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
             ^^^^^^^^^^^ Cannot cast `any` to object type because inexact object type [1] is incompatible with exact object type [2].
@@ -10,6 +13,9 @@ Error: error_continues.js:3
                             ^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- error_continues.js:3:12
+
+Cannot cast `any` to object type because in property `p`, number is incompatible
+with string.
 
 Error: error_continues.js:3
   3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
@@ -22,6 +28,10 @@ Error: error_continues.js:3
 
 Error ---------------------------------------------------- exact_basics.js:49:20
 
+Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person`
+because property `first` is missing in `ExactPerson` but exists in object
+literal.
+
 Error: exact_basics.js:49
  49: takesExactlyPerson(subtypeOfPerson); // error
                         ^^^^^^^^^^^^^^^ Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is missing in `ExactPerson` [1] but exists in object literal [2].
@@ -32,6 +42,9 @@ Error: exact_basics.js:49
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object literal
 
 Error ---------------------------------------------------- exact_basics.js:61:20
+
+Cannot call `takesExactlyPerson` with `returnsSubtypeOfPerson()` bound to
+`person` because inexact `Person` is incompatible with exact `ExactPerson`.
 
 Error: exact_basics.js:61
  61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
@@ -44,6 +57,10 @@ Error: exact_basics.js:61
 
 Error ---------------------------------------------------- exact_basics.js:71:20
 
+Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to
+`person` because property `first` is missing in `ExactPerson` but exists in
+`ExactPerson2`.
+
 Error: exact_basics.js:71
  71: takesExactlyPerson(returnsExactlyPerson2()); // error
                         ^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is missing in `ExactPerson` [1] but exists in `ExactPerson2` [2].
@@ -54,6 +71,10 @@ Error: exact_basics.js:71
                                                  ^^^^^^^^^^^^ [2]: `ExactPerson2`
 
 Error ---------------------------------------------------- exact_basics.js:85:23
+
+Cannot call `takesSubtypeOfPerson2` with `returnsExactlyPerson()` bound to
+`person2` because property `first` is missing in `ExactPerson` but exists in
+`Person2`.
 
 Error: exact_basics.js:85
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
@@ -66,6 +87,8 @@ Error: exact_basics.js:85
 
 Error ---------------------------------------------------- exact_basics.js:94:17
 
+Cannot create exact type from `PersonPred`.
+
 Error: exact_basics.js:94
  94: takesPersonPred(returnsExactlyPersonPred()); // error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot create exact type from `PersonPred` [1].
@@ -74,6 +97,8 @@ Error: exact_basics.js:94
                                                            ^^^^^^^^^^ [1]: `PersonPred`
 
 Error ------------------------------------------------------- prop_test.js:28:13
+
+Cannot get `pc.state` because property `state` is missing in `Person`.
 
 Error: prop_test.js:28
  28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
@@ -111,6 +136,8 @@ Error: unsealed.js:14
 
 Error ------------------------------------------------------- unsealed2.js:15:12
 
+Cannot return `x.q` because string is incompatible with number.
+
 Error: unsealed2.js:15
  15:     return x.q;
                 ^^^ Cannot return `x.q` because string [1] is incompatible with number [2].
@@ -122,6 +149,9 @@ Error: unsealed2.js:15
 
 Error ---------------------------------------------------------- use_ops.js:2:31
 
+Cannot assign `a` to `b` because in property `p`, inexact object type is
+incompatible with exact object type.
+
 Error: use_ops.js:2
   2: var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
                                    ^ Cannot assign `a` to `b` because in property `p`, inexact object type [1] is incompatible with exact object type [2].
@@ -132,6 +162,9 @@ Error: use_ops.js:2
                    ^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------------- use_ops.js:6:3
+
+Cannot call `f` with `o` bound to `o` because inexact object type is
+incompatible with exact object type.
 
 Error: use_ops.js:6
   6: f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)

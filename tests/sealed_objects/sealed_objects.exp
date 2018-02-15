@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- test.js:2:21
 
+Cannot get `o1.y` because property `y` is missing in object literal.
+
 Error: test.js:2
   2: var s1: string = o1.y; // error
                          ^ Cannot get `o1.y` because property `y` is missing in object literal [1].
@@ -8,6 +10,9 @@ Error: test.js:2
                 ^^^^^^^^ [1]: object literal
 
 Error ------------------------------------------------------------- test.js:7:39
+
+Cannot assign object literal to `o3` because property `y` is missing in object
+type but exists in object type.
 
 Error: test.js:7
   7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
@@ -19,6 +24,9 @@ Error: test.js:7
                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------ test.js:19:76
+
+Cannot assign object literal to `o7` because in property `y`, number is
+incompatible with string.
 
 Error: test.js:19
  19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error

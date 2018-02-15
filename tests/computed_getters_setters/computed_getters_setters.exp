@@ -1,10 +1,14 @@
 Error ------------------------------------------ computed_getters_setters.js:6:3
 
+Computed getters and setters are not yet supported.
+
 Error: computed_getters_setters.js:6
   6:   get ['d']() { return 'foo'; },
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Computed getters and setters are not yet supported.
 
 Error ------------------------------------------ computed_getters_setters.js:7:3
+
+Computed getters and setters are not yet supported.
 
 Error: computed_getters_setters.js:7
   7:   set ['d'](x: number) {},
@@ -12,11 +16,15 @@ Error: computed_getters_setters.js:7
 
 Error ----------------------------------------- computed_getters_setters.js:13:3
 
+Computed property keys not supported.
+
 Error: computed_getters_setters.js:13
  13:   get ['d']() { return 'foo'; }
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Computed property keys not supported.
 
 Error ----------------------------------------- computed_getters_setters.js:14:3
+
+Computed property keys not supported.
 
 Error: computed_getters_setters.js:14
  14:   set ['d'](x: number) {}

@@ -1,16 +1,22 @@
 Error ------------------------------------------------------------ annot.js:1:17
 
+Cannot resolve module `./unknown_class`.
+
 Error: annot.js:1
   1: var A = require('./unknown_class');
                      ^^^^^^^^^^^^^^^^^ Cannot resolve module `./unknown_class`.
 
 Error ------------------------------------------------------------- annot.js:5:7
 
+Missing type annotation for `x`.
+
 Error: annot.js:5
   5:   bar(x) { }
            ^ Missing type annotation for `x`.
 
 Error ------------------------------------------------------------- fun.js:11:16
+
+Cannot assign `f(...)` to `x` because number is incompatible with string.
 
 Error: fun.js:11
  11: var x:string = f(0);
@@ -22,6 +28,8 @@ Error: fun.js:11
              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- obj.js:10:16
+
+Cannot assign `o.x` to `x` because number is incompatible with string.
 
 Error: obj.js:10
  10: var x:string = o.x;

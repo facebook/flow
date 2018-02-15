@@ -1,5 +1,8 @@
 Error -------------------------------------------------------- issue-598.js:7:48
 
+Cannot return `y` because in type argument `A`, number is incompatible with
+string.
+
 Error: issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
                                                     ^ Cannot return `y` because in type argument `A`, number [1] is incompatible with string [2].
@@ -10,6 +13,8 @@ Error: issue-598.js:7
                                      ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- test.js:6:2
+
+Cannot cast `p.x` to string because number is incompatible with string.
 
 Error: test.js:6
   6: (p.x: string); // error
@@ -22,6 +27,8 @@ Error: test.js:6
 
 Error -------------------------------------------------------------- test.js:9:2
 
+Cannot cast `pstar` to number because `P` is incompatible with number.
+
 Error: test.js:9
   9: (pstar: number); // error, but limit potentially unbounded number of errors!
       ^^^^^ Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
@@ -32,6 +39,8 @@ Error: test.js:9
                ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test.js:13:2
+
+Cannot cast `pstar.x` to string because number is incompatible with string.
 
 Error: test.js:13
  13: (pstar.x: string); // error
@@ -44,6 +53,8 @@ Error: test.js:13
 
 Error ------------------------------------------------------------- test.js:16:2
 
+Cannot cast `pstar.x` to string because `P` is incompatible with string.
+
 Error: test.js:16
  16: (pstar.x: string); // error
       ^^^^^^^ Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
@@ -55,6 +66,9 @@ Error: test.js:16
 
 Error ----------------------------------------------------------- test2.js:30:12
 
+Cannot cast `new C()` to `D` because in type argument `X`, number is
+incompatible with string.
+
 Error: test2.js:30
  30: ((new C: C<number>): D<string>) // error: number ~/~ string
                 ^^^^^^ Cannot cast `new C()` to `D` because in type argument `X`, number [1] is incompatible with string [2].
@@ -65,6 +79,9 @@ Error: test2.js:30
                               ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- test3.js:13:10
+
+Cannot return `x` because in the return value, a callable signature is missing
+in `Q` but exists in `P`.
 
 Error: test3.js:13
  13:   return x; // terminate despite expanding types, error

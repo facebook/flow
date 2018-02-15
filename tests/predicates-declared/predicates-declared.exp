@@ -1,10 +1,14 @@
 Error ----------------------------------------------- sanity-conditional.js:5:50
 
+Unexpected token =
+
 Error: sanity-conditional.js:5
   5: declare function foo(x: string): mixed %checks(x = "1");
                                                       ^ Unexpected token =
 
 Error --------------------------------------------- sanity-fall-through.js:12:10
+
+Cannot return `1` because number is incompatible with string.
 
 Error: sanity-fall-through.js:12
  12:   return 1;
@@ -17,6 +21,8 @@ Error: sanity-fall-through.js:12
 
 Error --------------------------------------------- sanity-invalid-calls.js:10:8
 
+Cannot call `1` because number is not a function.
+
 Error: sanity-invalid-calls.js:10
  10:   if ((1)(s)) {
             ^ Cannot call `1` because number [1] is not a function.
@@ -26,6 +32,8 @@ Error: sanity-invalid-calls.js:10
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
 
+Cannot call `pred + 1` because number is not a function.
+
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
             ^^^^^^^^ Cannot call `pred + 1` because number [1] is not a function.
@@ -34,6 +42,8 @@ Error: sanity-invalid-calls.js:14
               ^^^^^^^^ [1]: number
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
+
+Cannot add `pred` and `1` because function type is incompatible with number.
 
 Error: sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
@@ -46,6 +56,8 @@ Error: sanity-invalid-calls.js:14
 
 Error -------------------------------------------- sanity-is-string-bug.js:13:14
 
+Cannot call `x.join` because property `join` is missing in `String`.
+
 Error: sanity-is-string-bug.js:13
  13:     return x.join();    // error: both string and Array<string> can flow to x
                   ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
@@ -54,6 +66,9 @@ Error: sanity-is-string-bug.js:13
                        ^^^^^^ [1]: `String`
 
 Error ---------------------------------------- sanity-parameter-mismatch.js:10:8
+
+Cannot call `foo` with `3` bound to `types` because number is incompatible with
+string.
 
 Error: sanity-parameter-mismatch.js:10
  10: foo(3, 3);
@@ -66,11 +81,15 @@ Error: sanity-parameter-mismatch.js:10
 
 Error -------------------------------------------- sanity-pred-with-body.js:6:34
 
+Cannot declare predicate when a function body is present.
+
 Error: sanity-pred-with-body.js:6
   6: function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
 Error ----------------------------------------------- sanity-return-type.js:3:47
+
+Cannot return `Array.isArray(...)` because boolean is incompatible with string.
 
 Error: sanity-return-type.js:3
   3: declare function f2(x: mixed): string %checks(Array.isArray(x));

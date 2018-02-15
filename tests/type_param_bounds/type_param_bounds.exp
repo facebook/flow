@@ -1,5 +1,8 @@
 Error ------------------------------------------------ type_param_bounds.js:4:10
 
+Cannot instantiate `X` because in type argument `T`, string is incompatible with
+number.
+
 Error: type_param_bounds.js:4
   4: (true: X<string>);
               ^^^^^^ Cannot instantiate `X` because in type argument `T`, string [1] is incompatible with number [2].

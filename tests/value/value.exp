@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ value.js:3:16
 
+Cannot assign `o["x"]` to `y` because number is incompatible with string.
+
 Error: value.js:3
   3: var y:string = o["x"];
                     ^^^^^^ Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2].
@@ -10,6 +12,9 @@ Error: value.js:3
              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ value.js:6:14
+
+Cannot assign `"hello"` to `table["x"]` because string is incompatible with
+number.
 
 Error: value.js:6
   6: table["x"] = "hello";

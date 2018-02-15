@@ -1,5 +1,7 @@
 Error ------------------------------------------------------- base_class.js:9:46
 
+string is incompatible with number.
+
 Error: base_class.js:9
   9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                   ^^^^^^ string [1] is incompatible with number [2].
@@ -10,6 +12,8 @@ Error: base_class.js:9
                                            ^^^^^^ [2]: number
 
 Error ------------------------------------------------------ base_class.js:16:53
+
+string is incompatible with number.
 
 Error: base_class.js:16
  16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
@@ -22,6 +26,9 @@ Error: base_class.js:16
 
 Error ------------------------------------------------------- base_class.js:33:2
 
+Cannot cast `o.annotatedField` to string because number is incompatible with
+string.
+
 Error: base_class.js:33
  33: (o.annotatedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^ Cannot cast `o.annotatedField` to string because number [1] is incompatible with string [2].
@@ -32,6 +39,9 @@ Error: base_class.js:33
                           ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- base_class.js:35:2
+
+Cannot cast `Base.annotatedField` to string because number is incompatible with
+string.
 
 Error: base_class.js:35
  35: (Base.annotatedField: string); // Error: number ~> string
@@ -44,6 +54,9 @@ Error: base_class.js:35
 
 Error ------------------------------------------------------- base_class.js:41:2
 
+Cannot cast `o.initializedField` to string because number is incompatible with
+string.
+
 Error: base_class.js:41
  41: (o.initializedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^ Cannot cast `o.initializedField` to string because number [1] is incompatible with string [2].
@@ -54,6 +67,9 @@ Error: base_class.js:41
                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- base_class.js:43:2
+
+Cannot cast `Base.initializedField` to number because string is incompatible
+with number.
 
 Error: base_class.js:43
  43: (Base.initializedField: number); // Error: string ~> number
@@ -66,6 +82,9 @@ Error: base_class.js:43
 
 Error ------------------------------------------------------- base_class.js:49:2
 
+Cannot cast `o.initializedFieldWithThis` to string because number is
+incompatible with string.
+
 Error: base_class.js:49
  49: (o.initializedFieldWithThis: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.initializedFieldWithThis` to string because number [1] is incompatible with string [2].
@@ -76,6 +95,9 @@ Error: base_class.js:49
                                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- base_class.js:51:2
+
+Cannot cast `Base.initializedFieldWithThis` to number because string is
+incompatible with number.
 
 Error: base_class.js:51
  51: (Base.initializedFieldWithThis: number); // Error: string ~> number
@@ -88,6 +110,9 @@ Error: base_class.js:51
 
 Error ------------------------------------------------------- base_class.js:59:2
 
+Cannot cast `o.annotatedInitializedFieldValid` to number because null or
+undefined is incompatible with number.
+
 Error: base_class.js:59
  59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.annotatedInitializedFieldValid` to number because null or undefined [1] is incompatible with number [2].
@@ -98,6 +123,9 @@ Error: base_class.js:59
                                           ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- base_class.js:61:2
+
+Cannot cast `Base.annotatedInitializedFieldValid` to number because null or
+undefined is incompatible with number.
 
 Error: base_class.js:61
  61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
@@ -110,6 +138,9 @@ Error: base_class.js:61
 
 Error ------------------------------------------------------- base_class.js:70:2
 
+Cannot cast `o.annotatedInitializedFieldInvalid` to string because number is
+incompatible with string.
+
 Error: base_class.js:70
  70: (o.annotatedInitializedFieldInvalid: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.annotatedInitializedFieldInvalid` to string because number [1] is incompatible with string [2].
@@ -120,6 +151,9 @@ Error: base_class.js:70
                                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- base_class.js:72:2
+
+Cannot cast `Base.annotatedInitializedFieldInvalid` to string because number is
+incompatible with string.
 
 Error: base_class.js:72
  72: (Base.annotatedInitializedFieldInvalid: string); // Error: number ~> string
@@ -132,6 +166,8 @@ Error: base_class.js:72
 
 Error ---------------------------------------------------- derived_class.js:9:51
 
+string is incompatible with number.
+
 Error: derived_class.js:9
   9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                        ^^^^^^ string [1] is incompatible with number [2].
@@ -142,6 +178,8 @@ Error: derived_class.js:9
                                                 ^^^^^^ [2]: number
 
 Error --------------------------------------------------- derived_class.js:16:58
+
+string is incompatible with number.
 
 Error: derived_class.js:16
  16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
@@ -154,6 +192,8 @@ Error: derived_class.js:16
 
 Error --------------------------------------------------- derived_class.js:28:52
 
+string is incompatible with number.
+
 Error: derived_class.js:28
  28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                         ^^^^^^ string [1] is incompatible with number [2].
@@ -164,6 +204,8 @@ Error: derived_class.js:28
                                                  ^^^^^^ [2]: number
 
 Error --------------------------------------------------- derived_class.js:35:59
+
+string is incompatible with number.
 
 Error: derived_class.js:35
  35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
@@ -176,6 +218,9 @@ Error: derived_class.js:35
 
 Error ---------------------------------------------------- derived_class.js:61:2
 
+Cannot cast `o.base_annotatedField` to string because number is incompatible
+with string.
+
 Error: derived_class.js:61
  61: (o.base_annotatedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.base_annotatedField` to string because number [1] is incompatible with string [2].
@@ -186,6 +231,9 @@ Error: derived_class.js:61
                                ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:63:2
+
+Cannot cast `Child.base_annotatedField` to string because number is incompatible
+with string.
 
 Error: derived_class.js:63
  63: (Child.base_annotatedField: string); // Error: number ~> string
@@ -198,6 +246,9 @@ Error: derived_class.js:63
 
 Error ---------------------------------------------------- derived_class.js:66:2
 
+Cannot cast `o.child_annotatedField` to string because number is incompatible
+with string.
+
 Error: derived_class.js:66
  66: (o.child_annotatedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.child_annotatedField` to string because number [1] is incompatible with string [2].
@@ -208,6 +259,9 @@ Error: derived_class.js:66
                                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:68:2
+
+Cannot cast `Child.child_annotatedField` to string because number is
+incompatible with string.
 
 Error: derived_class.js:68
  68: (Child.child_annotatedField: string); // Error: number ~> string
@@ -220,6 +274,9 @@ Error: derived_class.js:68
 
 Error ---------------------------------------------------- derived_class.js:74:2
 
+Cannot cast `o.base_initializedField` to string because number is incompatible
+with string.
+
 Error: derived_class.js:74
  74: (o.base_initializedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.base_initializedField` to string because number [1] is incompatible with string [2].
@@ -230,6 +287,9 @@ Error: derived_class.js:74
                                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:76:2
+
+Cannot cast `Child.base_initializedField` to number because string is
+incompatible with number.
 
 Error: derived_class.js:76
  76: (Child.base_initializedField: number); // Error: string ~> number
@@ -242,6 +302,9 @@ Error: derived_class.js:76
 
 Error ---------------------------------------------------- derived_class.js:79:2
 
+Cannot cast `o.child_initializedField` to string because number is incompatible
+with string.
+
 Error: derived_class.js:79
  79: (o.child_initializedField: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.child_initializedField` to string because number [1] is incompatible with string [2].
@@ -252,6 +315,9 @@ Error: derived_class.js:79
                                   ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:81:2
+
+Cannot cast `Child.child_initializedField` to number because string is
+incompatible with number.
 
 Error: derived_class.js:81
  81: (Child.child_initializedField: number); // Error: string ~> number
@@ -264,6 +330,9 @@ Error: derived_class.js:81
 
 Error ---------------------------------------------------- derived_class.js:87:2
 
+Cannot cast `o.base_initializedFieldWithThis` to string because number is
+incompatible with string.
+
 Error: derived_class.js:87
  87: (o.base_initializedFieldWithThis: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.base_initializedFieldWithThis` to string because number [1] is incompatible with string [2].
@@ -274,6 +343,9 @@ Error: derived_class.js:87
                                          ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:89:2
+
+Cannot cast `Child.base_initializedFieldWithThis` to number because string is
+incompatible with number.
 
 Error: derived_class.js:89
  89: (Child.base_initializedFieldWithThis: number); // Error: string ~> number
@@ -286,6 +358,9 @@ Error: derived_class.js:89
 
 Error ---------------------------------------------------- derived_class.js:92:2
 
+Cannot cast `o.child_initializedFieldWithThis` to string because number is
+incompatible with string.
+
 Error: derived_class.js:92
  92: (o.child_initializedFieldWithThis: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.child_initializedFieldWithThis` to string because number [1] is incompatible with string [2].
@@ -296,6 +371,9 @@ Error: derived_class.js:92
                                           ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- derived_class.js:94:2
+
+Cannot cast `Child.child_initializedFieldWithThis` to number because string is
+incompatible with number.
 
 Error: derived_class.js:94
  94: (Child.child_initializedFieldWithThis: number); // Error: string ~> number
@@ -308,6 +386,9 @@ Error: derived_class.js:94
 
 Error --------------------------------------------------- derived_class.js:102:2
 
+Cannot cast `o.base_annotatedInitializedFieldValid` to number because null or
+undefined is incompatible with number.
+
 Error: derived_class.js:102
 102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.base_annotatedInitializedFieldValid` to number because null or undefined [1] is incompatible with number [2].
@@ -318,6 +399,9 @@ Error: derived_class.js:102
                                                ^^^^^^ [2]: number
 
 Error --------------------------------------------------- derived_class.js:104:2
+
+Cannot cast `Child.base_annotatedInitializedFieldValid` to number because null
+or undefined is incompatible with number.
 
 Error: derived_class.js:104
 104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
@@ -330,6 +414,9 @@ Error: derived_class.js:104
 
 Error --------------------------------------------------- derived_class.js:107:2
 
+Cannot cast `o.child_annotatedInitializedFieldValid` to number because null or
+undefined is incompatible with number.
+
 Error: derived_class.js:107
 107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.child_annotatedInitializedFieldValid` to number because null or undefined [1] is incompatible with number [2].
@@ -340,6 +427,9 @@ Error: derived_class.js:107
                                                 ^^^^^^ [2]: number
 
 Error --------------------------------------------------- derived_class.js:109:2
+
+Cannot cast `Child.child_annotatedInitializedFieldValid` to number because null
+or undefined is incompatible with number.
 
 Error: derived_class.js:109
 109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
@@ -352,6 +442,9 @@ Error: derived_class.js:109
 
 Error --------------------------------------------------- derived_class.js:118:2
 
+Cannot cast `o.base_annotatedInitializedFieldInvalid` to string because number
+is incompatible with string.
+
 Error: derived_class.js:118
 118: (o.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.base_annotatedInitializedFieldInvalid` to string because number [1] is incompatible with string [2].
@@ -362,6 +455,9 @@ Error: derived_class.js:118
                                                  ^^^^^^ [2]: string
 
 Error --------------------------------------------------- derived_class.js:120:2
+
+Cannot cast `Child.base_annotatedInitializedFieldInvalid` to string because
+number is incompatible with string.
 
 Error: derived_class.js:120
 120: (Child.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
@@ -374,6 +470,9 @@ Error: derived_class.js:120
 
 Error --------------------------------------------------- derived_class.js:123:2
 
+Cannot cast `o.child_annotatedInitializedFieldInvalid` to string because number
+is incompatible with string.
+
 Error: derived_class.js:123
 123: (o.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.child_annotatedInitializedFieldInvalid` to string because number [1] is incompatible with string [2].
@@ -384,6 +483,9 @@ Error: derived_class.js:123
                                                   ^^^^^^ [2]: string
 
 Error --------------------------------------------------- derived_class.js:125:2
+
+Cannot cast `Child.child_annotatedInitializedFieldInvalid` to string because
+number is incompatible with string.
 
 Error: derived_class.js:125
 125: (Child.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
@@ -396,6 +498,9 @@ Error: derived_class.js:125
 
 Error --------------------------------------------------- derived_class.js:132:2
 
+Cannot cast `o.inherited_initializer` to string because number is incompatible
+with string.
+
 Error: derived_class.js:132
 132: (o.inherited_initializer: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `o.inherited_initializer` to string because number [1] is incompatible with string [2].
@@ -406,6 +511,9 @@ Error: derived_class.js:132
                                  ^^^^^^ [2]: string
 
 Error --------------------------------------------------- derived_class.js:134:2
+
+Cannot cast `Child.inherited_initializer` to string because number is
+incompatible with string.
 
 Error: derived_class.js:134
 134: (Child.inherited_initializer: string); // Error: number ~> string
@@ -418,6 +526,8 @@ Error: derived_class.js:134
 
 Error ---------------------------------------------------- generic_class.js:15:2
 
+Cannot cast `o1.p` to string because number is incompatible with string.
+
 Error: generic_class.js:15
  15: (o1.p: string); // Error: number ~> string
       ^^^^ Cannot cast `o1.p` to string because number [1] is incompatible with string [2].
@@ -428,6 +538,9 @@ Error: generic_class.js:15
               ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- generic_class.js:18:2
+
+Cannot cast `ClassAnnotated.p` to string because number is incompatible with
+string.
 
 Error: generic_class.js:18
  18: (ClassAnnotated.p: string); // Error: number ~> string
@@ -440,6 +553,8 @@ Error: generic_class.js:18
 
 Error --------------------------------------------------- generic_class.js:26:16
 
+number is incompatible with `T`.
+
 Error: generic_class.js:26
  26:   invalid: T = 42; // Error: number ~> Generic<T>
                     ^^ number [1] is incompatible with `T` [2].
@@ -450,6 +565,8 @@ Error: generic_class.js:26
                   ^ [2]: `T`
 
 Error --------------------------------------------------- generic_class.js:29:23
+
+number is incompatible with `T`.
 
 Error: generic_class.js:29
  29:   static invalid: T = 42; // Error: number ~> Generic<T>
@@ -462,6 +579,9 @@ Error: generic_class.js:29
 
 Error ---------------------------------------------------------- scoping.js:24:2
 
+Cannot cast `new Foo().outer` to string because number is incompatible with
+string.
+
 Error: scoping.js:24
  24: (new Foo().outer: string); // Error: number ~> string
       ^^^^^^^^^^^^^^^ Cannot cast `new Foo().outer` to string because number [1] is incompatible with string [2].
@@ -472,6 +592,8 @@ Error: scoping.js:24
                          ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- scoping.js:26:2
+
+Cannot cast `Foo.outer` to string because number is incompatible with string.
 
 Error: scoping.js:26
  26: (Foo.outer: string); // Error: number ~> string
@@ -484,6 +606,9 @@ Error: scoping.js:26
 
 Error ---------------------------------------------------------- scoping.js:33:2
 
+Cannot cast `new Foo().selfTyped` to number because `Foo` is incompatible with
+number.
+
 Error: scoping.js:33
  33: (new Foo().selfTyped: number); // Error: Foo ~> number
       ^^^^^^^^^^^^^^^^^^^ Cannot cast `new Foo().selfTyped` to number because `Foo` [1] is incompatible with number [2].
@@ -494,6 +619,8 @@ Error: scoping.js:33
                              ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- scoping.js:35:2
+
+Cannot cast `Foo.selfTyped` to number because `Foo` is incompatible with number.
 
 Error: scoping.js:35
  35: (Foo.selfTyped: number); // Error: Foo ~> number
@@ -506,6 +633,9 @@ Error: scoping.js:35
 
 Error ---------------------------------------------------------- scoping.js:38:2
 
+Cannot cast `new Foo().selfTypedInit` to number because `Foo` is incompatible
+with number.
+
 Error: scoping.js:38
  38: (new Foo().selfTypedInit: number); // Error: Foo ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `new Foo().selfTypedInit` to number because `Foo` [1] is incompatible with number [2].
@@ -516,6 +646,9 @@ Error: scoping.js:38
                                  ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- scoping.js:40:2
+
+Cannot cast `Foo.selfTypedInit` to number because `Foo` is incompatible with
+number.
 
 Error: scoping.js:40
  40: (Foo.selfTypedInit: number); // Error: Foo ~> number

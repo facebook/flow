@@ -1,5 +1,7 @@
 Error -------------------------------------------------------- qualified.js:4:13
 
+Cannot assign `0` to `x` because number is incompatible with `C`.
+
 Error: qualified.js:4
   4: var x:M.C = 0;
                  ^ Cannot assign `0` to `x` because number [1] is incompatible with `C` [2].
@@ -10,6 +12,8 @@ Error: qualified.js:4
              ^^^ [2]: `C`
 
 Error ------------------------------------------------------- qualified.js:12:14
+
+Cannot assign `'asdf'` to `b` because string is incompatible with number.
 
 Error: qualified.js:12
  12: var b: bar = 'asdf'; // Error: string ~> number

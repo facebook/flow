@@ -1,10 +1,14 @@
 Error ------------------------------------------------ yield_arrow_error.js:2:25
 
+Unexpected number
+
 Error: yield_arrow_error.js:2
   2:   var e = () => { yield 1; };
                              ^ Unexpected number
 
 Error ----------------------------------------------- yield_arrow_error2.js:2:23
+
+Unexpected number
 
 Error: yield_arrow_error2.js:2
   2:   var e = () => yield 1;

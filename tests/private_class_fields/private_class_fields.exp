@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- test.js:24:5
 
+Cannot get `other.#p` because property `#p` is missing in `C`.
+
 Error: test.js:24
  24:     other.#p; // Error: other does not have access to private variables in here.
          ^^^^^^^^ Cannot get `other.#p` because property `#p` is missing in `C` [1].
@@ -9,6 +11,9 @@ Error: test.js:24
 
 Error ------------------------------------------------------------- test.js:37:9
 
+Cannot assign `new Outer()` to `x.#inner` because property `#inner` is missing
+in `Outer`.
+
 Error: test.js:37
  37:         x.#inner = new Outer(); // Error, #inner is not a private field of Outer
              ^^^^^^^^ Cannot assign `new Outer()` to `x.#inner` because property `#inner` is missing in `Outer` [1].
@@ -17,6 +22,8 @@ Error: test.js:37
                        ^^^^^^^^^^^ [1]: `Outer`
 
 Error ------------------------------------------------------------ test.js:49:10
+
+Cannot cast `this.#p` to number because string is incompatible with number.
 
 Error: test.js:49
  49:         (this.#p : number); // Error, #p is a string not a number
@@ -29,6 +36,8 @@ Error: test.js:49
 
 Error ------------------------------------------------------------ test.js:51:19
 
+Cannot assign `3` to `this.#p` because number is incompatible with string.
+
 Error: test.js:51
  51:         this.#p = 3; // Error, #p is a string not a number
                        ^ Cannot assign `3` to `this.#p` because number [1] is incompatible with string [2].
@@ -39,6 +48,8 @@ Error: test.js:51
                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ test.js:53:10
+
+Cannot cast `x.#p` to string because number is incompatible with string.
 
 Error: test.js:53
  53:         (x.#p : string) // Error, here #p is a number not a string
@@ -51,6 +62,9 @@ Error: test.js:53
 
 Error ------------------------------------------------------------- test.js:65:8
 
+Cannot cast `this.#p` to number because null or undefined is incompatible with
+number.
+
 Error: test.js:65
  65:       (this.#p : number); // Error #p is null or undefined
             ^^^^^^^ Cannot cast `this.#p` to number because null or undefined [1] is incompatible with number [2].
@@ -62,6 +76,9 @@ Error: test.js:65
 
 Error ------------------------------------------------------------- test.js:75:5
 
+Cannot assign `3` to `a.#p` because number is not a class with private
+properties.
+
 Error: test.js:75
  75:     a.#p = 3; // Error, #p not on number
          ^^^^ Cannot assign `3` to `a.#p` because number [1] is not a class with private properties.
@@ -70,6 +87,8 @@ Error: test.js:75
                     ^^^^^^ [1]: number
 
 Error ------------------------------------------------------------- test.js:77:5
+
+Cannot get `b.#p` because object type is not a class with private properties.
 
 Error: test.js:77
  77:     b.#p; // Error, #p not on b.
@@ -80,6 +99,9 @@ Error: test.js:77
 
 Error ------------------------------------------------------------- test.js:93:4
 
+Cannot get `IncompatibleGetAndSet.#q` because property `#q` is missing in
+`IncompatibleGetAndSet`.
+
 Error: test.js:93
  93:    IncompatibleGetAndSet.#q; // Error, not visible here
         ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot get `IncompatibleGetAndSet.#q` because property `#q` is missing in `IncompatibleGetAndSet` [1].
@@ -88,6 +110,8 @@ Error: test.js:93
              ^^^^^^^^^^^^^^^^^^^^^ [1]: `IncompatibleGetAndSet`
 
 Error ------------------------------------------------------------- test.js:95:4
+
+Cannot assign `3` to `this.#p` because property `#p` is missing in `Static`.
 
 Error: test.js:95
  95:    this.#p = 3; // Error, no #p on instance
@@ -98,6 +122,8 @@ Error: test.js:95
 
 Error ------------------------------------------------------------- test.js:96:4
 
+Cannot get `this.#q` because property `#q` is missing in `Static`.
+
 Error: test.js:96
  96:    this.#q; // Error, no #q on instance
         ^^^^^^^ Cannot get `this.#q` because property `#q` is missing in `Static` [1].
@@ -106,6 +132,8 @@ Error: test.js:96
              ^^^^^^ [1]: `Static`
 
 Error ------------------------------------------------------------- test.js:97:4
+
+Cannot get `Static.#r` because property `#r` is missing in `Static`.
 
 Error: test.js:97
  97:    Static.#r; // Error, no #r on class
@@ -116,6 +144,9 @@ Error: test.js:97
 
 Error ------------------------------------------------------------- test.js:98:4
 
+Cannot assign `Static.#q` to `Static.#r` because property `#r` is missing in
+`Static`.
+
 Error: test.js:98
  98:    Static.#r = Static.#q; // Error, no #r on class
         ^^^^^^^^^ Cannot assign `Static.#q` to `Static.#r` because property `#r` is missing in `Static` [1].
@@ -124,6 +155,8 @@ Error: test.js:98
              ^^^^^^ [1]: `Static`
 
 Error ----------------------------------------------------------- test.js:107:16
+
+number is incompatible with string.
 
 Error: test.js:107
 107:   #s: string = 0; // Error, number ~> string
@@ -136,6 +169,8 @@ Error: test.js:107
 
 Error ----------------------------------------------------------- test.js:112:24
 
+number is incompatible with string.
+
 Error: test.js:112
 112:   static #ss: string = 0; // Error, number ~> string
                             ^ number [1] is incompatible with string [2].
@@ -146,6 +181,8 @@ Error: test.js:112
                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- test.js:118:12
+
+Cannot return `this.#t` because string is incompatible with number.
 
 Error: test.js:118
 118:     return this.#t; // Error, string ~> number
@@ -158,6 +195,8 @@ Error: test.js:118
 
 Error ----------------------------------------------------------- test.js:124:12
 
+Cannot return `Annotations.#st` because string is incompatible with number.
+
 Error: test.js:124
 124:     return Annotations.#st; // Error, string ~> number
                 ^^^^^^^^^^^^^^^ Cannot return `Annotations.#st` because string [1] is incompatible with number [2].
@@ -168,6 +207,8 @@ Error: test.js:124
                   ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- test.js:130:12
+
+Cannot return `this.#r` because number is incompatible with string.
 
 Error: test.js:130
 130:     return this.#r; // Error, number ~> string
@@ -180,6 +221,8 @@ Error: test.js:130
 
 Error ----------------------------------------------------------- test.js:139:12
 
+Cannot return `Annotations.#sr` because number is incompatible with string.
+
 Error: test.js:139
 139:     return Annotations.#sr; // Error, number ~> string
                 ^^^^^^^^^^^^^^^ Cannot return `Annotations.#sr` because number [1] is incompatible with string [2].
@@ -190,6 +233,9 @@ Error: test.js:139
                   ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ test.js:155:7
+
+Cannot cast `this.p` to number literal `3` because number is incompatible with
+number literal `3`.
 
 Error: test.js:155
 155:      (this.p: 3); // Error, this.#p doesn't refine this.p
@@ -202,6 +248,9 @@ Error: test.js:155
 
 Error ------------------------------------------------------------ test.js:159:7
 
+Cannot cast `this.#p` to number literal `4` because number literal `3` is
+incompatible with number literal `4`.
+
 Error: test.js:159
 159:      (this.#p: 4); // Error, this.p doesnt refine this.#p
            ^^^^^^^ Cannot cast `this.#p` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
@@ -212,6 +261,9 @@ Error: test.js:159
                       ^ [2]: number literal `4`
 
 Error ------------------------------------------------------------ test.js:162:7
+
+Cannot cast `this.p` to number literal `3` because number is incompatible with
+number literal `3`.
 
 Error: test.js:162
 162:      (this.p: 3); // Error, this.#p doesnt refine this.p
@@ -224,6 +276,9 @@ Error: test.js:162
 
 Error ------------------------------------------------------------ test.js:165:5
 
+Cannot cast `this.#p` to number literal `3` because number is incompatible with
+number literal `3`.
+
 Error: test.js:165
 165:    (this.#p: 3); // Error, Havoc happens as normal
          ^^^^^^^ Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
@@ -234,6 +289,9 @@ Error: test.js:165
                     ^ [2]: number literal `3`
 
 Error ------------------------------------------------------------ test.js:169:7
+
+Cannot cast `RefinementClashes.q` to number literal `3` because number is
+incompatible with number literal `3`.
 
 Error: test.js:169
 169:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
@@ -246,6 +304,9 @@ Error: test.js:169
 
 Error ------------------------------------------------------------ test.js:173:7
 
+Cannot cast `RefinementClashes.#q` to number literal `4` because number literal
+`3` is incompatible with number literal `4`.
+
 Error: test.js:173
 173:      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
            ^^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.#q` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
@@ -256,6 +317,9 @@ Error: test.js:173
                                    ^ [2]: number literal `4`
 
 Error ------------------------------------------------------------ test.js:176:7
+
+Cannot cast `RefinementClashes.q` to number literal `3` because number is
+incompatible with number literal `3`.
 
 Error: test.js:176
 176:      (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
@@ -268,6 +332,9 @@ Error: test.js:176
 
 Error ------------------------------------------------------------ test.js:179:5
 
+Cannot cast `RefinementClashes.#q` to number literal `3` because number is
+incompatible with number literal `3`.
+
 Error: test.js:179
 179:    (RefinementClashes.#q: 3); // Error, Havoc happens as normal
          ^^^^^^^^^^^^^^^^^^^^ Cannot cast `RefinementClashes.#q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
@@ -278,6 +345,9 @@ Error: test.js:179
                                  ^ [2]: number literal `3`
 
 Error ------------------------------------------------------------ test.js:185:7
+
+Cannot cast `this.#p` to number literal `3` because number is incompatible with
+number literal `3`.
 
 Error: test.js:185
 185:      (this.#p: 3); // Error, other.#p does havoc this.#p

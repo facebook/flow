@@ -1,10 +1,14 @@
 Error ---------------------------------------------------- clone_element.js:22:1
 
+Cannot call `React.cloneElement` without at least 1 argument.
+
 Error: clone_element.js:22
  22: React.cloneElement(); // Error: Needs a minimum of two arguments.
      ^^^^^^^^^^^^^^^^^^^^ Cannot call `React.cloneElement` without at least 1 argument.
 
 Error --------------------------------------------------- clone_element.js:23:20
+
+Inexact string is incompatible with exact `React.Element`.
 
 Error: clone_element.js:23
  23: React.cloneElement('nope'); // Error: Not a valid element type.
@@ -16,6 +20,8 @@ Error: clone_element.js:23
                           ^^^^^^ [2]: `React.Element`
 
 Error --------------------------------------------------- clone_element.js:24:20
+
+Property `key` is missing in object literal but exists in `React.Element`.
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -33,6 +39,8 @@ Error: clone_element.js:24
 
 Error --------------------------------------------------- clone_element.js:24:20
 
+Property `props` is missing in object literal but exists in `React.Element`.
+
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
                         ^^^^^^^^^^^^^ Property `props` is missing in object literal [1] but exists in `React.Element` [2].
@@ -48,6 +56,8 @@ Error: clone_element.js:24
        -^ [2]: `React.Element`. See lib: <BUILTINS>/react.js:157
 
 Error --------------------------------------------------- clone_element.js:24:20
+
+Property `ref` is missing in object literal but exists in `React.Element`.
 
 Error: clone_element.js:24
  24: React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -65,6 +75,9 @@ Error: clone_element.js:24
 
 Error ---------------------------------------------------- clone_element.js:28:2
 
+Cannot cast `React.cloneElement(...).type` to statics of `B` because `A` is
+incompatible with `B`.
+
 Error: clone_element.js:28
  28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).type` to statics of `B` because `A` [1] is incompatible with `B` [2].
@@ -76,6 +89,9 @@ Error: clone_element.js:28
 
 Error --------------------------------------------------- clone_element.js:30:30
 
+Cannot get `React.cloneElement(...).props.bar` because property `bar` is missing
+in object type.
+
 Error: clone_element.js:30
  30: (React.cloneElement(a).props.bar: empty); // Error: `bar` does not exist.
                                   ^^^ Cannot get `React.cloneElement(...).props.bar` because property `bar` is missing in object type [1].
@@ -84,6 +100,9 @@ Error: clone_element.js:30
                                        ^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- clone_element.js:31:2
+
+Cannot cast `React.cloneElement(...).props.foo` to string because number is
+incompatible with string.
 
 Error: clone_element.js:31
  31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
@@ -96,6 +115,9 @@ Error: clone_element.js:31
 
 Error ---------------------------------------------------- clone_element.js:34:2
 
+Cannot cast `React.cloneElement(...).props.foo` to string because number is
+incompatible with string.
+
 Error: clone_element.js:34
  34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
@@ -106,6 +128,9 @@ Error: clone_element.js:34
                                          ^^^^^^ [2]: string
 
 Error --------------------------------------------------- clone_element.js:40:23
+
+Cannot call `React.cloneElement` because property `bar` is missing in props but
+exists in call of method `cloneElement`.
 
 Error: clone_element.js:40
  40: React.cloneElement(a, {foo: 1, bar: 2}); // OK
@@ -118,6 +143,9 @@ Error: clone_element.js:40
 
 Error --------------------------------------------------- clone_element.js:41:29
 
+Cannot call `React.cloneElement` because in property `foo`, string is
+incompatible with number.
+
 Error: clone_element.js:41
  41: React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
                                  ^^^ Cannot call `React.cloneElement` because in property `foo`, string [1] is incompatible with number [2].
@@ -128,6 +156,9 @@ Error: clone_element.js:41
                                              ^^^^^^ [2]: number
 
 Error --------------------------------------------------- clone_element.js:47:29
+
+Cannot call `React.cloneElement` because in property `foo`, string is
+incompatible with number.
 
 Error: clone_element.js:47
  47: React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
@@ -140,6 +171,9 @@ Error: clone_element.js:47
 
 Error --------------------------------------------------- clone_element.js:53:34
 
+Cannot call `React.cloneElement` because in property `children`, string is
+incompatible with number.
+
 Error: clone_element.js:53
  53: React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                                       ^^^^ Cannot call `React.cloneElement` because in property `children`, string [1] is incompatible with number [2].
@@ -150,6 +184,9 @@ Error: clone_element.js:53
                                                   ^^^^^^ [2]: number
 
 Error --------------------------------------------------- clone_element.js:57:23
+
+Cannot call `React.cloneElement` because in property `children`, children array
+is incompatible with number.
 
 Error: clone_element.js:57
  57: React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
@@ -162,6 +199,9 @@ Error: clone_element.js:57
 
 Error --------------------------------------------------- clone_element.js:58:23
 
+Cannot call `React.cloneElement` because in property `children`, children array
+is incompatible with number.
+
 Error: clone_element.js:58
  58: React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
                            ^^^^^^^^^ Cannot call `React.cloneElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -172,6 +212,9 @@ Error: clone_element.js:58
                                                   ^^^^^^ [2]: number
 
 Error --------------------------------------------------- clone_element.js:59:23
+
+Cannot call `React.cloneElement` because in property `children`, children array
+is incompatible with number.
 
 Error: clone_element.js:59
  59: React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
@@ -184,6 +227,9 @@ Error: clone_element.js:59
 
 Error --------------------------------------------------- clone_element.js:63:34
 
+Cannot call `React.cloneElement` because in property `children`, number is
+incompatible with array type.
+
 Error: clone_element.js:63
  63: React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                                       ^^ Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
@@ -194,6 +240,9 @@ Error: clone_element.js:63
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error --------------------------------------------------- clone_element.js:65:23
+
+Cannot call `React.cloneElement` because in property `children`, number is
+incompatible with array type.
 
 Error: clone_element.js:65
  65: React.cloneElement(d, {}, 42); // Error: `children` is an array.
@@ -206,6 +255,9 @@ Error: clone_element.js:65
 
 Error --------------------------------------------------- clone_element.js:66:23
 
+Cannot call `React.cloneElement` because in property `children`, number is
+incompatible with array type.
+
 Error: clone_element.js:66
  66: React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                            ^^^^^^^^^ Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
@@ -216,6 +268,9 @@ Error: clone_element.js:66
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error --------------------------------------------------- clone_element.js:67:23
+
+Cannot call `React.cloneElement` because in property `children`, number is
+incompatible with array type.
 
 Error: clone_element.js:67
  67: React.cloneElement(d, null, 42); // Error: `children` is an array.
@@ -228,6 +283,9 @@ Error: clone_element.js:67
 
 Error --------------------------------------------------- clone_element.js:79:40
 
+Cannot call `React.cloneElement` because in property `p`, string is incompatible
+with number.
+
 Error: clone_element.js:79
  79: React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                                             ^^^^^ Cannot call `React.cloneElement` because in property `p`, string [1] is incompatible with number [2].
@@ -239,11 +297,15 @@ Error: clone_element.js:79
 
 Error ---------------------------------------------------- create_element.js:7:1
 
+Cannot call `React.createElement` without at least 1 argument.
+
 Error: create_element.js:7
   7: React.createElement(); // Error: Needs a minimum of two arguments.
      ^^^^^^^^^^^^^^^^^^^^^ Cannot call `React.createElement` without at least 1 argument.
 
 Error --------------------------------------------------- create_element.js:9:21
+
+Cannot call `React.createElement` because number is not a React component.
 
 Error: create_element.js:9
   9: React.createElement(42); // Error: Number is not a valid component type.
@@ -254,6 +316,8 @@ Error: create_element.js:9
 
 Error -------------------------------------------------- create_element.js:11:21
 
+Cannot call `React.createElement` because number is not a React component.
+
 Error: create_element.js:11
  11: React.createElement(42, {}); // Error: Number is not a valid component type.
                          ^^ Cannot call `React.createElement` because number [1] is not a React component.
@@ -263,6 +327,9 @@ Error: create_element.js:11
 
 Error -------------------------------------------------- create_element.js:12:21
 
+Cannot call `React.createElement` because object literal is not a React
+component.
+
 Error: create_element.js:12
  12: React.createElement({}, {}); // Error: Object is not a valid component type.
                          ^^ Cannot call `React.createElement` because object literal [1] is not a React component.
@@ -271,6 +338,9 @@ Error: create_element.js:12
                            ^^ [1]: object literal
 
 Error --------------------------------------------------- create_element.js:22:8
+
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
 
 Error: create_element.js:22
  22:   bar: 'Hello, world!', // Error: `bar` is a string.
@@ -283,6 +353,9 @@ Error: create_element.js:22
 
 Error --------------------------------------------------- create_element.js:26:8
 
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
+
 Error: create_element.js:26
  26:   bar: 'Hello, world!', // Error: `bar` is a string.
             ^^^^^^^^^^^^^^^ Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
@@ -293,6 +366,9 @@ Error: create_element.js:26
                                             ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:28:24
+
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
 
 Error: create_element.js:28
  28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
@@ -305,6 +381,9 @@ Error: create_element.js:28
 
 Error --------------------------------------------------- create_element.js:29:7
 
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
+
 Error: create_element.js:29
  29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
            ^^^^^^^^^^^^^ Cannot call `React.createElement` because property `bar` is missing in props [1] but exists in object type [2].
@@ -315,6 +394,9 @@ Error: create_element.js:29
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:30:24
+
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
 
 Error: create_element.js:30
  30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
@@ -327,6 +409,9 @@ Error: create_element.js:30
 
 Error -------------------------------------------------- create_element.js:30:24
 
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
+
 Error: create_element.js:30
  30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
                             ^^^^^^^^^ Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
@@ -337,6 +422,9 @@ Error: create_element.js:30
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_element.js:31:7
+
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
 
 Error: create_element.js:31
  31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
@@ -349,6 +437,9 @@ Error: create_element.js:31
 
 Error --------------------------------------------------- create_element.js:31:7
 
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
+
 Error: create_element.js:31
  31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
            ^^^^^^^^^^^^^ Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
@@ -359,6 +450,9 @@ Error: create_element.js:31
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:32:24
+
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
 
 Error: create_element.js:32
  32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
@@ -371,6 +465,9 @@ Error: create_element.js:32
 
 Error -------------------------------------------------- create_element.js:32:24
 
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
+
 Error: create_element.js:32
  32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
                             ^^^^ Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
@@ -382,6 +479,9 @@ Error: create_element.js:32
 
 Error --------------------------------------------------- create_element.js:33:7
 
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
+
 Error: create_element.js:33
  33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
            ^^^^^^^^^^^^^ Cannot call `React.createElement` because property `bar` is missing in props [1] but exists in object type [2].
@@ -392,6 +492,9 @@ Error: create_element.js:33
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_element.js:33:7
+
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
 
 Error: create_element.js:33
  33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
@@ -404,6 +507,9 @@ Error: create_element.js:33
 
 Error --------------------------------------------------- create_element.js:38:2
 
+Cannot cast `React.createElement(...).props.foo` to boolean because number is
+incompatible with boolean.
+
 Error: create_element.js:38
  38: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
@@ -414,6 +520,9 @@ Error: create_element.js:38
                                                             ^^^^^^^ [2]: boolean
 
 Error --------------------------------------------------- create_element.js:40:2
+
+Cannot cast `React.createElement(...).props.foo` to boolean because number is
+incompatible with boolean.
 
 Error: create_element.js:40
  40: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
@@ -426,6 +535,9 @@ Error: create_element.js:40
 
 Error -------------------------------------------------- create_element.js:42:42
 
+Cannot get `React.createElement(...).nope` because property `nope` is missing in
+`React.Element`.
+
 Error: create_element.js:42
  42: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1].
@@ -435,6 +547,9 @@ Error: create_element.js:42
 
 Error -------------------------------------------------- create_element.js:43:42
 
+Cannot get `React.createElement(...).nope` because property `nope` is missing in
+`React.Element`.
+
 Error: create_element.js:43
  43: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1].
@@ -443,6 +558,9 @@ Error: create_element.js:43
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Element`
 
 Error --------------------------------------------------- create_element.js:44:7
+
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
 
 Error: create_element.js:44
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -454,6 +572,9 @@ Error: create_element.js:44
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_element.js:44:7
+
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
 
 Error: create_element.js:44
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -466,6 +587,9 @@ Error: create_element.js:44
 
 Error --------------------------------------------------- create_element.js:45:7
 
+Cannot call `React.createElement` because property `bar` is missing in props but
+exists in object type.
+
 Error: create_element.js:45
  45: React.createElement(B); // Error: Missing `foo` and `bar`.
            ^^^^^^^^^^^^^ Cannot call `React.createElement` because property `bar` is missing in props [1] but exists in object type [2].
@@ -476,6 +600,9 @@ Error: create_element.js:45
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_element.js:45:7
+
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
 
 Error: create_element.js:45
  45: React.createElement(B); // Error: Missing `foo` and `bar`.
@@ -488,6 +615,9 @@ Error: create_element.js:45
 
 Error --------------------------------------------------- create_element.js:57:8
 
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
+
 Error: create_element.js:57
  57:   bar: 'Hello, world!', // Error: `bar` is a string.
             ^^^^^^^^^^^^^^^ Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
@@ -498,6 +628,9 @@ Error: create_element.js:57
                                                           ^^^^^^ [2]: number
 
 Error --------------------------------------------------- create_element.js:61:8
+
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
 
 Error: create_element.js:61
  61:   bar: 'Hello, world!', // Error: `bar` is a string.
@@ -510,6 +643,9 @@ Error: create_element.js:61
 
 Error -------------------------------------------------- create_element.js:71:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:71
  71: React.createElement(E, {}); // Error
                             ^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -520,6 +656,9 @@ Error: create_element.js:71
                                        ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:72:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:72
  72: React.createElement(E, undefined); // Error
@@ -532,6 +671,9 @@ Error: create_element.js:72
 
 Error -------------------------------------------------- create_element.js:73:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:73
  73: React.createElement(E, null); // Error
                             ^^^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -542,6 +684,9 @@ Error: create_element.js:73
                                        ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:77:24
+
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
 
 Error: create_element.js:77
  77: React.createElement(E, {}, 1, 2); // Error
@@ -554,6 +699,9 @@ Error: create_element.js:77
 
 Error -------------------------------------------------- create_element.js:78:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:78
  78: React.createElement(E, undefined, 1, 2); // Error
                             ^^^^^^^^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -564,6 +712,9 @@ Error: create_element.js:78
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:79:24
+
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
 
 Error: create_element.js:79
  79: React.createElement(E, null, 1, 2); // Error
@@ -576,6 +727,9 @@ Error: create_element.js:79
 
 Error -------------------------------------------------- create_element.js:80:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:80
  80: React.createElement(E, {}, 1, 2, 3); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -586,6 +740,9 @@ Error: create_element.js:80
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:81:24
+
+Cannot call `React.createElement` because in property `children`, array literal
+is incompatible with number.
 
 Error: create_element.js:81
  81: React.createElement(E, {}, [1, 2]); // Error
@@ -598,6 +755,9 @@ Error: create_element.js:81
 
 Error -------------------------------------------------- create_element.js:82:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:82
  82: React.createElement(E, {}, [1, 2], [3, 4]); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -608,6 +768,9 @@ Error: create_element.js:82
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:83:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:83
  83: React.createElement(E, {}, ...[]); // Error
@@ -620,6 +783,9 @@ Error: create_element.js:83
 
 Error -------------------------------------------------- create_element.js:85:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:85
  85: React.createElement(E, {}, ...[1, 2]); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -631,6 +797,9 @@ Error: create_element.js:85
 
 Error -------------------------------------------------- create_element.js:86:24
 
+Cannot call `React.createElement` because in property `children`, children array
+or array is incompatible with number.
+
 Error: create_element.js:86
  86: React.createElement(E, {}, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array or array [1] is incompatible with number [2].
@@ -641,6 +810,9 @@ Error: create_element.js:86
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:86:24
+
+Cannot call `React.createElement` because in property `children`, undefined is
+incompatible with number.
 
 Error: create_element.js:86
  86: React.createElement(E, {}, ...(any: Array<number>)); // Error
@@ -653,6 +825,9 @@ Error: create_element.js:86
 
 Error -------------------------------------------------- create_element.js:88:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:88
  88: React.createElement(E, {}, 1, ...[2]); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -663,6 +838,9 @@ Error: create_element.js:88
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_element.js:89:24
+
+Cannot call `React.createElement` because in property `children`, children array
+or number is incompatible with number.
 
 Error: create_element.js:89
  89: React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
@@ -675,6 +853,9 @@ Error: create_element.js:89
 
 Error -------------------------------------------------- create_element.js:92:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:92
  92: React.createElement(F, {}); // Error
                             ^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -685,6 +866,9 @@ Error: create_element.js:92
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:93:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:93
  93: React.createElement(F, undefined); // Error
@@ -697,6 +881,9 @@ Error: create_element.js:93
 
 Error -------------------------------------------------- create_element.js:94:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:94
  94: React.createElement(F, null); // Error
                             ^^^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -707,6 +894,9 @@ Error: create_element.js:94
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_element.js:95:24
+
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
 
 Error: create_element.js:95
  95: React.createElement(F, {}, 1); // Error
@@ -719,6 +909,9 @@ Error: create_element.js:95
 
 Error -------------------------------------------------- create_element.js:96:24
 
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
+
 Error: create_element.js:96
  96: React.createElement(F, undefined, 1); // Error
                             ^^^^^^^^^ Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
@@ -729,6 +922,9 @@ Error: create_element.js:96
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error -------------------------------------------------- create_element.js:97:24
+
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
 
 Error: create_element.js:97
  97: React.createElement(F, null, 1); // Error
@@ -741,6 +937,9 @@ Error: create_element.js:97
 
 Error ------------------------------------------------- create_element.js:103:24
 
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
+
 Error: create_element.js:103
 103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
                             ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
@@ -751,6 +950,9 @@ Error: create_element.js:103
                                                         ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:103:24
+
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
 
 Error: create_element.js:103
 103: React.createElement(F, {}, [1, 2], [3, 4]); // Error
@@ -763,6 +965,9 @@ Error: create_element.js:103
 
 Error ------------------------------------------------- create_element.js:104:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:104
 104: React.createElement(F, {}, ...[]); // Error
                             ^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -773,6 +978,9 @@ Error: create_element.js:104
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_element.js:105:24
+
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
 
 Error: create_element.js:105
 105: React.createElement(F, {}, ...[1]); // Error
@@ -785,6 +993,9 @@ Error: create_element.js:105
 
 Error ------------------------------------------------- create_element.js:107:24
 
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
+
 Error: create_element.js:107
 107: React.createElement(F, {}, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
@@ -795,6 +1006,9 @@ Error: create_element.js:107
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_element.js:107:24
+
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
 
 Error: create_element.js:107
 107: React.createElement(F, {}, ...(any: Array<number>)); // Error
@@ -807,6 +1021,9 @@ Error: create_element.js:107
 
 Error ------------------------------------------------- create_element.js:107:24
 
+Cannot call `React.createElement` because in property `children`, undefined is
+incompatible with array type.
+
 Error: create_element.js:107
 107: React.createElement(F, {}, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, undefined [1] is incompatible with array type [2].
@@ -817,6 +1034,9 @@ Error: create_element.js:107
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_element.js:108:24
+
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
 
 Error: create_element.js:108
 108: React.createElement(F, {}, 1, ...[]); // Error
@@ -829,6 +1049,9 @@ Error: create_element.js:108
 
 Error ------------------------------------------------- create_element.js:110:24
 
+Cannot call `React.createElement` because in property `children`, number is
+incompatible with array type.
+
 Error: create_element.js:110
 110: React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
@@ -839,6 +1062,9 @@ Error: create_element.js:110
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_element.js:113:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:113
 113: React.createElement(G, {}); // Error
@@ -851,6 +1077,9 @@ Error: create_element.js:113
 
 Error ------------------------------------------------- create_element.js:118:24
 
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
+
 Error: create_element.js:118
 118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
                             ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
@@ -861,6 +1090,9 @@ Error: create_element.js:118
                                                                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:118:24
+
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
 
 Error: create_element.js:118
 118: React.createElement(G, {}, [1, 2], [3, 4]); // Error
@@ -873,6 +1105,9 @@ Error: create_element.js:118
 
 Error ------------------------------------------------- create_element.js:119:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:119
 119: React.createElement(G, {}, ...[]); // Error
                             ^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -883,6 +1118,9 @@ Error: create_element.js:119
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_element.js:122:24
+
+Cannot call `React.createElement` because in property `children`, undefined is
+incompatible with number.
 
 Error: create_element.js:122
 122: React.createElement(G, {}, ...(any: Array<number>)); // Error
@@ -895,6 +1133,9 @@ Error: create_element.js:122
 
 Error ------------------------------------------------- create_element.js:133:25
 
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
+
 Error: create_element.js:133
 133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                              ^^ Cannot call `React.createElement` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
@@ -905,6 +1146,9 @@ Error: create_element.js:133
                                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:133:25
+
+Cannot call `React.createElement` because in property `children` and then type
+argument `T`, array literal is incompatible with number.
 
 Error: create_element.js:133
 133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
@@ -917,6 +1161,9 @@ Error: create_element.js:133
 
 Error ------------------------------------------------- create_element.js:144:24
 
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
+
 Error: create_element.js:144
 144: React.createElement(H, {}); // Error
                             ^^ Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
@@ -927,6 +1174,9 @@ Error: create_element.js:144
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_element.js:150:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:150
 150: React.createElement(H, {}, ...[]); // Error
@@ -939,6 +1189,9 @@ Error: create_element.js:150
 
 Error ------------------------------------------------- create_element.js:153:24
 
+Cannot call `React.createElement` because in property `children`, undefined is
+incompatible with number.
+
 Error: create_element.js:153
 153: React.createElement(H, {}, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, undefined [1] is incompatible with number [2].
@@ -949,6 +1202,9 @@ Error: create_element.js:153
                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:161:24
+
+Cannot call `React.createElement` because in property `children`, null is
+incompatible with number.
 
 Error: create_element.js:161
 161: React.createElement(I, {}, null); // Error
@@ -961,6 +1217,9 @@ Error: create_element.js:161
 
 Error ------------------------------------------------- create_element.js:163:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:163
 163: React.createElement(I, {}, 1, 2); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -971,6 +1230,9 @@ Error: create_element.js:163
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:166:24
+
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
 
 Error: create_element.js:166
 166: React.createElement(I, {}, ...[1, 2]); // Error
@@ -983,6 +1245,9 @@ Error: create_element.js:166
 
 Error ------------------------------------------------- create_element.js:167:24
 
+Cannot call `React.createElement` because in property `children`, children array
+or array is incompatible with number.
+
 Error: create_element.js:167
 167: React.createElement(I, {}, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array or array [1] is incompatible with number [2].
@@ -993,6 +1258,9 @@ Error: create_element.js:167
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:169:24
+
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
 
 Error: create_element.js:169
 169: React.createElement(I, {}, 1, ...[2]); // Error
@@ -1005,6 +1273,9 @@ Error: create_element.js:169
 
 Error ------------------------------------------------- create_element.js:170:24
 
+Cannot call `React.createElement` because in property `children`, children array
+or number is incompatible with number.
+
 Error: create_element.js:170
 170: React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array or number [1] is incompatible with number [2].
@@ -1015,6 +1286,9 @@ Error: create_element.js:170
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:173:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:173
 173: React.createElement(J, {}); // Error
@@ -1027,6 +1301,9 @@ Error: create_element.js:173
 
 Error ------------------------------------------------- create_element.js:177:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:177
 177: React.createElement(J, {}, 1, 2); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -1037,6 +1314,9 @@ Error: create_element.js:177
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:178:24
+
+Cannot call `React.createElement` because property `children` is missing in
+props but exists in object type.
 
 Error: create_element.js:178
 178: React.createElement(J, {}, ...[]); // Error
@@ -1049,6 +1329,9 @@ Error: create_element.js:178
 
 Error ------------------------------------------------- create_element.js:180:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:180
 180: React.createElement(J, {}, ...[1, 2]); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -1059,6 +1342,9 @@ Error: create_element.js:180
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:181:24
+
+Cannot call `React.createElement` because in property `children`, children array
+or array is incompatible with number.
 
 Error: create_element.js:181
 181: React.createElement(J, {}, ...(any: Array<number>)); // Error
@@ -1071,6 +1357,9 @@ Error: create_element.js:181
 
 Error ------------------------------------------------- create_element.js:183:24
 
+Cannot call `React.createElement` because in property `children`, children array
+is incompatible with number.
+
 Error: create_element.js:183
 183: React.createElement(J, {}, 1, ...[2]); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
@@ -1081,6 +1370,9 @@ Error: create_element.js:183
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:184:24
+
+Cannot call `React.createElement` because in property `children`, children array
+or number is incompatible with number.
 
 Error: create_element.js:184
 184: React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
@@ -1093,6 +1385,9 @@ Error: create_element.js:184
 
 Error ------------------------------------------------- create_element.js:190:24
 
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
+
 Error: create_element.js:190
 190: React.createElement(K, {}, '42'); // Error
                             ^^ Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
@@ -1103,6 +1398,9 @@ Error: create_element.js:190
                                                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:191:35
+
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
 
 Error: create_element.js:191
 191: React.createElement(K, {children: '42'}); // Error
@@ -1115,6 +1413,9 @@ Error: create_element.js:191
 
 Error ------------------------------------------------- create_element.js:193:24
 
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
+
 Error: create_element.js:193
 193: React.createElement(K, {children: 42}, '42'); // Error
                             ^^^^^^^^^^^^^^ Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
@@ -1126,6 +1427,9 @@ Error: create_element.js:193
 
 Error ------------------------------------------------- create_element.js:194:24
 
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
+
 Error: create_element.js:194
 194: React.createElement(K, {children: '42'}, '42'); // Error
                             ^^^^^^^^^^^^^^^^ Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
@@ -1136,6 +1440,9 @@ Error: create_element.js:194
                                                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:207:24
+
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
 
 Error: create_element.js:207
 207: React.createElement(L, {}, 1); // Error
@@ -1153,6 +1460,9 @@ Error: create_element.js:207
 
 Error ------------------------------------------------- create_element.js:208:24
 
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
+
 Error: create_element.js:208
 208: React.createElement(L, {children: 1}); // Error
                             ^^^^^^^^^^^^^ Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1168,6 +1478,9 @@ Error: create_element.js:208
        ^ [2]: object type
 
 Error ------------------------------------------------- create_element.js:209:24
+
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
 
 Error: create_element.js:209
 209: React.createElement(L, {bar: 1}, 2); // Error
@@ -1185,6 +1498,9 @@ Error: create_element.js:209
 
 Error ------------------------------------------------- create_element.js:210:24
 
+Cannot call `React.createElement` because property `foo` is missing in props but
+exists in object type.
+
 Error: create_element.js:210
 210: React.createElement(L, {bar: 1, children: 2}); // Error
                             ^^^^^^^^^^^^^^^^^^^^^ Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1201,6 +1517,9 @@ Error: create_element.js:210
 
 Error ------------------------------------------------- create_element.js:211:30
 
+Cannot call `React.createElement` because in property `foo`, string is
+incompatible with number.
+
 Error: create_element.js:211
 211: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
                                   ^^^ Cannot call `React.createElement` because in property `foo`, string [1] is incompatible with number [2].
@@ -1211,6 +1530,9 @@ Error: create_element.js:211
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:212:30
+
+Cannot call `React.createElement` because in property `foo`, string is
+incompatible with number.
 
 Error: create_element.js:212
 212: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
@@ -1223,6 +1545,9 @@ Error: create_element.js:212
 
 Error ------------------------------------------------- create_element.js:213:38
 
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
+
 Error: create_element.js:213
 213: React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
                                           ^^^ Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
@@ -1233,6 +1558,9 @@ Error: create_element.js:213
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:214:38
+
+Cannot call `React.createElement` because in property `bar`, string is
+incompatible with number.
 
 Error: create_element.js:214
 214: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
@@ -1245,6 +1573,9 @@ Error: create_element.js:214
 
 Error ------------------------------------------------- create_element.js:215:24
 
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
+
 Error: create_element.js:215
 215: React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
                             ^^^^^^^^^^^^^^^^ Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
@@ -1255,6 +1586,9 @@ Error: create_element.js:215
                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_element.js:216:51
+
+Cannot call `React.createElement` because in property `children`, string is
+incompatible with number.
 
 Error: create_element.js:216
 216: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
@@ -1267,6 +1601,9 @@ Error: create_element.js:216
 
 Error -------------------------------------------------- create_element.js:221:2
 
+Cannot cast `React.createElement(...).type` to `typeof N` because `M` is
+incompatible with `N`.
+
 Error: create_element.js:221
 221: (React.createElement(M).type: typeof N); // Error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `React.createElement(...).type` to `typeof N` because `M` [1] is incompatible with `N` [2].
@@ -1277,6 +1614,9 @@ Error: create_element.js:221
              ^ [2]: `N`
 
 Error --------------------------------------------------- create_factory.js:22:8
+
+Cannot call `aFactory` because in property `bar`, string is incompatible with
+number.
 
 Error: create_factory.js:22
  22:   bar: 'Hello, world!', // Error: `bar` is a string.
@@ -1289,6 +1629,9 @@ Error: create_factory.js:22
 
 Error --------------------------------------------------- create_factory.js:26:8
 
+Cannot call `bFactory` because in property `bar`, string is incompatible with
+number.
+
 Error: create_factory.js:26
  26:   bar: 'Hello, world!', // Error: `bar` is a string.
             ^^^^^^^^^^^^^^^ Cannot call `bFactory` because in property `bar`, string [1] is incompatible with number [2].
@@ -1299,6 +1642,9 @@ Error: create_factory.js:26
                                             ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:28:10
+
+Cannot call `aFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:28
  28: aFactory({foo: 42}); // Error: `bar` is missing.
@@ -1311,6 +1657,9 @@ Error: create_factory.js:28
 
 Error --------------------------------------------------- create_factory.js:29:1
 
+Cannot call `bFactory` because property `bar` is missing in props but exists in
+object type.
+
 Error: create_factory.js:29
  29: bFactory({foo: 42}); // Error: `bar` is missing.
      ^^^^^^^^ Cannot call `bFactory` because property `bar` is missing in props [1] but exists in object type [2].
@@ -1321,6 +1670,9 @@ Error: create_factory.js:29
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_factory.js:30:10
+
+Cannot call `aFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:30
  30: aFactory(undefined); // Error: `foo` and `bar` are missing.
@@ -1333,6 +1685,9 @@ Error: create_factory.js:30
 
 Error -------------------------------------------------- create_factory.js:30:10
 
+Cannot call `aFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:30
  30: aFactory(undefined); // Error: `foo` and `bar` are missing.
               ^^^^^^^^^ Cannot call `aFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1343,6 +1698,9 @@ Error: create_factory.js:30
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_factory.js:31:1
+
+Cannot call `bFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:31
  31: bFactory(undefined); // Error: `foo` and `bar` are missing.
@@ -1355,6 +1713,9 @@ Error: create_factory.js:31
 
 Error --------------------------------------------------- create_factory.js:31:1
 
+Cannot call `bFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:31
  31: bFactory(undefined); // Error: `foo` and `bar` are missing.
      ^^^^^^^^ Cannot call `bFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1365,6 +1726,9 @@ Error: create_factory.js:31
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_factory.js:32:10
+
+Cannot call `aFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:32
  32: aFactory(null); // Error: `foo` and `bar` are missing.
@@ -1377,6 +1741,9 @@ Error: create_factory.js:32
 
 Error -------------------------------------------------- create_factory.js:32:10
 
+Cannot call `aFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:32
  32: aFactory(null); // Error: `foo` and `bar` are missing.
               ^^^^ Cannot call `aFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1388,6 +1755,9 @@ Error: create_factory.js:32
 
 Error --------------------------------------------------- create_factory.js:33:1
 
+Cannot call `bFactory` because property `bar` is missing in props but exists in
+object type.
+
 Error: create_factory.js:33
  33: bFactory(null); // Error: `foo` and `bar` are missing.
      ^^^^^^^^ Cannot call `bFactory` because property `bar` is missing in props [1] but exists in object type [2].
@@ -1398,6 +1768,9 @@ Error: create_factory.js:33
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_factory.js:33:1
+
+Cannot call `bFactory` because property `foo` is missing in props but exists in
+object type.
 
 Error: create_factory.js:33
  33: bFactory(null); // Error: `foo` and `bar` are missing.
@@ -1410,6 +1783,9 @@ Error: create_factory.js:33
 
 Error --------------------------------------------------- create_factory.js:38:2
 
+Cannot cast `aFactory(...).props.foo` to boolean because number is incompatible
+with boolean.
+
 Error: create_factory.js:38
  38: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `aFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
@@ -1420,6 +1796,9 @@ Error: create_factory.js:38
                                               ^^^^^^^ [2]: boolean
 
 Error --------------------------------------------------- create_factory.js:39:2
+
+Cannot cast `bFactory(...).props.foo` to boolean because number is incompatible
+with boolean.
 
 Error: create_factory.js:39
  39: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
@@ -1432,6 +1811,9 @@ Error: create_factory.js:39
 
 Error -------------------------------------------------- create_factory.js:40:28
 
+Cannot get `aFactory(...).nope` because property `nope` is missing in
+`React.Element`.
+
 Error: create_factory.js:40
  40: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ Cannot get `aFactory(...).nope` because property `nope` is missing in `React.Element` [1].
@@ -1441,6 +1823,9 @@ Error: create_factory.js:40
 
 Error -------------------------------------------------- create_factory.js:41:28
 
+Cannot get `bFactory(...).nope` because property `nope` is missing in
+`React.Element`.
+
 Error: create_factory.js:41
  41: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ Cannot get `bFactory(...).nope` because property `nope` is missing in `React.Element` [1].
@@ -1449,6 +1834,9 @@ Error: create_factory.js:41
        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: `React.Element`
 
 Error --------------------------------------------------- create_factory.js:42:1
+
+Cannot call `aFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:42
  42: aFactory(); // Error: Missing `foo` and `bar`.
@@ -1461,6 +1849,9 @@ Error: create_factory.js:42
 
 Error --------------------------------------------------- create_factory.js:42:1
 
+Cannot call `aFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:42
  42: aFactory(); // Error: Missing `foo` and `bar`.
      ^^^^^^^^ Cannot call `aFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1471,6 +1862,9 @@ Error: create_factory.js:42
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_factory.js:43:1
+
+Cannot call `bFactory` because property `bar` is missing in props but exists in
+object type.
 
 Error: create_factory.js:43
  43: bFactory(); // Error: Missing `foo` and `bar`.
@@ -1483,6 +1877,9 @@ Error: create_factory.js:43
 
 Error --------------------------------------------------- create_factory.js:43:1
 
+Cannot call `bFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:43
  43: bFactory(); // Error: Missing `foo` and `bar`.
      ^^^^^^^^ Cannot call `bFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -1493,6 +1890,9 @@ Error: create_factory.js:43
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error --------------------------------------------------- create_factory.js:58:8
+
+Cannot call `cFactory` because in property `bar`, string is incompatible with
+number.
 
 Error: create_factory.js:58
  58:   bar: 'Hello, world!', // Error: `bar` is a string.
@@ -1505,6 +1905,9 @@ Error: create_factory.js:58
 
 Error --------------------------------------------------- create_factory.js:62:8
 
+Cannot call `dFactory` because in property `bar`, string is incompatible with
+number.
+
 Error: create_factory.js:62
  62:   bar: 'Hello, world!', // Error: `bar` is a string.
             ^^^^^^^^^^^^^^^ Cannot call `dFactory` because in property `bar`, string [1] is incompatible with number [2].
@@ -1515,6 +1918,9 @@ Error: create_factory.js:62
                                             ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:75:10
+
+Cannot call `eFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:75
  75: eFactory({}); // Error
@@ -1527,6 +1933,9 @@ Error: create_factory.js:75
 
 Error -------------------------------------------------- create_factory.js:76:10
 
+Cannot call `eFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:76
  76: eFactory(undefined); // Error
               ^^^^^^^^^ Cannot call `eFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1537,6 +1946,9 @@ Error: create_factory.js:76
                                        ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_factory.js:77:10
+
+Cannot call `eFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:77
  77: eFactory(null); // Error
@@ -1549,6 +1961,9 @@ Error: create_factory.js:77
 
 Error -------------------------------------------------- create_factory.js:81:10
 
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:81
  81: eFactory({}, 1, 2); // Error
               ^^ Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -1559,6 +1974,9 @@ Error: create_factory.js:81
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:82:10
+
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:82
  82: eFactory(undefined, 1, 2); // Error
@@ -1571,6 +1989,9 @@ Error: create_factory.js:82
 
 Error -------------------------------------------------- create_factory.js:83:10
 
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:83
  83: eFactory(null, 1, 2); // Error
               ^^^^ Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -1581,6 +2002,9 @@ Error: create_factory.js:83
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:84:10
+
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:84
  84: eFactory({}, 1, 2, 3); // Error
@@ -1593,6 +2017,9 @@ Error: create_factory.js:84
 
 Error -------------------------------------------------- create_factory.js:85:10
 
+Cannot call `eFactory` because in property `children`, array literal is
+incompatible with number.
+
 Error: create_factory.js:85
  85: eFactory({}, [1, 2]); // Error
               ^^ Cannot call `eFactory` because in property `children`, array literal [1] is incompatible with number [2].
@@ -1603,6 +2030,9 @@ Error: create_factory.js:85
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:86:10
+
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:86
  86: eFactory({}, [1, 2], [3, 4]); // Error
@@ -1615,6 +2045,9 @@ Error: create_factory.js:86
 
 Error -------------------------------------------------- create_factory.js:87:10
 
+Cannot call `eFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:87
  87: eFactory({}, ...[]); // Error
               ^^ Cannot call `eFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1625,6 +2058,9 @@ Error: create_factory.js:87
                                        ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_factory.js:89:10
+
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:89
  89: eFactory({}, ...[1, 2]); // Error
@@ -1637,6 +2073,9 @@ Error: create_factory.js:89
 
 Error -------------------------------------------------- create_factory.js:90:10
 
+Cannot call `eFactory` because in property `children`, children array or array
+is incompatible with number.
+
 Error: create_factory.js:90
  90: eFactory({}, ...(any: Array<number>)); // Error
               ^^ Cannot call `eFactory` because in property `children`, children array or array [1] is incompatible with number [2].
@@ -1647,6 +2086,9 @@ Error: create_factory.js:90
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:90:10
+
+Cannot call `eFactory` because in property `children`, undefined is incompatible
+with number.
 
 Error: create_factory.js:90
  90: eFactory({}, ...(any: Array<number>)); // Error
@@ -1659,6 +2101,9 @@ Error: create_factory.js:90
 
 Error -------------------------------------------------- create_factory.js:92:10
 
+Cannot call `eFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:92
  92: eFactory({}, 1, ...[2]); // Error
               ^^ Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -1669,6 +2114,9 @@ Error: create_factory.js:92
                                                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:93:10
+
+Cannot call `eFactory` because in property `children`, children array or number
+is incompatible with number.
 
 Error: create_factory.js:93
  93: eFactory({}, 1, ...(any: Array<number>)); // Error
@@ -1681,6 +2129,9 @@ Error: create_factory.js:93
 
 Error -------------------------------------------------- create_factory.js:97:10
 
+Cannot call `fFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:97
  97: fFactory({}); // Error
               ^^ Cannot call `fFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1691,6 +2142,9 @@ Error: create_factory.js:97
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------- create_factory.js:98:10
+
+Cannot call `fFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:98
  98: fFactory(undefined); // Error
@@ -1703,6 +2157,9 @@ Error: create_factory.js:98
 
 Error -------------------------------------------------- create_factory.js:99:10
 
+Cannot call `fFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:99
  99: fFactory(null); // Error
               ^^^^ Cannot call `fFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1713,6 +2170,9 @@ Error: create_factory.js:99
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_factory.js:100:10
+
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
 
 Error: create_factory.js:100
 100: fFactory({}, 1); // Error
@@ -1725,6 +2185,9 @@ Error: create_factory.js:100
 
 Error ------------------------------------------------- create_factory.js:101:10
 
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
+
 Error: create_factory.js:101
 101: fFactory(undefined, 1); // Error
               ^^^^^^^^^ Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
@@ -1735,6 +2198,9 @@ Error: create_factory.js:101
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_factory.js:102:10
+
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
 
 Error: create_factory.js:102
 102: fFactory(null, 1); // Error
@@ -1747,6 +2213,9 @@ Error: create_factory.js:102
 
 Error ------------------------------------------------- create_factory.js:108:10
 
+Cannot call `fFactory` because in property `children` and then type argument
+`T`, array literal is incompatible with number.
+
 Error: create_factory.js:108
 108: fFactory({}, [1, 2], [3, 4]); // Error
               ^^ Cannot call `fFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
@@ -1757,6 +2226,9 @@ Error: create_factory.js:108
                                                         ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:108:10
+
+Cannot call `fFactory` because in property `children` and then type argument
+`T`, array literal is incompatible with number.
 
 Error: create_factory.js:108
 108: fFactory({}, [1, 2], [3, 4]); // Error
@@ -1769,6 +2241,9 @@ Error: create_factory.js:108
 
 Error ------------------------------------------------- create_factory.js:109:10
 
+Cannot call `fFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:109
 109: fFactory({}, ...[]); // Error
               ^^ Cannot call `fFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1779,6 +2254,9 @@ Error: create_factory.js:109
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_factory.js:110:10
+
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
 
 Error: create_factory.js:110
 110: fFactory({}, ...[1]); // Error
@@ -1791,6 +2269,9 @@ Error: create_factory.js:110
 
 Error ------------------------------------------------- create_factory.js:112:10
 
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
+
 Error: create_factory.js:112
 112: fFactory({}, ...(any: Array<number>)); // Error
               ^^ Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
@@ -1801,6 +2282,9 @@ Error: create_factory.js:112
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_factory.js:112:10
+
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
 
 Error: create_factory.js:112
 112: fFactory({}, ...(any: Array<number>)); // Error
@@ -1813,6 +2297,9 @@ Error: create_factory.js:112
 
 Error ------------------------------------------------- create_factory.js:112:10
 
+Cannot call `fFactory` because in property `children`, undefined is incompatible
+with array type.
+
 Error: create_factory.js:112
 112: fFactory({}, ...(any: Array<number>)); // Error
               ^^ Cannot call `fFactory` because in property `children`, undefined [1] is incompatible with array type [2].
@@ -1823,6 +2310,9 @@ Error: create_factory.js:112
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_factory.js:113:10
+
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
 
 Error: create_factory.js:113
 113: fFactory({}, 1, ...[]); // Error
@@ -1835,6 +2325,9 @@ Error: create_factory.js:113
 
 Error ------------------------------------------------- create_factory.js:115:10
 
+Cannot call `fFactory` because in property `children`, number is incompatible
+with array type.
+
 Error: create_factory.js:115
 115: fFactory({}, 1, ...(any: Array<number>)); // Error
               ^^ Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
@@ -1845,6 +2338,9 @@ Error: create_factory.js:115
                                                   ^^^^^^^^^^^^^ [2]: array type
 
 Error ------------------------------------------------- create_factory.js:119:10
+
+Cannot call `gFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:119
 119: gFactory({}); // Error
@@ -1857,6 +2353,9 @@ Error: create_factory.js:119
 
 Error ------------------------------------------------- create_factory.js:124:10
 
+Cannot call `gFactory` because in property `children` and then type argument
+`T`, array literal is incompatible with number.
+
 Error: create_factory.js:124
 124: gFactory({}, [1, 2], [3, 4]); // Error
               ^^ Cannot call `gFactory` because in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
@@ -1867,6 +2366,9 @@ Error: create_factory.js:124
                                                                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:124:10
+
+Cannot call `gFactory` because in property `children` and then type argument
+`T`, array literal is incompatible with number.
 
 Error: create_factory.js:124
 124: gFactory({}, [1, 2], [3, 4]); // Error
@@ -1879,6 +2381,9 @@ Error: create_factory.js:124
 
 Error ------------------------------------------------- create_factory.js:125:10
 
+Cannot call `gFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:125
 125: gFactory({}, ...[]); // Error
               ^^ Cannot call `gFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1889,6 +2394,9 @@ Error: create_factory.js:125
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_factory.js:128:10
+
+Cannot call `gFactory` because in property `children`, undefined is incompatible
+with number.
 
 Error: create_factory.js:128
 128: gFactory({}, ...(any: Array<number>)); // Error
@@ -1901,6 +2409,9 @@ Error: create_factory.js:128
 
 Error ------------------------------------------------- create_factory.js:136:10
 
+Cannot call `hFactory` because property `children` is missing in props but
+exists in object type.
+
 Error: create_factory.js:136
 136: hFactory({}); // Error
               ^^ Cannot call `hFactory` because property `children` is missing in props [1] but exists in object type [2].
@@ -1911,6 +2422,9 @@ Error: create_factory.js:136
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- create_factory.js:142:10
+
+Cannot call `hFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:142
 142: hFactory({}, ...[]); // Error
@@ -1923,6 +2437,9 @@ Error: create_factory.js:142
 
 Error ------------------------------------------------- create_factory.js:145:10
 
+Cannot call `hFactory` because in property `children`, undefined is incompatible
+with number.
+
 Error: create_factory.js:145
 145: hFactory({}, ...(any: Array<number>)); // Error
               ^^ Cannot call `hFactory` because in property `children`, undefined [1] is incompatible with number [2].
@@ -1933,6 +2450,9 @@ Error: create_factory.js:145
                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:154:10
+
+Cannot call `iFactory` because in property `children`, null is incompatible with
+number.
 
 Error: create_factory.js:154
 154: iFactory({}, null); // Error
@@ -1945,6 +2465,9 @@ Error: create_factory.js:154
 
 Error ------------------------------------------------- create_factory.js:156:10
 
+Cannot call `iFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:156
 156: iFactory({}, 1, 2); // Error
               ^^ Cannot call `iFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -1955,6 +2478,9 @@ Error: create_factory.js:156
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:159:10
+
+Cannot call `iFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:159
 159: iFactory({}, ...[1, 2]); // Error
@@ -1967,6 +2493,9 @@ Error: create_factory.js:159
 
 Error ------------------------------------------------- create_factory.js:160:10
 
+Cannot call `iFactory` because in property `children`, children array or array
+is incompatible with number.
+
 Error: create_factory.js:160
 160: iFactory({}, ...(any: Array<number>)); // Error
               ^^ Cannot call `iFactory` because in property `children`, children array or array [1] is incompatible with number [2].
@@ -1977,6 +2506,9 @@ Error: create_factory.js:160
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:162:10
+
+Cannot call `iFactory` because in property `children`, children array is
+incompatible with number.
 
 Error: create_factory.js:162
 162: iFactory({}, 1, ...[2]); // Error
@@ -1989,6 +2521,9 @@ Error: create_factory.js:162
 
 Error ------------------------------------------------- create_factory.js:163:10
 
+Cannot call `iFactory` because in property `children`, children array or number
+is incompatible with number.
+
 Error: create_factory.js:163
 163: iFactory({}, 1, ...(any: Array<number>)); // Error
               ^^ Cannot call `iFactory` because in property `children`, children array or number [1] is incompatible with number [2].
@@ -1999,6 +2534,9 @@ Error: create_factory.js:163
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:167:10
+
+Cannot call `jFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:167
 167: jFactory({}); // Error
@@ -2011,6 +2549,9 @@ Error: create_factory.js:167
 
 Error ------------------------------------------------- create_factory.js:171:10
 
+Cannot call `jFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:171
 171: jFactory({}, 1, 2); // Error
               ^^ Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -2021,6 +2562,9 @@ Error: create_factory.js:171
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:172:10
+
+Cannot call `jFactory` because property `children` is missing in props but
+exists in object type.
 
 Error: create_factory.js:172
 172: jFactory({}, ...[]); // Error
@@ -2033,6 +2577,9 @@ Error: create_factory.js:172
 
 Error ------------------------------------------------- create_factory.js:174:10
 
+Cannot call `jFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:174
 174: jFactory({}, ...[1, 2]); // Error
               ^^ Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -2043,6 +2590,9 @@ Error: create_factory.js:174
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:175:10
+
+Cannot call `jFactory` because in property `children`, children array or array
+is incompatible with number.
 
 Error: create_factory.js:175
 175: jFactory({}, ...(any: Array<number>)); // Error
@@ -2055,6 +2605,9 @@ Error: create_factory.js:175
 
 Error ------------------------------------------------- create_factory.js:177:10
 
+Cannot call `jFactory` because in property `children`, children array is
+incompatible with number.
+
 Error: create_factory.js:177
 177: jFactory({}, 1, ...[2]); // Error
               ^^ Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
@@ -2065,6 +2618,9 @@ Error: create_factory.js:177
                                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:178:10
+
+Cannot call `jFactory` because in property `children`, children array or number
+is incompatible with number.
 
 Error: create_factory.js:178
 178: jFactory({}, 1, ...(any: Array<number>)); // Error
@@ -2077,6 +2633,9 @@ Error: create_factory.js:178
 
 Error ------------------------------------------------- create_factory.js:185:10
 
+Cannot call `kFactory` because in property `children`, string is incompatible
+with number.
+
 Error: create_factory.js:185
 185: kFactory({}, '42'); // Error
               ^^ Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
@@ -2087,6 +2646,9 @@ Error: create_factory.js:185
                                                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:186:21
+
+Cannot call `kFactory` because in property `children`, string is incompatible
+with number.
 
 Error: create_factory.js:186
 186: kFactory({children: '42'}); // Error
@@ -2099,6 +2661,9 @@ Error: create_factory.js:186
 
 Error ------------------------------------------------- create_factory.js:188:10
 
+Cannot call `kFactory` because in property `children`, string is incompatible
+with number.
+
 Error: create_factory.js:188
 188: kFactory({children: 42}, '42'); // Error
               ^^^^^^^^^^^^^^ Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
@@ -2110,6 +2675,9 @@ Error: create_factory.js:188
 
 Error ------------------------------------------------- create_factory.js:189:10
 
+Cannot call `kFactory` because in property `children`, string is incompatible
+with number.
+
 Error: create_factory.js:189
 189: kFactory({children: '42'}, '42'); // Error
               ^^^^^^^^^^^^^^^^ Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
@@ -2120,6 +2688,9 @@ Error: create_factory.js:189
                                                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:203:10
+
+Cannot call `lFactory` because property `foo` is missing in props but exists in
+object type.
 
 Error: create_factory.js:203
 203: lFactory({}, 1); // Error
@@ -2137,6 +2708,9 @@ Error: create_factory.js:203
 
 Error ------------------------------------------------- create_factory.js:204:10
 
+Cannot call `lFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:204
 204: lFactory({children: 1}); // Error
               ^^^^^^^^^^^^^ Cannot call `lFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -2152,6 +2726,9 @@ Error: create_factory.js:204
        ^ [2]: object type
 
 Error ------------------------------------------------- create_factory.js:205:10
+
+Cannot call `lFactory` because property `foo` is missing in props but exists in
+object type.
 
 Error: create_factory.js:205
 205: lFactory({bar: 1}, 2); // Error
@@ -2169,6 +2746,9 @@ Error: create_factory.js:205
 
 Error ------------------------------------------------- create_factory.js:206:10
 
+Cannot call `lFactory` because property `foo` is missing in props but exists in
+object type.
+
 Error: create_factory.js:206
 206: lFactory({bar: 1, children: 2}); // Error
               ^^^^^^^^^^^^^^^^^^^^^ Cannot call `lFactory` because property `foo` is missing in props [1] but exists in object type [2].
@@ -2185,6 +2765,9 @@ Error: create_factory.js:206
 
 Error ------------------------------------------------- create_factory.js:207:16
 
+Cannot call `lFactory` because in property `foo`, string is incompatible with
+number.
+
 Error: create_factory.js:207
 207: lFactory({foo: '1', bar: 2}, 3); // Error
                     ^^^ Cannot call `lFactory` because in property `foo`, string [1] is incompatible with number [2].
@@ -2195,6 +2778,9 @@ Error: create_factory.js:207
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:208:16
+
+Cannot call `lFactory` because in property `foo`, string is incompatible with
+number.
 
 Error: create_factory.js:208
 208: lFactory({foo: '1', bar: 2, children: 3}); // Error
@@ -2207,6 +2793,9 @@ Error: create_factory.js:208
 
 Error ------------------------------------------------- create_factory.js:209:24
 
+Cannot call `lFactory` because in property `bar`, string is incompatible with
+number.
+
 Error: create_factory.js:209
 209: lFactory({foo: 1, bar: '2'}, 3); // Error
                             ^^^ Cannot call `lFactory` because in property `bar`, string [1] is incompatible with number [2].
@@ -2217,6 +2806,9 @@ Error: create_factory.js:209
               ^^^^^^ [2]: number
 
 Error ------------------------------------------------- create_factory.js:210:24
+
+Cannot call `lFactory` because in property `bar`, string is incompatible with
+number.
 
 Error: create_factory.js:210
 210: lFactory({foo: 1, bar: '2', children: 3}); // Error
@@ -2229,6 +2821,9 @@ Error: create_factory.js:210
 
 Error ------------------------------------------------- create_factory.js:211:10
 
+Cannot call `lFactory` because in property `children`, string is incompatible
+with number.
+
 Error: create_factory.js:211
 211: lFactory({foo: 1, bar: 2}, '3'); // Error
               ^^^^^^^^^^^^^^^^ Cannot call `lFactory` because in property `children`, string [1] is incompatible with number [2].
@@ -2240,6 +2835,9 @@ Error: create_factory.js:211
 
 Error ------------------------------------------------- create_factory.js:212:37
 
+Cannot call `lFactory` because in property `children`, string is incompatible
+with number.
+
 Error: create_factory.js:212
 212: lFactory({foo: 1, bar: 2, children: '3'}); // Error
                                          ^^^ Cannot call `lFactory` because in property `children`, string [1] is incompatible with number [2].
@@ -2250,6 +2848,9 @@ Error: create_factory.js:212
                    ^^^^^^ [2]: number
 
 Error -------------------------------------------------- create_factory.js:218:2
+
+Cannot cast `mFactory().type` to `typeof N` because `M` is incompatible with
+`N`.
 
 Error: create_factory.js:218
 218: (mFactory().type: typeof N); // Error

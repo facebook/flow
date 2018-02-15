@@ -1,5 +1,7 @@
 Error ---------------------------------------------------------------- b.js:11:2
 
+Cannot cast `o[A.FOO]` to empty because null is incompatible with empty.
+
 Error: b.js:11
  11: (o[A.FOO]: empty); // error: null ~> empty
       ^^^^^^^^ Cannot cast `o[A.FOO]` to empty because null [1] is incompatible with empty [2].
@@ -10,6 +12,8 @@ Error: b.js:11
                   ^^^^^ [2]: empty
 
 Error ---------------------------------------------------------------- c.js:11:2
+
+Cannot cast `o[k]` to empty because null is incompatible with empty.
 
 Error: c.js:11
  11: (o[k]: empty); // error: null ~> empty

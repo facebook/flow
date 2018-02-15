@@ -1,5 +1,7 @@
 Error --------------------------------------------------------- undefined.js:3:7
 
+Cannot call `x.foo` because property `foo` is missing in uninitialized variable.
+
 Error: undefined.js:3
   3:     x.foo();
            ^^^ Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1].
@@ -8,6 +10,8 @@ Error: undefined.js:3
                ^ [1]: uninitialized variable
 
 Error -------------------------------------------------------- undefined2.js:7:6
+
+Cannot cast `name` to boolean because string is incompatible with boolean.
 
 Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
@@ -20,6 +24,8 @@ Error: undefined2.js:7
 
 Error -------------------------------------------------------- undefined2.js:7:6
 
+Cannot cast `name` to boolean because undefined is incompatible with boolean.
+
 Error: undefined2.js:7
   7:     (name: boolean); // error, string or void
           ^^^^ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
@@ -30,6 +36,8 @@ Error: undefined2.js:7
                   ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:13:6
+
+Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
 Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
@@ -42,6 +50,8 @@ Error: undefined2.js:13
 
 Error ------------------------------------------------------- undefined2.js:13:6
 
+Cannot cast `bar[x]` to boolean because undefined is incompatible with boolean.
+
 Error: undefined2.js:13
  13:     (bar[x]: boolean); // error, string or void
           ^^^^^^ Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2].
@@ -53,6 +63,8 @@ Error: undefined2.js:13
 
 Error ------------------------------------------------------- undefined2.js:22:7
 
+Cannot get `x[0]` because an indexer property is missing in `Number`.
+
 Error: undefined2.js:22
  22:       x[0]; // should error, could be void
            ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
@@ -61,6 +73,8 @@ Error: undefined2.js:22
                      ^^^^^^ [1]: `Number`
 
 Error ------------------------------------------------------- undefined2.js:29:6
+
+Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
 Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only
@@ -72,6 +86,8 @@ Error: undefined2.js:29
                     ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:29:6
+
+Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
 Error: undefined2.js:29
  29:     (bar[x]: boolean); // error, string only

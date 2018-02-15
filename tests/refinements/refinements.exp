@@ -1,5 +1,8 @@
 Error ------------------------------------------------------ assignment.js:16:14
 
+Cannot assign `x.parent` to `x` because null or undefined is incompatible with
+`Bar`.
+
 Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
                   ^^^^^^^^ Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2].
@@ -10,6 +13,8 @@ Error: assignment.js:16
                          ^^^ [2]: `Bar`
 
 Error ------------------------------------------------------ assignment.js:16:14
+
+null or undefined is incompatible with `Bar`.
 
 Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
@@ -22,6 +27,8 @@ Error: assignment.js:16
 
 Error ------------------------------------------------------ assignment.js:22:16
 
+Cannot get `x.parent` because property `parent` is missing in null or undefined.
+
 Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ Cannot get `x.parent` because property `parent` is missing in null or undefined [1].
@@ -30,6 +37,8 @@ Error: assignment.js:22
                          ^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------- bool.js:12:5
+
+Cannot get `x[0]` because an indexer property is missing in null or undefined.
 
 Error: bool.js:12
  12:   x[0]; // error on null and undefined
@@ -40,6 +49,8 @@ Error: bool.js:12
 
 Error ------------------------------------------------------------- bool.js:18:9
 
+Cannot get `x[0]` because an indexer property is missing in null or undefined.
+
 Error: bool.js:18
  18:       x[0]; // error on null and undefined
              ^ Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
@@ -48,6 +59,8 @@ Error: bool.js:18
                        ^^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------ bool.js:24:13
+
+Cannot perform arithmetic operation because boolean is not a number.
 
 Error: bool.js:24
  24:   if (100 * false) {
@@ -58,6 +71,8 @@ Error: bool.js:24
 
 Error ------------------------------------------------------------- bool.js:27:7
 
+Cannot perform arithmetic operation because boolean is not a number.
+
 Error: bool.js:27
  27:   if (false * 100) {
            ^^^^^ Cannot perform arithmetic operation because boolean [1] is not a number.
@@ -67,6 +82,8 @@ Error: bool.js:27
 
 Error ------------------------------------------------------------ bool.js:37:14
 
+Cannot get `x.result` because property `result` is missing in object type.
+
 Error: bool.js:37
  37:     return x.result; // error
                   ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
@@ -75,6 +92,8 @@ Error: bool.js:37
                                                       ^^^^^^^^^^^^^^^ [1]: object type
 
 Error ------------------------------------------------------------ bool.js:44:14
+
+Cannot get `x.result` because property `result` is missing in object type.
 
 Error: bool.js:44
  44:     return x.result; // error
@@ -130,6 +149,8 @@ Error: cond_prop.js:11
 
 Error ------------------------------------------------------- cond_prop.js:19:14
 
+Cannot get `x.result` because property `result` is missing in object type.
+
 Error: cond_prop.js:19
  19:     return x.result; // error
                   ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
@@ -138,6 +159,8 @@ Error: cond_prop.js:19
                                                       ^^^^^^^^^^^^^^^ [1]: object type
 
 Error ------------------------------------------------------- cond_prop.js:24:16
+
+Cannot get `x.result` because property `result` is missing in object type.
 
 Error: cond_prop.js:24
  24:       return x.result; // error, consider { foo: "herp", done: "derp" }
@@ -148,6 +171,8 @@ Error: cond_prop.js:24
 
 Error ------------------------------------------------------- cond_prop.js:26:14
 
+Cannot get `x.result` because property `result` is missing in object type.
+
 Error: cond_prop.js:26
  26:     return x.result; // error
                   ^^^^^^ Cannot get `x.result` because property `result` is missing in object type [1].
@@ -156,6 +181,8 @@ Error: cond_prop.js:26
                                                       ^^^^^^^^^^^^^^^ [1]: object type
 
 Error ------------------------------------------------------- cond_prop.js:36:12
+
+Cannot get `t.bar` because property `bar` is missing in object type.
 
 Error: cond_prop.js:36
  36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
@@ -166,6 +193,8 @@ Error: cond_prop.js:36
 
 Error ------------------------------------------------------- cond_prop.js:46:12
 
+Cannot get `t.foo` because property `foo` is missing in object type.
+
 Error: cond_prop.js:46
  46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
                 ^^^ Cannot get `t.foo` because property `foo` is missing in object type [1].
@@ -174,6 +203,8 @@ Error: cond_prop.js:46
                                                ^ [1]: object type
 
 Error ------------------------------------------------------- cond_prop.js:48:12
+
+Cannot get `t.quux` because property `quux` is missing in object type.
 
 Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
@@ -184,6 +215,8 @@ Error: cond_prop.js:48
 
 Error ------------------------------------------------------- cond_prop.js:54:11
 
+Property `p` is missing in null.
+
 Error: cond_prop.js:54
  54:     if (o.p) {} // error: property `p` not found on null
                ^ Property `p` is missing in null [1].
@@ -192,6 +225,8 @@ Error: cond_prop.js:54
                      ^^^^ [1]: null
 
 Error ---------------------------------------------------------------- eq.js:5:9
+
+Cannot compare string to number.
 
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
@@ -204,6 +239,8 @@ Error: eq.js:5
 
 Error --------------------------------------------------------------- eq.js:19:9
 
+Cannot compare string literal `bar` to number.
+
 Error: eq.js:19
  19:     if (x.y == 123) {} // error
              ^^^ Cannot compare string literal `bar` [1] to number [2].
@@ -214,6 +251,8 @@ Error: eq.js:19
                       ^^^ [2]: number
 
 Error --------------------------------------------------------------- eq.js:19:9
+
+Cannot compare string literal `foo` to number.
 
 Error: eq.js:19
  19:     if (x.y == 123) {} // error
@@ -226,6 +265,8 @@ Error: eq.js:19
 
 Error ---------------------------------------------------- hasOwnProperty.js:4:5
 
+Cannot call `x.y` because undefined is not a function.
+
 Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
          ^ Cannot call `x.y` because undefined [1] is not a function.
@@ -234,6 +275,8 @@ Error: hasOwnProperty.js:4
                           ^^^^^^^^^^ [1]: undefined
 
 Error ---------------------------------------------------- hasOwnProperty.js:6:7
+
+Cannot call `x.y` because undefined is not a function.
 
 Error: hasOwnProperty.js:6
   6:     x.y(); // error: still could be undefined
@@ -244,6 +287,8 @@ Error: hasOwnProperty.js:6
 
 Error ---------------------------------------------------- hasOwnProperty.js:9:7
 
+Cannot call `x.z` because property `z` is missing in object type.
+
 Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
            ^ Cannot call `x.z` because property `z` is missing in object type [1].
@@ -252,6 +297,8 @@ Error: hasOwnProperty.js:9
                       ^^^^^^^^^^^^^^^ [1]: object type
 
 Error -------------------------------------------------- heap_defassign.js:10:21
+
+Cannot assign `obj.p` to `x` because string is incompatible with number.
 
 Error: heap_defassign.js:10
  10:     var x: number = obj.p;      // error, obj.p : number | string
@@ -264,6 +311,8 @@ Error: heap_defassign.js:10
 
 Error -------------------------------------------------- heap_defassign.js:16:21
 
+Cannot assign `obj.p` to `x` because string is incompatible with number.
+
 Error: heap_defassign.js:16
  16:     var x: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
@@ -274,6 +323,8 @@ Error: heap_defassign.js:16
                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- heap_defassign.js:22:21
+
+Cannot assign `obj.p` to `x` because string is incompatible with number.
 
 Error: heap_defassign.js:22
  22:     var x: number = obj.p;      // error, obj.p : number | string
@@ -286,6 +337,8 @@ Error: heap_defassign.js:22
 
 Error -------------------------------------------------- heap_defassign.js:30:21
 
+Cannot assign `obj.p` to `y` because string is incompatible with number.
+
 Error: heap_defassign.js:30
  30:     var y: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
@@ -296,6 +349,8 @@ Error: heap_defassign.js:30
                   ^^^^^^ [2]: number
 
 Error -------------------------------------------------- heap_defassign.js:38:21
+
+Cannot assign `obj.p` to `y` because string is incompatible with number.
 
 Error: heap_defassign.js:38
  38:     var y: number = obj.p;      // error, obj.p : number | string
@@ -308,6 +363,8 @@ Error: heap_defassign.js:38
 
 Error -------------------------------------------------- heap_defassign.js:62:25
 
+Cannot assign `obj.p` to `y` because string is incompatible with number.
+
 Error: heap_defassign.js:62
  62:         var y: number = obj.p;  // error, string ~/~ number
                              ^^^^^ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
@@ -318,6 +375,8 @@ Error: heap_defassign.js:62
                       ^^^^^^ [2]: number
 
 Error -------------------------------------------------- heap_defassign.js:65:20
+
+Cannot assign `obj.p` to `z` because number is incompatible with string.
 
 Error: heap_defassign.js:65
  65:     var z:string = obj.p;       // error, number ~/~ string
@@ -330,6 +389,8 @@ Error: heap_defassign.js:65
 
 Error -------------------------------------------------- heap_defassign.js:73:21
 
+Cannot assign `obj.p` to `z` because string is incompatible with number.
+
 Error: heap_defassign.js:73
  73:     var z: number = obj.p;      // error, (number | string) ~/~ number
                          ^^^^^ Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2].
@@ -341,6 +402,9 @@ Error: heap_defassign.js:73
 
 Error ------------------------------------------- missing-property-cond.js:11:10
 
+Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown
+type.
+
 Error: missing-property-cond.js:11
  11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
               ^ Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1].
@@ -349,6 +413,8 @@ Error: missing-property-cond.js:11
              ^^^^ [1]: property `p2` of unknown type
 
 Error -------------------------------------------- missing-property-cond.js:16:5
+
+Cannot get `o.p3` because property `p3` is missing in object type.
 
 Error: missing-property-cond.js:16
  16:   o.p3.x; // usual error outside conditional
@@ -359,6 +425,9 @@ Error: missing-property-cond.js:16
 
 Error ------------------------------------------- missing-property-cond.js:23:10
 
+Cannot get `o.p4.x` because property `x` is missing in property `p4` does not
+exist.
+
 Error: missing-property-cond.js:23
  23:     o.p4.x; // error
               ^ Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1].
@@ -367,6 +436,8 @@ Error: missing-property-cond.js:23
              ^^^^ [1]: property `p4` does not exist
 
 Error -------------------------------------------- missing-property-cond.js:37:9
+
+Property `bar` is missing in mixed.
 
 Error: missing-property-cond.js:37
  37:   if (o.bar) {} // error, any lookup on mixed is unsafe
@@ -377,6 +448,8 @@ Error: missing-property-cond.js:37
 
 Error ------------------------------------------- missing-property-cond.js:41:16
 
+Property `bar` is missing in mixed.
+
 Error: missing-property-cond.js:41
  41:   if (typeof o.bar === 'string') {} // error
                     ^^^ Property `bar` is missing in mixed [1].
@@ -386,6 +459,8 @@ Error: missing-property-cond.js:41
 
 Error ------------------------------------------- missing-property-cond.js:65:12
 
+Property `q` is missing in null.
+
 Error: missing-property-cond.js:65
  65:   if (null.q) {} // error: property `q` on null
                 ^ Property `q` is missing in null [1].
@@ -394,6 +469,9 @@ Error: missing-property-cond.js:65
              ^^^^ [1]: null
 
 Error ------------------------------------------------------------ mixed.js:8:17
+
+Cannot call `takesString` with `x` bound to `x` because number is incompatible
+with string.
 
 Error: mixed.js:8
   8:     takesString(x); // error
@@ -406,6 +484,9 @@ Error: mixed.js:8
 
 Error ------------------------------------------------------------- mixed.js:9:6
 
+Cannot cast `!x` to boolean literal `false` because boolean is incompatible with
+boolean literal `false`.
+
 Error: mixed.js:9
   9:     (!x: false); // error: we don't know the truthiness of x
           ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
@@ -416,6 +497,9 @@ Error: mixed.js:9
                 ^^^^^ [2]: boolean literal `false`
 
 Error ----------------------------------------------------------- mixed.js:21:17
+
+Cannot call `takesNumber` with `x` bound to `x` because string is incompatible
+with number.
 
 Error: mixed.js:21
  21:     takesNumber(x); // error
@@ -428,6 +512,9 @@ Error: mixed.js:21
 
 Error ------------------------------------------------------------ mixed.js:22:6
 
+Cannot cast `!x` to boolean literal `false` because boolean is incompatible with
+boolean literal `false`.
+
 Error: mixed.js:22
  22:     (!x: false); // error: we don't know the truthiness of x
           ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
@@ -438,6 +525,9 @@ Error: mixed.js:22
                 ^^^^^ [2]: boolean literal `false`
 
 Error ----------------------------------------------------------- mixed.js:34:17
+
+Cannot call `takesString` with `x` bound to `x` because boolean is incompatible
+with string.
 
 Error: mixed.js:34
  34:     takesString(x); // error
@@ -450,6 +540,9 @@ Error: mixed.js:34
 
 Error ------------------------------------------------------------ mixed.js:35:6
 
+Cannot cast `x` to boolean literal `true` because boolean is incompatible with
+boolean literal `true`.
+
 Error: mixed.js:35
  35:     (x: true); // error: we don't know the truthiness of x
           ^ Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
@@ -460,6 +553,9 @@ Error: mixed.js:35
                ^^^^ [2]: boolean literal `true`
 
 Error ----------------------------------------------------------- mixed.js:47:17
+
+Cannot call `takesString` with `x` bound to `x` because function is incompatible
+with string.
 
 Error: mixed.js:47
  47:     takesString(x); // error
@@ -472,6 +568,9 @@ Error: mixed.js:47
 
 Error ----------------------------------------------------------- mixed.js:53:17
 
+Cannot call `takesString` with `x` bound to `x` because null is incompatible
+with string.
+
 Error: mixed.js:53
  53:     takesString(x); // error
                      ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
@@ -482,6 +581,9 @@ Error: mixed.js:53
                                ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- mixed.js:53:17
+
+Cannot call `takesString` with `x` bound to `x` because object is incompatible
+with string.
 
 Error: mixed.js:53
  53:     takesString(x); // error
@@ -494,6 +596,9 @@ Error: mixed.js:53
 
 Error ----------------------------------------------------------- mixed.js:59:17
 
+Cannot call `takesString` with `x` bound to `x` because array is incompatible
+with string.
+
 Error: mixed.js:59
  59:     takesString(x); // error
                      ^ Cannot call `takesString` with `x` bound to `x` because array [1] is incompatible with string [2].
@@ -504,6 +609,9 @@ Error: mixed.js:59
                                ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- mixed.js:65:17
+
+Cannot call `takesString` with `x` bound to `x` because undefined is
+incompatible with string.
 
 Error: mixed.js:65
  65:     takesString(x); // error
@@ -516,6 +624,9 @@ Error: mixed.js:65
 
 Error ----------------------------------------------------------- mixed.js:71:17
 
+Cannot call `takesString` with `x` bound to `x` because null is incompatible
+with string.
+
 Error: mixed.js:71
  71:     takesString(x); // error
                      ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
@@ -527,6 +638,9 @@ Error: mixed.js:71
 
 Error ----------------------------------------------------------- mixed.js:77:17
 
+Cannot call `takesString` with `x` bound to `x` because null is incompatible
+with string.
+
 Error: mixed.js:77
  77:     takesString(x); // error
                      ^ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
@@ -537,6 +651,9 @@ Error: mixed.js:77
                                ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- mixed.js:77:17
+
+Cannot call `takesString` with `x` bound to `x` because undefined is
+incompatible with string.
 
 Error: mixed.js:77
  77:     takesString(x); // error
@@ -549,6 +666,9 @@ Error: mixed.js:77
 
 Error ----------------------------------------------------------- mixed.js:83:17
 
+Cannot call `takesString` with `x` bound to `x` because boolean literal `true`
+is incompatible with string.
+
 Error: mixed.js:83
  83:     takesString(x); // error
                      ^ Cannot call `takesString` with `x` bound to `x` because boolean literal `true` [1] is incompatible with string [2].
@@ -559,6 +679,9 @@ Error: mixed.js:83
                                ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- mixed.js:89:17
+
+Cannot call `takesString` with `x` bound to `x` because boolean literal `false`
+is incompatible with string.
 
 Error: mixed.js:89
  89:     takesString(x); // error
@@ -571,6 +694,8 @@ Error: mixed.js:89
 
 Error ------------------------------------------------------------ mixed.js:97:8
 
+Cannot cast `x['foo']` to string because mixed is incompatible with string.
+
 Error: mixed.js:97
  97:       (x['foo']: string); // error, mixed
             ^^^^^^^^ Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2].
@@ -581,6 +706,9 @@ Error: mixed.js:97
                         ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- mixed.js:119:17
+
+Cannot call `takesString` with `x[0]` bound to `x` because mixed is incompatible
+with string.
 
 Error: mixed.js:119
 119:     takesString(x[0]); // error
@@ -593,6 +721,8 @@ Error: mixed.js:119
 
 Error --------------------------------------------------------------- not.js:5:5
 
+Cannot perform arithmetic operation because boolean is not a number.
+
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ Cannot perform arithmetic operation because boolean [1] is not a number.
@@ -602,6 +732,8 @@ Error: not.js:5
 
 Error --------------------------------------------------------------- not.js:5:5
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -610,6 +742,8 @@ Error: not.js:5
                        ^^^^^ [1]: null or undefined
 
 Error --------------------------------------------------------------- not.js:5:5
+
+Cannot assign number to `x` because number is incompatible with boolean.
 
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
@@ -622,6 +756,8 @@ Error: not.js:5
 
 Error --------------------------------------------------------------- not.js:5:5
 
+number is incompatible with boolean.
+
 Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^^^ number [1] is incompatible with boolean [2].
@@ -633,6 +769,8 @@ Error: not.js:5
 
 Error -------------------------------------------------------------- not.js:11:5
 
+Cannot get `x[0]` because an indexer property is missing in `Number`.
+
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
@@ -641,6 +779,8 @@ Error: not.js:11
                         ^^^^^^ [1]: `Number`
 
 Error -------------------------------------------------------------- not.js:11:7
+
+Cannot get `x[0]` because an indexer property is missing in null or undefined.
 
 Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
@@ -651,6 +791,8 @@ Error: not.js:11
 
 Error -------------------------------------------------------------- not.js:21:5
 
+Cannot get `x[0]` because an indexer property is missing in `Number`.
+
 Error: not.js:21
  21:     x[0]; // should error for number (0)
          ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
@@ -659,6 +801,9 @@ Error: not.js:21
                          ^^^^^^ [1]: `Number`
 
 Error -------------------------------------------------------------- not.js:41:6
+
+Cannot cast `!x` to boolean literal `false` because boolean is incompatible with
+boolean literal `false`.
 
 Error: not.js:41
  41:     (!x: false); // error, strings are not always truthy
@@ -671,6 +816,9 @@ Error: not.js:41
 
 Error -------------------------------------------------------------- not.js:44:6
 
+Cannot cast `!x` to boolean literal `false` because boolean is incompatible with
+boolean literal `false`.
+
 Error: not.js:44
  44:     (!x: false); // error, numbers are not always truthy
           ^^ Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
@@ -681,6 +829,9 @@ Error: not.js:44
                 ^^^^^ [2]: boolean literal `false`
 
 Error -------------------------------------------------------------- not.js:47:6
+
+Cannot cast `!x` to boolean literal `false` because boolean is incompatible with
+boolean literal `false`.
 
 Error: not.js:47
  47:     (!x: false); // error, bools are not always truthy
@@ -693,6 +844,8 @@ Error: not.js:47
 
 Error ------------------------------------------------------------- null.js:4:13
 
+Cannot perform arithmetic operation because null is not a number.
+
 Error: null.js:4
   4:   if (100 * null) {
                  ^^^^ Cannot perform arithmetic operation because null [1] is not a number.
@@ -702,6 +855,8 @@ Error: null.js:4
 
 Error -------------------------------------------------------------- null.js:7:7
 
+Cannot perform arithmetic operation because null is not a number.
+
 Error: null.js:7
   7:   if (null * 100) {
            ^^^^ Cannot perform arithmetic operation because null [1] is not a number.
@@ -710,6 +865,9 @@ Error: null.js:7
              ^^^^ [1]: null
 
 Error ------------------------------------------------------------ number.js:8:8
+
+Cannot cast `x` to undefined because number literal `0` is incompatible with
+undefined.
 
 Error: number.js:8
   8:       (x: void); // error
@@ -722,6 +880,9 @@ Error: number.js:8
 
 Error ----------------------------------------------------------- number.js:10:6
 
+Cannot cast `x` to number literal `0` because number is incompatible with number
+literal `0`.
+
 Error: number.js:10
  10:     (x: 0); // error
           ^ Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
@@ -732,6 +893,9 @@ Error: number.js:10
                ^ [2]: number literal `0`
 
 Error ----------------------------------------------------------- number.js:15:8
+
+Cannot cast `x` to number literal `0` because number is incompatible with number
+literal `0`.
 
 Error: number.js:15
  15:       (x: 0); // error
@@ -744,6 +908,8 @@ Error: number.js:15
 
 Error ----------------------------------------------------------- number.js:17:6
 
+Cannot cast `x` to undefined because number is incompatible with undefined.
+
 Error: number.js:17
  17:     (x: void); // error
           ^ Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
@@ -754,6 +920,8 @@ Error: number.js:17
                ^^^^ [2]: undefined
 
 Error ---------------------------------------------------------- number.js:21:15
+
+number literal `0` is incompatible with number literal `1`.
 
 Error: number.js:21
  21:     if (x === 0) {
@@ -766,6 +934,8 @@ Error: number.js:21
 
 Error ---------------------------------------------------------- number.js:28:15
 
+number literal `1` is incompatible with number literal `0`.
+
 Error: number.js:28
  28:     if (x === 1) {
                    ^ number literal `1` [1] is incompatible with number literal `0` [2].
@@ -776,6 +946,8 @@ Error: number.js:28
                      ^ [2]: number literal `0`
 
 Error ---------------------------------------------------------- number.js:35:15
+
+number literal `1` is incompatible with number literal `0`.
 
 Error: number.js:35
  35:     if (x !== 1) {
@@ -788,6 +960,9 @@ Error: number.js:35
 
 Error ----------------------------------------------------------- number.js:51:8
 
+Cannot cast `x` to undefined because number literal `0` is incompatible with
+undefined.
+
 Error: number.js:51
  51:       (x: void); // error
             ^ Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2].
@@ -798,6 +973,9 @@ Error: number.js:51
                  ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- number.js:51:8
+
+Cannot cast `x` to undefined because number literal `0` is incompatible with
+undefined.
 
 Error: number.js:51
  51:       (x: void); // error
@@ -810,6 +988,9 @@ Error: number.js:51
 
 Error ----------------------------------------------------------- number.js:55:8
 
+Cannot cast `x` to undefined because number literal `1` is incompatible with
+undefined.
+
 Error: number.js:55
  55:       (x: void); // error
             ^ Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2].
@@ -820,6 +1001,9 @@ Error: number.js:55
                  ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- number.js:55:8
+
+Cannot cast `x` to undefined because number literal `1` is incompatible with
+undefined.
 
 Error: number.js:55
  55:       (x: void); // error
@@ -832,6 +1016,8 @@ Error: number.js:55
 
 Error ---------------------------------------------------------- number.js:63:12
 
+Cannot return `x.foo` because number is incompatible with number literal `0`.
+
 Error: number.js:63
  63:     return x.foo; // error
                 ^^^^^ Cannot return `x.foo` because number [1] is incompatible with number literal `0` [2].
@@ -842,6 +1028,8 @@ Error: number.js:63
                                        ^ [2]: number literal `0`
 
 Error ---------------------------------------------------------- number.js:97:14
+
+Cannot return `s` because number literal `3` is incompatible with number enum.
 
 Error: number.js:97
  97:       return s; // error
@@ -854,6 +1042,8 @@ Error: number.js:97
 
 Error --------------------------------------------------------- number.js:116:14
 
+Cannot return `x` because number is incompatible with number literal `0`.
+
 Error: number.js:116
 116:       return x; // error
                   ^ Cannot return `x` because number [1] is incompatible with number literal `0` [2].
@@ -864,6 +1054,8 @@ Error: number.js:116
                               ^ [2]: number literal `0`
 
 Error -------------------------------------------------------- property.js:71:12
+
+Cannot return `x[y.z]` because null or undefined is incompatible with string.
 
 Error: property.js:71
  71:     return x[y.z];  // error
@@ -876,6 +1068,8 @@ Error: property.js:71
 
 Error ------------------------------------------------------ refinements.js:4:24
 
+Cannot assign `x` to `y` because number is incompatible with string.
+
 Error: refinements.js:4
   4:         var y:string = x;
                             ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
@@ -886,6 +1080,8 @@ Error: refinements.js:4
                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ refinements.js:7:20
+
+Cannot assign `x` to `z` because boolean is incompatible with string.
 
 Error: refinements.js:7
   7:     var z:string = x;
@@ -898,6 +1094,8 @@ Error: refinements.js:7
 
 Error ------------------------------------------------------ refinements.js:7:20
 
+Cannot assign `x` to `z` because null is incompatible with string.
+
 Error: refinements.js:7
   7:     var z:string = x;
                         ^ Cannot assign `x` to `z` because null [1] is incompatible with string [2].
@@ -908,6 +1106,8 @@ Error: refinements.js:7
                  ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- refinements.js:13:24
+
+Cannot assign `x` to `y` because null is incompatible with string.
 
 Error: refinements.js:13
  13:         var y:string = x;
@@ -920,6 +1120,8 @@ Error: refinements.js:13
 
 Error ----------------------------------------------------- refinements.js:13:24
 
+Cannot assign `x` to `y` because number is incompatible with string.
+
 Error: refinements.js:13
  13:         var y:string = x;
                             ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
@@ -930,6 +1132,8 @@ Error: refinements.js:13
                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- refinements.js:16:20
+
+Cannot assign `x` to `z` because boolean is incompatible with string.
 
 Error: refinements.js:16
  16:     var z:string = x;
@@ -942,6 +1146,8 @@ Error: refinements.js:16
 
 Error ----------------------------------------------------- refinements.js:33:24
 
+Cannot assign `x` to `y` because string is incompatible with number.
+
 Error: refinements.js:33
  33:         var y:number = x;
                             ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
@@ -952,6 +1158,8 @@ Error: refinements.js:33
                      ^^^^^^ [2]: number
 
 Error ----------------------------------------------------- refinements.js:33:24
+
+Cannot assign `x` to `y` because string is incompatible with number.
 
 Error: refinements.js:33
  33:         var y:number = x;
@@ -964,6 +1172,8 @@ Error: refinements.js:33
 
 Error ----------------------------------------------------- refinements.js:36:20
 
+Cannot assign `x` to `z` because number is incompatible with string.
+
 Error: refinements.js:36
  36:     var z:string = x;
                         ^ Cannot assign `x` to `z` because number [1] is incompatible with string [2].
@@ -974,6 +1184,8 @@ Error: refinements.js:36
                  ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- refinements.js:43:24
+
+Cannot assign `x` to `y` because number is incompatible with string.
 
 Error: refinements.js:43
  43:         var y:string = x;
@@ -986,6 +1198,8 @@ Error: refinements.js:43
 
 Error ----------------------------------------------------- refinements.js:45:20
 
+Cannot assign `x` to `z` because boolean is incompatible with string.
+
 Error: refinements.js:45
  45:     var z:string = x;
                         ^ Cannot assign `x` to `z` because boolean [1] is incompatible with string [2].
@@ -996,6 +1210,8 @@ Error: refinements.js:45
                  ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- refinements.js:45:20
+
+Cannot assign `x` to `z` because null is incompatible with string.
 
 Error: refinements.js:45
  45:     var z:string = x;
@@ -1008,6 +1224,8 @@ Error: refinements.js:45
 
 Error ----------------------------------------------------- refinements.js:54:20
 
+Cannot assign `x` to `z` because boolean is incompatible with number.
+
 Error: refinements.js:54
  54:     var z:number = x;
                         ^ Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
@@ -1018,6 +1236,9 @@ Error: refinements.js:54
                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ string.js:8:8
+
+Cannot cast `x` to undefined because string literal `foo` is incompatible with
+undefined.
 
 Error: string.js:8
   8:       (x: void); // error
@@ -1030,6 +1251,9 @@ Error: string.js:8
 
 Error ----------------------------------------------------------- string.js:10:6
 
+Cannot cast `x` to string literal `foo` because string is incompatible with
+string literal `foo`.
+
 Error: string.js:10
  10:     (x: 'foo'); // error
           ^ Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
@@ -1040,6 +1264,9 @@ Error: string.js:10
                ^^^^^ [2]: string literal `foo`
 
 Error ----------------------------------------------------------- string.js:15:8
+
+Cannot cast `x` to string literal `foo` because string is incompatible with
+string literal `foo`.
 
 Error: string.js:15
  15:       (x: 'foo'); // error
@@ -1052,6 +1279,8 @@ Error: string.js:15
 
 Error ----------------------------------------------------------- string.js:17:6
 
+Cannot cast `x` to undefined because string is incompatible with undefined.
+
 Error: string.js:17
  17:     (x: void); // error
           ^ Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
@@ -1062,6 +1291,8 @@ Error: string.js:17
                ^^^^ [2]: undefined
 
 Error ---------------------------------------------------------- string.js:21:15
+
+string literal `foo` is incompatible with string literal `bar`.
 
 Error: string.js:21
  21:     if (x === 'foo') {
@@ -1074,6 +1305,8 @@ Error: string.js:21
 
 Error ---------------------------------------------------------- string.js:28:15
 
+string literal `bar` is incompatible with string literal `foo`.
+
 Error: string.js:28
  28:     if (x === 'bar') {
                    ^^^^^ string literal `bar` [1] is incompatible with string literal `foo` [2].
@@ -1084,6 +1317,8 @@ Error: string.js:28
                      ^^^^^ [2]: string literal `foo`
 
 Error ---------------------------------------------------------- string.js:35:15
+
+string literal `bar` is incompatible with string literal `foo`.
 
 Error: string.js:35
  35:     if (x !== 'bar') {
@@ -1096,6 +1331,9 @@ Error: string.js:35
 
 Error ----------------------------------------------------------- string.js:51:8
 
+Cannot cast `x` to undefined because string literal `foo` is incompatible with
+undefined.
+
 Error: string.js:51
  51:       (x: void); // error
             ^ Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2].
@@ -1106,6 +1344,9 @@ Error: string.js:51
                  ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- string.js:51:8
+
+Cannot cast `x` to undefined because string literal `foo` is incompatible with
+undefined.
 
 Error: string.js:51
  51:       (x: void); // error
@@ -1118,6 +1359,9 @@ Error: string.js:51
 
 Error ----------------------------------------------------------- string.js:55:8
 
+Cannot cast `x` to undefined because string literal `bar` is incompatible with
+undefined.
+
 Error: string.js:55
  55:       (x: void); // error
             ^ Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2].
@@ -1128,6 +1372,9 @@ Error: string.js:55
                  ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- string.js:55:8
+
+Cannot cast `x` to undefined because string literal `bar` is incompatible with
+undefined.
 
 Error: string.js:55
  55:       (x: void); // error
@@ -1140,6 +1387,8 @@ Error: string.js:55
 
 Error ---------------------------------------------------------- string.js:63:12
 
+Cannot return `x.foo` because string is incompatible with string literal `foo`.
+
 Error: string.js:63
  63:     return x.foo; // error
                 ^^^^^ Cannot return `x.foo` because string [1] is incompatible with string literal `foo` [2].
@@ -1150,6 +1399,8 @@ Error: string.js:63
                                        ^^^^^ [2]: string literal `foo`
 
 Error ---------------------------------------------------------- string.js:98:14
+
+Cannot return `s` because string literal `d` is incompatible with string enum.
 
 Error: string.js:98
  98:       return s; // error
@@ -1162,6 +1413,8 @@ Error: string.js:98
 
 Error --------------------------------------------------------- string.js:117:14
 
+Cannot return `x` because string is incompatible with empty string.
+
 Error: string.js:117
 117:       return x; // error
                   ^ Cannot return `x` because string [1] is incompatible with empty string [2].
@@ -1172,6 +1425,9 @@ Error: string.js:117
                               ^^ [2]: empty string
 
 Error ---------------------------------------------------- super_member.js:13:14
+
+Cannot return `super.prop` because property `prop` of unknown type is
+incompatible with string.
 
 Error: super_member.js:13
  13:       return super.prop; // error, unknown type passed to string expected
@@ -1184,6 +1440,8 @@ Error: super_member.js:13
 
 Error ----------------------------------------------------------- switch.js:8:14
 
+Cannot return `text` because number is incompatible with string.
+
 Error: switch.js:8
   8:       return text; // error, should return string
                   ^^^^ Cannot return `text` because number [1] is incompatible with string [2].
@@ -1195,6 +1453,8 @@ Error: switch.js:8
 
 Error ---------------------------------------------------------- switch.js:27:14
 
+Cannot get `text[0]` because an indexer property is missing in `Number`.
+
 Error: switch.js:27
  27:       return text[0]; // error, [0] on number
                   ^^^^^^^ Cannot get `text[0]` because an indexer property is missing in `Number` [1].
@@ -1203,6 +1463,8 @@ Error: switch.js:27
                                     ^^^^^^ [1]: `Number`
 
 Error ---------------------------------------------------------- switch.js:37:14
+
+Cannot get `text[0]` because an indexer property is missing in `Number`.
 
 Error: switch.js:37
  37:       return text[0]; // error, [0] on number
@@ -1213,6 +1475,8 @@ Error: switch.js:37
 
 Error ---------------------------------------------------------- switch.js:51:15
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: switch.js:51
  51:       return (text++) + '';
                    ^^^^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -1222,6 +1486,8 @@ Error: switch.js:51
 
 Error ---------------------------------------------------- tagged_union.js:20:20
 
+Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined.
+
 Error: tagged_union.js:20
  20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
                         ^^^^^^ Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1].
@@ -1230,6 +1496,9 @@ Error: tagged_union.js:20
                  ^^^^^^ [1]: undefined. See: ast_node.js:3
 
 Error ---------------------------------------------------- tagged_union.js:34:30
+
+Cannot cast `x.taste` to string literal `Good` because string literal `Bad` is
+incompatible with string literal `Good`.
 
 Error: tagged_union.js:34
  34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
@@ -1242,6 +1511,9 @@ Error: tagged_union.js:34
 
 Error ----------------------------------------------------- tagged_union.js:35:9
 
+Cannot cast `x.raw` to string literal `No` because string literal `Maybe` is
+incompatible with string literal `No`.
+
 Error: tagged_union.js:35
  35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
              ^^^^^ Cannot cast `x.raw` to string literal `No` because string literal `Maybe` [1] is incompatible with string literal `No` [2].
@@ -1252,6 +1524,9 @@ Error: tagged_union.js:35
                       ^^^^ [2]: string literal `No`
 
 Error ----------------------------------------------------- tagged_union.js:40:6
+
+Cannot cast `x.raw` to union type because string literal `Maybe` is incompatible
+with string enum.
 
 Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
@@ -1264,6 +1539,8 @@ Error: tagged_union.js:40
 
 Error ----------------------------------------------------- tagged_union.js:40:8
 
+Cannot get `x.raw` because property `raw` is missing in `Orange`.
+
 Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
             ^^^ Cannot get `x.raw` because property `raw` is missing in `Orange` [1].
@@ -1273,6 +1550,8 @@ Error: tagged_union.js:40
 
 Error ---------------------------------------------------- tagged_union.js:72:21
 
+Cannot get `x.A` because property `A` is missing in `C`.
+
 Error: tagged_union.js:72
  72:   default: return x.A; // error, x: C and property A not found in type C
                          ^ Cannot get `x.A` because property `A` is missing in `C` [1].
@@ -1281,6 +1560,9 @@ Error: tagged_union.js:72
                                 ^ [1]: `C`
 
 Error ----------------------------------------------------- tagged_union.js:89:8
+
+Cannot cast `x.kindTypo` to string because number literal `1` is incompatible
+with string.
 
 Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
@@ -1293,6 +1575,8 @@ Error: tagged_union.js:89
 
 Error ---------------------------------------------------- tagged_union.js:96:11
 
+Cannot get `x.fooTypo` because property `fooTypo` is missing in object type.
+
 Error: tagged_union.js:96
  96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
                ^^^^^^^ Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1].
@@ -1301,6 +1585,8 @@ Error: tagged_union.js:96
                            ^^^^^^^^^^^^^^^ [1]: object type
 
 Error --------------------------------------------------- tagged_union.js:101:27
+
+Cannot call `null.toString` because property `toString` is missing in null.
 
 Error: tagged_union.js:101
 101:     if (x.kind === (null).toString()) {} // error, method on null
@@ -1311,6 +1597,8 @@ Error: tagged_union.js:101
 
 Error --------------------------------------------------- tagged_union.js:102:35
 
+Cannot call `null.toString` because property `toString` is missing in null.
+
 Error: tagged_union.js:102
 102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                        ^^^^^^^^ Cannot call `null.toString` because property `toString` is missing in null [1].
@@ -1319,6 +1607,9 @@ Error: tagged_union.js:102
                                    ^^^^ [1]: null
 
 Error ---------------------------------------------------- tagged_union.js:113:8
+
+Cannot cast `x.legnth` to string because number literal `0` is incompatible with
+string.
 
 Error: tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
@@ -1331,6 +1622,9 @@ Error: tagged_union.js:113
 
 Error ---------------------------------------------------- tagged_union.js:118:8
 
+Cannot cast `y.legnth` to string because number literal `0` is incompatible with
+string.
+
 Error: tagged_union.js:118
 118:       (y.legnth: string); // error: number literal 0 !~> string
             ^^^^^^^^ Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2].
@@ -1341,6 +1635,9 @@ Error: tagged_union.js:118
                         ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- tagged_union.js:123:8
+
+Cannot cast `z.toStirng` to string because number literal `0` is incompatible
+with string.
 
 Error: tagged_union.js:123
 123:       (z.toStirng: string); // error: number literal 0 !~> string
@@ -1353,6 +1650,9 @@ Error: tagged_union.js:123
 
 Error ---------------------------------------------------- tagged_union.js:128:8
 
+Cannot cast `q.valeuOf` to string because number literal `0` is incompatible
+with string.
+
 Error: tagged_union.js:128
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
             ^^^^^^^^^ Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2].
@@ -1363,6 +1663,9 @@ Error: tagged_union.js:128
                          ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- tagged_union.js:146:8
+
+Cannot cast `x.str` to string literal `not str` because string literal `str` is
+incompatible with string literal `not str`.
 
 Error: tagged_union.js:146
 146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
@@ -1375,6 +1678,9 @@ Error: tagged_union.js:146
 
 Error ---------------------------------------------------- tagged_union.js:149:8
 
+Cannot cast `x.num` to number literal `456` because number literal `123` is
+incompatible with number literal `456`.
+
 Error: tagged_union.js:149
 149:       (x.num: 456); // error: 123 !~> 456
             ^^^^^ Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal `456` [2].
@@ -1385,6 +1691,9 @@ Error: tagged_union.js:149
                      ^^^ [2]: number literal `456`
 
 Error ---------------------------------------------------- tagged_union.js:152:8
+
+Cannot cast `x.bool` to boolean literal `false` because boolean literal `true`
+is incompatible with boolean literal `false`.
 
 Error: tagged_union.js:152
 152:       (x.bool: false); // error: true !~> false
@@ -1397,6 +1706,9 @@ Error: tagged_union.js:152
 
 Error ---------------------------------------------------- tagged_union.js:156:8
 
+Cannot cast `x.badStr` to empty because string literal `bad` is incompatible
+with empty.
+
 Error: tagged_union.js:156
 156:       (x.badStr: empty); // error: 'bad' !~> empty
             ^^^^^^^^ Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2].
@@ -1407,6 +1719,9 @@ Error: tagged_union.js:156
                         ^^^^^ [2]: empty
 
 Error ---------------------------------------------------- tagged_union.js:159:8
+
+Cannot cast `x.badNum` to empty because number literal `123` is incompatible
+with empty.
 
 Error: tagged_union.js:159
 159:       (x.badNum: empty); // error: 123 !~> empty
@@ -1419,6 +1734,9 @@ Error: tagged_union.js:159
 
 Error ---------------------------------------------------- tagged_union.js:162:8
 
+Cannot cast `x.badBool` to empty because boolean literal `true` is incompatible
+with empty.
+
 Error: tagged_union.js:162
 162:       (x.badBool: empty); // error: true !~> empty
             ^^^^^^^^^ Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2].
@@ -1430,6 +1748,8 @@ Error: tagged_union.js:162
 
 Error ---------------------------------------------------- tagged_union.js:170:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:170
 170:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1438,6 +1758,8 @@ Error: tagged_union.js:170
                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:173:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:173
 173:       x.y; // error
@@ -1448,6 +1770,8 @@ Error: tagged_union.js:173
 
 Error ---------------------------------------------------- tagged_union.js:177:9
 
+Cannot get `x.y` because property `y` is missing in object type.
+
 Error: tagged_union.js:177
 177:       x.y; // error
              ^ Cannot get `x.y` because property `y` is missing in object type [1].
@@ -1456,6 +1780,8 @@ Error: tagged_union.js:177
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:180:9
+
+Cannot get `x.z` because property `z` is missing in object type.
 
 Error: tagged_union.js:180
 180:       x.z; // error
@@ -1466,6 +1792,8 @@ Error: tagged_union.js:180
 
 Error ---------------------------------------------------- tagged_union.js:188:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:188
 188:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1474,6 +1802,8 @@ Error: tagged_union.js:188
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:190:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:190
 190:       x.y; // error: x.foo could be a string
@@ -1484,6 +1814,8 @@ Error: tagged_union.js:190
 
 Error ---------------------------------------------------- tagged_union.js:191:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:191
 191:       x.z; // error: could still be either case (if foo was a different number)
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1492,6 +1824,8 @@ Error: tagged_union.js:191
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:196:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:196
 196:       x.y; // error
@@ -1502,6 +1836,8 @@ Error: tagged_union.js:196
 
 Error ---------------------------------------------------- tagged_union.js:199:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:199
 199:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1510,6 +1846,8 @@ Error: tagged_union.js:199
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:207:9
+
+Cannot get `x.z` because property `z` is missing in object type.
 
 Error: tagged_union.js:207
 207:       x.z; // error
@@ -1520,6 +1858,8 @@ Error: tagged_union.js:207
 
 Error ---------------------------------------------------- tagged_union.js:209:9
 
+Cannot get `x.y` because property `y` is missing in object type.
+
 Error: tagged_union.js:209
 209:       x.y; // error: x.foo could be a string
              ^ Cannot get `x.y` because property `y` is missing in object type [1].
@@ -1528,6 +1868,8 @@ Error: tagged_union.js:209
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:210:9
+
+Cannot get `x.z` because property `z` is missing in object type.
 
 Error: tagged_union.js:210
 210:       x.z; // error: could still be either case (if foo was a different number)
@@ -1538,6 +1880,8 @@ Error: tagged_union.js:210
 
 Error ---------------------------------------------------- tagged_union.js:215:9
 
+Cannot get `x.y` because property `y` is missing in object type.
+
 Error: tagged_union.js:215
 215:       x.y; // error
              ^ Cannot get `x.y` because property `y` is missing in object type [1].
@@ -1546,6 +1890,8 @@ Error: tagged_union.js:215
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:217:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:217
 217:       x.y; // error: x.foo could be a different string
@@ -1556,6 +1902,8 @@ Error: tagged_union.js:217
 
 Error ---------------------------------------------------- tagged_union.js:218:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:218
 218:       x.z; // error: x.foo could be a number
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1564,6 +1912,8 @@ Error: tagged_union.js:218
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:228:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:228
 228:       x.y; // error: flow isn't smart enough to figure this out yet
@@ -1574,6 +1924,8 @@ Error: tagged_union.js:228
 
 Error ---------------------------------------------------- tagged_union.js:229:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:229
 229:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1582,6 +1934,8 @@ Error: tagged_union.js:229
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:237:9
+
+Cannot get `x.z` because property `z` is missing in object type.
 
 Error: tagged_union.js:237
 237:       x.z; // error
@@ -1592,6 +1946,8 @@ Error: tagged_union.js:237
 
 Error ---------------------------------------------------- tagged_union.js:240:9
 
+Cannot get `x.y` because property `y` is missing in object type.
+
 Error: tagged_union.js:240
 240:       x.y; // error
              ^ Cannot get `x.y` because property `y` is missing in object type [1].
@@ -1600,6 +1956,8 @@ Error: tagged_union.js:240
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:244:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:244
 244:       x.y; // error
@@ -1610,6 +1968,8 @@ Error: tagged_union.js:244
 
 Error ---------------------------------------------------- tagged_union.js:247:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:247
 247:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1618,6 +1978,8 @@ Error: tagged_union.js:247
                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:255:9
+
+Cannot get `x.z` because property `z` is missing in object type.
 
 Error: tagged_union.js:255
 255:       x.z; // error
@@ -1628,6 +1990,8 @@ Error: tagged_union.js:255
 
 Error ---------------------------------------------------- tagged_union.js:258:9
 
+Cannot get `x.y` because property `y` is missing in object type.
+
 Error: tagged_union.js:258
 258:       x.y; // error
              ^ Cannot get `x.y` because property `y` is missing in object type [1].
@@ -1636,6 +2000,8 @@ Error: tagged_union.js:258
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- tagged_union.js:262:9
+
+Cannot get `x.y` because property `y` is missing in object type.
 
 Error: tagged_union.js:262
 262:       x.y; // error
@@ -1646,6 +2012,8 @@ Error: tagged_union.js:262
 
 Error ---------------------------------------------------- tagged_union.js:265:9
 
+Cannot get `x.z` because property `z` is missing in object type.
+
 Error: tagged_union.js:265
 265:       x.z; // error
              ^ Cannot get `x.z` because property `z` is missing in object type [1].
@@ -1655,6 +2023,8 @@ Error: tagged_union.js:265
 
 Error ------------------------------------------------------------ typeof.js:5:5
 
+Cannot get `x[0]` because an indexer property is missing in `Boolean`.
+
 Error: typeof.js:5
   5:     x[0]; // error for boolean, not number
          ^^^^ Cannot get `x[0]` because an indexer property is missing in `Boolean` [1].
@@ -1663,6 +2033,8 @@ Error: typeof.js:5
                        ^^^^ [1]: `Boolean`
 
 Error ---------------------------------------------------------- typeof.js:12:12
+
+Cannot return `x` because null is incompatible with number.
 
 Error: typeof.js:12
  12:     return x; // error, null
@@ -1675,6 +2047,8 @@ Error: typeof.js:12
 
 Error ----------------------------------------------------------- typeof.js:23:7
 
+Cannot call `BAZ.stuff` because undefined is not a function.
+
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
            ^^^^^ Cannot call `BAZ.stuff` because undefined [1] is not a function.
@@ -1683,6 +2057,8 @@ Error: typeof.js:23
                                  ^^^^^^^^^^^^^^^^^^^ [1]: undefined. See lib: lib.js:3
 
 Error ----------------------------------------------------------- typeof.js:23:7
+
+Cannot call `BAZ.stuff` because property `stuff` is missing in undefined.
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
@@ -1693,6 +2069,8 @@ Error: typeof.js:23
 
 Error ----------------------------------------------------------- typeof.js:26:7
 
+Cannot get `BAZ.stuff` because property `stuff` is missing in undefined.
+
 Error: typeof.js:26
  26:   BAZ.stuff; // error, could be undefined
            ^^^^^ Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1].
@@ -1701,6 +2079,8 @@ Error: typeof.js:26
                                                         ^^^^ [1]: undefined. See lib: lib.js:3
 
 Error ----------------------------------------------------------- typeof.js:30:9
+
+Cannot call `BAZ.stuff` because undefined is not a function.
 
 Error: typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
@@ -1711,17 +2091,25 @@ Error: typeof.js:30
 
 Error ---------------------------------------------------------- typeof.js:49:20
 
+Cannot compare the result of `typeof` to string literal `foo` because it is not
+a valid `typeof` return value.
+
 Error: typeof.js:49
  49:   if (typeof x === "foo") { // error
                         ^^^^^ Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
 
 Error ---------------------------------------------------------- typeof.js:61:20
 
+Cannot compare the result of `typeof` to string literal `foo` because it is not
+a valid `typeof` return value.
+
 Error: typeof.js:61
  61:   if (typeof x === `foo`) { // error
                         ^^^^^ Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
 
 Error ----------------------------------------------------------- typeof.js:69:6
+
+Cannot cast `Foo` to empty because statics of `Foo` is incompatible with empty.
 
 Error: typeof.js:69
  69:     (Foo: empty); // error, Foo is a class
@@ -1734,6 +2122,8 @@ Error: typeof.js:69
 
 Error ----------------------------------------------------------- typeof.js:77:6
 
+Cannot cast `x` to empty because `Foo` is incompatible with empty.
+
 Error: typeof.js:77
  77:     (x: empty); // error
           ^ Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2].
@@ -1745,6 +2135,8 @@ Error: typeof.js:77
 
 Error ----------------------------------------------------------- undef.js:31:13
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: undef.js:31
  31:     var y = x * 1000;
                  ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1753,6 +2145,8 @@ Error: undef.js:31
                                   ^^^^^^^ [1]: null or undefined
 
 Error ----------------------------------------------------------- undef.js:38:13
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: undef.js:38
  38:     var y = x * 1000;
@@ -1763,6 +2157,8 @@ Error: undef.js:38
 
 Error ----------------------------------------------------------- undef.js:44:13
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: undef.js:44
  44:     var y = x.x * 1000;
                  ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1771,6 +2167,8 @@ Error: undef.js:44
                                         ^^^^^^^ [1]: null or undefined
 
 Error ----------------------------------------------------------- undef.js:51:13
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: undef.js:51
  51:     var y = x.x * 1000;
@@ -1781,6 +2179,8 @@ Error: undef.js:51
 
 Error ----------------------------------------------------------- undef.js:69:13
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: undef.js:69
  69:     var b = y * 1000; // error
                  ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1789,6 +2189,8 @@ Error: undef.js:69
                                                    ^^^^^^^ [1]: null or undefined
 
 Error ----------------------------------------------------------- undef.js:74:13
+
+Cannot perform arithmetic operation because undefined is not a number.
 
 Error: undef.js:74
  74:   if (100 * undefined) {
@@ -1799,6 +2201,8 @@ Error: undef.js:74
 
 Error ------------------------------------------------------------ undef.js:77:7
 
+Cannot perform arithmetic operation because undefined is not a number.
+
 Error: undef.js:77
  77:   if (undefined * 100) {
            ^^^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
@@ -1807,6 +2211,8 @@ Error: undef.js:77
                               ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
 
 Error ------------------------------------------------------------- union.js:7:5
+
+Cannot get `x[0]` because an indexer property is missing in `Boolean`.
 
 Error: union.js:7
   7:     x[0]; // error on boolean
@@ -1817,6 +2223,8 @@ Error: union.js:7
 
 Error ------------------------------------------------------------ union.js:13:5
 
+Cannot get `x[0]` because an indexer property is missing in `Number`.
+
 Error: union.js:13
  13:     x[0]; // error on number
          ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
@@ -1825,6 +2233,8 @@ Error: union.js:13
                        ^^^^^ [1]: `Number`
 
 Error ------------------------------------------------------------ union.js:19:5
+
+Cannot get `x[0]` because an indexer property is missing in `Number`.
 
 Error: union.js:19
  19:     x[0]; // error on number
@@ -1835,6 +2245,8 @@ Error: union.js:19
 
 Error ------------------------------------------------------------ void.js:31:13
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: void.js:31
  31:     var y = x * 1000;
                  ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1843,6 +2255,8 @@ Error: void.js:31
                                  ^^^^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------ void.js:38:13
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: void.js:38
  38:     var y = x * 1000;
@@ -1853,6 +2267,8 @@ Error: void.js:38
 
 Error ------------------------------------------------------------ void.js:44:13
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: void.js:44
  44:     var y = x.x * 1000;
                  ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1861,6 +2277,8 @@ Error: void.js:44
                                       ^^^^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------ void.js:51:13
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: void.js:51
  51:     var y = x.x * 1000;
@@ -1871,6 +2289,8 @@ Error: void.js:51
 
 Error ------------------------------------------------------------ void.js:56:32
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: void.js:56
  56:   if (x !== null && x !== void(x * 1000)) {
                                     ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1879,6 +2299,8 @@ Error: void.js:56
                                         ^^^^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------ void.js:62:32
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: void.js:62
  62:   if (x === null || x === void(x * 1000)) {
@@ -1889,6 +2311,8 @@ Error: void.js:62
 
 Error ------------------------------------------------------------ void.js:69:36
 
+Cannot perform arithmetic operation because null or undefined is not a number.
+
 Error: void.js:69
  69:   if (x.x !== null && x.x !== void(x.x * 1000)) {
                                         ^^^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -1897,6 +2321,8 @@ Error: void.js:69
                                               ^^^^^^^ [1]: null or undefined
 
 Error ------------------------------------------------------------ void.js:75:36
+
+Cannot perform arithmetic operation because null or undefined is not a number.
 
 Error: void.js:75
  75:   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -1907,6 +2333,8 @@ Error: void.js:75
 
 Error ------------------------------------------------------------ void.js:82:13
 
+Cannot perform arithmetic operation because undefined is not a number.
+
 Error: void.js:82
  82:   if (100 * void(0)) {
                  ^^^^^^^ Cannot perform arithmetic operation because undefined [1] is not a number.
@@ -1915,6 +2343,8 @@ Error: void.js:82
                    ^^^^^^^ [1]: undefined
 
 Error ------------------------------------------------------------- void.js:85:7
+
+Cannot perform arithmetic operation because undefined is not a number.
 
 Error: void.js:85
  85:   if (void(0) * 100) {

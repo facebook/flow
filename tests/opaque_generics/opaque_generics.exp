@@ -1,5 +1,8 @@
 Error --------------------------------------------- importtest-polarity.js:10:12
 
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
+
 Error: importtest-polarity.js:10
  10:     return x;
                 ^ Cannot return `x` because in type argument `T`, string [1] is incompatible with number [2].
@@ -10,6 +13,9 @@ Error: importtest-polarity.js:10
                                                                  ^^^^^^ [2]: number
 
 Error --------------------------------------------- importtest-polarity.js:18:12
+
+Cannot return `x` because in type argument `T`, number is incompatible with
+string.
 
 Error: importtest-polarity.js:18
  18:     return x;
@@ -22,6 +28,9 @@ Error: importtest-polarity.js:18
 
 Error --------------------------------------------- importtest-polarity.js:26:12
 
+Cannot return `x` because in type argument `T`, number is incompatible with
+string.
+
 Error: importtest-polarity.js:26
  26:     return x;
                 ^ Cannot return `x` because in type argument `T`, number [1] is incompatible with string [2].
@@ -32,6 +41,9 @@ Error: importtest-polarity.js:26
                                                                  ^^^^^^ [2]: string
 
 Error --------------------------------------------- importtest-polarity.js:30:12
+
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
 
 Error: importtest-polarity.js:30
  30:     return x;
@@ -71,6 +83,9 @@ Error: importtest-polarity.js:39
 
 Error --------------------------------------------- importtest-polarity.js:39:12
 
+Cannot return `x` because in type argument `S`, number is incompatible with
+string.
+
 Error: importtest-polarity.js:39
  39:     return x;
                 ^ Cannot return `x` because in type argument `S`, number [1] is incompatible with string [2].
@@ -81,6 +96,9 @@ Error: importtest-polarity.js:39
                                                                                        ^^^^^^ [2]: string
 
 Error --------------------------------------------- importtest-polarity.js:39:12
+
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
 
 Error: importtest-polarity.js:39
  39:     return x;
@@ -93,6 +111,9 @@ Error: importtest-polarity.js:39
 
 Error ------------------------------------------------------- importtest.js:7:12
 
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
+
 Error: importtest.js:7
   7:     return x;
                 ^ Cannot return `x` because in type argument `T`, string [1] is incompatible with number [2].
@@ -103,6 +124,9 @@ Error: importtest.js:7
                                              ^^^^^^ [2]: number
 
 Error ------------------------------------------------------ importtest.js:15:12
+
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
 
 Error: importtest.js:15
  15:     return x;
@@ -115,6 +139,8 @@ Error: importtest.js:15
 
 Error ------------------------------------------------------ importtest.js:23:12
 
+Cannot return `x` because `Container` is incompatible with `Box`.
+
 Error: importtest.js:23
  23:     return x;
                 ^ Cannot return `x` because `Container` [1] is incompatible with `Box` [2].
@@ -125,6 +151,8 @@ Error: importtest.js:23
                                                ^^^^^^^^^^^ [2]: `Box`
 
 Error ------------------------------------------------------ importtest.js:27:12
+
+Cannot return `x` because `Box` is incompatible with `Container`.
 
 Error: importtest.js:27
  27:     return x;
@@ -137,6 +165,9 @@ Error: importtest.js:27
 
 Error --------------------------------------------------- test-polarity.js:12:28
 
+Cannot use `T` in an output position because `T` is expected to occur only in
+input positions.
+
 Error: test-polarity.js:12
  12: opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type
                                 ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
@@ -145,6 +176,9 @@ Error: test-polarity.js:12
                          ^ [1]: `T`
 
 Error --------------------------------------------------- test-polarity.js:13:28
+
+Cannot use `T` in an input position because `T` is expected to occur only in
+output positions.
 
 Error: test-polarity.js:13
  13: opaque type Bad2<+T> = Bar<T>; // Error: Bar expects contravariant type
@@ -155,6 +189,9 @@ Error: test-polarity.js:13
 
 Error --------------------------------------------------- test-polarity.js:14:28
 
+Cannot use `T` in an input/output position because `T` is expected to occur only
+in input positions.
+
 Error: test-polarity.js:14
  14: opaque type Bad3<-T> = Baz<T>; // Error: Baz expects invariant type
                                 ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
@@ -164,6 +201,9 @@ Error: test-polarity.js:14
 
 Error --------------------------------------------------- test-polarity.js:15:28
 
+Cannot use `T` in an input/output position because `T` is expected to occur only
+in output positions.
+
 Error: test-polarity.js:15
  15: opaque type Bad4<+T> = Baz<T>; // Error: Baz expects invariant type
                                 ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -172,6 +212,9 @@ Error: test-polarity.js:15
                          ^ [1]: `T`
 
 Error ------------------------------------------------------------- test.js:7:12
+
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
 
 Error: test.js:7
   7:     return x;
@@ -183,6 +226,9 @@ Error: test.js:7
                                              ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ test.js:15:12
+
+Cannot return `x` because in type argument `T`, string is incompatible with
+number.
 
 Error: test.js:15
  15:     return x;

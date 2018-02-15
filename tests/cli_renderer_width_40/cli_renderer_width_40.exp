@@ -1,5 +1,8 @@
 Error --------------------- basic.js:6:2
 
+Cannot cast `null` to empty because null
+is incompatible with empty.
+
 Error: basic.js:6
   6: (null: empty); // Error: null ~> empty
       ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].
@@ -10,6 +13,9 @@ Error: basic.js:6
               ^^^^^ [2]: empty
 
 Error - name/that/gets/very/close.js:6:2
+
+Cannot cast `null` to empty because null
+is incompatible with empty.
 
 Error: name/that/gets/very/close.js:6
   6: (null: empty); // Error: null ~> empty
@@ -23,6 +29,9 @@ Error: name/that/gets/very/close.js:6
 Error ----------------------------------
 name/that/gets/very/close2.js:6:2
 
+Cannot cast `null` to empty because null
+is incompatible with empty.
+
 Error: name/that/gets/very/close2.js:6
   6: (null: empty); // Error: null ~> empty
       ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].
@@ -33,6 +42,9 @@ Error: name/that/gets/very/close2.js:6
               ^^^^^ [2]: empty
 
 Error - name_that_gets_very_close.js:6:2
+
+Cannot cast `null` to empty because null
+is incompatible with empty.
 
 Error: name_that_gets_very_close.js:6
   6: (null: empty); // Error: null ~> empty
@@ -46,6 +58,9 @@ Error: name_that_gets_very_close.js:6
 Error ----------------------------------
 name_that_gets_very_close2.js:6:2
 
+Cannot cast `null` to empty because null
+is incompatible with empty.
+
 Error: name_that_gets_very_close2.js:6
   6: (null: empty); // Error: null ~> empty
       ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].
@@ -55,8 +70,109 @@ Error: name_that_gets_very_close2.js:6
     6: (null: empty); // Error: null ~> empty
               ^^^^^ [2]: empty
 
+Error ------ non_breakable_breaks.js:7:2
+
+Cannot cast
+`reallyReallyReallyReallyReallyReallyRea
+llyReallyLongVariableName` to empty
+because number is incompatible with
+empty.
+
+Error: non_breakable_breaks.js:7
+  7: (reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName` to empty because number [1] is incompatible with empty [2].
+  References:
+    6: const reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
+                                                                                ^^ [1]: number
+    7: (reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+                                                                          ^^^^^ [2]: empty
+
+Error ----- non_breakable_breaks.js:10:2
+
+Cannot cast
+`reallyReallyReallyReallyReallyReallyRea
+llyReallyReallyReallyReallyReallyReallyR
+eallyReallyReallyLongVariableName` to
+empty because number is incompatible
+with empty.
+
+Error: non_breakable_breaks.js:10
+ 10: (reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName` to empty because number [1] is incompatible with empty [2].
+  References:
+    9: const reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
+                                                                                                                                ^^ [1]: number
+   10: (reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+                                                                                                                          ^^^^^ [2]: empty
+
+Error ----- non_breakable_breaks.js:13:2
+
+Cannot cast
+`abcdefghijklmnopqrstuvwxyzabcdefghijkl`
+to empty because number is incompatible
+with empty.
+
+Error: non_breakable_breaks.js:13
+ 13: (abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `abcdefghijklmnopqrstuvwxyzabcdefghijkl` to empty because number [1] is incompatible with empty [2].
+  References:
+   12: const abcdefghijklmnopqrstuvwxyzabcdefghijkl = 42;
+                                                      ^^ [1]: number
+   13: (abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
+                                                ^^^^^ [2]: empty
+
+Error ----- non_breakable_breaks.js:16:2
+
+Cannot cast
+`abcdefghijklmnopqrstuvwxyzabcdefghijklm
+` to empty because number is
+incompatible with empty.
+
+Error: non_breakable_breaks.js:16
+ 16: (abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `abcdefghijklmnopqrstuvwxyzabcdefghijklm` to empty because number [1] is incompatible with empty [2].
+  References:
+   15: const abcdefghijklmnopqrstuvwxyzabcdefghijklm = 42;
+                                                       ^^ [1]: number
+   16: (abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
+                                                 ^^^^^ [2]: empty
+
+Error ----- non_breakable_breaks.js:19:2
+
+Cannot cast `mnopqrstuvwxyzabcdefghijkl`
+to empty because number is incompatible
+with empty.
+
+Error: non_breakable_breaks.js:19
+ 19: (mnopqrstuvwxyzabcdefghijkl: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `mnopqrstuvwxyzabcdefghijkl` to empty because number [1] is incompatible with empty [2].
+  References:
+   18: const mnopqrstuvwxyzabcdefghijkl = 42;
+                                          ^^ [1]: number
+   19: (mnopqrstuvwxyzabcdefghijkl: empty);
+                                    ^^^^^ [2]: empty
+
+Error ----- non_breakable_breaks.js:22:2
+
+Cannot cast
+`mnopqrstuvwxyzabcdefghijklm` to empty
+because number is incompatible with
+empty.
+
+Error: non_breakable_breaks.js:22
+ 22: (mnopqrstuvwxyzabcdefghijklm: empty);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `mnopqrstuvwxyzabcdefghijklm` to empty because number [1] is incompatible with empty [2].
+  References:
+   21: const mnopqrstuvwxyzabcdefghijklm = 42;
+                                           ^^ [1]: number
+   22: (mnopqrstuvwxyzabcdefghijklm: empty);
+                                     ^^^^^ [2]: empty
+
 Error ----------------------------------
 really/long/filename/that/is/much/more/then/40/characters.js:6:2
+
+Cannot cast `null` to empty because null
+is incompatible with empty.
 
 Error: really/long/filename/that/is/much/more/then/40/characters.js:6
   6: (null: empty); // Error: null ~> empty
@@ -70,6 +186,9 @@ Error: really/long/filename/that/is/much/more/then/40/characters.js:6
 Error ----------------------------------
 really_long_filename_that_is_much_more_then_40_characters.js:6:2
 
+Cannot cast `null` to empty because null
+is incompatible with empty.
+
 Error: really_long_filename_that_is_much_more_then_40_characters.js:6
   6: (null: empty); // Error: null ~> empty
       ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].
@@ -79,5 +198,25 @@ Error: really_long_filename_that_is_much_more_then_40_characters.js:6
     6: (null: empty); // Error: null ~> empty
               ^^^^^ [2]: empty
 
+Error -------------------- wrap.js:21:64
 
-Found 7 errors
+Cannot cast object literal to object
+type because in property
+`this.is.going`, index 0, property
+`to.be.a.really`, index 0, property
+`long.error.message.that.hopefully`,
+index 0, and then property
+`breaks.on.multiple.lines`; number is
+incompatible with string.
+
+Error: wrap.js:21
+ 21:                               {breaks: {on: {multiple: {lines: 42}}}},
+                                                                    ^^ Cannot cast object literal to object type because in property `this.is.going`, index 0, property `to.be.a.really`, index 0, property `long.error.message.that.hopefully`, index 0, and then property `breaks.on.multiple.lines`; number [1] is incompatible with string [2].
+  References:
+   21:                               {breaks: {on: {multiple: {lines: 42}}}},
+                                                                      ^^ [1]: number
+   51:                               {breaks: {on: {multiple: {lines: string}}}},
+                                                                      ^^^^^^ [2]: string
+
+
+Found 14 errors

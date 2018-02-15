@@ -1,5 +1,9 @@
 Error ------------------------------------------------------------- pred.js:17:8
 
+Cannot return
+`options.objectMode || options.readableObjectMode || options.writableObjectMode`
+because undefined is incompatible with boolean.
+
 Error: pred.js:17
  17:     || options.writableObjectMode; // error, undefined ~> boolean
             ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot return `options.objectMode || options.readableObjectMode || options.writableObjectMode` because undefined [1] is incompatible with boolean [2].
@@ -10,6 +14,8 @@ Error: pred.js:17
                                                                  ^^^^^^^ [2]: boolean
 
 Error ---------------------------------------------------- proper_blaming.js:9:3
+
+Cannot get `x.nope` because property `nope` is missing in null.
 
 Error: proper_blaming.js:9
   9: x.nope; // error here

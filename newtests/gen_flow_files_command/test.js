@@ -193,6 +193,8 @@ export default suite(({addFile, addFiles, flowCmd}) => [
                                                                         `
                                                                           Error ------------------------------------------------------- type_error.js:3:24
 
+                                                                          Cannot assign \`42\` to \`a\` because number is incompatible with string.
+
                                                                           Error: type_error.js:3
                                                                             3: export var a: string = 42;
                                                                                                       ^^ Cannot assign \`42\` to \`a\` because number [1] is incompatible with string [2].

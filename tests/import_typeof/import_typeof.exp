@@ -1,5 +1,8 @@
 Error --------------------------------------------------- import_typeof.js:13:22
 
+Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` is incompatible with
+statics of `ClassFoo1`.
+
 Error: import_typeof.js:13
  13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
                           ^^^^^^^^^^^^^^^ Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with statics of `ClassFoo1` [2].
@@ -11,6 +14,8 @@ Error: import_typeof.js:13
 
 Error ---------------------------------------------------- import_typeof.js:14:5
 
+Cannot reference type `ClassFoo1T` from a value position.
+
 Error: import_typeof.js:14
  14: new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
          ^^^^^^^^^^ Cannot reference type `ClassFoo1T` [1] from a value position.
@@ -19,6 +24,9 @@ Error: import_typeof.js:14
                      ^^^^^^^^^^ [1]: `ClassFoo1T`
 
 Error --------------------------------------------------- import_typeof.js:24:22
+
+Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` is incompatible with
+statics of `ClassFoo2`.
 
 Error: import_typeof.js:24
  24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -31,6 +39,8 @@ Error: import_typeof.js:24
 
 Error ---------------------------------------------------- import_typeof.js:25:5
 
+Cannot reference type `ClassFoo2T` from a value position.
+
 Error: import_typeof.js:25
  25: new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
          ^^^^^^^^^^ Cannot reference type `ClassFoo2T` [1] from a value position.
@@ -39,6 +49,9 @@ Error: import_typeof.js:25
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ClassFoo2T`
 
 Error --------------------------------------------------- import_typeof.js:35:22
+
+Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` is incompatible with
+statics of `ClassFoo3`.
 
 Error: import_typeof.js:35
  35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
@@ -51,6 +64,9 @@ Error: import_typeof.js:35
 
 Error --------------------------------------------------- import_typeof.js:45:22
 
+Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` is incompatible with
+statics of `ClassFoo4`.
+
 Error: import_typeof.js:45
  45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
                           ^^^^^^^^^^^^^^^ Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with statics of `ClassFoo4` [2].
@@ -62,11 +78,17 @@ Error: import_typeof.js:45
 
 Error --------------------------------------------------- import_typeof.js:51:16
 
+Cannot import the type `AliasFoo3` as a type. `import typeof` only works on
+value exports. Like variables, functions, and classes. If you intended to import
+a type use `import type` instead.
+
 Error: import_typeof.js:51
  51: import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
                     ^^^^^^^^^ Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports. Like variables, functions, and classes. If you intended to import a type use `import type` instead.
 
 Error --------------------------------------------------- import_typeof.js:68:23
+
+Cannot assign `'asdf'` to `f2` because string is incompatible with number.
 
 Error: import_typeof.js:68
  68: var f2: num_default = 'asdf'; // Error: string ~> number
@@ -79,6 +101,8 @@ Error: import_typeof.js:68
 
 Error --------------------------------------------------- import_typeof.js:77:21
 
+Cannot assign `'asdf'` to `g2` because string is incompatible with number.
+
 Error: import_typeof.js:77
  77: var g2: num_named = 'asdf'; // Error: string ~> number
                          ^^^^^^ Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2].
@@ -89,6 +113,8 @@ Error: import_typeof.js:77
                ^^^^^^^^^ [2]: number
 
 Error --------------------------------------------------- import_typeof.js:86:27
+
+Cannot assign `'asdf'` to `h2` because string is incompatible with number.
 
 Error: import_typeof.js:86
  86: var h2: num_cjs_default = 'asdf'; // Error: string ~> number
@@ -101,6 +127,8 @@ Error: import_typeof.js:86
 
 Error --------------------------------------------------- import_typeof.js:95:25
 
+Cannot assign `'asdf'` to `i2` because string is incompatible with number.
+
 Error: import_typeof.js:95
  95: var i2: num_cjs_named = 'asdf'; // Error: string ~> number
                              ^^^^^^ Cannot assign `'asdf'` to `i2` because string [1] is incompatible with number [2].
@@ -111,6 +139,9 @@ Error: import_typeof.js:95
                ^^^^^^^^^^^^^ [2]: number
 
 Error -------------------------------------------------- import_typeof.js:103:39
+
+Cannot assign object literal to `j2` because in property `str`, number is
+incompatible with string.
 
 Error: import_typeof.js:103
 103: var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string

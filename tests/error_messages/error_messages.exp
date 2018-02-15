@@ -1,5 +1,7 @@
 Error ----------------------------------------------------------- errors.js:1:12
 
+Cannot resolve name `define`.
+
 Error: errors.js:1
   1: if (typeof define === 'function' && define.amd) { }
                 ^^^^^^ Cannot resolve name `define`.

@@ -1,5 +1,8 @@
 Error ------------------------------------------------------------ array.js:4:10
 
+Cannot return `x` because array type has an unknown number of elements, so is
+incompatible with tuple type.
+
 Error: array.js:4
   4:   return x; // Error, can't enforce arity when flowing array to tuple
               ^ Cannot return `x` because array type [1] has an unknown number of elements, so is incompatible with tuple type [2].
@@ -11,11 +14,17 @@ Error: array.js:4
 
 Error ------------------------------------------------------ number-index.js:7:1
 
+Cannot assign `123` to `tup[0]` because the index must be statically known to
+write a tuple element.
+
 Error: number-index.js:7
   7: tup[(0: number)] = 123;
      ^^^^^^^^^^^^^^^^ Cannot assign `123` to `tup[0]` because the index must be statically known to write a tuple element.
 
 Error ---------------------------------------------------------- optional.js:4:2
+
+Cannot cast array literal to tuple type because array literal has an arity of 1
+but tuple type has an arity of 2.
 
 Error: optional.js:4
   4: ([0]: [number, ?string]); // Error, arity is enforced
@@ -28,6 +37,9 @@ Error: optional.js:4
 
 Error ---------------------------------------------------------- optional.js:6:2
 
+Cannot cast array literal to tuple type because empty array literal has an arity
+of 0 but tuple type has an arity of 2.
+
 Error: optional.js:6
   6: ([]: [?number, string]); // error, since second element is not marked optional
       ^^ Cannot cast array literal to tuple type because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of 2.
@@ -38,6 +50,9 @@ Error: optional.js:6
             ^^^^^^^^^^^^^^^^^ [2]: tuple type
 
 Error ----------------------------------------------------------- too-few.js:5:5
+
+Cannot call `foo` with array literal bound to `a` because array literal has an
+arity of 1 but tuple type has an arity of 2.
 
 Error: too-few.js:5
   5: foo([ {} ]); // error, too few elements in array passed to a tuple
@@ -50,6 +65,9 @@ Error: too-few.js:5
 
 Error ----------------------------------------------------------- tuples.js:2:13
 
+Cannot assign array literal to `b` because array literal has an arity of 1 but
+tuple type has an arity of 0.
+
 Error: tuples.js:2
   2: var b: [] = [123]; // Error - arity mismatch
                  ^^^^^ Cannot assign array literal to `b` because array literal [1] has an arity of 1 but tuple type [2] has an arity of 0.
@@ -61,6 +79,9 @@ Error: tuples.js:2
 
 Error ----------------------------------------------------------- tuples.js:3:19
 
+Cannot assign array literal to `c` because empty array literal has an arity of 0
+but tuple type has an arity of 1.
+
 Error: tuples.js:3
   3: var c: [number] = []; // nope
                        ^^ Cannot assign array literal to `c` because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of 1.
@@ -71,6 +92,9 @@ Error: tuples.js:3
               ^^^^^^^^ [2]: tuple type
 
 Error ----------------------------------------------------------- tuples.js:6:33
+
+Cannot assign array literal to `f` because in index 1, number is incompatible
+with string.
 
 Error: tuples.js:6
   6: var f: [number, string] = [123, 456];

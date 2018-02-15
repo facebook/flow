@@ -1,5 +1,9 @@
 Error ------------------------------------------------------------- array.js:7:2
 
+Cannot cast array literal to `Iterable` because in property `@@iterator`, the
+return value, and then type argument `Yield`; string is incompatible with
+number.
+
 Error: array.js:7
   7: (["hi"]: Iterable<number>); // Error string ~> number
       ^^^^^^ Cannot cast array literal to `Iterable` because in property `@@iterator`, the return value, and then type argument `Yield`; string [1] is incompatible with number [2].
@@ -10,6 +14,10 @@ Error: array.js:7
                          ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- array.js:8:2
+
+Cannot cast array literal to `Iterable` because in property `@@iterator`, the
+return value, and then type argument `Yield`; number is incompatible with
+string.
 
 Error: array.js:8
   8: (["hi", 1]: Iterable<string>); // Error number ~> string
@@ -22,6 +30,9 @@ Error: array.js:8
 
 Error ----------------------------------------------------- caching_bug.js:21:79
 
+Cannot return `x` because in property `@@iterator`, the return value, and then
+type argument `Yield`; number is incompatible with string.
+
 Error: caching_bug.js:21
  21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                                    ^ Cannot return `x` because in property `@@iterator`, the return value, and then type argument `Yield`; number [1] is incompatible with string [2].
@@ -32,6 +43,9 @@ Error: caching_bug.js:21
                                                                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------- iterator_result.js:23:18
+
+Cannot return object literal because in property `done`, boolean is incompatible
+with boolean literal `false`.
 
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
@@ -44,6 +58,9 @@ Error: iterator_result.js:23
 
 Error ------------------------------------------------- iterator_result.js:25:18
 
+Cannot return object literal because in property `done`, boolean is incompatible
+with boolean literal `true`.
+
 Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
                       ^^^^ Cannot return object literal because in property `done`, boolean [1] is incompatible with boolean literal `true` [2].
@@ -54,6 +71,9 @@ Error: iterator_result.js:25
                    ^^^^ [2]: boolean literal `true`. See lib: <BUILTINS>/core.js:493
 
 Error ------------------------------------------------------------- map.js:14:10
+
+Cannot return `map` because in property `@@iterator`, the return value, and then
+type argument `Yield`; tuple type is incompatible with string.
 
 Error: map.js:14
  14:   return map;
@@ -66,6 +86,9 @@ Error: map.js:14
 
 Error ------------------------------------------------------------- set.js:14:10
 
+Cannot return `set` because in property `@@iterator`, the return value, and then
+type argument `Yield`; string is incompatible with number.
+
 Error: set.js:14
  14:   return set;
               ^^^ Cannot return `set` because in property `@@iterator`, the return value, and then type argument `Yield`; string [1] is incompatible with number [2].
@@ -76,6 +99,9 @@ Error: set.js:14
                                                      ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ string.js:5:2
+
+Cannot cast `"hi"` to `Iterable` because in property `@@iterator`, the return
+value, and then type argument `Yield`; string is incompatible with number.
 
 Error: string.js:5
   5: ("hi": Iterable<number>); // Error - string is a Iterable<string>

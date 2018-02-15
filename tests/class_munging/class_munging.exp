@@ -1,5 +1,7 @@
 Error ---------------------------------------------------- with_munging.js:13:11
 
+Cannot call `this._method` because property `_method` is missing in `Bar`.
+
 Error: with_munging.js:13
  13:     (this._method(): string); // error
                ^^^^^^^ Cannot call `this._method` because property `_method` is missing in `Bar` [1].

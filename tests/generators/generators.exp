@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------ class.js:4:11
 
+Cannot yield empty string because string is incompatible with number.
+
 Error: class.js:4
   4:     yield ""; // error: string ~> number
                ^^ Cannot yield empty string because string [1] is incompatible with number [2].
@@ -10,6 +12,8 @@ Error: class.js:4
                                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ class.js:15:8
+
+Cannot cast `b` to string because number is incompatible with string.
 
 Error: class.js:15
  15:       (b : string); // error: number ~> string
@@ -22,6 +26,9 @@ Error: class.js:15
 
 Error ----------------------------------------------------------- class.js:24:12
 
+Cannot return empty string because in type argument `Return`, string is
+incompatible with number.
+
 Error: class.js:24
  24:     return ""; // error: string ~> number
                 ^^ Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
@@ -32,6 +39,8 @@ Error: class.js:24
                                              ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- class.js:28:22
+
+Cannot assign `yield 0` to `x` because number is incompatible with boolean.
 
 Error: class.js:28
  28:     var x: boolean = yield 0; // error: number ~> boolean
@@ -44,6 +53,8 @@ Error: class.js:28
 
 Error ----------------------------------------------------------- class.js:49:23
 
+Cannot assign `yield` to `x` because string is incompatible with number.
+
 Error: class.js:49
  49:       var x: number = yield; // error: string ~> number
                            ^^^^^ Cannot assign `yield` to `x` because string [1] is incompatible with number [2].
@@ -54,6 +65,9 @@ Error: class.js:49
                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- class.js:67:21
+
+Cannot assign `yield* inner()` to `x` because string is incompatible with
+number.
 
 Error: class.js:67
  67:     var x: number = yield *inner(); // error: string ~> number
@@ -66,6 +80,9 @@ Error: class.js:67
 
 Error ----------------------------------------------------------- class.js:72:12
 
+Cannot yield `xs` because in property `@@iterator`, the return value, and then
+type argument `Next`; undefined is incompatible with string.
+
 Error: class.js:72
  72:     yield *xs;
                 ^^ Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next`; undefined [1] is incompatible with string [2].
@@ -76,6 +93,8 @@ Error: class.js:72
                                                 ^^ [2]: string
 
 Error ----------------------------------------------------------- class.js:98:41
+
+Cannot cast `x` to string because number is incompatible with string.
 
 Error: class.js:98
  98: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
@@ -88,6 +107,9 @@ Error: class.js:98
 
 Error ----------------------------------------------------------- class.js:104:4
 
+Cannot cast `infer_stmt_next` to boolean because string is incompatible with
+boolean.
+
 Error: class.js:104
 104:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2].
@@ -98,6 +120,8 @@ Error: class.js:104
                             ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------------------- class.js:122:4
+
+Cannot cast `x` to number because string is incompatible with number.
 
 Error: class.js:122
 122:   (x : number) // error: string ~> number
@@ -110,6 +134,8 @@ Error: class.js:122
 
 Error ----------------------------------------------------------- class.js:128:4
 
+Cannot cast `x` to string because number is incompatible with string.
+
 Error: class.js:128
 128:   (x : string) // error: number ~> string
         ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
@@ -120,6 +146,8 @@ Error: class.js:128
               ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- class_failure.js:5:22
+
+Cannot assign `yield 0` to `x` because number is incompatible with boolean.
 
 Error: class_failure.js:5
   5:     var x: boolean = yield 0; // error: number ~> boolean
@@ -132,6 +160,8 @@ Error: class_failure.js:5
 
 Error --------------------------------------------------- class_failure.js:12:41
 
+Cannot cast `x` to string because number is incompatible with string.
+
 Error: class_failure.js:12
  12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                              ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
@@ -142,6 +172,9 @@ Error: class_failure.js:12
                                                    ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- class_failure.js:19:4
+
+Cannot cast `infer_stmt_next` to boolean because string is incompatible with
+boolean.
 
 Error: class_failure.js:19
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -154,6 +187,8 @@ Error: class_failure.js:19
 
 Error -------------------------------------------------------- generators.js:3:9
 
+Cannot yield empty string because string is incompatible with number.
+
 Error: generators.js:3
   3:   yield ""; // error: string ~> number
              ^^ Cannot yield empty string because string [1] is incompatible with number [2].
@@ -164,6 +199,8 @@ Error: generators.js:3
                                          ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- generators.js:14:6
+
+Cannot cast `b` to string because number is incompatible with string.
 
 Error: generators.js:14
  14:     (b : string); // error: number ~> string
@@ -176,6 +213,9 @@ Error: generators.js:14
 
 Error ------------------------------------------------------ generators.js:23:10
 
+Cannot return empty string because in type argument `Return`, string is
+incompatible with number.
+
 Error: generators.js:23
  23:   return ""; // error: string ~> number
               ^^ Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
@@ -186,6 +226,8 @@ Error: generators.js:23
                                                     ^^^^^^ [2]: number
 
 Error ------------------------------------------------------ generators.js:27:20
+
+Cannot assign `yield 0` to `x` because number is incompatible with boolean.
 
 Error: generators.js:27
  27:   var x: boolean = yield 0;
@@ -198,6 +240,8 @@ Error: generators.js:27
 
 Error ------------------------------------------------------ generators.js:30:32
 
+Cannot cast `x` to string because number is incompatible with string.
+
 Error: generators.js:30
  30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
                                     ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
@@ -208,6 +252,9 @@ Error: generators.js:30
                                           ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- generators.js:35:4
+
+Cannot cast `infer_stmt_next` to boolean because string is incompatible with
+boolean.
 
 Error: generators.js:35
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -220,6 +267,8 @@ Error: generators.js:35
 
 Error ------------------------------------------------------ generators.js:65:21
 
+Cannot assign `yield` to `x` because string is incompatible with number.
+
 Error: generators.js:65
  65:     var x: number = yield; // error: string ~> number
                          ^^^^^ Cannot assign `yield` to `x` because string [1] is incompatible with number [2].
@@ -230,6 +279,8 @@ Error: generators.js:65
                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- generators.js:79:4
+
+Cannot cast `x` to number because string is incompatible with number.
 
 Error: generators.js:79
  79:   (x : number) // error: string ~> number
@@ -242,6 +293,9 @@ Error: generators.js:79
 
 Error ------------------------------------------------------ generators.js:87:19
 
+Cannot assign `yield* inner()` to `x` because string is incompatible with
+number.
+
 Error: generators.js:87
  87:   var x: number = yield *inner(); // error: string ~> number
                        ^^^^^^^^^^^^^^ Cannot assign `yield* inner()` to `x` because string [1] is incompatible with number [2].
@@ -252,6 +306,9 @@ Error: generators.js:87
                 ^^^^^^ [2]: number
 
 Error ------------------------------------------------------ generators.js:92:10
+
+Cannot yield `xs` because in property `@@iterator`, the return value, and then
+type argument `Next`; undefined is incompatible with string.
 
 Error: generators.js:92
  92:   yield *xs;
@@ -264,6 +321,8 @@ Error: generators.js:92
 
 Error ------------------------------------------------------ generators.js:100:4
 
+Cannot cast `x` to string because number is incompatible with string.
+
 Error: generators.js:100
 100:   (x : string) // error: number ~> string
         ^ Cannot cast `x` to string because number [1] is incompatible with string [2].
@@ -274,6 +333,9 @@ Error: generators.js:100
               ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ generators.js:128:4
+
+Cannot cast `multiple_return_result.value` to undefined because number is
+incompatible with undefined.
 
 Error: generators.js:128
 128:   (multiple_return_result.value: void); // error: number|string ~> void
@@ -286,6 +348,9 @@ Error: generators.js:128
 
 Error ------------------------------------------------------ generators.js:128:4
 
+Cannot cast `multiple_return_result.value` to undefined because string is
+incompatible with undefined.
+
 Error: generators.js:128
 128:   (multiple_return_result.value: void); // error: number|string ~> void
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `multiple_return_result.value` to undefined because string [1] is incompatible with undefined [2].
@@ -296,6 +361,8 @@ Error: generators.js:128
                                         ^^^^ [2]: undefined
 
 Error -------------------------------------------------------------- refi.js:5:4
+
+Cannot cast `x.a` to string because undefined is incompatible with string.
 
 Error: refi.js:5
   5:   (x.a: string); // error
@@ -308,6 +375,8 @@ Error: refi.js:5
 
 Error ------------------------------------------------------------- refi.js:22:4
 
+Cannot cast `x.a` to string because undefined is incompatible with string.
+
 Error: refi.js:22
  22:   (x.a: string); // error
         ^^^ Cannot cast `x.a` to string because undefined [1] is incompatible with string [2].
@@ -318,6 +387,9 @@ Error: refi.js:22
                ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ return.js:5:4
+
+Cannot cast `ret.value` to undefined because number is incompatible with
+undefined.
 
 Error: return.js:5
   5:   (ret.value: void); // error: string | number ~> void
@@ -330,6 +402,9 @@ Error: return.js:5
 
 Error ------------------------------------------------------------ return.js:5:4
 
+Cannot cast `ret.value` to undefined because string is incompatible with
+undefined.
+
 Error: return.js:5
   5:   (ret.value: void); // error: string | number ~> void
         ^^^^^^^^^ Cannot cast `ret.value` to undefined because string [1] is incompatible with undefined [2].
@@ -340,6 +415,9 @@ Error: return.js:5
                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- return.js:20:4
+
+Cannot cast `refuse_return_result.value` to string because number is
+incompatible with string.
 
 Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string
@@ -352,6 +430,9 @@ Error: return.js:20
 
 Error ----------------------------------------------------------- return.js:20:4
 
+Cannot cast `refuse_return_result.value` to string because undefined is
+incompatible with string.
+
 Error: return.js:20
  20:   (refuse_return_result.value: string); // error: number | void ~> string
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `refuse_return_result.value` to string because undefined [1] is incompatible with string [2].
@@ -363,6 +444,9 @@ Error: return.js:20
 
 Error ------------------------------------------------------------ throw.js:11:4
 
+Cannot cast `catch_return_value` to string because number is incompatible with
+string.
+
 Error: throw.js:11
  11:   (catch_return_value : string); // error: number ~> string
         ^^^^^^^^^^^^^^^^^^ Cannot cast `catch_return_value` to string because number [1] is incompatible with string [2].
@@ -373,6 +457,9 @@ Error: throw.js:11
                                ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ throw.js:24:4
+
+Cannot cast `yield_return_value` to string because number is incompatible with
+string.
 
 Error: throw.js:24
  24:   (yield_return_value: string); // error: number ~> string

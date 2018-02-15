@@ -1,5 +1,8 @@
 Error ------------------------------------------------------------- iter.js:7:15
 
+Cannot iterate using a `for...in` statement because array literal is not an
+object, null, or undefined.
+
 Error: iter.js:7
   7: for (var k in a) {
                    ^ Cannot iterate using a `for...in` statement because array literal [1] is not an object, null, or undefined.
@@ -8,6 +11,8 @@ Error: iter.js:7
                ^^^^^^^^^^^^ [1]: array literal
 
 Error -------------------------------------------------------------- iter.js:8:9
+
+Cannot get `a[k]` because string is not an array index.
 
 Error: iter.js:8
   8:     foo(a[k]); // k is a string, which shouldn't be used for array access
@@ -18,6 +23,9 @@ Error: iter.js:8
 
 Error ------------------------------------------------------------ iter.js:22:20
 
+Cannot iterate using a `for...in` statement because array literal is not an
+object, null, or undefined.
+
 Error: iter.js:22
  22: for (var n in (d = a)) {
                         ^ Cannot iterate using a `for...in` statement because array literal [1] is not an object, null, or undefined.
@@ -26,6 +34,8 @@ Error: iter.js:22
                ^^^^^^^^^^^^ [1]: array literal
 
 Error ------------------------------------------------------------- iter.js:23:9
+
+Cannot get `d[n]` because string is not an array index.
 
 Error: iter.js:23
  23:     foo(d[n]); // d is a string, which shouldn't be used for array access

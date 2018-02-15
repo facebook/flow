@@ -1,5 +1,7 @@
 Error ------------------------------------------------------------- Bar.js:15:19
 
+Cannot assign `"?"` to `new Qux().w` because string is incompatible with number.
+
 Error: Bar.js:15
  15:     new Qux().w = "?";
                        ^^^ Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with number [2].
@@ -10,6 +12,9 @@ Error: Bar.js:15
            ^^^^^^ [2]: number. See: Qux.js:5
 
 Error ------------------------------------------------------------- Foo.js:21:12
+
+Cannot extend `Qux` with `Foo` because in property `fooqux` and then the first
+argument, string is incompatible with number.
 
 Error: Foo.js:21
  21:   fooqux(x:string) {
@@ -24,6 +29,9 @@ Error: Foo.js:21
 
 Error ------------------------------------------------------------- Foo.js:10:10
 
+Cannot assign `x` to `this.x` because property `x` is missing in uninitialized
+this (expected super constructor call).
+
 Error: Foo.js:10
  10:     this.x = x;
               ^ Cannot assign `x` to `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
@@ -33,11 +41,16 @@ Error: Foo.js:10
 
 Error ------------------------------------------------------------- Foo.js:13:16
 
+Missing type annotation for `z`.
+
 Error: Foo.js:13
  13:   foo(y:string,z):number {
                     ^ Missing type annotation for `z`.
 
 Error ------------------------------------------------------------- Foo.js:16:21
+
+Cannot call `Bar` with `y` bound to `y` because string is incompatible with
+number.
 
 Error: Foo.js:16
  16:     var v = new Bar(y);
@@ -50,6 +63,8 @@ Error: Foo.js:16
 
 Error ------------------------------------------------------------- Foo.js:18:12
 
+Cannot return `v.bar(...)` because string is incompatible with number.
+
 Error: Foo.js:18
  18:     return v.bar(z,u);
                 ^^^^^^^^^^ Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
@@ -60,6 +75,9 @@ Error: Foo.js:18
                          ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- Foo.js:18:20
+
+Cannot call `v.bar` with `u` bound to `u` because number is incompatible with
+string.
 
 Error: Foo.js:18
  18:     return v.bar(z,u);

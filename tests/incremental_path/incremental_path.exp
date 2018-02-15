@@ -2,6 +2,9 @@
 Should resolve to dir/node_modules/b.js which is number
 Error ------------------------------------------------------------- dir/a.js:2:2
 
+Cannot cast `require(...)` to boolean because number is incompatible with
+boolean.
+
 Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ Cannot cast `require(...)` to boolean because number [1] is incompatible with boolean [2].
@@ -17,6 +20,9 @@ Found 1 error
 Should resolve to node_modules/b.js which is a string
 Error ------------------------------------------------------------- dir/a.js:2:2
 
+Cannot cast `require(...)` to boolean because string is incompatible with
+boolean.
+
 Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ Cannot cast `require(...)` to boolean because string [1] is incompatible with boolean [2].
@@ -31,6 +37,9 @@ Found 1 error
 
 Should resolve to dir/node_modules/b.js which is number
 Error ------------------------------------------------------------- dir/a.js:2:2
+
+Cannot cast `require(...)` to boolean because number is incompatible with
+boolean.
 
 Error: dir/a.js:2
   2: (require('b'): boolean);

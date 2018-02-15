@@ -1,5 +1,7 @@
 Error ---------------------------------------------------------------- A.js:13:7
 
+Cannot assign `A.y` to `A.x` because string is incompatible with boolean.
+
 Error: A.js:13
  13: A.x = A.y;
            ^^^ Cannot assign `A.y` to `A.x` because string [1] is incompatible with boolean [2].
@@ -10,6 +12,9 @@ Error: A.js:13
                   ^^^^ [2]: boolean
 
 Error ---------------------------------------------------------------- A.js:14:3
+
+Cannot call `f` with `A.x` bound to `x` because string is incompatible with
+boolean.
 
 Error: A.js:14
  14: f(A.x); // A.x is now a string, by def assign
@@ -22,6 +27,8 @@ Error: A.js:14
 
 Error ----------------------------------------------------------------- C.js:9:7
 
+Cannot get `o.b` because property `b` is missing in new object.
+
 Error: C.js:9
   9:   f(o.b);
            ^ Cannot get `o.b` because property `b` is missing in new object [1].
@@ -30,6 +37,9 @@ Error: C.js:9
                  ^^^^^^^ [1]: new object
 
 Error ---------------------------------------------------------------- C.js:10:5
+
+Cannot call `f` with `o.s` bound to `x` because number is incompatible with
+boolean.
 
 Error: C.js:10
  10:   f(o.s);
@@ -42,6 +52,8 @@ Error: C.js:10
 
 Error ---------------------------------------------------------------- D.js:6:30
 
+Cannot return `this.i` because boolean is incompatible with string.
+
 Error: D.js:6
   6: function g():string { return this.i; }
                                   ^^^^^^ Cannot return `this.i` because boolean [1] is incompatible with string [2].
@@ -52,6 +64,9 @@ Error: D.js:6
                     ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------------- D.js:12:3
+
+Cannot call `f` with `i` bound to `x` because string is incompatible with
+boolean.
 
 Error: D.js:12
  12: f(i);
@@ -64,6 +79,9 @@ Error: D.js:12
 
 Error ----------------------------------------------------------------- E.js:8:6
 
+Cannot call `o.fn` with `false` bound to `x` because boolean is incompatible
+with number.
+
 Error: E.js:8
   8: o.fn(false);
           ^^^^^ Cannot call `o.fn` with `false` bound to `x` because boolean [1] is incompatible with number [2].
@@ -75,6 +93,8 @@ Error: E.js:8
 
 Error ---------------------------------------------------------------- F.js:1:26
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: F.js:1
   1: function fn2(x) { return x.length * 4; }
                               ^^^^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -83,6 +103,8 @@ Error: F.js:1
                     ^^^^ [1]: string
 
 Error ---------------------------------------------------------------- F.js:5:10
+
+Cannot return `x.length` because number is incompatible with string.
 
 Error: F.js:5
   5:   return x.length;
@@ -95,6 +117,8 @@ Error: F.js:5
 
 Error ---------------------------------------------------------------- G.js:2:12
 
+Cannot assign `123` to `a.length` because number is incompatible with string.
+
 Error: G.js:2
   2: a.length = 123;
                 ^^^ Cannot assign `123` to `a.length` because number [1] is incompatible with string [2].
@@ -106,6 +130,8 @@ Error: G.js:2
 
 Error ----------------------------------------------------------------- G.js:3:3
 
+Cannot call `a.length` because number is not a function.
+
 Error: G.js:3
   3: a.length();
        ^^^^^^ Cannot call `a.length` because number [1] is not a function.
@@ -114,6 +140,8 @@ Error: G.js:3
                   ^^^ [1]: number
 
 Error ---------------------------------------------------------------- G.js:6:12
+
+Cannot assign `"duck"` to `b.length` because string is incompatible with number.
 
 Error: G.js:6
   6: b.length = "duck";
@@ -125,6 +153,8 @@ Error: G.js:6
                    ^^^^^^ [2]: number. See lib: <BUILTINS>/core.js:275
 
 Error ----------------------------------------------------------------- G.js:7:3
+
+Cannot call `b.length` because string is not a function.
 
 Error: G.js:7
   7: b.length();

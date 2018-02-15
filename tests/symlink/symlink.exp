@@ -1,5 +1,8 @@
 Error --------------------------------------------------------------- qux.js:2:7
 
+Cannot cast object literal to `Foo` because in property `x`, string is
+incompatible with number.
+
 Error: qux.js:2
   2: ({ x: "" }: Foo);
            ^^ Cannot cast object literal to `Foo` because in property `x`, string [1] is incompatible with number [2].

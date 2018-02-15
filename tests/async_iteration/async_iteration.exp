@@ -1,5 +1,7 @@
 Error --------------------------------------------------- delegate_yield.js:3:19
 
+Cannot assign `yield` to `x` because number is incompatible with undefined.
+
 Error: delegate_yield.js:3
   3:     var x: void = yield; // error: number ~> void
                        ^^^^^ Cannot assign `yield` to `x` because number [1] is incompatible with undefined [2].
@@ -10,6 +12,8 @@ Error: delegate_yield.js:3
                   ^^^^ [2]: undefined
 
 Error --------------------------------------------------- delegate_yield.js:17:6
+
+Cannot cast `x` to undefined because number is incompatible with undefined.
 
 Error: delegate_yield.js:17
  17:     (x: void); // error: number ~> void
@@ -22,6 +26,9 @@ Error: delegate_yield.js:17
 
 Error -------------------------------------------------- delegate_yield.js:25:17
 
+Cannot assign `yield* inner()` to `x` because number is incompatible with
+undefined.
+
 Error: delegate_yield.js:25
  25:   var x: void = yield *inner(); // error: number ~> void
                      ^^^^^^^^^^^^^^ Cannot assign `yield* inner()` to `x` because number [1] is incompatible with undefined [2].
@@ -32,6 +39,8 @@ Error: delegate_yield.js:25
                 ^^^^ [2]: undefined
 
 Error -------------------------------------------------------- generator.js:23:6
+
+Cannot cast `line` to undefined because string is incompatible with undefined.
 
 Error: generator.js:23
  23:     (line: void); // error: string ~> void
@@ -44,6 +53,9 @@ Error: generator.js:23
 
 Error ------------------------------------------------------------ return.js:6:4
 
+Cannot cast `result.value` to undefined because number is incompatible with
+undefined.
+
 Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
         ^^^^^^^^^^^^ Cannot cast `result.value` to undefined because number [1] is incompatible with undefined [2].
@@ -54,6 +66,9 @@ Error: return.js:6
                         ^^^^ [2]: undefined
 
 Error ------------------------------------------------------------ return.js:6:4
+
+Cannot cast `result.value` to undefined because string is incompatible with
+undefined.
 
 Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
@@ -66,6 +81,8 @@ Error: return.js:6
 
 Error ----------------------------------------------------------- return.js:20:6
 
+Cannot cast `result.value` to string because number is incompatible with string.
+
 Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
           ^^^^^^^^^^^^ Cannot cast `result.value` to string because number [1] is incompatible with string [2].
@@ -76,6 +93,9 @@ Error: return.js:20
                           ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- return.js:20:6
+
+Cannot cast `result.value` to string because undefined is incompatible with
+string.
 
 Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
@@ -88,6 +108,8 @@ Error: return.js:20
 
 Error ------------------------------------------------------------ throw.js:12:8
 
+Cannot cast `value` to undefined because number is incompatible with undefined.
+
 Error: throw.js:12
  12:       (value: void); // error: number ~> void
             ^^^^^ Cannot cast `value` to undefined because number [1] is incompatible with undefined [2].
@@ -98,6 +120,8 @@ Error: throw.js:12
                      ^^^^ [2]: undefined
 
 Error ------------------------------------------------------------ throw.js:29:8
+
+Cannot cast `value` to undefined because number is incompatible with undefined.
 
 Error: throw.js:29
  29:       (value: void); // error: number ~> void

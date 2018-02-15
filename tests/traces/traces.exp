@@ -1,5 +1,8 @@
 Error ----------------------------------------------------------- Traces.js:3:21
 
+Cannot call `g0` with `x` bound to `y` because number is incompatible with
+string.
+
 Error: Traces.js:3
   3: function f0(x) { g0(x) }
                          ^ Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2].
@@ -32,6 +35,9 @@ Trace:
                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- Traces.js:8:27
+
+Cannot call `g1` with `y` bound to `b` because number is incompatible with
+string.
 
 Error: Traces.js:8
   8: function f1(x, y) { g1(x, y) }
@@ -66,6 +72,8 @@ Trace:
 
 Error ---------------------------------------------------------- Traces.js:14:25
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: Traces.js:14
  14: f2(function(x) { return x * x });
                              ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -97,6 +105,8 @@ Trace:
 
 Error ---------------------------------------------------------- Traces.js:14:29
 
+Cannot perform arithmetic operation because string is not a number.
+
 Error: Traces.js:14
  14: f2(function(x) { return x * x });
                                  ^ Cannot perform arithmetic operation because string [1] is not a number.
@@ -127,6 +137,8 @@ Trace:
                             ^^^^^^ [1]: string
 
 Error ---------------------------------------------------------- Traces.js:19:29
+
+Cannot perform arithmetic operation because string is not a number.
 
 Error: Traces.js:19
  19: function double(n) { return n * 2 }

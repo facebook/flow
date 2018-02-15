@@ -1,5 +1,7 @@
 Error --------------------------------- class_method_default_parameters.js:17:19
 
+string is incompatible with number.
+
 Error: class_method_default_parameters.js:17
  17:     h(i: number = this.b) { // error
                        ^^^^^^ string [1] is incompatible with number [2].

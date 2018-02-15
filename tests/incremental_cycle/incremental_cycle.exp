@@ -1,5 +1,8 @@
 Error ----------------------------------------------------------------- B.js:6:6
 
+Cannot extend `A` with `B` because in property `c`, `C` is incompatible with
+string.
+
 Error: B.js:6
   6:   c: C;
           ^ Cannot extend `A` [1] with `B` because in property `c`, `C` [2] is incompatible with string [3].
@@ -12,6 +15,9 @@ Error: B.js:6
             ^^^^^^ [3]: string. See: A.js:5
 
 Error ----------------------------------------------------------------- C.js:6:6
+
+Cannot extend `A` with `C` because in property `b`, `B` is incompatible with
+number.
 
 Error: C.js:6
   6:   b: B;
@@ -28,20 +34,8 @@ Error: C.js:6
 Found 2 errors
 Error ----------------------------------------------------------------- C.js:6:6
 
-Error: C.js:6
-  6:   b: B;
-          ^ Cannot extend `A` [1] with `C` because in property `b`, string [2] is incompatible with number [3].
-  References:
-    5: class C extends A {
-                       ^ [1]: `A`
-    6:   b: B;
-            ^ [2]: string
-    4:   b: number;
-            ^^^^^^ [3]: number. See: A.js:4
-
-
-Found 1 error
-Error ----------------------------------------------------------------- C.js:6:6
+Cannot extend `A` with `C` because in property `b`, string is incompatible with
+number.
 
 Error: C.js:6
   6:   b: B;
@@ -57,6 +51,27 @@ Error: C.js:6
 
 Found 1 error
 Error ----------------------------------------------------------------- C.js:6:6
+
+Cannot extend `A` with `C` because in property `b`, string is incompatible with
+number.
+
+Error: C.js:6
+  6:   b: B;
+          ^ Cannot extend `A` [1] with `C` because in property `b`, string [2] is incompatible with number [3].
+  References:
+    5: class C extends A {
+                       ^ [1]: `A`
+    6:   b: B;
+            ^ [2]: string
+    4:   b: number;
+            ^^^^^^ [3]: number. See: A.js:4
+
+
+Found 1 error
+Error ----------------------------------------------------------------- C.js:6:6
+
+Cannot extend `A` with `C` because in property `b`, string is incompatible with
+number.
 
 Error: C.js:6
   6:   b: B;
