@@ -1023,6 +1023,228 @@ module Cli_output = struct
         ^ filename
     )
 
+  (* ==================
+   * Error Message Text
+   * ==================
+   *
+   * Text of an error message decorated with styles. We also accumulate all
+   * the references in the message which will be rendered in another step.
+   *
+   * Most of the following code is responsible for splitting our message onto
+   * multiple lines. This would make for a great interview question. *)
+  let print_message_friendly =
+    let open Friendly in
+    (* Takes an input list of styled inline code parts of the following shape:
+     *
+     *     (bool * Tty.style * string) list
+     *
+     * The first boolean tells us whether or not we are allowed to break the
+     * string inside into multiple lines.
+     *
+     * We return a data structure of:
+     *
+     *     (int * (Tty.style * string) list) list
+     *
+     * Each item in the list is a "word". Each "word" is a tuple. The first
+     * element of the tuple is the length of the word. The second element of
+     * the tuple is a list of styled strings which make up the word. A word
+     * can have multiple different styles inside of it.
+     *
+     * We can put line breaks in between each "word". However, we cannot put
+     * a line break inside the strings after we have split them into words.
+     *
+     * Note that a word may have spaces in it. The input strs includes a
+     * boolean that determines whether or not a string is breakable even if it
+     * has spaces. Not breaking even when we have spaces is useful for
+     * rendering code. *)
+    let split_into_words =
+      let merge style str word_in_progress_acc =
+        match word_in_progress_acc with
+        (* If we do not have a word in progress then create a new word
+         * from str. *)
+        | None ->
+          (String.length str, [(style, str)])
+        (* If there is another word then we want to merge str with
+         * that word. We can assume that there is no breakpoint between
+         * the end of str and the beginning of the next word. *)
+        | Some (len, word) ->
+          (String.length str + len, (style, str) :: word)
+      in
+      let rec loop
+        finished_words_acc
+        word_in_progress_acc
+        strs
+      =
+        match strs with
+        | [] ->
+          let finished_words_acc = (match word_in_progress_acc with
+          | None -> finished_words_acc
+          | Some word -> word :: finished_words_acc
+          ) in
+          List.rev_map (fun (n, words) -> (n, List.rev words)) finished_words_acc
+
+        | (breakable, style, str) :: strs ->
+          (* If our string is breakable then try to find the first space. Use
+           * that space as the breakpoint. *)
+          let bp = if breakable
+            then try Some (String.index str ' ') with Not_found -> None
+            else None
+          in
+          (match bp with
+          (* If we have no breakpoint then we want to either create a new word
+           * or combine our str with the first word in the result of
+           * recursively calling split_into_words. *)
+          | None ->
+            loop
+              finished_words_acc
+              (Some (merge style str word_in_progress_acc))
+              strs
+
+          (* If we have a breakpoint then we need to split up our str and
+           * create a new word with the left half and recurse with the
+           * right half. *)
+          | Some bp ->
+            let left = String.sub str 0 bp in
+            let right = String.sub str (bp + 1) ((String.length str) - (bp + 1)) in
+            (* We need to recurse with the right half of our split str because
+             * there may be more words we need to split out in it. bp is only
+             * the first breakpoint in str. We can assume that our right half
+             * is breakable since we would have no breakpoint if str was
+             * not breakable. *)
+            loop
+              (merge style left word_in_progress_acc :: finished_words_acc)
+              None
+              ((true, style, right) :: strs)
+          )
+      in
+      loop [] None
+    in
+    let is_style_underlined = function
+    | Tty.Normal _ -> false
+    | Tty.Bold _ -> false
+    | Tty.Dim _ -> false
+    | Tty.Underline _ -> true
+    | Tty.BoldUnderline _ -> true
+    | Tty.DimUnderline _ -> true
+    | Tty.NormalWithBG _ -> false
+    | Tty.BoldWithBG _ -> false
+    in
+    let is_first_underlined = function
+    | [] -> false
+    | (style, _) :: _ -> is_style_underlined style
+    in
+    let is_last_underlined words = words |> List.rev |> is_first_underlined in
+    (* Hard breaks a single Tty style list returned by split_into_words. We use
+     * this when a word is, by itself, larger then our line length. Returns a:
+     *
+     *     (int * (Tty.style * string) list)
+     *
+     * Where int represents the length of the last line. *)
+    let hard_break_styles =
+      let rec loop acc pos ~line_length = function
+      | [] -> (pos, List.rev acc)
+      | (style, str) :: styles ->
+        let bp = line_length - pos in
+        let len = String.length str in
+        if len > bp then
+          let left = String.sub str 0 bp in
+          let right = String.sub str bp (len - bp) in
+          loop
+            (default_style "\n" :: (style, left) :: acc)
+            0
+            ~line_length
+            ((style, right) :: styles)
+        else
+          loop
+            ((style, str) :: acc)
+            (pos + len)
+            ~line_length
+            styles
+      in
+      loop [] 0
+    in
+    (* Concatenates a words data structure created by split_into_words into a:
+     *
+     *     (Tty.style * string) list
+     *
+     * Which can be rendered by the Tty module. This is where we will line
+     * break depending on the length of our word and the position of the word
+     * on the current line.
+     *
+     * TODO: Handle orphans gracefully. *)
+    let concat_words_into_lines ~line_length words =
+      match words with
+        (* No words means no string. *)
+        | [] -> []
+        (* If we have a single word we will use that as our initializer for
+         * our fold on the rest of our words. *)
+        | init :: words ->
+          let init = ((fun () -> is_last_underlined (snd init)), (fst init, [snd init])) in
+          let (_, (_, acc)) = List.fold_left (fun (last_underlined, (pos, acc)) (len, word) ->
+            (* If our position on the line plus one (for the space we would
+             * insert) plus the length of our word will fit in our line length
+             * then add the word to the current line separated from acc with a
+             * space. Otherwise start a new line where word is the only text. *)
+            if pos + 1 + len > line_length then
+              let last_underlined () = is_last_underlined word in
+              if len <= line_length then
+                (last_underlined, (len, (default_style "\n" :: word) :: acc))
+              else
+                let (len, word) = hard_break_styles ~line_length word in
+                (last_underlined, (len, (default_style "\n" :: word) :: acc))
+            else
+              (* If both the end of the last word was underlined *and* the
+               * beginning of the next word is underlined then we also want to
+               * underline the space we insert. *)
+              let should_underline = is_first_underlined word && last_underlined () in
+              let space =
+                let style =
+                  if should_underline then
+                    (Tty.Underline Tty.Default)
+                  else
+                    (Tty.Normal Tty.Default)
+                in
+                (style, " ")
+              in
+              let last_underlined () = is_last_underlined word in
+              (last_underlined, (pos + 1 + len, (space :: word) :: acc))
+          ) init words in
+          List.concat (List.rev acc)
+    in
+    (* Create the tuple structure we pass into split_into_words. Code is not
+     * breakable but Text is breakable. *)
+    let print_message_inline ~flags ~reference = function
+    | Code s when not (Tty.should_color flags.color) ->
+      (false, Tty.Normal Tty.Default, "`" ^ s ^ "`")
+    | Text s when reference -> (true, Tty.Underline Tty.Default, s)
+    | Code s when reference -> (false, Tty.BoldUnderline Tty.Default, s)
+    | Text s -> (true, Tty.Normal Tty.Default, s)
+    | Code s -> (false, Tty.Bold Tty.Default, s)
+    in
+    (* Put it all together! *)
+    fun ~flags error ->
+      let message = match error.root with
+      | Some { root_message; _ } -> root_message @ (text " " :: error.message)
+      | None -> error.message
+      in
+      let message = List.rev (List.fold_left (fun acc feature ->
+        match feature with
+        | Inline inlines ->
+          List.rev_append
+            (List.map (print_message_inline ~flags ~reference:false) inlines)
+            acc
+        | Reference (inlines, _) ->
+          List.rev_append
+            (List.map (print_message_inline ~flags ~reference:true) inlines)
+            acc
+      ) [] message) in
+      let message =
+        concat_words_into_lines
+          ~line_length:flags.message_width
+          (split_into_words message)
+      in
+      message
+
   let get_pretty_printed_friendly_error
     ~stdin_file
     ~strip_root
@@ -1031,10 +1253,9 @@ module Cli_output = struct
     kind trace error
   =
     let open Friendly in
-    [
-      print_header_friendly ~strip_root ~flags ~severity error.loc;
-      default_style "\n\n";
-    ] @
+    let header = print_header_friendly ~strip_root ~flags ~severity error.loc in
+    let message = print_message_friendly ~flags error in
+    (header :: default_style "\n\n" :: message) @ [default_style "\n\n"] @
     (get_pretty_printed_classic_error
       ~stdin_file ~strip_root ~severity
       kind trace (to_classic error))

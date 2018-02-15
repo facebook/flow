@@ -84,16 +84,17 @@ let supports_color =
       value
     end
 
+let should_color color_mode =
+  match color_mode with
+  | Color_Always -> true
+  | Color_Never -> false
+  | Color_Auto -> supports_color ()
+
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()
 
 let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
-  let should_color = match color_mode with
-    | Color_Always -> true
-    | Color_Never -> false
-    | Color_Auto -> supports_color ()
-  in
-  if should_color
+  if should_color color_mode
   then Printf.fprintf out_channel "\x1b[%sm%s\x1b[0m" (style_num c) (s)
   else Printf.fprintf out_channel "%s" s
 
