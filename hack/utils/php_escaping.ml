@@ -125,7 +125,7 @@ let unescape_literal literal_kind s =
         idx := !idx + unicode_count;
         if next () <> '}' then
           raise (Invalid_string "Invalid UTF-8 escape sequence")
-      | 'x' ->
+      | 'x' | 'X' ->
         let hex_count = count_f is_hex ~max:2 0 in
         if hex_count = 0 then
           Buffer.add_string buf "\\x"
