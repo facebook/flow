@@ -5,12 +5,9 @@ Cannot assign `o.x` to `x` because string is incompatible with number.
 
 Error ------------------------------------------------------------ proto.js:7:16
 
-Cannot assign `o.m()` to `y` because boolean is incompatible with number.
-
-
-Error ------------------------------------------------------------ proto.js:7:16
-
-Cannot assign `o.m()` to `y` because string is incompatible with number.
+Cannot assign `o.m()` to `y` because:
+ - boolean is incompatible with number.
+ - string is incompatible with number.
 
 
 Error ------------------------------------------------------------ sealed.js:3:3

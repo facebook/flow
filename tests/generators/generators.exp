@@ -134,14 +134,9 @@ Cannot cast `x` to string because number is incompatible with string.
 
 Error ------------------------------------------------------ generators.js:128:4
 
-Cannot cast `multiple_return_result.value` to undefined because number is
-incompatible with undefined.
-
-
-Error ------------------------------------------------------ generators.js:128:4
-
-Cannot cast `multiple_return_result.value` to undefined because string is
-incompatible with undefined.
+Cannot cast `multiple_return_result.value` to undefined because:
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error -------------------------------------------------------------- refi.js:5:4
@@ -156,26 +151,16 @@ Cannot cast `x.a` to string because undefined is incompatible with string.
 
 Error ------------------------------------------------------------ return.js:5:4
 
-Cannot cast `ret.value` to undefined because number is incompatible with
-undefined.
-
-
-Error ------------------------------------------------------------ return.js:5:4
-
-Cannot cast `ret.value` to undefined because string is incompatible with
-undefined.
+Cannot cast `ret.value` to undefined because:
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error ----------------------------------------------------------- return.js:20:4
 
-Cannot cast `refuse_return_result.value` to string because number is
-incompatible with string.
-
-
-Error ----------------------------------------------------------- return.js:20:4
-
-Cannot cast `refuse_return_result.value` to string because undefined is
-incompatible with string.
+Cannot cast `refuse_return_result.value` to string because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error ------------------------------------------------------------ throw.js:11:4

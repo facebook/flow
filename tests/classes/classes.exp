@@ -37,20 +37,10 @@ exists in `Foo`.
 
 Error ---------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because in property `a`, number is incompatible with
-string.
-
-
-Error ---------------------------------------------------- class_shapes.js:35:15
-
-Cannot assign `z` to `w` because in property `b`, number is incompatible with
-string.
-
-
-Error ---------------------------------------------------- class_shapes.js:35:15
-
-Cannot assign `z` to `w` because in property `c`, number is incompatible with
-string.
+Cannot assign `z` to `w` because:
+ - in property `a`, number is incompatible with string.
+ - in property `b`, number is incompatible with string.
+ - in property `c`, number is incompatible with string.
 
 
 Error ------------------------------------------------------------ expr.js:14:13

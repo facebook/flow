@@ -12,14 +12,9 @@ input positions.
 
 Error ------------------------------------------------------------- test.js:13:4
 
-Cannot cast `v1` to `Variance` because in type argument `In`, `B` is
-incompatible with `A`.
-
-
-Error ------------------------------------------------------------- test.js:13:4
-
-Cannot cast `v1` to `Variance` because in type argument `Out`, `A` is
-incompatible with `B`.
+Cannot cast `v1` to `Variance` because:
+ - in type argument `In`, `B` is incompatible with `A`.
+ - in type argument `Out`, `A` is incompatible with `B`.
 
 
 Error ------------------------------------------------------------- test.js:18:9

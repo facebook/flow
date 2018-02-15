@@ -15,12 +15,9 @@ Cannot assign `o.z` to `z` because string is incompatible with number.
 
 Error ----------------------------------------------------------- test3.js:17:18
 
-Cannot assign `s.y` to `t` because number is incompatible with boolean.
-
-
-Error ----------------------------------------------------------- test3.js:17:18
-
-Cannot assign `s.y` to `t` because string is incompatible with boolean.
+Cannot assign `s.y` to `t` because:
+ - number is incompatible with boolean.
+ - string is incompatible with boolean.
 
 
 Error ------------------------------------------------------------ test6.js:10:2

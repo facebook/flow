@@ -1,13 +1,10 @@
 Error ----------------------------------------------------- compatibility.js:3:9
 
-Cannot assign `y` to `x` because in property `x`, property `bar` is missing in
-object type but exists in object type.
-
-
-Error ----------------------------------------------------- compatibility.js:3:9
-
-Cannot assign `y` to `x` because in property `x`, property `foo` is missing in
-object type but exists in object type.
+Cannot assign `y` to `x` because:
+ - in property `x`, property `bar` is missing in object type but exists in
+   object type.
+ - in property `x`, property `foo` is missing in object type but exists in
+   object type.
 
 
 Error ----------------------------------------------------- compatibility.js:7:9

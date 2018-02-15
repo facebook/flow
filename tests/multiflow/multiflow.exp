@@ -128,16 +128,12 @@ Cannot call `funWithRestArray` with boolean bound to `y` because boolean is
 incompatible with number literal `123`.
 
 
-Error ---------------------------------------------------------- spread.js:28:37
+Error ----------------------------------------------------------- spread.js:28:1
 
-Cannot call `funWithRestArray` because in the rest argument and then type
-argument `T`, string is incompatible with number.
-
-
-Error ---------------------------------------------------------- spread.js:28:37
-
-Cannot call `funWithRestArray` because in the rest argument, string is
-incompatible with number literal `123`.
+Cannot call `funWithRestArray` because:
+ - in the rest argument and then type argument `T`, string is incompatible with
+   number.
+ - in the rest argument, string is incompatible with number literal `123`.
 
 
 

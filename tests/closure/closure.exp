@@ -1,49 +1,29 @@
 Error --------------------------------------------------------- Closure.js:20:14
 
-Cannot call `takes_string` with `global_x` bound to `_` because number is
-incompatible with string.
-
-
-Error --------------------------------------------------------- Closure.js:20:14
-
-Cannot call `takes_string` with `global_x` bound to `_` because number is
-incompatible with string.
+Cannot call `takes_string` with `global_x` bound to `_` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error --------------------------------------------------------- Closure.js:38:16
 
-Cannot call `takes_string` with `local_x` bound to `_` because number is
-incompatible with string.
-
-
-Error --------------------------------------------------------- Closure.js:38:16
-
-Cannot call `takes_string` with `local_x` bound to `_` because number is
-incompatible with string.
+Cannot call `takes_string` with `local_x` bound to `_` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error --------------------------------------------------------- Closure.js:57:14
 
-Cannot call `takes_string` with `global_y` bound to `_` because number is
-incompatible with string.
-
-
-Error --------------------------------------------------------- Closure.js:57:14
-
-Cannot call `takes_string` with `global_y` bound to `_` because number is
-incompatible with string.
+Cannot call `takes_string` with `global_y` bound to `_` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error --------------------------------------------------------- Closure.js:77:16
 
-Cannot call `takes_string` with `local_y` bound to `_` because number is
-incompatible with string.
-
-
-Error --------------------------------------------------------- Closure.js:77:16
-
-Cannot call `takes_string` with `local_y` bound to `_` because number is
-incompatible with string.
+Cannot call `takes_string` with `local_y` bound to `_` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error ------------------------------------------------------ cond_havoc.js:12:10
@@ -53,13 +33,9 @@ Cannot return `x` because string is incompatible with number.
 
 Error ----------------------------------------------------------- const.js:20:38
 
-Cannot assign `var_x` to `y` because null is incompatible with number.
-
-
-Error ----------------------------------------------------------- const.js:20:38
-
-Cannot assign `var_x` to `y` because null or undefined is incompatible with
-number.
+Cannot assign `var_x` to `y` because:
+ - null is incompatible with number.
+ - null or undefined is incompatible with number.
 
 
 

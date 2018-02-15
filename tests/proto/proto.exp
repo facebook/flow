@@ -33,14 +33,9 @@ Cannot get `o_optional.q` because property `q` is missing in `O_optional`.
 
 Error ------------------------------------------------------------ annot.js:16:2
 
-Cannot cast `o_optional.__proto__` to empty because object type is incompatible
-with empty.
-
-
-Error ------------------------------------------------------------ annot.js:16:2
-
-Cannot cast `o_optional.__proto__` to empty because undefined is incompatible
-with empty.
+Cannot cast `o_optional.__proto__` to empty because:
+ - object type is incompatible with empty.
+ - undefined is incompatible with empty.
 
 
 Error ----------------------------------------------------------- annot.js:21:13

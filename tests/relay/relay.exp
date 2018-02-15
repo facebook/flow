@@ -51,16 +51,11 @@ Cannot create `Profile` element because in property `foo`, string is
 incompatible with number.
 
 
-Error ------------------------------------------------------------- main.js:18:2
+Error ------------------------------------------------------------- main.js:18:1
 
-Cannot create `Profile` element because property `foo` is missing in props but
-exists in object type.
-
-
-Error ------------------------------------------------------------- main.js:18:2
-
-Cannot create `Profile` element because property `user` is missing in props but
-exists in object type.
+Cannot create `Profile` element because:
+ - property `foo` is missing in props but exists in object type.
+ - property `user` is missing in props but exists in object type.
 
 
 Error ------------------------------------------------------------ main.js:19:16
@@ -69,28 +64,18 @@ Cannot create `Profile` element because in property `user`, object type is
 incompatible with `Profile_userRef`.
 
 
-Error ------------------------------------------------------------ main.js:20:16
+Error ------------------------------------------------------------- main.js:20:1
 
-Cannot create `Profile` element because in property `user`, object type is
-incompatible with `Profile_userRef`.
-
-
-Error ------------------------------------------------------------ main.js:20:26
-
-Cannot create `Profile` element because in property `foo`, string is
-incompatible with number.
+Cannot create `Profile` element because:
+ - in property `user`, object type is incompatible with `Profile_userRef`.
+ - in property `foo`, string is incompatible with number.
 
 
-Error ------------------------------------------------------------ main.js:21:23
+Error ------------------------------------------------------------- main.js:21:1
 
-Cannot create `Profile` element because in property `user`, mixed is
-incompatible with `Profile_userRef`.
-
-
-Error ------------------------------------------------------------ main.js:21:43
-
-Cannot create `Profile` element because in property `foo`, mixed is incompatible
-with number.
+Cannot create `Profile` element because:
+ - in property `user`, mixed is incompatible with `Profile_userRef`.
+ - in property `foo`, mixed is incompatible with number.
 
 
 Error ------------------------------------------------------------ more.js:92:45
@@ -105,16 +90,13 @@ Cannot create `SingularTest` element because property `user` is missing in props
 but exists in object type.
 
 
-Error ------------------------------------------------------------ more.js:98:45
+Error ------------------------------------------------------------- more.js:98:1
 
-Cannot create `SingularTest` element because in property `user.__fragments` and
-then type argument `T`, `FragmentTypeof` is incompatible with object type.
-
-
-Error ------------------------------------------------------------ more.js:98:45
-
-Cannot create `SingularTest` element because in property `user.__fragments` and
-then type argument `T`, object type is incompatible with `FragmentTypeof`.
+Cannot create `SingularTest` element because:
+ - in property `user.__fragments` and then type argument `T`, `FragmentTypeof`
+   is incompatible with object type.
+ - in property `user.__fragments` and then type argument `T`, object type is
+   incompatible with `FragmentTypeof`.
 
 
 Error ----------------------------------------------------------- more.js:126:17
@@ -135,18 +117,13 @@ Cannot create `PluralTest` element because property `users` is missing in props
 but exists in object type.
 
 
-Error ----------------------------------------------------------- more.js:150:21
+Error ------------------------------------------------------------ more.js:150:1
 
-Cannot create `PluralTest` element because in property `users`, type argument
-`T`, property `__fragments`, and then type argument `T`; `FragmentTypeof` is
-incompatible with object type.
-
-
-Error ----------------------------------------------------------- more.js:150:21
-
-Cannot create `PluralTest` element because in property `users`, type argument
-`T`, property `__fragments`, and then type argument `T`; object type is
-incompatible with `FragmentTypeof`.
+Cannot create `PluralTest` element because:
+ - in property `users`, type argument `T`, property `__fragments`, and then type
+   argument `T`; `FragmentTypeof` is incompatible with object type.
+ - in property `users`, type argument `T`, property `__fragments`, and then type
+   argument `T`; object type is incompatible with `FragmentTypeof`.
 
 
 Error ----------------------------------------------------------- more.js:174:66

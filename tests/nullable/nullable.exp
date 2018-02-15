@@ -4,25 +4,18 @@ Cannot cast `any` to number because null or undefined is incompatible with
 number.
 
 
-Error ------------------------------------------------------------- error.js:9:8
+Error ------------------------------------------------------------- error.js:9:3
 
-Cannot cast `any` to null because null or undefined is incompatible with null.
-
-
-Error ------------------------------------------------------------- error.js:9:9
-
-Cannot cast `any` to null because number is incompatible with null.
+Cannot cast `any` to null because:
+ - null or undefined is incompatible with null.
+ - number is incompatible with null.
 
 
-Error ------------------------------------------------------------ error.js:10:8
+Error ------------------------------------------------------------ error.js:10:3
 
-Cannot cast `any` to undefined because null or undefined is incompatible with
-undefined.
-
-
-Error ------------------------------------------------------------ error.js:10:9
-
-Cannot cast `any` to undefined because number is incompatible with undefined.
+Cannot cast `any` to undefined because:
+ - null or undefined is incompatible with undefined.
+ - number is incompatible with undefined.
 
 
 Error: error.js:16
@@ -87,14 +80,9 @@ number.
 
 Error -------------------------------------------------------- nullable.js:15:17
 
-Cannot call `qux` with `x` bound to `x` because null is incompatible with
-string.
-
-
-Error -------------------------------------------------------- nullable.js:15:17
-
-Cannot call `qux` with `x` bound to `x` because null or undefined is
-incompatible with string.
+Cannot call `qux` with `x` bound to `x` because:
+ - null is incompatible with string.
+ - null or undefined is incompatible with string.
 
 
 Error --------------------------------------------------- simple_nullable.js:4:5

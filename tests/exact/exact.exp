@@ -1,13 +1,8 @@
-Error --------------------------------------------------- error_continues.js:3:8
+Error --------------------------------------------------- error_continues.js:3:3
 
-Cannot cast `any` to object type because inexact object type is incompatible
-with exact object type.
-
-
-Error -------------------------------------------------- error_continues.js:3:12
-
-Cannot cast `any` to object type because in property `p`, number is incompatible
-with string.
+Cannot cast `any` to object type because:
+ - inexact object type is incompatible with exact object type.
+ - in property `p`, number is incompatible with string.
 
 
 Error ---------------------------------------------------- exact_basics.js:49:20

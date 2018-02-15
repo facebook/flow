@@ -1,13 +1,8 @@
-Error ----------------------------------------------------- conditional.js:23:24
+Error ----------------------------------------------------- conditional.js:23:10
 
-Cannot return `x != null ? x : x != null` because number is incompatible with
-string.
-
-
-Error ----------------------------------------------------- conditional.js:23:29
-
-Cannot return `x != null ? x : x != null` because boolean is incompatible with
-string.
+Cannot return `x != null ? x : x != null` because:
+ - number is incompatible with string.
+ - boolean is incompatible with string.
 
 
 

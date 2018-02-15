@@ -76,12 +76,9 @@ number.
 
 Error --------------------------------------------------------- optional.js:7:54
 
-Cannot return `y[0]` because number is incompatible with string.
-
-
-Error --------------------------------------------------------- optional.js:7:54
-
-Cannot return `y[0]` because number is incompatible with string.
+Cannot return `y[0]` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error -------------------------------------------------- optional_param2.js:7:31

@@ -3,6 +3,14 @@ Error ------------------------------------------------------------- basic.js:6:2
 Cannot cast `null` to empty because null is incompatible with empty.
 
 
+Error ------------------------------------------------------------- group.js:6:2
+
+Cannot cast object literal to object type because:
+ - in property `a`, number is incompatible with string.
+ - in property `b`, number is incompatible with string.
+ - in property `c`, number is incompatible with string.
+
+
 Error ------------------------------------------------------------ wrap.js:21:64
 
 Cannot cast object literal to object type because in property `this.is.going`,
@@ -11,5 +19,16 @@ index 0, property `to.be.a.really`, index 0, property
 `breaks.on.multiple.lines`; number is incompatible with string.
 
 
+Error -------------------------------------------------------- wrap_group.js:6:2
 
-Found 2 errors
+Cannot cast object literal to object type because:
+ - in property `this.is.going`, index 0, property `to.be.a.really`, index 0,
+   property `long.error.message.that.hopefully`, index 0, and then property
+   `breaks.on.multiple.lines.a`; number is incompatible with string.
+ - in property `this.is.going`, index 0, property `to.be.a.really`, index 0,
+   property `long.error.message.that.hopefully`, index 0, and then property
+   `breaks.on.multiple.lines.b`; number is incompatible with string.
+
+
+
+Found 7 errors

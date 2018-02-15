@@ -37,16 +37,13 @@ Cannot call `checkPropTypes` with function bound to `getStack` because in the
 return value, number is incompatible with string.
 
 
-Error -------------------------------------------------------- propTypes.js:15:2
+Error -------------------------------------------------------- propTypes.js:15:1
 
-Cannot create `D` element because property `name` is missing in props but exists
-in propTypes of React component.
-
-
-Error -------------------------------------------------------- propTypes.js:15:2
-
-Cannot create `D` element because property `title` is missing in props but
-exists in propTypes of React component.
+Cannot create `D` element because:
+ - property `name` is missing in props but exists in propTypes of React
+   component.
+ - property `title` is missing in props but exists in propTypes of React
+   component.
 
 
 

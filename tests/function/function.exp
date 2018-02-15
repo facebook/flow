@@ -1,16 +1,9 @@
-Error ------------------------------------------------------------ apply.js:2:15
+Error ------------------------------------------------------------ apply.js:2:10
 
-Cannot get `this.length` because property `length` is missing in `Number`.
-
-
-Error ------------------------------------------------------------ apply.js:2:15
-
-Cannot get `this.length` because property `length` is missing in `Number`.
-
-
-Error ------------------------------------------------------------ apply.js:2:15
-
-Cannot get `this.length` because property `length` is missing in `Number`.
+Cannot get `this.length` because:
+ - property `length` is missing in `Number`.
+ - property `length` is missing in `Number`.
+ - property `length` is missing in `Number`.
 
 
 Error ------------------------------------------------------------ apply.js:12:6
@@ -101,14 +94,11 @@ Cannot call `x.bind` with `123` bound to `a` because number is incompatible with
 string.
 
 
-Error ------------------------------------------------------------- call.js:4:15
+Error ------------------------------------------------------------- call.js:4:10
 
-Cannot get `this.length` because property `length` is missing in `Number`.
-
-
-Error ------------------------------------------------------------- call.js:4:15
-
-Cannot get `this.length` because property `length` is missing in `Number`.
+Cannot get `this.length` because:
+ - property `length` is missing in `Number`.
+ - property `length` is missing in `Number`.
 
 
 Error ------------------------------------------------------------- call.js:14:6
@@ -293,13 +283,9 @@ Cannot call `f` with `123` bound to `x` because number is not an array.
 
 Error -------------------------------------------------------- rest_type.js:20:3
 
-Cannot call `f` because string is not an array.
-
-
-Error -------------------------------------------------------- rest_type.js:20:3
-
-Cannot call `f` because in the rest argument, rest array is incompatible with
-string.
+Cannot call `f` because:
+ - string is not an array.
+ - in the rest argument, rest array is incompatible with string.
 
 
 Error ------------------------------------------------------- rest_type.js:31:22

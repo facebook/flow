@@ -11,14 +11,9 @@ Cannot return `foo(...)` because string is incompatible with number.
 
 Error ------------------------------------------------------------ annot.js:8:46
 
-Cannot assign object literal to `obj` because property `j` is missing in object
-literal but exists in object type.
-
-
-Error ------------------------------------------------------------ annot.js:8:62
-
-Cannot assign object literal to `obj` because in property `i`, string is
-incompatible with number.
+Cannot assign object literal to `obj` because:
+ - property `j` is missing in object literal but exists in object type.
+ - in property `i`, string is incompatible with number.
 
 
 Error ----------------------------------------------------------- annot.js:10:31

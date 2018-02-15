@@ -35,16 +35,11 @@ Error -------------------------------------------------------------- test.js:7:2
 Cannot cast `k.x` to string because number is incompatible with string.
 
 
-Error ------------------------------------------------------------ test.js:17:25
+Error ------------------------------------------------------------ test.js:17:20
 
-Cannot assign object literal to `e` because in property `x`, string is
-incompatible with number.
-
-
-Error ------------------------------------------------------------ test.js:17:39
-
-Cannot assign object literal to `e` because in property `z`, string is
-incompatible with number.
+Cannot assign object literal to `e` because:
+ - in property `x`, string is incompatible with number.
+ - in property `z`, string is incompatible with number.
 
 
 Error ------------------------------------------------------------- test.js:18:2

@@ -127,13 +127,9 @@ type is incompatible with `T`.
 
 Error ------------------------------------------------------- type_contra.js:7:2
 
-Cannot cast `o1.p` to `T` because property `p` of unknown type is incompatible
-with `T`.
-
-
-Error ------------------------------------------------------- type_contra.js:7:2
-
-Cannot cast `o1.p` to `T` because undefined is incompatible with `T`.
+Cannot cast `o1.p` to `T` because:
+ - property `p` of unknown type is incompatible with `T`.
+ - undefined is incompatible with `T`.
 
 
 Error ------------------------------------------------------ type_contra.js:12:2
@@ -164,16 +160,11 @@ Cannot call `fn` with object literal bound to the first parameter because object
 literal is incompatible with `T`.
 
 
-Error ----------------------------------------------------- type_generic.js:3:12
+Error ------------------------------------------------------ type_generic.js:3:2
 
-Cannot cast `spread(...)` to object type because in property `p`, number is
-incompatible with empty.
-
-
-Error ----------------------------------------------------- type_generic.js:3:18
-
-Cannot cast `spread(...)` to object type because in property `q`, number is
-incompatible with empty.
+Cannot cast `spread(...)` to object type because:
+ - in property `p`, number is incompatible with empty.
+ - in property `q`, number is incompatible with empty.
 
 
 Error ------------------------------------------------ type_intersection.js:15:6
@@ -199,17 +190,10 @@ Cannot cast `o3.a` to empty because number is incompatible with empty.
 
 Error ------------------------------------------------------- type_mixed.js:14:2
 
-Cannot cast `o3.b` to empty because mixed is incompatible with empty.
-
-
-Error ------------------------------------------------------- type_mixed.js:14:2
-
-Cannot cast `o3.b` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------- type_mixed.js:14:2
-
-Cannot cast `o3.b` to empty because undefined is incompatible with empty.
+Cannot cast `o3.b` to empty because:
+ - mixed is incompatible with empty.
+ - number is incompatible with empty.
+ - undefined is incompatible with empty.
 
 
 Error ------------------------------------------------------- type_mixed.js:15:2

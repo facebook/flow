@@ -1,38 +1,24 @@
 Error ------------------------------------------------------------- map.js:23:21
 
-Cannot call `Map` with array literal bound to `iterable` because in property
-`@@iterator`, the return value, and then type argument `Yield`; number is
-incompatible with tuple type.
+Cannot call `Map` with array literal bound to `iterable` because:
+ - in property `@@iterator`, the return value, and then type argument `Yield`;
+   number is incompatible with tuple type.
+ - in property `@@iterator`, the return value, and then type argument `Yield`;
+   string is incompatible with tuple type.
 
 
-Error ------------------------------------------------------------- map.js:23:21
+Error ------------------------------------------------------------- map.js:24:34
 
-Cannot call `Map` with array literal bound to `iterable` because in property
-`@@iterator`, the return value, and then type argument `Yield`; string is
-incompatible with tuple type.
-
-
-Error ------------------------------------------------------------- map.js:24:44
-
-Cannot assign `new Map(...)` to `y` because in type argument `K`, string is
-incompatible with number.
-
-
-Error ------------------------------------------------------------- map.js:24:51
-
-Cannot assign `new Map(...)` to `y` because in type argument `V`, number is
-incompatible with string.
+Cannot assign `new Map(...)` to `y` because:
+ - in type argument `K`, string is incompatible with number.
+ - in type argument `V`, number is incompatible with string.
 
 
 Error -------------------------------------------------------------- map.js:29:6
 
-Cannot cast `x.get(...)` to boolean because number is incompatible with boolean.
-
-
-Error -------------------------------------------------------------- map.js:29:6
-
-Cannot cast `x.get(...)` to boolean because undefined is incompatible with
-boolean.
+Cannot cast `x.get(...)` to boolean because:
+ - number is incompatible with boolean.
+ - undefined is incompatible with boolean.
 
 
 Error ------------------------------------------------------------- map.js:30:11
@@ -55,23 +41,13 @@ incompatible with `RegExp$flags` since `z` is not a member of the set.
 
 Error --------------------------------------------------------- weakset.js:19:23
 
-Cannot call `WeakSet` with array literal bound to `iterable` because in property
-`@@iterator`, the return value, and then type argument `Yield`; number is
-incompatible with object type.
-
-
-Error --------------------------------------------------------- weakset.js:19:23
-
-Cannot call `WeakSet` with array literal bound to `iterable` because in property
-`@@iterator`, the return value, and then type argument `Yield`; number is
-incompatible with object type.
-
-
-Error --------------------------------------------------------- weakset.js:19:23
-
-Cannot call `WeakSet` with array literal bound to `iterable` because in property
-`@@iterator`, the return value, and then type argument `Yield`; number is
-incompatible with object type.
+Cannot call `WeakSet` with array literal bound to `iterable` because:
+ - in property `@@iterator`, the return value, and then type argument `Yield`;
+   number is incompatible with object type.
+ - in property `@@iterator`, the return value, and then type argument `Yield`;
+   number is incompatible with object type.
+ - in property `@@iterator`, the return value, and then type argument `Yield`;
+   number is incompatible with object type.
 
 
 Error --------------------------------------------------------- weakset.js:36:23

@@ -109,62 +109,17 @@ Cannot call `Request` because function requires another argument.
 
 Error ---------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because in property `cache`,
-string enum is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property
-`credentials`, string enum is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `headers`,
-`Headers` is incompatible with object type.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `headers`,
-`Headers` is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `integrity`,
-string is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `method`,
-string is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `mode`,
-string enum is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `redirect`,
-string enum is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property `referrer`,
-string is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- request.js:6:35
-
-Cannot call `Request` with `c` bound to `init` because in property
-`referrerPolicy`, string enum is incompatible with undefined.
+Cannot call `Request` with `c` bound to `init` because:
+ - in property `cache`, string enum is incompatible with undefined.
+ - in property `credentials`, string enum is incompatible with undefined.
+ - in property `headers`, `Headers` is incompatible with object type.
+ - in property `headers`, `Headers` is incompatible with undefined.
+ - in property `integrity`, string is incompatible with undefined.
+ - in property `method`, string is incompatible with undefined.
+ - in property `mode`, string enum is incompatible with undefined.
+ - in property `redirect`, string enum is incompatible with undefined.
+ - in property `referrer`, string is incompatible with undefined.
+ - in property `referrerPolicy`, string enum is incompatible with undefined.
 
 
 Error: request.js:8
@@ -396,16 +351,11 @@ Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in
 the first argument, `ArrayBuffer` is incompatible with `Buffer`.
 
 
-Error -------------------------------------------------- urlsearchparams.js:4:32
+Error -------------------------------------------------- urlsearchparams.js:4:31
 
-Cannot call `URLSearchParams` with array literal bound to `query` because in
-type argument `T`, string is incompatible with tuple type.
-
-
-Error -------------------------------------------------- urlsearchparams.js:4:40
-
-Cannot call `URLSearchParams` with array literal bound to `query` because in
-type argument `T`, string is incompatible with tuple type.
+Cannot call `URLSearchParams` with array literal bound to `query` because:
+ - in type argument `T`, string is incompatible with tuple type.
+ - in type argument `T`, string is incompatible with tuple type.
 
 
 Error --------------------------------------------------- urlsearchparams.js:9:3

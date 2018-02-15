@@ -12,24 +12,16 @@ because `HTMLInputElement` is incompatible with `HTMLFormElement`.
 
 Error -------------------------------------------------------- FormData.js:14:19
 
-Cannot assign `a.get(...)` to `d` because `File` is incompatible with string.
-
-
-Error -------------------------------------------------------- FormData.js:14:19
-
-Cannot assign `a.get(...)` to `d` because null or undefined is incompatible with
-string.
+Cannot assign `a.get(...)` to `d` because:
+ - `File` is incompatible with string.
+ - null or undefined is incompatible with string.
 
 
 Error -------------------------------------------------------- FormData.js:15:17
 
-Cannot assign `a.get(...)` to `e` because null or undefined is incompatible with
-`Blob`.
-
-
-Error -------------------------------------------------------- FormData.js:15:17
-
-Cannot assign `a.get(...)` to `e` because string is incompatible with `Blob`.
+Cannot assign `a.get(...)` to `e` because:
+ - null or undefined is incompatible with `Blob`.
+ - string is incompatible with `Blob`.
 
 
 Error --------------------------------------------------------- FormData.js:17:7
@@ -289,42 +281,24 @@ Cannot assign element 1 to `y` because `File` is incompatible with string.
 
 Error -------------------------------------------------------- FormData.js:65:38
 
-Cannot assign for-of element to variable because in index 0, string is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:65:38
-
-Cannot assign for-of element to variable because in index 1, `File` is
-incompatible with string.
+Cannot assign for-of element to variable because:
+ - in index 0, string is incompatible with number.
+ - in index 1, `File` is incompatible with string.
 
 
 Error -------------------------------------------------------- FormData.js:66:14
 
-Cannot assign element 1 to `y` because `File` is incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:66:14
-
-Cannot assign element 1 to `y` because string is incompatible with number.
+Cannot assign element 1 to `y` because:
+ - `File` is incompatible with number.
+ - string is incompatible with number.
 
 
 Error -------------------------------------------------------- FormData.js:66:38
 
-Cannot assign for-of element to variable because in index 1, `File` is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:66:38
-
-Cannot assign for-of element to variable because in index 1, string is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:66:38
-
-Cannot assign for-of element to variable because in index 1, string is
-incompatible with number.
+Cannot assign for-of element to variable because:
+ - in index 1, `File` is incompatible with number.
+ - in index 1, string is incompatible with number.
+ - in index 1, string is incompatible with number.
 
 
 Error -------------------------------------------------------- FormData.js:67:11
@@ -334,36 +308,18 @@ Cannot assign element 0 to `x` because string is incompatible with number.
 
 Error -------------------------------------------------------- FormData.js:67:14
 
-Cannot assign element 1 to `y` because `File` is incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:67:14
-
-Cannot assign element 1 to `y` because string is incompatible with number.
+Cannot assign element 1 to `y` because:
+ - `File` is incompatible with number.
+ - string is incompatible with number.
 
 
 Error -------------------------------------------------------- FormData.js:67:38
 
-Cannot assign for-of element to variable because in index 0, string is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:67:38
-
-Cannot assign for-of element to variable because in index 1, `File` is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:67:38
-
-Cannot assign for-of element to variable because in index 1, string is
-incompatible with number.
-
-
-Error -------------------------------------------------------- FormData.js:67:38
-
-Cannot assign for-of element to variable because in index 1, string is
-incompatible with number.
+Cannot assign for-of element to variable because:
+ - in index 0, string is incompatible with number.
+ - in index 1, `File` is incompatible with number.
+ - in index 1, string is incompatible with number.
+ - in index 1, string is incompatible with number.
 
 
 Error ------------------------------------------------- MutationObserver.js:10:5

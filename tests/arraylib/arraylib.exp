@@ -15,22 +15,12 @@ Cannot assign `a.reverse()` to `e` because in type argument `T`, number is
 incompatible with string.
 
 
-Error ------------------------------------------------------- array_lib.js:21:33
+Error ------------------------------------------------------- array_lib.js:21:24
 
-Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
-incompatible with number.
-
-
-Error ------------------------------------------------------- array_lib.js:21:38
-
-Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
-incompatible with number.
-
-
-Error ------------------------------------------------------- array_lib.js:21:43
-
-Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
-incompatible with number.
+Cannot assign `h.concat(...)` to `n` because:
+ - in type argument `T`, string is incompatible with number.
+ - in type argument `T`, string is incompatible with number.
+ - in type argument `T`, string is incompatible with number.
 
 
 Error ------------------------------------------------------- array_lib.js:46:29

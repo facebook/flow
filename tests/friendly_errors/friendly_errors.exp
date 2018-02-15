@@ -84,12 +84,9 @@ with string.
 
 Error --------------------------------------- class-refinement-env-merge.js:12:6
 
-Cannot cast `this.p` to number because string is incompatible with number.
-
-
-Error --------------------------------------- class-refinement-env-merge.js:12:6
-
-Cannot cast `this.p` to number because string is incompatible with number.
+Cannot cast `this.p` to number because:
+ - string is incompatible with number.
+ - string is incompatible with number.
 
 
 Error -------------------------------------------- desc-class-properties.js:16:6
@@ -338,16 +335,11 @@ Error ----------------------------------------------- misc-incompatibles.js:17:1
 Invalid left-hand side in assignment expression.
 
 
-Error ------------------------------------------------------------- order.js:9:6
+Error ------------------------------------------------------------- order.js:8:2
 
-Cannot cast object literal to object type because in property `a`, number is
-incompatible with boolean.
-
-
-Error ------------------------------------------------------------ order.js:11:6
-
-Cannot cast object literal to object type because in property `c`, boolean is
-incompatible with number.
+Cannot cast object literal to object type because:
+ - in property `a`, number is incompatible with boolean.
+ - in property `c`, boolean is incompatible with number.
 
 
 Error ------------------------------------------------------------ order.js:10:7

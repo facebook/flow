@@ -207,14 +207,11 @@ Error ------------------------------------------------------- expression.js:34:2
 Cannot cast `(1 ? 2 : 3).p` to empty because mixed is incompatible with empty.
 
 
-Error ------------------------------------------------------- expression.js:34:8
+Error ------------------------------------------------------- expression.js:34:4
 
-Cannot cast `1 ? 2 : 3` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------ expression.js:34:12
-
-Cannot cast `1 ? 2 : 3` to empty because number is incompatible with empty.
+Cannot cast `1 ? 2 : 3` to empty because:
+ - number is incompatible with empty.
+ - number is incompatible with empty.
 
 
 Error ------------------------------------------------------- expression.js:35:2
@@ -223,16 +220,11 @@ Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because mixed is incompatible
 with empty.
 
 
-Error ------------------------------------------------------ expression.js:35:18
+Error ------------------------------------------------------- expression.js:35:4
 
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number is incompatible with
-empty.
-
-
-Error ------------------------------------------------------ expression.js:35:22
-
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number is incompatible with
-empty.
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because:
+ - number is incompatible with empty.
+ - number is incompatible with empty.
 
 
 Error ------------------------------------------------------- expression.js:36:2

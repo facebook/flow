@@ -51,14 +51,9 @@ Error: importtest-polarity.js:39
 
 Error --------------------------------------------- importtest-polarity.js:39:12
 
-Cannot return `x` because in type argument `S`, number is incompatible with
-string.
-
-
-Error --------------------------------------------- importtest-polarity.js:39:12
-
-Cannot return `x` because in type argument `T`, string is incompatible with
-number.
+Cannot return `x` because:
+ - in type argument `S`, number is incompatible with string.
+ - in type argument `T`, string is incompatible with number.
 
 
 Error ------------------------------------------------------- importtest.js:7:12

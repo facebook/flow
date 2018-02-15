@@ -4,16 +4,12 @@ Cannot assign function to `A.qux` because property `qux` is missing in statics
 of `A`.
 
 
-Error ------------------------------------------------------------ test.js:10:13
+Error -------------------------------------------------------------- test.js:9:1
 
-Cannot extend `A` with `B` because in property `x`, string is incompatible with
-number.
-
-
-Error ------------------------------------------------------------ test.js:11:17
-
-Cannot extend `A` with `B` because in property `foo` and then the first
-argument, string is incompatible with number.
+Cannot extend `A` with `B` because:
+ - in property `x`, string is incompatible with number.
+ - in property `foo` and then the first argument, string is incompatible with
+   number.
 
 
 Error ------------------------------------------------------------ test.js:13:11

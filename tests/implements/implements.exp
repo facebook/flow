@@ -22,16 +22,11 @@ Cannot implement `IFoo` with `C4` because property `foo` is missing in `C4` but
 exists in `IFoo`.
 
 
-Error ------------------------------------------------------------- test.js:18:7
+Error ------------------------------------------------------------- test.js:18:1
 
-Cannot implement `IFooBar` with `C5` because property `bar` is missing in `C5`
-but exists in `IFooBar`.
-
-
-Error ------------------------------------------------------------- test.js:18:7
-
-Cannot implement `IFooBar` with `C5` because property `foo` is missing in `C5`
-but exists in `IFoo`.
+Cannot implement `IFooBar` with `C5` because:
+ - property `bar` is missing in `C5` but exists in `IFooBar`.
+ - property `foo` is missing in `C5` but exists in `IFoo`.
 
 
 Error ------------------------------------------------------------- test.js:21:2

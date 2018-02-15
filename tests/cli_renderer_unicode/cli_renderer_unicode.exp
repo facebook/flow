@@ -3,5 +3,13 @@ Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈�
 Cannot cast `null` to empty because null is incompatible with empty.
 
 
+Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ group.js:6:2
 
-Found 1 error
+Cannot cast object literal to object type because:
+ • in property `a`, number is incompatible with string.
+ • in property `b`, number is incompatible with string.
+ • in property `c`, number is incompatible with string.
+
+
+
+Found 4 errors

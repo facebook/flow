@@ -34,14 +34,9 @@ Cannot cast `newVal4` to string because number is incompatible with string.
 
 Error ----------------------------------- implicit_bounded_instantiation.js:15:8
 
-Cannot instantiate `C` because in type argument `T`, `Base` is incompatible with
-`Middle`.
-
-
-Error ----------------------------------- implicit_bounded_instantiation.js:15:8
-
-Cannot instantiate `C` because in type argument `T`, number is incompatible with
-`Middle`.
+Cannot instantiate `C` because:
+ - in type argument `T`, `Base` is incompatible with `Middle`.
+ - in type argument `T`, number is incompatible with `Middle`.
 
 
 Error ----------------------------------- implicit_bounded_instantiation.js:19:8
@@ -70,12 +65,9 @@ incompatible with string.
 
 Error ------------------------------------------------------------ poly.js:17:16
 
-Cannot assign `foo.x` to `x` because number is incompatible with string.
-
-
-Error ------------------------------------------------------------ poly.js:17:16
-
-Cannot assign `foo.x` to `x` because number is incompatible with string.
+Cannot assign `foo.x` to `x` because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error ------------------------------------------------------------ poly.js:18:31
@@ -84,16 +76,12 @@ Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string is
 incompatible with number.
 
 
-Error ------------------------------------------------------------- test.js:8:10
+Error -------------------------------------------------------------- test.js:7:1
 
-Cannot extend `C` with `D` because in property `foo` and then the first
-argument, number is incompatible with `X`.
-
-
-Error ------------------------------------------------------------- test.js:8:19
-
-Cannot extend `C` with `D` because in property `foo` and then the return value,
-number is incompatible with `X`.
+Cannot extend `C` with `D` because:
+ - in property `foo` and then the first argument, number is incompatible with
+   `X`.
+ - in property `foo` and then the return value, number is incompatible with `X`.
 
 
 

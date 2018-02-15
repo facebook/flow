@@ -1,61 +1,36 @@
-Error --------------------------------------------------------- identity.js:20:6
+Error --------------------------------------------------------- identity.js:19:2
 
-Cannot cast object literal to `Foo` because in property `a`, string is
-incompatible with number.
-
-
-Error --------------------------------------------------------- identity.js:21:6
-
-Cannot cast object literal to `Foo` because in property `b`, string is
-incompatible with number.
+Cannot cast object literal to `Foo` because:
+ - in property `a`, string is incompatible with number.
+ - in property `b`, string is incompatible with number.
 
 
-Error --------------------------------------------------------- identity.js:25:6
+Error --------------------------------------------------------- identity.js:24:3
 
-Cannot cast `any` to `Foo` because in property `a`, string is incompatible with
-number.
-
-
-Error --------------------------------------------------------- identity.js:26:6
-
-Cannot cast `any` to `Foo` because in property `b`, string is incompatible with
-number.
+Cannot cast `any` to `Foo` because:
+ - in property `a`, string is incompatible with number.
+ - in property `b`, string is incompatible with number.
 
 
 Error --------------------------------------------------------- identity.js:29:2
 
-Cannot cast object literal to `Foo` because property `a` is missing in object
-literal but exists in object type.
+Cannot cast object literal to `Foo` because:
+ - property `a` is missing in object literal but exists in object type.
+ - property `b` is missing in object literal but exists in object type.
 
 
-Error --------------------------------------------------------- identity.js:29:2
+Error --------------------------------------------------------- identity.js:31:3
 
-Cannot cast object literal to `Foo` because property `b` is missing in object
-literal but exists in object type.
-
-
-Error --------------------------------------------------------- identity.js:31:8
-
-Cannot cast `any` to `Foo` because property `a` is missing in object type but
-exists in object type.
-
-
-Error --------------------------------------------------------- identity.js:31:8
-
-Cannot cast `any` to `Foo` because property `b` is missing in object type but
-exists in object type.
+Cannot cast `any` to `Foo` because:
+ - property `a` is missing in object type but exists in object type.
+ - property `b` is missing in object type but exists in object type.
 
 
 Error --------------------------------------------------------- identity.js:38:2
 
-Cannot cast `foo` to object type because in property `a`, number is incompatible
-with string.
-
-
-Error --------------------------------------------------------- identity.js:38:2
-
-Cannot cast `foo` to object type because in property `b`, number is incompatible
-with string.
+Cannot cast `foo` to object type because:
+ - in property `a`, number is incompatible with string.
+ - in property `b`, number is incompatible with string.
 
 
 Error --------------------------------------------------------- identity.js:43:2

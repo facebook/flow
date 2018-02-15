@@ -235,14 +235,9 @@ Error: test16.js:14
 
 Error ------------------------------------------------------------ test17.js:7:2
 
-Cannot cast `[].concat(...)[1]` to string because number is incompatible with
-string.
-
-
-Error ------------------------------------------------------------ test17.js:7:2
-
-Cannot cast `[].concat(...)[1]` to string because number is incompatible with
-string.
+Cannot cast `[].concat(...)[1]` to string because:
+ - number is incompatible with string.
+ - number is incompatible with string.
 
 
 Error ---------------------------------------------------------- test20.js:14:26

@@ -15,17 +15,10 @@ Cannot cast `c` to string because boolean is incompatible with string.
 
 Error -------------------------------------------------------------- all.js:19:6
 
-Cannot cast `x` to undefined because boolean is incompatible with undefined.
-
-
-Error -------------------------------------------------------------- all.js:19:6
-
-Cannot cast `x` to undefined because number is incompatible with undefined.
-
-
-Error -------------------------------------------------------------- all.js:19:6
-
-Cannot cast `x` to undefined because string is incompatible with undefined.
+Cannot cast `x` to undefined because:
+ - boolean is incompatible with undefined.
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error -------------------------------------------------------------- all.js:24:9
@@ -112,12 +105,9 @@ Cannot assign `str` to `b` because string is incompatible with number.
 
 Error -------------------------------------------------------- promise.js:225:21
 
-Cannot assign `num` to `b` because number is incompatible with string.
-
-
-Error -------------------------------------------------------- promise.js:225:21
-
-Cannot assign `num` to `b` because undefined is incompatible with string.
+Cannot assign `num` to `b` because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error -------------------------------------------------- resolve_global.js:35:18

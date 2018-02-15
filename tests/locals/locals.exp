@@ -94,14 +94,9 @@ Error: locals.js:12
 
 Error ----------------------------------------------------------- locals.js:14:9
 
-Cannot call `foo` with `x` bound to `p` because number is incompatible with
-boolean.
-
-
-Error ----------------------------------------------------------- locals.js:14:9
-
-Cannot call `foo` with `x` bound to `p` because string is incompatible with
-boolean.
+Cannot call `foo` with `x` bound to `p` because:
+ - number is incompatible with boolean.
+ - string is incompatible with boolean.
 
 
 Error ---------------------------------------------------------- locals.js:22:10

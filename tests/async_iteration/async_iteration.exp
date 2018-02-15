@@ -21,25 +21,16 @@ Cannot cast `line` to undefined because string is incompatible with undefined.
 
 Error ------------------------------------------------------------ return.js:6:4
 
-Cannot cast `result.value` to undefined because number is incompatible with
-undefined.
-
-
-Error ------------------------------------------------------------ return.js:6:4
-
-Cannot cast `result.value` to undefined because string is incompatible with
-undefined.
+Cannot cast `result.value` to undefined because:
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error ----------------------------------------------------------- return.js:20:6
 
-Cannot cast `result.value` to string because number is incompatible with string.
-
-
-Error ----------------------------------------------------------- return.js:20:6
-
-Cannot cast `result.value` to string because undefined is incompatible with
-string.
+Cannot cast `result.value` to string because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error ------------------------------------------------------------ throw.js:12:8

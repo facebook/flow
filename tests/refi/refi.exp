@@ -59,17 +59,10 @@ Cannot cast `x.y` to string because boolean is incompatible with string.
 
 Error ------------------------------------------------------------ heap.js:135:6
 
-Cannot cast `x.y` to boolean because string is incompatible with boolean.
-
-
-Error ------------------------------------------------------------ heap.js:135:6
-
-Cannot cast `x.y` to boolean because string is incompatible with boolean.
-
-
-Error ------------------------------------------------------------ heap.js:135:6
-
-Cannot cast `x.y` to boolean because string is incompatible with boolean.
+Cannot cast `x.y` to boolean because:
+ - string is incompatible with boolean.
+ - string is incompatible with boolean.
+ - string is incompatible with boolean.
 
 
 Error ------------------------------------------------------------ heap.js:146:6
@@ -79,22 +72,16 @@ Cannot cast `x.y` to string because null is incompatible with string.
 
 Error ------------------------------------------------------------ heap.js:159:6
 
-Cannot cast `x.y` to string because boolean is incompatible with string.
-
-
-Error ------------------------------------------------------------ heap.js:159:6
-
-Cannot cast `x.y` to string because boolean is incompatible with string.
+Cannot cast `x.y` to string because:
+ - boolean is incompatible with string.
+ - boolean is incompatible with string.
 
 
 Error ------------------------------------------------------------ heap.js:172:6
 
-Cannot cast `x.y` to string because boolean is incompatible with string.
-
-
-Error ------------------------------------------------------------ heap.js:172:6
-
-Cannot cast `x.y` to string because number is incompatible with string.
+Cannot cast `x.y` to string because:
+ - boolean is incompatible with string.
+ - number is incompatible with string.
 
 
 Error ------------------------------------------------------------ heap.js:188:6
@@ -110,12 +97,9 @@ Property `bar` is missing in mixed.
 
 Error ------------------------------------------------------------ heap.js:193:6
 
-Cannot cast `x` to intersection type because mixed is incompatible with number.
-
-
-Error ------------------------------------------------------------ heap.js:193:6
-
-Cannot cast `x` to intersection type because mixed is incompatible with string.
+Cannot cast `x` to intersection type because:
+ - mixed is incompatible with number.
+ - mixed is incompatible with string.
 
 
 Error --------------------------------------------------------------- lex.js:6:4

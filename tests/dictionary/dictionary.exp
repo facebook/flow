@@ -64,16 +64,11 @@ Cannot assign object literal to `b` because in property `a`, `A` is incompatible
 with `B`.
 
 
-Error ------------------------------------------------------ dictionary.js:145:8
+Error ----------------------------------------------------- dictionary.js:144:27
 
-Cannot assign object literal to `c` because in property `a`, `A` is incompatible
-with `C`.
-
-
-Error ------------------------------------------------------ dictionary.js:146:8
-
-Cannot assign object literal to `c` because in property `b`, `B` is incompatible
-with `C`.
+Cannot assign object literal to `c` because:
+ - in property `a`, `A` is incompatible with `C`.
+ - in property `b`, `B` is incompatible with `C`.
 
 
 Error ----------------------------------------------------- dictionary.js:159:31

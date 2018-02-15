@@ -1,11 +1,8 @@
 Error ------------------------------------------------------------- test3.js:7:2
 
-Cannot cast `x.m()` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------------- test3.js:7:2
-
-Cannot cast `x.m()` to empty because string is incompatible with empty.
+Cannot cast `x.m()` to empty because:
+ - number is incompatible with empty.
+ - string is incompatible with empty.
 
 
 

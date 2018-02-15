@@ -10,14 +10,9 @@ Cannot return `false && '123'` because boolean is incompatible with number.
 
 Error -------------------------------------------------------- logical.js:101:12
 
-Cannot return `(x != null) && (x > 10)` because boolean is incompatible with
-string.
-
-
-Error -------------------------------------------------------- logical.js:101:25
-
-Cannot return `(x != null) && (x > 10)` because boolean is incompatible with
-string.
+Cannot return `(x != null) && (x > 10)` because:
+ - boolean is incompatible with string.
+ - boolean is incompatible with string.
 
 
 Error -------------------------------------------------------- logical.js:109:12
@@ -102,12 +97,9 @@ Cannot return `false && x && y` because boolean is incompatible with array type.
 
 Error -------------------------------------------------------- logical.js:329:12
 
-Cannot return `x && false && y` because number is incompatible with array type.
-
-
-Error -------------------------------------------------------- logical.js:329:17
-
-Cannot return `x && false && y` because boolean is incompatible with array type.
+Cannot return `x && false && y` because:
+ - number is incompatible with array type.
+ - boolean is incompatible with array type.
 
 
 Error -------------------------------------------------------- logical.js:348:18
@@ -135,40 +127,26 @@ Error -------------------------------------------------------- logical.js:371:18
 boolean is incompatible with number.
 
 
-Error -------------------------------------------------------- logical.js:381:13
+Error -------------------------------------------------------- logical.js:380:12
 
-Cannot return array literal because in type argument `T` and then property `x`,
-number is incompatible with string.
-
-
-Error -------------------------------------------------------- logical.js:383:21
-
-Cannot return array literal because in type argument `T` and then property `x`,
-boolean is incompatible with string.
-
-
-Error -------------------------------------------------------- logical.js:384:13
-
-Cannot return array literal because in type argument `T` and then property `x`,
-boolean is incompatible with string.
+Cannot return array literal because:
+ - in type argument `T` and then property `x`, number is incompatible with
+   string.
+ - in type argument `T` and then property `x`, boolean is incompatible with
+   string.
+ - in type argument `T` and then property `x`, boolean is incompatible with
+   string.
 
 
-Error -------------------------------------------------------- logical.js:397:13
+Error -------------------------------------------------------- logical.js:396:12
 
-Cannot return array literal because in type argument `T` and then property `x`,
-number is incompatible with string.
-
-
-Error -------------------------------------------------------- logical.js:399:22
-
-Cannot return array literal because in type argument `T` and then property `x`,
-boolean is incompatible with string.
-
-
-Error -------------------------------------------------------- logical.js:400:13
-
-Cannot return array literal because in type argument `T` and then property `x`,
-boolean is incompatible with string.
+Cannot return array literal because:
+ - in type argument `T` and then property `x`, number is incompatible with
+   string.
+ - in type argument `T` and then property `x`, boolean is incompatible with
+   string.
+ - in type argument `T` and then property `x`, boolean is incompatible with
+   string.
 
 
 Error -------------------------------------------------------- logical.js:510:11

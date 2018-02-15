@@ -175,26 +175,16 @@ Cannot cast `A.make()` to `B` because `A` is incompatible with `B`.
 
 Error ------------------------------------------------------------- test.js:23:2
 
-Cannot cast `new Inherit().foo()` to `Inherit` because `Base` is incompatible
-with `Inherit`.
-
-
-Error ------------------------------------------------------------- test.js:23:2
-
-Cannot cast `new Inherit().foo()` to `Inherit` because `Override` is
-incompatible with `Inherit`.
+Cannot cast `new Inherit().foo()` to `Inherit` because:
+ - `Base` is incompatible with `Inherit`.
+ - `Override` is incompatible with `Inherit`.
 
 
 Error ------------------------------------------------------------- test.js:29:2
 
-Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because
-`Base` is incompatible with `InheritOverride`.
-
-
-Error ------------------------------------------------------------- test.js:29:2
-
-Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because
-`Override` is incompatible with `InheritOverride`.
+Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because:
+ - `Base` is incompatible with `InheritOverride`.
+ - `Override` is incompatible with `InheritOverride`.
 
 
 Error ------------------------------------------------------------ test.js:41:15
@@ -203,22 +193,15 @@ Cannot use `this` in an input position because `this` is expected to occur only
 in output positions.
 
 
-Error ------------------------------------------------------------ test.js:51:10
+Error ------------------------------------------------------------- test.js:47:1
 
-Cannot extend `Base2` with `Override2` because in property `bar` and then the
-return value, `Override2` is incompatible with `this`.
-
-
-Error ------------------------------------------------------------ test.js:56:16
-
-Cannot extend `Base2` with `Override2` because in property `grault` and then the
-first argument, `Override2` is incompatible with `Base2`.
-
-
-Error ------------------------------------------------------------ test.js:56:16
-
-Cannot extend `Base2` with `Override2` because in property `grault` and then the
-first argument, `this` is incompatible with `Base2`.
+Cannot extend `Base2` with `Override2` because:
+ - in property `bar` and then the return value, `Override2` is incompatible with
+   `this`.
+ - in property `grault` and then the first argument, `Override2` is incompatible
+   with `Base2`.
+ - in property `grault` and then the first argument, `this` is incompatible with
+   `Base2`.
 
 
 Error ------------------------------------------------------------ test.js:54:15

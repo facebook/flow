@@ -12,19 +12,10 @@ property `timeout`, string is incompatible with number.
 
 Error ---------------------------------------------------- crypto/crypto.js:12:8
 
-Cannot cast `hmac.read()` to number because `Buffer` is incompatible with
-number.
-
-
-Error ---------------------------------------------------- crypto/crypto.js:12:8
-
-Cannot cast `hmac.read()` to number because null or undefined is incompatible
-with number.
-
-
-Error ---------------------------------------------------- crypto/crypto.js:12:8
-
-Cannot cast `hmac.read()` to number because string is incompatible with number.
+Cannot cast `hmac.read()` to number because:
+ - `Buffer` is incompatible with number.
+ - null or undefined is incompatible with number.
+ - string is incompatible with number.
 
 
 Error --------------------------------------------------- crypto/crypto.js:16:16
@@ -735,13 +726,9 @@ undefined.
 
 Error ---------------------------------------------------- json_file/test.js:6:2
 
-Cannot cast `data.abc` to boolean because null or undefined is incompatible with
-boolean.
-
-
-Error ---------------------------------------------------- json_file/test.js:6:2
-
-Cannot cast `data.abc` to boolean because string is incompatible with boolean.
+Cannot cast `data.abc` to boolean because:
+ - null or undefined is incompatible with boolean.
+ - string is incompatible with boolean.
 
 
 Error ---------------------------------------------------- json_file/test.js:9:2
@@ -810,16 +797,13 @@ Cannot cast `u3.username` to string because `Buffer` is incompatible with
 string.
 
 
-Error ------------------------------------------------- process/nextTick.js:14:3
+Error ------------------------------------------------- process/nextTick.js:12:1
 
-Cannot call `process.nextTick` because in the rest argument and then the first
-argument, number is incompatible with string.
-
-
-Error ------------------------------------------------- process/nextTick.js:16:3
-
-Cannot call `process.nextTick` because in the rest argument and then the third
-argument, null is incompatible with boolean.
+Cannot call `process.nextTick` because:
+ - in the rest argument and then the first argument, number is incompatible with
+   string.
+ - in the rest argument and then the third argument, null is incompatible with
+   boolean.
 
 
 Error ------------------------------------------------- process/nextTick.js:22:3

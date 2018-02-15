@@ -10,16 +10,11 @@ Cannot use property `Component` with less than 1 type argument.
 
 Error ----------------------------------------------------------- classes.js:7:1
 
-Cannot extend property `Component` with `Foo` because in property `setState` and
-then the first argument, property `y_` is missing in `State` but exists in
-object type.
-
-
-Error ----------------------------------------------------------- classes.js:7:1
-
-Cannot extend property `Component` with `Foo` because in property `setState` and
-then the first argument, property `y_` is missing in function type but exists in
-object type.
+Cannot extend property `Component` with `Foo` because:
+ - in property `setState` and then the first argument, property `y_` is missing
+   in `State` but exists in object type.
+ - in property `setState` and then the first argument, property `y_` is missing
+   in function type but exists in object type.
 
 
 Error --------------------------------------------------------- classes.js:15:21
@@ -53,13 +48,9 @@ in `Props`.
 
 Error --------------------------------------------------------- classes.js:39:25
 
-Cannot instantiate `React.Element` because number is not a React component.
-
-
-Error --------------------------------------------------------- classes.js:39:25
-
-Cannot instantiate `React.Element` because in type argument `ElementType`,
-number is incompatible with string.
+Cannot instantiate `React.Element` because:
+ - number is not a React component.
+ - in type argument `ElementType`, number is incompatible with string.
 
 
 Error --------------------------------------------------------- classes.js:43:17
@@ -85,26 +76,18 @@ Cannot assign `<FooLegacy />` to `foo_legacy` because in property `type`,
 statics of React component is incompatible with number.
 
 
-Error --------------------------------------------------------- classes.js:79:33
+Error --------------------------------------------------------- classes.js:79:32
 
-Cannot create `FooLegacy` element because number is not an object.
-
-
-Error --------------------------------------------------------- classes.js:79:33
-
-Cannot create `FooLegacy` element because property `x` is missing in props but
-exists in propTypes of React component.
+Cannot create `FooLegacy` element because:
+ - number is not an object.
+ - property `x` is missing in props but exists in propTypes of React component.
 
 
 Error --------------------------------------------------------- classes.js:79:32
 
-Cannot instantiate `React.Element` because number is not a React component.
-
-
-Error --------------------------------------------------------- classes.js:79:32
-
-Cannot instantiate `React.Element` because in type argument `ElementType`,
-number is incompatible with string.
+Cannot instantiate `React.Element` because:
+ - number is not a React component.
+ - in type argument `ElementType`, number is incompatible with string.
 
 
 Error ---------------------------------------------------- import-react.js:16:21
@@ -126,14 +109,9 @@ incompatible with string.
 
 Error ------------------------------------------------------- new_react.js:19:27
 
-Cannot assign `this.props.z` to `qux` because number is incompatible with
-string.
-
-
-Error ------------------------------------------------------- new_react.js:19:27
-
-Cannot assign `this.props.z` to `qux` because undefined is incompatible with
-string.
+Cannot assign `this.props.z` to `qux` because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error ------------------------------------------------------- new_react.js:20:24
@@ -161,19 +139,10 @@ propTypes of React component.
 
 Error ------------------------------------------------------- new_react.js:32:17
 
-Cannot assign `C.displayName` to `x` because null or undefined is incompatible
-with number.
-
-
-Error ------------------------------------------------------- new_react.js:32:17
-
-Cannot assign `C.displayName` to `x` because string is incompatible with number.
-
-
-Error ------------------------------------------------------- new_react.js:32:17
-
-Cannot assign `C.displayName` to `x` because undefined is incompatible with
-number.
+Cannot assign `C.displayName` to `x` because:
+ - null or undefined is incompatible with number.
+ - string is incompatible with number.
+ - undefined is incompatible with number.
 
 
 Error -------------------------------------------------------- propTypes.js:14:3
@@ -191,13 +160,9 @@ Cannot assign array literal to `props` because in type argument `T`, property
 
 Error ----------------------------------------------------------- props.js:14:25
 
-Cannot assign `this.props.x` to `a` because string is incompatible with number.
-
-
-Error ----------------------------------------------------------- props.js:14:25
-
-Cannot assign `this.props.x` to `a` because undefined is incompatible with
-number.
+Cannot assign `this.props.x` to `a` because:
+ - string is incompatible with number.
+ - undefined is incompatible with number.
 
 
 Error ----------------------------------------------------------- props.js:15:36
@@ -208,25 +173,16 @@ component.
 
 Error ----------------------------------------------------------- props.js:16:25
 
-Cannot assign `this.props.z` to `c` because number is incompatible with string.
+Cannot assign `this.props.z` to `c` because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
-Error ----------------------------------------------------------- props.js:16:25
+Error ----------------------------------------------------------- props.js:20:15
 
-Cannot assign `this.props.z` to `c` because undefined is incompatible with
-string.
-
-
-Error ----------------------------------------------------------- props.js:20:29
-
-Cannot create `TestProps` element because in property `x`, boolean is
-incompatible with string.
-
-
-Error ----------------------------------------------------------- props.js:20:49
-
-Cannot create `TestProps` element because in property `z`, boolean is
-incompatible with number.
+Cannot create `TestProps` element because:
+ - in property `x`, boolean is incompatible with string.
+ - in property `z`, boolean is incompatible with number.
 
 
 Error ------------------------------------------------------------ props.js:27:2
@@ -242,16 +198,11 @@ Cannot assign `this.state.bar` to `s` because number is incompatible with
 string.
 
 
-Error ---------------------------------------------------------- props2.js:15:17
+Error ---------------------------------------------------------- props2.js:15:16
 
-Cannot create `C` element because in property `bar`, number is incompatible with
-string.
-
-
-Error ---------------------------------------------------------- props2.js:15:42
-
-Cannot create `C` element because in property `foo`, number is incompatible with
-string.
+Cannot create `C` element because:
+ - in property `bar`, number is incompatible with string.
+ - in property `foo`, number is incompatible with string.
 
 
 Error ---------------------------------------------------------- props3.js:49:32

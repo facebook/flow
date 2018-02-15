@@ -15,17 +15,10 @@ Cannot cast `c` to undefined because boolean is incompatible with undefined.
 
 Error ------------------------------------------------------- array_rest.js:10:2
 
-Cannot cast `d` to undefined because boolean is incompatible with undefined.
-
-
-Error ------------------------------------------------------- array_rest.js:10:2
-
-Cannot cast `d` to undefined because number is incompatible with undefined.
-
-
-Error ------------------------------------------------------- array_rest.js:10:2
-
-Cannot cast `d` to undefined because string is incompatible with undefined.
+Cannot cast `d` to undefined because:
+ - boolean is incompatible with undefined.
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error ------------------------------------------------------- array_rest.js:12:6
@@ -46,67 +39,30 @@ undefined.
 
 Error ---------------------------------------------------------- defaults.js:9:4
 
-Cannot cast `q` to undefined because boolean is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- defaults.js:9:4
-
-Cannot cast `q` to undefined because null is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- defaults.js:9:4
-
-Cannot cast `q` to undefined because null is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- defaults.js:9:4
-
-Cannot cast `q` to undefined because number is incompatible with undefined.
-
-
-Error ---------------------------------------------------------- defaults.js:9:4
-
-Cannot cast `q` to undefined because string is incompatible with undefined.
+Cannot cast `q` to undefined because:
+ - boolean is incompatible with undefined.
+ - null is incompatible with undefined.
+ - null is incompatible with undefined.
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error --------------------------------------------------------- defaults.js:23:4
 
-Cannot cast `q` to undefined because boolean is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:23:4
-
-Cannot cast `q` to undefined because null is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:23:4
-
-Cannot cast `q` to undefined because null is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:23:4
-
-Cannot cast `q` to undefined because number is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:23:4
-
-Cannot cast `q` to undefined because string is incompatible with undefined.
+Cannot cast `q` to undefined because:
+ - boolean is incompatible with undefined.
+ - null is incompatible with undefined.
+ - null is incompatible with undefined.
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error --------------------------------------------------------- defaults.js:35:4
 
-Cannot cast `o.r` to undefined because null is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:35:4
-
-Cannot cast `o.r` to undefined because number is incompatible with undefined.
-
-
-Error --------------------------------------------------------- defaults.js:35:4
-
-Cannot cast `o.r` to undefined because string is incompatible with undefined.
+Cannot cast `o.r` to undefined because:
+ - null is incompatible with undefined.
+ - number is incompatible with undefined.
+ - string is incompatible with undefined.
 
 
 Error --------------------------------------------------------- defaults.js:43:3

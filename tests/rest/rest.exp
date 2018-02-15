@@ -18,14 +18,9 @@ but exists in object type.
 
 Error ------------------------------------------------------------- type.js:14:2
 
-Cannot cast `o1` to object type because in property `x`, `X` is incompatible
-with undefined.
-
-
-Error ------------------------------------------------------------- type.js:14:2
-
-Cannot cast `o1` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o1` to object type because:
+ - in property `x`, `X` is incompatible with undefined.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:15:2
@@ -36,14 +31,9 @@ with `Y`.
 
 Error ------------------------------------------------------------- type.js:16:2
 
-Cannot cast object literal to `O1` because inexact object literal is
-incompatible with exact object type.
-
-
-Error ------------------------------------------------------------- type.js:16:2
-
-Cannot cast object literal to `O1` because property `x` is missing in object
-literal but exists in object type.
+Cannot cast object literal to `O1` because:
+ - inexact object literal is incompatible with exact object type.
+ - property `x` is missing in object literal but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:18:2
@@ -65,26 +55,16 @@ Cannot instantiate `$Rest` because `Y` is incompatible with `X`.
 
 Error ------------------------------------------------------------- type.js:27:2
 
-Cannot cast `o3` to object type because property `x` is missing in object type
-but exists in object type.
-
-
-Error ------------------------------------------------------------- type.js:27:2
-
-Cannot cast `o3` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o3` to object type because:
+ - property `x` is missing in object type but exists in object type.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:28:2
 
-Cannot cast `o3` to object type because in property `x`, undefined is
-incompatible with `X`.
-
-
-Error ------------------------------------------------------------- type.js:28:2
-
-Cannot cast `o3` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o3` to object type because:
+ - in property `x`, undefined is incompatible with `X`.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:29:2
@@ -101,20 +81,10 @@ incompatible with `X`.
 
 Error ------------------------------------------------------------- type.js:32:2
 
-Cannot cast `o3` to object type because in property `x`, `X` is incompatible
-with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:32:2
-
-Cannot cast `o3` to object type because in property `x`, undefined is
-incompatible with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:32:2
-
-Cannot cast `o3` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o3` to object type because:
+ - in property `x`, `X` is incompatible with `Y`.
+ - in property `x`, undefined is incompatible with `Y`.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:33:2
@@ -131,14 +101,9 @@ with `X`.
 
 Error ------------------------------------------------------------- type.js:40:2
 
-Cannot cast `o4` to object type because property `x` is missing in object type
-but exists in object type.
-
-
-Error ------------------------------------------------------------- type.js:40:2
-
-Cannot cast `o4` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o4` to object type because:
+ - property `x` is missing in object type but exists in object type.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:41:2
@@ -149,14 +114,9 @@ but exists in object type.
 
 Error ------------------------------------------------------------- type.js:42:2
 
-Cannot cast `o4` to object type because in property `x`, `X` is incompatible
-with undefined.
-
-
-Error ------------------------------------------------------------- type.js:42:2
-
-Cannot cast `o4` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o4` to object type because:
+ - in property `x`, `X` is incompatible with undefined.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:44:2
@@ -167,26 +127,16 @@ with undefined.
 
 Error ------------------------------------------------------------- type.js:45:2
 
-Cannot cast `o4` to object type because in property `x`, `X` is incompatible
-with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:45:2
-
-Cannot cast `o4` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o4` to object type because:
+ - in property `x`, `X` is incompatible with `Y`.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:46:2
 
-Cannot cast object literal to `O4` because inexact object literal is
-incompatible with exact object type.
-
-
-Error ------------------------------------------------------------- type.js:46:2
-
-Cannot cast object literal to `O4` because property `x` is missing in object
-literal but exists in object type.
+Cannot cast object literal to `O4` because:
+ - inexact object literal is incompatible with exact object type.
+ - property `x` is missing in object literal but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:49:6
@@ -209,14 +159,9 @@ incompatible with `X`.
 
 Error ------------------------------------------------------------- type.js:57:2
 
-Cannot cast `o5` to object type because in property `x`, undefined is
-incompatible with `X`.
-
-
-Error ------------------------------------------------------------- type.js:57:2
-
-Cannot cast `o5` to object type because property `y` is missing in object type
-but exists in object type.
+Cannot cast `o5` to object type because:
+ - in property `x`, undefined is incompatible with `X`.
+ - property `y` is missing in object type but exists in object type.
 
 
 Error ------------------------------------------------------------- type.js:58:2
@@ -227,14 +172,9 @@ but exists in object type.
 
 Error ------------------------------------------------------------- type.js:59:2
 
-Cannot cast `o5` to object type because in property `x`, `X` is incompatible
-with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:59:2
-
-Cannot cast `o5` to object type because in property `x`, undefined is
-incompatible with `Y`.
+Cannot cast `o5` to object type because:
+ - in property `x`, `X` is incompatible with `Y`.
+ - in property `x`, undefined is incompatible with `Y`.
 
 
 Error ------------------------------------------------------------- type.js:63:6
@@ -263,14 +203,9 @@ incompatible with `X`.
 
 Error ------------------------------------------------------------- type.js:73:2
 
-Cannot cast `o6` to object type because in property `x`, `X` is incompatible
-with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:73:2
-
-Cannot cast `o6` to object type because in property `x`, undefined is
-incompatible with `Y`.
+Cannot cast `o6` to object type because:
+ - in property `x`, `X` is incompatible with `Y`.
+ - in property `x`, undefined is incompatible with `Y`.
 
 
 Error ------------------------------------------------------------- type.js:77:6
@@ -299,14 +234,9 @@ incompatible with `X`.
 
 Error ------------------------------------------------------------- type.js:87:2
 
-Cannot cast `o7` to object type because in property `x`, `X` is incompatible
-with `Y`.
-
-
-Error ------------------------------------------------------------- type.js:87:2
-
-Cannot cast `o7` to object type because in property `x`, undefined is
-incompatible with `Y`.
+Cannot cast `o7` to object type because:
+ - in property `x`, `X` is incompatible with `Y`.
+ - in property `x`, undefined is incompatible with `Y`.
 
 
 Error ------------------------------------------------------------- type.js:91:6
@@ -469,14 +399,11 @@ Error ------------------------------------------------------- type_dict.js:84:30
 Cannot instantiate `$Rest` because `X` is incompatible with `Y`.
 
 
-Error ------------------------------------------------------- type_dict.js:96:30
+Error ------------------------------------------------------- type_dict.js:96:12
 
-Cannot instantiate `$Rest` because `X` is incompatible with `Y`.
-
-
-Error ------------------------------------------------------- type_dict.js:96:30
-
-Cannot instantiate `$Rest` because undefined is incompatible with `Y`.
+Cannot instantiate `$Rest` because:
+ - `X` is incompatible with `Y`.
+ - undefined is incompatible with `Y`.
 
 
 Error ----------------------------------------------------- type_generic.js:1:37
@@ -496,14 +423,9 @@ Error ----------------------------------------------------- type_generic.js:2:13
 
 Error ------------------------------------------------------ type_generic.js:7:2
 
-Cannot cast `o` to object type because in property `x`, undefined is
-incompatible with string.
-
-
-Error ------------------------------------------------------ type_generic.js:7:2
-
-Cannot cast `o` to object type because property `p` is missing in object type
-but exists in object literal.
+Cannot cast `o` to object type because:
+ - in property `x`, undefined is incompatible with string.
+ - property `p` is missing in object type but exists in object literal.
 
 
 Error: type_union.js:14

@@ -6,14 +6,10 @@ string literal `B`.
 
 Error ---------------------------------------------- sanity-filter-union.js:16:2
 
-Cannot cast `my_filter(...)` to array type because in type argument `T` and then
-property `kind`, string literal `A` is incompatible with string literal `B`.
-
-
-Error ---------------------------------------------- sanity-filter-union.js:16:2
-
-Cannot cast `my_filter(...)` to array type because in type argument `T`,
-property `v` is missing in `A` but exists in `B`.
+Cannot cast `my_filter(...)` to array type because:
+ - in type argument `T` and then property `kind`, string literal `A` is
+   incompatible with string literal `B`.
+ - in type argument `T`, property `v` is missing in `A` but exists in `B`.
 
 
 Error: sanity-filter-union.js:17

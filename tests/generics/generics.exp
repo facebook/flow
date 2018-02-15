@@ -10,12 +10,9 @@ Cannot assign `o.u` to `n` because `T` is incompatible with number.
 
 Error -------------------------------------------------------- generics.js:28:16
 
-Cannot assign `e.set(...)` to `x` because number is incompatible with string.
-
-
-Error -------------------------------------------------------- generics.js:28:16
-
-Cannot assign `e.set(...)` to `x` because undefined is incompatible with string.
+Cannot assign `e.set(...)` to `x` because:
+ - number is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error -------------------------------------------------------- generics.js:39:41

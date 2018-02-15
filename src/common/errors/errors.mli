@@ -118,9 +118,6 @@ module Cli_output : sig
     warnings: ErrorSet.t ->
     unit ->
     unit
-
-  (* Simplified interface for ease of debugging; not suitable for production use *)
-  val string_of_error: error -> string
 end
 
 module Json_output : sig

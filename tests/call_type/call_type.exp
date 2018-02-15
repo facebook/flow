@@ -82,12 +82,9 @@ Cannot cast `g` to number because string is incompatible with number.
 
 Error ------------------------------------------------------------- test.js:41:2
 
-Cannot cast `g` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------------- test.js:41:2
-
-Cannot cast `g` to empty because string is incompatible with empty.
+Cannot cast `g` to empty because:
+ - number is incompatible with empty.
+ - string is incompatible with empty.
 
 
 Error: union.js:6
@@ -119,12 +116,9 @@ Cannot cast `a` to number because string is incompatible with number.
 
 Error ------------------------------------------------------------- union.js:9:2
 
-Cannot cast `a` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------------- union.js:9:2
-
-Cannot cast `a` to empty because string is incompatible with empty.
+Cannot cast `a` to empty because:
+ - number is incompatible with empty.
+ - string is incompatible with empty.
 
 
 Error: union.js:14
@@ -156,12 +150,9 @@ Cannot cast `b` to number because string is incompatible with number.
 
 Error ------------------------------------------------------------ union.js:17:2
 
-Cannot cast `b` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------------ union.js:17:2
-
-Cannot cast `b` to empty because string is incompatible with empty.
+Cannot cast `b` to empty because:
+ - number is incompatible with empty.
+ - string is incompatible with empty.
 
 
 Error: union.js:22
@@ -193,12 +184,9 @@ Cannot cast `c` to number because string is incompatible with number.
 
 Error ------------------------------------------------------------ union.js:25:2
 
-Cannot cast `c` to empty because number is incompatible with empty.
-
-
-Error ------------------------------------------------------------ union.js:25:2
-
-Cannot cast `c` to empty because string is incompatible with empty.
+Cannot cast `c` to empty because:
+ - number is incompatible with empty.
+ - string is incompatible with empty.
 
 
 

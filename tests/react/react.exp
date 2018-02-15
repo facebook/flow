@@ -391,16 +391,11 @@ argument `Props`, property `b` is missing in object type but exists in object
 type.
 
 
-Error -------------------------------------------------------------- hoc.js:11:8
+Error -------------------------------------------------------------- hoc.js:11:7
 
-Cannot create `Component` element because property `bar` is missing in props but
-exists in object type.
-
-
-Error -------------------------------------------------------------- hoc.js:11:8
-
-Cannot create `Component` element because property `foo` is missing in props but
-exists in object type.
+Cannot create `Component` element because:
+ - property `bar` is missing in props but exists in object type.
+ - property `foo` is missing in props but exists in object type.
 
 
 Error -------------------------------------------------------------- hoc.js:12:8
@@ -465,16 +460,11 @@ In type argument `Props`, property `b` is missing in object type but exists in
 object type.
 
 
-Error ------------------------------------------------------------- hoc3.js:26:2
+Error ------------------------------------------------------------- hoc3.js:26:1
 
-Cannot create `MyEnhancedComponent` element because property `a` is missing in
-props but exists in object type.
-
-
-Error ------------------------------------------------------------- hoc3.js:26:2
-
-Cannot create `MyEnhancedComponent` element because property `b` is missing in
-props but exists in object type.
+Cannot create `MyEnhancedComponent` element because:
+ - property `a` is missing in props but exists in object type.
+ - property `b` is missing in props but exists in object type.
 
 
 Error ------------------------------------------------------------ hoc3.js:28:24
@@ -483,16 +473,11 @@ Cannot create `MyEnhancedComponent` element because in property `a`, string is
 incompatible with number.
 
 
-Error ------------------------------------------------------------- hoc3.js:30:2
+Error ------------------------------------------------------------- hoc3.js:30:1
 
-Cannot create `MyEnhancedFunctionComponent` element because property `a` is
-missing in props but exists in object type.
-
-
-Error ------------------------------------------------------------- hoc3.js:30:2
-
-Cannot create `MyEnhancedFunctionComponent` element because property `b` is
-missing in props but exists in object type.
+Cannot create `MyEnhancedFunctionComponent` element because:
+ - property `a` is missing in props but exists in object type.
+ - property `b` is missing in props but exists in object type.
 
 
 Error ------------------------------------------------------------ hoc3.js:32:32
@@ -501,16 +486,11 @@ Cannot create `MyEnhancedFunctionComponent` element because in property `a`,
 string is incompatible with number.
 
 
-Error ------------------------------------------------------------- hoc4.js:26:2
+Error ------------------------------------------------------------- hoc4.js:26:1
 
-Cannot create `MyEnhancedComponent` element because property `a` is missing in
-props but exists in object type.
-
-
-Error ------------------------------------------------------------- hoc4.js:26:2
-
-Cannot create `MyEnhancedComponent` element because property `b` is missing in
-props but exists in object type.
+Cannot create `MyEnhancedComponent` element because:
+ - property `a` is missing in props but exists in object type.
+ - property `b` is missing in props but exists in object type.
 
 
 Error ------------------------------------------------------------ hoc4.js:28:24
@@ -519,16 +499,11 @@ Cannot create `MyEnhancedComponent` element because in property `a`, string is
 incompatible with number.
 
 
-Error ------------------------------------------------------------- hoc4.js:30:2
+Error ------------------------------------------------------------- hoc4.js:30:1
 
-Cannot create `MyEnhancedFunctionComponent` element because property `a` is
-missing in props but exists in object type.
-
-
-Error ------------------------------------------------------------- hoc4.js:30:2
-
-Cannot create `MyEnhancedFunctionComponent` element because property `b` is
-missing in props but exists in object type.
+Cannot create `MyEnhancedFunctionComponent` element because:
+ - property `a` is missing in props but exists in object type.
+ - property `b` is missing in props but exists in object type.
 
 
 Error ------------------------------------------------------------ hoc4.js:32:32
@@ -730,12 +705,9 @@ Cannot cast `componentName` to empty because string is incompatible with empty.
 
 Error ---------------------------------------- proptype_custom_validator.js:10:8
 
-Cannot cast `href` to empty because string is incompatible with empty.
-
-
-Error ---------------------------------------- proptype_custom_validator.js:10:8
-
-Cannot cast `href` to empty because undefined is incompatible with empty.
+Cannot cast `href` to empty because:
+ - string is incompatible with empty.
+ - undefined is incompatible with empty.
 
 
 Error --------------------------------------- proptype_custom_validator.js:11:18
@@ -1034,14 +1006,10 @@ object type.
 
 Error ------------------------------------------------ proptypes_builtins.js:7:2
 
-Cannot cast `React.PropTypes.arrayOf` to `NoFun` because in the first argument,
-`ReactPropsCheckType` is incompatible with mixed.
-
-
-Error ------------------------------------------------ proptypes_builtins.js:7:2
-
-Cannot cast `React.PropTypes.arrayOf` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
+ - in the first argument, `ReactPropsCheckType` is incompatible with mixed.
+ - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
+   empty.
 
 
 Error ----------------------------------------------- proptypes_builtins.js:11:2
@@ -1052,50 +1020,34 @@ Cannot cast `React.PropTypes.instanceOf` to `NoFun` because in the return value,
 
 Error ----------------------------------------------- proptypes_builtins.js:15:2
 
-Cannot cast `React.PropTypes.objectOf` to `NoFun` because in the first argument,
-`ReactPropsCheckType` is incompatible with mixed.
-
-
-Error ----------------------------------------------- proptypes_builtins.js:15:2
-
-Cannot cast `React.PropTypes.objectOf` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
+ - in the first argument, `ReactPropsCheckType` is incompatible with mixed.
+ - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
+   empty.
 
 
 Error ----------------------------------------------- proptypes_builtins.js:19:2
 
-Cannot cast `React.PropTypes.oneOf` to `NoFun` because in the first argument,
-array type is incompatible with mixed.
-
-
-Error ----------------------------------------------- proptypes_builtins.js:19:2
-
-Cannot cast `React.PropTypes.oneOf` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
+ - in the first argument, array type is incompatible with mixed.
+ - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
+   empty.
 
 
 Error ----------------------------------------------- proptypes_builtins.js:23:2
 
-Cannot cast `React.PropTypes.oneOfType` to `NoFun` because in the first
-argument, array type is incompatible with mixed.
-
-
-Error ----------------------------------------------- proptypes_builtins.js:23:2
-
-Cannot cast `React.PropTypes.oneOfType` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
+ - in the first argument, array type is incompatible with mixed.
+ - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
+   empty.
 
 
 Error ----------------------------------------------- proptypes_builtins.js:27:2
 
-Cannot cast `React.PropTypes.shape` to `NoFun` because in the first argument,
-object type is incompatible with mixed.
-
-
-Error ----------------------------------------------- proptypes_builtins.js:27:2
-
-Cannot cast `React.PropTypes.shape` to `NoFun` because in the return value,
-`ReactPropsChainableTypeChecker` is incompatible with empty.
+Cannot cast `React.PropTypes.shape` to `NoFun` because:
+ - in the first argument, object type is incompatible with mixed.
+ - in the return value, `ReactPropsChainableTypeChecker` is incompatible with
+   empty.
 
 
 Error ------------------------------------------------ proptypes_sealed.js:18:17

@@ -270,14 +270,9 @@ with string.
 
 Error ----------------------------------------------------------- mixed.js:53:17
 
-Cannot call `takesString` with `x` bound to `x` because null is incompatible
-with string.
-
-
-Error ----------------------------------------------------------- mixed.js:53:17
-
-Cannot call `takesString` with `x` bound to `x` because object is incompatible
-with string.
+Cannot call `takesString` with `x` bound to `x` because:
+ - null is incompatible with string.
+ - object is incompatible with string.
 
 
 Error ----------------------------------------------------------- mixed.js:59:17
@@ -300,14 +295,9 @@ with string.
 
 Error ----------------------------------------------------------- mixed.js:77:17
 
-Cannot call `takesString` with `x` bound to `x` because null is incompatible
-with string.
-
-
-Error ----------------------------------------------------------- mixed.js:77:17
-
-Cannot call `takesString` with `x` bound to `x` because undefined is
-incompatible with string.
+Cannot call `takesString` with `x` bound to `x` because:
+ - null is incompatible with string.
+ - undefined is incompatible with string.
 
 
 Error ----------------------------------------------------------- mixed.js:83:17
@@ -355,12 +345,9 @@ number is incompatible with boolean.
 
 Error -------------------------------------------------------------- not.js:11:5
 
-Cannot get `x[0]` because an indexer property is missing in `Number`.
-
-
-Error -------------------------------------------------------------- not.js:11:7
-
-Cannot get `x[0]` because an indexer property is missing in null or undefined.
+Cannot get `x[0]` because:
+ - an indexer property is missing in `Number`.
+ - an indexer property is missing in null or undefined.
 
 
 Error -------------------------------------------------------------- not.js:21:5
@@ -436,26 +423,16 @@ number literal `1` is incompatible with number literal `0`.
 
 Error ----------------------------------------------------------- number.js:51:8
 
-Cannot cast `x` to undefined because number literal `0` is incompatible with
-undefined.
-
-
-Error ----------------------------------------------------------- number.js:51:8
-
-Cannot cast `x` to undefined because number literal `0` is incompatible with
-undefined.
+Cannot cast `x` to undefined because:
+ - number literal `0` is incompatible with undefined.
+ - number literal `0` is incompatible with undefined.
 
 
 Error ----------------------------------------------------------- number.js:55:8
 
-Cannot cast `x` to undefined because number literal `1` is incompatible with
-undefined.
-
-
-Error ----------------------------------------------------------- number.js:55:8
-
-Cannot cast `x` to undefined because number literal `1` is incompatible with
-undefined.
+Cannot cast `x` to undefined because:
+ - number literal `1` is incompatible with undefined.
+ - number literal `1` is incompatible with undefined.
 
 
 Error ---------------------------------------------------------- number.js:63:12
@@ -485,22 +462,16 @@ Cannot assign `x` to `y` because number is incompatible with string.
 
 Error ------------------------------------------------------ refinements.js:7:20
 
-Cannot assign `x` to `z` because boolean is incompatible with string.
-
-
-Error ------------------------------------------------------ refinements.js:7:20
-
-Cannot assign `x` to `z` because null is incompatible with string.
+Cannot assign `x` to `z` because:
+ - boolean is incompatible with string.
+ - null is incompatible with string.
 
 
 Error ----------------------------------------------------- refinements.js:13:24
 
-Cannot assign `x` to `y` because null is incompatible with string.
-
-
-Error ----------------------------------------------------- refinements.js:13:24
-
-Cannot assign `x` to `y` because number is incompatible with string.
+Cannot assign `x` to `y` because:
+ - null is incompatible with string.
+ - number is incompatible with string.
 
 
 Error ----------------------------------------------------- refinements.js:16:20
@@ -510,12 +481,9 @@ Cannot assign `x` to `z` because boolean is incompatible with string.
 
 Error ----------------------------------------------------- refinements.js:33:24
 
-Cannot assign `x` to `y` because string is incompatible with number.
-
-
-Error ----------------------------------------------------- refinements.js:33:24
-
-Cannot assign `x` to `y` because string is incompatible with number.
+Cannot assign `x` to `y` because:
+ - string is incompatible with number.
+ - string is incompatible with number.
 
 
 Error ----------------------------------------------------- refinements.js:36:20
@@ -530,12 +498,9 @@ Cannot assign `x` to `y` because number is incompatible with string.
 
 Error ----------------------------------------------------- refinements.js:45:20
 
-Cannot assign `x` to `z` because boolean is incompatible with string.
-
-
-Error ----------------------------------------------------- refinements.js:45:20
-
-Cannot assign `x` to `z` because null is incompatible with string.
+Cannot assign `x` to `z` because:
+ - boolean is incompatible with string.
+ - null is incompatible with string.
 
 
 Error ----------------------------------------------------- refinements.js:54:20
@@ -583,26 +548,16 @@ string literal `bar` is incompatible with string literal `foo`.
 
 Error ----------------------------------------------------------- string.js:51:8
 
-Cannot cast `x` to undefined because string literal `foo` is incompatible with
-undefined.
-
-
-Error ----------------------------------------------------------- string.js:51:8
-
-Cannot cast `x` to undefined because string literal `foo` is incompatible with
-undefined.
+Cannot cast `x` to undefined because:
+ - string literal `foo` is incompatible with undefined.
+ - string literal `foo` is incompatible with undefined.
 
 
 Error ----------------------------------------------------------- string.js:55:8
 
-Cannot cast `x` to undefined because string literal `bar` is incompatible with
-undefined.
-
-
-Error ----------------------------------------------------------- string.js:55:8
-
-Cannot cast `x` to undefined because string literal `bar` is incompatible with
-undefined.
+Cannot cast `x` to undefined because:
+ - string literal `bar` is incompatible with undefined.
+ - string literal `bar` is incompatible with undefined.
 
 
 Error ---------------------------------------------------------- string.js:63:12
@@ -895,14 +850,11 @@ Error ---------------------------------------------------------- typeof.js:12:12
 Cannot return `x` because null is incompatible with number.
 
 
-Error ----------------------------------------------------------- typeof.js:23:7
+Error ----------------------------------------------------------- typeof.js:23:3
 
-Cannot call `BAZ.stuff` because undefined is not a function.
-
-
-Error ----------------------------------------------------------- typeof.js:23:7
-
-Cannot call `BAZ.stuff` because property `stuff` is missing in undefined.
+Cannot call `BAZ.stuff` because:
+ - undefined is not a function.
+ - property `stuff` is missing in undefined.
 
 
 Error ----------------------------------------------------------- typeof.js:26:7

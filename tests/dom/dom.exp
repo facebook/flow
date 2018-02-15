@@ -120,18 +120,14 @@ Error: path2d.js:9
   1418:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                           ^^^^^^ number. See lib: <BUILTINS>/dom.js:1418
 
-Error ------------------------------------------------- registerElement.js:52:19
+Error ------------------------------------------------- registerElement.js:48:48
 
 Cannot call `document.registerElement` with object literal bound to `options`
-because in property `prototype.attributeChangedCallback` and then the second
-argument, string is incompatible with null.
-
-
-Error ------------------------------------------------- registerElement.js:53:19
-
-Cannot call `document.registerElement` with object literal bound to `options`
-because in property `prototype.attributeChangedCallback` and then the third
-argument, string is incompatible with null.
+because:
+ - in property `prototype.attributeChangedCallback` and then the second
+   argument, string is incompatible with null.
+ - in property `prototype.attributeChangedCallback` and then the third argument,
+   string is incompatible with null.
 
 
 Error: traversal.js:29
