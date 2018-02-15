@@ -1,632 +1,13 @@
 module.exports = {
   todo: {
-    "Whitespace": true,
-    'Invalid unicode related syntax': true,
-    'Invalid Type Annotations': true,
-    'Array Comprehension': true,
-    'Harmony: Modules': true,
-    'Harmony: Invalid Class (strawman)': true,
     'ES6: Destructured Parameters': true,
-    'ES7 Proposal: Rest Properties' : true,
     'Harmony Invalid syntax': true,
   },
   sections: {
-    'Let Statement': [
-
-        'let x',
-        {
-          content: '{ let x }',
-          explanation: "Esprima counts the space before the implicit " +
-            "semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 8,
-              actual: 7
-            },
-            'root.body.0.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 8,
-              actual: 7
-            },
-          }
-        },
-        {
-          content: '{ let x = 42 }',
-          explanation: "Esprima counts the space before the implicit " +
-            "semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 12
-            },
-            'root.body.0.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 12
-            },
-          }
-        },
-        {
-          content: '{ let x = 14, y = 3, z = 1977 }',
-          explanation: "Esprima counts the space before the implicit " +
-            "semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-            'root.body.0.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-          }
-        },
-        {
-          content: 'if (true) let += 1',
-          explanation: 'Let is fine as an identifier',
-          expected_differences: {
-            'root.errors': {
-              type: 'Flow found no error',
-              expected: 'Line 1: Unexpected token let',
-              actual: undefined
-            },
-          }
-        }
-    ],
-
-    'Const Statement': [
-
-        'const x = 42',
-        {
-          content: '{ const x = 42 }',
-          explanation: "Esprima counts the space before the implicit " +
-            "semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 15,
-              actual: 14
-            },
-            'root.body.0.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 15,
-              actual: 14
-            },
-          }
-        },
-        {
-          content: '{ const x = 14, y = 3, z = 1977 }',
-          explanation: "Esprima counts the space before the implicit " +
-            "semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 32,
-              actual: 31
-            },
-            'root.body.0.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 32,
-              actual: 31
-            },
-          }
-        },
-    ],
-
-    'Iteration Statements': [
-
-        'do keep(); while (true)',
-        'do keep(); while (true);',
-        'do { x++; y--; } while (x < 10)',
-        {
-          content: '{ do { } while (false) false }',
-          explanation: "Esprima counts whitespace before implicit semicolon. " +
-            "Flow does not.",
-          expected_differences: {
-            'root.body.0.body.1.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-            'root.body.0.body.1.range.1': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-          }
-        },
-        'do that();while (true)',
-        /* Esprima harmony is exploding on this
-        'do that()\n;while (true)',
-        */
-        'while (true) doSomething()',
-        'while (x < 10) { x++; y--; }',
-        'for(;;);',
-        'for(;;){}',
-        'for(x = 0;;);',
-        'for(var x = 0;;);',
-        'for(let x = 0;;);',
-        'for(var x = 0, y = 1;;);',
-        'for(x = 0; x < 42;);',
-        'for(x = 0; x < 42; x++);',
-        'for(x = 0; x < 42; x++) process(x);',
-        'for(x in list) process(x);',
-        'for (var x in list) process(x);',
-        /* Esprima harmony is exploding due to unexpect in
-        'for (var x = 42 in list) process(x);',
-        */
-        'for (let x in list) process(x);',
-        /* Esprima harmony is exploding due to unexpect in
-        'for (var x = y = z in q);',
-        */
-        /* Esprima harmony is exploding due to unexpect in
-        {
-          content: 'for (var a = b = c = (d in e) in z);',
-          explanation: "Esprima counts the parens for (d in e) in the loc. " +
-            "Flow does not.",
-          expected_differences: {
-            'root.body.0.left.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-            'root.body.0.left.declarations.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-            'root.body.0.left.declarations.0.init.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-            'root.body.0.left.declarations.0.init.right.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-          }
-        },
-        */
-        /* Esprima harmony is exploding due to unexpect in
-        {
-          content: 'for (var i = function() { return 10 in [] } in list) process(x);',
-          explanation: "The return statement has an implicit semicolon. "+
-            "Esprima counts the whitespace before the implicit semicolon in " +
-            "the loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.left.declarations.0.init.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 42,
-              actual: 41
-            }
-          }
-        }
-        */
-    ],
-
-    'continue statement': [
-
-        'while (true) { continue; }',
-        {
-          content: 'while (true) { continue }',
-          explanation: " Esprima counts the whitespace before the curly " +
-          "brace that implies the semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 24,
-              actual: 23
-            },
-            'root.body.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 24,
-              actual: 23
-            },
-          }
-        },
-        {
-          content: 'done: while (true) { continue done }',
-          explanation: " Esprima counts the whitespace before the curly " +
-          "brace that implies the semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 35,
-              actual: 34
-            },
-            'root.body.0.body.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 35,
-              actual: 34
-            },
-          }
-        },
-        'done: while (true) { continue done; }',
-        '__proto__: while (true) { continue __proto__; }',
-    ],
-
-    'break statement': [
-
-        {
-          content: 'while (true) { break }',
-          explanation: " Esprima counts the whitespace before the curly " +
-          "brace that implies the semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 21,
-              actual: 20
-            },
-            'root.body.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 21,
-              actual: 20
-            },
-          }
-        },
-        {
-          content: 'done: while (true) { break done }',
-          explanation: " Esprima counts the whitespace before the curly " +
-          "brace that implies the semicolon. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 32,
-              actual: 31
-            },
-            'root.body.0.body.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 32,
-              actual: 31
-            },
-          }
-        },
-        'done: while (true) { break done; }',
-        '__proto__: while (true) { break __proto__; }',
-    ],
-
-    'return statement': [
-
-        {
-          content: '(function(){ return })',
-          explanation: "Esprima counts the parens and the whitespace before " +
-            "an implicit semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 20,
-              actual: 19
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 20,
-              actual: 19
-            },
-          }
-        },
-        '(function(){ return; })',
-        '(function(){ return x; })',
-        {
-          content: '(function(){ return x * y })',
-          explanation: "Esprima counts the whitespace before " +
-            "an implicit semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 26,
-              actual: 25
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 26,
-              actual: 25
-            },
-          }
-        },
-    ],
-
-    'with statement': [
-
-        'with (x) foo = bar',
-        'with (x) foo = bar;',
-        {
-          content: 'with (x) { foo = bar }',
-          explanation: "Esprima counts the whitespace before the implicit "+
-            "semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 21,
-              actual: 20
-            },
-            'root.body.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 21,
-              actual: 20
-            },
-          }
-        }
-    ],
-
-    'switch statement': [
-
-        'switch (x) {}',
-        'switch (answer) { case 42: hi(); break; }',
-        {
-          content: 'switch (answer) { case 42: hi(); break; default: break }',
-          explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.cases.1.loc.end.column': {
-              type: 'Wrong number',
-              expected: 55,
-              actual: 54
-            },
-            'root.body.0.cases.1.consequent.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 55,
-              actual: 54
-            },
-            'root.body.0.cases.1.range.1': {
-              type: 'Wrong number',
-              expected: 55,
-              actual: 54
-            },
-            'root.body.0.cases.1.consequent.0.range.1': {
-              type: 'Wrong number',
-              expected: 55,
-              actual: 54
-            },
-          }
-        }
-    ],
-
-    'try statement': [
-
-        'try { } catch (e) { }',
-        'try { } catch (eval) { }',
-        'try { } catch (arguments) { }',
-        {
-          content: 'try { } catch (e) { say(e) }',
-          explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.handlers.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-            'root.body.0.handlers.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-          }
-        },
-        {
-          content: 'try { } finally { cleanup(stuff) }',
-          explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.finalizer.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 33,
-              actual: 32
-            },
-            'root.body.0.finalizer.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 33,
-              actual: 32
-            },
-          }
-        },
-        {
-          content: 'try { doThat(); } catch (e) { say(e) }',
-          explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.handlers.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 37,
-              actual: 36
-            },
-            'root.body.0.handlers.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 37,
-              actual: 36
-            },
-          }
-        },
-        {
-          content: 'try { doThat(); } catch (e) { say(e) } finally { cleanup(stuff) }',
-          explanation: "Esprima counts the whitespace before the two implicit " +
-            "semicolons in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.handlers.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 37,
-              actual: 36
-            },
-            'root.body.0.finalizer.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 64,
-              actual: 63
-            },
-            'root.body.0.handlers.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 37,
-              actual: 36
-            },
-            'root.body.0.finalizer.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 64,
-              actual: 63
-            },
-          }
-        },
-    ],
-
     'Function Expression': [
       '(function(){}())',
       'var x = function(){}.bind(this)',
     ],
-
-    'Function Definition': [
-
-        'function hello() { sayHi(); }',
-        'function eval() { }',
-        'function arguments() { }',
-        'function test(t, t) { }',
-        '(function test(t, t) { })',
-        {
-          content: 'function eval() { function inner() { "use strict" } }',
-          explanation: "Esprima counts the implicit semicolon in the loc. " +
-            "Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.body.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 50,
-              actual: 49
-            },
-            'root.body.0.body.body.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 50,
-              actual: 49
-            },
-          }
-        },
-        'function hello(a) { sayHi(); }',
-        'function hello(a, b) { sayHi(); }',
-        {
-          content: 'var hi = function() { sayHi() };',
-          explanation: "Esprima counts the implicit semicolon in the loc. " +
-            "Flow doesn't",
-          expected_differences: {
-            'root.body.0.declarations.0.init.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-            'root.body.0.declarations.0.init.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-          }
-        },
-        'var hi = function eval() { };',
-        'var hi = function arguments() { };',
-        {
-          content: 'var hello = function hi() { sayHi() };',
-          explanation: "Esprima counts the implicit semicolon in the loc. " +
-            "Flow doesn't",
-          expected_differences: {
-            'root.body.0.declarations.0.init.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 36,
-              actual: 35
-            },
-            'root.body.0.declarations.0.init.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 36,
-              actual: 35
-            },
-          }
-        },
-        '(function(){})',
-        'function universe(__proto__) { }',
-        'function test() { "use strict" + 42; }',
-    ],
-
-    'Automatic semicolon insertion': [
-
-        {
-          content: '{ x\n++y }',
-          explanation: "Esprima counts the implicit semicolon on the second "+
-            "line in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.1.loc.end.column': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 3
-            },
-            'root.body.0.body.1.range.1': {
-              type: 'Wrong number',
-              expected: 8,
-              actual: 7
-            },
-          }
-        },
-        {
-          content: '{ x\n--y }',
-          explanation: "Esprima counts the implicit semicolon on the second "+
-            "line in its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.body.1.loc.end.column': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 3
-            },
-            'root.body.0.body.1.range.1': {
-              type: 'Wrong number',
-              expected: 8,
-              actual: 7
-            },
-          }
-        },
-        'var x /* comment */;',
-        '{ var x = 14, y = 3\nz; }',
-        'while (true) { continue\nthere; }',
-        'while (true) { continue // Comment\nthere; }',
-        'while (true) { continue /* Multiline\nComment */there; }',
-        'while (true) { break\nthere; }',
-        'while (true) { break // Comment\nthere; }',
-        'while (true) { break /* Multiline\nComment */there; }',
-        '(function(){ return\nx; })',
-        '(function(){ return // Comment\nx; })',
-        '(function(){ return/* Multiline\nComment */x; })',
-        '{ throw error\nerror; }',
-        '{ throw error// Comment\nerror; }',
-        '{ throw error/* Multiline\nComment */error; }',
-    ],
-
-    'Whitespace': [
-
-        'new\x20\x09\x0B\x0C\xA0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\uFEFFa',
-        '{0\x0A1\x0D2\u20283\u20294}',
-    ],
-
-    'Source elements': [
-
-        {
-          content: '',
-          explanation: "An empty program should start and end on line 1. "+
-            "Ain't no such thing as line 0",
-          expected_differences: {
-            'root.loc.start.line': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.loc.end.line': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            }
-          }
-        },
-    ],
-
-    'Source option': [
-        'x + y - z',
-        'a + (b < (c * d)) + e',
-    ],
-
 
     'Invalid syntax': [
 
@@ -1377,57 +758,31 @@ module.exports = {
           },
         },
     ],
-    'Invalid unicode related syntax': [
-        'x\\u005c',
-        'x\\u002a',
-        'a\\u',
-        '\\ua',
-        'var x = /[a-z\n]/\\ux',
-        '\u203F = 10',
-        '\\u005c',
-        '\\u0000',
-        '\u200C = []',
-        '\u200D = []',
-    ],
     'JSX': [
-        '<a />;\n',
         '<n:a n:v />',
         '<a n:foo="bar"> {value} <b><c /></b></a>',
         '<a b={" "} c=" " d="&amp;" />',
-        '<a\n/>',
         '<日本語></日本語>',
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
-        '<a>{}</a>',
-        '<a>{/* this is a comment */}</a>',
         '<div>@test content</div>',
         '<div><br />7x invalid-js-identifier</div>',
-        '<a.b></a.b>',
-        '<a.b.c></a.b.c>',
         '<div {...props} />',
         '<div {...props} post="attribute" />',
         '<div pre="leading" pre2="attribute" {...props}></div>',
         '<a>    </a>',
-        'function() { return <div/>; }'
     ],
     'Invalid JSX Syntax': [
-        '</>',
-        '<a: />',
-        '<:a />',
         '<a b=d />',
-        '<a>',
         '<a></b>',
         '<a foo="bar',
-        '<a:b></b>',
         '<a:b.c></a:b.c>',
         '<a.b:c></a.b:c>',
         '<a.b.c></a>',
         '<.a></.a>',
-        '<a.></a.>',
         '<a[foo]></a[foo]>',
         '<a[\'foo\']></a[\'foo\']>',
         '<a><a />',
-        '<a b={}>',
         '<a>{"str";}</a>',
         '<span className="a", id="b" />',
         '<div className"app">',
@@ -1435,15 +790,6 @@ module.exports = {
         '<div>stuff</div {...props}>',
         '<div {...props}>stuff</div {...props}>',
         '<div><a/><b/><c/>',
-    ],
-    'Invalid Type Annotations': [
-        'function foo(callback:) {}',
-        'function foo(): {}',
-        'function foo(): { foo() }',
-        'function foo(callback:(string) => number) {}',
-        'a = {foo(): { return 42; }}',
-        'class Foo { get bar<T>() { } }',
-        'var a:{a:number b:string}',
     ],
 
     'ES6 Unicode Code Point Escape Sequence': [
@@ -1454,15 +800,7 @@ module.exports = {
     // ECMAScript 6th Syntax, 11.1. 9 Template Literals
 
     'ES6 Template Strings': [
-        '`42`',
-        'raw`42`',
-        'raw`hello ${name}`',
-        '`$`',
-        '`\\n\\r\\b\\v\\t\\f\\\n\\\r\n`',
-        '`\n\r\n`',
-        '`\\u{000042}\\u0042\\x42\\102\\A`',
         '`Hello\rworld`',
-        'new raw`42`',
         '`foo ${\n  "bar"\n} baz`',
         '`foo ${/* a */ "bar" /* b */} baz`',
         '( foo)`bar`',
@@ -1472,12 +810,6 @@ module.exports = {
         'foo`foo`()',
     ],
 
-
-    // ECMAScript 6th Syntax, 12.11 The switch statement
-
-    'ES6: Switch Case Declaration': [
-        'switch (answer) { case 42: let t = 42; break; }'
-    ],
 
     // ECMAScript 6th Syntax, 13.2 Arrow Function Definitions
 
@@ -1516,15 +848,6 @@ module.exports = {
     ],
 
 
-    'Array Comprehension': [
-        '[[x,b,c] for (x in []) for (b in []) if (b && c)]' ,
-        '[x for (a in [])]' ,
-        '[1 for (x in [])]' ,
-        '[(x,1) for (x in [])]' ,
-        '[x for (x of array)]',
-        '[x for (x of array) for (y of array2) if (x === test)]'
-    ],
-
     // http://wiki.ecmascript.org/doku.php?id=harmony:destructuring
 
     'Harmony: Destructuring': [
@@ -1556,156 +879,6 @@ module.exports = {
         'var {a:b} = {}',
         'var f = function({node, guestStatus}) {}',
     ],
-
-    // http://wiki.ecmascript.org/doku.php?id=harmony:modules
-
-    'Harmony: Modules': [
-        'module "crypto" {}',
-        'module crypto from "crypto";',
-        'module "crypto/e" {}',
-        'export var document',
-        'export var document = { }',
-        'export let document',
-        'export let document = { }',
-        'export const document = { }',
-        'export function parse() { }',
-        'export class Class {}',
-        'export default = 42',
-        'export *',
-        'export * from "crypto"',
-        'export { encrypt }',
-        'export { encrypt, decrypt }',
-        'export { encrypt as default }',
-        'export { encrypt, decrypt as dec }',
-        'module "lib" { export var document }',
-        'module "lib" { export var document = { } }',
-        'module "lib" { export let document }',
-        'module "lib" { export let document = { } }',
-        'module "lib" { export const document = { } }',
-        'module "lib" { export function parse() { } }',
-        'module "lib" { export class Class {} }',
-        'module "lib" { export * }',
-        'module "security" { export * from "crypto" }',
-        'module "crypto" { export { encrypt } }',
-        'module "crypto" { export { encrypt, decrypt } }',
-        'module "crypto" { export { encrypt, decrypt as dec } }',
-        'import "jquery"',
-        'import $ from "jquery"',
-        'import { encrypt, decrypt } from "crypto"',
-        'import { encrypt as enc } from "crypto"',
-        'import { decrypt, encrypt as enc } from "crypto"',
-        'import default from "foo"',
-        'import { null as nil } from "bar"',
-        'module "security" { import "cryto" }',
-        'module()',
-        'module "foo" { module() }'
-    ],
-
-
-    // http://wiki.ecmascript.org/doku.php?id=harmony:generators
-
-    'Harmony: Yield Expression': [
-        {
-          content: '(function* () { yield v })',
-          explanation: "Esprima counts the parens and implicit semicolon in " +
-            "its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 24,
-              actual: 23
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 24,
-              actual: 23
-            },
-          }
-        },
-        {
-          content: '(function* () { yield *v })',
-          explanation: "Esprima counts the parens and implicit semicolon in " +
-            "its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 25,
-              actual: 24
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 25,
-              actual: 24
-            },
-          }
-        },
-        {
-          content: 'function* test () { yield *v }',
-          explanation: "Esprima counts the implicit semicolon in its loc, flow " +
-            "doesn't",
-          expected_differences: {
-            'root.body.0.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-            'root.body.0.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 29,
-              actual: 28
-            },
-          }
-        },
-        {
-          content: 'var x = { *test () { yield *v } };',
-          explanation: "Esprima counts the implicit semicolon in its loc, flow " +
-            "doesn't. Esprima-fb doesn't include params in onExpression " +
-            "location",
-          expected_differences: {
-            'root.body.0.declarations.0.init.properties.0.value.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-            'root.body.0.declarations.0.init.properties.0.value.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 30,
-              actual: 29
-            },
-            'root.body.0.declarations.0.init.properties.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 19,
-              actual: 16,
-            },
-            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 19,
-              actual: 16,
-            },
-          },
-        },
-        'function* t() {}',
-        {
-          content: '(function* () { yield yield 10 })',
-          explanation: "Esprima counts the parens and implicit semicolon in " +
-            "its loc. Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 31,
-              actual: 30
-            },
-            'root.body.0.expression.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 31,
-              actual: 30
-            },
-          }
-        },
-        'function* f () { var e = () => yield 1; }',
-    ],
-
-
 
     // http://wiki.ecmascript.org/doku.php?id=strawman:maximally_minimal_classes
 
@@ -2249,15 +1422,6 @@ module.exports = {
         },
     ],
 
-    'Harmony: Invalid Class (strawman)': [
-        'class A { get foo() {} get foo() {} }',
-        'class A { set foo(v) {} set foo(v) {} }',
-        'class A { get foo() {} foo() {} }',
-        'class A { foo() {} get foo() {} }',
-        'class A { set foo(v) {} foo() {} }',
-        'class A { foo() {} set foo(v) {} }',
-    ],
-
     'ES6: Computed Properties': [
         '({[x]: 10})',
         '({["x" + "y"]: 10})',
@@ -2388,13 +1552,6 @@ module.exports = {
         },
     ],
 
-    // ECMAScript 6th Syntax, 13 - Rest parameters
-    // http://wiki.ecmascript.org/doku.php?id=harmony:rest_parameters
-    'ES6: Rest parameters': [
-        'function f(...a) {}',
-        'function f(a = 4, ...b) {}',
-    ],
-
     'ES6: Destructured Parameters': [
         'function x([ a, b ]){}',
         'function x({ a, b }){}',
@@ -2458,13 +1615,6 @@ module.exports = {
     ],
 
     // https://gist.github.com/sebmarkbage/aa849c7973cb4452c547
-    'ES7 Proposal: Rest Properties' : [
-        'let {...x} = z',
-        'let {x, ...y} = z',
-        '(function({x, ...y}) { })'
-    ],
-
-    // https://gist.github.com/sebmarkbage/aa849c7973cb4452c547
     'ES7 Proposal: Spread Properties': [
         'let z = {...x}',
         'z = {x, ...y}',
@@ -2523,7 +1673,6 @@ module.exports = {
         'yield 10',
         'yield* 10',
         'e => yield* 10',
-        '(function () { yield 10 })',
         '(function () { yield* 10 })',
         '(function() { "use strict"; f(yield v) })',
         'var obj = { *test** }',
