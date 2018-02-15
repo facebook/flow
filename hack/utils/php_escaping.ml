@@ -97,7 +97,8 @@ let unescape_literal literal_kind s =
 
   while !idx < len do
     let c = next () in
-    if c <> '\\' then Buffer.add_char buf c else begin
+    (* If it's the last character we're done *)
+    if c <> '\\' || !idx = len then Buffer.add_char buf c else begin
       let c = next () in
       match c with
       | '\'' -> Buffer.add_string buf "\\\'"
