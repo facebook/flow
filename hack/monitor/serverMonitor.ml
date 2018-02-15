@@ -25,6 +25,74 @@ open Hh_core
 open ServerProcess
 open ServerMonitorUtils
 
+
+module Sent_fds_collector = struct
+
+  (**
+   This module exists to fix an issue with libancillary (passing a file descriptor
+   to another process with sendmsg over Unix Domain Sockets) and certain operating
+   systems. It allows us to delay closing of a File Descriptor inside the Monitor
+   until it is safe to do so.
+
+   Normally:
+     Monitor sends client FD to Server process, and immediately closes the FD.
+     This is fine even if the Server is busy and hasn't "recv_fd" the FD yet
+     because this doesn't really "close" the file. The kernel still considers
+     it to be open by the receiving process. If the server closes the FD
+     then reads on the client will get an EOF. If the client closes the FD
+     then reads on the server will get an EOF.
+
+   Mac OS X:
+     EOF isn't showing up correctly on file descriptors passed between
+     processes.
+     When the Monitor closes the FD after sending it to the Server (and
+     before the Server receives it), the kernel thinks it is the last open
+     descriptor on the file and actually closes it. After the server
+     receieves the FD, it gets an EOF when reading from it (which it shouldn't
+     because the client is still there; aside: oddly enough, writing to it
+     succeeds instead of getting EPIPE). The server then closes that FD after
+     reading the EOF. Normally (as noted above) the client would read an
+     EOF after this. But (this is the bug) this EOF never shows up and the
+     client blocks forever on "select" instead.
+
+   To get around this problem, we want to close the FD in the monitor only
+   after the server has received it. Unfortunately, we don't actually
+   have a way to reliably detect that it has been received. So we just delay
+   closing by 2 seconds.
+
+   Note: It's not safe to detect the receiving by reading the
+   Hello message from the server (since it could/would be consumed
+   here instead of by the Client) nor by "select" (by a race condition
+   with the client, the select might miss the Hello, and could prevent
+   an EOF from being read by the server).
+   *)
+
+  module Fd_scheduler = Scheduler.Make(struct
+    type t = (** Unix.time *) float
+  end)
+
+  let cleanup_fd fd =
+    if Sys_utils.is_apple_os () then
+      (** Close it 2 seconds later. *)
+      let trigger = Unix.gettimeofday () +. 2.0 in
+      Fd_scheduler.wait_for_fun
+        ~once:true
+        ~priority:1
+        (fun time -> time >= trigger)
+        (fun x ->
+          let () = Printf.eprintf "Closing client fd\n" in
+          let () = Unix.close fd in x)
+    else
+      Unix.close fd
+
+  let collect_garbage () =
+    if Sys_utils.is_apple_os () then
+      ignore (Fd_scheduler.wait_and_run_ready (Unix.gettimeofday ()))
+    else
+      ()
+end;;
+
+
 exception Malformed_build_id
 exception Send_fd_failure of int
 
@@ -243,8 +311,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (Hh_logger.log "Failed to handoff FD to server.";
        raise (Send_fd_failure status))
     else
-      (Unix.close client_fd;
-       ())
+      Sent_fds_collector.cleanup_fd client_fd
 
   (** Sends the client connection FD to the server process then closes the
    * FD. *)
@@ -416,6 +483,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
     let env = maybe_push_purgatory_clients env in
+    let () = Sent_fds_collector.collect_garbage () in
     let has_client = sleep_and_check socket in
     let env = update_status env monitor_config in
     if (not has_client) then
