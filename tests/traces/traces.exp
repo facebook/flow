@@ -2,6 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g0` with `x` bound to `y` because number is incompatible with string.
 
+
 Trace:
 * path 1:
   3: function f0(x) { g0(x) }
@@ -25,10 +26,10 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [`x`]
 
-
 Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
 
 Cannot call `g1` with `y` bound to `b` because number is incompatible with string.
+
 
 Trace:
 * path 1:
@@ -53,10 +54,10 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [`y`]
 
-
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
 Cannot perform arithmetic operation because string is not a number.
+
 
 Trace:
 * path 1:
@@ -81,10 +82,10 @@ Trace:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
 
 Cannot perform arithmetic operation because string is not a number.
+
 
 Trace:
 * path 1:
@@ -109,10 +110,10 @@ Trace:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:29
 
 Cannot perform arithmetic operation because string is not a number.
+
 
 Trace:
 * path 1:
@@ -136,7 +137,6 @@ Trace:
                           ^^^^^^ StrT [string]
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
-
 
 
 Found 5 errors

@@ -106,5 +106,25 @@ index 0, and then property
 incompatible with string.
 
 
+Error ---------------- wrap_group.js:6:2
 
-Found 14 errors
+Cannot cast object literal to object
+type because:
+ - in property `this.is.going`, index 0,
+   property `to.be.a.really`, index 0,
+   property
+   `long.error.message.that.hopefully`,
+   index 0, and then property
+   `breaks.on.multiple.lines.a`; number
+   is incompatible with string.
+ - in property `this.is.going`, index 0,
+   property `to.be.a.really`, index 0,
+   property
+   `long.error.message.that.hopefully`,
+   index 0, and then property
+   `breaks.on.multiple.lines.b`; number
+   is incompatible with string.
+
+
+
+Found 16 errors

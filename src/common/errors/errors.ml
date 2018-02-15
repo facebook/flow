@@ -328,6 +328,7 @@ let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
 let line_number_style text = (Tty.Bold Tty.Default, text)
 let comment_style text = (Tty.Bold Tty.Default, text)
 let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
+let _dim_style text = (Tty.Dim Tty.Default, text)
 
 
 let lib_prefix = "[LIB] "
@@ -644,6 +645,80 @@ end
    traces may share endpoints, and produce the same error *)
 module ErrorSet = Set.Make(Error)
 
+type error_group =
+  (* Classic errors are never grouped. *)
+  | ClassicSingleton of error_kind * message list * classic_error
+  (* Friendly errors without a root are never grouped. When traces are enabled
+   * all friendly errors will never group. *)
+  | FriendlySingleton of error_kind * message list * Friendly.t
+  (* Friendly errors that share a root are grouped together. *)
+  | FriendlyGroup of {
+      kind: error_kind;
+      root: Friendly.error_root;
+      messages: (Loc.t * Friendly.message) Nel.t;
+      omitted: int;
+    }
+
+exception Interrupt_ErrorSet_fold of error_group list
+
+(* Folds an ErrorSet into a grouped list. However, the group and all sub-groups
+ * are in reverse order. *)
+let collect_errors_into_groups max set =
+  let open Friendly in
+  try
+    let (_, acc) = ErrorSet.fold (fun (kind, trace, error) (n, acc) ->
+      let omit = Option.value_map max ~default:false ~f:(fun max -> max <= n) in
+      let acc = match error with
+      (* If the error is not a candidate for grouping then add a singleton to
+       * our accumulator. *)
+      | Classic error ->
+        if omit then raise (Interrupt_ErrorSet_fold acc);
+        ClassicSingleton (kind, trace, error) :: acc
+      | Friendly error when trace <> [] ->
+        if omit then raise (Interrupt_ErrorSet_fold acc);
+        FriendlySingleton (kind, trace, error) :: acc
+      | Friendly ({ root = None; _ } as error) ->
+        if omit then raise (Interrupt_ErrorSet_fold acc);
+        FriendlySingleton (kind, trace, error) :: acc
+      (* Friendly errors with a root might need to be grouped. *)
+      | Friendly { loc; message; root = Some root } ->
+        (match acc with
+        (* When the root location and message match the previous group, add our
+         * friendly error to the group. We can do this by only looking at the last
+         * group because ErrorSet is sorted so that friendly errors with the same
+         * root loc/message are stored next to each other.
+         *
+         * If we are now omitting errors then increment the omitted count
+         * instead of adding a message. *)
+        | FriendlyGroup {kind = kind'; root = root'; messages = messages; omitted} :: acc' when (
+            kind = kind' &&
+            Loc.compare root.root_loc root'.root_loc = 0 &&
+            root.root_message = root'.root_message
+          ) ->
+          FriendlyGroup {
+            kind = kind';
+            root = root';
+            messages = if omit then messages else Nel.cons (loc, message) messages;
+            omitted = if omit then omitted + 1 else omitted;
+          } :: acc'
+        (* If the roots did not match then we have a friendly singleton. *)
+        | _ ->
+          if omit then raise (Interrupt_ErrorSet_fold acc);
+          FriendlyGroup {
+            kind = kind;
+            root = root;
+            messages = Nel.one (loc, message);
+            omitted = 0;
+          } :: acc
+        )
+      in
+      (n + 1, acc)
+    ) set (0, []) in
+    acc
+  with
+    Interrupt_ErrorSet_fold acc ->
+      acc
+
 (* Human readable output *)
 module Cli_output = struct
   type error_flags = {
@@ -948,7 +1023,7 @@ module Cli_output = struct
     let formatted_extra = List.concat (List.map (
       print_extra_info ~strip_root ~severity stdin_file main_file
     ) extra) in
-    header @ formatted_messages @ formatted_extra
+    header @ formatted_messages @ formatted_extra @ [default_style "\n"]
 
   (* ==========================
    * Full Terminal Width Header
@@ -1022,6 +1097,12 @@ module Cli_output = struct
         ^ (if filename_on_newline then "\n" else " ")
         ^ filename
     )
+
+  let bullet_char ~flags =
+    (* Use [U+2022][1] for the bullet character if unicode is enabled.
+     *
+     * [1]: http://graphemica.com/%E2%80%A2 *)
+    if flags.unicode then "\xE2\x80\xA2" else "-"
 
   (* ==================
    * Error Message Text
@@ -1134,6 +1215,11 @@ module Cli_output = struct
     | (style, _) :: _ -> is_style_underlined style
     in
     let is_last_underlined words = words |> List.rev |> is_first_underlined in
+    let with_len = function
+    | None -> None
+    | Some styles ->
+      Some (List.fold_left (fun acc (_, s) -> acc + String.length s) 0 styles, styles)
+    in
     (* Hard breaks a single Tty style list returned by split_into_words. We use
      * this when a word is, by itself, larger then our line length. Returns a:
      *
@@ -1172,14 +1258,32 @@ module Cli_output = struct
      * on the current line.
      *
      * TODO: Handle orphans gracefully. *)
-    let concat_words_into_lines ~line_length words =
+    let concat_words_into_lines
+      ~line_length
+      ?indentation_first
+      ?indentation
+      words
+    =
+      let indentation = with_len indentation in
+      let indentation_first = match indentation_first with
+      | (Some _ as indentation_first) -> with_len indentation_first
+      | None -> indentation
+      in
       match words with
         (* No words means no string. *)
-        | [] -> []
+        | [] -> Option.value_map indentation_first ~default:[] ~f:snd
         (* If we have a single word we will use that as our initializer for
          * our fold on the rest of our words. *)
         | init :: words ->
-          let init = ((fun () -> is_last_underlined (snd init)), (fst init, [snd init])) in
+          let init =
+            let (init_len, init_word) = init in
+            let init = match indentation_first with
+            | None -> (init_len, [init_word])
+            | Some (indentation_first_len, indentation_first) ->
+              (indentation_first_len + init_len, [init_word; indentation_first])
+            in
+            ((fun () -> is_last_underlined init_word), init)
+          in
           let (_, (_, acc)) = List.fold_left (fun (last_underlined, (pos, acc)) (len, word) ->
             (* If our position on the line plus one (for the space we would
              * insert) plus the length of our word will fit in our line length
@@ -1187,11 +1291,17 @@ module Cli_output = struct
              * space. Otherwise start a new line where word is the only text. *)
             if pos + 1 + len > line_length then
               let last_underlined () = is_last_underlined word in
+              let (newline_len, newline) = match indentation with
+              | None ->
+                (0, [default_style "\n"])
+              | Some (indentation_len, indentation) ->
+                (indentation_len, default_style "\n" :: indentation)
+              in
               if len <= line_length then
-                (last_underlined, (len, (default_style "\n" :: word) :: acc))
+                (last_underlined, (len + newline_len, word :: newline :: acc))
               else
                 let (len, word) = hard_break_styles ~line_length word in
-                (last_underlined, (len, (default_style "\n" :: word) :: acc))
+                (last_underlined, (len + newline_len, word :: newline :: acc))
             else
               (* If both the end of the last word was underlined *and* the
                * beginning of the next word is underlined then we also want to
@@ -1222,11 +1332,7 @@ module Cli_output = struct
     | Code s -> (false, Tty.Bold Tty.Default, s)
     in
     (* Put it all together! *)
-    fun ~flags error ->
-      let message = match error.root with
-      | Some { root_message; _ } -> root_message @ (text " " :: error.message)
-      | None -> error.message
-      in
+    fun ~flags ?(bullet=false) message ->
       let message = List.rev (List.fold_left (fun acc feature ->
         match feature with
         | Inline inlines ->
@@ -1238,88 +1344,85 @@ module Cli_output = struct
             (List.map (print_message_inline ~flags ~reference:true) inlines)
             acc
       ) [] message) in
+      (* Use [U+2022][1] for the bullet character if unicode is enabled.
+       *
+       * [1]: http://graphemica.com/%E2%80%A2 *)
+      let indentation_first =
+        if bullet then
+          Some [default_style (" " ^ bullet_char ~flags ^ " ")]
+        else
+          None
+      in
       let message =
         concat_words_into_lines
           ~line_length:flags.message_width
+          ?indentation_first
+          ?indentation:(if bullet then Some [default_style "   "] else None)
           (split_into_words message)
       in
       message
 
-  let get_pretty_printed_friendly_error
+  let get_pretty_printed_friendly_error_group
     ~strip_root
     ~flags
     ~severity
-    error
+    root
+    ((first_loc, first_message), others)
+    omitted
   =
     let open Friendly in
-    let header = print_header_friendly ~strip_root ~flags ~severity error.loc in
-    let message = print_message_friendly ~flags error in
-    (header :: default_style "\n\n" :: message) @ [default_style "\n\n"]
-
-  let get_pretty_printed_error
-    ~stdin_file
-    ~strip_root
-    ~flags
-    ~severity
-    (kind, trace, error)
-  =
-    let to_print = match error with
-    | Classic error ->
-      get_pretty_printed_classic_error
-        ~stdin_file
-        ~strip_root
-        ~severity
-        kind trace error
-    | Friendly error ->
-      get_pretty_printed_friendly_error
-        ~strip_root
-        ~flags
-        ~severity
-        error @
-     List.concat (List.map (
-       print_message_nice ~strip_root ~severity stdin_file (
-         match file_of_source error.Friendly.loc.Loc.source with
-         | Some filename -> filename
-         | None -> "[No file]"
-       )
-     ) (append_trace_reasons [] trace)) @
-     (match trace with [] -> [] | _ -> [default_style "\n"])
+    (* The header location is either the root location when we have more then
+     * one message, or the primary location of the one message we have. *)
+    let header =
+      let loc = match root, others with
+      | None, _ | _, [] -> first_loc
+      | Some { root_loc; _ }, _ -> root_loc
+      in
+      print_header_friendly ~strip_root ~flags ~severity loc
     in
-    let to_print = if flags.one_line then List.map remove_newlines to_print
-      else to_print in
-    (to_print @ [default_style "\n"])
+    (* Either print our one message, our one message with the root prepended, or
+     * a list of error messages that share the same root. *)
+    let message = match root, others with
+    | None, _ ->
+      print_message_friendly ~flags first_message
+    | Some { root_message; _ }, [] when omitted = 0 ->
+      print_message_friendly ~flags (root_message @ (text " " :: first_message))
+    | Some { root_message; _ }, others ->
+      let message =
+        List.fold_left
+          (fun acc_message (_, message) ->
+            acc_message @
+            [default_style "\n"] @
+            print_message_friendly ~flags ~bullet:true message
+          )
+          ((print_message_friendly ~flags root_message) @ [default_style ":"])
+          ((first_loc, first_message) :: others)
+      in
+      if omitted = 0 then
+        message
+      else
+        message @
+        [default_style (
+          "\n " ^
+          bullet_char ~flags ^
+          " ... " ^
+          string_of_int omitted ^
+          " more error" ^
+          (if omitted = 1 then "" else "s") ^
+          "."
+        )]
+    in
+    (* Put it all together! *)
+    (header :: default_style "\n\n" :: message) @ [default_style "\n\n\n"]
 
-  (* Simplified interface for use while debugging *)
-  let string_of_error error =
-    let flags = {
-      color = Tty.Color_Never;
-      include_warnings = true;
-      max_warnings = None;
-      one_line = false;
-      show_all_errors = true;
-      unicode = true;
-      message_width = 120;
-    } in
-    get_pretty_printed_error
-      ~stdin_file:None
-      ~strip_root:None
-      ~severity:Err
-      ~flags
-      error
-    (* Extract just the strings, leaving behind the color info *)
-    |> List.map snd
-    |> String.concat ""
-
-  let print_error_color
-      ?(out_channel=stdout)
-      ~stdin_file:stdin_file
-      ~strip_root
-      ~flags
-      ~severity
-      (error : error) =
-    let to_print =
-      get_pretty_printed_error ~stdin_file ~strip_root ~flags ~severity error in
-    Tty.cprint ~out_channel ~color_mode:flags.color to_print
+  let print_styles ~out_channel ~flags styles =
+    let styles =
+      if flags.one_line then
+        List.map remove_newlines styles
+      else
+        styles
+    in
+    Tty.cprint ~out_channel ~color_mode:flags.color styles
 
   let print_errors =
     let render_counts =
@@ -1343,18 +1446,57 @@ module Cli_output = struct
     fun ~out_channel ~flags ?(stdin_file=None)
       ~strip_root ~errors ~warnings () ->
       let truncate = not (flags.show_all_errors) in
-      let print_error_if_not_truncated severity e curr =
-        begin if not(truncate) || curr < 50 then
-          print_error_color ~stdin_file ~strip_root ~flags ~out_channel ~severity e
-        end;
-
-        curr + 1
+      let max_count = if truncate then Some 50 else None in
+      let err_count = ErrorSet.cardinal errors in
+      let warn_count = ErrorSet.cardinal warnings in
+      let errors = collect_errors_into_groups max_count errors in
+      let warnings =
+        collect_errors_into_groups
+          (Option.map max_count ~f:(fun max_count -> max_count - err_count))
+          warnings
       in
-      let err_count = ErrorSet.fold (print_error_if_not_truncated Err) errors 0 in
-      let total_count = ErrorSet.fold
-        (print_error_if_not_truncated Warn) warnings err_count
+      let total_count = err_count + warn_count in
+      let () =
+        let iter_group ~severity group =
+          let styles = match group with
+          | ClassicSingleton (kind, trace, error) ->
+            get_pretty_printed_classic_error
+              ~stdin_file
+              ~strip_root
+              ~severity
+              kind trace error
+          | FriendlySingleton (_, trace, error) ->
+            let open Friendly in
+            (get_pretty_printed_friendly_error_group
+              ~strip_root
+              ~flags
+              ~severity
+              error.root
+              (Nel.one (error.loc, error.message))
+              0
+            ) @
+            List.concat (List.map (
+              print_message_nice ~strip_root ~severity stdin_file (
+                match file_of_source error.loc.Loc.source with
+                | Some filename -> filename
+                | None -> "[No file]"
+              )
+            ) (append_trace_reasons [] trace)) @
+            (match trace with [] -> [] | _ -> [default_style "\n"])
+          | FriendlyGroup { kind=_; root; messages; omitted } ->
+            get_pretty_printed_friendly_error_group
+              ~strip_root
+              ~flags
+              ~severity
+              (Some root)
+              (Nel.rev messages)
+              omitted
+          in
+          print_styles ~out_channel ~flags styles
+        in
+        List.iter (iter_group ~severity:Err) (List.rev errors);
+        List.iter (iter_group ~severity:Warn) (List.rev warnings);
       in
-      let warn_count = total_count - err_count in
       if total_count > 0 then print_newline ();
       if truncate && total_count > 50 then (
         let remaining_errs, remaining_warns = if err_count - 50 < 0
