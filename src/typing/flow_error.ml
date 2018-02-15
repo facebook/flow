@@ -2092,72 +2092,63 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     mk_friendly_error ~kind:RecursionLimitError (loc_of_reason r)
       [text "*** Recursion limit exceeded ***"]
 
-  (* TODO: friendlify *)
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
-      let msg = spf
-        "This modules resolves to %S, which is outside both your root \
-         directory and all of the entries in the [include] section of your \
-         .flowconfig. You should either add this directory to the [include] \
-         section of your .flowconfig, move your .flowconfig file higher in \
-         the project directory tree, or move this package under your Flow \
-         root directory."
-        package_relative_to_root
-      in
-      mk_error ~trace_infos [loc, [msg]]
+    mk_friendly_error ~trace_infos loc [
+      text "This module resolves to "; code package_relative_to_root; text " which ";
+      text "is outside both your root directory and all of the entries in the ";
+      code "[include]"; text " section of your "; code ".flowconfig"; text ". ";
+      text "You should either add this directory to the "; code "[include]"; text " ";
+      text "section of your "; code ".flowconfig"; text ", move your ";
+      code ".flowconfig"; text " file higher in the project directory tree, or ";
+      text "move this package under your Flow root directory.";
+    ]
 
-  (* TODO: friendlify *)
   | EExperimentalDecorators loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        "Experimental decorator usage";
-        "Decorators are an early stage proposal that may change. \
-         Additionally, Flow does not account for the type implications \
-         of decorators at this time."
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text "Experimental decorator usage. Decorators are an early stage ";
+      text "proposal that may change. Additionally, Flow does not account for ";
+      text "the type implications of decorators at this time.";
+    ]
 
-  (* TODO: friendlify *)
   | EExperimentalClassProperties (loc, static) ->
-      let config_name, config_key =
-        if static
-        then "class static field", "class_static_fields"
-        else "class instance field", "class_instance_fields"
-      in
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        spf "Experimental %s usage" config_name;
-        spf
-          "%ss are an active early stage feature proposal that may change. \
-           You may opt-in to using them anyway in Flow by putting \
-           `esproposal.%s=enable` into the [options] section of your \
-           .flowconfig."
-          (String.capitalize_ascii config_name)
-          config_key
-      ]]
+    let config_name, config_key =
+      if static
+      then "class static field", "class_static_fields"
+      else "class instance field", "class_instance_fields"
+    in
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text ("Experimental " ^ config_name ^ " usage. ");
+      text (String.capitalize_ascii config_name ^ "s are an active early stage ");
+      text "feature proposal that may change. You may opt-in to using them ";
+      text "anyway in Flow by putting "; code ("esproposal." ^ config_key ^ "=enable"); text " ";
+      text "into the "; code "[options]"; text " section of your ";
+      code ".flowconfig"; text ".";
+    ]
 
-  (* TODO: friendlify *)
   | EUnsafeGetSet loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        "Potentially unsafe get/set usage";
-        "Getters and setters with side effects are potentially unsafe and \
-         disabled by default. You may opt-in to using them anyway by putting \
-         `unsafe.enable_getters_and_setters=true` into the [options] section \
-         of your .flowconfig.";
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text "Potentially unsafe get/set usage. Getters and setters with side ";
+      text "effects are potentially unsafe and so disabled by default. You may ";
+      text "opt-in to using them anyway by putting ";
+      code "unsafe.enable_getters_and_setters"; text " into the ";
+      code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+    ]
 
-  (* TODO: friendlify *)
   | EExperimentalExportStarAs loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        "Experimental `export * as` usage";
-        "`export * as` is an active early stage feature proposal that may \
-         change. You may opt-in to using it anyway by putting \
-         `esproposal.export_star_as=enable` into the [options] section \
-         of your .flowconfig";
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text "Experimental "; code "export * as"; text " usage. ";
+      code "export * as"; text " is an active early stage feature propsal that ";
+      text "may change. You may opt-in to using it anyway by putting ";
+      code "esproposal.export_star_as=enable"; text " into the ";
+      code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+    ]
 
-  (* TODO: friendlify *)
   | EIndeterminateModuleType loc ->
-      mk_error ~trace_infos ~kind:InferWarning [loc, [
-        "Unable to determine module type (CommonJS vs ES) if both an export \
-         statement and module.exports are used in the same module!"
-      ]]
+    mk_friendly_error ~trace_infos ~kind:InferWarning loc [
+      text "Unable to determine module type (CommonJS vs ES) if both an export ";
+      text "statement and "; code "module.exports"; text " are used in the ";
+      text "same module!";
+    ]
 
   | EUnreachable loc ->
     mk_friendly_error ~trace_infos ~kind:InferWarning loc
