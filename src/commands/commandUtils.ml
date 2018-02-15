@@ -73,7 +73,15 @@ let expand_path file =
       FlowExitStatus.(exit ~msg Input_error)
     end
 
-let collect_error_flags main color include_warnings max_warnings one_line show_all_errors =
+let collect_error_flags main
+  color
+  include_warnings
+  max_warnings
+  one_line
+  show_all_errors
+  unicode
+  message_width
+=
   let color = match color with
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
@@ -85,7 +93,25 @@ let collect_error_flags main color include_warnings max_warnings one_line show_a
   | Some _ -> true
   | None -> include_warnings
   in
-  main { Errors.Cli_output.color; include_warnings; max_warnings; one_line; show_all_errors; }
+  let unicode = match unicode with
+  | Some "never" -> false
+  | Some "always" -> true
+  | Some "auto" | None -> Tty.supports_emoji ()
+  | _ -> assert false (* the enum type enforces this *)
+  in
+  let message_width = match message_width with
+  | Some message_width -> message_width
+  | None -> Option.value_map (Tty.get_term_cols ()) ~default:120 ~f:(min 120)
+  in
+  main {
+    Errors.Cli_output.color;
+    include_warnings;
+    max_warnings;
+    one_line;
+    show_all_errors;
+    unicode;
+    message_width;
+  }
 
 let warning_flags prev = CommandSpec.ArgSpec.(
   prev
@@ -105,6 +131,13 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
+  |> flag "--unicode" (enum ["auto"; "never"; "always"])
+      ~doc:"Display terminal output with unicode decoration. never, always, auto (default: auto)"
+  |> flag "--message-width" int
+      ~doc:(
+        "Sets the width of messages but not code snippets (defaults to the \
+         smaller of 120 or the terminal width)"
+      )
 )
 
 let collect_json_flags main json pretty =

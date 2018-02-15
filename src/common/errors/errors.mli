@@ -105,9 +105,9 @@ module Cli_output : sig
     max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
+    unicode: bool;
+    message_width: int;
   }
-
-  val default_error_flags: error_flags
 
   val print_errors:
     out_channel:out_channel ->

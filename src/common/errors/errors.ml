@@ -654,15 +654,21 @@ module Cli_output = struct
     max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
+    unicode: bool;
+    message_width: int;
   }
 
-  let default_error_flags = {
-    color = Tty.Color_Auto;
-    include_warnings = false;
-    max_warnings = None;
-    one_line = false;
-    show_all_errors = false;
-  }
+  let severity_fragment_style = function
+  | Err -> error_fragment_style
+  | Warn -> warning_fragment_style
+  | Off ->
+    Utils_js.assert_false "CLI output is only called with warnings and errors."
+
+  let severity_heading_style = function
+  | Err -> error_heading_style
+  | Warn -> warning_heading_style
+  | Off ->
+    Utils_js.assert_false "CLI output is only called with warnings and errors."
 
   let print_file_at_location ~strip_root ~severity stdin_file main_file loc s = Loc.(
     let l0 = loc.start.line in
@@ -670,12 +676,7 @@ module Cli_output = struct
     let c0 = loc.start.column in
     let c1 = loc._end.column in
     let filename = file_of_source loc.source in
-    let severity_style = match severity with
-      | Err -> error_fragment_style
-      | Warn -> warning_fragment_style
-      | Off ->
-        Utils_js.assert_false "CLI output is only called with warnings and errors."
-    in
+    let severity_style = severity_fragment_style severity in
 
     let see_another_file ~is_lib filename =
       if filename = main_file
@@ -885,12 +886,7 @@ module Cli_output = struct
       | Some File_key.SourceFile filename
       | Some File_key.JsonFile filename
       | Some File_key.ResourceFile filename ->
-        let heading_style = match severity with
-          | Err -> error_heading_style
-          | Warn -> warning_heading_style
-          | Off ->
-            Utils_js.assert_false "CLI output is only called with warnings and errors."
-        in
+        let heading_style = severity_heading_style severity in
         let severity_str = severity
           |> output_string_of_severity
           |> String.capitalize_ascii
@@ -933,8 +929,12 @@ module Cli_output = struct
   let remove_newlines (color, text) =
     (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-  let get_prety_printed_classic_error ~stdin_file:stdin_file ~strip_root
-      ~one_line ~severity kind trace error =
+  let get_pretty_printed_classic_error
+    ~stdin_file
+    ~strip_root
+    ~severity
+    kind trace error
+  =
     let { messages; extra } = error in
     let messages = append_trace_reasons messages trace in
     let messages = merge_comments_into_blames messages in
@@ -948,30 +948,139 @@ module Cli_output = struct
     let formatted_extra = List.concat (List.map (
       print_extra_info ~strip_root ~severity stdin_file main_file
     ) extra) in
-    let to_print = header @ formatted_messages @ formatted_extra in
-    let to_print = if one_line then List.map remove_newlines to_print
+    header @ formatted_messages @ formatted_extra
+
+  (* ==========================
+   * Full Terminal Width Header
+   * ==========================
+   *
+   * The header will always be the length of flags.message_width which in turn
+   * is the lesser of the terminal length and 120 characters. *)
+  let print_header_friendly ~strip_root ~flags ~severity loc =
+    let severity_style = severity_fragment_style severity in
+    let severity_name = match severity with
+    | Err -> "Error"
+    | Warn -> "Warning"
+    | Off -> failwith "unreachable"
+    in
+    let horizontal_line_length =
+      flags.message_width - (String.length severity_name + 1)
+    in
+    let filename =
+      let open Loc in
+      let open File_key in
+      let { source; start = { line; column; _ }; _ } = loc in
+      let pos = ":" ^ string_of_int line ^ ":" ^ string_of_int (column + 1) in
+      match source with
+      | Some (LibFile filename)
+        -> relative_lib_path ~strip_root filename ^ pos
+      | Some (SourceFile filename)
+      | Some (JsonFile filename)
+      | Some (ResourceFile filename)
+        -> relative_path ~strip_root filename ^ pos
+      | Some Builtins
+      | None
+        -> ""
+    in
+    (* If the filename is longer then the remaining horizontal line length we
+     * put the filename on a new line. Otherwise the filename eats some of the
+     * horizontal line space.
+     *
+     * We put two spaces of padding between the horizontal line and the
+     * filename. This looks better in some fonts. *)
+    let filename_with_padding_length = String.length filename + 1 in
+    let filename_on_newline = filename_with_padding_length + 1 > horizontal_line_length in
+    let horizontal_line_length =
+      if filename_on_newline then
+        horizontal_line_length
+      else
+        horizontal_line_length - filename_with_padding_length
+    in
+    (* The horizontal line which fills the space in our error message header
+     * will be made out of [U+2508][1] characters when unicode is enabled. In
+     * UTF-8 this character is encoded with three code points.
+     *
+     * [1]: https://duckduckgo.com/?q=U%2B2508
+     *)
+    let horizontal_line =
+      if flags.unicode then
+        String.init (horizontal_line_length * 3) (fun i ->
+          match i mod 3 with
+          | 0 -> '\xE2'
+          | 1 -> '\x94'
+          | 2 -> '\x88'
+          | _ -> failwith "unreachable"
+        )
+      else
+        String.make horizontal_line_length '-'
+    in
+    (* Construct the header by appending the constituent pieces. *)
+    severity_style (
+      severity_name
+        ^ " "
+        ^ horizontal_line
+        ^ (if filename_on_newline then "\n" else " ")
+        ^ filename
+    )
+
+  let get_pretty_printed_friendly_error
+    ~stdin_file
+    ~strip_root
+    ~flags
+    ~severity
+    kind trace error
+  =
+    let open Friendly in
+    [
+      print_header_friendly ~strip_root ~flags ~severity error.loc;
+      default_style "\n\n";
+    ] @
+    (get_pretty_printed_classic_error
+      ~stdin_file ~strip_root ~severity
+      kind trace (to_classic error))
+
+  let get_pretty_printed_error
+    ~stdin_file
+    ~strip_root
+    ~flags
+    ~severity
+    (kind, trace, error)
+  =
+    let to_print = match error with
+    | Classic error ->
+      get_pretty_printed_classic_error
+        ~stdin_file
+        ~strip_root
+        ~severity
+        kind trace error
+    | Friendly error ->
+      get_pretty_printed_friendly_error
+        ~stdin_file
+        ~strip_root
+        ~flags
+        ~severity
+        kind trace error
+    in
+    let to_print = if flags.one_line then List.map remove_newlines to_print
       else to_print in
     (to_print @ [default_style "\n"])
 
-  let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
-      ~severity ((kind, trace, error) : error) =
-    match error with
-    | Classic error ->
-      get_prety_printed_classic_error
-        ~stdin_file ~strip_root ~one_line ~severity
-        kind trace error
-    | Friendly error ->
-      get_prety_printed_classic_error
-        ~stdin_file ~strip_root ~one_line ~severity
-        kind trace (Friendly.to_classic error)
-
   (* Simplified interface for use while debugging *)
   let string_of_error error =
+    let flags = {
+      color = Tty.Color_Never;
+      include_warnings = true;
+      max_warnings = None;
+      one_line = false;
+      show_all_errors = true;
+      unicode = true;
+      message_width = 120;
+    } in
     get_pretty_printed_error
       ~stdin_file:None
       ~strip_root:None
-      ~one_line:false
       ~severity:Err
+      ~flags
       error
     (* Extract just the strings, leaving behind the color info *)
     |> List.map snd
@@ -981,13 +1090,12 @@ module Cli_output = struct
       ?(out_channel=stdout)
       ~stdin_file:stdin_file
       ~strip_root
-      ~one_line
-      ~color
+      ~flags
       ~severity
       (error : error) =
     let to_print =
-      get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~severity error in
-    Tty.cprint ~out_channel ~color_mode:color to_print
+      get_pretty_printed_error ~stdin_file ~strip_root ~flags ~severity error in
+    Tty.cprint ~out_channel ~color_mode:flags.color to_print
 
   let print_errors =
     let render_counts =
@@ -1011,11 +1119,9 @@ module Cli_output = struct
     fun ~out_channel ~flags ?(stdin_file=None)
       ~strip_root ~errors ~warnings () ->
       let truncate = not (flags.show_all_errors) in
-      let one_line = flags.one_line in
-      let color = flags.color in
       let print_error_if_not_truncated severity e curr =
         begin if not(truncate) || curr < 50 then
-          print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
+          print_error_color ~stdin_file ~strip_root ~flags ~out_channel ~severity e
         end;
 
         curr + 1
