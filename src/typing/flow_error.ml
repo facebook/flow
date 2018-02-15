@@ -102,7 +102,6 @@ type error_message =
   | EFunctionIncompatibleWithShape of reason * reason * use_op
   | EInternal of Loc.t * internal_error
   | EUnsupportedSyntax of Loc.t * unsupported_syntax
-  | EIllegalName of Loc.t
   | EUseArrayLiteral of Loc.t
   | EMissingAnnotation of reason
   | EBindingError of binding_error * Loc.t * string * Scope.Entry.t
@@ -216,6 +215,7 @@ and unsupported_syntax =
   | MultipleIndexers
   | SpreadArgument
   | ImportDynamicArgument
+  | IllegalName
 
 and lower_kind =
   | Possibly_null
@@ -324,7 +324,6 @@ let util_use_op_of_msg nope util = function
 | EFunPredCustom (_, _)
 | EInternal (_, _)
 | EUnsupportedSyntax (_, _)
-| EIllegalName (_)
 | EUseArrayLiteral (_)
 | EMissingAnnotation (_)
 | EBindingError (_, _, _, _)
@@ -2045,12 +2044,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
             "multiple indexers are not supported"
         | SpreadArgument ->
             "A spread argument is unsupported here"
+        | IllegalName ->
+            "Illegal name."
       in
       mk_error ~trace_infos [loc, [msg]]
-
-  (* TODO: friendlify *)
-  | EIllegalName loc ->
-      mk_error ~trace_infos [loc, ["illegal name"]]
 
   | EUseArrayLiteral loc ->
     mk_friendly_error ~trace_infos loc
@@ -2086,9 +2083,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         ]
       ]
 
-  (* TODO: friendlify *)
-  | ERecursionLimit reasons ->
-      typecheck_error ~kind:RecursionLimitError "*** Recursion limit exceeded ***" reasons
+  | ERecursionLimit (r, _) ->
+    mk_friendly_error ~kind:RecursionLimitError (loc_of_reason r)
+      [text "*** Recursion limit exceeded ***"]
 
   (* TODO: friendlify *)
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
@@ -2367,36 +2364,47 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       mk_error ~trace_infos [mk_info reason [
         "Prototype mutation not allowed"]]
 
-  (* TODO: friendlify *)
   | EDuplicateModuleProvider {module_name; provider; conflict} ->
-      mk_error ~kind:DuplicateProviderError [
-        Loc.({ none with source = Some conflict }), [
-          module_name; "Duplicate module provider"];
-        Loc.({ none with source = Some provider }), [
-          "current provider"]
-      ]
+    let (loc1, loc2) = Loc.(
+      let pos = { line = 1; column = 0; offset = 0 } in
+      let loc1 = { source = Some conflict; start = pos; _end = pos } in
+      let loc2 = { source = Some provider; start = pos; _end = pos } in
+      (loc1, loc2)
+    ) in
+    mk_friendly_error ~trace_infos ~kind:DuplicateProviderError loc1 [
+      text "Duplicate module provider for "; code module_name; text ". Change ";
+      text "either this module provider or the ";
+      ref (mk_reason (RCustom "current module provider") loc2);
+      text ".";
+    ]
 
   (* TODO: friendlify *)
   | EParseError (loc, parse_error) ->
     mk_error ~kind:ParseError [loc, [Parse_error.PP.error parse_error]]
 
-  (* TODO: friendlify *)
   | EDocblockError (loc, err) ->
     let msg = match err with
-    | MultipleFlowAttributes ->
-      "Unexpected @flow declaration. Only one per file is allowed."
-    | MultipleProvidesModuleAttributes ->
-      "Unexpected @providesModule declaration. Only one per file is allowed."
-    | MultipleJSXAttributes ->
-      "Unexpected @jsx declaration. Only one per file is allowed."
-    | InvalidJSXAttribute first_error ->
-      "Invalid @jsx declaration. Should have form `@jsx LeftHandSideExpression` "^
-      "with no spaces."^
-      (match first_error with
-      | None -> ""
-      | Some first_error -> spf " Parse error: %s" first_error)
+    | MultipleFlowAttributes -> [
+        text "Unexpected "; code "@flow"; text " declaration. Only one per ";
+        text "file is allowed.";
+      ]
+    | MultipleProvidesModuleAttributes -> [
+        text "Unexpected "; code "@providesModule"; text " declaration. ";
+        text "Only one per file is allowed.";
+      ]
+    | MultipleJSXAttributes -> [
+        text "Unexpected "; code "@jsx"; text " declaration. Only one per ";
+        text "file is allowed.";
+      ]
+    | InvalidJSXAttribute first_error -> [
+        text "Invalid "; code "@jsx"; text " declaration. Should have the form ";
+        code "@jsx LeftHandSideExpression"; text " with no spaces.";
+      ] @
+      match first_error with
+      | None -> []
+      | Some first_error -> [text (spf " Parse error: %s." first_error)]
     in
-    mk_error ~kind:ParseError [loc, [msg]]
+    mk_friendly_error ~kind:ParseError loc msg
 
   | EUntypedTypeImport (loc, module_name) ->
     mk_friendly_error ~trace_infos ~kind:(LintError Lints.UntypedTypeImport) loc [
@@ -2432,9 +2440,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     mk_friendly_error ~trace_infos ~kind:(LintError Lints.DeprecatedDeclareExports) loc
       [text "Deprecated syntax. Use "; code "declare module.exports"; text " instead."]
 
-  (* TODO: friendlify *)
   | EUnusedSuppression loc ->
-    mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
+    mk_friendly_error ~trace_infos loc
+      [text "Unused suppression comment."]
 
   | ELintSetting (loc, kind) ->
     let msg = match kind with

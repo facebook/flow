@@ -3,9 +3,12 @@ Initial status:
 No errors!
 
 Copy A.js to B.js:
-Error: B.js:0
-A. Duplicate module provider
-current provider. See: A.js:0
+Error: B.js:1
+  1: /* @flow */
+     ^ Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
+  References:
+    1: /* @flow */
+       ^ [1]: current module provider. See: A.js:1
 
 
 Found 1 error

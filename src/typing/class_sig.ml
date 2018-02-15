@@ -744,7 +744,7 @@ let add_interface_properties cx properties s =
       | _, Property.Literal (loc, _), _
       | _, Property.PrivateName (loc, _), _
       | _, Property.Computed (loc, _), _ ->
-          Flow.add_output cx (Flow_error.EIllegalName loc);
+          Flow.add_output cx (Flow_error.EUnsupportedSyntax (loc, Flow_error.IllegalName));
           x
       | true, Property.Identifier (id_loc, name),
           Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->

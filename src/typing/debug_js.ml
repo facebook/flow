@@ -2566,8 +2566,6 @@ let dump_flow_error =
         spf "EInternal (%s, %s)" (string_of_loc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) ->
         spf "EUnsupportedSyntax (%s, _)" (string_of_loc loc)
-    | EIllegalName loc ->
-        spf "EIllegalName (%s)" (string_of_loc loc)
     | EUseArrayLiteral loc ->
         spf "EUseArrayLiteral (%s)" (string_of_loc loc)
     | EMissingAnnotation reason ->

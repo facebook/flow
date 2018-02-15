@@ -3,11 +3,11 @@ Stop any already-running server.
 Full check shows the two unused suppressions:
 Warning: dependency.js:5
   5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: focused.js:7
   7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings
@@ -15,11 +15,11 @@ Found 2 warnings
 Full focus-check shows the two unused suppressions:
 Warning: dependency.js:5
   5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: focused.js:7
   7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings
@@ -27,7 +27,7 @@ Found 2 warnings
 Focused check on focused.js only reports focused's unused suppression
 Warning: focused.js:7
   7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 1 warning
@@ -38,11 +38,11 @@ Found 0 errors
 Focused check on dependency.js shows the two unused suppressions
 Warning: dependency.js:5
   5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning: focused.js:7
   7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings

@@ -27,9 +27,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 4 errors
@@ -53,9 +56,12 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 3 errors
@@ -70,9 +76,12 @@ Error: a.js:2
     2: var a: string = 0;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 2 errors
@@ -96,9 +105,12 @@ Error: b.js:3
     3: var b: number = a;
               ^^^^^^ [2]: number
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 3 errors
@@ -131,9 +143,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 4 errors
@@ -166,9 +181,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 4 errors
@@ -201,9 +219,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 Error: requires_unchecked.js:5
   5: var unchecked = require('Unchecked');
@@ -240,9 +261,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 4 errors
@@ -306,9 +330,12 @@ Error: c.js:3
     3: var c: string = b;
               ^^^^^^ [2]: string
 
-Error: dupe2.js:0
-Dupe. Duplicate module provider
-current provider. See: dupe1.js:0
+Error: dupe2.js:1
+  1: /**
+     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
+  References:
+    1: /**
+       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 4 errors
